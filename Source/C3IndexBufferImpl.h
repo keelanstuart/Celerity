@@ -1,0 +1,46 @@
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
+//
+// Copyright © 2001-2020, Keelan Stuart
+
+
+#pragma once
+
+#include <C3IndexBuffer.h>
+#include <C3RendererImpl.h>
+
+namespace c3
+{
+
+	class IndexBufferImpl : public IndexBuffer
+	{
+
+	protected:
+		RendererImpl *m_Rend;
+		void *m_Buffer;
+		size_t m_NumIndices;
+		GLuint m_glID;
+		IndexBuffer::IndexSize m_IndexSize;
+		GLuint m_LastBoundBuffer;
+
+	public:
+		IndexBufferImpl(RendererImpl *prend);
+		virtual ~IndexBufferImpl();
+
+		virtual void Release();
+
+		virtual RETURNCODE Lock(void **buffer, size_t count, IndexSize sz, props::TFlags64 flags);
+		virtual void Unlock();
+
+		virtual size_t Count();
+
+		virtual void Bind();
+		virtual void Unbind();
+
+		virtual size_t GetIndexSize();
+
+		operator GLuint() const { return m_glID; }
+
+	};
+
+};
