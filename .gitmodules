@@ -1,0 +1,21 @@
+[submodule "third-party/GenIO"]
+	path = third-party/GenIO
+	url = https://github.com/keelanstuart/GenIO
+[submodule "third-party/Pool"]
+	path = third-party/Pool
+	url = https://github.com/keelanstuart/Pool
+[submodule "third-party/glm"]
+	path = third-party/glm
+	url = https://github.com/g-truc/glm
+[submodule "third-party/mqme"]
+	path = third-party/mqme
+	url = https://github.com/keelanstuart/mqme
+[submodule "third-party/GLlibgen"]
+	path = third-party/GLlibgen
+	url = https://github.com/keelanstuart/GLlibgen
+[submodule "third-party/PowerProps"]
+	path = third-party/PowerProps
+	url = https://github.com/keelanstuart/PowerProps
+[submodule "third-party/tinyxml2"]
+	path = third-party/tinyxml2
+	url = https://github.com/leethomason/tinyxml2
