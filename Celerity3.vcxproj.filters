@@ -39,9 +39,6 @@
     <ClCompile Include="Source\pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="third-party\tinyxml2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\C3VertexBufferImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -111,9 +108,6 @@
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Source\pch.h">
-      <Filter>Header Files\Private</Filter>
-    </ClInclude>
-    <ClInclude Include="third-party\tinyxml2.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3VertexBufferImpl.h">

@@ -53,7 +53,6 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
     </ClCompile>
-    <ClCompile Include="third-party\tinyxml2.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3.h" />
@@ -82,7 +81,6 @@
     <ClInclude Include="Source\glext.h" />
     <ClInclude Include="Source\gl_wrapper.h" />
     <ClInclude Include="Source\pch.h" />
-    <ClInclude Include="third-party\tinyxml2.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

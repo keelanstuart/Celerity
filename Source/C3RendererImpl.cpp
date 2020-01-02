@@ -93,7 +93,7 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 	SetWorldMatrix(&m_ident);
 
 	gl.ShadeModel(GL_SMOOTH);
-	gl.ClearColor(1, 0, 1, 1);
+	gl.ClearColor(0, 0, 0, 1);
 	gl.ClearDepthf(1);
 	gl.Enable(GL_DEPTH_TEST);
 	gl.DepthFunc(GL_LEQUAL);
