@@ -1,7 +1,7 @@
 # Celerity
 Celerity - a game / visualization engine for Windows, written in C++, currently in it's third-ish iteration
 
-Project current requires the following support libraries to be cloned into ./third-party: <a href="https://github.com/keelanstuart/powerprops">PowerProps</a>, <a href="https://github.com/keelanstuart/mqme">mqme</a>, <a href="https://github.com/keelanstuart/Pool">Pool</a>, <a href="https://github.com/keelanstuart/genio">GenIO</a>, <a href="https://github.com/g-truc/glm">glm</a>, and <a href="https://github.com/keelanstuart/GLlibgen">GLlibgen</a>
+Project current requires the following support libraries to be cloned into ./third-party: <a href="https://github.com/keelanstuart/powerprops">PowerProps</a>, <a href="https://github.com/keelanstuart/mqme">mqme</a>, <a href="https://github.com/keelanstuart/Pool">Pool</a>, <a href="https://github.com/keelanstuart/genio">GenIO</a>, <a href="https://github.com/g-truc/glm">glm</a>, <a href="https://github.com/leethomason/tinyxml2">tinyxml2</a>, and <a href="https://github.com/keelanstuart/GLlibgen">GLlibgen</a>
 
 Initially, you should build the "Bootstrap" target.
 
