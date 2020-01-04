@@ -14,6 +14,9 @@ namespace c3
 {
 
 	class Texture;
+	class Texture2D;
+	class TextureCube;
+	class Texture3D;
 	class DepthBuffer;
 	class VertexBuffer;
 	class IndexBuffer;
@@ -95,9 +98,9 @@ namespace c3
 
 		virtual bool EndScene(props::TFlags64 flags) = NULL;
 
-		virtual Texture *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
-		virtual Texture *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
-		virtual Texture *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
+		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
+		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
+		virtual Texture3D *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
 
 		virtual DepthBuffer *CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 flags = 0) = NULL;
 

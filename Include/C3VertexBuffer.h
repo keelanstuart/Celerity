@@ -27,7 +27,7 @@ namespace c3
 			RET_MAPBUFFER_FAILED,
 		};
 
-		struct SVertexComponentDescription
+		typedef struct SComponentDescription
 		{
 			typedef enum EComponentType
 			{
@@ -92,14 +92,14 @@ namespace c3
 
 				return ret;
 			}
-		};
+		} ComponentDescription;
 
 		virtual void Release() = NULL;
 
 		#define VBLOCKFLAG_READ			0x0001
 		#define VBLOCKFLAG_WRITE		0x0002
 
-		virtual RETURNCODE Lock(void **buffer, size_t count, const SVertexComponentDescription *components, props::TFlags64 flags) = NULL;
+		virtual RETURNCODE Lock(void **buffer, size_t count, const ComponentDescription *components, props::TFlags64 flags) = NULL;
 		virtual void Unlock() = NULL;
 
 		virtual size_t Count() = NULL;
@@ -108,7 +108,7 @@ namespace c3
 		virtual void Unbind() = NULL;
 
 		virtual size_t NumComponents() = NULL;
-		virtual const SVertexComponentDescription *Component(size_t compidx) = NULL;
+		virtual const ComponentDescription *Component(size_t compidx) = NULL;
 
 		virtual size_t VertexSize() = NULL;
 	};

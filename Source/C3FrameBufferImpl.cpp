@@ -60,8 +60,8 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachColorTarget(Texture2D *target, si
 
 	if (m_Rend && (m_glID != GL_INVALID_VALUE))
 	{
-		if (position < m_ColorTarget.size())
-			m_ColorTarget.resize(position, nullptr);
+		if (position <= m_ColorTarget.size())
+			m_ColorTarget.resize(position + 1, nullptr);
 
 		m_ColorTarget[position] = target;
 

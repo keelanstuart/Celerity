@@ -45,7 +45,7 @@ void VertexBufferImpl::Release()
 }
 
 
-VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t count, const SVertexComponentDescription *components, props::TFlags64 flags)
+VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t count, const ComponentDescription *components, props::TFlags64 flags)
 {
 	if (m_Buffer)
 		return RET_ALREADY_LOCKED;
@@ -59,9 +59,9 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t count, con
 	m_Components.clear();
 
 	size_t sz = 0;
-	const SVertexComponentDescription *c = components;
+	const ComponentDescription *c = components;
 	size_t cc = 0;
-	while (c && (c->m_Type != VertexBuffer::SVertexComponentDescription::VCT_NONE) && (c->m_Count > 0))
+	while (c && (c->m_Type != VertexBuffer::ComponentDescription::VCT_NONE) && (c->m_Count > 0))
 	{
 		m_Components.push_back(*c);
 		sz += c->size();
@@ -148,7 +148,7 @@ size_t VertexBufferImpl::NumComponents()
 }
 
 
-const VertexBuffer::SVertexComponentDescription *VertexBufferImpl::Component(size_t compidx)
+const VertexBuffer::ComponentDescription *VertexBufferImpl::Component(size_t compidx)
 {
 	if (compidx >= m_Components.size())
 		return NULL;

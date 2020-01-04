@@ -23,7 +23,7 @@ namespace c3
 		GLuint m_glID;
 		size_t m_VertSize;
 
-		typedef std::vector<SVertexComponentDescription> TVertexComponentDescriptionArray;
+		typedef std::vector<ComponentDescription> TVertexComponentDescriptionArray;
 		TVertexComponentDescriptionArray m_Components;
 
 		GLuint m_LastBoundBuffer;
@@ -34,7 +34,7 @@ namespace c3
 
 		virtual void Release();
 
-		virtual RETURNCODE Lock(void **buffer, size_t count, const SVertexComponentDescription *components, props::TFlags64 flags);
+		virtual RETURNCODE Lock(void **buffer, size_t count, const ComponentDescription *components, props::TFlags64 flags);
 		virtual void Unlock();
 
 		virtual size_t Count();
@@ -43,7 +43,7 @@ namespace c3
 		virtual void Unbind();
 
 		virtual size_t NumComponents();
-		virtual const SVertexComponentDescription *Component(size_t compidx);
+		virtual const ComponentDescription *Component(size_t compidx);
 
 		virtual size_t VertexSize();
 

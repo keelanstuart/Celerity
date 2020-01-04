@@ -30,6 +30,8 @@ namespace c3
 		C3MATRIX m_proj, m_view, m_world, m_worldview;
 
 		bool m_Initialized;
+		WNDCLASS m_glARBWndClass;
+
 
 	public:
 		RendererImpl(SystemImpl *psys);
@@ -49,9 +51,9 @@ namespace c3
 		GLenum GLInternalFormat(TextureType type);
 		GLenum GLFormat(TextureType type);
 
-		virtual Texture *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount, props::TFlags64 flags);
-		virtual Texture *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags);
-		virtual Texture *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags);
+		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount, props::TFlags64 flags);
+		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags);
+		virtual Texture3D *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags);
 
 		virtual DepthBuffer *CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 flags);
 

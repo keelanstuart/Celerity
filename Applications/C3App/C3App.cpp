@@ -34,6 +34,10 @@ C3App theApp;
 
 BOOL C3App::InitInstance()
 {
+#if 1
+	MessageBox(NULL, L"attach graphics debugger", L"debug", MB_OK);
+#endif
+
 	CWinApp::InitInstance();
 
 	m_C3 = c3::System::Create(0);

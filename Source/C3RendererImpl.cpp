@@ -11,7 +11,9 @@
 #include <C3ShaderComponentImpl.h>
 #include <C3DepthBufferImpl.h>
 #include <C3TextureImpl.h>
-
+#include <C3VertexBufferImpl.h>
+#include <C3IndexBufferImpl.h>
+#include <C3FrameBufferImpl.h>
 
 using namespace c3;
 
@@ -23,6 +25,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_hwnd = NULL;
 	m_hdc = NULL;
 	m_glrc = NULL;
+
+	memset(&m_glARBWndClass, 0, sizeof(WNDCLASS));
 
 	m_ident = glm::identity<C3MATRIX>();
 
@@ -41,38 +45,119 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 	m_hwnd = hwnd;
 	m_hdc = ::GetDC(hwnd);
 
-	PIXELFORMATDESCRIPTOR pfd = {
-		sizeof(PIXELFORMATDESCRIPTOR),   // size of this pfd  
-		1,                     // version number  
-		PFD_DRAW_TO_WINDOW |   // support window  
-		PFD_SUPPORT_OPENGL |   // support OpenGL  
-		PFD_DOUBLEBUFFER,      // double buffered  
-		PFD_TYPE_RGBA,         // RGBA type  
-		24,                    // 24-bit color depth  
-		0, 0, 0, 0, 0, 0,      // color bits ignored  
-		0,                     // no alpha buffer  
-		0,                     // shift bit ignored  
-		0,                     // no accumulation buffer  
-		0, 0, 0, 0,            // accum bits ignored  
-		24,                    // 32-bit z-buffer  
-		8,                     // no stencil buffer  
-		0,                     // no auxiliary buffer  
-		PFD_MAIN_PLANE,        // main layer  
-		0,                     // reserved  
-		0, 0, 0                // layer masks ignored  
+	PIXELFORMATDESCRIPTOR pfd =
+	{
+	   sizeof(PIXELFORMATDESCRIPTOR),	// size of this pfd  
+	   1,								// version number  
+	   PFD_DRAW_TO_WINDOW |			// support window  
+	   PFD_SUPPORT_OPENGL |			// support OpenGL  
+	   PFD_DOUBLEBUFFER,				// double buffered  
+	   PFD_TYPE_RGBA,					// RGBA type  
+	   32,								// 32-bit color depth  
+	   0, 0, 0, 0, 0, 0,				// color bits ignored  
+	   0,								// no alpha buffer  
+	   0,								// shift bit ignored  
+	   0,								// no accumulation buffer  
+	   0, 0, 0, 0,						// accum bits ignored  
+	   24,								// 24-bit z-buffer  
+	   8,								// 8-bit stencil buffer  
+	   0,								// no auxiliary buffer  
+	   PFD_MAIN_PLANE,					// main layer  
+	   0,								// reserved  
+	   0, 0, 0							// layer masks ignored  
 	};
 
 	int  iPixelFormat;
 
-	// get the best available match of pixel format for the device context   
-	iPixelFormat = ChoosePixelFormat(m_hdc, &pfd);
+#define GLARBWND_CLASSNAME		_T("CELERITY3_OPENGL_ARB_WNDCLASS")
 
-	// make that the pixel format of the device context  
-	SetPixelFormat(m_hdc, iPixelFormat, &pfd);
+	HMODULE hmod_temp = GetModuleHandle(NULL);
 
-	m_glrc = wglCreateContext(m_hdc);
+	if (!GetClassInfo(hmod_temp, GLARBWND_CLASSNAME, &m_glARBWndClass))
+	{
+		m_glARBWndClass.style = CS_HREDRAW | CS_VREDRAW;
+		m_glARBWndClass.lpfnWndProc = DefWindowProc;
+		m_glARBWndClass.cbClsExtra = 0;
+		m_glARBWndClass.cbWndExtra = 0;
+		m_glARBWndClass.hInstance = hmod_temp;
+		m_glARBWndClass.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+		m_glARBWndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+		m_glARBWndClass.hbrBackground = (struct HBRUSH__ *)GetStockObject(BLACK_BRUSH);
+		m_glARBWndClass.lpszMenuName = NULL;
+		m_glARBWndClass.lpszClassName = GLARBWND_CLASSNAME;
 
-	wglMakeCurrent(m_hdc, m_glrc);
+		if (!RegisterClass(&m_glARBWndClass))
+			return false;
+
+		HWND hwnd_temp = CreateWindow(GLARBWND_CLASSNAME, GLARBWND_CLASSNAME,
+									  WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
+									  0, 0, 1, 1, NULL, NULL, hmod_temp, NULL);
+		if (hwnd_temp != NULL)
+		{
+			HDC hdc_temp = GetDC(hwnd_temp);
+
+			iPixelFormat = ChoosePixelFormat(hdc_temp, &pfd);
+
+			SetPixelFormat(hdc_temp, iPixelFormat, &pfd);
+
+			HGLRC hglrc_temp = wglCreateContext(hdc_temp);
+
+			wglMakeCurrent(hdc_temp, hglrc_temp);
+
+			PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = nullptr;
+			wglChoosePixelFormatARB = reinterpret_cast<PFNWGLCHOOSEPIXELFORMATARBPROC>(wglGetProcAddress("wglChoosePixelFormatARB"));
+
+			PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = nullptr;
+			wglCreateContextAttribsARB = reinterpret_cast<PFNWGLCREATECONTEXTATTRIBSARBPROC>(wglGetProcAddress("wglCreateContextAttribsARB"));
+
+			const int pixelAttribList[] =
+			{
+				WGL_DRAW_TO_WINDOW_ARB,		GL_TRUE,
+				WGL_SUPPORT_OPENGL_ARB,		GL_TRUE,
+				WGL_DOUBLE_BUFFER_ARB,		GL_TRUE,
+				WGL_PIXEL_TYPE_ARB,			WGL_TYPE_RGBA_ARB,
+				WGL_ACCELERATION_ARB,		WGL_FULL_ACCELERATION_ARB,
+				WGL_RED_BITS_ARB,			8,
+				WGL_GREEN_BITS_ARB,			8,
+				WGL_BLUE_BITS_ARB,			8,
+				WGL_ALPHA_BITS_ARB,			8,
+				WGL_DEPTH_BITS_ARB,			24,
+				WGL_STENCIL_BITS_ARB,		8,
+				WGL_SAMPLE_BUFFERS_ARB,		GL_TRUE,
+				WGL_SAMPLES_ARB,			4,
+
+				0, 0	// end
+			};
+
+			UINT numFormats;
+			wglChoosePixelFormatARB(m_hdc, pixelAttribList, NULL, 1, &iPixelFormat, &numFormats);
+			DescribePixelFormat(m_hdc, iPixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
+
+			// make that the pixel format of the device context  
+			SetPixelFormat(m_hdc, iPixelFormat, &pfd);
+
+			const int contextAttribList[] =
+			{
+				WGL_CONTEXT_MAJOR_VERSION_ARB,	4,
+				WGL_CONTEXT_MINOR_VERSION_ARB,	5,
+				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+				WGL_CONTEXT_PROFILE_MASK_ARB,	WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+				0, 0	// end
+			};
+
+			m_glrc = wglCreateContextAttribsARB(m_hdc, 0, contextAttribList);
+
+			wglMakeCurrent(NULL, NULL);
+
+			wglDeleteContext(hglrc_temp);
+			ReleaseDC(hwnd_temp, hdc_temp);
+			DestroyWindow(hwnd_temp);
+
+			UnregisterClass(m_glARBWndClass.lpszClassName, hmod_temp);
+
+			wglMakeCurrent(m_hdc, m_glrc);
+		}
+	}
 
 	if (!gl.Initialize())
 		return false;
@@ -93,7 +178,7 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 	SetWorldMatrix(&m_ident);
 
 	gl.ShadeModel(GL_SMOOTH);
-	gl.ClearColor(0, 0, 0, 1);
+	gl.ClearColor(1, 0, 1, 1);
 	gl.ClearDepthf(1);
 	gl.Enable(GL_DEPTH_TEST);
 	gl.DepthFunc(GL_LEQUAL);
@@ -314,19 +399,19 @@ GLenum RendererImpl::GLFormat(TextureType type)
 }
 
 
-Texture *RendererImpl::CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount, props::TFlags64 flags)
+Texture2D *RendererImpl::CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	return new Texture2DImpl(this, width, height, type, mipcount);
 }
 
 
-Texture *RendererImpl::CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags)
+TextureCube *RendererImpl::CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	return new TextureCubeImpl(this, width, height, depth, type, mipcount);
 }
 
 
-Texture *RendererImpl::CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags)
+Texture3D *RendererImpl::CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	return new Texture3DImpl(this, width, height, depth, type, mipcount);
 }
@@ -340,19 +425,19 @@ DepthBuffer* RendererImpl::CreateDepthBuffer(size_t width, size_t height, DepthT
 
 FrameBuffer *RendererImpl::CreateFrameBuffer(props::TFlags64 flags)
 {
-	return NULL;
+	return new FrameBufferImpl(this);
 }
 
 
 VertexBuffer *RendererImpl::CreateVertexBuffer(props::TFlags64 flags)
 {
-	return NULL;
+	return new VertexBufferImpl(this);
 }
 
 
 IndexBuffer *RendererImpl::CreateIndexBuffer(props::TFlags64 flags)
 {
-	return NULL;
+	return new IndexBufferImpl(this);
 }
 
 
@@ -370,13 +455,19 @@ ShaderComponent *RendererImpl::CreateShaderComponent(ShaderComponentType type)
 
 void RendererImpl::UseFrameBuffer(FrameBuffer *pfb)
 {
+	if (pfb)
+	{
+		gl.BindFramebuffer(GL_FRAMEBUFFER, (c3::FrameBufferImpl &)*pfb);
+	}
 }
 
 
 void RendererImpl::UseProgram(ShaderProgram *pprog)
 {
 	if (pprog)
+	{
 		gl.UseProgram((c3::ShaderProgramImpl &)*pprog);
+	}
 }
 
 

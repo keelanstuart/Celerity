@@ -10,6 +10,12 @@ class C3Dlg : public CDialog
 {
 protected:
 	c3::Renderer *m_Rend;
+	c3::Texture2D *m_Tex;
+	c3::VertexBuffer *m_VB;
+	c3::IndexBuffer *m_IB;
+	c3::FrameBuffer *m_FB;
+	c3::Texture2D *m_ColorTarg[2];
+	c3::DepthBuffer *m_DepthTarg;
 
 // Construction
 public:
