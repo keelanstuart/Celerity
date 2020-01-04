@@ -50,9 +50,11 @@ namespace c3
 		virtual RETURNCODE Unlock() = NULL;
 	};
 
-	#define TEXLOCKFLAG_READ		0x0001
-	#define TEXLOCKFLAG_WRITE		0x0002
-	#define TEXLOCKFLAG_GENMIPS		0x0004
+	#define TEXCREATEFLAG_RENDERTARGET		0x0001
+
+	#define TEXLOCKFLAG_READ				0x0001
+	#define TEXLOCKFLAG_WRITE				0x0002
+	#define TEXLOCKFLAG_GENMIPS				0x0004
 
 	class Texture2D : public Texture
 	{

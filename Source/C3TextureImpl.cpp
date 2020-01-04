@@ -12,7 +12,7 @@
 using namespace c3;
 
 
-Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount)
+Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	assert(prend);
 
@@ -37,6 +37,15 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 	m_Buffer = nullptr;
 	m_glID = GL_INVALID_VALUE;
 	m_LockMip = 0;
+
+	if (flags.IsSet(TEXCREATEFLAG_RENDERTARGET))
+	{
+		m_Rend->gl.CreateTextures(GL_TEXTURE_2D, 1, &m_glID);
+
+		Bind();
+
+		m_Rend->gl.TexStorage2D(GL_TEXTURE_2D, (GLsizei)m_MipCount, m_Rend->GLInternalFormat(m_Type), (GLsizei)m_Width, (GLsizei)m_Height);
+	}
 }
 
 
@@ -163,6 +172,8 @@ Texture::RETURNCODE Texture2DImpl::Unlock()
 	if (!m_Buffer)
 		return RET_NOT_LOCKED;
 
+	Bind();
+
 	m_Rend->gl.TexSubImage2D(GL_TEXTURE_2D, (GLint)m_LockMip, 0, 0, GLsizei(m_Width >> m_LockMip), GLsizei(m_Height >> m_LockMip), m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
 
 	free(m_Buffer);
@@ -176,7 +187,7 @@ Texture::RETURNCODE Texture2DImpl::Unlock()
 // *******************************************************************************
 
 
-TextureCubeImpl::TextureCubeImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount)
+TextureCubeImpl::TextureCubeImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	assert(prend);
 
@@ -363,6 +374,8 @@ Texture::RETURNCODE TextureCubeImpl::Unlock()
 	if (!m_Buffer)
 		return RET_NOT_LOCKED;
 
+	Bind();
+
 	m_Rend->gl.TexSubImage2D(GLface[m_LockFace], (GLint)m_LockMip, 0, 0, (GLsizei)m_LockWidth, (GLsizei)m_LockHeight, m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
 
 	free(m_Buffer);
@@ -376,7 +389,7 @@ Texture::RETURNCODE TextureCubeImpl::Unlock()
 // *******************************************************************************
 
 
-Texture3DImpl::Texture3DImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount)
+Texture3DImpl::Texture3DImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	assert(prend);
 
@@ -535,6 +548,8 @@ Texture::RETURNCODE Texture3DImpl::Unlock()
 
 	if (!m_Buffer)
 		return RET_NOT_LOCKED;
+
+	Bind();
 
 	m_Rend->gl.TexSubImage3D(GL_TEXTURE_3D, (GLint)m_LockMip, 0, 0, 0, (GLsizei)m_Width, (GLsizei)m_Height, (GLsizei)m_Depth, m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
 

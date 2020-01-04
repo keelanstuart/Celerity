@@ -401,19 +401,19 @@ GLenum RendererImpl::GLFormat(TextureType type)
 
 Texture2D *RendererImpl::CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount, props::TFlags64 flags)
 {
-	return new Texture2DImpl(this, width, height, type, mipcount);
+	return new Texture2DImpl(this, width, height, type, mipcount, flags);
 }
 
 
 TextureCube *RendererImpl::CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags)
 {
-	return new TextureCubeImpl(this, width, height, depth, type, mipcount);
+	return new TextureCubeImpl(this, width, height, depth, type, mipcount, flags);
 }
 
 
 Texture3D *RendererImpl::CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags)
 {
-	return new Texture3DImpl(this, width, height, depth, type, mipcount);
+	return new Texture3DImpl(this, width, height, depth, type, mipcount, flags);
 }
 
 

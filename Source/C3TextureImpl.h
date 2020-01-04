@@ -25,7 +25,7 @@ namespace c3
 		size_t m_LockMip;
 
 	public:
-		Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount);
+		Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);
 		virtual ~Texture2DImpl();
 
 		virtual void Release();
@@ -66,7 +66,7 @@ namespace c3
 		size_t m_LockHeight;
 
 	public:
-		TextureCubeImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount);
+		TextureCubeImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);
 		virtual ~TextureCubeImpl();
 
 		virtual void Release();
@@ -106,7 +106,7 @@ namespace c3
 		size_t m_LockMip;
 
 	public:
-		Texture3DImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount);
+		Texture3DImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);
 		virtual ~Texture3DImpl();
 
 		virtual void Release();
