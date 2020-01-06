@@ -9,6 +9,7 @@
 #include <C3.h>
 
 #include <C3RendererImpl.h>
+#include <C3LogImpl.h>
 
 namespace c3
 {
@@ -18,6 +19,7 @@ namespace c3
 
 	protected:
 		RendererImpl *m_Renderer;
+		LogImpl *m_Log;
 
 	public:
 		SystemImpl();
@@ -27,6 +29,8 @@ namespace c3
 		virtual void Release();
 
 		virtual Renderer *GetRenderer();
+
+		virtual Log *GetLog();
 
 	};
 

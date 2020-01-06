@@ -43,4 +43,5 @@ public:
 	virtual void OnFinalRelease();
 	virtual BOOL PreCreateWindow(CREATESTRUCT &cs);
 	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };

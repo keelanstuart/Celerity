@@ -63,6 +63,9 @@
     <ClCompile Include="$(SolutionDir)third-party\tinyxml2\tinyxml2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3LogImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3.h">
@@ -147,6 +150,12 @@
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Source\wglext.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Log.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3LogImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>

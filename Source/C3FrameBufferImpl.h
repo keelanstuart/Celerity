@@ -25,6 +25,8 @@ namespace c3
 		typedef std::vector<Texture2D *> TColorTargetArray;
 		TColorTargetArray m_ColorTarget;
 
+		const static GLuint targenum[MAX_COLORTARGETS];
+
 	public:
 
 		FrameBufferImpl(RendererImpl *prend);
@@ -41,6 +43,8 @@ namespace c3
 		virtual RETURNCODE AttachDepthTarget(DepthBuffer *pdepth);
 
 		virtual DepthBuffer *GetDepthTarget();
+
+		virtual RETURNCODE Seal();
 
 		operator GLuint() const { return m_glID; }
 

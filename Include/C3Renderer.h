@@ -12,6 +12,7 @@
 
 namespace c3
 {
+	class System;
 
 	class Texture;
 	class Texture2D;
@@ -85,17 +86,25 @@ namespace c3
 			ST_VERTEX,
 			ST_FRAGMENT,
 			ST_GEOMETRY,
+			ST_TESSEVAL,
+			ST_TESSCONTROL,
 
 			ST_NUMTYPES
 
 		} ShaderComponentType;
 
+		/// Returns the System that created this Renderer
+		virtual System *GetSystem() = NULL;
+
+		/// Initializes the Renderer
 		virtual bool Initialize(size_t width, size_t height, HWND hwnd, props::TFlags64 flags) = NULL;
 
 		virtual void Shutdown() = NULL;
 
+		/// Prepares the Renderer for rendering
 		virtual bool BeginScene(props::TFlags64 flags) = NULL;
 
+		/// Finalizes rendering and presents the result to the display
 		virtual bool EndScene(props::TFlags64 flags) = NULL;
 
 		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;

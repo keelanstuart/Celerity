@@ -29,6 +29,9 @@ namespace c3
 		virtual ShaderProgram::RETURNCODE AttachShader(ShaderComponent *pshader);
 		virtual ShaderProgram::RETURNCODE Link();
 
+		virtual ShaderProgram::RETURNCODE Bind();
+		virtual ShaderProgram::RETURNCODE Unbind();
+
 		operator GLuint() const { return m_glID; }
 
 	};

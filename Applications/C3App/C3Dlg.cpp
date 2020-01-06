@@ -40,6 +40,7 @@ BEGIN_MESSAGE_MAP(C3Dlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_ERASEBKGND()
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -78,6 +79,8 @@ BOOL C3Dlg::OnInitDialog()
 			m_FB->AttachColorTarget(m_ColorTarg[0], 0);
 			m_FB->AttachColorTarget(m_ColorTarg[1], 1);
 			m_FB->AttachDepthTarget(m_DepthTarg);
+
+			m_FB->Seal();
 		}
 	}
 
@@ -145,6 +148,8 @@ BOOL C3Dlg::OnInitDialog()
 		}
 	}
 
+	SetTimer('DRAW', 16, NULL);
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -193,6 +198,8 @@ HCURSOR C3Dlg::OnQueryDragIcon()
 
 void C3Dlg::OnFinalRelease()
 {
+	KillTimer('DRAW');
+
 	if (m_Tex)
 		m_Tex->Release();
 
@@ -230,4 +237,13 @@ BOOL C3Dlg::PreCreateWindow(CREATESTRUCT &cs)
 BOOL C3Dlg::OnEraseBkgnd(CDC *pDC)
 {
 	return FALSE;
+}
+
+
+void C3Dlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == 'DRAW')
+		Invalidate(0);
+
+	CDialog::OnTimer(nIDEvent);
 }

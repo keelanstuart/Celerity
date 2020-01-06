@@ -202,6 +202,12 @@ void RendererImpl::Shutdown()
 }
 
 
+c3::System *RendererImpl::GetSystem()
+{
+	return (c3::System *)m_pSys;
+}
+
+
 bool RendererImpl::BeginScene(props::TFlags64 flags)
 {
 	if (!m_Initialized)

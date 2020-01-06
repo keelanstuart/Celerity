@@ -20,6 +20,7 @@ namespace c3
 		GLuint m_glID;
 		Renderer::ShaderComponentType m_Type;
 		GLuint m_glType;
+		bool m_Compiled;
 
 	public:
 		ShaderComponentImpl(RendererImpl *prend, Renderer::ShaderComponentType type);

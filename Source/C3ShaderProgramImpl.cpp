@@ -24,7 +24,7 @@ ShaderProgramImpl::~ShaderProgramImpl()
 {
 	if (m_Rend && (m_glID != GL_INVALID_VALUE))
 	{
-		m_Rend->gl.DeleteShader(m_glID);
+		m_Rend->gl.DeleteProgram(m_glID);
 		m_glID = GL_INVALID_VALUE;
 	}
 }
@@ -59,6 +59,25 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::Link()
 		return ShaderProgram::RETURNCODE::RET_CREATE_FAILED;
 
 	m_Rend->gl.LinkProgram(m_glID);
+
+	return ShaderProgram::RETURNCODE::RET_OK;
+}
+
+
+ShaderProgram::RETURNCODE ShaderProgramImpl::Bind()
+{
+	if (m_glID == GL_INVALID_VALUE)
+		return ShaderProgram::RETURNCODE::RET_NOT_INITIALIZED;
+
+	m_Rend->gl.UseProgram(m_glID);
+
+	return ShaderProgram::RETURNCODE::RET_OK;
+}
+
+
+ShaderProgram::RETURNCODE ShaderProgramImpl::Unbind()
+{
+	m_Rend->gl.UseProgram(0);
 
 	return ShaderProgram::RETURNCODE::RET_OK;
 }

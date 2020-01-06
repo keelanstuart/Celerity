@@ -20,6 +20,9 @@ System *System::Create(props::TFlags64 flags)
 
 SystemImpl::SystemImpl()
 {
+	// we have a log by default... it will pipe to WARNINGS if nothing else
+	m_Log = new LogImpl(this);
+
 	m_Renderer = nullptr;
 }
 
@@ -37,6 +40,12 @@ void SystemImpl::Release()
 		delete m_Renderer;
 		m_Renderer = nullptr;
 	}
+
+	if (m_Log)
+	{
+		delete m_Log;
+		m_Log = nullptr;
+	}
 }
 
 
@@ -48,4 +57,10 @@ Renderer *SystemImpl::GetRenderer()
 	}
 
 	return m_Renderer;
+}
+
+
+Log *SystemImpl::GetLog()
+{
+	return m_Log;
 }

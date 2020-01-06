@@ -52,6 +52,9 @@ namespace c3
 		/// Returns the current depth target
 		virtual DepthBuffer *GetDepthTarget() = NULL;
 
+		/// Finalizes the creation of the frame buffer and indicates whether it is complete
+		virtual RETURNCODE Seal() = NULL;
+
 	};
 
 };

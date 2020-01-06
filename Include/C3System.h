@@ -21,6 +21,8 @@ namespace c3
 
 		virtual Renderer *GetRenderer() = NULL;
 
+		virtual Log *GetLog() = NULL;
+
 	};
 
 };

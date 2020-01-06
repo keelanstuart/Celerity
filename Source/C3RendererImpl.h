@@ -42,6 +42,8 @@ namespace c3
 
 		virtual void Shutdown();
 
+		virtual System *GetSystem();
+
 		virtual bool BeginScene(props::TFlags64 flags);
 
 		virtual bool EndScene(props::TFlags64 flags);
