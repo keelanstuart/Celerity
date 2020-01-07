@@ -21,6 +21,7 @@ namespace c3
 	protected:
 		RendererImpl *m_Renderer;
 		FactoryImpl *m_Factory;
+		pool::IThreadPool *m_Pool;
 		LogImpl *m_Log;
 
 	public:
@@ -33,6 +34,8 @@ namespace c3
 		virtual Renderer *GetRenderer();
 
 		virtual Factory *GetFactory();
+
+		virtual pool::IThreadPool *GetThreadPool();
 
 		virtual Log *GetLog();
 

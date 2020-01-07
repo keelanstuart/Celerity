@@ -17,6 +17,9 @@ protected:
 	c3::Texture2D *m_ColorTarg[2];
 	c3::DepthBuffer *m_DepthTarg;
 
+	c3::Factory *m_Factory;
+	c3::Object *m_RootObj;
+
 // Construction
 public:
 	C3Dlg(CWnd* pParent = nullptr);	// standard constructor

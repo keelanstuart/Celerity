@@ -42,6 +42,19 @@ void SystemImpl::Release()
 		m_Renderer = nullptr;
 	}
 
+	if (m_Factory)
+	{
+		delete m_Factory;
+		m_Factory = nullptr;
+	}
+
+	if (m_Pool)
+	{
+		m_Pool->WaitForAllTasks(INFINITE);
+		m_Pool->Release();
+		m_Pool = nullptr;
+	}
+
 	if (m_Log)
 	{
 		delete m_Log;
@@ -69,6 +82,17 @@ Factory *SystemImpl::GetFactory()
 	}
 
 	return m_Factory;
+}
+
+
+pool::IThreadPool *SystemImpl::GetThreadPool()
+{
+	if (!m_Pool)
+	{
+		m_Pool = pool::IThreadPool::Create(1, 0);
+	}
+
+	return m_Pool;
 }
 
 

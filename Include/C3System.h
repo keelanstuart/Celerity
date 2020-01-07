@@ -28,6 +28,8 @@ namespace c3
 
 		virtual Factory *GetFactory() = NULL;
 
+		virtual pool::IThreadPool *GetThreadPool() = NULL;
+
 		virtual Log *GetLog() = NULL;
 
 	};

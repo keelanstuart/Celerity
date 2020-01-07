@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 #include <PowerProps.h>
+#include <Pool.h>
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
 

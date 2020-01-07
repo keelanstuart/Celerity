@@ -55,6 +55,9 @@ BOOL C3Dlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
+	m_Factory = theApp.m_C3->GetFactory();
+	m_RootObj = m_Factory->Build();
+
 	m_Rend = theApp.m_C3->GetRenderer();
 	if (!m_Rend)
 		exit(-1);
@@ -223,6 +226,9 @@ void C3Dlg::OnFinalRelease()
 
 	if (m_Rend)
 		m_Rend->Shutdown();
+
+	if (m_RootObj)
+		m_RootObj->Release();
 
 	CDialog::OnFinalRelease();
 }

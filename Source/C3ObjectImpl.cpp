@@ -80,6 +80,35 @@ void ObjectImpl::SetOwner(Object *powner)
 }
 
 
+size_t ObjectImpl::GetNumChildren()
+{
+	return m_Children.size();
+}
+
+
+Object *ObjectImpl::GetChild(size_t index)
+{
+	if (index >= m_Children.size())
+		return nullptr;
+
+	return m_Children[index];
+}
+
+
+void ObjectImpl::AddChild(Object *pchild)
+{
+	if (!pchild)
+		return;
+
+	if (std::find(m_Children.cbegin(), m_Children.cend(), pchild) != m_Children.cend())
+	{
+		m_Children.push_back(pchild);
+
+		pchild->SetOwner(this);
+	}
+}
+
+
 props::TFlags64 &ObjectImpl::Flags()
 {
 	return m_Flags;

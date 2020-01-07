@@ -18,12 +18,15 @@ namespace c3
 		GUID m_GUID;
 		props::TFlags64 m_Flags;
 
-		Object *m_Owner;
-
 		props::IPropertySet *m_Props;
 
 		typedef std::deque<Comportment *> TComportmentArray;
 		TComportmentArray m_Comportments;
+
+		Object *m_Owner;
+
+		typedef std::deque<Object *> TObjectArray;
+		TObjectArray m_Children;
 
 	public:
 
@@ -44,6 +47,12 @@ namespace c3
 		virtual Object *GetOwner();
 
 		virtual void SetOwner(Object *powner);
+
+		virtual size_t GetNumChildren();
+
+		virtual Object *GetChild(size_t index);
+
+		virtual void AddChild(Object *pchild);
 
 		virtual props::TFlags64 &Flags();
 
