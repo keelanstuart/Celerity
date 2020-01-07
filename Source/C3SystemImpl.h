@@ -10,6 +10,7 @@
 
 #include <C3RendererImpl.h>
 #include <C3LogImpl.h>
+#include <C3FactoryImpl.h>
 
 namespace c3
 {
@@ -19,6 +20,7 @@ namespace c3
 
 	protected:
 		RendererImpl *m_Renderer;
+		FactoryImpl *m_Factory;
 		LogImpl *m_Log;
 
 	public:
@@ -29,6 +31,8 @@ namespace c3
 		virtual void Release();
 
 		virtual Renderer *GetRenderer();
+
+		virtual Factory *GetFactory();
 
 		virtual Log *GetLog();
 

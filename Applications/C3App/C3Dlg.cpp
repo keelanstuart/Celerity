@@ -27,7 +27,7 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_VB = nullptr;
 	m_IB = nullptr;
 	m_FB = nullptr;
-	m_ColorTarg[2] = {nullptr};
+	memset(m_ColorTarg, 0, sizeof(c3::Texture2D *) * 2);;
 	m_DepthTarg = nullptr;
 }
 

@@ -33,6 +33,9 @@ typedef glm::fvec4	C3VEC4;
 #include <C3ShaderProgram.h>
 #include <C3Renderer.h>
 #include <C3Log.h>
+#include <C3Comportment.h>
+#include <C3Object.h>
+#include <C3Prototype.h>
+#include <C3Factory.h>
 #include <C3System.h>
-
 

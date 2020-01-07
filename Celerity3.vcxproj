@@ -28,10 +28,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Source\C3DepthBufferImpl.cpp" />
+    <ClCompile Include="Source\C3FactoryImpl.cpp" />
     <ClCompile Include="Source\C3FrameBufferImpl.cpp" />
     <ClCompile Include="Source\C3IndexBufferImpl.cpp" />
     <ClCompile Include="Source\C3LogImpl.cpp" />
     <ClCompile Include="Source\C3MatrixStackImpl.cpp" />
+    <ClCompile Include="Source\C3ObjectImpl.cpp" />
+    <ClCompile Include="Source\C3PrototypeImpl.cpp" />
     <ClCompile Include="Source\C3RendererImpl.cpp" />
     <ClCompile Include="Source\C3ShaderComponentImpl.cpp" />
     <ClCompile Include="Source\C3ShaderProgramImpl.cpp" />
@@ -65,11 +68,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3.h" />
+    <ClInclude Include="Include\C3Comportment.h" />
     <ClInclude Include="Include\C3DepthBuffer.h" />
+    <ClInclude Include="Include\C3Factory.h" />
     <ClInclude Include="Include\C3FrameBuffer.h" />
     <ClInclude Include="Include\C3IndexBuffer.h" />
     <ClInclude Include="Include\C3Log.h" />
     <ClInclude Include="Include\C3MatrixStack.h" />
+    <ClInclude Include="Include\C3Object.h" />
+    <ClInclude Include="Include\C3Prototype.h" />
     <ClInclude Include="Include\C3Renderer.h" />
     <ClInclude Include="Include\C3ShaderComponent.h" />
     <ClInclude Include="Include\C3ShaderProgram.h" />
@@ -77,10 +84,13 @@
     <ClInclude Include="Include\C3Texture.h" />
     <ClInclude Include="Include\C3VertexBuffer.h" />
     <ClInclude Include="Source\C3DepthBufferImpl.h" />
+    <ClInclude Include="Source\C3FactoryImpl.h" />
     <ClInclude Include="Source\C3FrameBufferImpl.h" />
     <ClInclude Include="Source\C3IndexBufferImpl.h" />
     <ClInclude Include="Source\C3LogImpl.h" />
     <ClInclude Include="Source\C3MatrixStackImpl.h" />
+    <ClInclude Include="Source\C3ObjectImpl.h" />
+    <ClInclude Include="Source\C3PrototypeImpl.h" />
     <ClInclude Include="Source\C3RendererImpl.h" />
     <ClInclude Include="Source\C3ShaderProgramImpl.h" />
     <ClInclude Include="Source\C3ShaderComponentImpl.h" />
@@ -177,7 +187,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|Win32'">
@@ -185,7 +195,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -193,7 +203,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">
@@ -201,7 +211,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -209,7 +219,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -217,7 +227,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">

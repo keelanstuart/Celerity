@@ -24,6 +24,7 @@ SystemImpl::SystemImpl()
 	m_Log = new LogImpl(this);
 
 	m_Renderer = nullptr;
+	m_Factory = nullptr;
 }
 
 
@@ -57,6 +58,17 @@ Renderer *SystemImpl::GetRenderer()
 	}
 
 	return m_Renderer;
+}
+
+
+Factory *SystemImpl::GetFactory()
+{
+	if (!m_Factory)
+	{
+		m_Factory = new FactoryImpl(this);
+	}
+
+	return m_Factory;
 }
 
 
