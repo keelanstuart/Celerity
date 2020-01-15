@@ -62,7 +62,9 @@ namespace c3
 
 		virtual Comportment *GetComportment(size_t index);
 
-		virtual Comportment *AddComportment(ComportmentType *pctype);
+		virtual Comportment *FindComportment(const ComportmentType *pctype);
+
+		virtual Comportment *AddComportment(const ComportmentType *pctype);
 
 		virtual void RemoveComportment(Comportment *pcomportmemt);
 

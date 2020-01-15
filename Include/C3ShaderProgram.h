@@ -23,6 +23,7 @@ namespace c3
 
 			RET_CREATE_FAILED,
 			RET_NULL_SHADER,
+			RET_BAD_TYPE,
 			RET_PROGRAM_INCOMPLETE,
 			RET_LINK_FAILED,
 			RET_NOT_INITIALIZED
@@ -32,9 +33,6 @@ namespace c3
 
 		virtual RETURNCODE AttachShader(ShaderComponent *pshader) = NULL;
 		virtual RETURNCODE Link() = NULL;
-
-		virtual RETURNCODE Bind() = NULL;
-		virtual RETURNCODE Unbind() = NULL;
 
 	};
 

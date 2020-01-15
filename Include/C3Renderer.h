@@ -6,9 +6,7 @@
 
 #pragma once
 
-#if defined(_WIN32) || defined(_WIN64)
-#include <Windows.h>
-#endif
+#include <c3.h>
 
 namespace c3
 {
@@ -21,6 +19,7 @@ namespace c3
 	class DepthBuffer;
 	class VertexBuffer;
 	class IndexBuffer;
+	class Mesh;
 	class FrameBuffer;
 	class ShaderComponent;
 	class ShaderProgram;
@@ -30,7 +29,7 @@ namespace c3
 
 	public:
 
-		typedef enum EPrimitiveType
+		typedef enum EPrimType
 		{
 			POINTLIST = 0,
 			LINELIST,
@@ -99,7 +98,15 @@ namespace c3
 		/// Initializes the Renderer
 		virtual bool Initialize(size_t width, size_t height, HWND hwnd, props::TFlags64 flags) = NULL;
 
+		virtual bool Initialized() = NULL;
+
 		virtual void Shutdown() = NULL;
+
+		virtual void SetClearColor(const C3VEC4 *color = nullptr) = NULL;
+		virtual const C3VEC4 *GetClearColor(C3VEC4 *color = nullptr) = NULL;
+
+		virtual void SetClearDepth(float depth = 1.0f) = NULL;
+		virtual float GetClearDepth() = NULL;
 
 		/// Prepares the Renderer for rendering
 		virtual bool BeginScene(props::TFlags64 flags) = NULL;
@@ -118,13 +125,17 @@ namespace c3
 
 		virtual VertexBuffer *CreateVertexBuffer(props::TFlags64 flags = 0) = NULL;
 		virtual IndexBuffer *CreateIndexBuffer(props::TFlags64 flags = 0) = NULL;
+		virtual Mesh *CreateMesh() = NULL;
 
 		virtual ShaderProgram *CreateShaderProgram() = NULL;
 		virtual ShaderComponent *CreateShaderComponent(ShaderComponentType type) = NULL;
 
 		virtual void UseFrameBuffer(FrameBuffer *pfb) = NULL;
+		virtual FrameBuffer *GetActiveFrameBuffer() = NULL;
 
 		virtual void UseProgram(ShaderProgram *pprog) = NULL;
+		virtual void UseVertexBuffer(VertexBuffer *pvbuf) = NULL;
+		virtual void UseIndexBuffer(IndexBuffer *pibuf) = NULL;
 
 		virtual bool DrawPrimitives(PrimType type, size_t count = -1) = NULL;
 
@@ -133,6 +144,8 @@ namespace c3
 		virtual void SetProjectionMatrix(const C3MATRIX *m) = NULL;
 		virtual void SetViewMatrix(const C3MATRIX *m) = NULL;
 		virtual void SetWorldMatrix(const C3MATRIX *m) = NULL;
+
+		virtual Mesh *GetBoundsMesh() = NULL;
 
 	};
 

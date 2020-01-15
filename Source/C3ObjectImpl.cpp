@@ -136,16 +136,39 @@ Comportment *ObjectImpl::GetComportment(size_t index)
 }
 
 
-Comportment *ObjectImpl::AddComportment(ComportmentType *pctype)
+Comportment *ObjectImpl::FindComportment(const ComportmentType *pctype)
 {
-	if (pctype)
+	Comportment *ret = nullptr;
+
+	for (size_t i = 0, maxi = m_Comportments.size(); i < maxi; i++)
+	{
+		if (m_Comportments[i]->GetType() == pctype)
+		{
+			ret = m_Comportments[i];
+			break;
+		}
+	}
+
+	return ret;
+}
+
+
+Comportment *ObjectImpl::AddComportment(const ComportmentType *pctype)
+{
+	if (!pctype)
 		return nullptr;
 
-	Comportment *pc = pctype->Build(this);
+	Comportment *pc = FindComportment(pctype);
+	if (pc)
+		return pc;
+
+	pc = pctype->Build();
 	if (!pc)
 		return nullptr;
 
 	m_Comportments.push_back(pc);
+
+	pc->Initialize(this);
 
 	return pc;
 }
@@ -166,7 +189,7 @@ void ObjectImpl::Update(float elapsed_time)
 {
 	for (TComportmentArray::const_iterator it = m_Comportments.cbegin(), last_it = m_Comportments.cend(); it != last_it; it++)
 	{
-		(*it)->Update(elapsed_time);
+		(*it)->Update(this, elapsed_time);
 	}
 }
 
@@ -174,12 +197,24 @@ void ObjectImpl::Update(float elapsed_time)
 bool ObjectImpl::Prerender(props::TFlags64 rendflags)
 {
 	// TODO: port visibility culling
-	return true;
+
+	for (TComportmentArray::const_iterator it = m_Comportments.cbegin(), last_it = m_Comportments.cend(); it != last_it; it++)
+	{
+		if ((*it)->Prerender(this, rendflags))
+			return true;
+	}
+
+	return false;
 }
 
 
 bool ObjectImpl::Render(props::TFlags64 rendflags)
 {
+	for (TComportmentArray::const_iterator it = m_Comportments.cbegin(), last_it = m_Comportments.cend(); it != last_it; it++)
+	{
+		(*it)->Render(this, rendflags);
+	}
+
 	return true;
 }
 

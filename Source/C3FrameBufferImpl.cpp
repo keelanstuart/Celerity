@@ -61,13 +61,17 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachColorTarget(Texture2D *target, si
 {
 	if (m_Rend && (m_glID != GL_INVALID_VALUE))
 	{
+		FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
+		m_Rend->UseFrameBuffer(this);
+
 		if (position <= m_ColorTarget.size())
 			m_ColorTarget.resize(position + 1, nullptr);
 
 		m_ColorTarget[position] = target;
 
-		m_Rend->gl.BindFramebuffer(GL_FRAMEBUFFER, m_glID);
 		m_Rend->gl.FramebufferTexture(GL_FRAMEBUFFER, targenum[position], (const Texture2DImpl &)*target, 0);
+
+		m_Rend->UseFrameBuffer(curfb);
 	}
 
 	return FrameBuffer::RETURNCODE::RET_OK;
@@ -94,7 +98,15 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachDepthTarget(DepthBuffer* pdepth)
 	if (!pdepth)
 		return FrameBuffer::RETURNCODE::RET_NULLTARGET;
 
-	m_Rend->gl.FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, (const DepthBufferImpl &)*pdepth);
+	if (m_Rend)
+	{
+		FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
+		m_Rend->UseFrameBuffer(this);
+
+		m_Rend->gl.FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, (const DepthBufferImpl &)*pdepth);
+
+		m_Rend->UseFrameBuffer(curfb);
+	}
 
 	return FrameBuffer::RETURNCODE::RET_OK;
 }
@@ -108,12 +120,20 @@ DepthBuffer* FrameBufferImpl::GetDepthTarget()
 
 FrameBuffer::RETURNCODE FrameBufferImpl::Seal()
 {
-	m_Rend->gl.BindFramebuffer(GL_FRAMEBUFFER, m_glID);
+	RETURNCODE ret = RETURNCODE::RET_INCOMPLETE;
 
-	m_Rend->gl.DrawBuffers((GLsizei)m_ColorTarget.size(), targenum);
+	if (m_Rend)
+	{
+		FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
+		m_Rend->UseFrameBuffer(this);
 
-	if (m_Rend->gl.CheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
-		return RETURNCODE::RET_OK;
+		m_Rend->gl.DrawBuffers((GLsizei)m_ColorTarget.size(), targenum);
 
-	return RETURNCODE::RET_INCOMPLETE;
+		if (m_Rend->gl.CheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+			ret = RETURNCODE::RET_OK;
+
+		m_Rend->UseFrameBuffer(curfb);
+	}
+
+	return ret;
 }

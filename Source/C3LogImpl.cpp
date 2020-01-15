@@ -106,5 +106,9 @@ void LogImpl::Print(const TCHAR *format, ...)
 	if (m_pcbRedirect)
 		m_pcbRedirect(m_pUserData, buf);
 
+#if defined(UNICODE)
+	_RPTW0(_CRT_WARN, buf);
+#else
 	_RPT0(_CRT_WARN, buf);
+#endif
 }

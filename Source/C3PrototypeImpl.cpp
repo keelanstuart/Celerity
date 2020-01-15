@@ -24,11 +24,6 @@ PrototypeImpl::PrototypeImpl(System *psys, GUID guid)
 
 PrototypeImpl::~PrototypeImpl()
 {
-	for (TComportmentArray::const_iterator it = m_Comportments.cbegin(), last_it = m_Comportments.cend(); it != last_it; it++)
-	{
-		(*it)->GetType()->Destroy((*it));
-	}
-
 	m_Comportments.clear();
 
 	if (m_Props)
@@ -69,23 +64,22 @@ props::IPropertySet *PrototypeImpl::GetProperties()
 }
 
 
-bool PrototypeImpl::AddComportment(Comportment *pcomp)
+bool PrototypeImpl::AddComportment(ComportmentType *pcomptype)
 {
-	if (std::find(m_Comportments.cbegin(), m_Comportments.cend(), pcomp) != m_Comportments.cend())
+	if (std::find(m_Comportments.cbegin(), m_Comportments.cend(), pcomptype) != m_Comportments.cend())
 		return false;
 
-	m_Comportments.push_back(pcomp);
+	m_Comportments.push_back(pcomptype);
 
 	return true;
 }
 
 
-bool PrototypeImpl::RemoveComportment(Comportment *pcomp)
+bool PrototypeImpl::RemoveComportment(ComportmentType *pcomp)
 {
 	TComportmentArray::iterator it = std::find(m_Comportments.begin(), m_Comportments.end(), pcomp);
 	if (it != m_Comportments.end())
 	{
-		(*it)->GetType()->Destroy((*it));
 		m_Comportments.erase(it);
 
 		return true;
@@ -101,7 +95,7 @@ size_t PrototypeImpl::GetNumComportments()
 }
 
 
-Comportment *PrototypeImpl::GetComportment(size_t index)
+ComportmentType *PrototypeImpl::GetComportment(size_t index)
 {
 	if (index >= m_Comportments.size())
 		return nullptr;

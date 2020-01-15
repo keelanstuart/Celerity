@@ -29,13 +29,10 @@ namespace c3
 
 		virtual void Release();
 
-		virtual RETURNCODE Lock(void **buffer, size_t count, IndexSize sz, props::TFlags64 flags);
+		virtual RETURNCODE Lock(void **buffer, size_t numindices, IndexSize sz, props::TFlags64 flags);
 		virtual void Unlock();
 
 		virtual size_t Count();
-
-		virtual void Bind();
-		virtual void Unbind();
 
 		virtual size_t GetIndexSize();
 

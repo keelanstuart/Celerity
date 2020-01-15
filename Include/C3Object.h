@@ -109,8 +109,11 @@ namespace c3
 		/// Returns the attached Comportment at the given index
 		virtual Comportment *GetComportment(size_t index) = NULL;
 
+		/// Returns an attached Comportment with the given ComportmentType
+		virtual Comportment *FindComportment(const ComportmentType *pctype) = NULL;
+
 		/// Creates, attaches, and returns a Comportment of the given ComportmentType
-		virtual Comportment *AddComportment(ComportmentType *pctype) = NULL;
+		virtual Comportment *AddComportment(const ComportmentType *pctype) = NULL;
 
 		/// Removes the given Comportment
 		virtual void RemoveComportment(Comportment *pcomportmemt) = NULL;

@@ -33,6 +33,7 @@ VertexBufferImpl::~VertexBufferImpl()
 
 	if (m_Rend && (m_glID != GL_INVALID_VALUE))
 	{
+		m_Rend->UseVertexBuffer(nullptr);
 		m_Rend->gl.DeleteBuffers(1, &m_glID);
 		m_glID = GL_INVALID_VALUE;
 	}
@@ -45,12 +46,12 @@ void VertexBufferImpl::Release()
 }
 
 
-VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t count, const ComponentDescription *components, props::TFlags64 flags)
+VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, const ComponentDescription *components, props::TFlags64 flags)
 {
 	if (m_Buffer)
 		return RET_ALREADY_LOCKED;
 
-	if (!count)
+	if (!numverts)
 		return RET_ZERO_ELEMENTS;
 
 	if (!buffer)
@@ -90,12 +91,12 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t count, con
 		mode = GL_WRITE_ONLY;
 
 	// bind the buffer
-	Bind();
+	m_Rend->UseVertexBuffer(this);
 
 	if (init)
 	{
 		// make sure that it is allocated
-		m_Rend->gl.BufferData(GL_ARRAY_BUFFER, sz * count, NULL, GL_STATIC_DRAW);
+		m_Rend->gl.BufferData(GL_ARRAY_BUFFER, sz * numverts, NULL, GL_STATIC_DRAW);
 	}
 
 	m_Buffer = m_Rend->gl.MapBuffer(GL_ARRAY_BUFFER, mode);
@@ -103,7 +104,7 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t count, con
 		return RET_MAPBUFFER_FAILED;
 
 	m_VertSize = sz;
-	m_NumVerts = count;
+	m_NumVerts = numverts;
 
 	*buffer = m_Buffer;
 
@@ -117,8 +118,6 @@ void VertexBufferImpl::Unlock()
 	{
 		m_Rend->gl.UnmapBuffer(GL_ARRAY_BUFFER);
 
-		Unbind();
-
 		m_Buffer = NULL;
 	}
 }
@@ -127,18 +126,6 @@ void VertexBufferImpl::Unlock()
 size_t VertexBufferImpl::Count()
 {
 	return m_NumVerts;
-}
-
-
-void VertexBufferImpl::Bind()
-{
-	m_Rend->gl.BindBuffer(GL_ARRAY_BUFFER, m_glID);
-}
-
-
-void VertexBufferImpl::Unbind()
-{
-	m_Rend->gl.BindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 

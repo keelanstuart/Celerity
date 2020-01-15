@@ -35,7 +35,7 @@ namespace c3
 		virtual Prototype *CreatePrototype(Prototype *pproto = nullptr) = NULL;
 
 		/// Creates a new Prototype, optionally copying the attributes of an existing Object
-		virtual Prototype *CreatePrototype(Object *pobject = nullptr) = NULL;
+		virtual Prototype *MakePrototype(Object *pobject = nullptr) = NULL;
 
 		/// Removes a Prototype from the Factory
 		virtual void RemovePrototype(Prototype *pproto) = NULL;

@@ -56,7 +56,6 @@ BOOL C3Dlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	m_Factory = theApp.m_C3->GetFactory();
-	m_RootObj = m_Factory->Build();
 
 	m_Rend = theApp.m_C3->GetRenderer();
 	if (!m_Rend)
@@ -67,6 +66,7 @@ BOOL C3Dlg::OnInitDialog()
 	if (!m_Rend->Initialize(r.Width(), r.Height(), GetSafeHwnd(), 0))
 		exit(-2);
 
+#if 1
 	m_FB = m_Rend->CreateFrameBuffer();
 	if (m_FB)
 	{
@@ -85,8 +85,12 @@ BOOL C3Dlg::OnInitDialog()
 
 			m_FB->Seal();
 		}
-	}
 
+//		m_Rend->UseFrameBuffer(m_FB);
+	}
+#endif
+
+#if 1
 	m_Tex = m_Rend->CreateTexture2D(64, 64, c3::Renderer::ETextureType::U8_4CH, 0);
 	if (m_Tex)
 	{
@@ -98,7 +102,7 @@ BOOL C3Dlg::OnInitDialog()
 			{
 				for (size_t x = 0, maxx = li.width; x < maxx; x++)
 				{
-					((uint32_t *)buf)[x] = 0xFF00FFFF;
+					((uint32_t *)buf)[x] = 0x8000FF00;
 				}
 
 				buf += li.stride;
@@ -107,51 +111,21 @@ BOOL C3Dlg::OnInitDialog()
 			m_Tex->Unlock();
 		}
 	}
+#endif
 
-	m_VB = m_Rend->CreateVertexBuffer();
-	if (m_VB)
-	{
-		c3::VertexBuffer::ComponentDescription comps[4] = {
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_NORMAL},
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
+	c3::Prototype *pproto = m_Factory->CreatePrototype();
+	pproto->AddComportment(m_Factory->FindComportmentType(_T("UIControl")));
+	pproto->AddComportment(m_Factory->FindComportmentType(_T("Positionable")));
+	pproto->SetName(_T("GenericControl"));
 
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
-		};
+	props::IProperty *pprop = pproto->GetProperties()->CreateProperty(_T("Image"), 'IMG');
+	pprop->SetString(_T("default.tga"));
+	pprop->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
 
-		typedef struct
-		{
-			glm::vec3 pos;
-			glm::vec3 norm;
-			glm::vec2 uv;
-		} SSimpleVert;
+	m_RootObj = m_Factory->Build(pproto);
 
-		SSimpleVert v[4] ={{{0, 0, 0}, {0, 0, 1}, {0, 0}}, {{1, 0, 0}, {0, 0, 1}, {1, 0}}, {{0, 1, 0}, {0, 0, 1}, {0, 1}}, {{1, 1, 0}, {0, 0, 1}, {1, 1}}};
 
-		void *buf;
-		if (m_VB->Lock(&buf, 4, comps, VBLOCKFLAG_WRITE) == c3::VertexBuffer::RETURNCODE::RET_OK)
-		{
-			memcpy(buf, v, sizeof(SSimpleVert));
-
-			m_VB->Unlock();
-		}
-	}
-
-	m_IB = m_Rend->CreateIndexBuffer();
-	if (m_IB)
-	{
-		int16_t i[2][3] = {{0, 1, 2}, {0, 2, 3}};
-
-		void *buf;
-		if (m_IB->Lock(&buf, 6, c3::IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == c3::IndexBuffer::RETURNCODE::RET_OK)
-		{
-			memcpy(buf, i, 6 * sizeof(int16_t));
-
-			m_IB->Unlock();
-		}
-	}
-
-	SetTimer('DRAW', 16, NULL);
+	SetTimer('DRAW', 33, NULL);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -183,6 +157,11 @@ void C3Dlg::OnPaint()
 	{
 		if (m_Rend->BeginScene(0))
 		{
+			m_RootObj->Update(0);
+			if (m_RootObj->Prerender(0))
+				if (m_RootObj->Render(0))
+					m_RootObj->Postrender(0);
+
 			m_Rend->EndScene(0);
 		}
 
@@ -198,37 +177,68 @@ HCURSOR C3Dlg::OnQueryDragIcon()
 }
 
 
-
-void C3Dlg::OnFinalRelease()
+void C3Dlg::Cleanup()
 {
 	KillTimer('DRAW');
 
 	if (m_Tex)
+	{
 		m_Tex->Release();
+		m_Tex = nullptr;
+	}
 
 	if (m_VB)
+	{
 		m_VB->Release();
+		m_VB = nullptr;
+	}
 
 	if (m_IB)
+	{
 		m_IB->Release();
+		m_IB = nullptr;
+	}
 
 	if (m_ColorTarg[0])
+	{
 		m_ColorTarg[0]->Release();
+		m_ColorTarg[0] = nullptr;
+	}
 
 	if (m_ColorTarg[1])
+	{
 		m_ColorTarg[1]->Release();
+		m_ColorTarg[1] = nullptr;
+	}
 
 	if (m_DepthTarg)
+	{
 		m_DepthTarg->Release();
+		m_DepthTarg = nullptr;
+	}
 
 	if (m_FB)
+	{
 		m_FB->Release();
+		m_FB = nullptr;
+	}
 
 	if (m_Rend)
+	{
 		m_Rend->Shutdown();
+		m_Rend = nullptr;
+	}
 
 	if (m_RootObj)
+	{
 		m_RootObj->Release();
+		m_RootObj = nullptr;
+	}
+}
+
+void C3Dlg::OnFinalRelease()
+{
+	Cleanup();
 
 	CDialog::OnFinalRelease();
 }
@@ -249,7 +259,15 @@ BOOL C3Dlg::OnEraseBkgnd(CDC *pDC)
 void C3Dlg::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == 'DRAW')
-		Invalidate(0);
+		RedrawWindow(nullptr, nullptr, RDW_NOERASE | RDW_UPDATENOW);
 
 	CDialog::OnTimer(nIDEvent);
+}
+
+
+BOOL C3Dlg::DestroyWindow()
+{
+	Cleanup();
+
+	return CDialog::DestroyWindow();
 }

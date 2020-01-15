@@ -32,6 +32,7 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 
+	void Cleanup();
 
 // Implementation
 protected:
@@ -47,4 +48,5 @@ public:
 	virtual BOOL PreCreateWindow(CREATESTRUCT &cs);
 	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	virtual BOOL DestroyWindow();
 };

@@ -33,7 +33,9 @@
     <ClCompile Include="Source\C3IndexBufferImpl.cpp" />
     <ClCompile Include="Source\C3LogImpl.cpp" />
     <ClCompile Include="Source\C3MatrixStackImpl.cpp" />
+    <ClCompile Include="Source\C3MeshImpl.cpp" />
     <ClCompile Include="Source\C3ObjectImpl.cpp" />
+    <ClCompile Include="Source\C3PositionableImpl.cpp" />
     <ClCompile Include="Source\C3PrototypeImpl.cpp" />
     <ClCompile Include="Source\C3RendererImpl.cpp" />
     <ClCompile Include="Source\C3ShaderComponentImpl.cpp" />
@@ -68,6 +70,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3.h" />
+    <ClInclude Include="Include\C3Camera.h" />
     <ClInclude Include="Include\C3Comportment.h" />
     <ClInclude Include="Include\C3DepthBuffer.h" />
     <ClInclude Include="Include\C3Factory.h" />
@@ -75,7 +78,9 @@
     <ClInclude Include="Include\C3IndexBuffer.h" />
     <ClInclude Include="Include\C3Log.h" />
     <ClInclude Include="Include\C3MatrixStack.h" />
+    <ClInclude Include="Include\C3Mesh.h" />
     <ClInclude Include="Include\C3Object.h" />
+    <ClInclude Include="Include\C3Positionable.h" />
     <ClInclude Include="Include\C3Prototype.h" />
     <ClInclude Include="Include\C3Renderer.h" />
     <ClInclude Include="Include\C3ShaderComponent.h" />
@@ -83,13 +88,16 @@
     <ClInclude Include="Include\C3System.h" />
     <ClInclude Include="Include\C3Texture.h" />
     <ClInclude Include="Include\C3VertexBuffer.h" />
+    <ClInclude Include="Source\C3CameraImpl.h" />
     <ClInclude Include="Source\C3DepthBufferImpl.h" />
     <ClInclude Include="Source\C3FactoryImpl.h" />
     <ClInclude Include="Source\C3FrameBufferImpl.h" />
     <ClInclude Include="Source\C3IndexBufferImpl.h" />
     <ClInclude Include="Source\C3LogImpl.h" />
     <ClInclude Include="Source\C3MatrixStackImpl.h" />
+    <ClInclude Include="Source\C3MeshImpl.h" />
     <ClInclude Include="Source\C3ObjectImpl.h" />
+    <ClInclude Include="Source\C3PositionableImpl.h" />
     <ClInclude Include="Source\C3PrototypeImpl.h" />
     <ClInclude Include="Source\C3RendererImpl.h" />
     <ClInclude Include="Source\C3ShaderProgramImpl.h" />

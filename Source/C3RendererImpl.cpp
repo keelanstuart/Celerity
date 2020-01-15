@@ -13,6 +13,7 @@
 #include <C3TextureImpl.h>
 #include <C3VertexBufferImpl.h>
 #include <C3IndexBufferImpl.h>
+#include <C3MeshImpl.h>
 #include <C3FrameBufferImpl.h>
 
 using namespace c3;
@@ -25,6 +26,24 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_hwnd = NULL;
 	m_hdc = NULL;
 	m_glrc = NULL;
+
+	m_clearZ = 1.0f;
+
+	m_CurFB = nullptr;
+	m_CurFBID = 0;
+
+	m_CurIB = nullptr;
+	m_CurIBID = 0;
+
+	m_CurVB = nullptr;
+	m_CurVBID = 0;
+
+	m_CurProg = nullptr;
+	m_CurProgID = 0;
+
+	m_CubeVB = nullptr;
+	m_BoundsMesh = nullptr;
+	m_CubeMesh = nullptr;
 
 	memset(&m_glARBWndClass, 0, sizeof(WNDCLASS));
 
@@ -146,6 +165,8 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 			};
 
 			m_glrc = wglCreateContextAttribsARB(m_hdc, 0, contextAttribList);
+			m_glrc_aux = wglCreateContextAttribsARB(m_hdc, 0, contextAttribList);
+			wglShareLists(m_glrc_aux, m_glrc);
 
 			wglMakeCurrent(NULL, NULL);
 
@@ -164,6 +185,10 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 
 	m_Initialized = true;
 
+	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
+	if (wglSwapIntervalEXT)
+		wglSwapIntervalEXT(0);
+
 	RECT r;
 	GetClientRect(m_hwnd, &r);
 	if (width != -1)
@@ -177,13 +202,22 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 	SetViewMatrix(&m_ident);
 	SetWorldMatrix(&m_ident);
 
-	gl.ShadeModel(GL_SMOOTH);
-	gl.ClearColor(1, 0, 1, 1);
-	gl.ClearDepthf(1);
+	// This vertex array is global... only using VBO/IBO pairs. I don't know if this is "correct"
+	gl.GenVertexArrays(1, &m_VAOglID);
+	gl.BindVertexArray(m_VAOglID);
+
+	SetClearColor();
+	gl.ClearDepthf(m_clearZ);
 	gl.Enable(GL_DEPTH_TEST);
 	gl.DepthFunc(GL_LEQUAL);
 
 	return true;
+}
+
+
+bool RendererImpl::Initialized()
+{
+	return m_Initialized;
 }
 
 
@@ -192,11 +226,41 @@ void RendererImpl::Shutdown()
 	if (!m_Initialized)
 		return;
 
+	if (m_BoundsMesh)
+	{
+		m_BoundsMesh->GetIndexBuffer()->Release();
+		m_BoundsMesh->AttachIndexBuffer(nullptr);
+		m_BoundsMesh->AttachVertexBuffer(nullptr);
+		m_BoundsMesh->Release();
+		m_BoundsMesh = nullptr;
+	}
+
+	if (m_CubeMesh)
+	{
+		m_CubeMesh->GetIndexBuffer()->Release();
+		m_CubeMesh->AttachIndexBuffer(nullptr);
+		m_CubeMesh->AttachVertexBuffer(nullptr);
+		m_CubeMesh->Release();
+		m_CubeMesh = nullptr;
+	}
+
+	if (m_CubeVB)
+	{
+		m_CubeVB->Release();
+		m_CubeVB = nullptr;
+	}
+
+	// Delete the global vertex array
+	gl.BindVertexArray(0);
+	gl.DeleteVertexArrays(1, &m_VAOglID);
+
 	wglMakeCurrent(NULL, NULL);
 
+	wglDeleteContext(m_glrc_aux);
 	wglDeleteContext(m_glrc);
 
 	m_glrc = NULL;
+	m_glrc_aux = NULL;
 	m_hdc = NULL;
 	m_hwnd = NULL;
 }
@@ -205,6 +269,52 @@ void RendererImpl::Shutdown()
 c3::System *RendererImpl::GetSystem()
 {
 	return (c3::System *)m_pSys;
+}
+
+
+void RendererImpl::SetClearColor(const C3VEC4 *color)
+{
+	const static C3VEC4 defcolor = C3VEC4(0, 0, 0, 1);
+
+	bool update = false;
+	if (!color)
+		color = &defcolor;
+
+	if (m_clearColor != *color)
+	{
+		m_clearColor = *color;
+		update = true;
+	}
+
+	if (update)
+		gl.ClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+}
+
+
+const C3VEC4 *RendererImpl::GetClearColor(C3VEC4 *color)
+{
+	C3VEC4 *ret = color;
+
+	if (ret)
+		*ret = m_clearColor;
+
+	return ret;
+}
+
+
+void RendererImpl::SetClearDepth(float depth)
+{
+	if (depth != m_clearZ)
+	{
+		m_clearZ = depth;
+		gl.ClearDepth(m_clearZ);
+	}
+}
+
+
+float RendererImpl::GetClearDepth()
+{
+	return m_clearZ;
 }
 
 
@@ -224,7 +334,11 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 	if (!m_Initialized)
 		return false;
 
-	gl.Finish();
+	if (m_needFinish)
+	{
+		gl.Finish();
+		m_needFinish = false;
+	}
 
 	SwapBuffers(m_hdc);
 	return true;
@@ -322,13 +436,13 @@ GLenum RendererImpl::GLInternalFormat(TextureType type)
 			return GL_UNSIGNED_BYTE_3_3_2;
 
 		case Renderer::TextureType::U8_1CH:
-			return GL_R8UI;
+			return GL_R8;
 
 		case Renderer::TextureType::U8_2CH:
-			return GL_RG8UI;
+			return GL_RG8;
 
 		case Renderer::TextureType::U8_3CH:
-			return GL_RGB8UI;
+			return GL_RGB8;
 
 		case Renderer::TextureType::P16_3CH:
 			return GL_UNSIGNED_SHORT_5_6_5;
@@ -341,7 +455,7 @@ GLenum RendererImpl::GLInternalFormat(TextureType type)
 
 		case Renderer::TextureType::U8_3CHX:
 		case Renderer::TextureType::U8_4CH:
-			return GL_RGBA8UI;
+			return GL_RGBA8;
 
 		case Renderer::TextureType::F16_1CH:
 			return GL_R16F;
@@ -447,6 +561,12 @@ IndexBuffer *RendererImpl::CreateIndexBuffer(props::TFlags64 flags)
 }
 
 
+Mesh *RendererImpl::CreateMesh()
+{
+	return new MeshImpl(this);
+}
+
+
 ShaderProgram *RendererImpl::CreateShaderProgram()
 {
 	return new ShaderProgramImpl(this);
@@ -461,31 +581,187 @@ ShaderComponent *RendererImpl::CreateShaderComponent(ShaderComponentType type)
 
 void RendererImpl::UseFrameBuffer(FrameBuffer *pfb)
 {
+	if (pfb == m_CurFB)
+		return;
+
+	GLuint glid = 0;
 	if (pfb)
-	{
-		gl.BindFramebuffer(GL_FRAMEBUFFER, (c3::FrameBufferImpl &)*pfb);
-	}
+		glid = (c3::FrameBufferImpl &)*pfb;
+
+	m_CurFB = pfb;
+	m_CurFBID = glid;
+
+	gl.BindFramebuffer(GL_FRAMEBUFFER, glid);
+}
+
+
+FrameBuffer *RendererImpl::GetActiveFrameBuffer()
+{
+	return m_CurFB;
 }
 
 
 void RendererImpl::UseProgram(ShaderProgram *pprog)
 {
-	if (pprog)
-	{
-		gl.UseProgram((c3::ShaderProgramImpl &)*pprog);
-	}
+	if (pprog == m_CurProg)
+		return;
+
+	m_CurProg = pprog;
+	GLuint glid = m_CurProg ? (GLuint)(c3::ShaderProgramImpl &)*pprog : 0;
+	if (glid == GL_INVALID_VALUE)
+		glid = 0;
+
+	if (glid == m_CurProgID)
+		return;
+
+	m_Config = true;
+
+	m_CurProgID = glid;
+
+	gl.UseProgram(m_CurProgID);
 }
 
 
+void RendererImpl::UseVertexBuffer(VertexBuffer *pvbuf)
+{
+	if (pvbuf == m_CurVB)
+		return;
+
+	m_CurVB = pvbuf;
+	GLuint glid = m_CurVB ? (GLuint)(c3::VertexBufferImpl &)*pvbuf : 0;
+	if (glid == GL_INVALID_VALUE)
+		glid = 0;
+
+	if (glid == m_CurVBID)
+		return;
+
+	m_Config = true;
+
+	m_CurVBID = glid;
+
+	gl.BindBuffer(GL_ARRAY_BUFFER, glid);
+}
+
+
+void RendererImpl::UseIndexBuffer(IndexBuffer *pibuf)
+{
+	if (pibuf == m_CurIB)
+		return;
+
+	m_CurIB = pibuf;
+	GLuint glid = m_CurIB ? (GLuint)(c3::IndexBufferImpl &)*pibuf : 0;
+	if (glid == GL_INVALID_VALUE)
+		glid = 0;
+
+	if (glid == m_CurIBID)
+		return;
+
+	m_CurIBID = glid;
+
+	gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, glid);
+}
+
+
+bool RendererImpl::ConfigureDrawing()
+{
+	if (!m_Config)
+		return true;
+
+	if (m_CurVB && m_CurProg)
+	{
+		static const GLenum t[VertexBuffer::ComponentDescription::ComponentType::VCT_NUM_TYPES] = { 0, GL_UNSIGNED_BYTE, GL_BYTE, GL_HALF_FLOAT, GL_UNSIGNED_INT, GL_FLOAT };
+
+		size_t vsz = m_CurVB->VertexSize();
+		size_t vo = 0;
+
+		static const char *vattrname[VertexBuffer::ComponentDescription::Usage::VU_NUM_USAGES] =
+		{
+				"",
+				"vPos",
+				"vNorm",
+				"vTex0",
+				"vTex1",
+				"vTex2",
+				"vTex3",
+				"vTan",
+				"vBinorm",
+				"vIndex",
+				"vWeight",
+				"vColor0",
+				"vColor1",
+				"vColor2",
+				"vColor3",
+				"vSize"
+		};
+
+		for (size_t i = 0, maxi = m_CurVB->NumComponents(); i < maxi; i++)
+		{
+			const VertexBuffer::ComponentDescription *pcd = m_CurVB->Component(i);
+			if (!pcd || !pcd->m_Count || (pcd->m_Type == VertexBuffer::ComponentDescription::VCT_NONE) || (pcd->m_Usage == VertexBuffer::ComponentDescription::Usage::VU_NONE))
+				break;
+
+			GLint vloc = gl.GetAttribLocation(m_CurProgID, vattrname[pcd->m_Usage]);
+
+			if (vloc < 0)
+				return false;
+
+			assert(vloc == i);
+
+			gl.EnableVertexAttribArray(vloc);
+			gl.VertexAttribPointer(vloc, (GLint)pcd->m_Count, GL_FLOAT, GL_FALSE, (GLsizei)vsz, (void *)vo);
+			vo += pcd->size();
+		}
+	}
+
+	m_Config = false;
+	return true;
+}
+
+
+static const GLenum typelu[Renderer::PrimType::NUM_PRIMTYPES] = { GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN };
+
 bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
 {
-	return true;
+	if (m_CurVBID)
+	{
+		if (count == -1)
+			count = m_CurVB->Count();
+
+		if (m_Config)
+			ConfigureDrawing();
+
+		gl.DrawArrays(typelu[type], 0, (GLsizei)count);
+
+		return true;
+	}
+
+	return false;
 }
 
 
 bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t count)
 {
-	return true;
+	if (m_CurIBID && m_CurVBID)
+	{
+		if (count == -1)
+			count = m_CurIB->Count();
+
+		size_t idxs = m_CurIB->GetIndexSize();
+		if (!idxs)
+			return false;
+		idxs--;
+
+		static const GLuint glidxs[3] = {GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT};
+
+		if (m_Config)
+			ConfigureDrawing();
+
+		gl.DrawElements(typelu[type], (GLsizei)count, glidxs[idxs], NULL);
+
+		return true;
+	}
+
+	return false;
 }
 
 
@@ -495,8 +771,10 @@ void RendererImpl::SetProjectionMatrix(const C3MATRIX *m)
 	{
 		m_proj = *m;
 
+#if 0
 		gl.MatrixMode(GL_PROJECTION);
 		gl.LoadMatrixf((GLfloat *)&m_proj);
+#endif
 	}
 }
 
@@ -508,8 +786,10 @@ void RendererImpl::SetViewMatrix(const C3MATRIX *m)
 		m_view = *m;
 		m_worldview = m_world * m_view;
 
+#if 0
 		gl.MatrixMode(GL_MODELVIEW);
 		gl.LoadMatrixf((GLfloat *)&m_worldview);
+#endif
 	}
 }
 
@@ -521,7 +801,157 @@ void RendererImpl::SetWorldMatrix(const C3MATRIX *m)
 		m_world = *m;
 		m_worldview = m_world * m_view;
 
+#if 0		
 		gl.MatrixMode(GL_MODELVIEW);
 		gl.LoadMatrixf((GLfloat *)&m_worldview);
+#endif
 	}
+}
+
+VertexBuffer *RendererImpl::GetCubeVB()
+{
+	if (!m_CubeVB)
+	{
+		m_CubeVB = CreateVertexBuffer(0);
+
+		c3::VertexBuffer::ComponentDescription comps[4] ={
+			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
+			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_NORMAL},
+
+			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
+		};
+
+		typedef struct
+		{
+			glm::vec3 pos;
+			glm::vec3 norm;
+		} SCubeVert;
+
+		static const SCubeVert v[8 * 3] =
+		{
+			{ { -1, -1, -1 }, { -1,  0,  0 } },		// A
+			{ { -1, -1, -1 }, {  0, -1,  0 } },
+			{ { -1, -1, -1 }, {  0,  0, -1 } },
+
+			{ { -1, -1,  1 }, { -1,  0,  0 } },		// E
+			{ { -1, -1,  1 }, {  0, -1,  0 } },
+			{ { -1, -1,  1 }, {  0,  0,  1 } },
+
+			{ { -1,  1, -1 }, { -1,  0,  0 } },		// B
+			{ { -1,  1, -1 }, {  0,  1,  0 } },
+			{ { -1,  1, -1 }, {  0,  0, -1 } },
+
+			{ { -1,  1,  1 }, { -1,  0,  0 } },		// F
+			{ { -1,  1,  1 }, {  0,  1,  0 } },
+			{ { -1,  1,  1 }, {  0,  0,  1 } },
+
+			{ {  1,  1, -1 }, {  1,  0,  0 } },		// C
+			{ {  1,  1, -1 }, {  0,  1,  0 } },
+			{ {  1,  1, -1 }, {  0,  0, -1 } },
+
+			{ {  1,  1,  1 }, {  1,  0,  0 } },		// G
+			{ {  1,  1,  1 }, {  0,  1,  0 } },
+			{ {  1,  1,  1 }, {  0,  0,  1 } },
+
+			{ {  1, -1, -1 }, {  1,  0,  0 } },		// D
+			{ {  1, -1, -1 }, {  0, -1,  0 } },
+			{ {  1, -1, -1 }, {  0,  0, -1 } },
+
+			{ {  1, -1,  1 }, {  1,  0,  0 } },		// H
+			{ {  1, -1,  1 }, {  0, -1,  0 } },
+			{ {  1, -1,  1 }, {  0,  0,  1 } }
+		};
+
+		void *buf;
+		if (m_CubeVB->Lock(&buf, 8 * 3, comps, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
+		{
+			memcpy(buf, v, sizeof(SCubeVert) * 8 * 3);
+
+			m_CubeVB->Unlock();
+		}
+	}
+
+	return m_CubeVB;
+}
+
+Mesh *RendererImpl::GetBoundsMesh()
+{
+	if (!m_BoundsMesh)
+	{
+		m_BoundsMesh = CreateMesh();
+
+		m_BoundsMesh->AttachVertexBuffer(GetCubeVB());
+
+		if (m_CubeVB)
+		{
+			IndexBuffer *pib = CreateIndexBuffer(0);
+			if (pib)
+			{
+				static const uint16_t i[12][2] ={
+					{0 , 6 },
+					{6 , 12},
+					{12, 18},
+					{18, 0 },
+					{3 , 9 },
+					{9 , 15},
+					{15, 21},
+					{21, 3 },
+					{0 , 3 },
+					{6 , 9 },
+					{12, 15},
+					{18, 21}
+				};
+
+				void *buf;
+				if (pib->Lock(&buf, 12 * 2, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				{
+					memcpy(buf, i, sizeof(uint16_t) * 12 * 2);
+
+					pib->Unlock();
+				}
+
+				m_BoundsMesh->AttachIndexBuffer(pib);
+			}
+		}
+	}
+
+	return m_BoundsMesh;
+}
+
+Mesh *RendererImpl::GetCubeMesh()
+{
+	if (!m_CubeMesh)
+	{
+		m_CubeMesh = CreateMesh();
+
+		m_CubeMesh->AttachVertexBuffer(GetCubeVB());
+
+		if (m_CubeVB)
+		{
+			IndexBuffer *pib = CreateIndexBuffer(0);
+			if (pib)
+			{
+				static const uint16_t i[6][2][3] ={
+					{ {0 , 6 , 9 }, {0 , 9 , 3 } },	// -x
+					{ {6 , 12, 15}, {6 , 15, 9 } },	// +y
+					{ {12, 18, 21}, {12, 21, 15} },	// +x
+					{ {18, 0 , 3 }, {18, 9 , 3 } },	// -y
+					{ {0 , 12, 6 }, {0 , 18, 12} },	// -z
+					{ {3 , 15, 9 }, {3 , 21, 15} },	// +z
+				};
+
+				void *buf;
+				if (pib->Lock(&buf, 6 * 2 * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				{
+					memcpy(buf, i, sizeof(uint16_t) * 12 * 2);
+
+					pib->Unlock();
+				}
+
+				m_CubeMesh->AttachIndexBuffer(pib);
+			}
+		}
+	}
+
+	return m_CubeMesh;
 }

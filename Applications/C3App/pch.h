@@ -7,6 +7,8 @@
 #ifndef PCH_H
 #define PCH_H
 
+#define _CRTDBG_MAP_ALLOC
+
 // add headers that you want to pre-compile here
 #include "framework.h"
 

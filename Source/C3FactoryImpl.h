@@ -20,7 +20,7 @@ namespace c3
 		SystemImpl *m_pSys;
 
 		typedef std::deque<ComportmentType *> TComportmentTypeArray;
-		TComportmentTypeArray m_ComportmentTypes;
+		static TComportmentTypeArray s_ComportmentTypes;
 
 		typedef std::deque<Prototype *> TPrototypeArray;
 		TPrototypeArray m_Prototypes;
@@ -37,7 +37,7 @@ namespace c3
 
 		virtual Prototype *CreatePrototype(Prototype *pproto);
 
-		virtual Prototype *CreatePrototype(Object *pobject);
+		virtual Prototype *MakePrototype(Object *pobject);
 
 		virtual void RemovePrototype(Prototype *pproto);
 

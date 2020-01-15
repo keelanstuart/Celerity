@@ -32,6 +32,10 @@ namespace c3
 
 		virtual RETURNCODE CompileProgram(const TCHAR *program) = NULL;
 
+		virtual const TCHAR *GetProgramText() = NULL;
+
+		virtual bool IsCompiled() = NULL;
+
 	};
 
 };

@@ -41,6 +41,7 @@ ShaderComponentImpl::ShaderComponentImpl(RendererImpl *prend, Renderer::ShaderCo
 	}
 
 	m_glID = GL_INVALID_VALUE;
+	m_Compiled = false;
 }
 
 
@@ -77,6 +78,8 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 	if (m_glID == GL_INVALID_VALUE)
 		return ShaderComponent::RETURNCODE::RET_CREATE_FAILED;
 
+	m_ProgramText = program;
+
 	char *ps;
 	CONVERT_TCS2MBCS(program, ps);
 	m_Rend->gl.ShaderSource(m_glID, 1, &ps, NULL);
@@ -89,16 +92,25 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 	m_Rend->gl.GetShaderiv(m_glID, GL_COMPILE_STATUS, &compiled);
 	if (compiled == GL_FALSE)
 	{
+		m_Rend->GetSystem()->GetLog()->Print(_T("* shader compile error:"));
+
 		GLint maxlen = 0;
 		m_Rend->gl.GetShaderiv(m_glID, GL_INFO_LOG_LENGTH, &maxlen);
 
-		// The maxLength includes the NULL character
-		std::string log;
-		log.resize(maxlen);
-		m_Rend->gl.GetShaderInfoLog(m_glID, maxlen, &maxlen, &log[0]);
+		if (maxlen)
+		{
+			// The maxLength includes the NULL character
+			char *pserr = (char *)_alloca(maxlen);
+			m_Rend->gl.GetShaderInfoLog(m_glID, maxlen, &maxlen, pserr);
+			TCHAR *tpserr;
+			CONVERT_MBCS2TCS(pserr, tpserr);
 
-		m_Rend->GetSystem()->GetLog()->Print(_T("* shader compile error:\n"));
-		m_Rend->GetSystem()->GetLog()->Print(_T("\t%s\n\n"), log.c_str());
+			m_Rend->GetSystem()->GetLog()->Print(_T("\n\t%s\n\n"), tpserr);
+		}
+		else
+		{
+			m_Rend->GetSystem()->GetLog()->Print(_T(" unspecified\n\n"));
+		}
 
 		m_Compiled = false;
 	}
@@ -107,4 +119,16 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 		return ShaderComponent::RETURNCODE::RET_COMPILE_FAILED;
 
 	return ShaderComponent::RETURNCODE::RET_OK;
+}
+
+
+const TCHAR *ShaderComponentImpl::GetProgramText()
+{
+	return m_ProgramText.c_str();
+}
+
+
+bool ShaderComponentImpl::IsCompiled()
+{
+	return m_Compiled;
 }

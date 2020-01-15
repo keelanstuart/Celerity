@@ -38,16 +38,16 @@ namespace c3
 		virtual props::IPropertySet *GetProperties() = NULL;
 
 		/// Adds a Comportment to the Prototype
-		virtual bool AddComportment(Comportment *pcomp) = NULL;
+		virtual bool AddComportment(ComportmentType *pcomp) = NULL;
 
 		/// Removes the given Comportment from the Prototype
-		virtual bool RemoveComportment(Comportment *pcomp) = NULL;
+		virtual bool RemoveComportment(ComportmentType *pcomp) = NULL;
 
 		/// Returns the number of Comportments that are part of the Prototype
 		virtual size_t GetNumComportments() = NULL;
 
 		/// Returns the Comportment at the given index
-		virtual Comportment *GetComportment(size_t index) = NULL;
+		virtual ComportmentType *GetComportment(size_t index) = NULL;
 
 	};
 

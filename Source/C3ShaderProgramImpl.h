@@ -12,12 +12,15 @@
 namespace c3
 {
 
+	class ShaderComponentImpl;
+
 	class ShaderProgramImpl : public ShaderProgram
 	{
 
 	protected:
 		RendererImpl *m_Rend;
 		GLuint m_glID;
+		ShaderComponentImpl *m_Comp[Renderer::ShaderComponentType::ST_NUMTYPES];
 
 	public:
 
@@ -28,9 +31,6 @@ namespace c3
 
 		virtual ShaderProgram::RETURNCODE AttachShader(ShaderComponent *pshader);
 		virtual ShaderProgram::RETURNCODE Link();
-
-		virtual ShaderProgram::RETURNCODE Bind();
-		virtual ShaderProgram::RETURNCODE Unbind();
 
 		operator GLuint() const { return m_glID; }
 

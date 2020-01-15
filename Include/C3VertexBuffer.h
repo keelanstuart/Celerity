@@ -99,13 +99,10 @@ namespace c3
 		#define VBLOCKFLAG_READ			0x0001
 		#define VBLOCKFLAG_WRITE		0x0002
 
-		virtual RETURNCODE Lock(void **buffer, size_t count, const ComponentDescription *components, props::TFlags64 flags) = NULL;
+		virtual RETURNCODE Lock(void **buffer, size_t numverts, const ComponentDescription *components, props::TFlags64 flags) = NULL;
 		virtual void Unlock() = NULL;
 
 		virtual size_t Count() = NULL;
-
-		virtual void Bind() = NULL;
-		virtual void Unbind() = NULL;
 
 		virtual size_t NumComponents() = NULL;
 		virtual const ComponentDescription *Component(size_t compidx) = NULL;

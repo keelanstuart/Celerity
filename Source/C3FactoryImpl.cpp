@@ -11,9 +11,15 @@
 #include <C3PrototypeImpl.h>
 #include <C3ObjectImpl.h>
 
+// required for GUID creation
 #include <ObjBase.h>
 
+
+
 using namespace c3;
+
+
+FactoryImpl::TComportmentTypeArray FactoryImpl::s_ComportmentTypes;
 
 
 FactoryImpl::FactoryImpl(SystemImpl *psys)
@@ -47,15 +53,13 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid)
 
 		for (size_t i = 0, maxi = pproto->GetNumComportments(); i < maxi; i++)
 		{
-			Comportment *ppc = pproto->GetComportment(i);
-			if (!ppc)
+			ComportmentType *pct = pproto->GetComportment(i);
+			if (!pct)
 				continue;
 
-			Comportment *pc = o->AddComportment(ppc->GetType());
+			Comportment *pc = o->AddComportment(pct);
 			if (!pc)
 				continue;
-
-			pc->GetProperties()->AppendPropertySet(ppc->GetProperties());
 		}
 	}
 
@@ -89,7 +93,7 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid)
 			if (!pc)
 				continue;
 
-			pc->GetProperties()->AppendPropertySet(ppc->GetProperties());
+			pc->Initialize(o);
 		}
 	}
 
@@ -105,6 +109,8 @@ Prototype *FactoryImpl::CreatePrototype(Prototype *pproto)
 	CoCreateGuid(&guid);
 	Prototype *p = new PrototypeImpl(m_pSys, guid);
 
+	m_Prototypes.push_back(p);
+
 	if (pproto)
 	{
 		p->SetName(pproto->GetName());
@@ -113,16 +119,11 @@ Prototype *FactoryImpl::CreatePrototype(Prototype *pproto)
 
 		for (size_t i = 0, maxi = pproto->GetNumComportments(); i < maxi; i++)
 		{
-			Comportment *ppc = pproto->GetComportment(i);
-			if (!ppc)
+			ComportmentType *pct = pproto->GetComportment(i);
+			if (!pct)
 				continue;
 
-			Comportment *pc = ppc->GetType()->Build(nullptr, ppc);
-			if (!pc)
-				continue;
-
-			pc->GetProperties()->AppendPropertySet(ppc->GetProperties());
-			p->AddComportment(pc);
+			p->AddComportment(pct);
 		}
 	}
 
@@ -130,11 +131,13 @@ Prototype *FactoryImpl::CreatePrototype(Prototype *pproto)
 }
 
 
-Prototype *FactoryImpl::CreatePrototype(Object *pobject)
+Prototype *FactoryImpl::MakePrototype(Object *pobject)
 {
 	GUID guid;
 	CoCreateGuid(&guid);
 	Prototype *p = new PrototypeImpl(m_pSys, guid);
+
+	m_Prototypes.push_back(p);
 
 	if (pobject)
 	{
@@ -148,12 +151,11 @@ Prototype *FactoryImpl::CreatePrototype(Object *pobject)
 			if (!ppc)
 				continue;
 
-			Comportment *pc = ppc->GetType()->Build(nullptr, ppc);
-			if (!pc)
+			ComportmentType *pct = ppc->GetType();
+			if (!pct)
 				continue;
 
-			pc->GetProperties()->AppendPropertySet(ppc->GetProperties());
-			p->AddComportment(pc);
+			p->AddComportment(pct);
 		}
 	}
 
@@ -310,7 +312,7 @@ bool FactoryImpl::RegisterComportmentType(ComportmentType *pctype)
 		return false;
 
 	m_pSys->GetLog()->Print(_T("Registering ComportmentType \"%s\" ... "), pctype->GetName());
-	for (TComportmentTypeArray::const_iterator it = m_ComportmentTypes.cbegin(), last_it = m_ComportmentTypes.cend(); it != last_it; it++)
+	for (TComportmentTypeArray::const_iterator it = s_ComportmentTypes.cbegin(), last_it = s_ComportmentTypes.cend(); it != last_it; it++)
 	{
 		if (!_tcscmp((*it)->GetName(), pctype->GetName()) || ((*it)->GetGUID() == pctype->GetGUID()))
 		{
@@ -320,7 +322,7 @@ bool FactoryImpl::RegisterComportmentType(ComportmentType *pctype)
 	}
 
 	m_pSys->GetLog()->Print(_T("OK\n"));
-	m_ComportmentTypes.push_back(pctype);
+	s_ComportmentTypes.push_back(pctype);
 
 	return true;
 }
@@ -331,10 +333,10 @@ bool FactoryImpl::UnregisterComportmentType(ComportmentType *pctype)
 	if (!pctype)
 		return false;
 
-	TComportmentTypeArray::iterator it = std::find(m_ComportmentTypes.begin(), m_ComportmentTypes.end(), pctype);
-	if (it != m_ComportmentTypes.end())
+	TComportmentTypeArray::iterator it = std::find(s_ComportmentTypes.begin(), s_ComportmentTypes.end(), pctype);
+	if (it != s_ComportmentTypes.end())
 	{
-		m_ComportmentTypes.erase(it);
+		s_ComportmentTypes.erase(it);
 		return true;
 	}
 
@@ -344,16 +346,16 @@ bool FactoryImpl::UnregisterComportmentType(ComportmentType *pctype)
 
 size_t FactoryImpl::GetNumComportmentTypes()
 {
-	return m_ComportmentTypes.size();
+	return s_ComportmentTypes.size();
 }
 
 
 ComportmentType *FactoryImpl::GetComportmentType(size_t index)
 {
-	if (index >= m_ComportmentTypes.size())
+	if (index >= s_ComportmentTypes.size())
 		return nullptr;
 
-	return m_ComportmentTypes[index];
+	return s_ComportmentTypes[index];
 }
 
 
@@ -364,7 +366,7 @@ ComportmentType *FactoryImpl::FindComportmentType(const TCHAR *name, bool case_s
 
 	if (case_sensitive)
 	{
-		for (TComportmentTypeArray::const_iterator it = m_ComportmentTypes.cbegin(), last_it = m_ComportmentTypes.cend(); it != last_it; it++)
+		for (TComportmentTypeArray::const_iterator it = s_ComportmentTypes.cbegin(), last_it = s_ComportmentTypes.cend(); it != last_it; it++)
 		{
 			if (!_tcscmp((*it)->GetName(), name))
 			{
@@ -374,7 +376,7 @@ ComportmentType *FactoryImpl::FindComportmentType(const TCHAR *name, bool case_s
 	}
 	else
 	{
-		for (TComportmentTypeArray::const_iterator it = m_ComportmentTypes.cbegin(), last_it = m_ComportmentTypes.cend(); it != last_it; it++)
+		for (TComportmentTypeArray::const_iterator it = s_ComportmentTypes.cbegin(), last_it = s_ComportmentTypes.cend(); it != last_it; it++)
 		{
 			if (!_tcsicmp((*it)->GetName(), name))
 			{
@@ -389,7 +391,7 @@ ComportmentType *FactoryImpl::FindComportmentType(const TCHAR *name, bool case_s
 
 ComportmentType *FactoryImpl::FindComportmentType(GUID guid)
 {
-	for (TComportmentTypeArray::const_iterator it = m_ComportmentTypes.cbegin(), last_it = m_ComportmentTypes.cend(); it != last_it; it++)
+	for (TComportmentTypeArray::const_iterator it = s_ComportmentTypes.cbegin(), last_it = s_ComportmentTypes.cend(); it != last_it; it++)
 	{
 		if ((*it)->GetGUID() == guid)
 		{

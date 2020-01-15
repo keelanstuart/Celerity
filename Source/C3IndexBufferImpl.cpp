@@ -33,6 +33,7 @@ IndexBufferImpl::~IndexBufferImpl()
 
 	if (m_Rend && (m_glID != GL_INVALID_VALUE))
 	{
+		m_Rend->UseIndexBuffer(nullptr);
 		m_Rend->gl.DeleteBuffers(1, &m_glID);
 		m_glID = 0;
 	}
@@ -45,12 +46,12 @@ void IndexBufferImpl::Release()
 }
 
 
-IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t count, IndexSize sz, props::TFlags64 flags)
+IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, IndexSize sz, props::TFlags64 flags)
 {
 	if (m_Buffer)
 		return RET_ALREADY_LOCKED;
 
-	if (!count)
+	if (!numindices)
 		return RET_ZERO_ELEMENTS;
 
 	if (!buffer)
@@ -74,12 +75,12 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t count, Index
 	else if (flags.IsSet(IBLOCKFLAG_WRITE))
 		mode = GL_WRITE_ONLY;
 
-	Bind();
+	m_Rend->UseIndexBuffer(this);
 
 	if (init)
 	{
 		// make sure that it is allocated
-		m_Rend->gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, sz * count, NULL, GL_STATIC_DRAW);
+		m_Rend->gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, sz * numindices, NULL, GL_STATIC_DRAW);
 	}
 
 	m_Buffer = m_Rend->gl.MapBuffer(GL_ELEMENT_ARRAY_BUFFER, mode);
@@ -87,7 +88,7 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t count, Index
 		return RET_MAPBUFFER_FAILED;
 
 	m_IndexSize = sz;
-	m_NumIndices = count;
+	m_NumIndices = numindices;
 
 	*buffer = m_Buffer;
 
@@ -101,8 +102,6 @@ void IndexBufferImpl::Unlock()
 	{
 		m_Rend->gl.UnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
 
-		Unbind();
-
 		m_Buffer = NULL;
 	}
 }
@@ -111,18 +110,6 @@ void IndexBufferImpl::Unlock()
 size_t IndexBufferImpl::Count()
 {
 	return m_NumIndices;
-}
-
-
-void IndexBufferImpl::Bind()
-{
-	m_Rend->gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_glID);
-}
-
-
-void IndexBufferImpl::Unbind()
-{
-	m_Rend->gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
 

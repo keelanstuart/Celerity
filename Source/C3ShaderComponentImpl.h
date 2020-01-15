@@ -21,6 +21,7 @@ namespace c3
 		Renderer::ShaderComponentType m_Type;
 		GLuint m_glType;
 		bool m_Compiled;
+		tstring m_ProgramText;
 
 	public:
 		ShaderComponentImpl(RendererImpl *prend, Renderer::ShaderComponentType type);
@@ -31,6 +32,10 @@ namespace c3
 		virtual Renderer::ShaderComponentType Type();
 
 		virtual ShaderComponent::RETURNCODE CompileProgram(const TCHAR *program);
+
+		virtual const TCHAR *GetProgramText();
+
+		virtual bool IsCompiled();
 
 		operator GLuint() const { return m_glID; }
 

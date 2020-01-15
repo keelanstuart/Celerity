@@ -34,13 +34,10 @@ namespace c3
 
 		virtual void Release();
 
-		virtual RETURNCODE Lock(void **buffer, size_t count, const ComponentDescription *components, props::TFlags64 flags);
+		virtual RETURNCODE Lock(void **buffer, size_t numverts, const ComponentDescription *components, props::TFlags64 flags);
 		virtual void Unlock();
 
 		virtual size_t Count();
-
-		virtual void Bind();
-		virtual void Unbind();
 
 		virtual size_t NumComponents();
 		virtual const ComponentDescription *Component(size_t compidx);

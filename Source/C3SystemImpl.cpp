@@ -8,13 +8,17 @@
 
 #include <C3SystemImpl.h>
 
+#include <C3PositionableImpl.h>
+
 
 using namespace c3;
 
 
 System *System::Create(props::TFlags64 flags)
 {
-	return new SystemImpl();
+	System *ret = new SystemImpl();
+
+	return ret;
 }
 
 
@@ -31,6 +35,12 @@ SystemImpl::SystemImpl()
 SystemImpl::~SystemImpl()
 {
 	Release();
+
+	if (m_Log)
+	{
+		delete m_Log;
+		m_Log = nullptr;
+	}
 }
 
 
@@ -44,6 +54,11 @@ void SystemImpl::Release()
 
 	if (m_Factory)
 	{
+		/// REGISTER NATIVE COMPORTMENTS BETWEEN THESE LINES
+		// *************************************************
+		UNREGISTER_COMPORTMENTTYPE(Positionable, m_Factory);
+		// *************************************************
+
 		delete m_Factory;
 		m_Factory = nullptr;
 	}
@@ -53,12 +68,6 @@ void SystemImpl::Release()
 		m_Pool->WaitForAllTasks(INFINITE);
 		m_Pool->Release();
 		m_Pool = nullptr;
-	}
-
-	if (m_Log)
-	{
-		delete m_Log;
-		m_Log = nullptr;
 	}
 }
 
@@ -79,6 +88,11 @@ Factory *SystemImpl::GetFactory()
 	if (!m_Factory)
 	{
 		m_Factory = new FactoryImpl(this);
+
+		/// REGISTER NATIVE COMPORTMENTS BETWEEN THESE LINES
+		// *************************************************
+		REGISTER_COMPORTMENTTYPE(Positionable, m_Factory);
+		// *************************************************
 	}
 
 	return m_Factory;
