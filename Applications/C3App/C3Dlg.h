@@ -19,6 +19,7 @@ protected:
 
 	c3::Factory *m_Factory;
 	c3::Object *m_RootObj;
+	c3::Object *m_Camera;
 
 // Construction
 public:

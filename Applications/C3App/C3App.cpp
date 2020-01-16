@@ -42,6 +42,7 @@ UIControl::UIControl()
 	m_VB = nullptr;
 	m_IB = nullptr;
 	m_M = nullptr;
+	m_MVP = -1;
 }
 
 UIControl::~UIControl()
@@ -110,11 +111,14 @@ bool UIControl::Initialize(c3::Object *powner)
 			"uniform mat4 MVP;\n"
 			"layout (location=0) in vec3 vPos;\n"
 			"layout (location=1) in vec3 vNorm;\n"
-			"out vec3 color;\n"
+			"out vec3 fNorm;"
+			"out vec4 fColor;\n"
 			"void main()\n"
 			"{\n"
-			"    gl_Position = /*MVP * */ vec4(vPos, 1.0);\n"
-			"    color = vec4(1, 1, 1, 1);\n"//vColor0;\n"
+			"    gl_Position = MVP * vec4(vPos, 1.0);\n"
+			"    vec4 n = MVP * vec4(vNorm, 0.0);\n"
+			"    fNorm = n.xyz;\n"
+			"    fColor = vec4(n.x, 1.0, n.z, 1.0);\n"
 			"}\n" );
 
 		m_VS->CompileProgram(vertex_shader_text);
@@ -125,13 +129,14 @@ bool UIControl::Initialize(c3::Object *powner)
 	{
 		static const TCHAR *fragment_shader_text = _T(
 			"#version 410\n"
-			"in vec3 color;\n"
+			"in vec3 fNorm;\n"
+			"in vec4 fColor;\n"
 			"layout (location=0) out vec4 fragment;\n"
-			//"layout (location=1) out vec4 fragment_inv;\n"
+			//"layout (location=1) out vec4 fragment_norm;\n"
 			"void main()\n"
 			"{\n"
-			"    fragment = vec4(color, 1.0);\n"
-//			"    fragment_inv = vec4(1.0 - color.r, 1.0 - color.g, 1.0 - color.b, 1.0);\n"
+			"    fragment = vec4(fColor);\n"
+//			"    fragment_norm = vec4(fNorm, 1.0);\n"
 			"}\n" );
 
 		m_FS->CompileProgram(fragment_shader_text);
@@ -144,7 +149,10 @@ bool UIControl::Initialize(c3::Object *powner)
 		m_SP->AttachShader(m_VS);
 		m_SP->AttachShader(m_FS);
 
-		m_SP->Link();
+		if (m_SP->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
+		{
+			m_MVP = m_SP->GetUniformLocation(_T("MVP"));
+		}
 	}
 
 	m_VB = prend->CreateVertexBuffer();
@@ -219,6 +227,8 @@ void UIControl::Render(c3::Object *powner, props::TFlags64 rendflags)
 		c3::Renderer *prend = powner->GetSystem()->GetRenderer();
 		prend->UseProgram(m_SP);
 
+		m_SP->SetUniformMatrix(m_MVP, prend->GetWorldViewProjectionMatrix());
+
 		m_M->Draw(c3::Renderer::PrimType::LINELIST);
 	}
 }
@@ -241,6 +251,16 @@ BOOL C3App::InitInstance()
 	c3::Factory *pfactory = m_C3->GetFactory();
 
 	REGISTER_COMPORTMENTTYPE(UIControl, pfactory);
+
+	c3::Prototype *ppcam = pfactory->CreatePrototype();
+	ppcam->AddComportment(pfactory->FindComportmentType(_T("Positionable")));
+	ppcam->AddComportment(pfactory->FindComportmentType(_T("Camera")));
+	ppcam->SetName(_T("Camera"));
+
+	c3::Prototype *ppctl = pfactory->CreatePrototype();
+	ppctl->AddComportment(pfactory->FindComportmentType(_T("Positionable")));
+	ppctl->AddComportment(pfactory->FindComportmentType(_T("UIControl")));
+	ppctl->SetName(_T("GenericControl"));
 
 	// Standard initialization
 

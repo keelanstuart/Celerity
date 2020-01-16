@@ -66,6 +66,9 @@ props::IPropertySet *PrototypeImpl::GetProperties()
 
 bool PrototypeImpl::AddComportment(ComportmentType *pcomptype)
 {
+	if (!pcomptype)
+		return false;
+
 	if (std::find(m_Comportments.cbegin(), m_Comportments.cend(), pcomptype) != m_Comportments.cend())
 		return false;
 

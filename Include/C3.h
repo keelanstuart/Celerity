@@ -20,14 +20,12 @@
 
 #include <PowerProps.h>
 #include <Pool.h>
+
+// GLM init
+#define GLM_FORCE_CTOR_INIT
+
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
-
-#define C3MATRIX		glm::mat4x4
-#define C3VEC2			glm::fvec2
-#define C3VEC3			glm::fvec3
-#define C3VEC4			glm::fvec4
-#define C3QUAT			glm::quat
 
 #include <C3MatrixStack.h>
 #include <C3Texture.h>
@@ -41,6 +39,8 @@
 #include <C3Renderer.h>
 #include <C3Log.h>
 #include <C3Comportment.h>
+#include <C3Positionable.h>
+#include <C3Camera.h>
 #include <C3Object.h>
 #include <C3Prototype.h>
 #include <C3Factory.h>

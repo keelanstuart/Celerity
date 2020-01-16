@@ -27,6 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Source\C3CameraImpl.cpp" />
     <ClCompile Include="Source\C3DepthBufferImpl.cpp" />
     <ClCompile Include="Source\C3FactoryImpl.cpp" />
     <ClCompile Include="Source\C3FrameBufferImpl.cpp" />

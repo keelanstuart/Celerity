@@ -26,8 +26,10 @@ protected:
 	c3::ShaderComponent *m_FS;
 	c3::ShaderProgram *m_SP;
 	c3::Mesh *m_M;
+	int64_t m_MVP;
 
 public:
+	static const c3::ComportmentType *Type();
 
 	UIControl();
 	virtual ~UIControl();

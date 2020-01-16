@@ -84,16 +84,15 @@ namespace c3
 
 	/// THIS GOES IN YOUR HEADER
 	#define DEFINE_COMPORTMENTTYPE(comportment_class, comportmentimpl_class, guid, name, description)					\
-		class comportment_class##Type : public c3::ComportmentType														\
+		class COMPORTMENTTYPE(comportment_class) : public c3::ComportmentType											\
 		{																												\
+			friend class comportment_class;																				\
 			public:																										\
-			static COMPORTMENTTYPE(comportment_class) *self;															\
+			static COMPORTMENTTYPE(comportment_class) self;																\
 			static void Register(c3::Factory *factory) {																\
-				if (!self) { self = new COMPORTMENTTYPE(comportment_class); }											\
-				if (factory) { factory->RegisterComportmentType(self); } }												\
+				if (factory) { factory->RegisterComportmentType(&self); } }												\
 			static void Unregister(c3::Factory *factory) {																\
-				if (factory) { factory->UnregisterComportmentType(self); }												\
-				if (self) { delete self; self = nullptr; } }															\
+				if (factory) { factory->UnregisterComportmentType(&self); } }											\
 			COMPORTMENTTYPE(comportment_class)() { }																	\
 			virtual ~COMPORTMENTTYPE(comportment_class)() { }															\
 			virtual c3::Comportment *Build() const { return new comportmentimpl_class(); }								\
@@ -105,8 +104,9 @@ namespace c3
 
 	/// THIS GOES IN YOUR SOURCE
 	#define DECLARE_COMPORTMENTTYPE(comportment_class, comportmentimpl_class)											\
-		COMPORTMENTTYPE(comportment_class) * COMPORTMENTTYPE(comportment_class)::self = nullptr;						\
-		c3::ComportmentType *comportmentimpl_class::GetType() { return COMPORTMENTTYPE(comportment_class)::self; }
+		COMPORTMENTTYPE(comportment_class) COMPORTMENTTYPE(comportment_class)::self;									\
+		c3::ComportmentType *comportmentimpl_class::GetType() { return &COMPORTMENTTYPE(comportment_class)::self; }		\
+		const c3::ComportmentType *comportment_class::Type() { return (const c3::ComportmentType *)&COMPORTMENTTYPE(comportment_class)::self; }
 
 	/// DO THIS AFTER YOU CALL c3::System::Create OR WHEN YOUR PLUG-IN IS INITIALIZED
 	#define REGISTER_COMPORTMENTTYPE(comportment_class, factory)	COMPORTMENTTYPE(comportment_class)::Register(factory)

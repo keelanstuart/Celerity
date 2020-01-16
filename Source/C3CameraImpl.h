@@ -8,29 +8,39 @@
 
 #include <C3.h>
 #include <C3Camera.h>
+#include <C3PositionableImpl.h>
 
 namespace c3
 {
+
+	#define CAMFLAG_REBUILDMATRICES		0x0001
 
 	class CameraImpl : public Camera, props::IPropertyChangeListener
 	{
 
 	protected:
-		C3MATRIX m_proj, m_view;
+		
+		glm::fmat4x4 m_proj, m_view;
 
 		props::IProperty *m_pviewmode;
-		ViewMode m_viewmode;
+		uint64_t m_viewmode;
 
 		props::IProperty *m_pprojpmode;
-		ProjectionMode m_projmode;
+		uint64_t m_projmode;
 
 		props::IProperty *m_pdim;
-		C3VEC2 m_dim;
+		glm::fvec2 m_dim;
 
 		props::IProperty *m_pfov;
 		float m_fov;
 
-		C3VEC3 m_campos, m_targpos;
+		glm::fvec3 m_eyepos, m_targpos;
+		props::IProperty *m_porbitdist;
+		float m_orbitdist;
+
+		Positionable *m_pcpos;
+
+		props::TFlags64 m_flags;
 
 	public:
 
@@ -63,20 +73,22 @@ namespace c3
 		virtual void SetPolarDistance(float distance);
 		virtual float GetPolarDistance();
 
-		virtual void SetOrthoDimensions(const C3VEC2 *dim);
-		virtual const C3VEC2 *GetOrthoDimensions(C3VEC2 *dim);
+		virtual void SetOrthoDimensions(const glm::fvec2 *dim);
+		virtual const glm::fvec2 *GetOrthoDimensions(glm::fvec2 *dim);
 		virtual float GetOrthoWidth();
 		virtual float GetOrthoHeight();
 
 		virtual void SetFOV(float height);
 		virtual float GetFOV();
 
-		virtual const C3VEC3 *GetEyePos(C3VEC3 *pos);
-		virtual const C3VEC3 *GetTargetPos(C3VEC3 *pos);
+		virtual const glm::fvec3 *GetEyePos(glm::fvec3 *pos);
+		virtual const glm::fvec3 *GetTargetPos(glm::fvec3 *pos);
 
-		virtual const C3MATRIX *GetViewMatrix(C3MATRIX *mat);
-		virtual const C3MATRIX *GetProjectionMatrix(C3MATRIX *mat);
+		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *mat);
+		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *mat);
 
 	};
+
+	DEFINE_COMPORTMENTTYPE(Camera, CameraImpl, GUID({0xfcc880c3, 0x54a2, 0x4168, { 0xbd, 0x4, 0xe9, 0x91, 0xfe, 0xee, 0x29, 0xef }}), _T("Camera"), _T("Camera generates view and projection matrices for scene rendering (requires Positionable)"));
 
 };

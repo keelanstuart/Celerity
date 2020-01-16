@@ -102,8 +102,8 @@ namespace c3
 
 		virtual void Shutdown() = NULL;
 
-		virtual void SetClearColor(const C3VEC4 *color = nullptr) = NULL;
-		virtual const C3VEC4 *GetClearColor(C3VEC4 *color = nullptr) = NULL;
+		virtual void SetClearColor(const glm::fvec4 *color = nullptr) = NULL;
+		virtual const glm::fvec4 *GetClearColor(glm::fvec4 *color = nullptr) = NULL;
 
 		virtual void SetClearDepth(float depth = 1.0f) = NULL;
 		virtual float GetClearDepth() = NULL;
@@ -141,11 +141,18 @@ namespace c3
 
 		virtual bool DrawIndexedPrimitives(PrimType type, size_t offset = -1, size_t count = -1) = NULL;
 
-		virtual void SetProjectionMatrix(const C3MATRIX *m) = NULL;
-		virtual void SetViewMatrix(const C3MATRIX *m) = NULL;
-		virtual void SetWorldMatrix(const C3MATRIX *m) = NULL;
+		virtual void SetProjectionMatrix(const glm::fmat4x4 *m) = NULL;
+		virtual void SetViewMatrix(const glm::fmat4x4 *m) = NULL;
+		virtual void SetWorldMatrix(const glm::fmat4x4 *m) = NULL;
+
+		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+		virtual const glm::fmat4x4 *GetWorldMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 
 		virtual Mesh *GetBoundsMesh() = NULL;
+		virtual Mesh *GetCubeMesh() = NULL;
 
 	};
 

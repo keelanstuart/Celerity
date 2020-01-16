@@ -15,6 +15,13 @@ namespace c3
 
 	class SystemImpl;
 
+	#define MATRIXUPDATE_VIEW		0x01
+	#define MATRIXUPDATE_PROJ		0x02
+	#define MATRIXUPDATE_WORLD		0x04
+
+	#define MATRIXUPDATE_VIEWPROJ		(MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
+	#define MATRIXUPDATE_ALL			(MATRIXUPDATE_WORLD | MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
+
 	class RendererImpl : public Renderer
 	{
 
@@ -29,11 +36,12 @@ namespace c3
 
 		bool m_needFinish;
 
-		C3MATRIX m_ident;
+		glm::fmat4x4 m_ident;
 
-		C3MATRIX m_proj, m_view, m_world, m_worldview;
+		glm::fmat4x4 m_proj, m_view, m_world, m_viewproj, m_worldviewproj;
+		props::TFlags32 m_matupflags;
 
-		C3VEC4 m_clearColor;
+		glm::fvec4 m_clearColor;
 		float m_clearZ;
 
 		bool m_Initialized;
@@ -82,8 +90,8 @@ namespace c3
 
 		virtual System *GetSystem();
 
-		virtual void SetClearColor(const C3VEC4 *color = nullptr);
-		virtual const C3VEC4 *GetClearColor(C3VEC4 *color = nullptr);
+		virtual void SetClearColor(const glm::fvec4 *color = nullptr);
+		virtual const glm::fvec4 *GetClearColor(glm::fvec4 *color = nullptr);
 
 		virtual void SetClearDepth(float depth);
 		virtual float GetClearDepth();
@@ -124,9 +132,15 @@ namespace c3
 		virtual bool DrawPrimitives(PrimType type, size_t count = -1);
 		virtual bool DrawIndexedPrimitives(PrimType type, size_t offset = -1, size_t count = -1);
 
-		virtual void SetProjectionMatrix(const C3MATRIX *m);
-		virtual void SetViewMatrix(const C3MATRIX *m);
-		virtual void SetWorldMatrix(const C3MATRIX *m);
+		virtual void SetProjectionMatrix(const glm::fmat4x4 *m);
+		virtual void SetViewMatrix(const glm::fmat4x4 *m);
+		virtual void SetWorldMatrix(const glm::fmat4x4 *m);
+
+		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *m = nullptr);
+		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *m = nullptr);
+		virtual const glm::fmat4x4 *GetWorldMatrix(glm::fmat4x4 *m = nullptr);
+		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
+		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
 
 		VertexBuffer *GetCubeVB();
 		virtual Mesh *GetBoundsMesh();

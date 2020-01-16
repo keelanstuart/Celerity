@@ -33,6 +33,15 @@ namespace c3
 
 		virtual RETURNCODE AttachShader(ShaderComponent *pshader) = NULL;
 		virtual RETURNCODE Link() = NULL;
+		virtual bool IsLinked() = NULL;
+
+		virtual int64_t GetUniformLocation(const TCHAR *name) = NULL;
+		virtual bool SetUniformMatrix(int64_t location, const glm::fmat4x4 *mat) = NULL;
+		virtual bool SetUniform1(int64_t location, float f) = NULL;
+		virtual bool SetUniform2(int64_t location, const glm::fvec2 *v2) = NULL;
+		virtual bool SetUniform3(int64_t location, const glm::fvec3 *v3) = NULL;
+		virtual bool SetUniform4(int64_t location, const glm::fvec4 *v4) = NULL;
+		virtual bool SetUniformTexture(int64_t location, Texture *tex) = NULL;
 
 	};
 

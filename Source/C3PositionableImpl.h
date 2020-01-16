@@ -12,6 +12,12 @@
 namespace c3
 {
 
+	#define POSFLAG_POSCHANGED			0x0001
+	#define POSFLAG_ORICHANGED			0x0002
+	#define POSFLAG_SCLCHANGED			0x0004
+
+	#define POSFLAG_REBUILDMATRIX		(POSFLAG_POSCHANGED | POSFLAG_ORICHANGED | POSFLAG_SCLCHANGED)
+
 	class PositionableImpl : public Positionable, props::IPropertyChangeListener
 	{
 
@@ -25,10 +31,10 @@ namespace c3
 		props::IProperty *m_pscl;
 		glm::vec3 m_Scl;
 
-		bool m_RecalcMatrix;
-		glm::mat4x4 m_Mat;
+		props::TFlags64 m_Flags;
+		glm::fmat4x4 m_Mat;
 
-		C3VEC3 m_Facing, m_LocalUp, m_LocalLeft;
+		glm::fvec3 m_Facing, m_LocalUp, m_LocalLeft;
 
 	public:
 
@@ -55,12 +61,12 @@ namespace c3
 		// *** POSITION FUNCTIONS *******************************
 
 		virtual void SetPos(float x, float y, float z);
-		virtual void SetPosVec(const C3VEC3 *pos);
+		virtual void SetPosVec(const glm::fvec3 *pos);
 		virtual void SetPosX(float x);
 		virtual void SetPosY(float y);
 		virtual void SetPosZ(float z);
 
-		virtual const C3VEC3 *GetPosVec(C3VEC3 *pos = nullptr);
+		virtual const glm::fvec3 *GetPosVec(glm::fvec3 *pos = nullptr);
 		virtual float GetPosX();
 		virtual float GetPosY();
 		virtual float GetPosZ();
@@ -71,12 +77,12 @@ namespace c3
 		// *** ROTATION CENTER FUNCTIONS *******************************
 
 		virtual void SetRotCenter(float x, float y, float z);
-		virtual void SetRotCenterVec(const C3VEC3 *rotc);
+		virtual void SetRotCenterVec(const glm::fvec3 *rotc);
 		virtual void SetRotCenterX(float x);
 		virtual void SetRotCenterY(float y);
 		virtual void SetRotCenterZ(float z);
 
-		virtual const C3VEC3 *GetRotCenterVec(C3VEC3 *rotc = nullptr);
+		virtual const glm::fvec3 *GetRotCenterVec(glm::fvec3 *rotc = nullptr);
 		virtual float GetRotCenterX();
 		virtual float GetRotCenterY();
 		virtual float GetRotCenterZ();
@@ -90,10 +96,10 @@ namespace c3
 		virtual void SetOri(float x, float y, float z, float w);
 
 		// Set the orientation by providing each element of the quaternion directly
-		virtual void SetOriQuat(const C3QUAT *ori);
+		virtual void SetOriQuat(const glm::fquat *ori);
 		virtual void SetYawPitchRoll(float y, float p, float r);
 
-		virtual const C3QUAT *GetOriQuat(C3QUAT *ori = nullptr);
+		virtual const glm::fquat *GetOriQuat(glm::fquat *ori = nullptr);
 
 		// returns the yaw (in radians)
 		virtual float GetYaw();
@@ -113,25 +119,30 @@ namespace c3
 		// adjust the roll (in radians)
 		virtual void AdjustRoll(float dr);
 
-		virtual const C3VEC3 *GetFacingVector(C3VEC3 *vec = nullptr);
-		virtual const C3VEC3 *GetLocalUpVector(C3VEC3 *vec = nullptr);
-		virtual const C3VEC3 *GetLocalLeftVector(C3VEC3 *vec = nullptr);
+		virtual const glm::fvec3 *GetFacingVector(glm::fvec3 *vec = nullptr);
+		virtual const glm::fvec3 *GetLocalUpVector(glm::fvec3 *vec = nullptr);
+		virtual const glm::fvec3 *GetLocalLeftVector(glm::fvec3 *vec = nullptr);
 
 
 		// *** SCALE FUNCTIONS *******************************
 
 		virtual void SetScl(float x, float y, float z);
-		virtual void SetSclVec(const C3VEC3 *scl);
+		virtual void SetSclVec(const glm::fvec3 *scl);
 		virtual void SetSclX(float x);
 		virtual void SetSclY(float y);
 		virtual void SetSclZ(float z);
 
-		virtual const C3VEC3 *GetScl(C3VEC3 *scl = nullptr);
+		virtual const glm::fvec3 *GetScl(glm::fvec3 *scl = nullptr);
 		virtual float GetSclX();
 		virtual float GetSclY();
 		virtual float GetSclZ();
 
 		virtual void AdjustScl(float dx = 0.0f, float dy = 0.0f, float dz = 0.0f);
+
+
+		// *** COMBINED TRANSFORM FUNCTIONS ******************
+
+		virtual const glm::fmat4x4 *GetTransformMatrix(glm::fmat4x4 *mat = nullptr);
 
 	};
 

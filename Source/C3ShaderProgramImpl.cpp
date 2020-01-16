@@ -17,6 +17,7 @@ ShaderProgramImpl::ShaderProgramImpl(RendererImpl *prend)
 {
 	m_Rend = prend;
 	m_glID = GL_INVALID_VALUE;
+	m_Linked = false;
 	memset(m_Comp, 0, sizeof(ShaderComponentImpl *) * Renderer::ShaderComponentType::ST_NUMTYPES);
 }
 
@@ -78,5 +79,120 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::Link()
 
 	m_Rend->gl.LinkProgram(m_glID);
 
+	GLint link_ok = 0;
+	m_Rend->gl.GetProgramiv(m_glID, GL_LINK_STATUS, &link_ok);
+	if (link_ok == GL_FALSE)
+	{
+		m_Rend->GetSystem()->GetLog()->Print(_T("* shader link error:"));
+
+		GLint maxlen = 0;
+		m_Rend->gl.GetProgramiv(m_glID, GL_INFO_LOG_LENGTH, &maxlen);
+
+		if (maxlen)
+		{
+			// The maxLength includes the NULL character
+			char *pserr = (char *)_alloca(maxlen);
+			m_Rend->gl.GetProgramInfoLog(m_glID, maxlen, &maxlen, pserr);
+			TCHAR *tpserr;
+			CONVERT_MBCS2TCS(pserr, tpserr);
+
+			m_Rend->GetSystem()->GetLog()->Print(_T("\n\t%s\n\n"), tpserr);
+		}
+		else
+		{
+			m_Rend->GetSystem()->GetLog()->Print(_T(" unspecified\n\n"));
+		}
+
+		m_Linked = false;
+
+		return ShaderProgram::RETURNCODE::RET_LINK_FAILED;
+	}
+
+	m_Linked = true;
+
 	return ShaderProgram::RETURNCODE::RET_OK;
+}
+
+
+bool ShaderProgramImpl::IsLinked()
+{
+	return m_Linked;
+}
+
+
+int64_t ShaderProgramImpl::GetUniformLocation(const TCHAR *name)
+{
+	if (!m_Linked || !name)
+		return -1;
+
+	char *n;
+	CONVERT_TCS2MBCS(name, n);
+
+	int64_t ret = m_Rend->gl.GetUniformLocation(m_glID, n);
+
+	return ret;
+}
+
+
+bool ShaderProgramImpl::SetUniformMatrix(int64_t location, const glm::fmat4x4 *mat)
+{
+	if ((location < 0) || !mat)
+		return false;
+
+	m_Rend->gl.UniformMatrix4fv((GLint)location, 1, GL_FALSE, (const GLfloat *)mat);
+
+	return true;
+}
+
+
+bool ShaderProgramImpl::SetUniform1(int64_t location, float f)
+{
+	if (location < 0)
+		return false;
+
+	m_Rend->gl.Uniform1f((GLint)location, f);
+
+	return true;
+}
+
+
+bool ShaderProgramImpl::SetUniform2(int64_t location, const glm::fvec2 *v2)
+{
+	if ((location < 0) || !v2)
+		return false;
+
+	m_Rend->gl.Uniform2fv((GLint)location, 1, (const GLfloat *)v2);
+
+	return true;
+}
+
+
+bool ShaderProgramImpl::SetUniform3(int64_t location, const glm::fvec3 *v3)
+{
+	if ((location < 0) || !v3)
+		return false;
+
+	m_Rend->gl.Uniform3fv((GLint)location, 1, (const GLfloat *)v3);
+
+	return true;
+}
+
+
+bool ShaderProgramImpl::SetUniform4(int64_t location, const glm::fvec4 *v4)
+{
+	if ((location < 0) || !v4)
+		return false;
+
+	m_Rend->gl.Uniform4fv((GLint)location, 1, (const GLfloat *)v4);
+
+	return true;
+}
+
+
+bool ShaderProgramImpl::SetUniformTexture(int64_t location, Texture *tex)
+{
+	if ((location < 0) || !tex)
+		return false;
+
+	return true;
 }

@@ -16,7 +16,7 @@ namespace c3
 
 	protected:
 
-		typedef std::deque<C3MATRIX> TMatrixStack;
+		typedef std::deque<glm::fmat4x4> TMatrixStack;
 
 		// pre is each matrix that has been pushed, post is the result of a multiply of that and the previous top
 		TMatrixStack pre, post;
@@ -28,10 +28,10 @@ namespace c3
 
 		virtual void Release();
 
-		virtual void Push(const C3MATRIX *m = nullptr);
+		virtual void Push(const glm::fmat4x4 *m = nullptr);
 		virtual bool Pop();
 
-		virtual const C3MATRIX *Top(C3MATRIX *m) const;
+		virtual const glm::fmat4x4 *Top(glm::fmat4x4 *m) const;
 
 	};
 

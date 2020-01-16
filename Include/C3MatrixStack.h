@@ -20,10 +20,10 @@ namespace c3
 
 		virtual void Release() = NULL;
 
-		virtual void Push(const C3MATRIX *m = nullptr) = NULL;
+		virtual void Push(const glm::fmat4x4 *m = nullptr) = NULL;
 		virtual bool Pop() = NULL;
 
-		virtual const C3MATRIX *Top(C3MATRIX *m) const = NULL;
+		virtual const glm::fmat4x4 *Top(glm::fmat4x4 *m) const = NULL;
 
 	};
 

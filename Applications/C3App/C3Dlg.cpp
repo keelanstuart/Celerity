@@ -113,19 +113,15 @@ BOOL C3Dlg::OnInitDialog()
 	}
 #endif
 
-	c3::Prototype *pproto = m_Factory->CreatePrototype();
-	pproto->AddComportment(m_Factory->FindComportmentType(_T("UIControl")));
-	pproto->AddComportment(m_Factory->FindComportmentType(_T("Positionable")));
-	pproto->SetName(_T("GenericControl"));
+	c3::Prototype *pproto;
+	
+	pproto = m_Factory->FindPrototype(_T("Camera"));
+	m_Camera = pproto ? m_Factory->Build(pproto) : nullptr;
 
-	props::IProperty *pprop = pproto->GetProperties()->CreateProperty(_T("Image"), 'IMG');
-	pprop->SetString(_T("default.tga"));
-	pprop->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
+	pproto = m_Factory->FindPrototype(_T("GenericControl"));
+	m_RootObj = pproto ? m_Factory->Build(pproto) : nullptr;
 
-	m_RootObj = m_Factory->Build(pproto);
-
-
-	SetTimer('DRAW', 33, NULL);
+	SetTimer('DRAW', 10, NULL);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -155,9 +151,33 @@ void C3Dlg::OnPaint()
 	}
 	else
 	{
+		m_Camera->Update();
+		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComportment(c3::Positionable::Type()));
+		if (pcampos)
+		{
+			//pcampos->AdjustYaw(-0.1f);
+		}
+		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComportment(c3::Camera::Type()));
+		if (pcam)
+		{
+			pcam->SetPolarDistance(5.0f);
+			m_Rend->SetViewMatrix(pcam->GetViewMatrix());
+			m_Rend->SetProjectionMatrix(pcam->GetProjectionMatrix());
+		}
+
+		time_t t = time(nullptr);
+		glm::fvec4 c = glm::fvec4((float)fabs(sin(t)), 0.0f, 0.0f, 1.0f);
+		m_Rend->SetClearColor(&c);
 		if (m_Rend->BeginScene(0))
 		{
+			c3::Positionable *ppos = (c3::Positionable *)(m_RootObj->FindComportment(c3::Positionable::Type()));
+
+			ppos->AdjustPitch((float)sin(t) * 3.14f);
+			ppos->AdjustYaw((float)sin(t) * -3.14f);
 			m_RootObj->Update(0);
+
+			m_Rend->SetWorldMatrix(ppos->GetTransformMatrix());
+
 			if (m_RootObj->Prerender(0))
 				if (m_RootObj->Render(0))
 					m_RootObj->Postrender(0);
@@ -259,7 +279,7 @@ BOOL C3Dlg::OnEraseBkgnd(CDC *pDC)
 void C3Dlg::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == 'DRAW')
-		RedrawWindow(nullptr, nullptr, RDW_NOERASE | RDW_UPDATENOW);
+		RedrawWindow(nullptr, nullptr, RDW_NOERASE | RDW_UPDATENOW | RDW_INVALIDATE);
 
 	CDialog::OnTimer(nIDEvent);
 }

@@ -9,6 +9,7 @@
 #include <C3SystemImpl.h>
 
 #include <C3PositionableImpl.h>
+#include <C3CameraImpl.h>
 
 
 using namespace c3;
@@ -57,6 +58,7 @@ void SystemImpl::Release()
 		/// REGISTER NATIVE COMPORTMENTS BETWEEN THESE LINES
 		// *************************************************
 		UNREGISTER_COMPORTMENTTYPE(Positionable, m_Factory);
+		UNREGISTER_COMPORTMENTTYPE(Camera, m_Factory);
 		// *************************************************
 
 		delete m_Factory;
@@ -92,6 +94,7 @@ Factory *SystemImpl::GetFactory()
 		/// REGISTER NATIVE COMPORTMENTS BETWEEN THESE LINES
 		// *************************************************
 		REGISTER_COMPORTMENTTYPE(Positionable, m_Factory);
+		REGISTER_COMPORTMENTTYPE(Camera, m_Factory);
 		// *************************************************
 	}
 

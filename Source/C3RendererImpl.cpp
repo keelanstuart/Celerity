@@ -47,7 +47,9 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 
 	memset(&m_glARBWndClass, 0, sizeof(WNDCLASS));
 
-	m_ident = glm::identity<C3MATRIX>();
+	m_ident = glm::identity<glm::fmat4x4>();
+
+	m_matupflags.Set(MATRIXUPDATE_ALL);
 
 	m_Initialized = false;
 }
@@ -272,9 +274,9 @@ c3::System *RendererImpl::GetSystem()
 }
 
 
-void RendererImpl::SetClearColor(const C3VEC4 *color)
+void RendererImpl::SetClearColor(const glm::fvec4 *color)
 {
-	const static C3VEC4 defcolor = C3VEC4(0, 0, 0, 1);
+	const static glm::fvec4 defcolor = glm::fvec4(0, 0, 0, 1);
 
 	bool update = false;
 	if (!color)
@@ -291,9 +293,9 @@ void RendererImpl::SetClearColor(const C3VEC4 *color)
 }
 
 
-const C3VEC4 *RendererImpl::GetClearColor(C3VEC4 *color)
+const glm::fvec4 *RendererImpl::GetClearColor(glm::fvec4 *color)
 {
-	C3VEC4 *ret = color;
+	glm::fvec4 *ret = color;
 
 	if (ret)
 		*ret = m_clearColor;
@@ -765,48 +767,97 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 }
 
 
-void RendererImpl::SetProjectionMatrix(const C3MATRIX *m)
+void RendererImpl::SetProjectionMatrix(const glm::fmat4x4 *m)
 {
 	if (*m != m_proj)
 	{
 		m_proj = *m;
-
-#if 0
-		gl.MatrixMode(GL_PROJECTION);
-		gl.LoadMatrixf((GLfloat *)&m_proj);
-#endif
+		m_matupflags.Set(MATRIXUPDATE_PROJ);
 	}
 }
 
 
-void RendererImpl::SetViewMatrix(const C3MATRIX *m)
+void RendererImpl::SetViewMatrix(const glm::fmat4x4 *m)
 {
 	if (*m != m_view)
 	{
 		m_view = *m;
-		m_worldview = m_world * m_view;
-
-#if 0
-		gl.MatrixMode(GL_MODELVIEW);
-		gl.LoadMatrixf((GLfloat *)&m_worldview);
-#endif
+		m_matupflags.Set(MATRIXUPDATE_VIEW);
 	}
 }
 
 
-void RendererImpl::SetWorldMatrix(const C3MATRIX *m)
+void RendererImpl::SetWorldMatrix(const glm::fmat4x4 *m)
 {
 	if (*m != m_world)
 	{
 		m_world = *m;
-		m_worldview = m_world * m_view;
-
-#if 0		
-		gl.MatrixMode(GL_MODELVIEW);
-		gl.LoadMatrixf((GLfloat *)&m_worldview);
-#endif
+		m_matupflags.Set(MATRIXUPDATE_WORLD);
 	}
 }
+
+
+const glm::fmat4x4 *RendererImpl::GetProjectionMatrix(glm::fmat4x4 *m)
+{
+	if (!m)
+		return &m_proj;
+
+	*m = m_proj;
+	return m;
+}
+
+
+const glm::fmat4x4 *RendererImpl::GetViewMatrix(glm::fmat4x4 *m)
+{
+	if (!m)
+		return &m_view;
+
+	*m = m_view;
+	return m;
+}
+
+
+const glm::fmat4x4 *RendererImpl::GetWorldMatrix(glm::fmat4x4 *m)
+{
+	if (!m)
+		return &m_world;
+
+	*m = m_world;
+	return m;
+}
+
+
+const glm::fmat4x4 *RendererImpl::GetViewProjectionMatrix(glm::fmat4x4 *m)
+{
+	if (m_matupflags.AnySet(MATRIXUPDATE_VIEWPROJ))
+	{
+		m_viewproj = m_view * m_proj;
+		m_matupflags.Clear(MATRIXUPDATE_VIEWPROJ);
+	}
+
+	if (!m)
+		return &m_viewproj;
+
+	*m = m_viewproj;
+	return m;
+}
+
+
+const glm::fmat4x4 *RendererImpl::GetWorldViewProjectionMatrix(glm::fmat4x4 *m)
+{
+	if (m_matupflags.AnySet(MATRIXUPDATE_ALL))
+	{
+		m_worldviewproj = m_world * *GetViewProjectionMatrix();
+		m_matupflags.Clear(MATRIXUPDATE_ALL);
+	}
+
+	if (!m)
+		return &m_worldviewproj;
+
+	*m = m_worldviewproj;
+	return m;
+}
+
 
 VertexBuffer *RendererImpl::GetCubeVB()
 {
