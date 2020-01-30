@@ -20,13 +20,14 @@ class UIControl : public c3::Comportment
 
 protected:
 	c3::Object *m_Owner;
-	c3::VertexBuffer *m_VB;
-	c3::IndexBuffer *m_IB;
 	c3::ShaderComponent *m_VS;
 	c3::ShaderComponent *m_FS;
 	c3::ShaderProgram *m_SP;
 	c3::Mesh *m_M;
+	c3::Texture2D *m_Tex;
+	c3::Resource *m_TexRes;
 	int64_t m_MVP;
+	int64_t m_TEX0;
 
 public:
 	static const c3::ComportmentType *Type();
@@ -40,10 +41,11 @@ public:
 	virtual bool Initialize(c3::Object *powner);
 	virtual bool Prerender(c3::Object *powner, props::TFlags64 rendflags);
 	virtual void Render(c3::Object *powner, props::TFlags64 rendflags);
+	virtual void PropertyChanged(const props::IProperty *pprop) { }
 
 };
 
-DEFINE_COMPORTMENTTYPE(UIControl, UIControl, GUID({0x8e92d07e, 0x3169, 0x41e8, { 0x81, 0x2a, 0x4, 0x96, 0x4e, 0x3c, 0xd5, 0x7b }}), _T("UIControl"), _T(""));
+DEFINE_COMPORTMENTTYPE(UIControl, UIControl, GUID({0x8e92d07e, 0x3169, 0x41e8, { 0x81, 0x2a, 0x4, 0x96, 0x4e, 0x3c, 0xd5, 0x7b }}), "UIControl", "");
 
 class C3App : public CWinApp
 {

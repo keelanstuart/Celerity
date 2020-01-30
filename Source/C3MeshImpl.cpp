@@ -69,12 +69,12 @@ Mesh::RETURNCODE MeshImpl::Draw(Renderer::PrimType type)
 		if (m_IB)
 		{
 			m_pRend->UseIndexBuffer(m_IB);
-			m_pRend->DrawIndexedPrimitives(c3::Renderer::PrimType::TRILIST);
+			m_pRend->DrawIndexedPrimitives(type);
 		}
 		else
 		{
 			m_pRend->UseIndexBuffer(nullptr);
-			m_pRend->DrawPrimitives(c3::Renderer::PrimType::TRILIST);
+			m_pRend->DrawPrimitives(type);
 		}
 
 		return Mesh::RETURNCODE::RET_OK;

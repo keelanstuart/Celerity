@@ -24,11 +24,19 @@ namespace c3
 
 		virtual void Release() = NULL;
 
+		virtual ResourceManager *GetResourceManager() = NULL;
+
 		virtual Renderer *GetRenderer() = NULL;
 
 		virtual Factory *GetFactory() = NULL;
 
+		virtual PluginManager *GetPluginManager() = NULL;
+
 		virtual pool::IThreadPool *GetThreadPool() = NULL;
+
+		virtual FileMapper *GetFileMapper() = NULL;
+
+		virtual Configuration *CreateConfiguration(const TCHAR *filename) = NULL;
 
 		virtual Log *GetLog() = NULL;
 

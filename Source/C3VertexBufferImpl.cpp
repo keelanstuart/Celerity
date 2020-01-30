@@ -20,6 +20,7 @@ VertexBufferImpl::VertexBufferImpl(RendererImpl *prend)
 	m_VertSize = 0;
 	m_glID = GL_INVALID_VALUE;
 	m_LastBoundBuffer = 0;
+	m_Components.reserve(5);
 }
 
 
@@ -82,6 +83,11 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 	if (m_glID == GL_INVALID_VALUE)
 		return RET_GENBUFFER_FAILED;
 
+	bool update_now = flags.IsSet(VBLOCKFLAG_UPDATENOW);
+	bool user_buffer = flags.IsSet(VBLOCKFLAG_USERBUFFER);
+	if (update_now && !user_buffer)
+		return RET_UPDATENOW_NEEDS_USERBUFFER;
+
 	GLint mode;
 	if (flags.IsSet(VBLOCKFLAG_READ | VBLOCKFLAG_WRITE))
 		mode = GL_READ_WRITE;
@@ -90,21 +96,23 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 	else if (flags.IsSet(VBLOCKFLAG_WRITE))
 		mode = GL_WRITE_ONLY;
 
+	m_VertSize = sz;
+	m_NumVerts = numverts;
+
 	// bind the buffer
 	m_Rend->UseVertexBuffer(this);
 
-	if (init)
+	if (init || update_now)
 	{
 		// make sure that it is allocated
-		m_Rend->gl.BufferData(GL_ARRAY_BUFFER, sz * numverts, NULL, GL_STATIC_DRAW);
+		m_Rend->gl.BufferData(GL_ARRAY_BUFFER, sz * numverts, user_buffer ? *buffer : nullptr, flags.IsSet(VBLOCKFLAG_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		if (update_now)
+			return RET_OK;
 	}
 
 	m_Buffer = m_Rend->gl.MapBuffer(GL_ARRAY_BUFFER, mode);
 	if (!m_Buffer)
 		return RET_MAPBUFFER_FAILED;
-
-	m_VertSize = sz;
-	m_NumVerts = numverts;
 
 	*buffer = m_Buffer;
 

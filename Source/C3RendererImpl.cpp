@@ -15,6 +15,11 @@
 #include <C3IndexBufferImpl.h>
 #include <C3MeshImpl.h>
 #include <C3FrameBufferImpl.h>
+#include <C3ImGuiImpl.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 
 using namespace c3;
 
@@ -26,8 +31,23 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_hwnd = NULL;
 	m_hdc = NULL;
 	m_glrc = NULL;
+	m_hwnd_override = NULL;
+
+	m_event_shutdown = CreateEvent(nullptr, TRUE, TRUE, nullptr);
+
+	for (size_t tc = 0; tc < NUMAUXTHREADS; tc++)
+	{
+		m_hdc_aux[tc] = NULL;
+		m_glrc_aux[tc] = NULL;
+	}
+	m_AuxPool = pool::IThreadPool::Create(NUMAUXTHREADS);
+
+	m_needsFinish = false;
 
 	m_clearZ = 1.0f;
+	m_DepthMode = DepthMode::DM_READWRITE;
+	m_DepthTest = DepthTest::DT_LESSEREQUAL;
+	m_CullMode = CullMode::CM_BACK;
 
 	m_CurFB = nullptr;
 	m_CurFBID = 0;
@@ -45,6 +65,20 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_BoundsMesh = nullptr;
 	m_CubeMesh = nullptr;
 
+	m_PlanesVB = nullptr;
+	m_XYPlaneMesh = nullptr;
+	m_XZPlaneMesh = nullptr;
+	m_YZPlaneMesh = nullptr;
+
+	m_HemisphereVB = nullptr;
+	m_HemisphereMesh = nullptr;
+
+	m_BlackTex = nullptr;
+	m_GreyTex = nullptr;
+	m_WhiteTex = nullptr;
+	m_BlueTex = nullptr;
+	m_GridTex = nullptr;
+
 	memset(&m_glARBWndClass, 0, sizeof(WNDCLASS));
 
 	m_ident = glm::identity<glm::fmat4x4>();
@@ -58,6 +92,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 RendererImpl::~RendererImpl()
 {
 	Shutdown();
+
+	CloseHandle(m_event_shutdown);
 }
 
 
@@ -68,24 +104,25 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 
 	PIXELFORMATDESCRIPTOR pfd =
 	{
-	   sizeof(PIXELFORMATDESCRIPTOR),	// size of this pfd  
-	   1,								// version number  
-	   PFD_DRAW_TO_WINDOW |			// support window  
-	   PFD_SUPPORT_OPENGL |			// support OpenGL  
-	   PFD_DOUBLEBUFFER,				// double buffered  
-	   PFD_TYPE_RGBA,					// RGBA type  
-	   32,								// 32-bit color depth  
-	   0, 0, 0, 0, 0, 0,				// color bits ignored  
-	   0,								// no alpha buffer  
-	   0,								// shift bit ignored  
-	   0,								// no accumulation buffer  
-	   0, 0, 0, 0,						// accum bits ignored  
-	   24,								// 24-bit z-buffer  
-	   8,								// 8-bit stencil buffer  
-	   0,								// no auxiliary buffer  
-	   PFD_MAIN_PLANE,					// main layer  
-	   0,								// reserved  
-	   0, 0, 0							// layer masks ignored  
+		sizeof(PIXELFORMATDESCRIPTOR),	// size of this pfd  
+		1,								// version number  
+		PFD_DRAW_TO_WINDOW |			// support window  
+		PFD_SUPPORT_OPENGL |			// support OpenGL  
+		PFD_SUPPORT_COMPOSITION |		// support compositing
+		PFD_DOUBLEBUFFER,				// double buffered  
+		PFD_TYPE_RGBA,					// RGBA type  
+		32,								// 32-bit color depth  
+		0, 0, 0, 0, 0, 0,				// color bits ignored  
+		0,								// no alpha buffer  
+		0,								// shift bit ignored  
+		0,								// no accumulation buffer  
+		0, 0, 0, 0,						// accum bits ignored  
+		24,								// 24-bit z-buffer  
+		8,								// 8-bit stencil buffer  
+		0,								// no auxiliary buffer  
+		PFD_MAIN_PLANE,					// main layer  
+		0,								// reserved  
+		0, 0, 0							// layer masks ignored  
 	};
 
 	int  iPixelFormat;
@@ -113,6 +150,7 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 		HWND hwnd_temp = CreateWindow(GLARBWND_CLASSNAME, GLARBWND_CLASSNAME,
 									  WS_POPUP | WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
 									  0, 0, 1, 1, NULL, NULL, hmod_temp, NULL);
+
 		if (hwnd_temp != NULL)
 		{
 			HDC hdc_temp = GetDC(hwnd_temp);
@@ -136,6 +174,7 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 				WGL_DRAW_TO_WINDOW_ARB,		GL_TRUE,
 				WGL_SUPPORT_OPENGL_ARB,		GL_TRUE,
 				WGL_DOUBLE_BUFFER_ARB,		GL_TRUE,
+				WGL_TRANSPARENT_ARB,		GL_TRUE,
 				WGL_PIXEL_TYPE_ARB,			WGL_TYPE_RGBA_ARB,
 				WGL_ACCELERATION_ARB,		WGL_FULL_ACCELERATION_ARB,
 				WGL_RED_BITS_ARB,			8,
@@ -167,8 +206,13 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 			};
 
 			m_glrc = wglCreateContextAttribsARB(m_hdc, 0, contextAttribList);
-			m_glrc_aux = wglCreateContextAttribsARB(m_hdc, 0, contextAttribList);
-			wglShareLists(m_glrc_aux, m_glrc);
+
+			for (size_t tc = 0; tc < NUMAUXTHREADS; tc++)
+			{
+				m_hdc_aux[tc] = CreateDC(_T("DISPLAY"), NULL, NULL, NULL);
+				m_glrc_aux[tc] = wglCreateContextAttribsARB(m_hdc_aux[tc], m_glrc, contextAttribList);
+				wglShareLists(m_glrc_aux[tc], m_glrc);
+			}
 
 			wglMakeCurrent(NULL, NULL);
 
@@ -187,6 +231,8 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 
 	m_Initialized = true;
 
+	ResetEvent(m_event_shutdown);
+
 	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
 	if (wglSwapIntervalEXT)
 		wglSwapIntervalEXT(0);
@@ -204,14 +250,46 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 	SetViewMatrix(&m_ident);
 	SetWorldMatrix(&m_ident);
 
-	// This vertex array is global... only using VBO/IBO pairs. I don't know if this is "correct"
+	// This vertex array is global... only using VBO/IBO pairs. I don't know if this is "correct",
+	// but I bind it only once and never touch it again.
 	gl.GenVertexArrays(1, &m_VAOglID);
 	gl.BindVertexArray(m_VAOglID);
 
-	SetClearColor();
+	gl.ClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
 	gl.ClearDepthf(m_clearZ);
+
 	gl.Enable(GL_DEPTH_TEST);
 	gl.DepthFunc(GL_LEQUAL);
+	gl.DepthMask(GL_TRUE);
+
+	gl.FrontFace(GL_CCW);
+	gl.Enable(GL_CULL_FACE);
+	gl.CullFace(GL_BACK);
+
+	gl.Enable(GL_BLEND);
+	gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+	// Initialize meshes
+	GetCubeMesh();
+	GetBoundsMesh();
+	GetHemisphereMesh();
+	GetXYPlaneMesh();
+	GetXZPlaneMesh();
+	GetYZPlaneMesh();
+
+	// Initizlie textures
+	GetBlackTexture();
+	GetGreyTexture();
+	GetWhiteTexture();
+	GetBlueTexture();
+	GetGridTexture();
+
+	ImGui::CreateContext();
+	ImGuiIO &io = ImGui::GetIO(); (void)io;
+	io.DisplaySize.x = width;
+	io.DisplaySize.y = height;
+
+	ImGui_ImplCelerity_Init((c3::System *)m_pSys);
 
 	return true;
 }
@@ -228,9 +306,44 @@ void RendererImpl::Shutdown()
 	if (!m_Initialized)
 		return;
 
+	SetEvent(m_event_shutdown);
+
+	ImGui_ImplCelerity_Shutdown();
+
+	if (m_BlackTex)
+	{
+		m_BlackTex->Release();
+		m_BlackTex = nullptr;
+	}
+
+	if (m_GreyTex)
+	{
+		m_GreyTex->Release();
+		m_GreyTex = nullptr;
+	}
+
+	if (m_WhiteTex)
+	{
+		m_WhiteTex->Release();
+		m_WhiteTex = nullptr;
+	}
+
+	if (m_BlueTex)
+	{
+		m_BlueTex->Release();
+		m_BlueTex = nullptr;
+	}
+
+	if (m_GridTex)
+	{
+		m_GridTex->Release();
+		m_GridTex = nullptr;
+	}
+
 	if (m_BoundsMesh)
 	{
-		m_BoundsMesh->GetIndexBuffer()->Release();
+		if (m_BoundsMesh->GetIndexBuffer())
+			m_BoundsMesh->GetIndexBuffer()->Release();
 		m_BoundsMesh->AttachIndexBuffer(nullptr);
 		m_BoundsMesh->AttachVertexBuffer(nullptr);
 		m_BoundsMesh->Release();
@@ -239,7 +352,8 @@ void RendererImpl::Shutdown()
 
 	if (m_CubeMesh)
 	{
-		m_CubeMesh->GetIndexBuffer()->Release();
+		if (m_CubeMesh->GetIndexBuffer())
+			m_CubeMesh->GetIndexBuffer()->Release();
 		m_CubeMesh->AttachIndexBuffer(nullptr);
 		m_CubeMesh->AttachVertexBuffer(nullptr);
 		m_CubeMesh->Release();
@@ -252,19 +366,79 @@ void RendererImpl::Shutdown()
 		m_CubeVB = nullptr;
 	}
 
+	if (m_XYPlaneMesh)
+	{
+		if (m_XYPlaneMesh->GetIndexBuffer())
+			m_XYPlaneMesh->GetIndexBuffer()->Release();
+		m_XYPlaneMesh->AttachIndexBuffer(nullptr);
+		m_XYPlaneMesh->AttachVertexBuffer(nullptr);
+		m_XYPlaneMesh->Release();
+		m_XYPlaneMesh = nullptr;
+	}
+
+	if (m_XZPlaneMesh)
+	{
+		if (m_XZPlaneMesh->GetIndexBuffer())
+			m_XZPlaneMesh->GetIndexBuffer()->Release();
+		m_XZPlaneMesh->AttachIndexBuffer(nullptr);
+		m_XZPlaneMesh->AttachVertexBuffer(nullptr);
+		m_XZPlaneMesh->Release();
+		m_XZPlaneMesh = nullptr;
+	}
+
+	if (m_YZPlaneMesh)
+	{
+		if (m_YZPlaneMesh->GetIndexBuffer())
+			m_YZPlaneMesh->GetIndexBuffer()->Release();
+		m_YZPlaneMesh->AttachIndexBuffer(nullptr);
+		m_YZPlaneMesh->AttachVertexBuffer(nullptr);
+		m_YZPlaneMesh->Release();
+		m_YZPlaneMesh = nullptr;
+	}
+
+	if (m_PlanesVB)
+	{
+		m_PlanesVB->Release();
+		m_PlanesVB = nullptr;
+	}
+
+	if (m_HemisphereMesh)
+	{
+		if (m_HemisphereMesh->GetIndexBuffer())
+			m_HemisphereMesh->GetIndexBuffer()->Release();
+		m_HemisphereMesh->AttachIndexBuffer(nullptr);
+		m_HemisphereMesh->AttachVertexBuffer(nullptr);
+		m_HemisphereMesh->Release();
+		m_HemisphereMesh = nullptr;
+	}
+
+	if (m_HemisphereVB)
+	{
+		m_HemisphereVB->Release();
+		m_HemisphereVB = nullptr;
+	}
+
 	// Delete the global vertex array
 	gl.BindVertexArray(0);
 	gl.DeleteVertexArrays(1, &m_VAOglID);
 
 	wglMakeCurrent(NULL, NULL);
 
-	wglDeleteContext(m_glrc_aux);
-	wglDeleteContext(m_glrc);
+	for (size_t aux_idx = 0; aux_idx < NUMAUXTHREADS; aux_idx++)
+	{
+		if (m_glrc_aux[aux_idx])
+			wglDeleteContext(m_glrc_aux[aux_idx]);
+	}
+
+	if (m_glrc)
+		wglDeleteContext(m_glrc);
 
 	m_glrc = NULL;
-	m_glrc_aux = NULL;
 	m_hdc = NULL;
 	m_hwnd = NULL;
+	memset(m_glrc_aux, 0, sizeof(HGLRC) *NUMAUXTHREADS);
+
+	m_Initialized = false;
 }
 
 
@@ -274,22 +448,78 @@ c3::System *RendererImpl::GetSystem()
 }
 
 
+void RendererImpl::SetOverrideHwnd(HWND hwnd)
+{
+	m_hwnd_override = hwnd;
+}
+
+
+HWND RendererImpl::GetOverrideHwnd()
+{
+	return m_hwnd_override;
+}
+
+
+bool RendererImpl::BeginScene(props::TFlags64 flags)
+{
+	if (!m_Initialized)
+		return false;
+
+	m_needsFinish = true;
+
+	ImGui_ImplCelerity_NewFrame();
+	ImGui::NewFrame();
+
+	bool show_demo_window = true;
+	ImGui::ShowDemoWindow(&show_demo_window);
+
+	gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	return true;
+}
+
+
+bool RendererImpl::EndScene(props::TFlags64 flags)
+{
+	if (!m_Initialized)
+		return false;
+
+	if (!m_needsFinish)
+		return false;
+
+	ImGui::EndFrame();
+	ImGui::Render();
+	ImGui_ImplCelerity_RenderDrawData(ImGui::GetDrawData());
+
+	gl.Finish();
+
+	return true;
+}
+
+
+bool RendererImpl::Present()
+{
+	if (!m_Initialized)
+		return false;
+
+	HDC tmpdc = m_hwnd_override ? GetDC(m_hwnd_override) : m_hdc;
+	SwapBuffers(tmpdc);
+	return true;
+}
+
+
 void RendererImpl::SetClearColor(const glm::fvec4 *color)
 {
 	const static glm::fvec4 defcolor = glm::fvec4(0, 0, 0, 1);
 
-	bool update = false;
 	if (!color)
 		color = &defcolor;
 
 	if (m_clearColor != *color)
 	{
 		m_clearColor = *color;
-		update = true;
-	}
-
-	if (update)
 		gl.ClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+	}
 }
 
 
@@ -320,31 +550,86 @@ float RendererImpl::GetClearDepth()
 }
 
 
-bool RendererImpl::BeginScene(props::TFlags64 flags)
+void RendererImpl::SetDepthMode(DepthMode mode)
 {
-	if (!m_Initialized)
-		return false;
-
-	gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	return true;
-}
-
-
-bool RendererImpl::EndScene(props::TFlags64 flags)
-{
-	if (!m_Initialized)
-		return false;
-
-	if (m_needFinish)
+	if (mode != m_DepthMode)
 	{
-		gl.Finish();
-		m_needFinish = false;
-	}
+		if ((m_DepthMode == DM_DISABLED) || (m_DepthMode == DM_READONLY))
+			gl.DepthMask(GL_TRUE);
 
-	SwapBuffers(m_hdc);
-	return true;
+		if ((m_DepthMode == DM_DISABLED) || (m_DepthMode == DM_WRITEONLY))
+			gl.Enable(GL_DEPTH_TEST);
+
+		if ((mode == DM_DISABLED) || (mode == DM_READONLY))
+			gl.DepthMask(GL_FALSE);
+
+		if ((mode == DM_DISABLED) || (mode == DM_WRITEONLY))
+			gl.Disable(GL_DEPTH_TEST);
+
+		m_DepthMode = mode;
+	}
 }
+
+
+Renderer::DepthMode RendererImpl::GetDepthMode()
+{
+	return m_DepthMode;
+}
+
+
+void RendererImpl::SetDepthTest(DepthTest test)
+{
+	if (test != m_DepthTest)
+	{
+		const static GLenum dtvals[DT_NUMTESTS] ={DT_NEVER, DT_LESSER, DT_LESSEREQUAL, DT_EQUAL, DT_NOTEQUAL, DT_GREATEREQUAL, DT_GREATER, DT_ALWAYS};
+
+		gl.DepthFunc(dtvals[test]);
+
+		m_DepthTest = test;
+	}
+}
+
+
+Renderer::DepthTest RendererImpl::GetDepthTest()
+{
+	return m_DepthTest;
+}
+
+
+void RendererImpl::SetCullMode(CullMode mode)
+{
+	if (mode != m_CullMode)
+	{
+		if (mode == CM_DISABLED)
+			gl.Disable(GL_CULL_FACE);
+		else if (m_CullMode == CM_DISABLED)
+			gl.Enable(GL_CULL_FACE);
+
+		switch (mode)
+		{
+			case CM_FRONT:
+				gl.CullFace(GL_FRONT);
+				break;
+
+			case CM_BACK:
+				gl.CullFace(GL_BACK);
+				break;
+
+			case CM_ALL:
+				gl.CullFace(GL_FRONT_AND_BACK);
+				break;
+		}
+
+		m_CullMode = mode;
+	}
+}
+
+
+Renderer::CullMode RendererImpl::GetCullMode()
+{
+	return m_CullMode;
+}
+
 
 size_t RendererImpl::PixelSize(Renderer::TextureType type)
 {
@@ -539,6 +824,60 @@ Texture3D *RendererImpl::CreateTexture3D(size_t width, size_t height, size_t dep
 }
 
 
+Texture2D *RendererImpl::CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 flags)
+{
+	Texture2D *ret = nullptr;
+
+	char *_filename;
+	CONVERT_TCS2MBCS(filename, _filename);
+
+	unsigned char *data;
+	int width, height, numchannels;
+	data = stbi_load(_filename, &width, &height, &numchannels, 0);
+	if (data)
+	{
+		Renderer::TextureType tt;
+
+		switch (numchannels)
+		{
+			case 1:
+				tt = Renderer::TextureType::U8_1CH;
+				break;
+
+			case 2:
+				tt = Renderer::TextureType::U8_2CH;
+				break;
+
+			case 3:
+				tt = Renderer::TextureType::U8_3CH;
+				break;
+
+			case 4:
+				tt = Renderer::TextureType::U8_4CH;
+				break;
+		}
+
+		ret = CreateTexture2D(width, height, tt, 0, flags);
+		
+		if (ret)
+		{
+			void *buf;
+			Texture2D::SLockInfo li;
+			if ((ret->Lock(&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				memcpy(buf, data, width * height * numchannels);
+
+				ret->Unlock();
+			}
+		}
+
+		free(data);
+	}
+
+	return ret;
+}
+
+
 DepthBuffer* RendererImpl::CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 flags)
 {
 	return new DepthBufferImpl(this, width, height, type);
@@ -661,6 +1000,66 @@ void RendererImpl::UseIndexBuffer(IndexBuffer *pibuf)
 	m_CurIBID = glid;
 
 	gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, glid);
+}
+
+
+void RendererImpl::UseTexture(uint64_t sampler, Texture *ptex)
+{
+	if (sampler >= 32)
+		return;
+
+	static const GLenum sampleridlu[32] =
+	{
+		GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3, GL_TEXTURE4, GL_TEXTURE5, GL_TEXTURE6, GL_TEXTURE7,
+		GL_TEXTURE8, GL_TEXTURE9, GL_TEXTURE10, GL_TEXTURE11, GL_TEXTURE12, GL_TEXTURE13, GL_TEXTURE14, GL_TEXTURE15,
+		GL_TEXTURE16, GL_TEXTURE17, GL_TEXTURE18, GL_TEXTURE19, GL_TEXTURE20, GL_TEXTURE21, GL_TEXTURE22, GL_TEXTURE23,
+		GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27, GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31
+	};
+
+	static Texture *ptexcache[32] ={0};
+
+	if (ptexcache[sampler] == ptex)
+		return;
+
+	Texture *luptex = ptex ? ptex : ptexcache[sampler];
+
+	GLuint glid = GL_INVALID_VALUE;
+	GLenum textype;
+
+	c3::Texture2DImpl *tex2d = dynamic_cast<c3::Texture2DImpl *>(luptex);
+	if (!tex2d)
+	{
+		c3::TextureCubeImpl *texcube = dynamic_cast<c3::TextureCubeImpl *>(luptex);
+		if (!texcube)
+		{
+			c3::Texture3DImpl *tex3d = dynamic_cast<c3::Texture3DImpl *>(luptex);
+			if (!tex3d)
+			{
+				return;
+			}
+			else
+			{
+				textype = GL_TEXTURE_3D;
+				glid = (GLuint)(c3::ShaderProgramImpl &)*tex3d;
+			}
+		}
+		else
+		{
+			textype = GL_TEXTURE_CUBE_MAP;
+			glid = (GLuint)(c3::ShaderProgramImpl &)*texcube;
+		}
+	}
+	else
+	{
+		textype = GL_TEXTURE_2D;
+		glid = (GLuint)(c3::ShaderProgramImpl &)*tex2d;
+	}
+
+	ptexcache[sampler] = ptex;
+
+	gl.ActiveTexture(sampleridlu[sampler]);
+
+	gl.BindTexture(textype, ptex ? glid : 0);
 }
 
 
@@ -831,7 +1230,7 @@ const glm::fmat4x4 *RendererImpl::GetViewProjectionMatrix(glm::fmat4x4 *m)
 {
 	if (m_matupflags.AnySet(MATRIXUPDATE_VIEWPROJ))
 	{
-		m_viewproj = m_view * m_proj;
+		m_viewproj = m_proj * m_view;
 		m_matupflags.Clear(MATRIXUPDATE_VIEWPROJ);
 	}
 
@@ -847,7 +1246,7 @@ const glm::fmat4x4 *RendererImpl::GetWorldViewProjectionMatrix(glm::fmat4x4 *m)
 {
 	if (m_matupflags.AnySet(MATRIXUPDATE_ALL))
 	{
-		m_worldviewproj = m_world * *GetViewProjectionMatrix();
+		m_worldviewproj = *GetViewProjectionMatrix() * m_world;
 		m_matupflags.Clear(MATRIXUPDATE_ALL);
 	}
 
@@ -868,55 +1267,61 @@ VertexBuffer *RendererImpl::GetCubeVB()
 		c3::VertexBuffer::ComponentDescription comps[4] ={
 			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
 			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_NORMAL},
+			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
 
 			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
 		};
 
 		typedef struct
 		{
-			glm::vec3 pos;
-			glm::vec3 norm;
+			glm::fvec3 pos;
+			glm::fvec3 norm;
+			glm::fvec2 uv;
 		} SCubeVert;
 
-		static const SCubeVert v[8 * 3] =
+		static const SCubeVert v[6 * 4] =
 		{
-			{ { -1, -1, -1 }, { -1,  0,  0 } },		// A
-			{ { -1, -1, -1 }, {  0, -1,  0 } },
-			{ { -1, -1, -1 }, {  0,  0, -1 } },
+			// TOP +Z 0
+			{ { -1, -1,  1 }, {  0,  0,  1 }, {  0,  0 } },
+			{ {  1, -1,  1 }, {  0,  0,  1 }, {  0,  1 } },
+			{ {  1,  1,  1 }, {  0,  0,  1 }, {  1,  1 } },
+			{ { -1,  1,  1 }, {  0,  0,  1 }, {  1,  0 } },
 
-			{ { -1, -1,  1 }, { -1,  0,  0 } },		// E
-			{ { -1, -1,  1 }, {  0, -1,  0 } },
-			{ { -1, -1,  1 }, {  0,  0,  1 } },
+			// RIGHT +X 4
+			{ {  1,  1,  1 }, {  1,  0,  0 }, {  0,  0 } },
+			{ {  1,  1, -1 }, {  1,  0,  0 }, {  0,  1 } },
+			{ {  1, -1, -1 }, {  1,  0,  0 }, {  1,  1 } },
+			{ {  1, -1,  1 }, {  1,  0,  0 }, {  1,  0 } },
 
-			{ { -1,  1, -1 }, { -1,  0,  0 } },		// B
-			{ { -1,  1, -1 }, {  0,  1,  0 } },
-			{ { -1,  1, -1 }, {  0,  0, -1 } },
+			// BOTTOM -Z 8
+			{ { -1, -1, -1 }, {  0,  0, -1 }, {  0,  0 } },
+			{ {  1, -1, -1 }, {  0,  0, -1 }, {  0,  1 } },
+			{ {  1,  1, -1 }, {  0,  0, -1 }, {  1,  1 } },
+			{ { -1,  1, -1 }, {  0,  0, -1 }, {  1,  0 } },
 
-			{ { -1,  1,  1 }, { -1,  0,  0 } },		// F
-			{ { -1,  1,  1 }, {  0,  1,  0 } },
-			{ { -1,  1,  1 }, {  0,  0,  1 } },
+			// LEFT -X 12
+			{ { -1, -1, -1 }, { -1,  0,  0 }, {  0,  0 } },
+			{ { -1, -1,  1 }, { -1,  0,  0 }, {  0,  1 } },
+			{ { -1,  1,  1 }, { -1,  0,  0 }, {  1,  1 } },
+			{ { -1,  1, -1 }, { -1,  0,  0 }, {  1,  0 } },
 
-			{ {  1,  1, -1 }, {  1,  0,  0 } },		// C
-			{ {  1,  1, -1 }, {  0,  1,  0 } },
-			{ {  1,  1, -1 }, {  0,  0, -1 } },
+			// FRONT +Y 16
+			{ { -1,  1, -1 }, {  0,  1,  0 }, {  0,  0 } },
+			{ {  1,  1, -1 }, {  0,  1,  0 }, {  0,  1 } },
+			{ {  1,  1,  1 }, {  0,  1,  0 }, {  1,  1 } },
+			{ { -1,  1,  1 }, {  0,  1,  0 }, {  1,  0 } },
 
-			{ {  1,  1,  1 }, {  1,  0,  0 } },		// G
-			{ {  1,  1,  1 }, {  0,  1,  0 } },
-			{ {  1,  1,  1 }, {  0,  0,  1 } },
-
-			{ {  1, -1, -1 }, {  1,  0,  0 } },		// D
-			{ {  1, -1, -1 }, {  0, -1,  0 } },
-			{ {  1, -1, -1 }, {  0,  0, -1 } },
-
-			{ {  1, -1,  1 }, {  1,  0,  0 } },		// H
-			{ {  1, -1,  1 }, {  0, -1,  0 } },
-			{ {  1, -1,  1 }, {  0,  0,  1 } }
+			// FRONT -Y 20
+			{ { -1, -1, -1 }, {  0, -1,  0 }, {  0,  0 } },
+			{ {  1, -1, -1 }, {  0, -1,  0 }, {  0,  1 } },
+			{ {  1, -1,  1 }, {  0, -1,  0 }, {  1,  1 } },
+			{ { -1, -1,  1 }, {  0, -1,  0 }, {  1,  0 } }
 		};
 
 		void *buf;
-		if (m_CubeVB->Lock(&buf, 8 * 3, comps, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
+		if (m_CubeVB->Lock(&buf, 6 * 4, comps, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
 		{
-			memcpy(buf, v, sizeof(SCubeVert) * 8 * 3);
+			memcpy(buf, v, sizeof(SCubeVert) * 6 * 4);
 
 			m_CubeVB->Unlock();
 		}
@@ -938,19 +1343,20 @@ Mesh *RendererImpl::GetBoundsMesh()
 			IndexBuffer *pib = CreateIndexBuffer(0);
 			if (pib)
 			{
+				// do front and back, then connect the corners
 				static const uint16_t i[12][2] ={
-					{0 , 6 },
-					{6 , 12},
-					{12, 18},
-					{18, 0 },
-					{3 , 9 },
-					{9 , 15},
-					{15, 21},
-					{21, 3 },
-					{0 , 3 },
-					{6 , 9 },
-					{12, 15},
-					{18, 21}
+					{0 , 1 },
+					{1 , 2 },
+					{2 , 3 },
+					{3 , 0 },
+					{8 , 9 },
+					{9 , 10},
+					{10, 11},
+					{11, 8 },
+					{0 , 8 },
+					{1 , 9 },
+					{2 , 10},
+					{3 , 11}
 				};
 
 				void *buf;
@@ -982,19 +1388,20 @@ Mesh *RendererImpl::GetCubeMesh()
 			IndexBuffer *pib = CreateIndexBuffer(0);
 			if (pib)
 			{
-				static const uint16_t i[6][2][3] ={
-					{ {0 , 6 , 9 }, {0 , 9 , 3 } },	// -x
-					{ {6 , 12, 15}, {6 , 15, 9 } },	// +y
-					{ {12, 18, 21}, {12, 21, 15} },	// +x
-					{ {18, 0 , 3 }, {18, 9 , 3 } },	// -y
-					{ {0 , 12, 6 }, {0 , 18, 12} },	// -z
-					{ {3 , 15, 9 }, {3 , 21, 15} },	// +z
+				static const uint16_t i[6][2][3] =
+				{
+					 { {  0,  2,  1 }, {  0,  3, 2  } }		// top
+					,{ {  4,  5,  6 }, {  4,  6, 7  } }		// right
+					,{ {  8,  9, 10 }, {  8, 10, 11 } }		// bottom
+					,{ { 12, 14, 13 }, { 12, 15, 14 } }		// left fix
+					,{ { 16, 17, 18 }, { 16, 18, 19 } }		// front
+					,{ { 20, 22, 21 }, { 20, 23, 22 } }		// back
 				};
 
 				void *buf;
-				if (pib->Lock(&buf, 6 * 2 * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				if (pib->Lock(&buf, 2 * 3 * 6, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
 				{
-					memcpy(buf, i, sizeof(uint16_t) * 12 * 2);
+					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3 * 6);
 
 					pib->Unlock();
 				}
@@ -1005,4 +1412,441 @@ Mesh *RendererImpl::GetCubeMesh()
 	}
 
 	return m_CubeMesh;
+}
+
+
+VertexBuffer *RendererImpl::GetPlanesVB()
+{
+	if (!m_PlanesVB)
+	{
+		m_PlanesVB = CreateVertexBuffer(0);
+
+		c3::VertexBuffer::ComponentDescription comps[4] ={
+			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
+			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_NORMAL},
+			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
+
+			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
+		};
+
+		typedef struct
+		{
+			glm::fvec3 pos;
+			glm::fvec3 norm;
+			glm::fvec2 uv;
+		} SPlaneVert;
+
+		static const SPlaneVert v[3 * 4] =
+		{
+			// XY
+			{ { -1, -1,  0 }, {  0,  0,  1 }, {  0,  0 } },
+			{ {  1, -1,  0 }, {  0,  0,  1 }, {  0,  1 } },
+			{ {  1,  1,  0 }, {  0,  0,  1 }, {  1,  1 } },
+			{ { -1,  1,  0 }, {  0,  0,  1 }, {  1,  0 } },
+
+			// YZ
+			{ {  0,  1,  1 }, {  1,  0,  0 }, {  0,  0 } },
+			{ {  0,  1, -1 }, {  1,  0,  0 }, {  0,  1 } },
+			{ {  0, -1, -1 }, {  1,  0,  0 }, {  1,  1 } },
+			{ {  0, -1,  1 }, {  1,  0,  0 }, {  1,  0 } },
+
+			// XZ
+			{ { -1,  0, -1 }, {  0,  1,  0 }, {  0,  0 } },
+			{ {  1,  0, -1 }, {  0,  1,  0 }, {  0,  1 } },
+			{ {  1,  0,  1 }, {  0,  1,  0 }, {  1,  1 } },
+			{ { -1,  0,  1 }, {  0,  1,  0 }, {  1,  0 } }
+		};
+
+		void *buf;
+		if (m_PlanesVB->Lock(&buf, 3 * 4, comps, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
+		{
+			memcpy(buf, v, sizeof(SPlaneVert) * 3 * 4);
+
+			m_PlanesVB->Unlock();
+		}
+	}
+
+	return m_PlanesVB;
+}
+
+Mesh *RendererImpl::GetXYPlaneMesh()
+{
+	if (!m_XYPlaneMesh)
+	{
+		m_XYPlaneMesh = CreateMesh();
+
+		m_XYPlaneMesh->AttachVertexBuffer(GetPlanesVB());
+
+		if (m_PlanesVB)
+		{
+			IndexBuffer *pib = CreateIndexBuffer(0);
+			if (pib)
+			{
+				static const uint16_t i[2][3] =
+				{
+					 {  0,  2,  1 }, {  0,  3, 2  }
+				};
+
+				void *buf;
+				if (pib->Lock(&buf, 2 * 3 * 6, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				{
+					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3 * 6);
+
+					pib->Unlock();
+				}
+
+				m_XYPlaneMesh->AttachIndexBuffer(pib);
+			}
+		}
+	}
+
+	return m_XYPlaneMesh;
+}
+
+
+Mesh *RendererImpl::GetYZPlaneMesh()
+{
+	if (!m_YZPlaneMesh)
+	{
+		m_YZPlaneMesh = CreateMesh();
+
+		m_YZPlaneMesh->AttachVertexBuffer(GetPlanesVB());
+
+		if (m_PlanesVB)
+		{
+			IndexBuffer *pib = CreateIndexBuffer(0);
+			if (pib)
+			{
+				static const uint16_t i[2][3] =
+				{
+					 {  8,  10,  9 }, {  8,  11, 10  }
+				};
+
+				void *buf;
+				if (pib->Lock(&buf, 2 * 3 * 6, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				{
+					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3 * 6);
+
+					pib->Unlock();
+				}
+
+				m_YZPlaneMesh->AttachIndexBuffer(pib);
+			}
+		}
+	}
+
+	return m_YZPlaneMesh;
+}
+
+
+Mesh *RendererImpl::GetXZPlaneMesh()
+{
+	if (!m_XZPlaneMesh)
+	{
+		m_XZPlaneMesh = CreateMesh();
+
+		m_XZPlaneMesh->AttachVertexBuffer(GetPlanesVB());
+
+		if (m_PlanesVB)
+		{
+			IndexBuffer *pib = CreateIndexBuffer(0);
+			if (pib)
+			{
+				static const uint16_t i[2][3] =
+				{
+					 {  4,  6,  5 }, {  4,  7, 6  }
+				};
+
+				void *buf;
+				if (pib->Lock(&buf, 2 * 3 * 6, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				{
+					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3 * 6);
+
+					pib->Unlock();
+				}
+
+				m_XZPlaneMesh->AttachIndexBuffer(pib);
+			}
+		}
+	}
+
+	return m_XZPlaneMesh;
+}
+
+
+size_t hemisphereSectorCount = 40;
+size_t hemisphereStackCount = 20;
+
+VertexBuffer *RendererImpl::GetHemisphereVB()
+{
+	typedef struct
+	{
+		glm::fvec3 pos;
+		glm::fvec3 norm;
+		glm::fvec2 uv;
+	} SHemisphereVert;
+
+	typedef std::vector<SHemisphereVert> TVertexArray;
+	TVertexArray verts;
+
+	SHemisphereVert v;
+
+	glm::fvec4 n(0, 0, 1, 0);
+
+	v.pos.x = v.pos.y = v.norm.x = v.norm.y = v.uv.x = v.uv.y = 0.0f;
+	v.pos.z = v.norm.z = 1.0f;
+
+	verts.push_back(v);
+
+	glm::fmat4x4 mz = (glm::fmat4x4)glm::angleAxis(C3_PI * 2.0f / (float)hemisphereSectorCount, glm::fvec3(0.0f, 0.0f, 1.0f));
+
+	for (size_t i = 1, maxi = hemisphereStackCount + 1; i < maxi; i++)
+	{
+		glm::fmat4x4 mx = (glm::fmat4x4)glm::angleAxis(C3_PI / 2.0f / (float)(hemisphereStackCount + 1) * i, glm::fvec3(0.0f, 1.0f, 0.0f));
+		n = glm::normalize(glm::fvec4(0, 0, 1, 0) * mx);
+
+		for (size_t j = 0, maxj = hemisphereSectorCount + 1; j < maxj; j++)
+		{
+			v.norm = v.pos = n;
+			//v.uv.x = (float)j;
+			v.uv = glm::fvec2(n.x, n.y) * glm::fvec2(0.5f, 0.5f) + glm::fvec2(0.5f, 0.5f);
+
+			verts.push_back(v);
+
+			n = glm::normalize(n * mz);
+		}
+
+		//v.uv.y = (float)i;
+	}
+
+	c3::VertexBuffer::ComponentDescription comps[4] ={
+		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
+		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_NORMAL},
+		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
+
+		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
+	};
+
+	m_HemisphereVB = CreateVertexBuffer(0);
+	if (m_HemisphereVB)
+	{
+		void *buf;
+		if ((m_HemisphereVB->Lock(&buf, verts.size(), comps, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
+		{
+			memcpy(buf, &(verts.at(0)), sizeof(SHemisphereVert) * verts.size());
+
+			m_HemisphereVB->Unlock();
+		}
+	}
+
+	return m_HemisphereVB;
+}
+
+
+Mesh *RendererImpl::GetHemisphereMesh()
+{
+	if (!m_HemisphereMesh)
+	{
+		m_HemisphereMesh = CreateMesh();
+
+		m_HemisphereMesh->AttachVertexBuffer(GetHemisphereVB());
+
+		if (m_HemisphereVB)
+		{
+			IndexBuffer *pib = CreateIndexBuffer(0);
+			if (pib)
+			{
+				uint16_t *buf;
+
+				size_t ic_top = 3 * (hemisphereSectorCount + 1), ic = ic_top + ((ic_top * 2) * (hemisphereStackCount - 1));
+
+				if (pib->Lock((void **)&buf, ic, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				{
+					// Do the top slice first because it has only one triangle per sector
+					for (uint16_t i = 0, maxi = (uint16_t)(hemisphereSectorCount + 1); i < maxi; i++)
+					{
+						*(buf++) = 0;
+						*(buf++) = i;
+						*(buf++) = i + 1;
+					}
+
+					uint16_t ss = 1;
+					for (uint16_t i = 1, maxi = (uint16_t)(hemisphereStackCount + 1); i < maxi; i++)
+					{
+						for (uint16_t j = 0, maxj = (uint16_t)(hemisphereSectorCount + 1); j < maxj; j++)
+						{
+							uint16_t a = ss;
+							uint16_t b = a + (uint16_t)hemisphereSectorCount;
+
+							*(buf++) = a;
+							*(buf++) = b;
+							*(buf++) = b + 1;
+
+							*(buf++) = a;
+							*(buf++) = b + 1;
+							*(buf++) = a + 1;
+
+							ss++;
+						}
+					}
+
+					pib->Unlock();
+				}
+
+				m_HemisphereMesh->AttachIndexBuffer(pib);
+			}
+		}
+	}
+
+	return m_HemisphereMesh;
+}
+
+
+Texture2D *RendererImpl::GetBlackTexture()
+{
+	if (!m_BlackTex)
+	{
+		m_BlackTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
+		if (m_BlackTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_BlackTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				for (size_t y = 0, maxy = li.height; y < maxy; y++)
+				{
+					for (size_t x = 0, maxx = li.width; x < maxx; x++)
+					{
+						buf[x] = 0xFF000000;
+					}
+
+					buf = (uint32_t *)((BYTE *)buf + li.stride);
+				}
+
+				m_BlackTex->Unlock();
+			}
+		}
+	}
+
+	return m_BlackTex;
+}
+
+
+Texture2D *RendererImpl::GetGreyTexture()
+{
+	if (!m_GreyTex)
+	{
+		m_GreyTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
+		if (m_GreyTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_GreyTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				for (size_t y = 0, maxy = li.height; y < maxy; y++)
+				{
+					for (size_t x = 0, maxx = li.width; x < maxx; x++)
+					{
+						buf[x] = 0xFF808080;
+					}
+
+					buf = (uint32_t *)((BYTE *)buf + li.stride);
+				}
+
+				m_GreyTex->Unlock();
+			}
+		}
+	}
+
+	return m_GreyTex;
+}
+
+
+Texture2D *RendererImpl::GetWhiteTexture()
+{
+	if (!m_WhiteTex)
+	{
+		m_WhiteTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
+		if (m_WhiteTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_WhiteTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				for (size_t y = 0, maxy = li.height; y < maxy; y++)
+				{
+					for (size_t x = 0, maxx = li.width; x < maxx; x++)
+					{
+						buf[x] = 0xFFFFFFFF;
+					}
+
+					buf = (uint32_t *)((BYTE *)buf + li.stride);
+				}
+
+				m_WhiteTex->Unlock();
+			}
+		}
+	}
+
+	return m_WhiteTex;
+}
+
+
+Texture2D *RendererImpl::GetBlueTexture()
+{
+	if (!m_BlueTex)
+	{
+		m_BlueTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
+		if (m_BlueTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_BlueTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				for (size_t y = 0, maxy = li.height; y < maxy; y++)
+				{
+					for (size_t x = 0, maxx = li.width; x < maxx; x++)
+					{
+						buf[x] = 0xFFFF0000;
+					}
+
+					buf = (uint32_t *)((BYTE *)buf + li.stride);
+				}
+
+				m_BlueTex->Unlock();
+			}
+		}
+	}
+
+	return m_BlueTex;
+}
+
+
+Texture2D *RendererImpl::GetGridTexture()
+{
+	if (!m_GridTex)
+	{
+		m_GridTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 0, TEXCREATEFLAG_WRAP_U | TEXCREATEFLAG_WRAP_V);
+		if (m_GridTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_GridTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				for (size_t y = 0, maxy = li.height, maxym1 = (maxy - 1); y < maxy; y++)
+				{
+					for (size_t x = 0, maxx = li.width, maxxm1 = (maxx - 1); x < maxx; x++)
+					{
+						buf[x] = (((y > 0) && (y < maxym1) && (x > 0) && (x < maxxm1)) ? 0x00000000 : 0xFFFFFFFF);
+					}
+
+					buf = (uint32_t *)((BYTE *)buf + li.stride);
+				}
+
+				m_GridTex->Unlock();
+			}
+		}
+	}
+
+	return m_GridTex;
 }

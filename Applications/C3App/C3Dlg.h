@@ -10,9 +10,6 @@ class C3Dlg : public CDialog
 {
 protected:
 	c3::Renderer *m_Rend;
-	c3::Texture2D *m_Tex;
-	c3::VertexBuffer *m_VB;
-	c3::IndexBuffer *m_IB;
 	c3::FrameBuffer *m_FB;
 	c3::Texture2D *m_ColorTarg[2];
 	c3::DepthBuffer *m_DepthTarg;
@@ -50,4 +47,5 @@ public:
 	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	virtual BOOL DestroyWindow();
+	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 };

@@ -46,6 +46,9 @@ namespace c3
 		/// Called by the Object that owns the Comportment during it's own Render
 		virtual void Render(Object *pobject, props::TFlags64 rendflags) = NULL;
 
+		/// Called when a property on the owning Object has changed
+		virtual void PropertyChanged(const props::IProperty *pprop) = NULL;
+
 	};
 
 
@@ -77,8 +80,8 @@ namespace c3
 	};
 
 
-	/// This is the standard way of registering your comportments
-	/// Do your own thing but beware!
+	/// This is the standard way of registering your Comportment
+	/// Do your own thing, but beware!
 
 	#define COMPORTMENTTYPE(comportment_class) comportment_class##Type
 
@@ -98,8 +101,8 @@ namespace c3
 			virtual c3::Comportment *Build() const { return new comportmentimpl_class(); }								\
 			virtual void Destroy(c3::Comportment *pc) const { pc->Release(); }											\
 			virtual GUID GetGUID() const { return GUID(guid); }															\
-			virtual const TCHAR *GetName() const { return name; }														\
-			virtual const TCHAR *GetDescription() const { return description; }											\
+			virtual const TCHAR *GetName() const { return _T(name); }													\
+			virtual const TCHAR *GetDescription() const { return _T(description); }										\
 		}
 
 	/// THIS GOES IN YOUR SOURCE

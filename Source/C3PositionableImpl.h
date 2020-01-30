@@ -12,12 +12,6 @@
 namespace c3
 {
 
-	#define POSFLAG_POSCHANGED			0x0001
-	#define POSFLAG_ORICHANGED			0x0002
-	#define POSFLAG_SCLCHANGED			0x0004
-
-	#define POSFLAG_REBUILDMATRIX		(POSFLAG_POSCHANGED | POSFLAG_ORICHANGED | POSFLAG_SCLCHANGED)
-
 	class PositionableImpl : public Positionable, props::IPropertyChangeListener
 	{
 
@@ -56,7 +50,7 @@ namespace c3
 
 		virtual void Render(Object *pobject, props::TFlags64 rendflags);
 
-		virtual void PropertyChanged(const props::IPropertySet *ppropset, const props::IProperty *pprop);
+		virtual void PropertyChanged(const props::IProperty *pprop);
 
 		// *** POSITION FUNCTIONS *******************************
 
@@ -146,6 +140,6 @@ namespace c3
 
 	};
 
-	DEFINE_COMPORTMENTTYPE(Positionable, PositionableImpl, GUID({0x26d446ca, 0xda21, 0x4272, {0xb6, 0x66, 0x16, 0xc2, 0xcb, 0xf3, 0x5f, 0x69}}), _T("Positionable"), _T("Allows the Object to be positioned and oriented in space"));
+	DEFINE_COMPORTMENTTYPE(Positionable, PositionableImpl, GUID({0x26d446ca, 0xda21, 0x4272, {0xb6, 0x66, 0x16, 0xc2, 0xcb, 0xf3, 0x5f, 0x69}}), "Positionable", "Allows the Object to be positioned and oriented in space");
 
 };

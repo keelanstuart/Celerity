@@ -6,6 +6,13 @@
 
 #pragma once
 
+#define CELERITY_VERSION_MAJ		3
+#define CELERITY_VERSION_MIN		0
+#define CELERITY_VERSION_BLD		0
+
+#define CELERITY_VERSION			((CELERITY_VERSION_MAJ << 24) |  (CELERITY_VERSION_MIN << 16) | CELERITY_VERSION_BLD)
+
+
 #ifdef C3_EXPORTS
 #define C3_API __declspec(dllexport)
 #else
@@ -44,5 +51,12 @@
 #include <C3Object.h>
 #include <C3Prototype.h>
 #include <C3Factory.h>
+#include <C3Plugin.h>
+#include <C3PluginManager.h>
+#include <C3Configuration.h>
+#include <C3FileMapper.h>
+#include <C3ResourceManager.h>
 #include <C3System.h>
 
+#define IMGUI_USER_CONFIG	"C3ImGuiConfig.h"
+#include <../third-party/imgui/imgui.h>

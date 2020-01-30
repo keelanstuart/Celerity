@@ -25,6 +25,7 @@ namespace c3
 			RET_NULL_BUFFER,
 			RET_GENBUFFER_FAILED,
 			RET_MAPBUFFER_FAILED,
+			RET_UPDATENOW_NEEDS_USERBUFFER,
 		};
 
 		virtual void Release() = NULL;
@@ -50,7 +51,14 @@ namespace c3
 		virtual RETURNCODE Unlock() = NULL;
 	};
 
-	#define TEXCREATEFLAG_RENDERTARGET		0x0001
+	#define TEXCREATEFLAG_RENDERTARGET		0x00000001
+
+	#define TEXCREATEFLAG_WRAP_U			0x00000010
+	#define TEXCREATEFLAG_MIRROR_U			0x00000020
+	#define TEXCREATEFLAG_WRAP_V			0x00000100
+	#define TEXCREATEFLAG_MIRROR_V			0x00000200
+	#define TEXCREATEFLAG_WRAP_W			0x00001000
+	#define TEXCREATEFLAG_MIRROR_W			0x00002000
 
 	#define TEXLOCKFLAG_READ				0x0001
 	#define TEXLOCKFLAG_WRITE				0x0002
@@ -65,12 +73,13 @@ namespace c3
 		{
 			size_t width;
 			size_t height;
-			size_t stride;
+			size_t stride;		// The number of bytes, not pixels, between lines
 
 		} SLockInfo;
 
 		/// Call to begin updating texture; fill out the returned buffer and call unlock to finalize the update
 		virtual Texture::RETURNCODE Lock(void **buffer, SLockInfo &lockinfo, size_t mip = 0, props::TFlags64 flags = 0) = NULL;
+
 	};
 
 
@@ -83,7 +92,7 @@ namespace c3
 		{
 			size_t width;
 			size_t height;
-			size_t stride;
+			size_t stride;		// The number of bytes, not pixels, between lines
 
 		} SLockInfo;
 
@@ -105,6 +114,7 @@ namespace c3
 
 		/// Call to begin updating texture; fill out the returned buffer and call unlock to finalize the update
 		virtual Texture::RETURNCODE Lock(void **buffer, CubeFace face, SLockInfo &lockinfo, size_t mip = 0, props::TFlags64 flags = 0) = NULL;
+
 	};
 
 
@@ -118,8 +128,8 @@ namespace c3
 			size_t width;
 			size_t height;
 			size_t depth;
-			size_t stride_w;
-			size_t stride_h;
+			size_t stride_w;		// The number of bytes, not pixels, between lines
+			size_t stride_h;		// The number of bytes, not pixels, between slices
 
 		} SLockInfo;
 
@@ -128,6 +138,7 @@ namespace c3
 
 		/// Call to begin updating texture; fill out the returned buffer and call unlock to finalize the update
 		virtual Texture::RETURNCODE Lock(void **buffer, SLockInfo &lockinfo, size_t mip = 0, props::TFlags64 flags = 0) = NULL;
+
 	};
 
 };

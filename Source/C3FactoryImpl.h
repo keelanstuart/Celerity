@@ -63,11 +63,11 @@ namespace c3
 		
 		virtual size_t GetNumComportmentTypes();
 
-		virtual ComportmentType *GetComportmentType(size_t index);
+		virtual const ComportmentType *GetComportmentType(size_t index);
 
-		virtual ComportmentType *FindComportmentType(const TCHAR *name, bool case_sensitive);
+		virtual const ComportmentType *FindComportmentType(const TCHAR *name, bool case_sensitive);
 
-		virtual ComportmentType *FindComportmentType(GUID guid);
+		virtual const ComportmentType *FindComportmentType(GUID guid);
 
 	};
 

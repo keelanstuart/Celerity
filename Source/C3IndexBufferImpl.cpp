@@ -67,6 +67,11 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, 
 	if (m_glID == GL_INVALID_VALUE)
 		return RET_GENBUFFER_FAILED;
 
+	bool update_now = flags.IsSet(IBLOCKFLAG_UPDATENOW);
+	bool user_buffer = flags.IsSet(IBLOCKFLAG_USERBUFFER);
+	if (update_now && !user_buffer)
+		return RET_UPDATENOW_NEEDS_USERBUFFER;
+
 	GLint mode;
 	if (flags.IsSet(IBLOCKFLAG_READ | IBLOCKFLAG_WRITE))
 		mode = GL_READ_WRITE;
@@ -77,10 +82,12 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, 
 
 	m_Rend->UseIndexBuffer(this);
 
-	if (init)
+	if (init || update_now)
 	{
 		// make sure that it is allocated
-		m_Rend->gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, sz * numindices, NULL, GL_STATIC_DRAW);
+		m_Rend->gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, sz * numindices, user_buffer ? *buffer : nullptr, flags.IsSet(IBLOCKFLAG_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		if (update_now)
+			return RET_OK;
 	}
 
 	m_Buffer = m_Rend->gl.MapBuffer(GL_ELEMENT_ARRAY_BUFFER, mode);

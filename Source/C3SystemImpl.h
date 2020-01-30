@@ -11,6 +11,11 @@
 #include <C3RendererImpl.h>
 #include <C3LogImpl.h>
 #include <C3FactoryImpl.h>
+#include <C3PluginManagerImpl.h>
+#include <C3ResourceManagerImpl.h>
+#include <C3FileMapperImpl.h>
+#include <C3ResourceManagerImpl.h>
+
 
 namespace c3
 {
@@ -21,8 +26,11 @@ namespace c3
 	protected:
 		RendererImpl *m_Renderer;
 		FactoryImpl *m_Factory;
+		PluginManagerImpl *m_PluginManager;
+		ResourceManagerImpl *m_ResourceManager;
 		pool::IThreadPool *m_Pool;
 		LogImpl *m_Log;
+		FileMapperImpl *m_FileMapper;
 
 	public:
 		SystemImpl();
@@ -31,11 +39,19 @@ namespace c3
 
 		virtual void Release();
 
+		virtual ResourceManager *GetResourceManager();
+
 		virtual Renderer *GetRenderer();
 
 		virtual Factory *GetFactory();
 
+		virtual PluginManager *GetPluginManager();
+
 		virtual pool::IThreadPool *GetThreadPool();
+
+		virtual FileMapper *GetFileMapper();
+
+		virtual Configuration *CreateConfiguration(const TCHAR *filename);
 
 		virtual Log *GetLog();
 

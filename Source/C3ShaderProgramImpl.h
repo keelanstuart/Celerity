@@ -40,7 +40,7 @@ namespace c3
 		virtual bool SetUniform2(int64_t location, const glm::fvec2 *v2);
 		virtual bool SetUniform3(int64_t location, const glm::fvec3 *v3);
 		virtual bool SetUniform4(int64_t location, const glm::fvec4 *v4);
-		virtual bool SetUniformTexture(int64_t location, Texture *tex);
+		virtual bool SetUniformTexture(int64_t location, uint64_t sampler, Texture *tex);
 
 		operator GLuint() const { return m_glID; }
 

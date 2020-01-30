@@ -13,8 +13,6 @@
 namespace c3
 {
 
-	#define CAMFLAG_REBUILDMATRICES		0x0001
-
 	class CameraImpl : public Camera, props::IPropertyChangeListener
 	{
 
@@ -40,7 +38,7 @@ namespace c3
 
 		Positionable *m_pcpos;
 
-		props::TFlags64 m_flags;
+		props::TFlags64 m_Flags;
 
 	public:
 
@@ -62,7 +60,7 @@ namespace c3
 
 		virtual void Render(Object *pobject, props::TFlags64 rendflags);
 
-		virtual void PropertyChanged(const props::IPropertySet *ppropset, const props::IProperty *pprop);
+		virtual void PropertyChanged(const props::IProperty *pprop);
 
 		virtual void SetViewMode(ViewMode mode);
 		virtual ViewMode GetViewMode();
@@ -89,6 +87,6 @@ namespace c3
 
 	};
 
-	DEFINE_COMPORTMENTTYPE(Camera, CameraImpl, GUID({0xfcc880c3, 0x54a2, 0x4168, { 0xbd, 0x4, 0xe9, 0x91, 0xfe, 0xee, 0x29, 0xef }}), _T("Camera"), _T("Camera generates view and projection matrices for scene rendering (requires Positionable)"));
+	DEFINE_COMPORTMENTTYPE(Camera, CameraImpl, GUID({0xfcc880c3, 0x54a2, 0x4168, { 0xbd, 0x4, 0xe9, 0x91, 0xfe, 0xee, 0x29, 0xef }}), "Camera", "Camera generates view and projection matrices for scene rendering (requires Positionable)");
 
 };

@@ -17,6 +17,7 @@ PrototypeImpl::PrototypeImpl(System *psys, GUID guid)
 {
 	m_pSys = psys;
 	m_GUID = guid;
+	m_Flags.SetAll(OBJFLAG_UPDATE | OBJFLAG_DRAW);
 
 	m_Props = props::IPropertySet::CreatePropertySet();
 }
@@ -64,7 +65,7 @@ props::IPropertySet *PrototypeImpl::GetProperties()
 }
 
 
-bool PrototypeImpl::AddComportment(ComportmentType *pcomptype)
+bool PrototypeImpl::AddComportment(const ComportmentType *pcomptype)
 {
 	if (!pcomptype)
 		return false;
@@ -78,7 +79,7 @@ bool PrototypeImpl::AddComportment(ComportmentType *pcomptype)
 }
 
 
-bool PrototypeImpl::RemoveComportment(ComportmentType *pcomp)
+bool PrototypeImpl::RemoveComportment(const ComportmentType *pcomp)
 {
 	TComportmentArray::iterator it = std::find(m_Comportments.begin(), m_Comportments.end(), pcomp);
 	if (it != m_Comportments.end())
@@ -98,7 +99,7 @@ size_t PrototypeImpl::GetNumComportments()
 }
 
 
-ComportmentType *PrototypeImpl::GetComportment(size_t index)
+const ComportmentType *PrototypeImpl::GetComportment(size_t index)
 {
 	if (index >= m_Comportments.size())
 		return nullptr;

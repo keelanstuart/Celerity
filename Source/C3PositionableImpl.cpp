@@ -34,7 +34,7 @@ void PositionableImpl::Release()
 
 props::TFlags64 PositionableImpl::Flags()
 {
-	return props::TFlags64(0);
+	return m_Flags;
 }
 
 
@@ -47,20 +47,20 @@ bool PositionableImpl::Initialize(Object *pobject)
 	if (!propset)
 		return false;
 
-	m_ppos = propset->CreateReferenceProperty(_T("Position"), 'POS', &m_Pos, props::IProperty::PROPERTY_TYPE::PT_REAL_V3);
+	m_ppos = propset->CreateReferenceProperty(_T("Position"), 'POS', &m_Pos, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
 	if (m_ppos)
 	{
 		m_ppos->SetVec3F(props::TVec3F(0, 0, 0));
 	}
 
-	m_pori = propset->CreateReferenceProperty(_T("Orientation"), 'ORI', &m_Ori, props::IProperty::PROPERTY_TYPE::PT_REAL_V4);
+	m_pori = propset->CreateReferenceProperty(_T("Orientation"), 'ORI', &m_Ori, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4);
 	if (m_pori)
 	{
 		m_pori->SetVec4F(props::TVec4F(m_Ori.x, m_Ori.y, m_Ori.z, m_Ori.w));
 		m_pori->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_QUATERNION);
 	}
 
-	m_pscl = propset->CreateReferenceProperty(_T("Scale"), 'SCL', &m_Scl, props::IProperty::PROPERTY_TYPE::PT_REAL_V3);
+	m_pscl = propset->CreateReferenceProperty(_T("Scale"), 'SCL', &m_Scl, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
 	if (m_pscl)
 	{
 		m_pscl->SetVec3F(props::TVec3F(1, 1, 1));
@@ -102,7 +102,10 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 		//m_Bounds.Align(&m_Mat);
 
 		m_Flags.Clear(POSFLAG_REBUILDMATRIX);
+		m_Flags.Set(POSFLAG_MATRIXCHANGED);
 	}
+	else
+		m_Flags.Clear(POSFLAG_MATRIXCHANGED);
 }
 
 
@@ -122,12 +125,12 @@ void PositionableImpl::Render(Object *pobject, props::TFlags64 rendflags)
 	Mesh *pbm = pr->GetBoundsMesh();
 	if (pbm)
 	{
-		pbm->Draw();
+		pbm->Draw(c3::Renderer::PrimType::LINELIST);
 	}
 }
 
 
-void PositionableImpl::PropertyChanged(const props::IPropertySet *ppropset, const props::IProperty *pprop)
+void PositionableImpl::PropertyChanged(const props::IProperty *pprop)
 {
 	props::FOURCHARCODE fcc = pprop->GetID();
 	if ((fcc == 'POS') || (fcc == 'ORI') || (fcc == 'SCL'))

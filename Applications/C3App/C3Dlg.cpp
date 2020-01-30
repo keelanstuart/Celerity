@@ -23,9 +23,6 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	m_Rend = nullptr;
-	m_Tex = nullptr;
-	m_VB = nullptr;
-	m_IB = nullptr;
 	m_FB = nullptr;
 	memset(m_ColorTarg, 0, sizeof(c3::Texture2D *) * 2);;
 	m_DepthTarg = nullptr;
@@ -41,6 +38,7 @@ BEGIN_MESSAGE_MAP(C3Dlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	ON_WM_ERASEBKGND()
 	ON_WM_TIMER()
+	ON_WM_MOUSEWHEEL()
 END_MESSAGE_MAP()
 
 
@@ -49,6 +47,14 @@ END_MESSAGE_MAP()
 BOOL C3Dlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+
+	DWM_BLURBEHIND bb;
+	bb.dwFlags = DWM_BB_ENABLE | DWM_BB_TRANSITIONONMAXIMIZED | DWM_BB_BLURREGION;
+	bb.fEnable = TRUE;
+	bb.hRgnBlur = CreateRectRgn(0, 0, -1, -1);
+	bb.fTransitionOnMaximized = TRUE;
+	DwmEnableBlurBehindWindow(GetSafeHwnd(), &bb);
+
 
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
@@ -66,7 +72,7 @@ BOOL C3Dlg::OnInitDialog()
 	if (!m_Rend->Initialize(r.Width(), r.Height(), GetSafeHwnd(), 0))
 		exit(-2);
 
-#if 1
+#if 0
 	m_FB = m_Rend->CreateFrameBuffer();
 	if (m_FB)
 	{
@@ -90,29 +96,6 @@ BOOL C3Dlg::OnInitDialog()
 	}
 #endif
 
-#if 1
-	m_Tex = m_Rend->CreateTexture2D(64, 64, c3::Renderer::ETextureType::U8_4CH, 0);
-	if (m_Tex)
-	{
-		c3::Texture2D::SLockInfo li;
-		BYTE *buf;
-		if (m_Tex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == c3::Texture::RETURNCODE::RET_OK)
-		{
-			for (size_t y = 0, maxy = li.height; y < maxy; y++)
-			{
-				for (size_t x = 0, maxx = li.width; x < maxx; x++)
-				{
-					((uint32_t *)buf)[x] = 0x8000FF00;
-				}
-
-				buf += li.stride;
-			}
-
-			m_Tex->Unlock();
-		}
-	}
-#endif
-
 	c3::Prototype *pproto;
 	
 	pproto = m_Factory->FindPrototype(_T("Camera"));
@@ -121,7 +104,29 @@ BOOL C3Dlg::OnInitDialog()
 	pproto = m_Factory->FindPrototype(_T("GenericControl"));
 	m_RootObj = pproto ? m_Factory->Build(pproto) : nullptr;
 
-	SetTimer('DRAW', 10, NULL);
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComportment(c3::Positionable::Type()));
+	if (pcampos)
+	{
+		// look up a little
+		pcampos->AdjustPitch(glm::radians(-60.0f));
+		pcampos->AdjustPos(0.0f, 0.0f, -8.0f);
+	}
+
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComportment(c3::Camera::Type()));
+	if (pcam)
+	{
+		pcam->SetPolarDistance(8.0f);
+		pcam->SetFOV(glm::radians(70.0f));
+	}
+
+	c3::Positionable *pdomepos = dynamic_cast<c3::Positionable *>(m_RootObj->FindComportment(c3::Positionable::Type()));
+	if (pdomepos)
+	{
+		pdomepos->SetScl(40.0f, 40.0f, 40.0f);
+	}
+
+
+	SetTimer('DRAW', 16, NULL);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -151,38 +156,37 @@ void C3Dlg::OnPaint()
 	}
 	else
 	{
-		m_Camera->Update();
 		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComportment(c3::Positionable::Type()));
 		if (pcampos)
-		{
-			//pcampos->AdjustYaw(-0.1f);
-		}
+			pcampos->AdjustYaw(glm::radians(0.5f));
+
+		m_Camera->Update();
+
 		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComportment(c3::Camera::Type()));
 		if (pcam)
 		{
-			pcam->SetPolarDistance(5.0f);
 			m_Rend->SetViewMatrix(pcam->GetViewMatrix());
 			m_Rend->SetProjectionMatrix(pcam->GetProjectionMatrix());
 		}
 
 		time_t t = time(nullptr);
-		glm::fvec4 c = glm::fvec4((float)fabs(sin(t)), 0.0f, 0.0f, 1.0f);
+		glm::fvec4 c = glm::fvec4(0.0f, 0.0f, 0.0f, 0.0f);
 		m_Rend->SetClearColor(&c);
-		if (m_Rend->BeginScene(0))
+		if (m_Rend->BeginScene())
 		{
 			c3::Positionable *ppos = (c3::Positionable *)(m_RootObj->FindComportment(c3::Positionable::Type()));
 
-			ppos->AdjustPitch((float)sin(t) * 3.14f);
-			ppos->AdjustYaw((float)sin(t) * -3.14f);
+			//ppos->AdjustPitch(0.02f);
 			m_RootObj->Update(0);
 
 			m_Rend->SetWorldMatrix(ppos->GetTransformMatrix());
 
-			if (m_RootObj->Prerender(0))
-				if (m_RootObj->Render(0))
-					m_RootObj->Postrender(0);
+			if (m_RootObj->Prerender())
+				if (m_RootObj->Render())
+					m_RootObj->Postrender();
 
-			m_Rend->EndScene(0);
+			m_Rend->EndScene();
+			m_Rend->Present();
 		}
 
 		CDialog::OnPaint();
@@ -200,24 +204,6 @@ HCURSOR C3Dlg::OnQueryDragIcon()
 void C3Dlg::Cleanup()
 {
 	KillTimer('DRAW');
-
-	if (m_Tex)
-	{
-		m_Tex->Release();
-		m_Tex = nullptr;
-	}
-
-	if (m_VB)
-	{
-		m_VB->Release();
-		m_VB = nullptr;
-	}
-
-	if (m_IB)
-	{
-		m_IB->Release();
-		m_IB = nullptr;
-	}
 
 	if (m_ColorTarg[0])
 	{
@@ -290,4 +276,20 @@ BOOL C3Dlg::DestroyWindow()
 	Cleanup();
 
 	return CDialog::DestroyWindow();
+}
+
+
+BOOL C3Dlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
+{
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComportment(c3::Camera::Type()));
+	if (pcam)
+	{
+		float d = pcam->GetPolarDistance();
+		d += ((zDelta < 0) ? 0.5f : -0.5f);
+		d = std::max(d, 0.1f);
+
+		pcam->SetPolarDistance(d);
+	}
+
+	return CDialog::OnMouseWheel(nFlags, zDelta, pt);
 }

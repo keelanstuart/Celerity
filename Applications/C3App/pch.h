@@ -12,6 +12,19 @@
 // add headers that you want to pre-compile here
 #include "framework.h"
 
+#include <tchar.h>
+
+#include <map>
+#include <deque>
+#include <vector>
+#include <string>
+#include <set>
+#include <algorithm>
+
+typedef std::basic_string<TCHAR, std::char_traits<TCHAR>, std::allocator<TCHAR> > tstring;
+typedef std::basic_ostream<TCHAR, std::char_traits<TCHAR> > tostream;
+typedef std::basic_istream<TCHAR, std::char_traits<TCHAR> > tistream;
+
 #include <C3.h>
 
 #endif //PCH_H

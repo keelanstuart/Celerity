@@ -25,6 +25,7 @@ namespace c3
 			RET_BAD_VERTEX_DESCRIPTION,
 			RET_GENBUFFER_FAILED,
 			RET_MAPBUFFER_FAILED,
+			RET_UPDATENOW_NEEDS_USERBUFFER,
 		};
 
 		typedef struct SComponentDescription
@@ -98,6 +99,9 @@ namespace c3
 
 		#define VBLOCKFLAG_READ			0x0001
 		#define VBLOCKFLAG_WRITE		0x0002
+		#define VBLOCKFLAG_DYNAMIC		0x0004
+		#define VBLOCKFLAG_USERBUFFER	0x0008
+		#define VBLOCKFLAG_UPDATENOW	0x0010
 
 		virtual RETURNCODE Lock(void **buffer, size_t numverts, const ComponentDescription *components, props::TFlags64 flags) = NULL;
 		virtual void Unlock() = NULL;

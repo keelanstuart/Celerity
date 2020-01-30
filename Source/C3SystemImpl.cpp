@@ -7,10 +7,12 @@
 #include "pch.h"
 
 #include <C3SystemImpl.h>
+#include <C3ConfigurationImpl.h>
 
 #include <C3PositionableImpl.h>
 #include <C3CameraImpl.h>
 
+#include <C3TextureImpl.h>
 
 using namespace c3;
 
@@ -28,15 +30,17 @@ SystemImpl::SystemImpl()
 	// we have a log by default... it will pipe to WARNINGS if nothing else
 	m_Log = new LogImpl(this);
 
+	m_FileMapper = nullptr;
+	m_ResourceManager = nullptr;
 	m_Renderer = nullptr;
 	m_Factory = nullptr;
+	m_PluginManager = nullptr;
+	m_Pool = nullptr;
 }
 
 
 SystemImpl::~SystemImpl()
 {
-	Release();
-
 	if (m_Log)
 	{
 		delete m_Log;
@@ -47,6 +51,23 @@ SystemImpl::~SystemImpl()
 
 void SystemImpl::Release()
 {
+	if (m_ResourceManager)
+	{
+		/// UNREGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES
+		// *************************************************
+		UNREGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
+		// *************************************************
+
+		delete m_ResourceManager;
+		m_ResourceManager = nullptr;
+	}
+
+	if (m_FileMapper)
+	{
+		delete m_FileMapper;
+		m_FileMapper = nullptr;
+	}
+
 	if (m_Renderer)
 	{
 		delete m_Renderer;
@@ -55,7 +76,7 @@ void SystemImpl::Release()
 
 	if (m_Factory)
 	{
-		/// REGISTER NATIVE COMPORTMENTS BETWEEN THESE LINES
+		/// UNREGISTER NATIVE COMPORTMENTS BETWEEN THESE LINES
 		// *************************************************
 		UNREGISTER_COMPORTMENTTYPE(Positionable, m_Factory);
 		UNREGISTER_COMPORTMENTTYPE(Camera, m_Factory);
@@ -65,12 +86,47 @@ void SystemImpl::Release()
 		m_Factory = nullptr;
 	}
 
+	if (m_PluginManager)
+	{
+		delete m_PluginManager;
+		m_PluginManager = nullptr;
+	}
+
 	if (m_Pool)
 	{
 		m_Pool->WaitForAllTasks(INFINITE);
 		m_Pool->Release();
 		m_Pool = nullptr;
 	}
+
+	delete this;
+}
+
+
+FileMapper *SystemImpl::GetFileMapper()
+{
+	if (!m_FileMapper)
+	{
+		m_FileMapper = new FileMapperImpl(this);
+	}
+
+	return m_FileMapper;
+}
+
+
+ResourceManager *SystemImpl::GetResourceManager()
+{
+	if (!m_ResourceManager)
+	{
+		m_ResourceManager = new ResourceManagerImpl(this);
+
+		/// REGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES
+		// *************************************************
+		REGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
+		// *************************************************
+	}
+
+	return m_ResourceManager;
 }
 
 
@@ -102,6 +158,17 @@ Factory *SystemImpl::GetFactory()
 }
 
 
+PluginManager *SystemImpl::GetPluginManager()
+{
+	if (!m_PluginManager)
+	{
+		m_PluginManager = new PluginManagerImpl(this);
+	}
+
+	return m_PluginManager;
+}
+
+
 pool::IThreadPool *SystemImpl::GetThreadPool()
 {
 	if (!m_Pool)
@@ -112,6 +179,13 @@ pool::IThreadPool *SystemImpl::GetThreadPool()
 	return m_Pool;
 }
 
+
+Configuration *SystemImpl::CreateConfiguration(const TCHAR *filename)
+{
+	Configuration *ret = new ConfigurationImpl(filename);
+
+	return ret;
+}
 
 Log *SystemImpl::GetLog()
 {

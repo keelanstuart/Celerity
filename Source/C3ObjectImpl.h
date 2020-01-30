@@ -82,7 +82,7 @@ namespace c3
 
 		virtual void PostLoad();
 
-		virtual void PropertyChanged(const props::IPropertySet *ppropset, const props::IProperty *pprop);
+		virtual void PropertyChanged(const props::IProperty *pprop);
 
 	};
 

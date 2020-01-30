@@ -84,7 +84,7 @@ size_t FrameBufferImpl::GetNumColorTargets()
 }
 
 
-Texture2D* FrameBufferImpl::GetColorTarget(size_t position)
+Texture2D *FrameBufferImpl::GetColorTarget(size_t position)
 {
 	if (position < m_ColorTarget.size())
 		return m_ColorTarget[position];

@@ -8,6 +8,7 @@
 
 #include <C3ShaderProgramImpl.h>
 #include <C3ShaderComponentImpl.h>
+#include <C3TextureImpl.h>
 
 
 using namespace c3;
@@ -139,7 +140,7 @@ bool ShaderProgramImpl::SetUniformMatrix(int64_t location, const glm::fmat4x4 *m
 	if ((location < 0) || !mat)
 		return false;
 
-	m_Rend->gl.UniformMatrix4fv((GLint)location, 1, GL_FALSE, (const GLfloat *)mat);
+	m_Rend->gl.ProgramUniformMatrix4fv(m_glID, (GLint)location, 1, GL_FALSE, (const GLfloat *)mat);
 
 	return true;
 }
@@ -150,7 +151,7 @@ bool ShaderProgramImpl::SetUniform1(int64_t location, float f)
 	if (location < 0)
 		return false;
 
-	m_Rend->gl.Uniform1f((GLint)location, f);
+	m_Rend->gl.ProgramUniform1f(m_glID, (GLint)location, f);
 
 	return true;
 }
@@ -161,7 +162,7 @@ bool ShaderProgramImpl::SetUniform2(int64_t location, const glm::fvec2 *v2)
 	if ((location < 0) || !v2)
 		return false;
 
-	m_Rend->gl.Uniform2fv((GLint)location, 1, (const GLfloat *)v2);
+	m_Rend->gl.ProgramUniform2fv(m_glID, (GLint)location, 1, (const GLfloat *)v2);
 
 	return true;
 }
@@ -172,7 +173,7 @@ bool ShaderProgramImpl::SetUniform3(int64_t location, const glm::fvec3 *v3)
 	if ((location < 0) || !v3)
 		return false;
 
-	m_Rend->gl.Uniform3fv((GLint)location, 1, (const GLfloat *)v3);
+	m_Rend->gl.ProgramUniform3fv(m_glID, (GLint)location, 1, (const GLfloat *)v3);
 
 	return true;
 }
@@ -183,16 +184,20 @@ bool ShaderProgramImpl::SetUniform4(int64_t location, const glm::fvec4 *v4)
 	if ((location < 0) || !v4)
 		return false;
 
-	m_Rend->gl.Uniform4fv((GLint)location, 1, (const GLfloat *)v4);
+	m_Rend->gl.ProgramUniform4fv(m_glID, (GLint)location, 1, (const GLfloat *)v4);
 
 	return true;
 }
 
 
-bool ShaderProgramImpl::SetUniformTexture(int64_t location, Texture *tex)
+bool ShaderProgramImpl::SetUniformTexture(int64_t location, uint64_t sampler, Texture *tex)
 {
-	if ((location < 0) || !tex)
+	if (location < 0)
 		return false;
+
+	m_Rend->UseTexture(sampler, tex);
+
+	m_Rend->gl.ProgramUniform1i(m_glID, (GLint)location, (GLint)sampler);
 
 	return true;
 }

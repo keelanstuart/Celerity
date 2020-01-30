@@ -7,10 +7,40 @@
 #include "pch.h"
 
 #include <C3TextureImpl.h>
+#include <C3Resource.h>
 
 
 using namespace c3;
 
+
+DECLARE_RESOURCETYPE(Texture2D);
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
+{
+	if (returned_data)
+	{
+		*returned_data = psys->GetRenderer()->CreateTexture2DFromFile(filename);
+		if (!*returned_data)
+			return ResourceType::LoadResult::LR_ERROR;
+	}
+
+	return ResourceType::LoadResult::LR_SUCCESS;
+}
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
+{
+	return ResourceType::LoadResult::LR_ERROR;
+}
+
+bool RESOURCETYPENAME(Texture2D)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+{
+	return false;
+}
+
+void RESOURCETYPENAME(Texture2D)::Unload(void *data) const
+{
+	((Texture2D *)data)->Release();
+}
 
 Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
@@ -37,6 +67,19 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 	m_Buffer = nullptr;
 	m_glID = GL_INVALID_VALUE;
 	m_LockMip = 0;
+	m_Flags = 0;
+
+	if (flags.IsSet(TEXCREATEFLAG_WRAP_U))
+		m_Flags.Set(TEXFLAG_WRAP_U);
+
+	if (flags.IsSet(TEXCREATEFLAG_MIRROR_U))
+		m_Flags.Set(TEXFLAG_MIRROR_U);
+
+	if (flags.IsSet(TEXCREATEFLAG_WRAP_V))
+		m_Flags.Set(TEXFLAG_WRAP_V);
+
+	if (flags.IsSet(TEXCREATEFLAG_MIRROR_V))
+		m_Flags.Set(TEXFLAG_MIRROR_V);
 
 	if (flags.IsSet(TEXCREATEFLAG_RENDERTARGET))
 	{
@@ -135,6 +178,11 @@ Texture::RETURNCODE Texture2DImpl::Lock(void **buffer, Texture2D::SLockInfo &loc
 	if (m_glID == GL_INVALID_VALUE)
 		return RET_GENBUFFER_FAILED;
 
+	bool update_now = flags.IsSet(TEXLOCKFLAG_UPDATENOW);
+	bool user_buffer = flags.IsSet(TEXLOCKFLAG_USERBUFFER);
+	if (update_now && !user_buffer)
+		return RET_UPDATENOW_NEEDS_USERBUFFER;
+
 	// bind the buffer
 	Bind();
 
@@ -142,6 +190,28 @@ Texture::RETURNCODE Texture2DImpl::Lock(void **buffer, Texture2D::SLockInfo &loc
 	{
 		// make sure that it is allocated
 		m_Rend->gl.TexStorage2D(GL_TEXTURE_2D, (GLsizei)m_MipCount, m_Rend->GLInternalFormat(m_Type), (GLsizei)m_Width, (GLsizei)m_Height);
+
+		GLenum wrapmode_u = GL_CLAMP_TO_EDGE;
+		if (m_Flags.IsSet(TEXFLAG_WRAP_U))
+			wrapmode_u = GL_REPEAT;
+		else if (m_Flags.IsSet(TEXFLAG_MIRROR_U))
+			wrapmode_u = GL_MIRROR_CLAMP_TO_EDGE;
+		else if (m_Flags.IsSet(TEXFLAG_WRAP_U | TEXFLAG_MIRROR_U))
+			wrapmode_u = GL_MIRRORED_REPEAT;
+
+		GLenum wrapmode_v = GL_CLAMP_TO_EDGE;
+		if (m_Flags.IsSet(TEXFLAG_WRAP_V))
+			wrapmode_v = GL_REPEAT;
+		else if (m_Flags.IsSet(TEXFLAG_MIRROR_V))
+			wrapmode_v = GL_MIRROR_CLAMP_TO_EDGE;
+		else if (m_Flags.IsSet(TEXFLAG_WRAP_V | TEXFLAG_MIRROR_V))
+			wrapmode_v = GL_MIRRORED_REPEAT;
+
+		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapmode_u);
+		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapmode_v);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (m_MipCount > 0) ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 
 	lockinfo.width = m_Width >> mip;
@@ -157,6 +227,11 @@ Texture::RETURNCODE Texture2DImpl::Lock(void **buffer, Texture2D::SLockInfo &loc
 	if (flags.IsSet(TEXLOCKFLAG_READ))
 	{
 		m_Rend->gl.GetTexImage(GL_TEXTURE_2D, (GLsizei)mip, m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
+	}
+
+	if (flags.IsSet(TEXLOCKFLAG_GENMIPS))
+	{
+		m_Flags.Set(TEXFLAG_GENMIPS);
 	}
 
 	*buffer = m_Buffer;
@@ -178,6 +253,12 @@ Texture::RETURNCODE Texture2DImpl::Unlock()
 
 	free(m_Buffer);
 	m_Buffer = nullptr;
+
+	if (m_Flags.IsSet(TEXFLAG_GENMIPS))
+	{
+		m_Rend->gl.GenerateMipmap(GL_TEXTURE_2D);
+		m_Flags.Clear(TEXFLAG_GENMIPS);
+	}
 
 	return RET_OK;
 }
@@ -213,6 +294,7 @@ TextureCubeImpl::TextureCubeImpl(RendererImpl *prend, size_t width, size_t heigh
 	m_Buffer = nullptr;
 	m_glID = GL_INVALID_VALUE;
 	m_LockMip = 0;
+	m_Flags = 0;
 }
 
 
@@ -361,6 +443,11 @@ Texture::RETURNCODE TextureCubeImpl::Lock(void **buffer, CubeFace face, TextureC
 		m_Rend->gl.GetTexImage(GLface[m_LockFace], (GLsizei)mip, m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
 	}
 
+	if (flags.IsSet(TEXLOCKFLAG_GENMIPS))
+	{
+		m_Flags.Set(TEXFLAG_GENMIPS);
+	}
+
 	*buffer = m_Buffer;
 
 	return RET_OK;
@@ -380,6 +467,12 @@ Texture::RETURNCODE TextureCubeImpl::Unlock()
 
 	free(m_Buffer);
 	m_Buffer = nullptr;
+
+	if (m_Flags.IsSet(TEXFLAG_GENMIPS))
+	{
+		m_Rend->gl.GenerateMipmap(GL_TEXTURE_CUBE_MAP);
+		m_Flags.Clear(TEXFLAG_GENMIPS);
+	}
 
 	return RET_OK;
 }
@@ -415,6 +508,25 @@ Texture3DImpl::Texture3DImpl(RendererImpl *prend, size_t width, size_t height, s
 	m_Buffer = nullptr;
 	m_glID = GL_INVALID_VALUE;
 	m_LockMip = 0;
+	m_Flags = 0;
+
+	if (flags.IsSet(TEXCREATEFLAG_WRAP_U))
+		m_Flags.Set(TEXFLAG_WRAP_U);
+
+	if (flags.IsSet(TEXCREATEFLAG_MIRROR_U))
+		m_Flags.Set(TEXFLAG_MIRROR_U);
+
+	if (flags.IsSet(TEXCREATEFLAG_WRAP_V))
+		m_Flags.Set(TEXFLAG_WRAP_V);
+
+	if (flags.IsSet(TEXCREATEFLAG_MIRROR_V))
+		m_Flags.Set(TEXFLAG_MIRROR_V);
+
+	if (flags.IsSet(TEXCREATEFLAG_WRAP_W))
+		m_Flags.Set(TEXFLAG_WRAP_W);
+
+	if (flags.IsSet(TEXCREATEFLAG_MIRROR_W))
+		m_Flags.Set(TEXFLAG_MIRROR_W);
 }
 
 
@@ -517,6 +629,34 @@ Texture::RETURNCODE Texture3DImpl::Lock(void **buffer, Texture3D::SLockInfo &loc
 	{
 		// make sure that it is allocated
 		m_Rend->gl.TexStorage3D(GL_TEXTURE_3D, (GLsizei)m_MipCount, m_Rend->GLInternalFormat(m_Type), (GLsizei)m_Width, (GLsizei)m_Height, (GLsizei)m_Depth);
+
+		GLenum wrapmode_u = GL_CLAMP_TO_EDGE;
+		if (m_Flags.IsSet(TEXFLAG_WRAP_U))
+			wrapmode_u = GL_REPEAT;
+		else if (m_Flags.IsSet(TEXFLAG_MIRROR_U))
+			wrapmode_u = GL_MIRROR_CLAMP_TO_EDGE;
+		else if (m_Flags.IsSet(TEXFLAG_WRAP_U | TEXFLAG_MIRROR_U))
+			wrapmode_u = GL_MIRRORED_REPEAT;
+
+		GLenum wrapmode_v = GL_CLAMP_TO_EDGE;
+		if (m_Flags.IsSet(TEXFLAG_WRAP_V))
+			wrapmode_v = GL_REPEAT;
+		else if (m_Flags.IsSet(TEXFLAG_MIRROR_V))
+			wrapmode_v = GL_MIRROR_CLAMP_TO_EDGE;
+		else if (m_Flags.IsSet(TEXFLAG_WRAP_V | TEXFLAG_MIRROR_V))
+			wrapmode_v = GL_MIRRORED_REPEAT;
+
+		GLenum wrapmode_w = GL_CLAMP_TO_EDGE;
+		if (m_Flags.IsSet(TEXFLAG_WRAP_W))
+			wrapmode_w = GL_REPEAT;
+		else if (m_Flags.IsSet(TEXFLAG_MIRROR_W))
+			wrapmode_w = GL_MIRROR_CLAMP_TO_EDGE;
+		else if (m_Flags.IsSet(TEXFLAG_WRAP_W | TEXFLAG_MIRROR_W))
+			wrapmode_w = GL_MIRRORED_REPEAT;
+
+		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapmode_u);
+		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapmode_v);
+		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, wrapmode_w);
 	}
 
 	lockinfo.width = m_Width >> mip;
@@ -534,6 +674,11 @@ Texture::RETURNCODE Texture3DImpl::Lock(void **buffer, Texture3D::SLockInfo &loc
 	if (flags.IsSet(TEXLOCKFLAG_READ))
 	{
 		m_Rend->gl.GetTexImage(GL_TEXTURE_3D, (GLsizei)mip, m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
+	}
+
+	if (flags.IsSet(TEXLOCKFLAG_GENMIPS))
+	{
+		m_Flags.Set(TEXFLAG_GENMIPS);
 	}
 
 	*buffer = m_Buffer;
@@ -555,6 +700,12 @@ Texture::RETURNCODE Texture3DImpl::Unlock()
 
 	free(m_Buffer);
 	m_Buffer = nullptr;
+
+	if (m_Flags.IsSet(TEXFLAG_GENMIPS))
+	{
+		m_Rend->gl.GenerateMipmap(GL_TEXTURE_3D);
+		m_Flags.Clear(TEXFLAG_GENMIPS);
+	}
 
 	return RET_OK;
 }

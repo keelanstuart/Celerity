@@ -37,7 +37,7 @@ CameraImpl::CameraImpl()
 	m_pfov = nullptr;
 	m_porbitdist = nullptr;
 
-	m_flags.SetAll(CAMFLAG_REBUILDMATRICES);
+	m_Flags.SetAll(CAMFLAG_REBUILDMATRICES);
 }
 
 
@@ -55,7 +55,7 @@ void CameraImpl::Release()
 
 props::TFlags64 CameraImpl::Flags()
 {
-	return props::TFlags64(0);
+	return m_Flags;
 }
 
 
@@ -70,9 +70,9 @@ bool CameraImpl::Initialize(Object *pobject)
 
 	m_pviewmode = props->CreateReferenceProperty(_T("ViewMode"), 'C:VM', &m_viewmode, props::IProperty::PT_INT);
 	m_pprojpmode = props->CreateReferenceProperty(_T("ProjectionMode"), 'C:PM', &m_projmode, props::IProperty::PT_INT);
-	m_pdim = props->CreateReferenceProperty(_T("Dimensions(Orthographic)"), 'C:DM', &m_dim, props::IProperty::PT_REAL_V2);
-	m_pfov = props->CreateReferenceProperty(_T("FOV(Perspective)"), 'C:FV', &m_viewmode, props::IProperty::PT_REAL);
-	m_porbitdist = props->CreateReferenceProperty(_T("OrbitDistance(Polar)"), 'C:OD', &m_viewmode, props::IProperty::PT_REAL);
+	m_pdim = props->CreateReferenceProperty(_T("Dimensions(Orthographic)"), 'C:DM', &m_dim, props::IProperty::PT_FLOAT_V2);
+	m_pfov = props->CreateReferenceProperty(_T("FOV(Perspective)"), 'C:FV', &m_viewmode, props::IProperty::PT_FLOAT);
+	m_porbitdist = props->CreateReferenceProperty(_T("OrbitDistance(Polar)"), 'C:OD', &m_viewmode, props::IProperty::PT_FLOAT);
 
 	return true;
 }
@@ -87,7 +87,7 @@ void CameraImpl::Update(Object *pobject, float elapsed_time)
 	if (!m_pcpos)
 		return;
 
-	if (m_flags.IsSet(CAMFLAG_REBUILDMATRICES))
+	if (m_Flags.IsSet(CAMFLAG_REBUILDMATRICES) || m_pcpos->Flags().IsSet(POSFLAG_MATRIXCHANGED))
 	{
 		m_pcpos->GetPosVec(&m_eyepos);
 		m_targpos = m_eyepos;
@@ -120,7 +120,7 @@ void CameraImpl::Update(Object *pobject, float elapsed_time)
 		{
 			default:
 			case PM_PERSPECTIVE:
-				m_proj = glm::perspectiveFovLH(m_fov, m_dim.x, m_dim.y, 0.01f, 1.0f);
+				m_proj = glm::perspectiveFovLH(m_fov, m_dim.x, m_dim.y, 0.01f, 500.0f);
 				break;
 
 			case PM_ORTHOGRAPHIC:
@@ -128,7 +128,7 @@ void CameraImpl::Update(Object *pobject, float elapsed_time)
 				break;
 		}
 
-		m_flags.Clear(CAMFLAG_REBUILDMATRICES);
+		m_Flags.Clear(CAMFLAG_REBUILDMATRICES);
 	}
 }
 
@@ -145,7 +145,7 @@ void CameraImpl::Render(Object *pobject, props::TFlags64 rendflags)
 }
 
 
-void CameraImpl::PropertyChanged(const props::IPropertySet *ppropset, const props::IProperty *pprop)
+void CameraImpl::PropertyChanged(const props::IProperty *pprop)
 {
 
 }
@@ -156,7 +156,7 @@ void CameraImpl::SetViewMode(Camera::ViewMode mode)
 	if (m_viewmode != mode)
 	{
 		m_viewmode = mode;
-		m_flags.Set(CAMFLAG_REBUILDMATRICES);
+		m_Flags.Set(CAMFLAG_REBUILDMATRICES);
 	}
 }
 
@@ -172,7 +172,7 @@ void CameraImpl::SetProjectionMode(Camera::ProjectionMode mode)
 	if (m_projmode != mode)
 	{
 		m_projmode = mode;
-		m_flags.Set(CAMFLAG_REBUILDMATRICES);
+		m_Flags.Set(CAMFLAG_REBUILDMATRICES);
 	}
 }
 
@@ -190,7 +190,7 @@ void CameraImpl::SetPolarDistance(float distance)
 		m_orbitdist = distance;
 
 		if (m_viewmode == Camera::ViewMode::VM_POLAR)
-			m_flags.Set(CAMFLAG_REBUILDMATRICES);
+			m_Flags.Set(CAMFLAG_REBUILDMATRICES);
 	}
 }
 
@@ -208,7 +208,7 @@ void CameraImpl::SetOrthoDimensions(const glm::fvec2 *dim)
 		m_dim = *dim;
 
 		if (m_projmode == Camera::ProjectionMode::PM_ORTHOGRAPHIC)
-			m_flags.Set(CAMFLAG_REBUILDMATRICES);
+			m_Flags.Set(CAMFLAG_REBUILDMATRICES);
 	}
 }
 
@@ -244,7 +244,7 @@ void CameraImpl::SetFOV(float fov)
 		m_fov = fov;
 
 		if (m_projmode == Camera::ProjectionMode::PM_PERSPECTIVE)
-			m_flags.Set(CAMFLAG_REBUILDMATRICES);
+			m_Flags.Set(CAMFLAG_REBUILDMATRICES);
 	}
 }
 

@@ -48,12 +48,12 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid)
 	if (pproto)
 	{
 		o->SetName(pproto->GetName());
-		o->Flags() = pproto->Flags();
+		o->Flags().SetAll(pproto->Flags());
 		o->GetProperties()->AppendPropertySet(pproto->GetProperties());
 
 		for (size_t i = 0, maxi = pproto->GetNumComportments(); i < maxi; i++)
 		{
-			ComportmentType *pct = pproto->GetComportment(i);
+			const ComportmentType *pct = pproto->GetComportment(i);
 			if (!pct)
 				continue;
 
@@ -80,7 +80,7 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid)
 	if (pobject)
 	{
 		o->SetName(pobject->GetName());
-		o->Flags() = pobject->Flags();
+		o->Flags().SetAll(pobject->Flags());
 		o->GetProperties()->AppendPropertySet(pobject->GetProperties());
 
 		for (size_t i = 0, maxi = pobject->GetNumComportments(); i < maxi; i++)
@@ -114,12 +114,12 @@ Prototype *FactoryImpl::CreatePrototype(Prototype *pproto)
 	if (pproto)
 	{
 		p->SetName(pproto->GetName());
-		p->Flags() = pproto->Flags();
+		p->Flags().SetAll(pproto->Flags());
 		p->GetProperties()->AppendPropertySet(pproto->GetProperties());
 
 		for (size_t i = 0, maxi = pproto->GetNumComportments(); i < maxi; i++)
 		{
-			ComportmentType *pct = pproto->GetComportment(i);
+			const ComportmentType *pct = pproto->GetComportment(i);
 			if (!pct)
 				continue;
 
@@ -142,7 +142,7 @@ Prototype *FactoryImpl::MakePrototype(Object *pobject)
 	if (pobject)
 	{
 		p->SetName(pobject->GetName());
-		p->Flags() = pobject->Flags();
+		p->Flags().SetAll(pobject->Flags());
 		p->GetProperties()->AppendPropertySet(pobject->GetProperties());
 
 		for (size_t i = 0, maxi = pobject->GetNumComportments(); i < maxi; i++)
@@ -350,7 +350,7 @@ size_t FactoryImpl::GetNumComportmentTypes()
 }
 
 
-ComportmentType *FactoryImpl::GetComportmentType(size_t index)
+const ComportmentType *FactoryImpl::GetComportmentType(size_t index)
 {
 	if (index >= s_ComportmentTypes.size())
 		return nullptr;
@@ -359,7 +359,7 @@ ComportmentType *FactoryImpl::GetComportmentType(size_t index)
 }
 
 
-ComportmentType *FactoryImpl::FindComportmentType(const TCHAR *name, bool case_sensitive)
+const ComportmentType *FactoryImpl::FindComportmentType(const TCHAR *name, bool case_sensitive)
 {
 	if (!name)
 		return nullptr;
@@ -389,7 +389,7 @@ ComportmentType *FactoryImpl::FindComportmentType(const TCHAR *name, bool case_s
 }
 
 
-ComportmentType *FactoryImpl::FindComportmentType(GUID guid)
+const ComportmentType *FactoryImpl::FindComportmentType(GUID guid)
 {
 	for (TComportmentTypeArray::const_iterator it = s_ComportmentTypes.cbegin(), last_it = s_ComportmentTypes.cend(); it != last_it; it++)
 	{

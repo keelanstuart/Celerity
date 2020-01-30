@@ -25,6 +25,8 @@
 #include <set>
 #include <algorithm>
 
+#define C3_PI		3.14159f
+
 typedef std::basic_string<TCHAR, std::char_traits<TCHAR>, std::allocator<TCHAR> > tstring;
 typedef std::basic_ostream<TCHAR, std::char_traits<TCHAR> > tostream;
 typedef std::basic_istream<TCHAR, std::char_traits<TCHAR> > tistream;
@@ -69,5 +71,7 @@ typedef std::basic_istream<TCHAR, std::char_traits<TCHAR> > tistream;
 
 
 #include <C3.h>
+
+#include <imgui.h>
 
 #endif //PCH_H

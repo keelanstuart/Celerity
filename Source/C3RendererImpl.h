@@ -22,19 +22,25 @@ namespace c3
 	#define MATRIXUPDATE_VIEWPROJ		(MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
 	#define MATRIXUPDATE_ALL			(MATRIXUPDATE_WORLD | MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
 
+	#define NUMAUXTHREADS			1
+
 	class RendererImpl : public Renderer
 	{
 
 	protected:
 		SystemImpl *m_pSys;
+		HANDLE m_event_shutdown;
 
 		HWND m_hwnd;
 		HDC m_hdc;
-
 		HGLRC m_glrc;
-		HGLRC m_glrc_aux;
+		HWND m_hwnd_override;
 
-		bool m_needFinish;
+		bool m_needsFinish;
+
+		HDC m_hdc_aux[NUMAUXTHREADS];
+		HGLRC m_glrc_aux[NUMAUXTHREADS];
+		pool::IThreadPool *m_AuxPool;
 
 		glm::fmat4x4 m_ident;
 
@@ -63,6 +69,10 @@ namespace c3
 
 		bool m_Config;
 
+		DepthTest m_DepthTest;
+		DepthMode m_DepthMode;
+		CullMode m_CullMode;
+
 		typedef std::pair<VertexBuffer *, ShaderProgram *> TVBProgPair;
 		typedef struct
 		{
@@ -73,6 +83,20 @@ namespace c3
 		VertexBuffer *m_CubeVB;
 		Mesh *m_BoundsMesh;
 		Mesh *m_CubeMesh;
+
+		VertexBuffer *m_PlanesVB;
+		Mesh *m_XYPlaneMesh;
+		Mesh *m_YZPlaneMesh;
+		Mesh *m_XZPlaneMesh;
+
+		VertexBuffer *m_HemisphereVB;
+		Mesh *m_HemisphereMesh;
+
+		Texture2D *m_BlackTex;
+		Texture2D *m_GreyTex;
+		Texture2D *m_WhiteTex;
+		Texture2D *m_BlueTex;
+		Texture2D *m_GridTex;
 
 	public:
 
@@ -90,15 +114,27 @@ namespace c3
 
 		virtual System *GetSystem();
 
+		virtual void SetOverrideHwnd(HWND hwnd);
+		virtual HWND GetOverrideHwnd();
+
+		virtual bool BeginScene(props::TFlags64 flags);
+		virtual bool EndScene(props::TFlags64 flags);
+		virtual bool Present();
+
 		virtual void SetClearColor(const glm::fvec4 *color = nullptr);
 		virtual const glm::fvec4 *GetClearColor(glm::fvec4 *color = nullptr);
 
 		virtual void SetClearDepth(float depth);
 		virtual float GetClearDepth();
 
-		virtual bool BeginScene(props::TFlags64 flags);
+		virtual void SetDepthMode(DepthMode mode);
+		virtual DepthMode GetDepthMode();
 
-		virtual bool EndScene(props::TFlags64 flags);
+		virtual void SetDepthTest(DepthTest test);
+		virtual DepthTest GetDepthTest();
+
+		virtual void SetCullMode(CullMode mode);
+		virtual CullMode GetCullMode();
 
 		size_t PixelSize(TextureType type);
 		GLenum GLType(TextureType type);
@@ -108,6 +144,8 @@ namespace c3
 		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount, props::TFlags64 flags);
 		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags);
 		virtual Texture3D *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags);
+
+		virtual Texture2D *CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 flags);
 
 		virtual DepthBuffer *CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 flags);
 
@@ -127,6 +165,8 @@ namespace c3
 		virtual void UseVertexBuffer(VertexBuffer *pvbuf);
 		virtual void UseIndexBuffer(IndexBuffer *pibuf);
 
+		virtual void UseTexture(uint64_t sampler, Texture *ptex = nullptr);
+
 		bool ConfigureDrawing();
 
 		virtual bool DrawPrimitives(PrimType type, size_t count = -1);
@@ -145,6 +185,20 @@ namespace c3
 		VertexBuffer *GetCubeVB();
 		virtual Mesh *GetBoundsMesh();
 		virtual Mesh *GetCubeMesh();
+
+		VertexBuffer *GetPlanesVB();
+		virtual Mesh *GetXYPlaneMesh();
+		virtual Mesh *GetYZPlaneMesh();
+		virtual Mesh *GetXZPlaneMesh();
+
+		VertexBuffer *GetHemisphereVB();
+		virtual Mesh *GetHemisphereMesh();
+
+		virtual Texture2D *GetBlackTexture();
+		virtual Texture2D *GetGreyTexture();
+		virtual Texture2D *GetWhiteTexture();
+		virtual Texture2D *GetBlueTexture();
+		virtual Texture2D *GetGridTexture();
 
 	};
 

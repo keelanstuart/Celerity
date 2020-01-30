@@ -78,13 +78,13 @@ namespace c3
 		virtual size_t GetNumComportmentTypes() = NULL;
 
 		/// Returns a ComportmentType given an index
-		virtual ComportmentType *GetComportmentType(size_t index) = NULL;
+		virtual const ComportmentType *GetComportmentType(size_t index) = NULL;
 
 		/// Returns a ComportmentType with the given name, or nullptr if one is not found
-		virtual ComportmentType *FindComportmentType(const TCHAR *name, bool case_sensitive = true) = NULL;
+		virtual const ComportmentType *FindComportmentType(const TCHAR *name, bool case_sensitive = true) = NULL;
 
 		/// Returns a ComportmentType with the given GUID, or nullptr if one is not found
-		virtual ComportmentType *FindComportmentType(GUID guid) = NULL;
+		virtual const ComportmentType *FindComportmentType(GUID guid) = NULL;
 
 	};
 

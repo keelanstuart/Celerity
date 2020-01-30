@@ -92,6 +92,43 @@ namespace c3
 
 		} ShaderComponentType;
 
+		typedef enum EDepthTest
+		{
+			DT_NEVER = 0,
+			DT_LESSER,
+			DT_LESSEREQUAL,
+			DT_EQUAL,
+			DT_NOTEQUAL,
+			DT_GREATEREQUAL,
+			DT_GREATER,
+			DT_ALWAYS,
+
+			DT_NUMTESTS
+
+		} DepthTest;
+
+		typedef enum EDepthMode
+		{
+			DM_DISABLED = 0,
+			DM_READWRITE,
+			DM_READONLY,
+			DM_WRITEONLY,
+
+			DM_NUMMODES
+
+		} DepthMode;
+
+		typedef enum ECullMode
+		{
+			CM_DISABLED = 0,
+			CM_FRONT,
+			CM_BACK,
+			CM_ALL,
+
+			CM_NUMMODES
+
+		} CullMode;
+
 		/// Returns the System that created this Renderer
 		virtual System *GetSystem() = NULL;
 
@@ -102,21 +139,37 @@ namespace c3
 
 		virtual void Shutdown() = NULL;
 
+		virtual void SetOverrideHwnd(HWND hwnd = NULL) = NULL;
+		virtual HWND GetOverrideHwnd() = NULL;
+
+		/// Prepares the Renderer for rendering
+		virtual bool BeginScene(props::TFlags64 flags = 0) = NULL;
+
+		/// Finalizes rendering and presents the result to the display
+		virtual bool EndScene(props::TFlags64 flags = 0) = NULL;
+
+		virtual bool Present() = NULL;
+
 		virtual void SetClearColor(const glm::fvec4 *color = nullptr) = NULL;
 		virtual const glm::fvec4 *GetClearColor(glm::fvec4 *color = nullptr) = NULL;
 
 		virtual void SetClearDepth(float depth = 1.0f) = NULL;
 		virtual float GetClearDepth() = NULL;
 
-		/// Prepares the Renderer for rendering
-		virtual bool BeginScene(props::TFlags64 flags) = NULL;
+		virtual void SetDepthMode(DepthMode mode) = NULL;
+		virtual DepthMode GetDepthMode() = NULL;
 
-		/// Finalizes rendering and presents the result to the display
-		virtual bool EndScene(props::TFlags64 flags) = NULL;
+		virtual void SetDepthTest(DepthTest test) = NULL;
+		virtual DepthTest GetDepthTest() = NULL;
+
+		virtual void SetCullMode(CullMode mode) = NULL;
+		virtual CullMode GetCullMode() = NULL;
 
 		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
 		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
 		virtual Texture3D *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
+
+		virtual Texture2D *CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 flags = 0) = NULL;
 
 		virtual DepthBuffer *CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 flags = 0) = NULL;
 
@@ -137,6 +190,8 @@ namespace c3
 		virtual void UseVertexBuffer(VertexBuffer *pvbuf) = NULL;
 		virtual void UseIndexBuffer(IndexBuffer *pibuf) = NULL;
 
+		virtual void UseTexture(uint64_t sampler, Texture *ptex = nullptr) = NULL;
+
 		virtual bool DrawPrimitives(PrimType type, size_t count = -1) = NULL;
 
 		virtual bool DrawIndexedPrimitives(PrimType type, size_t offset = -1, size_t count = -1) = NULL;
@@ -153,6 +208,18 @@ namespace c3
 
 		virtual Mesh *GetBoundsMesh() = NULL;
 		virtual Mesh *GetCubeMesh() = NULL;
+
+		virtual Mesh *GetXYPlaneMesh() = NULL;
+		virtual Mesh *GetYZPlaneMesh() = NULL;
+		virtual Mesh *GetXZPlaneMesh() = NULL;
+
+		virtual Mesh *GetHemisphereMesh() = NULL;
+
+		virtual Texture2D *GetBlackTexture() = NULL;
+		virtual Texture2D *GetGreyTexture() = NULL;
+		virtual Texture2D *GetWhiteTexture() = NULL;
+		virtual Texture2D *GetBlueTexture() = NULL;
+		virtual Texture2D *GetGridTexture() = NULL;
 
 	};
 
