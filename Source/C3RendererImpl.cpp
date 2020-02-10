@@ -35,12 +35,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 
 	m_event_shutdown = CreateEvent(nullptr, TRUE, TRUE, nullptr);
 
-	for (size_t tc = 0; tc < NUMAUXTHREADS; tc++)
-	{
-		m_hdc_aux[tc] = NULL;
-		m_glrc_aux[tc] = NULL;
-	}
-	m_AuxPool = pool::IThreadPool::Create(NUMAUXTHREADS);
+	// No extra threads, just run everything in this thread
+	m_TaskPool = pool::IThreadPool::Create(0);
 
 	m_needsFinish = false;
 
@@ -93,6 +89,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 
 RendererImpl::~RendererImpl()
 {
+	m_TaskPool->Release();
+
 	Shutdown();
 
 	CloseHandle(m_event_shutdown);
@@ -214,13 +212,6 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 			};
 
 			m_glrc = wglCreateContextAttribsARB(m_hdc, 0, contextAttribList);
-
-			for (size_t tc = 0; tc < NUMAUXTHREADS; tc++)
-			{
-				m_hdc_aux[tc] = CreateDC(_T("DISPLAY"), NULL, NULL, NULL);
-				m_glrc_aux[tc] = wglCreateContextAttribsARB(m_hdc_aux[tc], m_glrc, contextAttribList);
-				wglShareLists(m_glrc_aux[tc], m_glrc);
-			}
 
 			wglMakeCurrent(NULL, NULL);
 
@@ -424,21 +415,20 @@ void RendererImpl::Shutdown()
 
 	wglMakeCurrent(NULL, NULL);
 
-	for (size_t aux_idx = 0; aux_idx < NUMAUXTHREADS; aux_idx++)
-	{
-		if (m_glrc_aux[aux_idx])
-			wglDeleteContext(m_glrc_aux[aux_idx]);
-	}
-
 	if (m_glrc)
 		wglDeleteContext(m_glrc);
 
 	m_glrc = NULL;
 	m_hdc = NULL;
 	m_hwnd = NULL;
-	memset(m_glrc_aux, 0, sizeof(HGLRC) *NUMAUXTHREADS);
 
 	m_Initialized = false;
+}
+
+
+pool::IThreadPool *RendererImpl::GetTaskPool()
+{
+	return m_TaskPool;
 }
 
 
@@ -486,6 +476,8 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 		return false;
 
 	m_needsFinish = true;
+
+	m_TaskPool->Flush();
 
 	if (m_Gui)
 		m_Gui->BeginFrame();

@@ -143,7 +143,7 @@ bool UIControl::Initialize(c3::Object *powner)
 	}
 
 	m_Tex = prend->GetGridTexture();
-	//m_TexRes = powner->GetSystem()->GetResourceManager()->GetResource(_T("D:/IAC/tmpproj/Tales/Resources/Textures/rock01.jpg"));
+	m_TexRes = powner->GetSystem()->GetResourceManager()->GetResource(_T("D:/IAC/tmpproj/Tales/Resources/Textures/rock01.jpg"));
 
 	m_SP = prend->CreateShaderProgram();
 	if (m_SP)
@@ -180,7 +180,7 @@ void UIControl::Render(c3::Object *powner, props::TFlags64 rendflags)
 		prend->UseProgram(m_SP);
 
 		m_SP->SetUniformMatrix(m_MVP, prend->GetWorldViewProjectionMatrix());
-		m_SP->SetUniformTexture(m_TEX0, 0, m_Tex);// (m_TexRes->GetStatus() != c3::Resource::Status::RS_LOADED) ? m_Tex : (c3::Texture2D *)(m_TexRes->GetData()));
+		m_SP->SetUniformTexture(m_TEX0, 0, (!m_TexRes || (m_TexRes->GetStatus() != c3::Resource::Status::RS_LOADED)) ? m_Tex : (c3::Texture2D *)(m_TexRes->GetData()));
 
 		prend->SetCullMode(c3::Renderer::CM_DISABLED);
 

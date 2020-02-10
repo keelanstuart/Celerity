@@ -23,8 +23,6 @@ namespace c3
 	#define MATRIXUPDATE_VIEWPROJ		(MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
 	#define MATRIXUPDATE_ALL			(MATRIXUPDATE_WORLD | MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
 
-	#define NUMAUXTHREADS			1
-
 	class RendererImpl : public Renderer
 	{
 
@@ -39,9 +37,8 @@ namespace c3
 
 		bool m_needsFinish;
 
-		HDC m_hdc_aux[NUMAUXTHREADS];
-		HGLRC m_glrc_aux[NUMAUXTHREADS];
-		pool::IThreadPool *m_AuxPool;
+		// There's no extra thread here... the "pool" just contains a list of tasks that we're going to execute on this thread
+		pool::IThreadPool *m_TaskPool;
 
 		glm::fmat4x4 m_ident;
 
@@ -116,6 +113,8 @@ namespace c3
 		virtual bool Initialized();
 
 		virtual void Shutdown();
+
+		pool::IThreadPool *GetTaskPool();
 
 		virtual Gui *GetGui();
 
