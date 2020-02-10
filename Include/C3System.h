@@ -40,6 +40,17 @@ namespace c3
 
 		virtual Log *GetLog() = NULL;
 
+
+		virtual size_t GetCurrentFrameNumber() = NULL;
+
+		virtual void SetCurrentFrameNumber(size_t framenum) = NULL;
+
+		virtual float GetCurrentTime() = NULL;
+
+		virtual float GetElapsedTime() = NULL;
+
+		virtual void UpdateTime() = NULL;
+
 	};
 
 };

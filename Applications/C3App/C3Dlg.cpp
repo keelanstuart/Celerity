@@ -39,6 +39,8 @@ BEGIN_MESSAGE_MAP(C3Dlg, CDialog)
 	ON_WM_ERASEBKGND()
 	ON_WM_TIMER()
 	ON_WM_MOUSEWHEEL()
+	ON_WM_SIZE()
+	ON_WM_SIZING()
 END_MESSAGE_MAP()
 
 
@@ -69,7 +71,7 @@ BOOL C3Dlg::OnInitDialog()
 
 	CRect r;
 	GetClientRect(r);
-	if (!m_Rend->Initialize(r.Width(), r.Height(), GetSafeHwnd(), 0))
+	if (!m_Rend->Initialize(GetSafeHwnd(), 0))
 		exit(-2);
 
 #if 0
@@ -169,7 +171,10 @@ void C3Dlg::OnPaint()
 			m_Rend->SetProjectionMatrix(pcam->GetProjectionMatrix());
 		}
 
-		time_t t = time(nullptr);
+		theApp.m_C3->UpdateTime();
+
+		float dt = theApp.m_C3->GetElapsedTime();
+
 		glm::fvec4 c = glm::fvec4(0.0f, 0.0f, 0.0f, 0.0f);
 		m_Rend->SetClearColor(&c);
 		if (m_Rend->BeginScene())
@@ -177,7 +182,7 @@ void C3Dlg::OnPaint()
 			c3::Positionable *ppos = (c3::Positionable *)(m_RootObj->FindComportment(c3::Positionable::Type()));
 
 			//ppos->AdjustPitch(0.02f);
-			m_RootObj->Update(0);
+			m_RootObj->Update(dt);
 
 			m_Rend->SetWorldMatrix(ppos->GetTransformMatrix());
 
@@ -292,4 +297,30 @@ BOOL C3Dlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	}
 
 	return CDialog::OnMouseWheel(nFlags, zDelta, pt);
+}
+
+
+void C3Dlg::OnSize(UINT nType, int cx, int cy)
+{
+	cx = std::max(cx, 384);
+	cy = std::max(cy, 256);
+
+	CDialog::OnSize(nType, cx, cy);
+
+	theApp.m_C3->GetRenderer()->SetViewport();
+
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComportment(c3::Camera::Type()));
+	if (pcam)
+	{
+		glm::fvec2 dim;
+		dim.x = (float)cx;
+		dim.y = (float)cy;
+		pcam->SetOrthoDimensions(&dim);
+	}
+}
+
+
+void C3Dlg::OnSizing(UINT fwSide, LPRECT pRect)
+{
+	CDialog::OnSizing(fwSide, pRect);
 }

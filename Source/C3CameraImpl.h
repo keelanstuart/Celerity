@@ -17,7 +17,7 @@ namespace c3
 	{
 
 	protected:
-		
+
 		glm::fmat4x4 m_proj, m_view;
 
 		props::IProperty *m_pviewmode;

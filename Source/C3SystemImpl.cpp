@@ -36,6 +36,15 @@ SystemImpl::SystemImpl()
 	m_Factory = nullptr;
 	m_PluginManager = nullptr;
 	m_Pool = nullptr;
+
+	m_FrameNum = 0;
+
+	QueryPerformanceFrequency(&m_PerfFreq);
+	QueryPerformanceCounter(&m_PerfCount);
+
+	m_CurrentTime = 0.0f;
+	m_LastTime = 0.0f;
+	m_ElapsedTime = 0.0f;
 }
 
 
@@ -190,4 +199,41 @@ Configuration *SystemImpl::CreateConfiguration(const TCHAR *filename)
 Log *SystemImpl::GetLog()
 {
 	return m_Log;
+}
+
+
+size_t SystemImpl::GetCurrentFrameNumber()
+{
+	return m_FrameNum;
+}
+
+
+void SystemImpl::SetCurrentFrameNumber(size_t framenum)
+{
+	m_FrameNum = framenum;
+}
+
+
+float SystemImpl::GetCurrentTime()
+{
+	return m_CurrentTime;
+}
+
+
+float SystemImpl::GetElapsedTime()
+{
+	return m_ElapsedTime;
+}
+
+
+void SystemImpl::UpdateTime()
+{
+	LARGE_INTEGER c;
+	QueryPerformanceCounter(&c);
+	m_PerfDelta.QuadPart = c.QuadPart - m_PerfCount.QuadPart;
+	m_PerfCount = c;
+
+	m_ElapsedTime = (float)m_PerfDelta.QuadPart * 100.0f / (float)m_PerfFreq.QuadPart;
+	m_LastTime = m_CurrentTime;
+	m_CurrentTime += m_ElapsedTime;
 }

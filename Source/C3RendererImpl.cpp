@@ -15,7 +15,7 @@
 #include <C3IndexBufferImpl.h>
 #include <C3MeshImpl.h>
 #include <C3FrameBufferImpl.h>
-#include <C3ImGuiImpl.h>
+#include <C3SystemImpl.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -86,6 +86,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_matupflags.Set(MATRIXUPDATE_ALL);
 
 	m_Initialized = false;
+
+	m_Gui = nullptr;
 }
 
 
@@ -97,7 +99,13 @@ RendererImpl::~RendererImpl()
 }
 
 
-bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFlags64 flags)
+c3::System *RendererImpl::GetSystem()
+{
+	return (c3::System *)m_pSys;
+}
+
+
+bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 {
 	m_hwnd = hwnd;
 	m_hdc = ::GetDC(hwnd);
@@ -237,15 +245,6 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 	if (wglSwapIntervalEXT)
 		wglSwapIntervalEXT(0);
 
-	RECT r;
-	GetClientRect(m_hwnd, &r);
-	if (width != -1)
-		r.right = (LONG)width;
-	if (height != -1)
-		r.bottom = (LONG)height;
-
-	gl.Viewport(r.left, r.top, r.right - r.left, r.bottom - r.top);
-
 	SetProjectionMatrix(&m_ident);
 	SetViewMatrix(&m_ident);
 	SetWorldMatrix(&m_ident);
@@ -284,12 +283,9 @@ bool RendererImpl::Initialize(size_t width, size_t height, HWND hwnd, props::TFl
 	GetBlueTexture();
 	GetGridTexture();
 
-	ImGui::CreateContext();
-	ImGuiIO &io = ImGui::GetIO(); (void)io;
-	io.DisplaySize.x = width;
-	io.DisplaySize.y = height;
+	m_Gui = new GuiImpl(this);
 
-	ImGui_ImplCelerity_Init((c3::System *)m_pSys);
+	SetViewport();
 
 	return true;
 }
@@ -308,7 +304,11 @@ void RendererImpl::Shutdown()
 
 	SetEvent(m_event_shutdown);
 
-	ImGui_ImplCelerity_Shutdown();
+	if (m_Gui)
+	{
+		delete m_Gui;
+		m_Gui = nullptr;
+	}
 
 	if (m_BlackTex)
 	{
@@ -442,9 +442,29 @@ void RendererImpl::Shutdown()
 }
 
 
-c3::System *RendererImpl::GetSystem()
+Gui *RendererImpl::GetGui()
 {
-	return (c3::System *)m_pSys;
+	return m_Gui;
+}
+
+
+void RendererImpl::SetViewport(const RECT *viewport)
+{
+	RECT r;
+	if (!viewport)
+	{
+		GetClientRect(m_hwnd, &r);
+		viewport = &r;
+	}
+
+	LONG w = r.right - r.left;
+	LONG h = r.bottom - r.top;
+	gl.Viewport(r.left, r.top, w, h);
+
+	if (m_Gui)
+	{
+		m_Gui->SetDisplaySize((float)w, (float)h);
+	}
 }
 
 
@@ -467,11 +487,8 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 
 	m_needsFinish = true;
 
-	ImGui_ImplCelerity_NewFrame();
-	ImGui::NewFrame();
-
-	bool show_demo_window = true;
-	ImGui::ShowDemoWindow(&show_demo_window);
+	if (m_Gui)
+		m_Gui->BeginFrame();
 
 	gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -487,11 +504,17 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 	if (!m_needsFinish)
 		return false;
 
-	ImGui::EndFrame();
-	ImGui::Render();
-	ImGui_ImplCelerity_RenderDrawData(ImGui::GetDrawData());
+	if (m_Gui)
+	{
+		static bool show_metrics = true;
+		ImGui::ShowMetricsWindow(&show_metrics);
+
+		m_Gui->Render();
+	}
 
 	gl.Finish();
+
+	m_pSys->SetCurrentFrameNumber(m_pSys->GetCurrentFrameNumber() + 1);
 
 	return true;
 }
@@ -920,7 +943,7 @@ ShaderComponent *RendererImpl::CreateShaderComponent(ShaderComponentType type)
 }
 
 
-void RendererImpl::UseFrameBuffer(FrameBuffer *pfb)
+void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 {
 	if (pfb == m_CurFB)
 		return;
@@ -929,10 +952,33 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb)
 	if (pfb)
 		glid = (c3::FrameBufferImpl &)*pfb;
 
+	if (flags.IsSet(UFBFLAG_FINISHLAST))
+		gl.Finish();
+
+	DepthBuffer *pdb = pfb ? pfb->GetDepthTarget() : nullptr;
+	if (pdb)
+	{
+		RECT r;
+
+		r.left = 0;
+		r.top = 0;
+		r.right = (LONG)pdb->Width();
+		r.bottom = (LONG)pdb->Height();
+
+		SetViewport(&r);
+	}
+	else
+	{
+		SetViewport();
+	}
+
 	m_CurFB = pfb;
 	m_CurFBID = glid;
 
 	gl.BindFramebuffer(GL_FRAMEBUFFER, glid);
+
+	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH))
+		gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) | (flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_DEPTH_BUFFER_BIT : 0));
 }
 
 
@@ -1108,8 +1154,12 @@ bool RendererImpl::ConfigureDrawing()
 
 			assert(vloc == i);
 
+			bool is_color = (pcd->m_Usage >= VertexBuffer::ComponentDescription::Usage::VU_COLOR0) && (pcd->m_Usage <= VertexBuffer::ComponentDescription::Usage::VU_COLOR3);
+			bool is_byte = (pcd->m_Type >= VertexBuffer::ComponentDescription::VCT_U8) && (pcd->m_Type <= VertexBuffer::ComponentDescription::VCT_S8);
+			GLuint norm = (is_color && is_byte);
+
 			gl.EnableVertexAttribArray(vloc);
-			gl.VertexAttribPointer(vloc, (GLint)pcd->m_Count, GL_FLOAT, GL_FALSE, (GLsizei)vsz, (void *)vo);
+			gl.VertexAttribPointer(vloc, (GLint)pcd->m_Count, t[pcd->m_Type], norm, (GLsizei)vsz, (void *)vo);
 			vo += pcd->size();
 		}
 	}
@@ -1593,7 +1643,8 @@ VertexBuffer *RendererImpl::GetHemisphereVB()
 
 	glm::fvec4 n(0, 0, 1, 0);
 
-	v.pos.x = v.pos.y = v.norm.x = v.norm.y = v.uv.x = v.uv.y = 0.0f;
+	v.pos.x = v.pos.y = v.norm.x = v.norm.y = 0.0f;
+	v.uv.x = v.uv.y = 0.5f;
 	v.pos.z = v.norm.z = 1.0f;
 
 	verts.push_back(v);

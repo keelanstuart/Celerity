@@ -43,6 +43,8 @@
 #include <C3Mesh.h>
 #include <C3ShaderComponent.h>
 #include <C3ShaderProgram.h>
+#include <C3Material.h>
+#include <C3Model.h>
 #include <C3Renderer.h>
 #include <C3Log.h>
 #include <C3Comportment.h>
@@ -57,6 +59,3 @@
 #include <C3FileMapper.h>
 #include <C3ResourceManager.h>
 #include <C3System.h>
-
-#define IMGUI_USER_CONFIG	"C3ImGuiConfig.h"
-#include <../third-party/imgui/imgui.h>

@@ -18,6 +18,9 @@ protected:
 	c3::Object *m_RootObj;
 	c3::Object *m_Camera;
 
+	LARGE_INTEGER m_PerfFreq;
+	LARGE_INTEGER m_PerfTime;
+
 // Construction
 public:
 	C3Dlg(CWnd* pParent = nullptr);	// standard constructor
@@ -48,4 +51,6 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	virtual BOOL DestroyWindow();
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
+	afx_msg void OnSize(UINT nType, int cx, int cy);
+	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
 };

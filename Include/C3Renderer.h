@@ -23,6 +23,7 @@ namespace c3
 	class FrameBuffer;
 	class ShaderComponent;
 	class ShaderProgram;
+	class Gui;
 
 	class Renderer
 	{
@@ -133,11 +134,15 @@ namespace c3
 		virtual System *GetSystem() = NULL;
 
 		/// Initializes the Renderer
-		virtual bool Initialize(size_t width, size_t height, HWND hwnd, props::TFlags64 flags) = NULL;
+		virtual bool Initialize(HWND hwnd, props::TFlags64 flags) = NULL;
 
 		virtual bool Initialized() = NULL;
 
 		virtual void Shutdown() = NULL;
+
+		virtual Gui *GetGui() = NULL;
+
+		virtual void SetViewport(const RECT *viewport_rect = nullptr) = NULL;
 
 		virtual void SetOverrideHwnd(HWND hwnd = NULL) = NULL;
 		virtual HWND GetOverrideHwnd() = NULL;
@@ -183,7 +188,12 @@ namespace c3
 		virtual ShaderProgram *CreateShaderProgram() = NULL;
 		virtual ShaderComponent *CreateShaderComponent(ShaderComponentType type) = NULL;
 
-		virtual void UseFrameBuffer(FrameBuffer *pfb) = NULL;
+
+		#define UFBFLAG_CLEARCOLOR			0x0001
+		#define UFBFLAG_CLEARDEPTH			0x0002
+		#define UFBFLAG_FINISHLAST			0x0004
+
+		virtual void UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags = UFBFLAG_FINISHLAST) = NULL;
 		virtual FrameBuffer *GetActiveFrameBuffer() = NULL;
 
 		virtual void UseProgram(ShaderProgram *pprog) = NULL;

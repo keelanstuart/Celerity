@@ -33,7 +33,7 @@
     <ClCompile Include="Source\C3FactoryImpl.cpp" />
     <ClCompile Include="Source\C3FileMapperImpl.cpp" />
     <ClCompile Include="Source\C3FrameBufferImpl.cpp" />
-    <ClCompile Include="Source\C3ImGuiImpl.cpp" />
+    <ClCompile Include="Source\C3GuiImpl.cpp" />
     <ClCompile Include="Source\C3IndexBufferImpl.cpp" />
     <ClCompile Include="Source\C3LogImpl.cpp" />
     <ClCompile Include="Source\C3MatrixStackImpl.cpp" />
@@ -43,19 +43,13 @@
     <ClCompile Include="Source\C3PluginManagerImpl.cpp" />
     <ClCompile Include="Source\C3PositionableImpl.cpp" />
     <ClCompile Include="Source\C3PrototypeImpl.cpp" />
+    <ClCompile Include="Source\C3RenderableImpl.cpp" />
     <ClCompile Include="Source\C3RendererImpl.cpp" />
     <ClCompile Include="Source\C3ResourceManagerImpl.cpp" />
     <ClCompile Include="Source\C3ShaderComponentImpl.cpp" />
     <ClCompile Include="Source\C3ShaderProgramImpl.cpp" />
     <ClCompile Include="Source\C3SystemImpl.cpp" />
-    <ClCompile Include="Source\C3TextureImpl.cpp">
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</PreprocessToFile>
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|Win32'">false</PreprocessToFile>
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</PreprocessToFile>
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</PreprocessToFile>
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">false</PreprocessToFile>
-      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessToFile>
-    </ClCompile>
+    <ClCompile Include="Source\C3TextureImpl.cpp" />
     <ClCompile Include="Source\C3VertexBufferImpl.cpp" />
     <ClCompile Include="Source\dllmain.cpp" />
     <ClCompile Include="Source\gl_wrapper.cpp" />
@@ -124,16 +118,20 @@
     <ClInclude Include="Include\C3Factory.h" />
     <ClInclude Include="Include\C3FileMapper.h" />
     <ClInclude Include="Include\C3FrameBuffer.h" />
-    <ClInclude Include="Include\C3ImGuiConfig.h" />
+    <ClInclude Include="Include\C3Frustum.h" />
+    <ClInclude Include="Include\C3Gui.h" />
     <ClInclude Include="Include\C3IndexBuffer.h" />
     <ClInclude Include="Include\C3Log.h" />
+    <ClInclude Include="Include\C3Material.h" />
     <ClInclude Include="Include\C3MatrixStack.h" />
     <ClInclude Include="Include\C3Mesh.h" />
+    <ClInclude Include="Include\C3Model.h" />
     <ClInclude Include="Include\C3Object.h" />
     <ClInclude Include="Include\C3Plugin.h" />
     <ClInclude Include="Include\C3PluginManager.h" />
     <ClInclude Include="Include\C3Positionable.h" />
     <ClInclude Include="Include\C3Prototype.h" />
+    <ClInclude Include="Include\C3Renderable.h" />
     <ClInclude Include="Include\C3Renderer.h" />
     <ClInclude Include="Include\C3Resource.h" />
     <ClInclude Include="Include\C3ResourceManager.h" />
@@ -148,7 +146,8 @@
     <ClInclude Include="Source\C3FactoryImpl.h" />
     <ClInclude Include="Source\C3FileMapperImpl.h" />
     <ClInclude Include="Source\C3FrameBufferImpl.h" />
-    <ClInclude Include="Source\C3ImGuiImpl.h" />
+    <ClInclude Include="Source\C3GuiImpl.h" />
+    <ClInclude Include="Source\C3ImGuiConfig.h" />
     <ClInclude Include="Source\C3IndexBufferImpl.h" />
     <ClInclude Include="Source\C3LogImpl.h" />
     <ClInclude Include="Source\C3MatrixStackImpl.h" />
@@ -158,6 +157,7 @@
     <ClInclude Include="Source\C3PluginManagerImpl.h" />
     <ClInclude Include="Source\C3PositionableImpl.h" />
     <ClInclude Include="Source\C3PrototypeImpl.h" />
+    <ClInclude Include="Source\C3RenderableImpl.h" />
     <ClInclude Include="Source\C3RendererImpl.h" />
     <ClInclude Include="Source\C3ResourceImpl.h" />
     <ClInclude Include="Source\C3ResourceManagerImpl.h" />

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <C3.h>
+#include <C3GuiImpl.h>
 
 #include <gl_wrapper.h>
 
@@ -69,6 +70,8 @@ namespace c3
 
 		bool m_Config;
 
+		GuiImpl *m_Gui;
+
 		DepthTest m_DepthTest;
 		DepthMode m_DepthMode;
 		CullMode m_CullMode;
@@ -106,13 +109,17 @@ namespace c3
 
 		virtual ~RendererImpl();
 
-		virtual bool Initialize(size_t width, size_t height, HWND hwnd, props::TFlags64 flags);
+		virtual System *GetSystem();
+
+		virtual bool Initialize(HWND hwnd, props::TFlags64 flags);
 
 		virtual bool Initialized();
 
 		virtual void Shutdown();
 
-		virtual System *GetSystem();
+		virtual Gui *GetGui();
+
+		virtual void SetViewport(const RECT *viewport_rect = nullptr);
 
 		virtual void SetOverrideHwnd(HWND hwnd);
 		virtual HWND GetOverrideHwnd();
@@ -158,7 +165,7 @@ namespace c3
 		virtual ShaderProgram *CreateShaderProgram();
 		virtual ShaderComponent *CreateShaderComponent(ShaderComponentType type);
 
-		virtual void UseFrameBuffer(FrameBuffer *pfb);
+		virtual void UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags = UFBFLAG_FINISHLAST);
 		virtual FrameBuffer *GetActiveFrameBuffer();
 
 		virtual void UseProgram(ShaderProgram *pprog);

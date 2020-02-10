@@ -72,6 +72,7 @@ typedef std::basic_istream<TCHAR, std::char_traits<TCHAR> > tistream;
 
 #include <C3.h>
 
-#include <imgui.h>
+#define IMGUI_USER_CONFIG	<C3ImGuiConfig.h>
+#include <../third-party/imgui/imgui.h>
 
 #endif //PCH_H

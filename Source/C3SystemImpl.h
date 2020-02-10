@@ -32,6 +32,12 @@ namespace c3
 		LogImpl *m_Log;
 		FileMapperImpl *m_FileMapper;
 
+		size_t m_FrameNum;
+		LARGE_INTEGER m_PerfFreq, m_PerfCount, m_PerfDelta;
+		float m_CurrentTime;
+		float m_LastTime;
+		float m_ElapsedTime;
+
 	public:
 		SystemImpl();
 
@@ -54,6 +60,17 @@ namespace c3
 		virtual Configuration *CreateConfiguration(const TCHAR *filename);
 
 		virtual Log *GetLog();
+
+
+		virtual size_t GetCurrentFrameNumber();
+
+		virtual void SetCurrentFrameNumber(size_t framenum);
+
+		virtual float GetCurrentTime();
+
+		virtual float GetElapsedTime();
+
+		virtual void UpdateTime();
 
 	};
 
