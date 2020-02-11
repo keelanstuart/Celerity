@@ -1,6 +1,8 @@
 # Celerity
 Celerity - a game / visualization engine for Windows, written in C++, currently in it's third-ish iteration
 
+First, add an environment variable ("C3_SDK") that points to the directory where you've cloned Celerity. Celerity uses this to find some of it's own files, but you can use it also.
+
 Initially, you should build the "Bootstrap" target... but be prepared: it will be building the OpenGL wrapper code, which involves downloading and parsing header files and documentation (yes, the resulting code includes comments detailing the version of OpenGL the function comes from and what it does). Even if you leave it in the Bootstrap configuration, a CRC is generated based on the .h files and the parameters used to create it which, together, prevent re-processing of all the OpenGL headers. That said, even the initial download is slow enough that you'll want to switch to a normal Debug config.
 
 ______________________________________________
