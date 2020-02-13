@@ -44,27 +44,33 @@
     </Link>
     <PreBuildEvent>
       <Command>@echo Setting environment varaible "C3_SDK" to "$(SolutionDir)" ...
-set C3_SDK="$(SolutionDir)"
+setx C3_SDK $(SolutionDir)
 
+@echo.
 @echo Updating "Pool" submodule ...
 cd $(SolutionDir)third-party\Pool
 git checkout origin/master
 
+@echo.
 @echo Updating "PowerProps" submodule ...
 cd $(SolutionDir)third-party\PowerProps
 git checkout origin/master
 
+@echo.
 @echo Updating "mqme" submodule ...
 cd $(SolutionDir)third-party\mqme
 git checkout origin/master
 
+@echo.
 @echo Updating "GenIO" submodule ...
 cd $(SolutionDir)third-party\GenIO
 git checkout origin/master
 
+@echo.
 @echo Updating "GLlibgen" submodule ...
 cd $(SolutionDir)third-party\GLlibgen
-git checkout origin/master</Command>
+git checkout origin/master
+</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
