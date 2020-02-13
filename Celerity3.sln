@@ -68,7 +68,11 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PowerSlide_C3P", "..\..\spi
 		{68EEDDFF-ECE7-4982-88AD-5C803216D17A} = {68EEDDFF-ECE7-4982-88AD-5C803216D17A}
 	EndProjectSection
 EndProject
+<<<<<<< HEAD
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CelerityConfig", "CelerityConfig.vcxproj", "{68EEDDFF-ECE7-4982-88AD-5C803216D17A}"
+=======
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CelerityConfig", "..\c3\CelerityConfig\CelerityConfig.vcxproj", "{68EEDDFF-ECE7-4982-88AD-5C803216D17A}"
+>>>>>>> 84d2903707993a1e16cb47d12b67227d80bbafef
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -173,6 +177,7 @@ Global
 		{94FBC020-7492-4FD8-9065-28DD2BAC91D9}.Release|x64.ActiveCfg = Release|x64
 		{94FBC020-7492-4FD8-9065-28DD2BAC91D9}.Release|x64.Build.0 = Release|x64
 		{94FBC020-7492-4FD8-9065-28DD2BAC91D9}.Release|x86.ActiveCfg = Release|x64
+<<<<<<< HEAD
 		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Bootstrap (Debug)|x64.ActiveCfg = Bootstrap|x64
 		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Bootstrap (Debug)|x64.Build.0 = Bootstrap|x64
 		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Bootstrap (Debug)|x86.ActiveCfg = Bootstrap|x64
@@ -183,6 +188,18 @@ Global
 		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Release|x64.ActiveCfg = Bootstrap|x64
 		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Release|x86.ActiveCfg = Bootstrap|x64
 		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Release|x86.Build.0 = Bootstrap|x64
+=======
+		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Bootstrap (Debug)|x64.ActiveCfg = Debug|x64
+		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Bootstrap (Debug)|x64.Build.0 = Debug|x64
+		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Bootstrap (Debug)|x86.ActiveCfg = Debug|Win32
+		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Bootstrap (Debug)|x86.Build.0 = Debug|Win32
+		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Debug|x64.ActiveCfg = Debug|x64
+		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Debug|x86.ActiveCfg = Debug|Win32
+		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Debug|x86.Build.0 = Debug|Win32
+		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Release|x64.ActiveCfg = Release|x64
+		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Release|x86.ActiveCfg = Release|Win32
+		{68EEDDFF-ECE7-4982-88AD-5C803216D17A}.Release|x86.Build.0 = Release|Win32
+>>>>>>> 84d2903707993a1e16cb47d12b67227d80bbafef
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
