@@ -148,14 +148,14 @@ Global
 		{94FBC020-7492-4FD8-9065-28DD2BAC91D9}.Debug|x64.Build.0 = Debug|x64
 		{94FBC020-7492-4FD8-9065-28DD2BAC91D9}.Release|x64.ActiveCfg = Release|x64
 		{94FBC020-7492-4FD8-9065-28DD2BAC91D9}.Release|x64.Build.0 = Release|x64
-		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Bootstrap (Debug)|x64.ActiveCfg = Bootstrap|x64
-		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Bootstrap (Debug)|x64.Build.0 = Bootstrap|x64
-		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Bootstrap|x64.ActiveCfg = Bootstrap|x64
-		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Bootstrap|x64.Build.0 = Bootstrap|x64
-		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Debug|x64.ActiveCfg = Bootstrap|x64
-		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Debug|x64.Build.0 = Bootstrap|x64
-		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Release|x64.ActiveCfg = Bootstrap|x64
-		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Release|x64.Build.0 = Bootstrap|x64
+		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Bootstrap (Debug)|x64.ActiveCfg = Bootstrap (Debug)|x64
+		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Bootstrap (Debug)|x64.Build.0 = Bootstrap (Debug)|x64
+		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Bootstrap|x64.ActiveCfg = Bootstrap (Debug)|x64
+		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Bootstrap|x64.Build.0 = Bootstrap (Debug)|x64
+		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Debug|x64.ActiveCfg = Bootstrap (Debug)|x64
+		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Debug|x64.Build.0 = Bootstrap (Debug)|x64
+		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Release|x64.ActiveCfg = Bootstrap (Debug)|x64
+		{CF5B939B-5101-4A18-ACFF-C04C638625C5}.Release|x64.Build.0 = Bootstrap (Debug)|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
