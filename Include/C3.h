@@ -35,6 +35,7 @@
 #include <glm/ext.hpp>
 
 #include <C3MatrixStack.h>
+#include <C3Frustum.h>
 #include <C3Texture.h>
 #include <C3DepthBuffer.h>
 #include <C3FrameBuffer.h>
@@ -47,7 +48,7 @@
 #include <C3Model.h>
 #include <C3Renderer.h>
 #include <C3Log.h>
-#include <C3Comportment.h>
+#include <C3Feature.h>
 #include <C3Positionable.h>
 #include <C3Camera.h>
 #include <C3Object.h>

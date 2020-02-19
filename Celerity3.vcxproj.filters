@@ -120,6 +120,12 @@
     <ClCompile Include="Source\C3RenderableImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3ModelImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3FrustumImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3.h">
@@ -217,9 +223,6 @@
     </ClInclude>
     <ClInclude Include="Include\C3Object.h">
       <Filter>Header Files\Public</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Comportment.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\C3Prototype.h">
       <Filter>Header Files</Filter>
@@ -327,6 +330,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\C3Frustum.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ModelImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Feature.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3FrustumImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

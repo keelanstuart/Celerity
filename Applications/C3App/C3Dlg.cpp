@@ -106,7 +106,7 @@ BOOL C3Dlg::OnInitDialog()
 	pproto = m_Factory->FindPrototype(_T("GenericControl"));
 	m_RootObj = pproto ? m_Factory->Build(pproto) : nullptr;
 
-	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComportment(c3::Positionable::Type()));
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindFeature(c3::Positionable::Type()));
 	if (pcampos)
 	{
 		// look up a little
@@ -114,14 +114,14 @@ BOOL C3Dlg::OnInitDialog()
 		pcampos->AdjustPos(0.0f, 0.0f, -8.0f);
 	}
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComportment(c3::Camera::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
 	if (pcam)
 	{
 		pcam->SetPolarDistance(8.0f);
 		pcam->SetFOV(glm::radians(70.0f));
 	}
 
-	c3::Positionable *pdomepos = dynamic_cast<c3::Positionable *>(m_RootObj->FindComportment(c3::Positionable::Type()));
+	c3::Positionable *pdomepos = dynamic_cast<c3::Positionable *>(m_RootObj->FindFeature(c3::Positionable::Type()));
 	if (pdomepos)
 	{
 		pdomepos->SetScl(40.0f, 40.0f, 40.0f);
@@ -158,13 +158,13 @@ void C3Dlg::OnPaint()
 	}
 	else
 	{
-		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComportment(c3::Positionable::Type()));
+		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindFeature(c3::Positionable::Type()));
 		if (pcampos)
 			pcampos->AdjustYaw(glm::radians(0.5f));
 
 		m_Camera->Update();
 
-		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComportment(c3::Camera::Type()));
+		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
 		if (pcam)
 		{
 			m_Rend->SetViewMatrix(pcam->GetViewMatrix());
@@ -179,7 +179,7 @@ void C3Dlg::OnPaint()
 		m_Rend->SetClearColor(&c);
 		if (m_Rend->BeginScene())
 		{
-			c3::Positionable *ppos = (c3::Positionable *)(m_RootObj->FindComportment(c3::Positionable::Type()));
+			c3::Positionable *ppos = (c3::Positionable *)(m_RootObj->FindFeature(c3::Positionable::Type()));
 
 			//ppos->AdjustPitch(0.02f);
 			m_RootObj->Update(dt);
@@ -286,7 +286,7 @@ BOOL C3Dlg::DestroyWindow()
 
 BOOL C3Dlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComportment(c3::Camera::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
 	if (pcam)
 	{
 		float d = pcam->GetPolarDistance();
@@ -309,7 +309,7 @@ void C3Dlg::OnSize(UINT nType, int cx, int cy)
 
 	theApp.m_C3->GetRenderer()->SetViewport();
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComportment(c3::Camera::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
 	if (pcam)
 	{
 		glm::fvec2 dim;

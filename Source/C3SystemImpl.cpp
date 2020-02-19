@@ -13,6 +13,7 @@
 #include <C3CameraImpl.h>
 
 #include <C3TextureImpl.h>
+#include <C3ModelImpl.h>
 
 using namespace c3;
 
@@ -65,6 +66,7 @@ void SystemImpl::Release()
 		/// UNREGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES
 		// *************************************************
 		UNREGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(Model, m_ResourceManager);
 		// *************************************************
 
 		delete m_ResourceManager;
@@ -85,10 +87,10 @@ void SystemImpl::Release()
 
 	if (m_Factory)
 	{
-		/// UNREGISTER NATIVE COMPORTMENTS BETWEEN THESE LINES
+		/// UNREGISTER NATIVE FEATURES BETWEEN THESE LINES
 		// *************************************************
-		UNREGISTER_COMPORTMENTTYPE(Positionable, m_Factory);
-		UNREGISTER_COMPORTMENTTYPE(Camera, m_Factory);
+		UNREGISTER_FEATURETYPE(Positionable, m_Factory);
+		UNREGISTER_FEATURETYPE(Camera, m_Factory);
 		// *************************************************
 
 		delete m_Factory;
@@ -132,6 +134,7 @@ ResourceManager *SystemImpl::GetResourceManager()
 		/// REGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES
 		// *************************************************
 		REGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
+		REGISTER_RESOURCETYPE(Model, m_ResourceManager);
 		// *************************************************
 	}
 
@@ -156,10 +159,10 @@ Factory *SystemImpl::GetFactory()
 	{
 		m_Factory = new FactoryImpl(this);
 
-		/// REGISTER NATIVE COMPORTMENTS BETWEEN THESE LINES
+		/// REGISTER NATIVE FEATURES BETWEEN THESE LINES
 		// *************************************************
-		REGISTER_COMPORTMENTTYPE(Positionable, m_Factory);
-		REGISTER_COMPORTMENTTYPE(Camera, m_Factory);
+		REGISTER_FEATURETYPE(Positionable, m_Factory);
+		REGISTER_FEATURETYPE(Camera, m_Factory);
 		// *************************************************
 	}
 

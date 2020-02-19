@@ -31,7 +31,7 @@ C3App theApp;
 
 
 
-DECLARE_COMPORTMENTTYPE(UIControl, UIControl);
+DECLARE_FEATURETYPE(UIControl, UIControl);
 
 
 UIControl::UIControl()
@@ -209,16 +209,16 @@ BOOL C3App::InitInstance()
 
 	c3::Factory *pfactory = m_C3->GetFactory();
 
-	REGISTER_COMPORTMENTTYPE(UIControl, pfactory);
+	REGISTER_FEATURETYPE(UIControl, pfactory);
 
 	c3::Prototype *ppcam = pfactory->CreatePrototype();
-	ppcam->AddComportment(pfactory->FindComportmentType(_T("Positionable")));
-	ppcam->AddComportment(pfactory->FindComportmentType(_T("Camera")));
+	ppcam->AddFeature(pfactory->FindFeatureType(_T("Positionable")));
+	ppcam->AddFeature(pfactory->FindFeatureType(_T("Camera")));
 	ppcam->SetName(_T("Camera"));
 
 	c3::Prototype *ppctl = pfactory->CreatePrototype();
-	ppctl->AddComportment(pfactory->FindComportmentType(_T("UIControl")));
-	ppctl->AddComportment(pfactory->FindComportmentType(_T("Positionable")));
+	ppctl->AddFeature(pfactory->FindFeatureType(_T("UIControl")));
+	ppctl->AddFeature(pfactory->FindFeatureType(_T("Positionable")));
 		ppctl->SetName(_T("GenericControl"));
 
 	// Standard initialization
@@ -240,7 +240,7 @@ int C3App::ExitInstance()
 {
 	c3::Factory *pfactory = m_C3->GetFactory();
 
-	UNREGISTER_COMPORTMENTTYPE(UIControl, pfactory);
+	UNREGISTER_FEATURETYPE(UIControl, pfactory);
 
 	if (m_C3)
 	{

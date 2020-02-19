@@ -11,7 +11,7 @@
 using namespace c3;
 
 
-DECLARE_COMPORTMENTTYPE(Positionable, PositionableImpl);
+DECLARE_FEATURETYPE(Positionable, PositionableImpl);
 
 
 PositionableImpl::PositionableImpl()

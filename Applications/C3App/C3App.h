@@ -15,7 +15,7 @@
 // See C3App.cpp for the implementation of this class
 //
 
-class UIControl : public c3::Comportment
+class UIControl : public c3::Feature
 {
 
 protected:
@@ -30,12 +30,12 @@ protected:
 	int64_t m_TEX0;
 
 public:
-	static const c3::ComportmentType *Type();
+	static const c3::FeatureType *Type();
 
 	UIControl();
 	virtual ~UIControl();
 	virtual void Release();
-	virtual c3::ComportmentType *GetType();
+	virtual c3::FeatureType *GetType();
 	virtual props::TFlags64 Flags();
 	virtual void Update(c3::Object *powner, float elapsed_time = 0.0f);
 	virtual bool Initialize(c3::Object *powner);
@@ -45,7 +45,7 @@ public:
 
 };
 
-DEFINE_COMPORTMENTTYPE(UIControl, UIControl, GUID({0x8e92d07e, 0x3169, 0x41e8, { 0x81, 0x2a, 0x4, 0x96, 0x4e, 0x3c, 0xd5, 0x7b }}), "UIControl", "");
+DEFINE_FEATURETYPE(UIControl, UIControl, GUID({0x8e92d07e, 0x3169, 0x41e8, { 0x81, 0x2a, 0x4, 0x96, 0x4e, 0x3c, 0xd5, 0x7b }}), "UIControl", "");
 
 class C3App : public CWinApp
 {

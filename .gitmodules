@@ -31,3 +31,9 @@
 [submodule "third-party/bullet3"]
 	path = third-party/bullet3
 	url = https://github.com/bulletphysics/bullet3
+[submodule "third-party/zlib"]
+	path = third-party/zlib
+	url = https://github.com/madler/zlib
+[submodule "third-party/irrXML"]
+	path = third-party/irrXML
+	url = https://github.com/hunter-packages/irrXML

@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include <C3Comportment.h>
+#include <C3Feature.h>
 #include <PowerProps.h>
 #include <GenIO.h>
 
 namespace c3
 {
 
-	class Comportment;
-	class ComportmentType;
+	class Feature;
+	class FeatureType;
 
 	/// All world objects in Celerity are Objects. Objects have their own properties and maintain
-	/// a list of Comportments -- the dictionary definition of "Comportment" is: behavior, bearing -- and
+	/// a list of Features -- the dictionary definition of "Feature" is: behavior, bearing -- and
 	/// can receive time-based updates and process requests to draw themselves.
 
 	/// Previous versions of Celerity followed a paradigm of sub-classes derived from the base object class to be
@@ -104,20 +104,20 @@ namespace c3
 		/// Returns the IPropertySet owned by the Object
 		virtual props::IPropertySet *GetProperties() = NULL;
 
-		/// Returns the number of Comportments currently attached to this Object
-		virtual size_t GetNumComportments() = NULL;
+		/// Returns the number of Features currently attached to this Object
+		virtual size_t GetNumFeatures() = NULL;
 
-		/// Returns the attached Comportment at the given index
-		virtual Comportment *GetComportment(size_t index) = NULL;
+		/// Returns the attached Feature at the given index
+		virtual Feature *GetFeature(size_t index) = NULL;
 
-		/// Returns an attached Comportment with the given ComportmentType
-		virtual Comportment *FindComportment(const ComportmentType *pctype) = NULL;
+		/// Returns an attached Feature with the given FeatureType
+		virtual Feature *FindFeature(const FeatureType *pctype) = NULL;
 
-		/// Creates, attaches, and returns a Comportment of the given ComportmentType
-		virtual Comportment *AddComportment(const ComportmentType *pctype) = NULL;
+		/// Creates, attaches, and returns a Feature of the given FeatureType
+		virtual Feature *AddFeature(const FeatureType *pctype) = NULL;
 
-		/// Removes the given Comportment
-		virtual void RemoveComportment(Comportment *pcomportmemt) = NULL;
+		/// Removes the given Feature
+		virtual void RemoveFeature(Feature *pcomportmemt) = NULL;
 
 		/// Updates the object by the given amount of elapsed time (in seconds)
 		virtual void Update(float elapsed_time = 0.0f) = NULL;

@@ -25,7 +25,7 @@ PrototypeImpl::PrototypeImpl(System *psys, GUID guid)
 
 PrototypeImpl::~PrototypeImpl()
 {
-	m_Comportments.clear();
+	m_Features.clear();
 
 	if (m_Props)
 	{
@@ -65,26 +65,26 @@ props::IPropertySet *PrototypeImpl::GetProperties()
 }
 
 
-bool PrototypeImpl::AddComportment(const ComportmentType *pcomptype)
+bool PrototypeImpl::AddFeature(const FeatureType *pcomptype)
 {
 	if (!pcomptype)
 		return false;
 
-	if (std::find(m_Comportments.cbegin(), m_Comportments.cend(), pcomptype) != m_Comportments.cend())
+	if (std::find(m_Features.cbegin(), m_Features.cend(), pcomptype) != m_Features.cend())
 		return false;
 
-	m_Comportments.push_back(pcomptype);
+	m_Features.push_back(pcomptype);
 
 	return true;
 }
 
 
-bool PrototypeImpl::RemoveComportment(const ComportmentType *pcomp)
+bool PrototypeImpl::RemoveFeature(const FeatureType *pcomp)
 {
-	TComportmentArray::iterator it = std::find(m_Comportments.begin(), m_Comportments.end(), pcomp);
-	if (it != m_Comportments.end())
+	TFeatureArray::iterator it = std::find(m_Features.begin(), m_Features.end(), pcomp);
+	if (it != m_Features.end())
 	{
-		m_Comportments.erase(it);
+		m_Features.erase(it);
 
 		return true;
 	}
@@ -93,16 +93,16 @@ bool PrototypeImpl::RemoveComportment(const ComportmentType *pcomp)
 }
 
 
-size_t PrototypeImpl::GetNumComportments()
+size_t PrototypeImpl::GetNumFeatures()
 {
-	return m_Comportments.size();
+	return m_Features.size();
 }
 
 
-const ComportmentType *PrototypeImpl::GetComportment(size_t index)
+const FeatureType *PrototypeImpl::GetFeature(size_t index)
 {
-	if (index >= m_Comportments.size())
+	if (index >= m_Features.size())
 		return nullptr;
 
-	return m_Comportments[index];
+	return m_Features[index];
 }

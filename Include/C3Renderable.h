@@ -7,22 +7,22 @@
 #pragma once
 
 #include <C3.h>
-#include <C3Comportment.h>
+#include <C3Feature.h>
 
 
 namespace c3
 {
 
-	class C3_API Renderable : public Comportment
+	class C3_API Renderable : public Feature
 	{
 
 	public:
 
-		static const ComportmentType *Type();
+		static const FeatureType *Type();
 
 		virtual void Release() = NULL;
 
-		virtual ComportmentType *GetType() = NULL;
+		virtual FeatureType *GetType() = NULL;
 
 		virtual props::TFlags64 Flags() = NULL;
 

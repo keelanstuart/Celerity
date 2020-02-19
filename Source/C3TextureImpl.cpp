@@ -13,35 +13,6 @@
 using namespace c3;
 
 
-DECLARE_RESOURCETYPE(Texture2D);
-
-c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
-{
-	if (returned_data)
-	{
-		*returned_data = psys->GetRenderer()->CreateTexture2DFromFile(filename);
-		if (!*returned_data)
-			return ResourceType::LoadResult::LR_ERROR;
-	}
-
-	return ResourceType::LoadResult::LR_SUCCESS;
-}
-
-c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
-{
-	return ResourceType::LoadResult::LR_ERROR;
-}
-
-bool RESOURCETYPENAME(Texture2D)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
-{
-	return false;
-}
-
-void RESOURCETYPENAME(Texture2D)::Unload(void *data) const
-{
-	((Texture2D *)data)->Release();
-}
-
 Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	assert(prend);
@@ -261,6 +232,39 @@ Texture::RETURNCODE Texture2DImpl::Unlock()
 	}
 
 	return RET_OK;
+}
+
+
+DECLARE_RESOURCETYPE(Texture2D);
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
+{
+	if (returned_data)
+	{
+		*returned_data = psys->GetRenderer()->CreateTexture2DFromFile(filename);
+		if (!*returned_data)
+			return ResourceType::LoadResult::LR_ERROR;
+	}
+
+	return ResourceType::LoadResult::LR_SUCCESS;
+}
+
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
+{
+	return ResourceType::LoadResult::LR_ERROR;
+}
+
+
+bool RESOURCETYPENAME(Texture2D)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+{
+	return false;
+}
+
+
+void RESOURCETYPENAME(Texture2D)::Unload(void *data) const
+{
+	((Texture2D *)data)->Release();
 }
 
 

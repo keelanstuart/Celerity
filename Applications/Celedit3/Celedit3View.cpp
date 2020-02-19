@@ -95,7 +95,7 @@ void CCeledit3View::OnDraw(CDC *pDC)
 		pDoc->m_Projector->Update();
 		pDoc->m_Observer->Update();
 		pDoc->m_RootObj->Update();
-		c3::Positionable *pos = (c3::Positionable *)(pDoc->m_RootObj->FindComportment(c3::Positionable::Type()));
+		c3::Positionable *pos = (c3::Positionable *)(pDoc->m_RootObj->FindFeature(c3::Positionable::Type()));
 #if 1
 		if (pos)
 		{
@@ -359,16 +359,16 @@ void CCeledit3View::OnInitialUpdate()
 	if (!pdoc)
 		return;
 
-	m_pCamPos = dynamic_cast<c3::Positionable *>(pdoc->m_Observer->FindComportment(c3::Positionable::Type()));
+	m_pCamPos = dynamic_cast<c3::Positionable *>(pdoc->m_Observer->FindFeature(c3::Positionable::Type()));
 	m_pCamPos->SetPos(-3.0f, 0, -10.0f);
-	m_pCam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindComportment(c3::Camera::Type()));
+	m_pCam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindFeature(c3::Camera::Type()));
 	m_pCam->SetFOV(glm::radians(60.0f));
 	m_pCam->SetViewMode(c3::Camera::ViewMode::VM_POLAR);
 	m_pCam->SetPolarDistance(1.0f);
 
-	m_pProjectorCamPos = dynamic_cast<c3::Positionable *>(pdoc->m_Projector->FindComportment(c3::Positionable::Type()));
+	m_pProjectorCamPos = dynamic_cast<c3::Positionable *>(pdoc->m_Projector->FindFeature(c3::Positionable::Type()));
 	m_pProjectorCamPos->AdjustPitch(glm::radians(-90.0f));
-	m_pProjectorCam = dynamic_cast<c3::Camera *>(pdoc->m_Projector->FindComportment(c3::Camera::Type()));
+	m_pProjectorCam = dynamic_cast<c3::Camera *>(pdoc->m_Projector->FindFeature(c3::Camera::Type()));
 	m_pProjectorCam->SetFOV(glm::radians(170.0f));
 	m_pProjectorCam->SetViewMode(c3::Camera::ViewMode::VM_LOOKAT);
 	m_pProjectorCam->SetPolarDistance(1.0f);
@@ -736,7 +736,7 @@ BOOL CCeledit3View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	CCeledit3Doc *pdoc = GetDocument();
 	ASSERT_VALID(pdoc);
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindComportment(c3::Camera::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindFeature(c3::Camera::Type()));
 	if (pcam)
 	{
 		float d = pcam->GetPolarDistance();
