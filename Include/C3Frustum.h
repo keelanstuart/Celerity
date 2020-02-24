@@ -66,9 +66,9 @@ namespace c3
 
 		} FrustumEdge;
 
-		virtual void CalculateForView(const glm::fmat4 *viewmat, const glm::fmat4 *projmat) = NULL;
+		virtual void CalculateForView(const glm::fmat4x4 *viewmat, const glm::fmat4x4 *projmat) = NULL;
 
-		virtual void CalculateForBounds(const glm::fvec3 *boundsmin, const glm::fvec3 *boundsmax, const glm::fmat4 *matrix) = NULL;
+		virtual void CalculateForBounds(const glm::fvec3 *boundsmin, const glm::fvec3 *boundsmax, const glm::fmat4x4 *matrix) = NULL;
 
 		virtual bool IsPointInside(float x, float y, float z) = NULL;
 

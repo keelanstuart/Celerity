@@ -97,7 +97,7 @@ bool PlaneIntersectLine(const glm::fvec4 &plane, const glm::fvec3 v1, const glm:
 }
 
 
-void FrustumImpl::CalculateForView(const glm::fmat4 *viewmat, const glm::fmat4 *projmat)
+void FrustumImpl::CalculateForView(const glm::fmat4x4 *viewmat, const glm::fmat4x4 *projmat)
 {
 	corner[FRUSTCORN_xyz].x = -1.0f;
 	corner[FRUSTCORN_xyz].y = -1.0f;
@@ -131,7 +131,7 @@ void FrustumImpl::CalculateForView(const glm::fmat4 *viewmat, const glm::fmat4 *
 	corner[FRUSTCORN_XYZ].y = 1.0f;
 	corner[FRUSTCORN_XYZ].z = 1.0f;
 
-	glm::fmat4 m;
+	glm::fmat4x4 m;
     m = glm::inverse(*viewmat * *projmat);
 
 	for (uint32_t i = 0; i < FRUSTCORN_NUMCORNERS; i++)
@@ -148,7 +148,7 @@ void FrustumImpl::CalculateForView(const glm::fmat4 *viewmat, const glm::fmat4 *
 }
 
 
-void FrustumImpl::CalculateForBounds(const glm::fvec3 *boundsmin, const glm::fvec3 *boundsmax, const glm::fmat4 *matrix)
+void FrustumImpl::CalculateForBounds(const glm::fvec3 *boundsmin, const glm::fvec3 *boundsmax, const glm::fmat4x4 *matrix)
 {
 	corner[FRUSTCORN_xyz].x = boundsmin->x;
 	corner[FRUSTCORN_xyz].y = boundsmin->y;

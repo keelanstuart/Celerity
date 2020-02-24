@@ -17,6 +17,7 @@
   <ItemGroup>
     <ClCompile Include="Source\C3CameraImpl.cpp" />
     <ClCompile Include="Source\C3ConfigurationImpl.cpp" />
+    <ClCompile Include="Source\C3CRC.cpp" />
     <ClCompile Include="Source\C3DepthBufferImpl.cpp" />
     <ClCompile Include="Source\C3FactoryImpl.cpp" />
     <ClCompile Include="Source\C3FileMapperImpl.cpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="Include\C3.h" />
     <ClInclude Include="Include\C3Camera.h" />
     <ClInclude Include="Include\C3Configuration.h" />
+    <ClInclude Include="Include\C3CRC.h" />
     <ClInclude Include="Include\C3DepthBuffer.h" />
     <ClInclude Include="Include\C3Factory.h" />
     <ClInclude Include="Include\C3Feature.h" />
@@ -228,7 +230,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;C3_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -251,7 +253,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;C3_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -274,7 +276,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;C3_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>

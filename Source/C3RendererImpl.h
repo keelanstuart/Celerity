@@ -37,7 +37,7 @@ namespace c3
 
 		bool m_needsFinish;
 
-		// There's no extra thread here... the "pool" just contains a list of tasks that we're going to execute on this thread
+		// There's no extra thread here... the "pool" just contains a list of tasks that we're going to execute on this thread when we can
 		pool::IThreadPool *m_TaskPool;
 
 		glm::fmat4x4 m_ident;

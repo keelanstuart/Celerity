@@ -26,6 +26,16 @@ namespace c3
 		#define RESFLAG_DEMANDLOAD				(1 << c3::ResourceManager::SHIFT_RESFLAG_DEMANDLOAD)				// Loads the Resource immediately in the current thread
 		#define RESFLAG_CREATEENTRYONLY			(1 << c3::ResourceManager::SHIFT_RESFLAG_CREATEENTRYONLY)			// Creates an empty Resource in the table
 
+		/// ResTypeFlagMode is used in ForAllResourceDo calls
+		typedef enum
+		{
+			RTFM_IGNORE = 0,		/// Don't use the flags
+			RTFM_ANY,				/// Passes if ANY ResType flags (set in your DEFINE_RESOURCETYPE code) match the flags given here
+			RTFM_ALL,				/// Passes only if ALL ResType flags (set in your DEFINE_RESOURCETYPE code) match the flags given here
+			RTFM_NONE				/// Passes if NONE OF the ResType flags (set in your DEFINE_RESOURCETYPE code) match the flags given here
+
+		} ResTypeFlagMode;
+
 		// resource handling functions
 		typedef bool (__cdecl *RESOURCE_CALLBACK_FUNC)(Resource *pres);
 
@@ -37,7 +47,7 @@ namespace c3
 		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags = 0, const ResourceType *restype = nullptr) = NULL;
 
 		// For all the resources currently managed by the system, call back into this function. Optionally filter by ResourceType.
-		virtual void ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype = nullptr) = NULL;
+		virtual void ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype = nullptr, props::TFlags64 restypeflags = 0, ResTypeFlagMode flagmode = RTFM_IGNORE) = NULL;
 
 		virtual void RegisterResourceType(const ResourceType *restype) = NULL;
 

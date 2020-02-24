@@ -126,7 +126,7 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 	return pres;
 }
 
-void ResourceManagerImpl::ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype)
+void ResourceManagerImpl::ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype, props::TFlags64 restypeflags, ResTypeFlagMode flagmode)
 {
 	if (!func)
 		return;
@@ -140,6 +140,18 @@ void ResourceManagerImpl::ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const R
 
 	while (it != last_it)
 	{
+		if (flagmode != ResTypeFlagMode::RTFM_IGNORE)
+		{
+			if ((flagmode == ResTypeFlagMode::RTFM_ANY) && !it->first->Flags().AnySet(restypeflags))
+				continue;
+
+			if ((flagmode == ResTypeFlagMode::RTFM_ALL) && (it->first->Flags() != restypeflags))
+				continue;
+
+			if ((flagmode == ResTypeFlagMode::RTFM_NONE) && it->first->Flags().AnySet(restypeflags))
+				continue;
+		}
+
 		Resource *pres = it->second;
 		func(pres);
 		it++;
@@ -169,7 +181,7 @@ void ResourceManagerImpl::RegisterResourceType(const ResourceType *restype)
 			ext += *(t++);
 		}
 
-		std::transform(ext.begin(), ext.end(), ext.begin(), _tolower);
+		std::transform(ext.begin(), ext.end(), ext.begin(), tolower);
 		m_ExtResTypeMap.insert(TExtToResourceTypeMap::value_type(ext, restype));
 
 		h++;

@@ -18,25 +18,261 @@ using namespace c3;
 
 ModelImpl::ModelImpl(RendererImpl *prend)
 {
-
+	m_pRend = prend;
+	m_MatStack = MatrixStack::Create();
 }
 
 
 ModelImpl::~ModelImpl()
 {
-
+	m_MatStack->Release();
 }
 
 
 void ModelImpl::Release()
 {
+
 	delete this;
 }
 
 
-size_t ModelImpl::AddMesh(const Mesh *pmesh, const TCHAR *name)
+Model::NodeIndex ModelImpl::AddNode()
 {
-	return -1;
+	SNodeInfo *pni = new SNodeInfo();
+
+	NodeIndex ret = m_Nodes.size();
+	m_Nodes.push_back(pni);
+
+	return ret;
+}
+
+
+void ModelImpl::RemoveNode(NodeIndex nidx)
+{
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+			delete node;
+
+		m_Nodes[nidx] = nullptr;
+	}
+}
+
+
+size_t ModelImpl::GetNodeCount() const
+{
+	return m_Nodes.size();
+}
+
+
+void ModelImpl::SetNodeName(NodeIndex nidx, const TCHAR *name)
+{
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+			node->name = name ? name : _T("");
+	}
+}
+
+
+const TCHAR *ModelImpl::GetNodeName(NodeIndex nidx) const
+{
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+			return node->name.c_str();
+	}
+
+	return nullptr;
+}
+
+
+void ModelImpl::SetTransform(NodeIndex nidx, const glm::fmat4x4 *pmat)
+{
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+			node->mat = pmat ? *pmat : glm::identity<glm::fmat4x4>();
+	}
+}
+
+
+const glm::fmat4x4 *ModelImpl::GetTransform(NodeIndex nidx, glm::fmat4x4 *pmat) const
+{
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+		{
+			if (pmat)
+			{
+				*pmat = node->mat;
+				return pmat;
+			}
+
+			return &(node->mat);
+		}
+	}
+
+	return nullptr;
+}
+
+
+void ModelImpl::SetParent(NodeIndex nidx, NodeIndex parent_nidx)
+{
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node && (node->parent != parent_nidx))
+		{
+			if (node->parent != NO_PARENT)
+			{
+				SNodeInfo *old_par = m_Nodes[node->parent];
+				if (old_par)
+				{
+					SNodeInfo::TNodeIndexArray::iterator it = std::find(old_par->children.begin(), old_par->children.end(), nidx);
+					if (it != old_par->children.end())
+						old_par->children.erase(it);
+				}
+			}
+
+			node->parent = parent_nidx;
+			if (node->parent != NO_PARENT)
+			{
+				SNodeInfo *new_par = m_Nodes[node->parent];
+				if (new_par)
+				{
+					SNodeInfo::TNodeIndexArray::iterator it = std::find(new_par->children.begin(), new_par->children.end(), nidx);
+					if (it == new_par->children.end())
+						new_par->children.push_back(nidx);
+				}
+			}
+		}
+	}
+}
+
+
+Model::NodeIndex ModelImpl::GetParent(Model::NodeIndex nidx) const
+{
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+			return node->parent;
+	}
+
+	return NO_PARENT;
+}
+
+
+Model::SubMeshIndex ModelImpl::AssignMeshToNode(NodeIndex nidx, MeshIndex midx)
+{
+	if (midx >= m_Meshes.size())
+		return INVALID_INDEX;
+
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+		{
+			size_t ret = node->meshes.size();
+			node->meshes.push_back(midx);
+			return ret;
+		}
+	}
+
+	return INVALID_INDEX;
+}
+
+
+Model::MeshIndex ModelImpl::GetMeshFromNode(NodeIndex nidx, SubMeshIndex midx) const
+{
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+		{
+			size_t ret = node->meshes.size();
+			node->meshes.push_back(midx);
+			return ret;
+		}
+	}
+
+	return INVALID_INDEX;
+}
+
+
+size_t ModelImpl::GetMeshCountOnNode(NodeIndex nidx) const
+{
+	size_t ret = 0;
+
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+			ret = node->meshes.size();
+	}
+
+	return ret;
+}
+
+
+Model::MeshIndex ModelImpl::AddMesh(const Mesh *pmesh)
+{
+	SMeshInfo *pmi = new SMeshInfo();
+	if (!pmi)
+		return INVALID_INDEX;
+
+	pmi->pmesh = pmesh;
+
+	MeshIndex ret = m_Meshes.size();
+	m_Meshes.push_back(pmi);
+
+	return ret;
+}
+
+
+const Mesh *ModelImpl::GetMesh(MeshIndex midx) const
+{
+	if (midx < m_Meshes.size())
+	{
+		SMeshInfo *pmi = m_Meshes[midx];
+		if (pmi)
+			return pmi->pmesh;
+	}
+
+	return nullptr;
+}
+
+
+void ModelImpl::RemoveMesh(MeshIndex midx)
+{
+	if (midx < m_Meshes.size())
+	{
+		SMeshInfo *pmi = m_Meshes[midx];
+		if (pmi)
+		{
+			if (pmi->pmesh)
+			{
+				((Mesh *)(pmi->pmesh))->Release();
+				pmi->pmesh = nullptr;
+			}
+
+			if (pmi->pmtl)
+			{
+				((Material *)(pmi->pmtl))->Release();
+				pmi->pmtl = nullptr;
+			}
+
+			delete pmi;
+		}
+
+		m_Meshes[midx] = nullptr;
+	}
 }
 
 
@@ -46,50 +282,34 @@ size_t ModelImpl::GetMeshCount() const
 }
 
 
-const Mesh *ModelImpl::GetMesh(size_t index) const
+void ModelImpl::SetMaterial(MeshIndex midx, const Material *pmtl)
 {
-	return nullptr;
+	if (midx < m_Meshes.size())
+	{
+		SMeshInfo *pmi = m_Meshes[midx];
+		if (pmi)
+		{
+			if (pmi->pmtl)
+			{
+				((Material *)(pmi->pmtl))->Release();
+				pmi->pmtl = nullptr;
+			}
+
+			pmi->pmtl = pmtl;
+		}
+	}
 }
 
 
-const TCHAR *ModelImpl::GetMeshName(const Mesh *mesh) const
+const Material *ModelImpl::GetMaterial(MeshIndex midx) const
 {
-	return nullptr;
-}
+	if (midx < m_Meshes.size())
+	{
+		SMeshInfo *pmi = m_Meshes[midx];
+		if (pmi)
+			return pmi->pmtl;
+	}
 
-
-void ModelImpl::SetMaterial(const Mesh *mesh, const Material *pmaterial)
-{
-
-}
-
-
-const Material *ModelImpl::GetMaterial(const Mesh *mesh) const
-{
-	return nullptr;
-}
-
-
-void ModelImpl::SetTransform(const Mesh *mesh, const glm::fmat4 *pmat)
-{
-
-}
-
-
-const glm::fmat4 *ModelImpl::GetTransform(const Mesh *mesh, glm::fmat4 *pmat) const
-{
-	return nullptr;
-}
-
-
-void ModelImpl::SetParent(const Mesh *mesh, const Mesh *parent_mesh)
-{
-
-}
-
-
-const Mesh *ModelImpl::GetParent(const Mesh *mesh) const
-{
 	return nullptr;
 }
 
@@ -100,14 +320,104 @@ const Frustum *ModelImpl::GetBounds() const
 }
 
 
-void ModelImpl::Draw(glm::fmat4 *pmat) const
+void ModelImpl::Draw(const glm::fmat4x4 *pmat) const
 {
+	if (pmat)
+		m_MatStack->Push(pmat);
 
+	for (TNodeInfoArray::const_iterator cit = m_Nodes.cbegin(), last_cit = m_Nodes.cend(); cit != last_cit; cit++)
+	{
+		const SNodeInfo *node = *cit;
+		if (!node)
+			continue;
+
+		// from this point, only draw top-level nodes
+		if (node->parent == NO_PARENT)
+			DrawNode(*cit);
+	}
+
+	if (pmat)
+		m_MatStack->Pop();
+}
+
+
+bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
+{
+	if (!pnode)
+		return false;
+
+	// push the node's transform to build the hierarchy correctly
+	m_MatStack->Push(&pnode->mat);
+
+	glm::fmat4x4 m;
+
+	// set up the world matrix to draw meshes at this node level
+	m_pRend->SetWorldMatrix(m_MatStack->Top(&m));
+
+	for (SNodeInfo::TMeshIndexArray::const_iterator mit = pnode->meshes.cbegin(), last_mit = pnode->meshes.cend(); mit != last_mit; mit++)
+	{
+		// render each of the meshes on this node
+		const SMeshInfo *mesh = m_Meshes[*mit];
+		if (!mesh)
+			continue;
+
+		if (mesh->pmtl)
+		{
+			// apply the material for this mesh now
+		}
+
+		mesh->pmesh->Draw();
+	}
+
+	for (SNodeInfo::TNodeIndexArray::const_iterator cit = pnode->children.cbegin(), last_cit = pnode->children.cend(); cit != last_cit; cit++)
+	{
+		// recursively draw each of the child nodes here
+		const SNodeInfo *child = m_Nodes[*cit];
+		if (!child)
+			continue;
+
+		DrawNode(child);
+	}
+
+	// pop the node's transform
+	m_MatStack->Pop();
+
+	return true;
 }
 
 
 
 DECLARE_RESOURCETYPE(Model);
+
+typedef std::map<const aiNode *, Model::NodeIndex> TNodeIndexMap;
+typedef std::map<size_t, Model::MeshIndex> TMeshIndexMap;
+
+void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, TNodeIndexMap &nidxmap, TMeshIndexMap &midxmap)
+{
+	if (!pn || !pm)
+		return;
+
+	Model::NodeIndex nidx = pm->AddNode();
+	nidxmap.insert(TNodeIndexMap::value_type(pn, nidx));
+
+	TCHAR *name;
+	CONVERT_MBCS2TCS(pn->mName.C_Str(), name);
+
+	pm->SetNodeName(nidx, name);
+	pm->SetParent(nidx, parent_nidx);
+	pm->SetTransform(nidx, (const glm::fmat4x4 *)&(pn->mTransformation));
+
+	for (size_t i = 0; i < pn->mNumChildren; i++)
+		AddModelNode(pm, nidx, pn->mChildren[i], nidxmap, midxmap);
+
+	for (size_t j = 0; j < pn->mNumMeshes; j++)
+	{
+		TMeshIndexMap::const_iterator cit = midxmap.find(size_t(pn->mMeshes[j]));
+		if (cit != midxmap.cend())
+			pm->AssignMeshToNode(nidx, cit->second);
+	}
+}
+
 
 c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
 {
@@ -135,15 +445,20 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;
 
+		TMeshIndexMap mim;
+
 		for (size_t i = 0; i < scene->mNumMeshes; i++)
 		{
 			VertexBuffer *pvb = psys->GetRenderer()->CreateVertexBuffer();
 			IndexBuffer *pib = psys->GetRenderer()->CreateIndexBuffer();
 			Mesh *pm = psys->GetRenderer()->CreateMesh();
 
-			TCHAR *name;
-			CONVERT_MBCS2TCS(scene->mMeshes[i]->mName.C_Str(), name);
-			pmi->AddMesh(pm, name);
+			Model::MeshIndex midx = pmi->AddMesh(pm);
+			if (midx == Model::INVALID_INDEX)
+				continue;
+
+			// associate the aiMesh with a MeshIndex so we can attach it to the appropriate ModelIndex
+			mim.insert(TMeshIndexMap::value_type(i, midx));
 
 			VertexBuffer::ComponentDescription vcd[VertexBuffer::ComponentDescription::EUsage::VU_NUM_USAGES + 1];
 			memset(vcd, 0, sizeof(VertexBuffer::ComponentDescription) * (VertexBuffer::ComponentDescription::EUsage::VU_NUM_USAGES + 1));
@@ -166,6 +481,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 				ci++;
 			}
 
+#if 0
 			if (scene->mMeshes[i]->HasTangentsAndBitangents())
 			{
 				vcd[ci].m_Count = 3;
@@ -178,6 +494,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 				vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_BINORMAL;
 				ci++;
 			}
+#endif
 
 			for (unsigned int t = 0; t < 4; t++)
 			{
@@ -211,7 +528,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 			size_t vct = scene->mMeshes[i]->mNumVertices;
 
 			BYTE *vbuf;
-			if (pvb->Lock((void **)&vbuf, vct, vcd, VBLOCKFLAG_WRITE))
+			if (pvb->Lock((void **)&vbuf, vct, vcd, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
 			{
 				ci = 0;
 				size_t ofs = 0;
@@ -259,8 +576,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 					{
 						for (size_t j = 0; j < vct; j++)
 						{
-							for (size_t k = 0; k < vcd[ci].m_Count; k++)
-								((float *)pv)[k] = ((float *)(&pmd_3f[j]))[k];
+							memcpy(pv, &pmd_3f[j], sizeof(float) * vcd[ci].m_Count);
 
 							pv += vsz;
 						}
@@ -280,28 +596,62 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 							pv += vsz;
 						}
 					}
+
+					ofs += vcd[ci].size();
+					ci++;
 				}
 
 				pvb->Unlock();
 				pm->AttachVertexBuffer(pvb);
 			}
 
+			size_t numfaces = 0;
+			for (size_t k = 0; k < scene->mMeshes[i]->mNumFaces; k++)
+			{
+				aiFace pf = scene->mMeshes[i]->mFaces[k];
+				if (pf.mNumIndices == 3)
+					numfaces++;
+			}
+
 			BYTE *ibuf;
 			bool large_indices = (scene->mMeshes[i]->mNumVertices >= SHRT_MAX);
-			if (pib->Lock((void **)&ibuf, scene->mMeshes[i]->mNumFaces, large_indices ? IndexBuffer::EIndexSize::IS_16BIT : IndexBuffer::EIndexSize::IS_32BIT, IBLOCKFLAG_WRITE))
+			if (pib->Lock((void **)&ibuf, numfaces * 3, large_indices ? IndexBuffer::EIndexSize::IS_32BIT : IndexBuffer::EIndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
 			{
-				for (size_t k = 0; k < scene->mMeshes[i]->mNumFaces; k++)
+				size_t ii = 0;
+
+				if (large_indices)
 				{
-					aiFace pf = scene->mMeshes[i]->mFaces[k];
-					uint32_t a = pf.mIndices[0];
-					uint32_t b = pf.mIndices[1];
-					uint32_t c = pf.mIndices[2];
+					for (size_t k = 0; k < numfaces; k++)
+					{
+						aiFace pf = scene->mMeshes[i]->mFaces[k];
+						if (pf.mNumIndices != 3)
+							continue;
+
+						memcpy(&ibuf[ii], &pf.mIndices[0], sizeof(uint32_t) * 3);
+						ii += 3;
+					}
+				}
+				else
+				{
+					for (size_t k = 0; k < numfaces; k++)
+					{
+						aiFace pf = scene->mMeshes[i]->mFaces[k];
+						if (pf.mNumIndices != 3)
+							continue;
+
+						((uint16_t *)ibuf)[ii++] = (uint16_t)pf.mIndices[0];
+						((uint16_t *)ibuf)[ii++] = (uint16_t)pf.mIndices[1];
+						((uint16_t *)ibuf)[ii++] = (uint16_t)pf.mIndices[2];
+					}
 				}
 
 				pib->Unlock();
 				pm->AttachIndexBuffer(pib);
 			}
 		}
+
+		TNodeIndexMap nim;
+		AddModelNode(pmi, Model::NO_PARENT, scene->mRootNode, nim, mim);
 	}
 
 	return ResourceType::LoadResult::LR_SUCCESS;

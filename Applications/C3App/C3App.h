@@ -20,14 +20,16 @@ class UIControl : public c3::Feature
 
 protected:
 	c3::Object *m_Owner;
-	c3::ShaderComponent *m_VS;
+	c3::ShaderComponent *m_VS[2];
 	c3::ShaderComponent *m_FS;
-	c3::ShaderProgram *m_SP;
+	c3::ShaderProgram *m_SP[2];
 	c3::Mesh *m_M;
 	c3::Texture2D *m_Tex;
 	c3::Resource *m_TexRes;
 	int64_t m_MVP;
 	int64_t m_TEX0;
+	c3::Model *m_Mod;
+	c3::Resource *m_ModRes;
 
 public:
 	static const c3::FeatureType *Type();

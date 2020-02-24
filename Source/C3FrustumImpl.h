@@ -25,9 +25,9 @@ namespace c3
 
 		virtual ~FrustumImpl();
 
-		virtual void CalculateForView(const glm::fmat4 *viewmat, const glm::fmat4 *projmat);
+		virtual void CalculateForView(const glm::fmat4x4 *viewmat, const glm::fmat4x4 *projmat);
 
-		virtual void CalculateForBounds(const glm::fvec3 *boundsmin, const glm::fvec3 *boundsmax, const glm::fmat4 *matrix);
+		virtual void CalculateForBounds(const glm::fvec3 *boundsmin, const glm::fvec3 *boundsmax, const glm::fmat4x4 *matrix);
 
 		virtual bool IsPointInside(float x, float y, float z);
 

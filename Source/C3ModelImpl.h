@@ -11,6 +11,7 @@
 #include <C3Resource.h>
 #include <C3Frustum.h>
 
+
 namespace c3
 {
 
@@ -20,18 +21,49 @@ namespace c3
 	protected:
 		Renderer *m_pRend;
 
-		typedef struct
+		typedef struct sNodeInfo
 		{
-			Mesh *parent;
-			Material *pmaterial;
-			glm::fmat4 mat;
+			sNodeInfo()
+			{
+				parent = NO_PARENT;
+				mat = glm::identity<glm::fmat4x4>();
+			}
 
-		} SModelMeshInfo;
+			typedef std::vector<MeshIndex> TMeshIndexArray;
+			TMeshIndexArray meshes;
 
-		typedef std::multimap<Mesh *, SModelMeshInfo> TMeshesMap;
-		TMeshesMap m_Meshes;
+			tstring name;
+
+			NodeIndex parent;
+			typedef std::vector<NodeIndex> TNodeIndexArray;
+			TNodeIndexArray children;
+
+			glm::fmat4x4 mat;
+
+		} SNodeInfo;
+
+		typedef std::vector<SNodeInfo *> TNodeInfoArray;
+		TNodeInfoArray m_Nodes;
+
+		typedef struct sMeshInfo
+		{
+			sMeshInfo()
+			{
+				pmesh = nullptr;
+				pmtl = nullptr;
+			}
+
+			const Mesh *pmesh;
+			const Material *pmtl;
+
+		} SMeshInfo;
+
+		typedef std::vector<SMeshInfo *> TMeshInfoArray;
+		TMeshInfoArray m_Meshes;
 
 		Frustum *m_Bounds;
+
+		MatrixStack *m_MatStack;
 
 	public:
 
@@ -41,29 +73,48 @@ namespace c3
 
 		virtual void Release();
 
-		virtual size_t AddMesh(const Mesh *pmesh, const TCHAR *name);
+		virtual NodeIndex AddNode();
+
+		virtual void RemoveNode(NodeIndex nidx);
+
+		virtual size_t GetNodeCount() const;
+
+		virtual void SetNodeName(NodeIndex nidx, const TCHAR *name);
+
+		virtual const TCHAR *GetNodeName(NodeIndex nidx) const;
+
+		virtual void SetTransform(NodeIndex nidx, const glm::fmat4x4 *pmat);
+
+		virtual const glm::fmat4x4 *GetTransform(NodeIndex nidx, glm::fmat4x4 *pmat) const;
+
+		virtual void SetParent(NodeIndex nidx, NodeIndex parent_nidx = -1);
+
+		virtual NodeIndex GetParent(NodeIndex nidx) const;
+
+		virtual SubMeshIndex AssignMeshToNode(NodeIndex nidx, MeshIndex midx);
+
+		virtual MeshIndex GetMeshFromNode(NodeIndex nidx, SubMeshIndex midx) const;
+
+		virtual size_t GetMeshCountOnNode(NodeIndex nidx) const;
+
+		virtual MeshIndex AddMesh(const Mesh *pmesh);
+
+		virtual const Mesh *GetMesh(MeshIndex midx) const;
+
+		virtual void RemoveMesh(MeshIndex midx);
 
 		virtual size_t GetMeshCount() const;
 
-		virtual const Mesh *GetMesh(size_t index) const;
+		virtual void SetMaterial(MeshIndex midx, const Material *pmtl);
 
-		virtual const TCHAR *GetMeshName(const Mesh *mesh) const;
-
-		virtual void SetMaterial(const Mesh *mesh, const Material *pmaterial);
-
-		virtual const Material *GetMaterial(const Mesh *mesh) const;
-
-		virtual void SetTransform(const Mesh *mesh, const glm::fmat4 *pmat);
-
-		virtual const glm::fmat4 *GetTransform(const Mesh *mesh, glm::fmat4 *pmat = nullptr) const;
-
-		virtual void SetParent(const Mesh *mesh, const Mesh *parent_mesh);
-
-		virtual const Mesh *GetParent(const Mesh *mesh) const;
+		virtual const Material *GetMaterial(MeshIndex midx) const;
 
 		virtual const Frustum *GetBounds() const;
 
-		virtual void Draw(glm::fmat4 *pmat = nullptr) const;
+		virtual void Draw(const glm::fmat4x4 *pmat) const;
+
+	protected:
+		bool DrawNode(const SNodeInfo *pnode) const;
 
 	};
 

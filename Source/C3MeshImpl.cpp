@@ -26,12 +26,23 @@ MeshImpl::~MeshImpl()
 {
 	m_pRend = nullptr;
 	m_IB = nullptr;
-	m_VB = nullptr;
 }
 
 
 void MeshImpl::Release()
 {
+	if (m_VB)
+	{
+		m_VB->Release();
+		m_VB = nullptr;
+	}
+
+	if (m_IB)
+	{
+		m_IB->Release();
+		m_IB = nullptr;
+	}
+
 	delete this;
 }
 
@@ -42,7 +53,7 @@ void MeshImpl::AttachVertexBuffer(VertexBuffer *pvertexbuf)
 }
 
 
-VertexBuffer *MeshImpl::GetVertexBuffer()
+VertexBuffer *MeshImpl::GetVertexBuffer() const
 {
 	return m_VB;
 }
@@ -54,13 +65,13 @@ void MeshImpl::AttachIndexBuffer(IndexBuffer *pindexbuf)
 }
 
 
-IndexBuffer *MeshImpl::GetIndexBuffer()
+IndexBuffer *MeshImpl::GetIndexBuffer() const
 {
 	return m_IB;
 }
 
 
-Mesh::RETURNCODE MeshImpl::Draw(Renderer::PrimType type)
+Mesh::RETURNCODE MeshImpl::Draw(Renderer::PrimType type) const
 {
 	if (m_VB)
 	{

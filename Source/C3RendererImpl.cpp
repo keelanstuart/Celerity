@@ -287,11 +287,20 @@ bool RendererImpl::Initialized()
 	return m_Initialized;
 }
 
+bool __cdecl UnloadRenderResource(c3::Resource *pres)
+{
+	while (pres->GetStatus() == Resource::Status::RS_LOADED)
+		pres->DelRef();
+
+	return true;
+}
 
 void RendererImpl::Shutdown()
 {
 	if (!m_Initialized)
 		return;
+
+	m_pSys->GetResourceManager()->ForAllResourcesDo(UnloadRenderResource, nullptr, RTFLAG_RUNBYRENDERER, ResourceManager::ResTypeFlagMode::RTFM_ANY);
 
 	SetEvent(m_event_shutdown);
 
@@ -333,9 +342,6 @@ void RendererImpl::Shutdown()
 
 	if (m_BoundsMesh)
 	{
-		if (m_BoundsMesh->GetIndexBuffer())
-			m_BoundsMesh->GetIndexBuffer()->Release();
-		m_BoundsMesh->AttachIndexBuffer(nullptr);
 		m_BoundsMesh->AttachVertexBuffer(nullptr);
 		m_BoundsMesh->Release();
 		m_BoundsMesh = nullptr;
@@ -343,9 +349,6 @@ void RendererImpl::Shutdown()
 
 	if (m_CubeMesh)
 	{
-		if (m_CubeMesh->GetIndexBuffer())
-			m_CubeMesh->GetIndexBuffer()->Release();
-		m_CubeMesh->AttachIndexBuffer(nullptr);
 		m_CubeMesh->AttachVertexBuffer(nullptr);
 		m_CubeMesh->Release();
 		m_CubeMesh = nullptr;
@@ -359,9 +362,6 @@ void RendererImpl::Shutdown()
 
 	if (m_XYPlaneMesh)
 	{
-		if (m_XYPlaneMesh->GetIndexBuffer())
-			m_XYPlaneMesh->GetIndexBuffer()->Release();
-		m_XYPlaneMesh->AttachIndexBuffer(nullptr);
 		m_XYPlaneMesh->AttachVertexBuffer(nullptr);
 		m_XYPlaneMesh->Release();
 		m_XYPlaneMesh = nullptr;
@@ -369,9 +369,6 @@ void RendererImpl::Shutdown()
 
 	if (m_XZPlaneMesh)
 	{
-		if (m_XZPlaneMesh->GetIndexBuffer())
-			m_XZPlaneMesh->GetIndexBuffer()->Release();
-		m_XZPlaneMesh->AttachIndexBuffer(nullptr);
 		m_XZPlaneMesh->AttachVertexBuffer(nullptr);
 		m_XZPlaneMesh->Release();
 		m_XZPlaneMesh = nullptr;
@@ -379,9 +376,6 @@ void RendererImpl::Shutdown()
 
 	if (m_YZPlaneMesh)
 	{
-		if (m_YZPlaneMesh->GetIndexBuffer())
-			m_YZPlaneMesh->GetIndexBuffer()->Release();
-		m_YZPlaneMesh->AttachIndexBuffer(nullptr);
 		m_YZPlaneMesh->AttachVertexBuffer(nullptr);
 		m_YZPlaneMesh->Release();
 		m_YZPlaneMesh = nullptr;
@@ -395,9 +389,6 @@ void RendererImpl::Shutdown()
 
 	if (m_HemisphereMesh)
 	{
-		if (m_HemisphereMesh->GetIndexBuffer())
-			m_HemisphereMesh->GetIndexBuffer()->Release();
-		m_HemisphereMesh->AttachIndexBuffer(nullptr);
 		m_HemisphereMesh->AttachVertexBuffer(nullptr);
 		m_HemisphereMesh->Release();
 		m_HemisphereMesh = nullptr;
@@ -498,8 +489,11 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 
 	if (m_Gui)
 	{
-		static bool show_metrics = true;
-		ImGui::ShowMetricsWindow(&show_metrics);
+		static bool show_metrics = false;
+		if (show_metrics)
+		{
+			ImGui::ShowMetricsWindow(&show_metrics);
+		}
 
 		m_Gui->Render();
 	}

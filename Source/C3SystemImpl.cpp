@@ -25,9 +25,15 @@ System *System::Create(props::TFlags64 flags)
 	return ret;
 }
 
+void InitializeCrc16Table();
+void InitializeCrc32Table();
 
 SystemImpl::SystemImpl()
 {
+	// Initialize out CRC tables before we get rollin'
+	InitializeCrc16Table();
+	InitializeCrc32Table();
+
 	// we have a log by default... it will pipe to WARNINGS if nothing else
 	m_Log = new LogImpl(this);
 

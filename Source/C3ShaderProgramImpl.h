@@ -20,6 +20,7 @@ namespace c3
 	protected:
 		RendererImpl *m_Rend;
 		GLuint m_glID;
+
 		bool m_Linked;
 		ShaderComponentImpl *m_Comp[Renderer::ShaderComponentType::ST_NUMTYPES];
 
@@ -34,6 +35,8 @@ namespace c3
 		virtual ShaderProgram::RETURNCODE Link();
 		virtual bool IsLinked();
 
+		enum { INVALID_UNIFORM = -1 };
+
 		virtual int64_t GetUniformLocation(const TCHAR *name);
 		virtual bool SetUniformMatrix(int64_t location, const glm::fmat4x4 *mat);
 		virtual bool SetUniform1(int64_t location, float f);
@@ -45,5 +48,7 @@ namespace c3
 		operator GLuint() const { return m_glID; }
 
 	};
+
+	DEFINE_RESOURCETYPE(ShaderProgram, RTFLAG_RUNBYRENDERER, GUID({0x9c62e3e0, 0x95d0, 0x4023, { 0xad, 0xb3, 0x6a, 0xb2, 0xd5, 0xcf, 0x4e, 0x9a }}), "ShaderProgram", "Shader Programs (GLSL)", "c3shader", "c3shader");
 
 };
