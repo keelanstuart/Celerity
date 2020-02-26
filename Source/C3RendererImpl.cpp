@@ -33,6 +33,9 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_glrc = NULL;
 	m_hwnd_override = NULL;
 
+	m_glVersionMaj = 4;
+	m_glVersionMin = 5;
+
 	m_event_shutdown = CreateEvent(nullptr, TRUE, TRUE, nullptr);
 
 	// No extra threads, just run everything in this thread
@@ -169,6 +172,17 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 			wglMakeCurrent(hdc_temp, hglrc_temp);
 
+			// We want to get the highest version of opengl available...
+			typedef const GLubyte * (APIENTRY *PFNGLGETSTRINGPROC) (GLenum name);
+			PFNGLGETSTRINGPROC glGetString = nullptr;
+			HMODULE module = LoadLibrary(_T("opengl32.dll"));
+			glGetString = reinterpret_cast<PFNGLGETSTRINGPROC>(GetProcAddress(module, "glGetString"));
+			if (glGetString)
+			{
+				std::string vers = (char *)glGetString(GL_VERSION);
+				sscanf_s(vers.c_str(), "%d.%d", &m_glVersionMaj, &m_glVersionMin);
+			}
+
 			PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = nullptr;
 			wglChoosePixelFormatARB = reinterpret_cast<PFNWGLCHOOSEPIXELFORMATARBPROC>(wglGetProcAddress("wglChoosePixelFormatARB"));
 
@@ -204,8 +218,8 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 			const int contextAttribList[] =
 			{
-				WGL_CONTEXT_MAJOR_VERSION_ARB,	4,
-				WGL_CONTEXT_MINOR_VERSION_ARB,	5,
+				WGL_CONTEXT_MAJOR_VERSION_ARB,	(int)m_glVersionMaj,
+				WGL_CONTEXT_MINOR_VERSION_ARB,	(int)m_glVersionMin,
 				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 				WGL_CONTEXT_PROFILE_MASK_ARB,	WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 				0, 0	// end
@@ -489,7 +503,7 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 
 	if (m_Gui)
 	{
-		static bool show_metrics = false;
+		static bool show_metrics = true;
 		if (show_metrics)
 		{
 			ImGui::ShowMetricsWindow(&show_metrics);

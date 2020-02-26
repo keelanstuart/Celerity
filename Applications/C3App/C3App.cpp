@@ -171,12 +171,12 @@ bool UIControl::Initialize(c3::Object *powner)
 	}
 
 	m_Tex = prend->GetGridTexture();
-	m_TexRes = powner->GetSystem()->GetResourceManager()->GetResource(_T("D:/IAC/tmpproj/Tales/Resources/Textures/rock01.jpg"));
+	m_TexRes = powner->GetSystem()->GetResourceManager()->GetResource(_T("C:\\Proj\\Game Data\\Textures\\drg_ground_stones.png"));
 
 #if 0
 	m_ModRes = powner->GetSystem()->GetResourceManager()->GetResource(_T("D:/proj/three.js/examples/models/fbx/stanford-bunny.fbx"));
 #else
-	m_ModRes = powner->GetSystem()->GetResourceManager()->GetResource(_T("D:\\proj\\C3\\third-party\\assimp\\test\\models\\OBJ\\box.obj"));
+	m_ModRes = powner->GetSystem()->GetResourceManager()->GetResource(_T("c:\\proj\\Celerity\\third-party\\assimp\\test\\models\\OBJ\\box.obj"));
 #endif
 
 
@@ -233,7 +233,7 @@ void UIControl::Render(c3::Object *powner, props::TFlags64 rendflags)
 
 		prend->SetCullMode(c3::Renderer::CM_DISABLED);
 
-//		m_M->Draw(c3::Renderer::PrimType::TRILIST);
+		m_M->Draw(c3::Renderer::PrimType::TRILIST);
 
 		if (m_ModRes && (m_ModRes->GetStatus() == c3::Resource::RS_LOADED) && m_ModRes->GetData())
 			((c3::Model *)(m_ModRes->GetData()))->Draw();

@@ -47,7 +47,6 @@ GuiImpl::GuiImpl(Renderer *prend)
 	io.BackendRendererName = "imgui_impl_celerity";
 
 	const TCHAR *vertex_shader = _T(
-		"#version 410\n"
 		"uniform mat4 ProjMtx;\n"
 		"layout (location = 0) in vec2 vPos;\n"
 		"layout (location = 1) in vec2 vTex0;\n"
@@ -63,7 +62,6 @@ GuiImpl::GuiImpl(Renderer *prend)
 	);
 
 	const TCHAR *fragment_shader = _T(
-		"#version 410\n"
 		"in vec2 fTex0;\n"
 		"in vec4 fColor0;\n"
 		"uniform sampler2D TEX0;\n"
@@ -578,7 +576,6 @@ void GuiImpl::SetScrollFromPosY(float local_y, float center_y_ratio)
 }
 
 
-#if 0
 void GuiImpl::PushFont(ImFont *font)
 {
 	ImGui::PushFont(font);
@@ -589,7 +586,6 @@ void GuiImpl::PopFont()
 {
 	ImGui::PopFont();
 }
-#endif
 
 
 void GuiImpl::SetColorScheme(ColorScheme scheme)
@@ -645,7 +641,6 @@ const glm::fvec4 &GuiImpl::GetStyleColorVec4(ColorType idx)
 }
 
 
-#if 0
 ImFont *GuiImpl::GetFont()
 {
 	return ImGui::GetFont();
@@ -662,7 +657,6 @@ glm::fvec2 GuiImpl::GetFontTexUvWhitePixel()
 {
 	return ImGui::GetFontTexUvWhitePixel();
 }
-#endif
 
 
 uint32_t GuiImpl::GetColorU32(ColorType idx, float alpha_mul)
