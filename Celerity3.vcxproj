@@ -26,6 +26,7 @@
     <ClCompile Include="Source\C3GuiImpl.cpp" />
     <ClCompile Include="Source\C3IndexBufferImpl.cpp" />
     <ClCompile Include="Source\C3LogImpl.cpp" />
+    <ClCompile Include="Source\C3Math.cpp" />
     <ClCompile Include="Source\C3MatrixStackImpl.cpp" />
     <ClCompile Include="Source\C3MeshImpl.cpp" />
     <ClCompile Include="Source\C3ModelImpl.cpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="Include\C3IndexBuffer.h" />
     <ClInclude Include="Include\C3Log.h" />
     <ClInclude Include="Include\C3Material.h" />
+    <ClInclude Include="Include\C3Math.h" />
     <ClInclude Include="Include\C3MatrixStack.h" />
     <ClInclude Include="Include\C3Mesh.h" />
     <ClInclude Include="Include\C3Model.h" />
