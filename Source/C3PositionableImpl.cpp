@@ -302,7 +302,7 @@ void PositionableImpl::AdjustRotCenter(float dx, float dy, float dz)
 
 void PositionableImpl::SetOri(float x, float y, float z, float w)
 {
-	if ((m_Ori.x != x) || (m_Ori.y != y) || (m_Ori.z != z) || (m_Ori.w = w))
+	if ((m_Ori.x != x) || (m_Ori.y != y) || (m_Ori.z != z) || (m_Ori.w != w))
 	{
 		m_Ori.x = x;
 		m_Ori.y = y;
