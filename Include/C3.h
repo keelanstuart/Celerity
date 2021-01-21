@@ -35,6 +35,7 @@
 #include <glm/ext.hpp>
 
 #include <C3MatrixStack.h>
+#include <C3Frustum.h>
 #include <C3Texture.h>
 #include <C3DepthBuffer.h>
 #include <C3FrameBuffer.h>

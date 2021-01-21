@@ -19,7 +19,7 @@
 using namespace c3;
 
 
-FactoryImpl::TComportmentTypeArray FactoryImpl::s_ComportmentTypes;
+FactoryImpl::TFeatureTypeArray FactoryImpl::s_FeatureTypes;
 
 
 FactoryImpl::FactoryImpl(SystemImpl *psys)
@@ -51,13 +51,13 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid)
 		o->Flags().SetAll(pproto->Flags());
 		o->GetProperties()->AppendPropertySet(pproto->GetProperties());
 
-		for (size_t i = 0, maxi = pproto->GetNumComportments(); i < maxi; i++)
+		for (size_t i = 0, maxi = pproto->GetNumFeatures(); i < maxi; i++)
 		{
-			const ComportmentType *pct = pproto->GetComportment(i);
+			const FeatureType *pct = pproto->GetFeature(i);
 			if (!pct)
 				continue;
 
-			Comportment *pc = o->AddComportment(pct);
+			Feature *pc = o->AddFeature(pct);
 			if (!pc)
 				continue;
 		}
@@ -83,13 +83,13 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid)
 		o->Flags().SetAll(pobject->Flags());
 		o->GetProperties()->AppendPropertySet(pobject->GetProperties());
 
-		for (size_t i = 0, maxi = pobject->GetNumComportments(); i < maxi; i++)
+		for (size_t i = 0, maxi = pobject->GetNumFeatures(); i < maxi; i++)
 		{
-			Comportment *ppc = pobject->GetComportment(i);
+			Feature *ppc = pobject->GetFeature(i);
 			if (!ppc)
 				continue;
 
-			Comportment *pc = o->AddComportment(ppc->GetType());
+			Feature *pc = o->AddFeature(ppc->GetType());
 			if (!pc)
 				continue;
 
@@ -117,13 +117,13 @@ Prototype *FactoryImpl::CreatePrototype(Prototype *pproto)
 		p->Flags().SetAll(pproto->Flags());
 		p->GetProperties()->AppendPropertySet(pproto->GetProperties());
 
-		for (size_t i = 0, maxi = pproto->GetNumComportments(); i < maxi; i++)
+		for (size_t i = 0, maxi = pproto->GetNumFeatures(); i < maxi; i++)
 		{
-			const ComportmentType *pct = pproto->GetComportment(i);
+			const FeatureType *pct = pproto->GetFeature(i);
 			if (!pct)
 				continue;
 
-			p->AddComportment(pct);
+			p->AddFeature(pct);
 		}
 	}
 
@@ -145,17 +145,17 @@ Prototype *FactoryImpl::MakePrototype(Object *pobject)
 		p->Flags().SetAll(pobject->Flags());
 		p->GetProperties()->AppendPropertySet(pobject->GetProperties());
 
-		for (size_t i = 0, maxi = pobject->GetNumComportments(); i < maxi; i++)
+		for (size_t i = 0, maxi = pobject->GetNumFeatures(); i < maxi; i++)
 		{
-			Comportment *ppc = pobject->GetComportment(i);
+			Feature *ppc = pobject->GetFeature(i);
 			if (!ppc)
 				continue;
 
-			ComportmentType *pct = ppc->GetType();
+			FeatureType *pct = ppc->GetType();
 			if (!pct)
 				continue;
 
-			p->AddComportment(pct);
+			p->AddFeature(pct);
 		}
 	}
 
@@ -306,13 +306,13 @@ bool FactoryImpl::SavePrototypes(tinyxml2::XMLNode *proot, PROTO_SAVE_HUERISTIC_
 }
 
 
-bool FactoryImpl::RegisterComportmentType(ComportmentType *pctype)
+bool FactoryImpl::RegisterFeatureType(FeatureType *pctype)
 {
 	if (!pctype)
 		return false;
 
-	m_pSys->GetLog()->Print(_T("Registering ComportmentType \"%s\" ... "), pctype->GetName());
-	for (TComportmentTypeArray::const_iterator it = s_ComportmentTypes.cbegin(), last_it = s_ComportmentTypes.cend(); it != last_it; it++)
+	m_pSys->GetLog()->Print(_T("Registering FeatureType \"%s\" ... "), pctype->GetName());
+	for (TFeatureTypeArray::const_iterator it = s_FeatureTypes.cbegin(), last_it = s_FeatureTypes.cend(); it != last_it; it++)
 	{
 		if (!_tcscmp((*it)->GetName(), pctype->GetName()) || ((*it)->GetGUID() == pctype->GetGUID()))
 		{
@@ -322,21 +322,21 @@ bool FactoryImpl::RegisterComportmentType(ComportmentType *pctype)
 	}
 
 	m_pSys->GetLog()->Print(_T("OK\n"));
-	s_ComportmentTypes.push_back(pctype);
+	s_FeatureTypes.push_back(pctype);
 
 	return true;
 }
 
 
-bool FactoryImpl::UnregisterComportmentType(ComportmentType *pctype)
+bool FactoryImpl::UnregisterFeatureType(FeatureType *pctype)
 {
 	if (!pctype)
 		return false;
 
-	TComportmentTypeArray::iterator it = std::find(s_ComportmentTypes.begin(), s_ComportmentTypes.end(), pctype);
-	if (it != s_ComportmentTypes.end())
+	TFeatureTypeArray::iterator it = std::find(s_FeatureTypes.begin(), s_FeatureTypes.end(), pctype);
+	if (it != s_FeatureTypes.end())
 	{
-		s_ComportmentTypes.erase(it);
+		s_FeatureTypes.erase(it);
 		return true;
 	}
 
@@ -344,29 +344,29 @@ bool FactoryImpl::UnregisterComportmentType(ComportmentType *pctype)
 }
 
 
-size_t FactoryImpl::GetNumComportmentTypes()
+size_t FactoryImpl::GetNumFeatureTypes()
 {
-	return s_ComportmentTypes.size();
+	return s_FeatureTypes.size();
 }
 
 
-const ComportmentType *FactoryImpl::GetComportmentType(size_t index)
+const FeatureType *FactoryImpl::GetFeatureType(size_t index)
 {
-	if (index >= s_ComportmentTypes.size())
+	if (index >= s_FeatureTypes.size())
 		return nullptr;
 
-	return s_ComportmentTypes[index];
+	return s_FeatureTypes[index];
 }
 
 
-const ComportmentType *FactoryImpl::FindComportmentType(const TCHAR *name, bool case_sensitive)
+const FeatureType *FactoryImpl::FindFeatureType(const TCHAR *name, bool case_sensitive)
 {
 	if (!name)
 		return nullptr;
 
 	if (case_sensitive)
 	{
-		for (TComportmentTypeArray::const_iterator it = s_ComportmentTypes.cbegin(), last_it = s_ComportmentTypes.cend(); it != last_it; it++)
+		for (TFeatureTypeArray::const_iterator it = s_FeatureTypes.cbegin(), last_it = s_FeatureTypes.cend(); it != last_it; it++)
 		{
 			if (!_tcscmp((*it)->GetName(), name))
 			{
@@ -376,7 +376,7 @@ const ComportmentType *FactoryImpl::FindComportmentType(const TCHAR *name, bool 
 	}
 	else
 	{
-		for (TComportmentTypeArray::const_iterator it = s_ComportmentTypes.cbegin(), last_it = s_ComportmentTypes.cend(); it != last_it; it++)
+		for (TFeatureTypeArray::const_iterator it = s_FeatureTypes.cbegin(), last_it = s_FeatureTypes.cend(); it != last_it; it++)
 		{
 			if (!_tcsicmp((*it)->GetName(), name))
 			{
@@ -389,9 +389,9 @@ const ComportmentType *FactoryImpl::FindComportmentType(const TCHAR *name, bool 
 }
 
 
-const ComportmentType *FactoryImpl::FindComportmentType(GUID guid)
+const FeatureType *FactoryImpl::FindFeatureType(GUID guid)
 {
-	for (TComportmentTypeArray::const_iterator it = s_ComportmentTypes.cbegin(), last_it = s_ComportmentTypes.cend(); it != last_it; it++)
+	for (TFeatureTypeArray::const_iterator it = s_FeatureTypes.cbegin(), last_it = s_FeatureTypes.cend(); it != last_it; it++)
 	{
 		if ((*it)->GetGUID() == guid)
 		{

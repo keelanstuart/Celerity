@@ -11,7 +11,7 @@
 using namespace c3;
 
 
-DECLARE_COMPORTMENTTYPE(Renderable, RenderableImpl);
+DECLARE_FEATURETYPE(Renderable, RenderableImpl);
 
 
 RenderableImpl::RenderableImpl()
@@ -53,9 +53,9 @@ bool RenderableImpl::Initialize(Object *pobject)
 
 void RenderableImpl::Update(Object *pobject, float elapsed_time)
 {
-	// get a positionable comportment from the object -- and if we can't, don't proceed
+	// get a positionable feature from the object -- and if we can't, don't proceed
 	if (!m_pcpos)
-		m_pcpos = dynamic_cast<PositionableImpl *>(pobject->FindComportment(Positionable::Type()));
+		m_pcpos = dynamic_cast<PositionableImpl *>(pobject->FindFeature(Positionable::Type()));
 
 	if (!m_pcpos)
 		return;

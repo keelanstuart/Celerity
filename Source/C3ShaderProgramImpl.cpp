@@ -201,3 +201,100 @@ bool ShaderProgramImpl::SetUniformTexture(int64_t location, uint64_t sampler, Te
 
 	return true;
 }
+
+
+DECLARE_RESOURCETYPE(ShaderProgram);
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
+{
+	if (returned_data)
+	{
+		*returned_data = psys->GetRenderer()->CreateShaderProgram();
+		if (!*returned_data)
+			return ResourceType::LoadResult::LR_ERROR;
+
+		char *fn;
+		CONVERT_TCS2MBCS(filename, fn);
+		tinyxml2::XMLDocument doc;
+		if (!doc.LoadFile(fn) != tinyxml2::XMLError::XML_SUCCESS)
+			return ResourceType::LoadResult::LR_ERROR;
+
+		static const char *shader_tagname[Renderer::ShaderComponentType::ST_NUMTYPES] =
+		{
+			"vertex_shader",
+			"fragment_shader",
+			"geometry_shader",
+			"tesseval_shader",
+			"tesscontrol_shader"
+		};
+
+		for (size_t sti = 0; sti < Renderer::ShaderComponentType::ST_NUMTYPES; sti++)
+		{
+			tinyxml2::XMLElement *pel = doc.FirstChildElement(shader_tagname[sti]);
+			if (pel)
+			{
+				const tinyxml2::XMLAttribute *pa = pel->FindAttribute("filename");
+				if (pa)
+				{
+					TCHAR *sfn, ffn[MAX_PATH];
+					CONVERT_MBCS2TCS(pa->Value(), sfn);
+					if (!psys->GetFileMapper()->FindFile(sfn, ffn, MAX_PATH))
+					{
+						psys->GetLog()->Print(_T("Unable to locate \"%S\" referenced by %s tag by \"%S\"\n"), ffn, shader_tagname[sti], filename);
+						continue;
+					}
+
+					HANDLE hf = CreateFile(ffn, GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING, 0, NULL);
+					if (hf == INVALID_HANDLE_VALUE)
+					{
+						psys->GetLog()->Print(_T("Error opening \"%S\"\n"), ffn);
+						continue;
+					}
+
+					DWORD rb = 0, fsz = GetFileSize(hf, nullptr);
+					if (!fsz)
+						continue;
+
+					char *sh = (char *)malloc(fsz);
+					if (sh)
+					{
+						if (ReadFile(hf, sh, fsz, &rb, nullptr))
+						{
+							ShaderComponent *psc = psys->GetRenderer()->CreateShaderComponent((Renderer::ShaderComponentType)sti);
+
+							TCHAR *_sh;
+							CONVERT_MBCS2TCS(sh, _sh);
+							psc->CompileProgram(_sh);
+						}
+
+						free(sh);
+					}
+
+					CloseHandle(hf);
+				}
+			}
+		}
+
+		((ShaderProgram *)*returned_data)->Link();
+	}
+
+	return ResourceType::LoadResult::LR_SUCCESS;
+}
+
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
+{
+	return ResourceType::LoadResult::LR_ERROR;
+}
+
+
+bool RESOURCETYPENAME(ShaderProgram)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+{
+	return false;
+}
+
+
+void RESOURCETYPENAME(ShaderProgram)::Unload(void *data) const
+{
+	((ShaderProgram *)data)->Release();
+}

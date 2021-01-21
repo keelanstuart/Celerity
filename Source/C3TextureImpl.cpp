@@ -13,35 +13,6 @@
 using namespace c3;
 
 
-DECLARE_RESOURCETYPE(Texture2D);
-
-c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
-{
-	if (returned_data)
-	{
-		*returned_data = psys->GetRenderer()->CreateTexture2DFromFile(filename);
-		if (!*returned_data)
-			return ResourceType::LoadResult::LR_ERROR;
-	}
-
-	return ResourceType::LoadResult::LR_SUCCESS;
-}
-
-c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
-{
-	return ResourceType::LoadResult::LR_ERROR;
-}
-
-bool RESOURCETYPENAME(Texture2D)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
-{
-	return false;
-}
-
-void RESOURCETYPENAME(Texture2D)::Unload(void *data) const
-{
-	((Texture2D *)data)->Release();
-}
-
 Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	assert(prend);
@@ -84,6 +55,12 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 	if (flags.IsSet(TEXCREATEFLAG_RENDERTARGET))
 	{
 		m_Rend->gl.CreateTextures(GL_TEXTURE_2D, 1, &m_glID);
+
+		// if we can't get a gl 4.5 context, then we may have to use gen instead of create
+		if (m_glID == GL_INVALID_VALUE)
+		{
+			m_Rend->gl.GenTextures(1, &m_glID);
+		}
 
 		Bind();
 
@@ -172,6 +149,13 @@ Texture::RETURNCODE Texture2DImpl::Lock(void **buffer, Texture2D::SLockInfo &loc
 	if (m_glID == GL_INVALID_VALUE)
 	{
 		m_Rend->gl.CreateTextures(GL_TEXTURE_2D, 1, &m_glID);
+
+		// if we can't get a gl 4.5 context, then we may have to use gen instead of create
+		if (m_glID == GL_INVALID_VALUE)
+		{
+			m_Rend->gl.GenTextures(1, &m_glID);
+		}
+
 		init = true;
 	}
 
@@ -261,6 +245,39 @@ Texture::RETURNCODE Texture2DImpl::Unlock()
 	}
 
 	return RET_OK;
+}
+
+
+DECLARE_RESOURCETYPE(Texture2D);
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
+{
+	if (returned_data)
+	{
+		*returned_data = psys->GetRenderer()->CreateTexture2DFromFile(filename);
+		if (!*returned_data)
+			return ResourceType::LoadResult::LR_ERROR;
+	}
+
+	return ResourceType::LoadResult::LR_SUCCESS;
+}
+
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
+{
+	return ResourceType::LoadResult::LR_ERROR;
+}
+
+
+bool RESOURCETYPENAME(Texture2D)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+{
+	return false;
+}
+
+
+void RESOURCETYPENAME(Texture2D)::Unload(void *data) const
+{
+	((Texture2D *)data)->Release();
 }
 
 
@@ -391,6 +408,13 @@ Texture::RETURNCODE TextureCubeImpl::Lock(void **buffer, CubeFace face, TextureC
 	if (m_glID == GL_INVALID_VALUE)
 	{
 		m_Rend->gl.CreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_glID);
+
+		// if we can't get a gl 4.5 context, then we may have to use gen instead of create
+		if (m_glID == GL_INVALID_VALUE)
+		{
+			m_Rend->gl.GenTextures(1, &m_glID);
+		}
+
 		init = true;
 	}
 
@@ -616,6 +640,13 @@ Texture::RETURNCODE Texture3DImpl::Lock(void **buffer, Texture3D::SLockInfo &loc
 	if (m_glID == GL_INVALID_VALUE)
 	{
 		m_Rend->gl.CreateTextures(GL_TEXTURE_3D, 1, &m_glID);
+
+		// if we can't get a gl 4.5 context, then we may have to use gen instead of create
+		if (m_glID == GL_INVALID_VALUE)
+		{
+			m_Rend->gl.GenTextures(1, &m_glID);
+		}
+
 		init = true;
 	}
 

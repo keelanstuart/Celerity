@@ -143,7 +143,7 @@ namespace c3
 
 		virtual void SetScrollFromPosY(float local_y, float center_y_ratio = 0.5f);
 
-#if 0
+#if 1
 		virtual void PushFont(ImFont *font);
 
 		virtual void PopFont();
@@ -167,7 +167,7 @@ namespace c3
 
 		virtual const glm::fvec4 &GetStyleColorVec4(ColorType idx);
 
-#if 0
+#if 1
 		virtual ImFont *GetFont();
 
 		virtual float GetFontSize();

@@ -38,7 +38,7 @@ namespace c3
 
 		virtual void Release();
 
-		virtual ComportmentType *GetType();
+		virtual FeatureType *GetType();
 
 		virtual props::TFlags64 Flags();
 
@@ -140,6 +140,6 @@ namespace c3
 
 	};
 
-	DEFINE_COMPORTMENTTYPE(Positionable, PositionableImpl, GUID({0x26d446ca, 0xda21, 0x4272, {0xb6, 0x66, 0x16, 0xc2, 0xcb, 0xf3, 0x5f, 0x69}}), "Positionable", "Allows the Object to be positioned and oriented in space");
+	DEFINE_FEATURETYPE(Positionable, PositionableImpl, GUID({0x26d446ca, 0xda21, 0x4272, {0xb6, 0x66, 0x16, 0xc2, 0xcb, 0xf3, 0x5f, 0x69}}), "Positionable", "Allows the Object to be positioned and oriented in space");
 
 };

@@ -7,7 +7,7 @@
 #pragma once
 
 #include <C3.h>
-#include <C3Comportment.h>
+#include <C3Feature.h>
 
 namespace c3
 {
@@ -19,12 +19,12 @@ namespace c3
 	#define POSFLAG_REBUILDMATRIX		(POSFLAG_POSCHANGED | POSFLAG_ORICHANGED | POSFLAG_SCLCHANGED)
 	#define POSFLAG_MATRIXCHANGED		0x0008
 
-	class C3_API Positionable : public Comportment
+	class C3_API Positionable : public Feature
 	{
 
 	public:
 
-		static const ComportmentType *Type();
+		static const FeatureType *Type();
 
 		// *** POSITION FUNCTIONS *******************************
 

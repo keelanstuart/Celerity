@@ -40,7 +40,7 @@ namespace c3
 
 		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype);
 
-		virtual void ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype);
+		virtual void ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype = nullptr, props::TFlags64 restypeflags = 0, ResTypeFlagMode flagmode = RTFM_IGNORE);
 
 		virtual void RegisterResourceType(const ResourceType *restype);
 

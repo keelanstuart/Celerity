@@ -20,8 +20,8 @@ namespace c3
 
 		props::IPropertySet *m_Props;
 
-		typedef std::deque<Comportment *> TComportmentArray;
-		TComportmentArray m_Comportments;
+		typedef std::deque<Feature *> TFeatureArray;
+		TFeatureArray m_Features;
 
 		Object *m_Owner;
 
@@ -58,15 +58,15 @@ namespace c3
 
 		virtual props::IPropertySet *GetProperties();
 
-		virtual size_t GetNumComportments();
+		virtual size_t GetNumFeatures();
 
-		virtual Comportment *GetComportment(size_t index);
+		virtual Feature *GetFeature(size_t index);
 
-		virtual Comportment *FindComportment(const ComportmentType *pctype);
+		virtual Feature *FindFeature(const FeatureType *pctype);
 
-		virtual Comportment *AddComportment(const ComportmentType *pctype);
+		virtual Feature *AddFeature(const FeatureType *pctype);
 
-		virtual void RemoveComportment(Comportment *pcomportmemt);
+		virtual void RemoveFeature(Feature *pcomportmemt);
 
 		virtual void Update(float elapsed_time = 0.0f);
 

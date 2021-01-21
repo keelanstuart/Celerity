@@ -31,7 +31,7 @@ namespace c3
 
 		virtual Renderer::ShaderComponentType Type();
 
-		virtual ShaderComponent::RETURNCODE CompileProgram(const TCHAR *program);
+		virtual ShaderComponent::RETURNCODE CompileProgram(const TCHAR *program, const TCHAR *preamble);
 
 		virtual const TCHAR *GetProgramText();
 

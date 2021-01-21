@@ -32,13 +32,13 @@ namespace c3
 
 		virtual void AttachVertexBuffer(VertexBuffer *pvertexbuf);
 
-		virtual VertexBuffer *GetVertexBuffer();
+		virtual VertexBuffer *GetVertexBuffer() const;
 
 		virtual void AttachIndexBuffer(IndexBuffer *pindexbuf);
 
-		virtual IndexBuffer *GetIndexBuffer();
+		virtual IndexBuffer *GetIndexBuffer() const;
 
-		virtual RETURNCODE Draw(Renderer::PrimType type);
+		virtual RETURNCODE Draw(Renderer::PrimType type) const;
 
 	};
 

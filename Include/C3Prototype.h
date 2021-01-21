@@ -8,7 +8,7 @@
 
 #include <C3.h>
 #include <C3Object.h>
-#include <C3Comportment.h>
+#include <C3Feature.h>
 
 namespace c3
 {
@@ -37,17 +37,17 @@ namespace c3
 		/// Returns the properties conferred to an Object instance to be manipulated
 		virtual props::IPropertySet *GetProperties() = NULL;
 
-		/// Adds a Comportment to the Prototype
-		virtual bool AddComportment(const ComportmentType *pcomp) = NULL;
+		/// Adds a Feature to the Prototype
+		virtual bool AddFeature(const FeatureType *pcomp) = NULL;
 
-		/// Removes the given Comportment from the Prototype
-		virtual bool RemoveComportment(const ComportmentType *pcomp) = NULL;
+		/// Removes the given Feature from the Prototype
+		virtual bool RemoveFeature(const FeatureType *pcomp) = NULL;
 
-		/// Returns the number of Comportments that are part of the Prototype
-		virtual size_t GetNumComportments() = NULL;
+		/// Returns the number of Features that are part of the Prototype
+		virtual size_t GetNumFeatures() = NULL;
 
-		/// Returns the Comportment at the given index
-		virtual const ComportmentType *GetComportment(size_t index) = NULL;
+		/// Returns the Feature at the given index
+		virtual const FeatureType *GetFeature(size_t index) = NULL;
 
 	};
 

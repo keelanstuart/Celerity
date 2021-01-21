@@ -67,7 +67,7 @@ Renderer::ShaderComponentType ShaderComponentImpl::Type()
 }
 
 
-ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *program)
+ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *program, const TCHAR *preamble)
 {
 	if (!program)
 		return ShaderComponent::RETURNCODE::RET_NULL_PROGRAM;
@@ -80,9 +80,14 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 
 	m_ProgramText = program;
 
-	char *ps;
-	CONVERT_TCS2MBCS(program, ps);
-	m_Rend->gl.ShaderSource(m_glID, 1, &ps, NULL);
+	size_t progidx = preamble ? 2 : 1;
+	char *ps[3] = {"#version 410\n", nullptr, nullptr};
+	CONVERT_TCS2MBCS(program, ps[progidx]);
+	if (preamble)
+	{
+		CONVERT_TCS2MBCS(preamble, ps[1]);
+	}
+	m_Rend->gl.ShaderSource(m_glID, preamble ? 3 : 2, ps, NULL);
 
 	m_Rend->gl.CompileShader(m_glID);
 

@@ -66,6 +66,7 @@ namespace c3
 
 		} LoadResult;
 
+		/// Set this flag when you define your ResourceType is you need the underlying data to be loaded in the render thread
 		#define RTFLAG_RUNBYRENDERER		0x0001
 
 		/// Returns the flags associated with this ResourceType

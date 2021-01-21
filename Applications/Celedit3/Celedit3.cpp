@@ -98,13 +98,13 @@ BOOL CCeledit3App::InitInstance()
 	ppm->DiscoverPlugins();
 
 	c3::Prototype *pcamproto = pf->CreatePrototype();
-	pcamproto->AddComportment(c3::Positionable::Type());
-	pcamproto->AddComportment(c3::Camera::Type());
+	pcamproto->AddFeature(c3::Positionable::Type());
+	pcamproto->AddFeature(c3::Camera::Type());
 	pcamproto->SetName(_T("Camera"));
 
 	c3::Prototype *pslideproto = pf->CreatePrototype();
-	pslideproto->AddComportment(c3::Positionable::Type());
-	pslideproto->AddComportment(pf->FindComportmentType(_T("SimpleSlide"), false));
+	pslideproto->AddFeature(c3::Positionable::Type());
+	pslideproto->AddFeature(pf->FindFeatureType(_T("SimpleSlide"), false));
 	pslideproto->SetName(_T("SimpleSlide"));
 
 	// Initialize OLE libraries

@@ -30,13 +30,13 @@ namespace c3
 
 		virtual void AttachVertexBuffer(VertexBuffer *pvertexbuf) = NULL;
 
-		virtual VertexBuffer *GetVertexBuffer() = NULL;
+		virtual VertexBuffer *GetVertexBuffer() const = NULL;
 
 		virtual void AttachIndexBuffer(IndexBuffer *pindexbuf) = NULL;
 
-		virtual IndexBuffer *GetIndexBuffer() = NULL;
+		virtual IndexBuffer *GetIndexBuffer() const = NULL;
 
-		virtual RETURNCODE Draw(Renderer::PrimType type = Renderer::PrimType::TRILIST) = NULL;
+		virtual RETURNCODE Draw(Renderer::PrimType type = Renderer::PrimType::TRILIST) const = NULL;
 
 	};
 

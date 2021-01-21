@@ -26,11 +26,11 @@ ObjectImpl::ObjectImpl(SystemImpl *psys, GUID guid)
 
 ObjectImpl::~ObjectImpl()
 {
-	for (TComportmentArray::const_iterator it = m_Comportments.cbegin(), last_it = m_Comportments.cend(); it != last_it; it++)
+	for (TFeatureArray::const_iterator it = m_Features.cbegin(), last_it = m_Features.cend(); it != last_it; it++)
 	{
 		(*it)->GetType()->Destroy((*it));
 	}
-	m_Comportments.clear();
+	m_Features.clear();
 
 	if (m_Props)
 	{
@@ -123,30 +123,30 @@ props::IPropertySet *ObjectImpl::GetProperties()
 }
 
 
-size_t ObjectImpl::GetNumComportments()
+size_t ObjectImpl::GetNumFeatures()
 {
-	return m_Comportments.size();
+	return m_Features.size();
 }
 
 
-Comportment *ObjectImpl::GetComportment(size_t index)
+Feature *ObjectImpl::GetFeature(size_t index)
 {
-	if (index >= m_Comportments.size())
+	if (index >= m_Features.size())
 		return nullptr;
 
-	return m_Comportments[index];
+	return m_Features[index];
 }
 
 
-Comportment *ObjectImpl::FindComportment(const ComportmentType *pctype)
+Feature *ObjectImpl::FindFeature(const FeatureType *pctype)
 {
-	Comportment *ret = nullptr;
+	Feature *ret = nullptr;
 
-	for (size_t i = 0, maxi = m_Comportments.size(); i < maxi; i++)
+	for (size_t i = 0, maxi = m_Features.size(); i < maxi; i++)
 	{
-		if (m_Comportments[i]->GetType() == pctype)
+		if (m_Features[i]->GetType() == pctype)
 		{
-			ret = m_Comportments[i];
+			ret = m_Features[i];
 			break;
 		}
 	}
@@ -155,12 +155,12 @@ Comportment *ObjectImpl::FindComportment(const ComportmentType *pctype)
 }
 
 
-Comportment *ObjectImpl::AddComportment(const ComportmentType *pctype)
+Feature *ObjectImpl::AddFeature(const FeatureType *pctype)
 {
 	if (!pctype)
 		return nullptr;
 
-	Comportment *pc = FindComportment(pctype);
+	Feature *pc = FindFeature(pctype);
 	if (pc)
 		return pc;
 
@@ -168,7 +168,7 @@ Comportment *ObjectImpl::AddComportment(const ComportmentType *pctype)
 	if (!pc)
 		return nullptr;
 
-	m_Comportments.push_back(pc);
+	m_Features.push_back(pc);
 
 	pc->Initialize(this);
 
@@ -176,13 +176,13 @@ Comportment *ObjectImpl::AddComportment(const ComportmentType *pctype)
 }
 
 
-void ObjectImpl::RemoveComportment(Comportment *pcomportmemt)
+void ObjectImpl::RemoveFeature(Feature *pcomportmemt)
 {
-	TComportmentArray::iterator it = std::find(m_Comportments.begin(), m_Comportments.end(), pcomportmemt);
-	if (it != m_Comportments.end())
+	TFeatureArray::iterator it = std::find(m_Features.begin(), m_Features.end(), pcomportmemt);
+	if (it != m_Features.end())
 	{
 		(*it)->GetType()->Destroy((*it));
-		m_Comportments.erase(it);
+		m_Features.erase(it);
 	}
 }
 
@@ -192,7 +192,7 @@ void ObjectImpl::Update(float elapsed_time)
 	if (!m_Flags.IsSet(OBJFLAG_UPDATE))
 		return;
 
-	for (TComportmentArray::const_iterator it = m_Comportments.cbegin(), last_it = m_Comportments.cend(); it != last_it; it++)
+	for (TFeatureArray::const_iterator it = m_Features.cbegin(), last_it = m_Features.cend(); it != last_it; it++)
 	{
 		(*it)->Update(this, elapsed_time);
 	}
@@ -207,7 +207,7 @@ bool ObjectImpl::Prerender(props::TFlags64 rendflags)
 	// TODO: port visibility culling
 	bool ret = false;
 
-	for (TComportmentArray::const_iterator it = m_Comportments.cbegin(), last_it = m_Comportments.cend(); it != last_it; it++)
+	for (TFeatureArray::const_iterator it = m_Features.cbegin(), last_it = m_Features.cend(); it != last_it; it++)
 	{
 		if ((*it)->Prerender(this, rendflags))
 			ret = true;
@@ -222,7 +222,7 @@ bool ObjectImpl::Render(props::TFlags64 rendflags)
 	if (!rendflags.AnySet(m_Flags))
 		return false;
 
-	for (TComportmentArray::const_iterator it = m_Comportments.cbegin(), last_it = m_Comportments.cend(); it != last_it; it++)
+	for (TFeatureArray::const_iterator it = m_Features.cbegin(), last_it = m_Features.cend(); it != last_it; it++)
 	{
 		(*it)->Render(this, rendflags);
 	}
@@ -267,7 +267,7 @@ void ObjectImpl::PropertyChanged(const props::IProperty *pprop)
 	if (!pprop)
 		return;
 
-	for (TComportmentArray::const_iterator it = m_Comportments.cbegin(), last_it = m_Comportments.cend(); it != last_it; it++)
+	for (TFeatureArray::const_iterator it = m_Features.cbegin(), last_it = m_Features.cend(); it != last_it; it++)
 	{
 		(*it)->PropertyChanged(pprop);
 	}

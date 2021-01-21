@@ -1,11 +1,12 @@
 # Celerity
 Celerity - a game / visualization engine for Windows, written in C++, currently in it's third-ish iteration
 
-Initially, you should build the "Bootstrap (Debug)" target... but be prepared: it will be building the OpenGL wrapper code, which involves downloading and parsing header files and documentation (yes, the resulting code includes comments detailing the version of OpenGL the function comes from and what it does). Even if you leave it in the Bootstrap configuration, a CRC is generated based on the .h files and the parameters used to create it which, together, prevent re-processing of all the OpenGL headers. Even so, the initial download is slow enough that you'll want to switch to a normal Debug config.
+Once you have cloned the repo, run SetupCelerityEnv.bat to create / update the C3_SDK environment variable.
 
-Once the bootstrap configuration build is finished, you will need to restart Visual Studio in order for it to see "C3_SDK" (the location where you cloned the repo) in it's environment.
-
+Next, load the main Celerity solution in Visual Studio and build the "Bootstrap (Debug)" target. Be prepared: it will be building the OpenGL wrapper code, which involves downloading and parsing header files and documentation (yes, the resulting code includes comments detailing the version of OpenGL the function comes from and what it does). Even if you leave it in the Bootstrap configuration, a CRC is generated based on the .h files and the parameters used to create it which, together, prevent re-processing of all the OpenGL headers. Even so, the initial download is slow enough that you'll want to switch to a Debug / Release config.
 ______________________________________________
+
+Some background...
 
 Celerity has been around since roughly 2001, beginning life as a DirectX 8.1 engine... eventually moving to DirectX 9... and finally being ported to OpenGL. The initial reasons for using DirectX (better drivers, rapid adoption of new hardware features, and lots of helper library functions in D3DX) went away sometime in the last decade, or so, and have finally prompted a re-write using OpenGL. Why not Vulkan or DX12? I think they (the hardware vendors and Microsoft) have tried to edge out smaller-scale studios by shifting the burden of software development away from themselves... and I'm not saying they're unwise to do this, but because of that I believe OpenGL, at this point, provides a better platform for "lone wolves."
 

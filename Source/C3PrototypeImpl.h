@@ -23,8 +23,8 @@ namespace c3
 
 		props::IPropertySet *m_Props;
 
-		typedef std::deque<const ComportmentType *> TComportmentArray;
-		TComportmentArray m_Comportments;
+		typedef std::deque<const FeatureType *> TFeatureArray;
+		TFeatureArray m_Features;
 
 	public:
 
@@ -42,13 +42,13 @@ namespace c3
 
 		virtual props::IPropertySet *GetProperties();
 
-		virtual bool AddComportment(const ComportmentType *pcomp);
+		virtual bool AddFeature(const FeatureType *pcomp);
 
-		virtual bool RemoveComportment(const ComportmentType *pcomp);
+		virtual bool RemoveFeature(const FeatureType *pcomp);
 
-		virtual size_t GetNumComportments();
+		virtual size_t GetNumFeatures();
 
-		virtual const ComportmentType *GetComportment(size_t index);
+		virtual const FeatureType *GetFeature(size_t index);
 
 	};
 

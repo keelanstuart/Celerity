@@ -23,7 +23,7 @@ namespace c3
 		virtual void Push(const glm::fmat4x4 *m = nullptr) = NULL;
 		virtual bool Pop() = NULL;
 
-		virtual const glm::fmat4x4 *Top(glm::fmat4x4 *m) const = NULL;
+		virtual const glm::fmat4x4 *Top(glm::fmat4x4 *m = nullptr) const = NULL;
 
 	};
 

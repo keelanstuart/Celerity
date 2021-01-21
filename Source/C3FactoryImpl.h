@@ -19,8 +19,8 @@ namespace c3
 	protected:
 		SystemImpl *m_pSys;
 
-		typedef std::deque<ComportmentType *> TComportmentTypeArray;
-		static TComportmentTypeArray s_ComportmentTypes;
+		typedef std::deque<FeatureType *> TFeatureTypeArray;
+		static TFeatureTypeArray s_FeatureTypes;
 
 		typedef std::deque<Prototype *> TPrototypeArray;
 		TPrototypeArray m_Prototypes;
@@ -57,17 +57,17 @@ namespace c3
 
 		virtual bool SavePrototypes(tinyxml2::XMLNode *proot, PROTO_SAVE_HUERISTIC_FUNCTION pshfunc);
 
-		virtual bool RegisterComportmentType(ComportmentType *pctype);
+		virtual bool RegisterFeatureType(FeatureType *pctype);
 
-		virtual bool UnregisterComportmentType(ComportmentType *pctype);
+		virtual bool UnregisterFeatureType(FeatureType *pctype);
 		
-		virtual size_t GetNumComportmentTypes();
+		virtual size_t GetNumFeatureTypes();
 
-		virtual const ComportmentType *GetComportmentType(size_t index);
+		virtual const FeatureType *GetFeatureType(size_t index);
 
-		virtual const ComportmentType *FindComportmentType(const TCHAR *name, bool case_sensitive);
+		virtual const FeatureType *FindFeatureType(const TCHAR *name, bool case_sensitive);
 
-		virtual const ComportmentType *FindComportmentType(GUID guid);
+		virtual const FeatureType *FindFeatureType(GUID guid);
 
 	};
 

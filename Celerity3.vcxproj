@@ -17,15 +17,19 @@
   <ItemGroup>
     <ClCompile Include="Source\C3CameraImpl.cpp" />
     <ClCompile Include="Source\C3ConfigurationImpl.cpp" />
+    <ClCompile Include="Source\C3CRC.cpp" />
     <ClCompile Include="Source\C3DepthBufferImpl.cpp" />
     <ClCompile Include="Source\C3FactoryImpl.cpp" />
     <ClCompile Include="Source\C3FileMapperImpl.cpp" />
     <ClCompile Include="Source\C3FrameBufferImpl.cpp" />
+    <ClCompile Include="Source\C3FrustumImpl.cpp" />
     <ClCompile Include="Source\C3GuiImpl.cpp" />
     <ClCompile Include="Source\C3IndexBufferImpl.cpp" />
     <ClCompile Include="Source\C3LogImpl.cpp" />
+    <ClCompile Include="Source\C3Math.cpp" />
     <ClCompile Include="Source\C3MatrixStackImpl.cpp" />
     <ClCompile Include="Source\C3MeshImpl.cpp" />
+    <ClCompile Include="Source\C3ModelImpl.cpp" />
     <ClCompile Include="Source\C3ObjectImpl.cpp" />
     <ClCompile Include="Source\C3PluginImpl.cpp" />
     <ClCompile Include="Source\C3PluginManagerImpl.cpp" />
@@ -79,10 +83,11 @@
   <ItemGroup>
     <ClInclude Include="Include\C3.h" />
     <ClInclude Include="Include\C3Camera.h" />
-    <ClInclude Include="Include\C3Comportment.h" />
     <ClInclude Include="Include\C3Configuration.h" />
+    <ClInclude Include="Include\C3CRC.h" />
     <ClInclude Include="Include\C3DepthBuffer.h" />
     <ClInclude Include="Include\C3Factory.h" />
+    <ClInclude Include="Include\C3Feature.h" />
     <ClInclude Include="Include\C3FileMapper.h" />
     <ClInclude Include="Include\C3FrameBuffer.h" />
     <ClInclude Include="Include\C3Frustum.h" />
@@ -90,6 +95,7 @@
     <ClInclude Include="Include\C3IndexBuffer.h" />
     <ClInclude Include="Include\C3Log.h" />
     <ClInclude Include="Include\C3Material.h" />
+    <ClInclude Include="Include\C3Math.h" />
     <ClInclude Include="Include\C3MatrixStack.h" />
     <ClInclude Include="Include\C3Mesh.h" />
     <ClInclude Include="Include\C3Model.h" />
@@ -113,12 +119,14 @@
     <ClInclude Include="Source\C3FactoryImpl.h" />
     <ClInclude Include="Source\C3FileMapperImpl.h" />
     <ClInclude Include="Source\C3FrameBufferImpl.h" />
+    <ClInclude Include="Source\C3FrustumImpl.h" />
     <ClInclude Include="Source\C3GuiImpl.h" />
     <ClInclude Include="Source\C3ImGuiConfig.h" />
     <ClInclude Include="Source\C3IndexBufferImpl.h" />
     <ClInclude Include="Source\C3LogImpl.h" />
     <ClInclude Include="Source\C3MatrixStackImpl.h" />
     <ClInclude Include="Source\C3MeshImpl.h" />
+    <ClInclude Include="Source\C3ModelImpl.h" />
     <ClInclude Include="Source\C3ObjectImpl.h" />
     <ClInclude Include="Source\C3PluginImpl.h" />
     <ClInclude Include="Source\C3PluginManagerImpl.h" />
@@ -198,7 +206,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">
@@ -206,7 +214,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -214,7 +222,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -224,7 +232,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;C3_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -232,7 +240,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PreBuildEvent>
@@ -247,7 +255,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;C3_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -255,7 +263,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(SolutionDir)Bin\glLibGen64.exe -class:"COpenGL" -basefile:"gl_wrapper" -outdir:"$(SolutionDir)Source" -ver:4.5 -glh:"C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um\gl\GL.h" -glexth:"https://www.khronos.org/registry/OpenGL/api/GL/glext.h" -wglexth:"https://www.khronos.org/registry/OpenGL/api/GL/wglext.h" -khrh:"https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h" -pch</Command>
@@ -270,7 +278,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;C3_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
@@ -279,7 +287,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
     </Link>
     <PreBuildEvent>

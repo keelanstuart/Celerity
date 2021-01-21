@@ -33,6 +33,9 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_glrc = NULL;
 	m_hwnd_override = NULL;
 
+	m_glVersionMaj = 4;
+	m_glVersionMin = 5;
+
 	m_event_shutdown = CreateEvent(nullptr, TRUE, TRUE, nullptr);
 
 	// No extra threads, just run everything in this thread
@@ -169,6 +172,17 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 			wglMakeCurrent(hdc_temp, hglrc_temp);
 
+			// We want to get the highest version of opengl available...
+			typedef const GLubyte * (APIENTRY *PFNGLGETSTRINGPROC) (GLenum name);
+			PFNGLGETSTRINGPROC glGetString = nullptr;
+			HMODULE module = LoadLibrary(_T("opengl32.dll"));
+			glGetString = reinterpret_cast<PFNGLGETSTRINGPROC>(GetProcAddress(module, "glGetString"));
+			if (glGetString)
+			{
+				std::string vers = (char *)glGetString(GL_VERSION);
+				sscanf_s(vers.c_str(), "%d.%d", &m_glVersionMaj, &m_glVersionMin);
+			}
+
 			PFNWGLCHOOSEPIXELFORMATARBPROC wglChoosePixelFormatARB = nullptr;
 			wglChoosePixelFormatARB = reinterpret_cast<PFNWGLCHOOSEPIXELFORMATARBPROC>(wglGetProcAddress("wglChoosePixelFormatARB"));
 
@@ -204,8 +218,8 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 			const int contextAttribList[] =
 			{
-				WGL_CONTEXT_MAJOR_VERSION_ARB,	4,
-				WGL_CONTEXT_MINOR_VERSION_ARB,	5,
+				WGL_CONTEXT_MAJOR_VERSION_ARB,	(int)m_glVersionMaj,
+				WGL_CONTEXT_MINOR_VERSION_ARB,	(int)m_glVersionMin,
 				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 				WGL_CONTEXT_PROFILE_MASK_ARB,	WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 				0, 0	// end
@@ -287,11 +301,20 @@ bool RendererImpl::Initialized()
 	return m_Initialized;
 }
 
+bool __cdecl UnloadRenderResource(c3::Resource *pres)
+{
+	while (pres->GetStatus() == Resource::Status::RS_LOADED)
+		pres->DelRef();
+
+	return true;
+}
 
 void RendererImpl::Shutdown()
 {
 	if (!m_Initialized)
 		return;
+
+	m_pSys->GetResourceManager()->ForAllResourcesDo(UnloadRenderResource, nullptr, RTFLAG_RUNBYRENDERER, ResourceManager::ResTypeFlagMode::RTFM_ANY);
 
 	SetEvent(m_event_shutdown);
 
@@ -333,9 +356,6 @@ void RendererImpl::Shutdown()
 
 	if (m_BoundsMesh)
 	{
-		if (m_BoundsMesh->GetIndexBuffer())
-			m_BoundsMesh->GetIndexBuffer()->Release();
-		m_BoundsMesh->AttachIndexBuffer(nullptr);
 		m_BoundsMesh->AttachVertexBuffer(nullptr);
 		m_BoundsMesh->Release();
 		m_BoundsMesh = nullptr;
@@ -343,9 +363,6 @@ void RendererImpl::Shutdown()
 
 	if (m_CubeMesh)
 	{
-		if (m_CubeMesh->GetIndexBuffer())
-			m_CubeMesh->GetIndexBuffer()->Release();
-		m_CubeMesh->AttachIndexBuffer(nullptr);
 		m_CubeMesh->AttachVertexBuffer(nullptr);
 		m_CubeMesh->Release();
 		m_CubeMesh = nullptr;
@@ -359,9 +376,6 @@ void RendererImpl::Shutdown()
 
 	if (m_XYPlaneMesh)
 	{
-		if (m_XYPlaneMesh->GetIndexBuffer())
-			m_XYPlaneMesh->GetIndexBuffer()->Release();
-		m_XYPlaneMesh->AttachIndexBuffer(nullptr);
 		m_XYPlaneMesh->AttachVertexBuffer(nullptr);
 		m_XYPlaneMesh->Release();
 		m_XYPlaneMesh = nullptr;
@@ -369,9 +383,6 @@ void RendererImpl::Shutdown()
 
 	if (m_XZPlaneMesh)
 	{
-		if (m_XZPlaneMesh->GetIndexBuffer())
-			m_XZPlaneMesh->GetIndexBuffer()->Release();
-		m_XZPlaneMesh->AttachIndexBuffer(nullptr);
 		m_XZPlaneMesh->AttachVertexBuffer(nullptr);
 		m_XZPlaneMesh->Release();
 		m_XZPlaneMesh = nullptr;
@@ -379,9 +390,6 @@ void RendererImpl::Shutdown()
 
 	if (m_YZPlaneMesh)
 	{
-		if (m_YZPlaneMesh->GetIndexBuffer())
-			m_YZPlaneMesh->GetIndexBuffer()->Release();
-		m_YZPlaneMesh->AttachIndexBuffer(nullptr);
 		m_YZPlaneMesh->AttachVertexBuffer(nullptr);
 		m_YZPlaneMesh->Release();
 		m_YZPlaneMesh = nullptr;
@@ -395,9 +403,6 @@ void RendererImpl::Shutdown()
 
 	if (m_HemisphereMesh)
 	{
-		if (m_HemisphereMesh->GetIndexBuffer())
-			m_HemisphereMesh->GetIndexBuffer()->Release();
-		m_HemisphereMesh->AttachIndexBuffer(nullptr);
 		m_HemisphereMesh->AttachVertexBuffer(nullptr);
 		m_HemisphereMesh->Release();
 		m_HemisphereMesh = nullptr;
@@ -499,7 +504,10 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 	if (m_Gui)
 	{
 		static bool show_metrics = true;
-		ImGui::ShowMetricsWindow(&show_metrics);
+		if (show_metrics)
+		{
+			ImGui::ShowMetricsWindow(&show_metrics);
+		}
 
 		m_Gui->Render();
 	}
