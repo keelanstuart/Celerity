@@ -47,7 +47,7 @@
 #include <C3Model.h>
 #include <C3Renderer.h>
 #include <C3Log.h>
-#include <C3Comportment.h>
+#include <C3Feature.h>
 #include <C3Positionable.h>
 #include <C3Camera.h>
 #include <C3Object.h>
