@@ -635,7 +635,7 @@ void GuiImpl::PopStyleVar(int count)
 }
 
 
-const glm::fvec4 &GuiImpl::GetStyleColorVec4(ColorType idx)
+const glm::fvec4 GuiImpl::GetStyleColorVec4(ColorType idx)
 {
 	return ImGui::GetStyleColorVec4(idx);
 }

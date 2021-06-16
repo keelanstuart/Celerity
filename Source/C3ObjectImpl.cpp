@@ -19,16 +19,16 @@ ObjectImpl::ObjectImpl(SystemImpl *psys, GUID guid)
 	m_pSys = psys;
 	m_GUID = guid;
 	m_Props = props::IPropertySet::CreatePropertySet();
-	m_Flags.SetAll(OBJFLAG_UPDATE | OBJFLAG_DRAW);
+	m_Flags.SetAll(OBJFLAG(UPDATE) | OBJFLAG(DRAW));
 	m_Owner = nullptr;
 }
 
 
 ObjectImpl::~ObjectImpl()
 {
-	for (TFeatureArray::const_iterator it = m_Features.cbegin(), last_it = m_Features.cend(); it != last_it; it++)
+	for (const auto &it : m_Features)
 	{
-		(*it)->GetType()->Destroy((*it));
+		it->GetType()->Destroy(it);
 	}
 	m_Features.clear();
 
@@ -189,12 +189,12 @@ void ObjectImpl::RemoveFeature(Feature *pcomportmemt)
 
 void ObjectImpl::Update(float elapsed_time)
 {
-	if (!m_Flags.IsSet(OBJFLAG_UPDATE))
+	if (!m_Flags.IsSet(OBJFLAG(UPDATE)))
 		return;
 
-	for (TFeatureArray::const_iterator it = m_Features.cbegin(), last_it = m_Features.cend(); it != last_it; it++)
+	for (const auto &it : m_Features)
 	{
-		(*it)->Update(this, elapsed_time);
+		it->Update(this, elapsed_time);
 	}
 }
 
@@ -207,9 +207,9 @@ bool ObjectImpl::Prerender(props::TFlags64 rendflags)
 	// TODO: port visibility culling
 	bool ret = false;
 
-	for (TFeatureArray::const_iterator it = m_Features.cbegin(), last_it = m_Features.cend(); it != last_it; it++)
+	for (const auto it : m_Features)
 	{
-		if ((*it)->Prerender(this, rendflags))
+		if (it->Prerender(this, rendflags))
 			ret = true;
 	}
 
@@ -222,9 +222,9 @@ bool ObjectImpl::Render(props::TFlags64 rendflags)
 	if (!rendflags.AnySet(m_Flags))
 		return false;
 
-	for (TFeatureArray::const_iterator it = m_Features.cbegin(), last_it = m_Features.cend(); it != last_it; it++)
+	for (const auto &it : m_Features)
 	{
-		(*it)->Render(this, rendflags);
+		it->Render(this, rendflags);
 	}
 
 	return true;
@@ -267,8 +267,8 @@ void ObjectImpl::PropertyChanged(const props::IProperty *pprop)
 	if (!pprop)
 		return;
 
-	for (TFeatureArray::const_iterator it = m_Features.cbegin(), last_it = m_Features.cend(); it != last_it; it++)
+	for (const auto &it : m_Features)
 	{
-		(*it)->PropertyChanged(pprop);
+		it->PropertyChanged(pprop);
 	}
 }

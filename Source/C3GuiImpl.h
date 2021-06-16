@@ -165,7 +165,7 @@ namespace c3
 
 		virtual void PopStyleVar(int count = 1);
 
-		virtual const glm::fvec4 &GetStyleColorVec4(ColorType idx);
+		virtual const glm::fvec4 GetStyleColorVec4(ColorType idx);
 
 #if 1
 		virtual ImFont *GetFont();

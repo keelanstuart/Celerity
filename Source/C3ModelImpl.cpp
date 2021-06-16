@@ -325,15 +325,15 @@ void ModelImpl::Draw(const glm::fmat4x4 *pmat) const
 	if (pmat)
 		m_MatStack->Push(pmat);
 
-	for (TNodeInfoArray::const_iterator cit = m_Nodes.cbegin(), last_cit = m_Nodes.cend(); cit != last_cit; cit++)
+	for (const auto cit : m_Nodes)
 	{
-		const SNodeInfo *node = *cit;
+		const SNodeInfo *node = cit;
 		if (!node)
 			continue;
 
 		// from this point, only draw top-level nodes
 		if (node->parent == NO_PARENT)
-			DrawNode(*cit);
+			DrawNode(cit);
 	}
 
 	if (pmat)
@@ -354,10 +354,10 @@ bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
 	// set up the world matrix to draw meshes at this node level
 	m_pRend->SetWorldMatrix(m_MatStack->Top(&m));
 
-	for (SNodeInfo::TMeshIndexArray::const_iterator mit = pnode->meshes.cbegin(), last_mit = pnode->meshes.cend(); mit != last_mit; mit++)
+	for (const auto &mit : pnode->meshes)
 	{
 		// render each of the meshes on this node
-		const SMeshInfo *mesh = m_Meshes[*mit];
+		const SMeshInfo *mesh = m_Meshes[mit];
 		if (!mesh)
 			continue;
 
@@ -369,10 +369,10 @@ bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
 		mesh->pmesh->Draw();
 	}
 
-	for (SNodeInfo::TNodeIndexArray::const_iterator cit = pnode->children.cbegin(), last_cit = pnode->children.cend(); cit != last_cit; cit++)
+	for (const auto &cit : pnode->children)
 	{
 		// recursively draw each of the child nodes here
-		const SNodeInfo *child = m_Nodes[*cit];
+		const SNodeInfo *child = m_Nodes[cit];
 		if (!child)
 			continue;
 

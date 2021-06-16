@@ -34,6 +34,7 @@ namespace c3
 		HDC m_hdc;
 		HGLRC m_glrc;
 		HWND m_hwnd_override;
+		RECT m_Viewport;
 
 		GLuint m_glVersionMaj;
 		GLuint m_glVersionMin;
@@ -121,7 +122,8 @@ namespace c3
 
 		virtual Gui *GetGui();
 
-		virtual void SetViewport(const RECT *viewport_rect = nullptr);
+		virtual void SetViewport(const RECT *viewport = nullptr);
+		virtual const RECT *GetViewport(RECT *viewport = nullptr) const;
 
 		virtual void SetOverrideHwnd(HWND hwnd);
 		virtual HWND GetOverrideHwnd();

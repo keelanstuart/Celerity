@@ -43,6 +43,7 @@ CCeledit3Doc::CCeledit3Doc() noexcept
 	m_Observer = nullptr;
 	m_Projector = nullptr;
 	m_RootObj = nullptr;
+	m_Brush = nullptr;
 }
 
 CCeledit3Doc::~CCeledit3Doc()
@@ -64,6 +65,12 @@ CCeledit3Doc::~CCeledit3Doc()
 		m_RootObj->Release();
 		m_RootObj = nullptr;
 	}
+
+	if (m_Brush)
+	{
+		m_Brush->Release();
+		m_Brush = nullptr;
+	}
 }
 
 BOOL CCeledit3Doc::OnNewDocument()
@@ -82,8 +89,6 @@ BOOL CCeledit3Doc::OnNewDocument()
 
 	return TRUE;
 }
-
-
 
 
 // CCeledit3Doc serialization

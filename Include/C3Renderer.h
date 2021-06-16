@@ -142,7 +142,8 @@ namespace c3
 
 		virtual Gui *GetGui() = NULL;
 
-		virtual void SetViewport(const RECT *viewport_rect = nullptr) = NULL;
+		virtual void SetViewport(const RECT *viewport = nullptr) = NULL;
+		virtual const RECT *GetViewport(RECT *viewport = nullptr) const = NULL;
 
 		virtual void SetOverrideHwnd(HWND hwnd = NULL) = NULL;
 		virtual HWND GetOverrideHwnd() = NULL;

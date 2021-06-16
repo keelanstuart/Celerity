@@ -30,42 +30,29 @@ namespace c3
 
 	public:
 
-		enum
+		typedef enum
 		{
-			SHIFT_OBJFLAG_UPDATE = 0,
-			SHIFT_OBJFLAG_DRAW,
-			SHIFT_OBJFLAG_DRAWINEDITOR,
-			SHIFT_OBJFLAG_POSCHANGED,
-			SHIFT_OBJFLAG_ORICHANGED,
-			SHIFT_OBJFLAG_SCLCHANGED,
-			SHIFT_OBJFLAG_KILL,
-			SHIFT_OBJFLAG_TEMPORARY,
-			SHIFT_OBJFLAG_CHECKCOLLISIONS,
-			SHIFT_OBJFLAG_TRACKCAMX,
-			SHIFT_OBJFLAG_TRACKCAMY,
-			SHIFT_OBJFLAG_TRACKCAMZ,
-			SHIFT_OBJFLAG_TRACKCAMLITERAL,
-			SHIFT_OBJFLAG_BILLBOARD,
-			SHIFT_OBJFLAG_CHILDRENDIRTY,
-			SHIFT_OBJFLAG_PARENTDIRTY,
-		};
+			UPDATE = 0,					// Clearing this ensures the object won't update
+			DRAW,						// Clearing this ensures the object won't draw
+			DRAWINEDITOR,				// Setting this will make the object draw in the editor... note: it is up to a tool to handle this
+			POSCHANGED,					// WARNING: not recommended that you change this manually
+			ORICHANGED,					// WARNING: not recommended that you change this manually
+			SCLCHANGED,					// WARNING: not recommended that you change this manually
+			KILL,						// The object is marked for death
+			TEMPORARY,					// Temporary objects will not persist when parent objects are saved
+			CHECKCOLLISIONS,			// Indicates that the Object should respond to collisions
+			TRACKCAMX,					// Move with the active camera X
+			TRACKCAMY,					// " Y
+			TRACKCAMZ,					// " Z
+			TRACKCAMLITERAL,			// Distinguishes between eye or focus position when following the camera
+			BILLBOARD,					// Aligns the object to the view matrix of the renderer when drawn
+			CHILDRENDIRTY,				// Indicates that the children have changed since the last update
+			PARENTDIRTY,				// Indicates that the parent has changed since the last update
+		} EObjFlag;
 
-		#define OBJFLAG_UPDATE				(1 << c3::Object::SHIFT_OBJFLAG_UPDATE)				// Clearing this ensures the object won't update
-		#define OBJFLAG_DRAW				(1 << c3::Object::SHIFT_OBJFLAG_DRAW)				// Clearing this ensures the object won't draw
-		#define OBJFLAG_DRAWINEDITOR		(1 << c3::Object::SHIFT_OBJFLAG_DRAWINEDITOR)		// Setting this will make the object draw in the editor... note: it is up to a tool to handle this
-		#define OBJFLAG_POSCHANGED			(1 << c3::Object::SHIFT_OBJFLAG_POSCHANGED)			// WARNING: not recommended that you change this manually
-		#define OBJFLAG_ORICHANGED			(1 << c3::Object::SHIFT_OBJFLAG_ORICHANGED)			// WARNING: not recommended that you change this manually
-		#define OBJFLAG_SCLCHANGED			(1 << c3::Object::SHIFT_OBJFLAG_SCLCHANGED)			// WARNING: not recommended that you change this manually
-		#define OBJFLAG_KILL				(1 << c3::Object::SHIFT_OBJFLAG_KILL)				// The object is marked for death
-		#define OBJFLAG_TEMPORARY			(1 << c3::Object::SHIFT_OBJFLAG_TEMPORARY)			// Temporary objects will not persist when parent objects are saved
-		#define OBJFLAG_CHECKCOLLISIONS		(1 << c3::Object::SHIFT_OBJFLAG_CHECKCOLLISIONS		// Indicates that the Object should respond to collisions
-		#define OBJFLAG_TRACKCAMX			(1 << c3::Object::SHIFT_OBJFLAG_TRACKCAMX)			// Move with the active camera X
-		#define OBJFLAG_TRACKCAMY			(1 << c3::Object::SHIFT_OBJFLAG_TRACKCAMY)			// " Y
-		#define OBJFLAG_TRACKCAMZ			(1 << c3::Object::SHIFT_OBJFLAG_TRACKCAMZ)			// " Z
-		#define OBJFLAG_TRACKCAMLITERAL		(1 << c3::Object::SHIFT_OBJFLAG_TRACKCAMLITERAL		// Distinguishes between eye or focus position when following the camera
-		#define OBJFLAG_BILLBOARD			(1 << c3::Object::SHIFT_OBJFLAG_BILLBOARD)			// Aligns the object to the view matrix of the renderer when drawn
-		#define OBJFLAG_CHILDRENDIRTY		(1 << c3::Object::SHIFT_OBJFLAG_CHILDRENDIRTY)		// Indicates that the children have changed since the last update
-		#define OBJFLAG_PARENTDIRTY			(1 << c3::Object::SHIFT_OBJFLAG_PARENTDIRTY)		// Indicates that the children have changed since the last update
+		// compile time helper for making bitwise flags out of EObjFlag enum values
+		// OBJFLAG(TRACKCAMX) | OBJFLAG(TRACKCAMY), for example, converts and conflates those flags at compile time
+		static constexpr uint64_t OBJFLAG(EObjFlag f) { return (1LL << (f)); }
 		
 
 		/// Returns the Celerity System in which the Object exists
@@ -123,13 +110,13 @@ namespace c3
 		virtual void Update(float elapsed_time = 0.0f) = NULL;
 
 		/// Called prior to actually rendering the object; returns true if Render should be called, false if not
-		virtual bool Prerender(props::TFlags64 rendflags = OBJFLAG_DRAW) = NULL;
+		virtual bool Prerender(props::TFlags64 rendflags = OBJFLAG(DRAW)) = NULL;
 
 		/// Called to render the object; returns true if Postrender should be called, false if not
-		virtual bool Render(props::TFlags64 rendflags = OBJFLAG_DRAW) = NULL;
+		virtual bool Render(props::TFlags64 rendflags = OBJFLAG(DRAW)) = NULL;
 
 		/// Called after the object is rendered
-		virtual void Postrender(props::TFlags64 rendflags = OBJFLAG_DRAW) = NULL;
+		virtual void Postrender(props::TFlags64 rendflags = OBJFLAG(DRAW)) = NULL;
 
 		/// Loads the Object from a stream
 		virtual bool Load(genio::IInputStream *is) = NULL;

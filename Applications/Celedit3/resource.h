@@ -104,6 +104,8 @@
 #define IDS_SHORTCUTS                   252
 #define IDS_FOLDERS                     253
 #define IDS_OUTLOOKBAR                  258
+#define IDS_TOOLBAR_3DTOOLS				259
+#define IDS_TOOLBAR_AXES				260
 #define IDS_BUILD_TAB                   300
 #define IDS_DEBUG_TAB                   301
 #define IDS_FIND_TAB                    302
@@ -121,14 +123,26 @@
 #define IDC_WAND                        320
 #define IDC_CURSOR9                     321
 #define IDC_ZOOM                        321
+#define IDR_TOOLBAR_3DTOOLS             322
+#define IDR_TOOLBAR_AXES                323
+#define ID_AXIS_X						324
+#define ID_AXIS_Y						325
+#define ID_AXIS_Z						326
+#define ID_AXIS_SCREENREL				327
+#define ID_TOOL_SELECT					328
+#define ID_TOOL_TRANSLATE				329
+#define ID_TOOL_ROTATE					330
+#define ID_TOOL_UNISCALE				331
+#define ID_TOOL_SCALE					332
+#define ID_TOOL_WAND					333
 #define ID_WRITE_PASTEASHYPERLINK       32770
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        322
-#define _APS_NEXT_COMMAND_VALUE         32771
+#define _APS_NEXT_RESOURCE_VALUE        324
+#define _APS_NEXT_COMMAND_VALUE         32772
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           310
 #endif

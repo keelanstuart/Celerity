@@ -17,14 +17,14 @@ namespace c3
 
 	public:
 
-		enum
+		typedef enum
 		{
-			SHIFT_RESFLAG_DEMANDLOAD = 0,
-			SHIFT_RESFLAG_CREATEENTRYONLY,
-		} ;
+			DEMANDLOAD = 0,			// Loads the Resource immediately in the current thread
+			CREATEENTRYONLY,		// Creates an empty Resource in the table
+		} EResFlag;
 
-		#define RESFLAG_DEMANDLOAD				(1 << c3::ResourceManager::SHIFT_RESFLAG_DEMANDLOAD)				// Loads the Resource immediately in the current thread
-		#define RESFLAG_CREATEENTRYONLY			(1 << c3::ResourceManager::SHIFT_RESFLAG_CREATEENTRYONLY)			// Creates an empty Resource in the table
+		static constexpr uint64_t RESFLAG(EResFlag f) { return (1LL << (uint64_t)f); }
+
 
 		/// ResTypeFlagMode is used in ForAllResourceDo calls
 		typedef enum
@@ -35,6 +35,7 @@ namespace c3
 			RTFM_NONE				/// Passes if NONE OF the ResType flags (set in your DEFINE_RESOURCETYPE code) match the flags given here
 
 		} ResTypeFlagMode;
+
 
 		// resource handling functions
 		typedef bool (__cdecl *RESOURCE_CALLBACK_FUNC)(Resource *pres);
@@ -53,15 +54,15 @@ namespace c3
 
 		virtual void UnregisterResourceType(const ResourceType *restype) = NULL;
 
-		virtual size_t GetNumResourceTypes() = NULL;
+		virtual size_t GetNumResourceTypes() const = NULL;
 
-		virtual const ResourceType *GetResourceType(size_t index) = NULL;
+		virtual const ResourceType *GetResourceType(size_t index) const = NULL;
 
 		// Finds a resource type that has been previously registered, based on file extension
 		// if the same file extension could be used for multiple data types, then 
-		virtual const ResourceType *FindResourceType(const TCHAR *ext) = NULL;
+		virtual const ResourceType *FindResourceType(const TCHAR *ext) const = NULL;
 
-		virtual const ResourceType *FindResourceType(GUID guid) = NULL;
+		virtual const ResourceType *FindResourceType(GUID guid) const = NULL;
 
 		// Deletes all references on all resources, effectively unloading everything
 		virtual void Reset() = NULL;

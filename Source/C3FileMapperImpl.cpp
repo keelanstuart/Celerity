@@ -162,11 +162,11 @@ void FileMapperImpl::AddMapping(const TCHAR *extension, const TCHAR *path)
 		if (i == e)
 		{
 			TExtToPathMap::value_type p(extension, path);
-			for (tstring::iterator it = p.second.begin(); it != p.second.end(); it++)
+			for (auto &it : p.second)
 			{
-				if (*it == _T('\\'))
+				if (it == _T('\\'))
 				{
-					*it = _T('/');
+					it = _T('/');
 				}
 			}
 

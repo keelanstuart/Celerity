@@ -25,8 +25,17 @@ protected: // create from serialization only
 public:
 	CCeledit3Doc* GetDocument() const;
 
+protected:
+	typedef std::deque<const c3::Object *> TObjectArray;
+	TObjectArray m_Selected;
+
+
 // Operations
 public:
+	void ClearSelection();
+	void AddToSelection(const c3::Object *obj);
+	void RemoveFromSelection(const c3::Object *obj);
+	size_t GetNumSelected();
 
 // Overrides
 public:

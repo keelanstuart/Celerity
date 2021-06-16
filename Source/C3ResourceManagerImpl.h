@@ -46,13 +46,13 @@ namespace c3
 
 		virtual void UnregisterResourceType(const ResourceType *restype);
 
-		virtual size_t GetNumResourceTypes();
+		virtual size_t GetNumResourceTypes() const;
 
-		virtual const ResourceType *GetResourceType(size_t index);
+		virtual const ResourceType *GetResourceType(size_t index) const;
 
-		virtual const ResourceType *FindResourceType(const TCHAR *ext);
+		virtual const ResourceType *FindResourceType(const TCHAR *ext) const;
 
-		virtual const ResourceType *FindResourceType(GUID guid);
+		virtual const ResourceType *FindResourceType(GUID guid) const;
 
 		virtual void Reset();
 

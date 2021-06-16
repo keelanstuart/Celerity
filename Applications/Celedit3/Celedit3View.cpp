@@ -23,6 +23,8 @@
 #include "Celedit3Doc.h"
 #include "Celedit3View.h"
 
+#include <C3Renderable.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -515,41 +517,41 @@ void CCeledit3View::OnMouseMove(UINT nFlags, CPoint point)
 	if ((nFlags & (MK_SHIFT | MK_MBUTTON | MK_LBUTTON)) && (this != GetCapture()))
 		SetCapture();
 
-	/*
-	if (cam && (Settings.tool == TOOL3D_TOOL_OBJBRUSH) && pDoc->brushobj)
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindFeature(c3::Camera::Type()));
+	c3::Renderable *pbr = pdoc->m_Brush ? dynamic_cast<c3::Renderable *>(pdoc->m_Brush->FindFeature(c3::Renderable::Type())) : nullptr;
+	c3::Positionable *pbp = pdoc->m_Brush ? dynamic_cast<c3::Positionable *>(pdoc->m_Brush->FindFeature(c3::Positionable::Type())) : nullptr;
+
+	if ((active_tool == CCeledit3App::ToolType::TT_WAND) && pcam && pbr && pbp)
 	{
-		cam->Update();
+		pdoc->m_Observer->Update();
 
-		D3DXVECTOR3 pos3d_near((float)m_MousePos.x, (float)m_MousePos.y, 0.0f);
-		D3DXVECTOR3 pos3d_far((float)m_MousePos.x, (float)m_MousePos.y, 1.0f);
+		glm::fvec3 pos3d_near((float)m_MousePos.x, (float)m_MousePos.y, 0.0f);
+		glm::fvec3 pos3d_far((float)m_MousePos.x, (float)m_MousePos.y, 1.0f);
 
-		D3DXMATRIX m, viewmat, projmat;
-		D3DXMatrixIdentity(&m);
-
-		cam->GetViewMatrix(viewmat);
-		cam->GetProjectionMatrix(projmat);
-
-		// Construct a viewport that desribes our view metric
-		D3DVIEWPORT8 viewport = {0, 0, r.right - r.left, r.bottom - r.top, 0.0f, 1.0f};
-
-		TRenderer *rend = pDoc->GetCelerity()->Renderer();
+		glm::fmat4x4 viewmat, projmat;
 
 		// Get the current projection and view matrices from d3d
-//		rend->GetD3DDev()->GetTransform(D3DTS_PROJECTION, &projmat);
-//		rend->GetD3DDev()->GetTransform(D3DTS_VIEW, &viewmat);
+		pcam->GetViewMatrix(&viewmat);
+		pcam->GetProjectionMatrix(&projmat);
 
-		D3DXVec3Unproject(&pos3d_near, &pos3d_near, &viewport, &projmat, &viewmat, &m);
-		D3DXVec3Unproject(&pos3d_far, &pos3d_far, &viewport, &projmat, &viewmat, &m);
+		c3::Renderer *pr = theApp.m_C3->GetRenderer();
 
-		D3DXVECTOR3 rayvec(pos3d_far);
+		// Construct a viewport that desribes our view metric
+		glm::fvec4 viewport(0.0f, 0.0f, (float)(r.right - r.left), (float)(r.bottom - r.top));
+
+		pos3d_near = glm::unProject(pos3d_near, viewmat, projmat, viewport);
+		pos3d_far = glm::unProject(pos3d_far, viewmat, projmat, viewport);
+
+		glm::fvec3 rayvec = pos3d_far;
 		rayvec -= pos3d_near;
 
 		float shortdist = FLT_MAX;
 
+#if 0
 		for (UINT32 i = 0; i < world->GetNumWalkables(); i++)
 		{
 			TObjectInstance *obj = world->GetWalkable(i);
-			if (!obj || !obj->IsFlagSet(OBJFLAG_DRAW))
+			if (!obj || !obj->IsFlagSet(OBJFLAG(DRAW)))
 				continue;
 
 			float tmp = FLT_MAX;
@@ -559,14 +561,15 @@ void CCeledit3View::OnMouseMove(UINT nFlags, CPoint point)
 				shortdist = tmp;
 			}
 		}
+#endif
 
-		D3DXVec3Normalize(&rayvec, &rayvec);
+		rayvec = glm::normalize(rayvec);
+
 		rayvec *= shortdist;
 		rayvec += pos3d_near;
 
-		pDoc->brushobj->SetPos(rayvec);
+		pbp->SetPos(rayvec.x, rayvec.y, rayvec.z);
 	}
-	*/
 
 //	m_pCam
 //	m_pCamPos
@@ -626,7 +629,7 @@ void CCeledit3View::OnMouseMove(UINT nFlags, CPoint point)
 		float ssens = theApp.m_Config->GetFloat(_T("environment.sensitivity.scale"), 0.1f);
 
 #if 0
-		for (UINT32 i = 0; i < pDoc->GetNumSelected(); i++)
+		for (size_t i = 0; i < pdoc->GetNumSelected(); i++)
 		{
 			C2BaseObject *obj = pDoc->GetSelection(i);
 
@@ -758,3 +761,31 @@ void CCeledit3View::OnSize(UINT nType, int cx, int cy)
 	if (pr->Initialized())
 		pr->SetViewport();
 }
+
+
+void CCeledit3View::ClearSelection()
+{
+	m_Selected.clear();
+}
+
+
+void CCeledit3View::AddToSelection(const c3::Object *obj)
+{
+	if (std::find(m_Selected.cbegin(), m_Selected.cend(), obj) == m_Selected.cend())
+		m_Selected.push_back(obj);
+}
+
+
+void CCeledit3View::RemoveFromSelection(const c3::Object *obj)
+{
+	TObjectArray::iterator it = std::find(m_Selected.begin(), m_Selected.end(), obj);
+	if (it != m_Selected.cend())
+		m_Selected.erase(it);
+}
+
+
+size_t CCeledit3View::GetNumSelected()
+{
+	return m_Selected.size();
+}
+

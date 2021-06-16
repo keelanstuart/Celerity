@@ -136,16 +136,11 @@ PluginManager::RETURNCODE PluginManagerImpl::UnloadPlugin(Plugin *pplug)
 
 void PluginManagerImpl::UnloadAllPlugins()
 {
-	for (TPluginArray::iterator it = m_Plugins.begin(), last_it = m_Plugins.end(); it != last_it; it++)
+	for (auto &it : m_Plugins)
 	{
-		Plugin *pp = (Plugin *)(*it);
+		it->Deactivate();
 
-		if (pp)
-		{
-			pp->Deactivate();
-
-			delete pp;
-		}
+		delete it;
 	}
 
 	m_Plugins.clear();

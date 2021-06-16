@@ -192,18 +192,18 @@ Prototype *FactoryImpl::FindPrototype(const TCHAR *name, bool case_sensitive)
 {
 	if (case_sensitive)
 	{
-		for (TPrototypeArray::iterator it = m_Prototypes.begin(), last_it = m_Prototypes.end(); it != last_it; it++)
+		for (auto &it : m_Prototypes)
 		{
-			if (!_tcscmp((*it)->GetName(), name))
-				return (*it);
+			if (!_tcscmp(it->GetName(), name))
+				return it;
 		}
 	}
 	else
 	{
-		for (TPrototypeArray::iterator it = m_Prototypes.begin(), last_it = m_Prototypes.end(); it != last_it; it++)
+		for (auto &it : m_Prototypes)
 		{
-			if (!_tcsicmp((*it)->GetName(), name))
-				return (*it);
+			if (!_tcsicmp(it->GetName(), name))
+				return it;
 		}
 	}
 
@@ -213,10 +213,10 @@ Prototype *FactoryImpl::FindPrototype(const TCHAR *name, bool case_sensitive)
 
 Prototype *FactoryImpl::FindPrototype(GUID guid)
 {
-	for (TPrototypeArray::iterator it = m_Prototypes.begin(), last_it = m_Prototypes.end(); it != last_it; it++)
+	for (auto &it : m_Prototypes)
 	{
-		if ((*it)->GetGUID() == guid)
-			return (*it);
+		if (it->GetGUID() == guid)
+			return it;
 	}
 
 	return nullptr;
@@ -277,9 +277,9 @@ bool FactoryImpl::SavePrototypes(genio::IOutputStream *os, PROTO_SAVE_HUERISTIC_
 	if (!os || !os->CanAccess())
 		return false;
 
-	for (TPrototypeArray::const_iterator it = m_Prototypes.cbegin(), last_it = m_Prototypes.cend(); it != last_it; it++)
+	for (const auto &it : m_Prototypes)
 	{
-		if (!pshfunc || pshfunc((*it)))
+		if (!pshfunc || pshfunc(it))
 		{
 			// TODO: implement prototype saving
 		}
@@ -294,9 +294,9 @@ bool FactoryImpl::SavePrototypes(tinyxml2::XMLNode *proot, PROTO_SAVE_HUERISTIC_
 	if (!proot)
 		return false;
 
-	for (TPrototypeArray::const_iterator it = m_Prototypes.cbegin(), last_it = m_Prototypes.cend(); it != last_it; it++)
+	for (const auto &it : m_Prototypes)
 	{
-		if (!pshfunc || pshfunc((*it)))
+		if (!pshfunc || pshfunc(it))
 		{
 			// TODO: implement prototype saving
 		}
@@ -312,9 +312,9 @@ bool FactoryImpl::RegisterFeatureType(FeatureType *pctype)
 		return false;
 
 	m_pSys->GetLog()->Print(_T("Registering FeatureType \"%s\" ... "), pctype->GetName());
-	for (TFeatureTypeArray::const_iterator it = s_FeatureTypes.cbegin(), last_it = s_FeatureTypes.cend(); it != last_it; it++)
+	for (const auto &it : s_FeatureTypes)
 	{
-		if (!_tcscmp((*it)->GetName(), pctype->GetName()) || ((*it)->GetGUID() == pctype->GetGUID()))
+		if (!_tcscmp(it->GetName(), pctype->GetName()) || (it->GetGUID() == pctype->GetGUID()))
 		{
 			m_pSys->GetLog()->Print(_T("FAILED (duplicate)\n"));
 			return false;
@@ -366,21 +366,21 @@ const FeatureType *FactoryImpl::FindFeatureType(const TCHAR *name, bool case_sen
 
 	if (case_sensitive)
 	{
-		for (TFeatureTypeArray::const_iterator it = s_FeatureTypes.cbegin(), last_it = s_FeatureTypes.cend(); it != last_it; it++)
+		for (const auto &it : s_FeatureTypes)
 		{
-			if (!_tcscmp((*it)->GetName(), name))
+			if (!_tcscmp(it->GetName(), name))
 			{
-				return *it;
+				return it;
 			}
 		}
 	}
 	else
 	{
-		for (TFeatureTypeArray::const_iterator it = s_FeatureTypes.cbegin(), last_it = s_FeatureTypes.cend(); it != last_it; it++)
+		for (const auto &it : s_FeatureTypes)
 		{
-			if (!_tcsicmp((*it)->GetName(), name))
+			if (!_tcsicmp(it->GetName(), name))
 			{
-				return *it;
+				return it;
 			}
 		}
 	}
@@ -391,11 +391,11 @@ const FeatureType *FactoryImpl::FindFeatureType(const TCHAR *name, bool case_sen
 
 const FeatureType *FactoryImpl::FindFeatureType(GUID guid)
 {
-	for (TFeatureTypeArray::const_iterator it = s_FeatureTypes.cbegin(), last_it = s_FeatureTypes.cend(); it != last_it; it++)
+	for (const auto &it : s_FeatureTypes)
 	{
-		if ((*it)->GetGUID() == guid)
+		if (it->GetGUID() == guid)
 		{
-			return *it;
+			return it;
 		}
 	}
 

@@ -60,7 +60,7 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 
 	if (!pres)
 	{
-		bool only_create_entry = flags.IsSet(RESFLAG_CREATEENTRYONLY);
+		bool only_create_entry = flags.IsSet(RESFLAG(CREATEENTRYONLY));
 
 		const TCHAR *ext = NULL;
 
@@ -105,7 +105,7 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 
 			if (!restype->Flags().IsSet(RTFLAG_RUNBYRENDERER))
 			{
-				if (flags.IsSet(RESFLAG_DEMANDLOAD))
+				if (flags.IsSet(RESFLAG(DEMANDLOAD)))
 				{
 					// Just adding a reference should cause the resource to load... and in this thread.
 					pres->AddRef();
@@ -229,22 +229,22 @@ void ResourceManagerImpl::UnregisterResourceType(const ResourceType *restype)
 }
 
 
-size_t ResourceManagerImpl::GetNumResourceTypes()
+size_t ResourceManagerImpl::GetNumResourceTypes() const
 {
 	return m_ResTypes.size();
 }
 
 
-const ResourceType *ResourceManagerImpl::GetResourceType(size_t index)
+const ResourceType *ResourceManagerImpl::GetResourceType(size_t index) const
 {
 	if (index < m_ResTypes.size())
-		m_ResTypes[index];
+		return m_ResTypes[index];
 
 	return nullptr;
 }
 
 
-const ResourceType *ResourceManagerImpl::FindResourceType(const TCHAR *ext)
+const ResourceType *ResourceManagerImpl::FindResourceType(const TCHAR *ext) const
 {
 	if (ext)
 	{
@@ -256,16 +256,16 @@ const ResourceType *ResourceManagerImpl::FindResourceType(const TCHAR *ext)
 			return it->second;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 
-const ResourceType *ResourceManagerImpl::FindResourceType(GUID guid)
+const ResourceType *ResourceManagerImpl::FindResourceType(GUID guid) const
 {
-	for (TResourceTypeArray::const_iterator it = m_ResTypes.cbegin(), last_it = m_ResTypes.cend(); it != last_it; it++)
+	for (const auto &it : m_ResTypes)
 	{
-		if ((*it)->GetGUID() == guid)
-			return *it;
+		if (it->GetGUID() == guid)
+			return it;
 	}
 
 	return nullptr;
@@ -274,10 +274,9 @@ const ResourceType *ResourceManagerImpl::FindResourceType(GUID guid)
 
 void ResourceManagerImpl::Reset()
 {
-	TResourceMap::iterator e = m_ResMap.end();
-	for (TResourceMap::iterator i = m_ResMap.begin(); i != e; i++)
+	for (auto &it : m_ResMap)
 	{
-		Resource *pres = i->second;
+		Resource *pres = it.second;
 		while (pres->GetStatus() == Resource::Status::RS_LOADED);
 			pres->DelRef();
 	}

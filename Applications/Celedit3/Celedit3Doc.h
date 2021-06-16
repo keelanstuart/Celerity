@@ -27,6 +27,7 @@ public:
 	c3::Object *m_RootObj;
 	c3::Object *m_Observer;
 	c3::Object *m_Projector;
+	c3::Object *m_Brush;
 
 // Operations
 public:

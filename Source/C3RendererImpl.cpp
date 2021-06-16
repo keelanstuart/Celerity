@@ -288,7 +288,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	GetBlueTexture();
 	GetGridTexture();
 
-	m_Gui = new GuiImpl(this);
+	m_Gui = nullptr; //new GuiImpl(this);
 
 	SetViewport();
 
@@ -452,6 +452,8 @@ void RendererImpl::SetViewport(const RECT *viewport)
 		viewport = &r;
 	}
 
+	memcpy(&m_Viewport, viewport, sizeof(RECT));
+
 	LONG w = r.right - r.left;
 	LONG h = r.bottom - r.top;
 	gl.Viewport(r.left, r.top, w, h);
@@ -460,6 +462,18 @@ void RendererImpl::SetViewport(const RECT *viewport)
 	{
 		m_Gui->SetDisplaySize((float)w, (float)h);
 	}
+}
+
+
+const RECT *RendererImpl::GetViewport(RECT *viewport) const
+{
+	if (viewport)
+	{
+		memcpy(viewport, &m_Viewport, sizeof(RECT));
+		return viewport;
+	}
+
+	return &m_Viewport;
 }
 
 
@@ -1152,7 +1166,7 @@ bool RendererImpl::ConfigureDrawing()
 			if (vloc < 0)
 				return false;
 
-			assert(vloc == i);
+			//assert(vloc == i);
 
 			bool is_color = (pcd->m_Usage >= VertexBuffer::ComponentDescription::Usage::VU_COLOR0) && (pcd->m_Usage <= VertexBuffer::ComponentDescription::Usage::VU_COLOR3);
 			bool is_byte = (pcd->m_Type >= VertexBuffer::ComponentDescription::VCT_U8) && (pcd->m_Type <= VertexBuffer::ComponentDescription::VCT_S8);
