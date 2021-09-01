@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 // pch.h: This is a precompiled header file.
@@ -24,6 +24,9 @@
 #include <string>
 #include <set>
 #include <algorithm>
+#include <mutex>
+#include <unordered_map>
+
 
 #define C3_PI		3.14159f
 

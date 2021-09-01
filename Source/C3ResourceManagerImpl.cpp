@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #include "pch.h"
@@ -27,14 +27,16 @@ ResourceManagerImpl::~ResourceManagerImpl()
 	Reset();
 }
 
-void ResourceManagerImpl::LoadingThreadProc(LPVOID presmanimpl, LPVOID pres, size_t task_number)
+pool::IThreadPool::TASK_RETURN ResourceManagerImpl::LoadingThreadProc(void *presmanimpl, void *pres, size_t task_number)
 {
 	assert(presmanimpl);
 
 	if (!pres)
-		return;
+		return pool::IThreadPool::TR_OK;
 
 	((Resource *)pres)->AddRef();
+
+	return pool::IThreadPool::TR_OK;
 }
 
 
@@ -103,7 +105,7 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 			m_ResMap.insert(TResourceMap::value_type(key, pres));
 			m_ResByTypeMap.insert(TResourceByTypeMap::value_type(restype, pres));
 
-			if (!restype->Flags().IsSet(RTFLAG_RUNBYRENDERER))
+			if (flags.IsSet(RESFLAG(DEMANDLOAD)) || !restype->Flags().IsSet(RTFLAG_RUNBYRENDERER))
 			{
 				if (flags.IsSet(RESFLAG(DEMANDLOAD)))
 				{
@@ -113,12 +115,12 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 				else
 				{
 					// Since we didn't demand that this get loaded right now, schedule it on the thread pool.
-					m_pSys->GetThreadPool()->RunTask(LoadingThreadProc, (LPVOID)this, (LPVOID)pres);
+					m_pSys->GetThreadPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
 				}
 			}
 			else
 			{
-				((RendererImpl *)(m_pSys->GetRenderer()))->GetTaskPool()->RunTask(LoadingThreadProc, (LPVOID)this, (LPVOID)pres);
+				((RendererImpl *)(m_pSys->GetRenderer()))->GetTaskPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
 			}
 		}
 	}

@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #include "pch.h"
@@ -20,19 +20,15 @@ c3::Publisher *c3::Publisher::Create(const TCHAR *name)
 c3::PublisherImpl::PublisherImpl(const TCHAR *name)
 {
 	m_Name = name ? name : _T("<anonymous>");
-
-	InitializeCriticalSection(&m_csSubs);
 }
 
 
 c3::PublisherImpl::~PublisherImpl()
 {
-	DeleteCriticalSection(&m_csSubs);
-
-	std::for_each(m_Subs.begin(), m_Subs.end(), [&](TSubscriptionArray::value_type &sub)
+	for (auto &it : m_Subs)
 	{
-		delete (c3::SubscriptionImpl *)sub;
-	});
+		delete (c3::SubscriptionImpl *)it;
+	};
 
 	m_Subs.clear();
 }
@@ -46,14 +42,12 @@ void c3::PublisherImpl::Release()
 
 c3::Subscription *c3::PublisherImpl::Subscribe()
 {
-	EnterCriticalSection(&m_csSubs);
+	std::lock_guard<std::mutex> lock(m_mxSubs);
 
 	c3::Subscription *ret = new c3::SubscriptionImpl(this);
 
 	m_Subs.push_back(ret);
 	((c3::SubscriptionImpl *)ret)->m_bReady = true;
-
-	LeaveCriticalSection(&m_csSubs);
 
 	return ret;
 }
@@ -63,13 +57,13 @@ void c3::PublisherImpl::Unsubscribe(c3::Subscription **sub)
 {
 	if (sub)
 	{
-		EnterCriticalSection(&m_csSubs);
+		{
+			std::lock_guard<std::mutex> lock(m_mxSubs);
 
-		TSubscriptionArray::iterator it = std::find(m_Subs.begin(), m_Subs.end(), *sub);
-		if (it != m_Subs.end())
-			m_Subs.erase(it);
-
-		LeaveCriticalSection(&m_csSubs);
+			auto &it = std::find(m_Subs.begin(), m_Subs.end(), *sub);
+			if (it != m_Subs.end())
+				m_Subs.erase(it);
+		}
 
 		if (*sub)
 		{
@@ -82,12 +76,10 @@ void c3::PublisherImpl::Unsubscribe(c3::Subscription **sub)
 
 void c3::PublisherImpl::Deliver()
 {
-	EnterCriticalSection(&m_csSubs);
+	std::lock_guard<std::mutex> lock(m_mxSubs);
 
-	std::for_each(m_Subs.begin(), m_Subs.end(), [&](TSubscriptionArray::value_type &sub)
+	for (auto &it : m_Subs)
 	{
-		((c3::SubscriptionImpl *)sub)->m_bReady;
-	});
-
-	LeaveCriticalSection(&m_csSubs);
+		((c3::SubscriptionImpl *)it)->m_bReady;
+	};
 }

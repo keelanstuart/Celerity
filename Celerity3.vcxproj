@@ -26,6 +26,8 @@
     <ClCompile Include="Source\C3GuiImpl.cpp" />
     <ClCompile Include="Source\C3IndexBufferImpl.cpp" />
     <ClCompile Include="Source\C3LogImpl.cpp" />
+    <ClCompile Include="Source\C3MaterialImpl.cpp" />
+    <ClCompile Include="Source\C3MaterialManagerImpl.cpp" />
     <ClCompile Include="Source\C3Math.cpp" />
     <ClCompile Include="Source\C3MatrixStackImpl.cpp" />
     <ClCompile Include="Source\C3MeshImpl.cpp" />
@@ -35,11 +37,14 @@
     <ClCompile Include="Source\C3PluginManagerImpl.cpp" />
     <ClCompile Include="Source\C3PositionableImpl.cpp" />
     <ClCompile Include="Source\C3PrototypeImpl.cpp" />
+    <ClCompile Include="Source\C3PublisherImpl.cpp" />
     <ClCompile Include="Source\C3RenderableImpl.cpp" />
     <ClCompile Include="Source\C3RendererImpl.cpp" />
     <ClCompile Include="Source\C3ResourceManagerImpl.cpp" />
+    <ClCompile Include="Source\C3ShaderBuilderImpl.cpp" />
     <ClCompile Include="Source\C3ShaderComponentImpl.cpp" />
     <ClCompile Include="Source\C3ShaderProgramImpl.cpp" />
+    <ClCompile Include="Source\C3SubscriptionImpl.cpp" />
     <ClCompile Include="Source\C3SystemImpl.cpp" />
     <ClCompile Include="Source\C3TextureImpl.cpp" />
     <ClCompile Include="Source\C3VertexBufferImpl.cpp" />
@@ -83,6 +88,7 @@
   <ItemGroup>
     <ClInclude Include="Include\C3.h" />
     <ClInclude Include="Include\C3Camera.h" />
+    <ClInclude Include="Include\C3ColorDefs.h" />
     <ClInclude Include="Include\C3Configuration.h" />
     <ClInclude Include="Include\C3CRC.h" />
     <ClInclude Include="Include\C3DepthBuffer.h" />
@@ -95,6 +101,7 @@
     <ClInclude Include="Include\C3IndexBuffer.h" />
     <ClInclude Include="Include\C3Log.h" />
     <ClInclude Include="Include\C3Material.h" />
+    <ClInclude Include="Include\C3MaterialManager.h" />
     <ClInclude Include="Include\C3Math.h" />
     <ClInclude Include="Include\C3MatrixStack.h" />
     <ClInclude Include="Include\C3Mesh.h" />
@@ -104,12 +111,14 @@
     <ClInclude Include="Include\C3PluginManager.h" />
     <ClInclude Include="Include\C3Positionable.h" />
     <ClInclude Include="Include\C3Prototype.h" />
+    <ClInclude Include="Include\C3Publisher.h" />
     <ClInclude Include="Include\C3Renderable.h" />
     <ClInclude Include="Include\C3Renderer.h" />
     <ClInclude Include="Include\C3Resource.h" />
     <ClInclude Include="Include\C3ResourceManager.h" />
     <ClInclude Include="Include\C3ShaderComponent.h" />
     <ClInclude Include="Include\C3ShaderProgram.h" />
+    <ClInclude Include="Include\C3Subscription.h" />
     <ClInclude Include="Include\C3System.h" />
     <ClInclude Include="Include\C3Texture.h" />
     <ClInclude Include="Include\C3VertexBuffer.h" />
@@ -124,6 +133,8 @@
     <ClInclude Include="Source\C3ImGuiConfig.h" />
     <ClInclude Include="Source\C3IndexBufferImpl.h" />
     <ClInclude Include="Source\C3LogImpl.h" />
+    <ClInclude Include="Source\C3MaterialImpl.h" />
+    <ClInclude Include="Source\C3MaterialManagerImpl.h" />
     <ClInclude Include="Source\C3MatrixStackImpl.h" />
     <ClInclude Include="Source\C3MeshImpl.h" />
     <ClInclude Include="Source\C3ModelImpl.h" />
@@ -132,12 +143,15 @@
     <ClInclude Include="Source\C3PluginManagerImpl.h" />
     <ClInclude Include="Source\C3PositionableImpl.h" />
     <ClInclude Include="Source\C3PrototypeImpl.h" />
+    <ClInclude Include="Source\C3PublisherImpl.h" />
     <ClInclude Include="Source\C3RenderableImpl.h" />
     <ClInclude Include="Source\C3RendererImpl.h" />
     <ClInclude Include="Source\C3ResourceImpl.h" />
     <ClInclude Include="Source\C3ResourceManagerImpl.h" />
+    <ClInclude Include="Source\C3ShaderBuilderImpl.h" />
     <ClInclude Include="Source\C3ShaderProgramImpl.h" />
     <ClInclude Include="Source\C3ShaderComponentImpl.h" />
+    <ClInclude Include="Source\C3SubscriptionImpl.h" />
     <ClInclude Include="Source\C3SystemImpl.h" />
     <ClInclude Include="Source\C3TextureImpl.h" />
     <ClInclude Include="Source\C3VertexBufferImpl.h" />
@@ -146,6 +160,7 @@
     <ClInclude Include="Source\glext.h" />
     <ClInclude Include="Source\gl_wrapper.h" />
     <ClInclude Include="$(SolutionDir)third-party\tinyxml2\tinyxml2.h" />
+    <ClInclude Include="Source\Header.h" />
     <ClInclude Include="Source\pch.h" />
     <ClInclude Include="Source\wglext.h" />
     <ClInclude Include="third-party\imgui\imconfig.h" />

@@ -55,8 +55,7 @@ BOOL C3Dlg::OnInitDialog()
 	bb.fEnable = TRUE;
 	bb.hRgnBlur = CreateRectRgn(0, 0, -1, -1);
 	bb.fTransitionOnMaximized = TRUE;
-	DwmEnableBlurBehindWindow(GetSafeHwnd(), &bb);
-
+	//DwmEnableBlurBehindWindow(GetSafeHwnd(), &bb);
 
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
@@ -159,8 +158,10 @@ void C3Dlg::OnPaint()
 	else
 	{
 		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindFeature(c3::Positionable::Type()));
+#if 0
 		if (pcampos)
 			pcampos->AdjustYaw(glm::radians(0.5f));
+#endif
 
 		m_Camera->Update();
 
@@ -181,7 +182,11 @@ void C3Dlg::OnPaint()
 		{
 			c3::Positionable *ppos = (c3::Positionable *)(m_RootObj->FindFeature(c3::Positionable::Type()));
 
-			//ppos->AdjustPitch(0.02f);
+#if 1
+			ppos->AdjustPitch(0.01f);
+			ppos->AdjustRoll(-0.02f);
+			ppos->AdjustYaw(0.03f);
+#endif
 			m_RootObj->Update(dt);
 
 			m_Rend->SetWorldMatrix(ppos->GetTransformMatrix());

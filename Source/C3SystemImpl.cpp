@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #include "pch.h"
@@ -14,6 +14,8 @@
 
 #include <C3TextureImpl.h>
 #include <C3ModelImpl.h>
+#include <C3ShaderComponentImpl.h>
+
 
 using namespace c3;
 
@@ -73,6 +75,7 @@ void SystemImpl::Release()
 		// *************************************************
 		UNREGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(Model, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
 		// *************************************************
 
 		delete m_ResourceManager;
@@ -141,6 +144,7 @@ ResourceManager *SystemImpl::GetResourceManager()
 		// *************************************************
 		REGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
 		REGISTER_RESOURCETYPE(Model, m_ResourceManager);
+		REGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
 		// *************************************************
 	}
 

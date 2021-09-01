@@ -1,13 +1,14 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #pragma once
 
 #include <C3.h>
 #include <C3GuiImpl.h>
+#include <C3MaterialManagerImpl.h>
 
 #include <gl_wrapper.h>
 
@@ -16,11 +17,14 @@ namespace c3
 
 	class SystemImpl;
 
-	#define MATRIXUPDATE_VIEW		0x01
-	#define MATRIXUPDATE_PROJ		0x02
-	#define MATRIXUPDATE_WORLD		0x04
+	#define MATRIXUPDATE_WORLDVIEWPROJ		0x01
+	#define MATRIXUPDATE_WORLDVIEW			0x02
+	#define MATRIXUPDATE_VIEWPROJ			0x04
+	#define MATRIXUPDATE_NORMAL				0x08
 
-	#define MATRIXUPDATE_VIEWPROJ		(MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
+	#define MATRIXUPDATE_WORLD			(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_WORLDVIEW | MATRIXUPDATE_NORMAL)
+	#define MATRIXUPDATE_VIEW			(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_VIEWPROJ | MATRIXUPDATE_NORMAL)
+	#define MATRIXUPDATE_PROJ			(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_VIEWPROJ)
 	#define MATRIXUPDATE_ALL			(MATRIXUPDATE_WORLD | MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
 
 	class RendererImpl : public Renderer
@@ -46,7 +50,7 @@ namespace c3
 
 		glm::fmat4x4 m_ident;
 
-		glm::fmat4x4 m_proj, m_view, m_world, m_viewproj, m_worldviewproj;
+		glm::fmat4x4 m_proj, m_view, m_world, m_worldview, m_normal, m_viewproj, m_worldviewproj;
 		props::TFlags32 m_matupflags;
 
 		glm::fvec4 m_clearColor;
@@ -73,16 +77,15 @@ namespace c3
 
 		GuiImpl *m_Gui;
 
-		DepthTest m_DepthTest;
 		DepthMode m_DepthMode;
+		Test m_DepthTest;
+
 		CullMode m_CullMode;
 
-		typedef std::pair<VertexBuffer *, ShaderProgram *> TVBProgPair;
-		typedef struct
-		{
-			GLint attribloc;
-		} SVBProg;
-//		typedef std::
+		bool m_StencilEnabled;
+		Test m_StencilTest;
+		uint8_t m_StencilRef, m_StencilMask;
+		StencilOperation m_StencilFailOp, m_StencilZFailOp, m_StencilZPassOp;
 
 		VertexBuffer *m_CubeVB;
 		Mesh *m_BoundsMesh;
@@ -101,6 +104,8 @@ namespace c3
 		Texture2D *m_WhiteTex;
 		Texture2D *m_BlueTex;
 		Texture2D *m_GridTex;
+
+		MaterialManagerImpl *m_MatMan;
 
 	public:
 
@@ -133,19 +138,28 @@ namespace c3
 		virtual bool Present();
 
 		virtual void SetClearColor(const glm::fvec4 *color = nullptr);
-		virtual const glm::fvec4 *GetClearColor(glm::fvec4 *color = nullptr);
+		virtual const glm::fvec4 *GetClearColor(glm::fvec4 *color = nullptr) const;
 
 		virtual void SetClearDepth(float depth);
-		virtual float GetClearDepth();
+		virtual float GetClearDepth() const;
 
 		virtual void SetDepthMode(DepthMode mode);
-		virtual DepthMode GetDepthMode();
+		virtual DepthMode GetDepthMode() const;
 
-		virtual void SetDepthTest(DepthTest test);
-		virtual DepthTest GetDepthTest();
+		virtual void SetDepthTest(Test test);
+		virtual Test GetDepthTest() const;
+
+		virtual void SetStencilEnabled(bool en);
+		virtual bool GetStencilEnabled() const;
+
+		virtual void SetStencilTest(Test test, uint8_t ref = 0, uint8_t mask = 0xff);
+		virtual Test GetStencilTest(uint8_t *ref = nullptr, uint8_t *mask = nullptr) const;
+
+		virtual void SetStencilOperation(StencilOperation stencil_fail, StencilOperation zfail, StencilOperation zpass);
+		virtual void GetStencilOperation(StencilOperation &stencil_fail, StencilOperation &zfail, StencilOperation &zpass) const;
 
 		virtual void SetCullMode(CullMode mode);
-		virtual CullMode GetCullMode();
+		virtual CullMode GetCullMode() const;
 
 		size_t PixelSize(TextureType type);
 		GLenum GLType(TextureType type);
@@ -190,6 +204,8 @@ namespace c3
 		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetWorldMatrix(glm::fmat4x4 *m = nullptr);
+		virtual const glm::fmat4x4 *GetWorldViewMatrix(glm::fmat4x4 *m = nullptr);
+		virtual const glm::fmat4x4 *GetNormalMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
 
@@ -210,6 +226,8 @@ namespace c3
 		virtual Texture2D *GetWhiteTexture();
 		virtual Texture2D *GetBlueTexture();
 		virtual Texture2D *GetGridTexture();
+
+		virtual MaterialManager *GetMaterialManager();
 
 	};
 

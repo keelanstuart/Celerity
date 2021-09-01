@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #include "pch.h"
@@ -58,7 +58,7 @@ void InitializeCrc16Table()
 }
 
 
-uint32_t Crc32::Calculate(const uint8_t *data, uint32_t len, uint32_t initvalue)
+uint32_t Crc32::Calculate(const uint8_t *data, size_t len, uint32_t initvalue)
 {
 	uint32_t ret = initvalue;
 
@@ -79,10 +79,16 @@ uint32_t Crc32::CalculateString(const TCHAR *s, uint32_t initvalue)
 
 	if (s)
 	{
+#ifdef _UNICODE
+		uint8_t *b = (uint8_t *)s;
+#endif
 		while (*s)
 		{
 #ifdef _UNICODE
-			ret = Crc32Table[((int)ret ^ (*s++)) & 0xffff] ^ (ret >> 16);
+
+			ret = Crc32Table[((int)ret ^ (*b++)) & 0xff] ^ (ret >> 8);
+			ret = Crc32Table[((int)ret ^ (*b++)) & 0xff] ^ (ret >> 8);
+			s++;
 #else
 			ret = Crc32Table[((int)ret ^ (*s++)) & 0xff] ^ (ret >> 8);
 #endif
@@ -93,7 +99,7 @@ uint32_t Crc32::CalculateString(const TCHAR *s, uint32_t initvalue)
 }
 
 
-uint16_t Crc16::Calculate(const uint8_t *data, uint32_t len, uint16_t initvalue)
+uint16_t Crc16::Calculate(const uint8_t *data, size_t len, uint16_t initvalue)
 {
 	uint16_t ret = initvalue;
 

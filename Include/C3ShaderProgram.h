@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #pragma once
@@ -42,6 +42,8 @@ namespace c3
 		virtual bool SetUniform3(int64_t location, const glm::fvec3 *v3) = NULL;
 		virtual bool SetUniform4(int64_t location, const glm::fvec4 *v4) = NULL;
 		virtual bool SetUniformTexture(int64_t location, uint64_t sampler, Texture *tex) = NULL;
+
+		virtual void UpdateGlobalUniforms() = NULL;
 
 	};
 

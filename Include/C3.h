@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #pragma once
@@ -45,6 +45,7 @@
 #include <C3ShaderComponent.h>
 #include <C3ShaderProgram.h>
 #include <C3Material.h>
+#include <C3MaterialManager.h>
 #include <C3Model.h>
 #include <C3Renderer.h>
 #include <C3Log.h>
@@ -60,3 +61,4 @@
 #include <C3FileMapper.h>
 #include <C3ResourceManager.h>
 #include <C3System.h>
+#include <C3ColorDefs.h>

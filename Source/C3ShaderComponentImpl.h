@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #pragma once
@@ -40,5 +40,7 @@ namespace c3
 		operator GLuint() const { return m_glID; }
 
 	};
+
+	DEFINE_RESOURCETYPE(ShaderComponent, RTFLAG_RUNBYRENDERER, GUID({0x8c91d2f4, 0xb414, 0x47ef, {0x88, 0x23, 0xf9, 0x5e, 0xb6, 0xab, 0x22, 0x72}}), "ShaderComponent", "Shader Components", "esh;fsh;gsh;tsh;vsh", "glsl");
 
 };

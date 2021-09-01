@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #pragma once
@@ -24,6 +24,7 @@ namespace c3
 	class ShaderComponent;
 	class ShaderProgram;
 	class Gui;
+	class MaterialManager;
 
 	class Renderer
 	{
@@ -93,7 +94,7 @@ namespace c3
 
 		} ShaderComponentType;
 
-		typedef enum EDepthTest
+		typedef enum ETest
 		{
 			DT_NEVER = 0,
 			DT_LESSER,
@@ -106,7 +107,7 @@ namespace c3
 
 			DT_NUMTESTS
 
-		} DepthTest;
+		} Test;
 
 		typedef enum EDepthMode
 		{
@@ -118,6 +119,20 @@ namespace c3
 			DM_NUMMODES
 
 		} DepthMode;
+
+		typedef enum EStencilOperation
+		{
+			SO_KEEP = 0,
+			SO_ZERO,
+			SO_REPLACE,
+			SO_INC,
+			SO_INC_WRAP,
+			SO_DEC,
+			SO_DEC_WRAP,
+			SO_INVERT,
+
+			SO_NUMOPMODES
+		} StencilOperation;
 
 		typedef enum ECullMode
 		{
@@ -157,19 +172,28 @@ namespace c3
 		virtual bool Present() = NULL;
 
 		virtual void SetClearColor(const glm::fvec4 *color = nullptr) = NULL;
-		virtual const glm::fvec4 *GetClearColor(glm::fvec4 *color = nullptr) = NULL;
+		virtual const glm::fvec4 *GetClearColor(glm::fvec4 *color = nullptr) const = NULL;
 
 		virtual void SetClearDepth(float depth = 1.0f) = NULL;
-		virtual float GetClearDepth() = NULL;
+		virtual float GetClearDepth() const = NULL;
 
 		virtual void SetDepthMode(DepthMode mode) = NULL;
-		virtual DepthMode GetDepthMode() = NULL;
+		virtual DepthMode GetDepthMode() const = NULL;
 
-		virtual void SetDepthTest(DepthTest test) = NULL;
-		virtual DepthTest GetDepthTest() = NULL;
+		virtual void SetDepthTest(Test test) = NULL;
+		virtual Test GetDepthTest() const = NULL;
+
+		virtual void SetStencilEnabled(bool en) = NULL;
+		virtual bool GetStencilEnabled() const = NULL;
+
+		virtual void SetStencilTest(Test test, uint8_t ref = 0, uint8_t mask = 0xff) = NULL;
+		virtual Test GetStencilTest(uint8_t *ref = nullptr, uint8_t *mask = nullptr) const = NULL;
+
+		virtual void SetStencilOperation(StencilOperation stencil_fail, StencilOperation zfail, StencilOperation zpass) = NULL;
+		virtual void GetStencilOperation(StencilOperation &stencil_fail, StencilOperation &zfail, StencilOperation &zpass) const = NULL;
 
 		virtual void SetCullMode(CullMode mode) = NULL;
-		virtual CullMode GetCullMode() = NULL;
+		virtual CullMode GetCullMode() const = NULL;
 
 		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
 		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
@@ -201,8 +225,6 @@ namespace c3
 		virtual void UseVertexBuffer(VertexBuffer *pvbuf) = NULL;
 		virtual void UseIndexBuffer(IndexBuffer *pibuf) = NULL;
 
-		virtual void UseTexture(uint64_t sampler, Texture *ptex = nullptr) = NULL;
-
 		virtual bool DrawPrimitives(PrimType type, size_t count = -1) = NULL;
 
 		virtual bool DrawIndexedPrimitives(PrimType type, size_t offset = -1, size_t count = -1) = NULL;
@@ -214,6 +236,8 @@ namespace c3
 		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetWorldMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+		virtual const glm::fmat4x4 *GetWorldViewMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+		virtual const glm::fmat4x4 *GetNormalMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 
@@ -231,6 +255,8 @@ namespace c3
 		virtual Texture2D *GetWhiteTexture() = NULL;
 		virtual Texture2D *GetBlueTexture() = NULL;
 		virtual Texture2D *GetGridTexture() = NULL;
+
+		virtual MaterialManager *GetMaterialManager() = NULL;
 
 	};
 

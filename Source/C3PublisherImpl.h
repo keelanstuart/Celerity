@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #pragma once
@@ -33,7 +33,7 @@ namespace c3
 		typedef std::deque<c3::Subscription *> TSubscriptionArray;
 
 		TSubscriptionArray m_Subs;
-		CRITICAL_SECTION m_csSubs;
+		std::mutex m_mxSubs;
 
 		tstring m_Name;
 

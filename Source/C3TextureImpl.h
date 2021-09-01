@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #pragma once
@@ -37,6 +37,7 @@ namespace c3
 		void *m_Buffer;
 		size_t m_LockMip;
 		props::TFlags64 m_Flags;
+		int64_t m_SamplerID;
 
 	public:
 		Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);
@@ -81,6 +82,7 @@ namespace c3
 		size_t m_LockWidth;
 		size_t m_LockHeight;
 		props::TFlags64 m_Flags;
+		int64_t m_SamplerID;
 
 	public:
 		TextureCubeImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);
@@ -122,6 +124,7 @@ namespace c3
 		void *m_Buffer;
 		size_t m_LockMip;
 		props::TFlags64 m_Flags;
+		int64_t m_SamplerID;
 
 	public:
 		Texture3DImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);

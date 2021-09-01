@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #pragma once
@@ -27,12 +27,16 @@ namespace c3
 			RET_WRONGRES,
 			RET_INCOMPLETE,
 			RET_BADTYPE,
+			RET_TOOMANYTARGETS,
+			RET_NOTARGETS,
 			RET_UNKNOWN,
 
 			RET_NUMERRORS
 		};
 
+		// The practical limit is 4, but...
 		enum { MAX_COLORTARGETS = 32 };
+
 
 		/// Releases the resources owned by the framebuffer (note: does not release any attached surfaces)
 		virtual void Release() = NULL;

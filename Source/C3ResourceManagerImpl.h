@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #pragma once
@@ -36,7 +36,7 @@ namespace c3
 
 		virtual ~ResourceManagerImpl();
 
-		static void __cdecl LoadingThreadProc(LPVOID presmanimpl, LPVOID pres, size_t task_number);
+		static pool::IThreadPool::TASK_RETURN __cdecl LoadingThreadProc(void *presmanimpl, void *pres, size_t task_number);
 
 		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype);
 

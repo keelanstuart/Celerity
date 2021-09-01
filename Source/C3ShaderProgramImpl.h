@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #pragma once
@@ -24,6 +24,59 @@ namespace c3
 		bool m_Linked;
 		ShaderComponentImpl *m_Comp[Renderer::ShaderComponentType::ST_NUMTYPES];
 
+		typedef uint32_t UniformNameCRC;
+		typedef std::map<UniformNameCRC, int64_t> TNameCRCToIdMap;
+		TNameCRCToIdMap m_NameCrcToId;
+
+		typedef enum EShaderUniformUse
+		{
+			SUU_AMBIENT = 0,
+#if 0
+			SUU_BOXX,
+			SUU_BOXY,
+			SUU_BOUNDINGBOXMAX,
+			SUU_BOUNDINGBOXMIN,
+			SUU_BOUNDINGBOXSIZE,
+			SUU_BOUNDINGCENTER,
+			SUU_BOUNDINGSPHERESIZE,
+			SUU_BOUNDINGSPHEREMIN,
+			SUU_BOUNDINGSPHEREMAX,
+#endif
+			SUU_ELAPSEDTIME,
+			SUU_LASTTIME,
+			SUU_PROJECTION,
+			SUU_PROJECTIONINVERSE,
+			SUU_PROJECTIONINVERSETRANSPOSE,
+			SUU_RANDOM,
+			SUU_REFRACTION,
+			SUU_RENDERCOLORTARGET,
+			SUU_RENDERDEPTHSTENCILTARGET,
+			SUU_RENDERTARGETCLIPPING,
+			SUU_RENDERTARGETDIMENSIONS,
+			SUU_TIME,
+			SUU_FRAMENUMBER,
+			SUU_VIEW,
+			SUU_VIEWINVERSE,
+			SUU_VIEWINVERSETRANSPOSE,
+			SUU_VIEWPROJECTION,
+			SUU_VIEWPROJECTIONINVERSE,
+			SUU_VIEWPROJECTIONINVERSETRANSPOSE,
+			SUU_WORLD,
+			SUU_WORLDINVERSE,
+			SUU_WORLDINVERSETRANSPOSE,
+			SUU_WORLDVIEW,
+			SUU_WORLDVIEWINVERSE,
+			SUU_WORLDVIEWINVERSETRANSPOSE,
+			SUU_WORLDVIEWPROJECTION,
+			SUU_WORLDVIEWPROJECTIONINVERSE,
+			SUU_WORLDVIEWPROJECTIONINVERSETRANSPOSE,
+
+			SUU_NUMUSES
+
+		} ShaderUniformUse;
+
+		props::IPropertySet *m_Uniforms;
+
 	public:
 
 		ShaderProgramImpl(RendererImpl *prend);
@@ -44,6 +97,11 @@ namespace c3
 		virtual bool SetUniform3(int64_t location, const glm::fvec3 *v3);
 		virtual bool SetUniform4(int64_t location, const glm::fvec4 *v4);
 		virtual bool SetUniformTexture(int64_t location, uint64_t sampler, Texture *tex);
+
+		/// collects all the global (world, view, projection xforms, etc)
+		void CaptureGlobalUniforms();
+
+		virtual void UpdateGlobalUniforms();
 
 		operator GLuint() const { return m_glID; }
 

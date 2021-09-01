@@ -135,9 +135,9 @@ void CCeledit3View::OnDraw(CDC *pDC)
 
 				m_Rend->GetHemisphereMesh()->Draw();
 
-				m_Rend->UseTexture(0, nullptr);
-				m_Rend->UseTexture(1, nullptr);
-				m_Rend->UseTexture(2, nullptr);
+				//m_Rend->UseTexture(0, nullptr);
+				//m_Rend->UseTexture(1, nullptr);
+				//m_Rend->UseTexture(2, nullptr);
 			}
 
 			m_Rend->EndScene();

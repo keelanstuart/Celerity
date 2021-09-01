@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #include "pch.h"
@@ -267,7 +267,7 @@ void GuiImpl::Render()
 #endif
 
 					// Bind texture, Draw
-					m_pRend->UseTexture(0, (Texture *)pcmd->TextureId);
+					//m_pRend->UseTexture(0, (Texture *)pcmd->TextureId);
 
 					m_pRend->DrawIndexedPrimitives(c3::Renderer::PrimType::TRILIST, pcmd->IdxOffset, cmd_list->IdxBuffer.Size);
 				}

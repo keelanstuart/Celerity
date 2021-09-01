@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #include "pch.h"
@@ -9,6 +9,7 @@
 #include <C3ShaderProgramImpl.h>
 #include <C3ShaderComponentImpl.h>
 #include <C3TextureImpl.h>
+#include <C3CRC.h>
 
 
 using namespace c3;
@@ -20,11 +21,14 @@ ShaderProgramImpl::ShaderProgramImpl(RendererImpl *prend)
 	m_glID = GL_INVALID_VALUE;
 	m_Linked = false;
 	memset(m_Comp, 0, sizeof(ShaderComponentImpl *) * Renderer::ShaderComponentType::ST_NUMTYPES);
+	m_Uniforms = props::IPropertySet::CreatePropertySet();
 }
 
 
 ShaderProgramImpl::~ShaderProgramImpl()
 {
+	m_Uniforms->Release();
+
 	if (m_Rend && (m_glID != GL_INVALID_VALUE))
 	{
 		for (UINT i = (Renderer::ShaderComponentType::ST_NONE + 1), maxi = Renderer::ShaderComponentType::ST_NUMTYPES; i < maxi; i++)
@@ -66,6 +70,10 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::AttachShader(ShaderComponent *pshad
 	if (m_Comp[shtype])
 		m_Rend->gl.DetachShader(m_glID, (ShaderComponentImpl &)*m_Comp[shtype]);
 	m_Comp[shtype] = (ShaderComponentImpl *)pshader;
+
+	m_Linked = false;
+	m_NameCrcToId.clear();
+	m_Uniforms->DeleteAll();
 
 	m_Rend->gl.AttachShader(m_glID, (ShaderComponentImpl &)*pshader);
 
@@ -110,6 +118,7 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::Link()
 	}
 
 	m_Linked = true;
+	CaptureGlobalUniforms();
 
 	return ShaderProgram::RETURNCODE::RET_OK;
 }
@@ -126,10 +135,19 @@ int64_t ShaderProgramImpl::GetUniformLocation(const TCHAR *name)
 	if (!m_Linked || !name)
 		return -1;
 
+	UniformNameCRC crc = Crc32::CalculateString(name);
+	TNameCRCToIdMap::const_iterator it = m_NameCrcToId.find(crc);
+
+	// if the name is in the table, then just return the location now
+	if (it != m_NameCrcToId.cend())
+		return it->second;
+
+	// otherwise the name was not in the table, so insert it and return the location
 	char *n;
 	CONVERT_TCS2MBCS(name, n);
 
 	int64_t ret = m_Rend->gl.GetUniformLocation(m_glID, n);
+	std::pair<TNameCRCToIdMap::iterator, bool> insret = m_NameCrcToId.insert(TNameCRCToIdMap::value_type(crc, ret));
 
 	return ret;
 }
@@ -200,6 +218,78 @@ bool ShaderProgramImpl::SetUniformTexture(int64_t location, uint64_t sampler, Te
 	m_Rend->gl.ProgramUniform1i(m_glID, (GLint)location, (GLint)sampler);
 
 	return true;
+}
+
+
+void ShaderProgramImpl::CaptureGlobalUniforms()
+{
+	if (!m_Linked)
+		return;
+
+	GLint total = 0;
+	m_Rend->gl.GetProgramiv(m_glID, GL_ACTIVE_UNIFORMS, &total); 
+	for (GLint i = 0; i < total; i++)
+	{
+		GLint name_len = 0;
+		GLint num = -1;
+		GLenum type = GL_ZERO;
+
+		char name[100];
+
+		m_Rend->gl.GetActiveUniform(m_glID, GLuint(i), sizeof(name) - 1, &name_len, &num, &type, name);
+		name[name_len] = 0;
+
+		GLuint location = m_Rend->gl.GetUniformLocation(m_glID, name);
+
+		TCHAR *n;
+		CONVERT_MBCS2TCS(name, n);
+		props::IProperty *p = m_Uniforms->CreateProperty(n, location);
+
+		switch (type)
+		{
+			case GL_FLOAT_MAT3:
+			{
+				props::TMat3x3F tmp;
+				p->SetMat3x3F(&tmp);
+				break;
+			}
+
+			case GL_FLOAT_MAT4:
+			{
+				props::TMat4x4F tmp;
+				p->SetMat4x4F(&tmp);
+				break;
+			}
+
+			case GL_FLOAT_VEC3:
+				p->SetVec3F(props::TVec3F(0, 0, 0));
+				break;
+
+			case GL_FLOAT_VEC4:
+				p->SetVec4F(props::TVec4F(0, 0, 0));
+				break;
+
+			case GL_FLOAT:
+				p->SetFloat(0);
+				break;
+
+			case GL_INT:
+				p->SetInt(0);
+				break;
+
+			case GL_BOOL:
+				p->SetBool(false);
+				break;
+
+			case GL_SAMPLER_2D:
+				break;
+		}
+	}
+}
+
+
+void ShaderProgramImpl::UpdateGlobalUniforms()
+{
 }
 
 

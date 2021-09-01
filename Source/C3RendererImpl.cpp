@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2020, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #include "pch.h"
@@ -24,6 +24,9 @@
 using namespace c3;
 
 
+const static GLenum testvals[Renderer::DT_NUMTESTS] = {GL_NEVER, GL_LESS, GL_LEQUAL, GL_EQUAL, GL_NOTEQUAL, GL_GEQUAL, GL_GREATER, GL_ALWAYS};
+const static GLenum stencilvals[Renderer::SO_NUMOPMODES] = {GL_KEEP, GL_ZERO, GL_REPLACE, GL_INCR, GL_INCR_WRAP, GL_DECR, GL_DECR_WRAP, GL_INVERT};
+
 RendererImpl::RendererImpl(SystemImpl *psys)
 {
 	m_pSys = psys;
@@ -45,8 +48,16 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 
 	m_clearZ = 1.0f;
 	m_DepthMode = DepthMode::DM_READWRITE;
-	m_DepthTest = DepthTest::DT_LESSEREQUAL;
+	m_DepthTest = Test::DT_LESSEREQUAL;
 	m_CullMode = CullMode::CM_BACK;
+
+	m_StencilEnabled = false;
+	m_StencilTest = Test::DT_ALWAYS;
+	m_StencilRef = 0;
+	m_StencilMask = 0xff;
+	m_StencilFailOp = StencilOperation::SO_KEEP;
+	m_StencilZFailOp = StencilOperation::SO_KEEP;
+	m_StencilZPassOp = StencilOperation::SO_KEEP;
 
 	m_CurFB = nullptr;
 	m_CurFBID = 0;
@@ -77,6 +88,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_WhiteTex = nullptr;
 	m_BlueTex = nullptr;
 	m_GridTex = nullptr;
+
+	m_MatMan = nullptr;
 
 	memset(&m_glARBWndClass, 0, sizeof(WNDCLASS));
 
@@ -414,6 +427,12 @@ void RendererImpl::Shutdown()
 		m_HemisphereVB = nullptr;
 	}
 
+	if (m_MatMan)
+	{
+		delete m_MatMan;
+		m_MatMan;
+	}
+
 	// Delete the global vertex array
 	gl.BindVertexArray(0);
 	gl.DeleteVertexArrays(1, &m_VAOglID);
@@ -560,7 +579,7 @@ void RendererImpl::SetClearColor(const glm::fvec4 *color)
 }
 
 
-const glm::fvec4 *RendererImpl::GetClearColor(glm::fvec4 *color)
+const glm::fvec4 *RendererImpl::GetClearColor(glm::fvec4 *color) const
 {
 	glm::fvec4 *ret = color;
 
@@ -581,7 +600,7 @@ void RendererImpl::SetClearDepth(float depth)
 }
 
 
-float RendererImpl::GetClearDepth()
+float RendererImpl::GetClearDepth() const
 {
 	return m_clearZ;
 }
@@ -608,28 +627,91 @@ void RendererImpl::SetDepthMode(DepthMode mode)
 }
 
 
-Renderer::DepthMode RendererImpl::GetDepthMode()
+Renderer::DepthMode RendererImpl::GetDepthMode() const
 {
 	return m_DepthMode;
 }
 
 
-void RendererImpl::SetDepthTest(DepthTest test)
+void RendererImpl::SetDepthTest(Test test)
 {
 	if (test != m_DepthTest)
 	{
-		const static GLenum dtvals[DT_NUMTESTS] ={DT_NEVER, DT_LESSER, DT_LESSEREQUAL, DT_EQUAL, DT_NOTEQUAL, DT_GREATEREQUAL, DT_GREATER, DT_ALWAYS};
-
-		gl.DepthFunc(dtvals[test]);
+		gl.DepthFunc(testvals[test]);
 
 		m_DepthTest = test;
 	}
 }
 
 
-Renderer::DepthTest RendererImpl::GetDepthTest()
+Renderer::Test RendererImpl::GetDepthTest() const
 {
 	return m_DepthTest;
+}
+
+
+void RendererImpl::SetStencilEnabled(bool en)
+{
+	if (m_StencilEnabled != en)
+	{
+		if (en)
+			gl.Enable(GL_STENCIL_TEST);
+		else
+			gl.Disable(GL_STENCIL_TEST);
+
+		m_StencilEnabled = en;
+	}
+}
+
+
+bool RendererImpl::GetStencilEnabled() const
+{
+	return m_StencilEnabled;
+}
+
+
+void RendererImpl::SetStencilTest(Test test, uint8_t ref, uint8_t mask)
+{
+	if ((m_StencilTest != test) || (m_StencilRef != ref) || (m_StencilMask != mask))
+	{
+		gl.StencilFunc(testvals[test], ref, mask);
+
+		m_StencilTest = test;
+		m_StencilRef = ref;
+		m_StencilMask = mask;
+	}
+}
+
+
+Renderer::Test RendererImpl::GetStencilTest(uint8_t *ref, uint8_t *mask) const
+{
+	if (ref)
+		*ref = m_StencilRef;
+	if (mask)
+		*mask = m_StencilMask;
+
+	return m_StencilTest;
+}
+
+
+void RendererImpl::SetStencilOperation(StencilOperation stencil_fail, StencilOperation zfail, StencilOperation zpass)
+{
+	if ((m_StencilFailOp != stencil_fail) || (m_StencilZFailOp != zfail) || (m_StencilZPassOp != zpass))
+	{
+		gl.StencilOp(stencilvals[stencil_fail], stencilvals[zfail], stencilvals[zpass]);
+
+		m_StencilFailOp = stencil_fail;
+		m_StencilZFailOp = zfail;
+		m_StencilZPassOp = zpass;
+	}
+}
+
+
+void RendererImpl::GetStencilOperation(StencilOperation &stencil_fail, StencilOperation &zfail, StencilOperation &zpass) const
+{
+	stencil_fail = m_StencilFailOp;
+	zfail = m_StencilZFailOp;
+	zpass = m_StencilZPassOp;
 }
 
 
@@ -662,7 +744,7 @@ void RendererImpl::SetCullMode(CullMode mode)
 }
 
 
-Renderer::CullMode RendererImpl::GetCullMode()
+Renderer::CullMode RendererImpl::GetCullMode() const
 {
 	return m_CullMode;
 }
@@ -1290,6 +1372,38 @@ const glm::fmat4x4 *RendererImpl::GetWorldMatrix(glm::fmat4x4 *m)
 }
 
 
+const glm::fmat4x4 *RendererImpl::GetWorldViewMatrix(glm::fmat4x4 *m)
+{
+	if (m_matupflags.AnySet(MATRIXUPDATE_WORLDVIEW))
+	{
+		m_worldview = m_view * m_world;
+		m_matupflags.Clear(MATRIXUPDATE_WORLDVIEW);
+	}
+
+	if (!m)
+		return &m_worldview;
+
+	*m = m_worldview;
+	return m;
+}
+
+
+const glm::fmat4x4 *RendererImpl::GetNormalMatrix(glm::fmat4x4 *m)
+{
+	if (m_matupflags.AnySet(MATRIXUPDATE_NORMAL))
+	{
+		m_normal = glm::inverseTranspose(m_view * m_world);
+		m_matupflags.Clear(MATRIXUPDATE_NORMAL);
+	}
+
+	if (!m)
+		return &m_normal;
+
+	*m = m_normal;
+	return m;
+}
+
+
 const glm::fmat4x4 *RendererImpl::GetViewProjectionMatrix(glm::fmat4x4 *m)
 {
 	if (m_matupflags.AnySet(MATRIXUPDATE_VIEWPROJ))
@@ -1308,10 +1422,10 @@ const glm::fmat4x4 *RendererImpl::GetViewProjectionMatrix(glm::fmat4x4 *m)
 
 const glm::fmat4x4 *RendererImpl::GetWorldViewProjectionMatrix(glm::fmat4x4 *m)
 {
-	if (m_matupflags.AnySet(MATRIXUPDATE_ALL))
+	if (m_matupflags.AnySet(MATRIXUPDATE_WORLDVIEWPROJ))
 	{
 		m_worldviewproj = *GetViewProjectionMatrix() * m_world;
-		m_matupflags.Clear(MATRIXUPDATE_ALL);
+		m_matupflags.Clear(MATRIXUPDATE_WORLDVIEWPROJ);
 	}
 
 	if (!m)
@@ -1914,4 +2028,13 @@ Texture2D *RendererImpl::GetGridTexture()
 	}
 
 	return m_GridTex;
+}
+
+
+MaterialManager *RendererImpl::GetMaterialManager()
+{
+	if (!m_MatMan)
+		m_MatMan = new MaterialManagerImpl(this);
+
+	return m_MatMan;
 }
