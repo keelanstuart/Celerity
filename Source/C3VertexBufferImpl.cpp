@@ -15,12 +15,13 @@ using namespace c3;
 VertexBufferImpl::VertexBufferImpl(RendererImpl *prend)
 {
 	m_Rend = prend;
-	m_Buffer = NULL;
+	m_Buffer = nullptr;
 	m_NumVerts = 0;
 	m_VertSize = 0;
 	m_glID = GL_INVALID_VALUE;
 	m_LastBoundBuffer = 0;
 	m_Components.reserve(5);
+	m_Cache = nullptr;
 }
 
 
@@ -28,6 +29,12 @@ VertexBufferImpl::~VertexBufferImpl()
 {
 	if (m_Buffer)
 		Unlock();
+
+	if (m_Cache)
+	{
+		free(m_Cache);
+		m_Cache = nullptr;
+	}
 
 	m_NumVerts = 0;
 	m_VertSize = 0;
@@ -52,26 +59,58 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 	if (m_Buffer)
 		return RET_ALREADY_LOCKED;
 
-	if (!numverts)
-		return RET_ZERO_ELEMENTS;
-
 	if (!buffer)
 		return RET_NULL_BUFFER;
 
-	m_Components.clear();
-
 	size_t sz = 0;
-	const ComponentDescription *c = components;
-	size_t cc = 0;
-	while (c && (c->m_Type != VertexBuffer::ComponentDescription::VCT_NONE) && (c->m_Count > 0))
+
+	if (flags.IsSet(VBLOCKFLAG_WRITE))
 	{
-		m_Components.push_back(*c);
-		sz += c->size();
-		c++;
+		if (!numverts)
+			return RET_ZERO_ELEMENTS;
+
+		m_Components.clear();
+
+		const ComponentDescription *c = components;
+		size_t cc = 0;
+		while (c && (c->m_Type != VertexBuffer::ComponentDescription::VCT_NONE) && (c->m_Count > 0))
+		{
+			m_Components.push_back(*c);
+			sz += c->size();
+			c++;
+		}
+
+		if (!sz)
+			return RET_BAD_VERTEX_DESCRIPTION;
 	}
 
-	if (!sz)
-		return RET_BAD_VERTEX_DESCRIPTION;
+	if (flags.IsSet(VBLOCKFLAG_CACHE))
+	{
+		if (m_Cache)
+		{
+			size_t cache_sz = _msize(m_Cache);
+			if (cache_sz != (sz * numverts))
+				free(m_Cache);
+		}
+
+		m_Cache = malloc(sz * numverts);
+	}
+
+	// if we want read-only access, then use the cache if one is available. this avoids a map/unmap
+	if (flags.IsSet(VBLOCKFLAG_READ) && !flags.IsSet(VBLOCKFLAG_WRITE))
+	{
+		if (m_Cache)
+		{
+			m_Buffer = m_Cache;
+			*buffer = m_Buffer;
+
+			return RET_OK;
+		}
+		else
+		{
+			assert(0 && "Cache never created; expect poor performance. Use VBLOCKFLAG_CACHE when calling Lock()!");
+		}
+	}
 
 	bool init = false;
 	if (m_glID == GL_INVALID_VALUE)
@@ -124,7 +163,15 @@ void VertexBufferImpl::Unlock()
 {
 	if (m_Buffer)
 	{
-		m_Rend->gl.UnmapBuffer(GL_ARRAY_BUFFER);
+		// if the buffer isn't just our cached copy, then unmap it and let the video driver do it's thing
+		if (m_Buffer != m_Cache)
+		{
+			// if there IS a cache, then copy our new buffer contents to it
+			if (m_Cache)
+				memcpy(m_Cache, m_Buffer, m_VertSize * m_NumVerts);
+
+			m_Rend->gl.UnmapBuffer(GL_ARRAY_BUFFER);
+		}
 
 		m_Buffer = NULL;
 	}

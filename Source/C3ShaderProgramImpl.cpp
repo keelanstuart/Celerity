@@ -9,11 +9,12 @@
 #include <C3ShaderProgramImpl.h>
 #include <C3ShaderComponentImpl.h>
 #include <C3TextureImpl.h>
-#include <C3CRC.h>
 
 
 using namespace c3;
 
+
+//#define IMMEDIATE_UNIFORMS
 
 ShaderProgramImpl::ShaderProgramImpl(RendererImpl *prend)
 {
@@ -72,7 +73,6 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::AttachShader(ShaderComponent *pshad
 	m_Comp[shtype] = (ShaderComponentImpl *)pshader;
 
 	m_Linked = false;
-	m_NameCrcToId.clear();
 	m_Uniforms->DeleteAll();
 
 	m_Rend->gl.AttachShader(m_glID, (ShaderComponentImpl &)*pshader);
@@ -118,7 +118,7 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::Link()
 	}
 
 	m_Linked = true;
-	CaptureGlobalUniforms();
+	CaptureUniforms();
 
 	return ShaderProgram::RETURNCODE::RET_OK;
 }
@@ -130,98 +130,136 @@ bool ShaderProgramImpl::IsLinked()
 }
 
 
-int64_t ShaderProgramImpl::GetUniformLocation(const TCHAR *name)
+int32_t ShaderProgramImpl::GetUniformLocation(const TCHAR *name)
 {
 	if (!m_Linked || !name)
-		return -1;
+		return INVALID_UNIFORM;
 
-	UniformNameCRC crc = Crc32::CalculateString(name);
-	TNameCRCToIdMap::const_iterator it = m_NameCrcToId.find(crc);
+	props::IProperty *p = m_Uniforms->GetPropertyByName(name);
+	if (p)
+		return p->GetID();
 
-	// if the name is in the table, then just return the location now
-	if (it != m_NameCrcToId.cend())
-		return it->second;
-
-	// otherwise the name was not in the table, so insert it and return the location
-	char *n;
-	CONVERT_TCS2MBCS(name, n);
-
-	int64_t ret = m_Rend->gl.GetUniformLocation(m_glID, n);
-	std::pair<TNameCRCToIdMap::iterator, bool> insret = m_NameCrcToId.insert(TNameCRCToIdMap::value_type(crc, ret));
-
-	return ret;
+	return INVALID_UNIFORM;
 }
 
 
-bool ShaderProgramImpl::SetUniformMatrix(int64_t location, const glm::fmat4x4 *mat)
+bool ShaderProgramImpl::SetUniformMatrix(int32_t location, const glm::fmat4x4 *mat)
 {
 	if ((location < 0) || !mat)
 		return false;
 
+	props::IProperty *p = m_Uniforms->GetPropertyById(location);
+	if (!p)
+		return false;
+
+	p->SetMat4x4F((const props::TMat4x4F *)mat);
+
+#ifdef IMMEDIATE_UNIFORMS
 	m_Rend->gl.ProgramUniformMatrix4fv(m_glID, (GLint)location, 1, GL_FALSE, (const GLfloat *)mat);
+#endif
 
 	return true;
 }
 
 
-bool ShaderProgramImpl::SetUniform1(int64_t location, float f)
+bool ShaderProgramImpl::SetUniform1(int32_t location, float f)
 {
 	if (location < 0)
 		return false;
 
+	props::IProperty *p = m_Uniforms->GetPropertyById(location);
+	if (!p)
+		return false;
+
+	p->SetFloat(f);
+
+#ifdef IMMEDIATE_UNIFORMS
 	m_Rend->gl.ProgramUniform1f(m_glID, (GLint)location, f);
+#endif
 
 	return true;
 }
 
 
-bool ShaderProgramImpl::SetUniform2(int64_t location, const glm::fvec2 *v2)
+bool ShaderProgramImpl::SetUniform2(int32_t location, const glm::fvec2 *v2)
 {
 	if ((location < 0) || !v2)
 		return false;
 
+	props::IProperty *p = m_Uniforms->GetPropertyById(location);
+	if (!p)
+		return false;
+
+	p->SetVec2F(*(const props::TVec2F *)v2);
+
+#ifdef IMMEDIATE_UNIFORMS
 	m_Rend->gl.ProgramUniform2fv(m_glID, (GLint)location, 1, (const GLfloat *)v2);
+#endif
 
 	return true;
 }
 
 
-bool ShaderProgramImpl::SetUniform3(int64_t location, const glm::fvec3 *v3)
+bool ShaderProgramImpl::SetUniform3(int32_t location, const glm::fvec3 *v3)
 {
 	if ((location < 0) || !v3)
 		return false;
 
+	props::IProperty *p = m_Uniforms->GetPropertyById(location);
+	if (!p)
+		return false;
+
+	p->SetVec3F(*(const props::TVec3F *)v3);
+
+#ifdef IMMEDIATE_UNIFORMS
 	m_Rend->gl.ProgramUniform3fv(m_glID, (GLint)location, 1, (const GLfloat *)v3);
+#endif
 
 	return true;
 }
 
 
-bool ShaderProgramImpl::SetUniform4(int64_t location, const glm::fvec4 *v4)
+bool ShaderProgramImpl::SetUniform4(int32_t location, const glm::fvec4 *v4)
 {
 	if ((location < 0) || !v4)
 		return false;
 
+	props::IProperty *p = m_Uniforms->GetPropertyById(location);
+	if (!p)
+		return false;
+
+	p->SetVec4F(*(const props::TVec4F *)v4);
+
+#ifdef IMMEDIATE_UNIFORMS
 	m_Rend->gl.ProgramUniform4fv(m_glID, (GLint)location, 1, (const GLfloat *)v4);
+#endif
 
 	return true;
 }
 
 
-bool ShaderProgramImpl::SetUniformTexture(int64_t location, uint64_t sampler, Texture *tex)
+bool ShaderProgramImpl::SetUniformTexture(int32_t location, uint32_t sampler, Texture *tex)
 {
 	if (location < 0)
 		return false;
 
-	m_Rend->UseTexture(sampler, tex);
+	props::IProperty *p = m_Uniforms->GetPropertyById(location);
+	if (!p)
+		return false;
 
+	p->SetInt((int64_t)tex);
+	p->SetAspect(props::IProperty::PROPERTY_ASPECT((size_t)props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_DIFFUSE + sampler));
+
+#ifdef IMMEDIATE_UNIFORMS
+	m_Rend->UseTexture(sampler, tex);
 	m_Rend->gl.ProgramUniform1i(m_glID, (GLint)location, (GLint)sampler);
+#endif
 
 	return true;
 }
 
 
-void ShaderProgramImpl::CaptureGlobalUniforms()
+void ShaderProgramImpl::CaptureUniforms()
 {
 	if (!m_Linked)
 		return;
@@ -258,15 +296,43 @@ void ShaderProgramImpl::CaptureGlobalUniforms()
 			{
 				props::TMat4x4F tmp;
 				p->SetMat4x4F(&tmp);
+
+				if (!_tcscmp(n, _T("uMatrixMVP")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWPROJECTION);
+				else if (!_tcscmp(n, _T("uMatrixN")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWINVTRANS);
+				else if (!_tcscmp(n, _T("uMatrixP")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_PROJECTION);
+
 				break;
 			}
 
-			case GL_FLOAT_VEC3:
-				p->SetVec3F(props::TVec3F(0, 0, 0));
+			case GL_FLOAT_VEC4:
+				p->SetVec4F(props::TVec4F(1, 1, 1, 1));
+
+				if (!_tcscmp(n, _T("uColorDiffuse")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE);
+				else if (!_tcscmp(n, _T("uColorEmissive")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE);
+				else if (!_tcscmp(n, _T("uColorSpecular")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR);
+
 				break;
 
-			case GL_FLOAT_VEC4:
-				p->SetVec4F(props::TVec4F(0, 0, 0));
+			case GL_FLOAT_VEC3:
+				p->SetVec3F(props::TVec3F(0, 0, 0));
+
+				if (!_tcscmp(n, _T("uColorDiffuse")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE);
+				else if (!_tcscmp(n, _T("uColorEmissive")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE);
+				else if (!_tcscmp(n, _T("uColorSpecular")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR);
+
+				break;
+
+			case GL_FLOAT_VEC2:
+				p->SetVec2F(props::TVec2F(0, 0));
 				break;
 
 			case GL_FLOAT:
@@ -282,14 +348,115 @@ void ShaderProgramImpl::CaptureGlobalUniforms()
 				break;
 
 			case GL_SAMPLER_2D:
+				p->SetInt(0);
+
+				if (!_tcscmp(n, _T("uSamplerDiffuse")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_DIFFUSE);
+				else if (!_tcscmp(n, _T("uSamplerNormal")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_NORMAL);
+				else if (!_tcscmp(n, _T("uSamplerSurfDesc")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_SURFDESC);
+				else if (!_tcscmp(n, _T("uSamplerEmissive")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_EMISSIVE);
+				else if (!_tcscmp(n, _T("uSamplerPosDepth")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_POSITIONDEPTH);
+
 				break;
 		}
 	}
 }
 
-
 void ShaderProgramImpl::UpdateGlobalUniforms()
 {
+	for (size_t i = 0, maxi = m_Uniforms->GetPropertyCount(); i < maxi; i++)
+	{
+		props::IProperty *p = m_Uniforms->GetProperty(i);
+		switch (p->GetType())
+		{
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_MAT4X4:
+				switch (p->GetAspect())
+				{
+					case props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWPROJECTION:
+						SetUniformMatrix(p->GetID(), m_Rend->GetWorldViewProjectionMatrix());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWINVTRANS:
+						SetUniformMatrix(p->GetID(), m_Rend->GetNormalMatrix());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_PROJECTION:
+						SetUniformMatrix(p->GetID(), m_Rend->GetProjectionMatrix());
+						break;
+				}
+				break;
+		}
+	}
+}
+
+void ShaderProgramImpl::ApplyUniforms(bool update_globals)
+{
+	if (update_globals)
+		UpdateGlobalUniforms();
+
+#ifdef IMMEDIATE_UNIFORMS
+	return;
+#endif
+
+	for (size_t i = 0, maxi = m_Uniforms->GetPropertyCount(); i < maxi; i++)
+	{
+		props::IProperty *p = m_Uniforms->GetProperty(i);
+		switch (p->GetType())
+		{
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_MAT3X3:
+				m_Rend->gl.ProgramUniformMatrix3fv(m_glID, (GLint)p->GetID(), 1, GL_FALSE, (const GLfloat *)(p->AsMat3x3F()));
+				break;
+
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_MAT4X4:
+				m_Rend->gl.ProgramUniformMatrix4fv(m_glID, (GLint)p->GetID(), 1, GL_FALSE, (const GLfloat *)(p->AsMat4x4F()));
+				break;
+
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
+				m_Rend->gl.ProgramUniform4fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec4F());
+				break;
+
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
+				m_Rend->gl.ProgramUniform3fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec3F());
+				break;
+
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:
+				m_Rend->gl.ProgramUniform3fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec2F());
+				break;
+
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT:
+				m_Rend->gl.ProgramUniform1f(m_glID, (GLint)p->GetID(), p->AsFloat());
+				break;
+
+			case props::IProperty::PROPERTY_TYPE::PT_INT:
+				switch (p->GetAspect())
+				{
+					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_DIFFUSE:
+					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_NORMAL:
+					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_SURFDESC:
+					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_EMISSIVE:
+					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_POSITIONDEPTH:
+					{
+						GLint sampler = p->GetAspect() - props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_DIFFUSE;
+
+						m_Rend->UseTexture(sampler, (Texture *)p->AsInt());
+						m_Rend->gl.ProgramUniform1i(m_glID, (GLint)p->GetID(), (GLint)sampler);
+						break;
+					}
+
+					default:
+						m_Rend->gl.ProgramUniform1i(m_glID, (GLint)p->GetID(), (GLint)p->AsInt());
+						break;
+				}
+				break;
+
+			case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:
+				break;
+		}
+	}
 }
 
 

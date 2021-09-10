@@ -25,10 +25,7 @@ namespace c3
 		Texture *m_tex[TextureComponentType::NUM_TEXTURETYPES];
 		glm::fvec4 m_color[ColorComponentType::NUM_COLORTYPES];
 
-		Renderer::DepthMode m_DepthMode;
 		Renderer::Test m_DepthTest;
-
-		Renderer::CullMode m_CullMode;
 
 		bool m_StencilEnabled;
 		Renderer::Test m_StencilTest;

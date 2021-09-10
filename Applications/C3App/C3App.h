@@ -24,7 +24,7 @@ protected:
 	c3::ShaderComponent *m_FS;
 	c3::ShaderProgram *m_SP;
 	c3::Material *m_Mtl;
-	c3::Mesh *m_M;
+	c3::Model *m_M;
 	c3::Texture2D *m_Tex;
 	c3::Resource *m_NormRes;
 	c3::Resource *m_TexRes;

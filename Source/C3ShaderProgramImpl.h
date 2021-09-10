@@ -24,57 +24,6 @@ namespace c3
 		bool m_Linked;
 		ShaderComponentImpl *m_Comp[Renderer::ShaderComponentType::ST_NUMTYPES];
 
-		typedef uint32_t UniformNameCRC;
-		typedef std::map<UniformNameCRC, int64_t> TNameCRCToIdMap;
-		TNameCRCToIdMap m_NameCrcToId;
-
-		typedef enum EShaderUniformUse
-		{
-			SUU_AMBIENT = 0,
-#if 0
-			SUU_BOXX,
-			SUU_BOXY,
-			SUU_BOUNDINGBOXMAX,
-			SUU_BOUNDINGBOXMIN,
-			SUU_BOUNDINGBOXSIZE,
-			SUU_BOUNDINGCENTER,
-			SUU_BOUNDINGSPHERESIZE,
-			SUU_BOUNDINGSPHEREMIN,
-			SUU_BOUNDINGSPHEREMAX,
-#endif
-			SUU_ELAPSEDTIME,
-			SUU_LASTTIME,
-			SUU_PROJECTION,
-			SUU_PROJECTIONINVERSE,
-			SUU_PROJECTIONINVERSETRANSPOSE,
-			SUU_RANDOM,
-			SUU_REFRACTION,
-			SUU_RENDERCOLORTARGET,
-			SUU_RENDERDEPTHSTENCILTARGET,
-			SUU_RENDERTARGETCLIPPING,
-			SUU_RENDERTARGETDIMENSIONS,
-			SUU_TIME,
-			SUU_FRAMENUMBER,
-			SUU_VIEW,
-			SUU_VIEWINVERSE,
-			SUU_VIEWINVERSETRANSPOSE,
-			SUU_VIEWPROJECTION,
-			SUU_VIEWPROJECTIONINVERSE,
-			SUU_VIEWPROJECTIONINVERSETRANSPOSE,
-			SUU_WORLD,
-			SUU_WORLDINVERSE,
-			SUU_WORLDINVERSETRANSPOSE,
-			SUU_WORLDVIEW,
-			SUU_WORLDVIEWINVERSE,
-			SUU_WORLDVIEWINVERSETRANSPOSE,
-			SUU_WORLDVIEWPROJECTION,
-			SUU_WORLDVIEWPROJECTIONINVERSE,
-			SUU_WORLDVIEWPROJECTIONINVERSETRANSPOSE,
-
-			SUU_NUMUSES
-
-		} ShaderUniformUse;
-
 		props::IPropertySet *m_Uniforms;
 
 	public:
@@ -88,22 +37,24 @@ namespace c3
 		virtual ShaderProgram::RETURNCODE Link();
 		virtual bool IsLinked();
 
-		enum { INVALID_UNIFORM = -1 };
+		virtual int32_t GetUniformLocation(const TCHAR *name);
+		virtual bool SetUniformMatrix(int32_t location, const glm::fmat4x4 *mat);
+		virtual bool SetUniform1(int32_t location, float f);
+		virtual bool SetUniform2(int32_t location, const glm::fvec2 *v2);
+		virtual bool SetUniform3(int32_t location, const glm::fvec3 *v3);
+		virtual bool SetUniform4(int32_t location, const glm::fvec4 *v4);
+		virtual bool SetUniformTexture(int32_t location, uint32_t sampler, Texture *tex);
 
-		virtual int64_t GetUniformLocation(const TCHAR *name);
-		virtual bool SetUniformMatrix(int64_t location, const glm::fmat4x4 *mat);
-		virtual bool SetUniform1(int64_t location, float f);
-		virtual bool SetUniform2(int64_t location, const glm::fvec2 *v2);
-		virtual bool SetUniform3(int64_t location, const glm::fvec3 *v3);
-		virtual bool SetUniform4(int64_t location, const glm::fvec4 *v4);
-		virtual bool SetUniformTexture(int64_t location, uint64_t sampler, Texture *tex);
-
-		/// collects all the global (world, view, projection xforms, etc)
-		void CaptureGlobalUniforms();
-
-		virtual void UpdateGlobalUniforms();
+		virtual void ApplyUniforms(bool update_globals = true);
 
 		operator GLuint() const { return m_glID; }
+
+	protected:
+
+		/// Collects all uniforms, including globals (world, view, projection xforms, etc)
+		void CaptureUniforms();
+
+		void UpdateGlobalUniforms();
 
 	};
 

@@ -40,6 +40,9 @@ namespace c3
 
 		virtual RETURNCODE Draw(Renderer::PrimType type) const;
 
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
+							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;
+
 	};
 
 };

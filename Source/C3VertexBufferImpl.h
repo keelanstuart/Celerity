@@ -23,6 +23,8 @@ namespace c3
 		GLuint m_glID;
 		size_t m_VertSize;
 
+		void *m_Cache;
+
 		typedef std::vector<ComponentDescription> TVertexComponentDescriptionArray;
 		TVertexComponentDescriptionArray m_Components;
 

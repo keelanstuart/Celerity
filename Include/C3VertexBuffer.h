@@ -97,11 +97,13 @@ namespace c3
 
 		virtual void Release() = NULL;
 
-		#define VBLOCKFLAG_READ			0x0001
-		#define VBLOCKFLAG_WRITE		0x0002
-		#define VBLOCKFLAG_DYNAMIC		0x0004
-		#define VBLOCKFLAG_USERBUFFER	0x0008
-		#define VBLOCKFLAG_UPDATENOW	0x0010
+		#define VBLOCKFLAG_READ			0x0001		// need read access to the memory
+		#define VBLOCKFLAG_WRITE		0x0002		// need write access to the memory
+		#define VBLOCKFLAG_DYNAMIC		0x0004		// hint to the driver that the data will change frequently
+		#define VBLOCKFLAG_USERBUFFER	0x0008		// we want the memory in the provided buffer
+		#define VBLOCKFLAG_UPDATENOW	0x0010		// update the buffer data (used with USERBUFFER) - requires no unlock
+		#define VBLOCKFLAG_CACHE		0x0020		// create a cache of the data so that it can be queried quickly later
+
 
 		virtual RETURNCODE Lock(void **buffer, size_t numverts, const ComponentDescription *components, props::TFlags64 flags) = NULL;
 		virtual void Unlock() = NULL;

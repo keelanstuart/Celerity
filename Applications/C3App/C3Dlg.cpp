@@ -73,16 +73,16 @@ BOOL C3Dlg::OnInitDialog()
 	if (!m_Rend->Initialize(GetSafeHwnd(), 0))
 		exit(-2);
 
-#if 0
+#if 1
 	m_FB = m_Rend->CreateFrameBuffer();
 	if (m_FB)
 	{
-		size_t w = r.Width() * 2;
-		size_t h = r.Height() * 2;
+		size_t w = r.Width();// * 2;
+		size_t h = r.Height();// * 2;
 
-		m_ColorTarg[0] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::F32_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
+		m_ColorTarg[0] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::U8_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
 		m_ColorTarg[1] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::F32_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
-		m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::F32_D);
+		m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
 
 		if (m_ColorTarg[0] && m_ColorTarg[1] && m_DepthTarg)
 		{
@@ -92,8 +92,6 @@ BOOL C3Dlg::OnInitDialog()
 
 			m_FB->Seal();
 		}
-
-//		m_Rend->UseFrameBuffer(m_FB);
 	}
 #endif
 
@@ -116,14 +114,14 @@ BOOL C3Dlg::OnInitDialog()
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
 	if (pcam)
 	{
-		pcam->SetPolarDistance(8.0f);
+		pcam->SetPolarDistance(150.0f);
 		pcam->SetFOV(glm::radians(70.0f));
 	}
 
 	c3::Positionable *pdomepos = dynamic_cast<c3::Positionable *>(m_RootObj->FindFeature(c3::Positionable::Type()));
 	if (pdomepos)
 	{
-		pdomepos->SetScl(40.0f, 40.0f, 40.0f);
+		//pdomepos->SetScl(40.0f, 40.0f, 40.0f);
 	}
 
 
@@ -176,8 +174,7 @@ void C3Dlg::OnPaint()
 
 		float dt = theApp.m_C3->GetElapsedTime();
 
-		glm::fvec4 c = glm::fvec4(0.0f, 0.0f, 0.0f, 0.0f);
-		m_Rend->SetClearColor(&c);
+		m_Rend->SetClearColor(&c3::Color::Black);
 		if (m_Rend->BeginScene())
 		{
 			c3::Positionable *ppos = (c3::Positionable *)(m_RootObj->FindFeature(c3::Positionable::Type()));
@@ -191,9 +188,13 @@ void C3Dlg::OnPaint()
 
 			m_Rend->SetWorldMatrix(ppos->GetTransformMatrix());
 
+			m_Rend->UseFrameBuffer(m_FB);
+
 			if (m_RootObj->Prerender())
 				if (m_RootObj->Render())
 					m_RootObj->Postrender();
+
+			m_Rend->UseFrameBuffer(nullptr);
 
 			m_Rend->EndScene();
 			m_Rend->Present();
@@ -295,7 +296,7 @@ BOOL C3Dlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	if (pcam)
 	{
 		float d = pcam->GetPolarDistance();
-		d += ((zDelta < 0) ? 0.5f : -0.5f);
+		d += ((zDelta < 0) ? 3.5f : -3.5f);
 		d = std::max(d, 0.1f);
 
 		pcam->SetPolarDistance(d);

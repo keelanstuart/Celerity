@@ -25,6 +25,7 @@ namespace c3
 	class ShaderProgram;
 	class Gui;
 	class MaterialManager;
+	class Material;
 
 	class Renderer
 	{
@@ -257,6 +258,9 @@ namespace c3
 		virtual Texture2D *GetGridTexture() = NULL;
 
 		virtual MaterialManager *GetMaterialManager() = NULL;
+		virtual const Material *GetWhiteMaterial() = NULL;
+
+		virtual ShaderProgram *GetBoundsShader() = NULL;
 
 	};
 

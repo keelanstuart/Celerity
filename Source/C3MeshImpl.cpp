@@ -93,3 +93,10 @@ Mesh::RETURNCODE MeshImpl::Draw(Renderer::PrimType type) const
 
 	return Mesh::RETURNCODE::RET_NULLBUFFER;
 }
+
+
+bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
+					   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
+{
+	return false;
+}

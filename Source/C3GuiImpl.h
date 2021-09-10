@@ -27,13 +27,8 @@ namespace c3
 		IndexBuffer *m_IB;// g_imgui_ibptr;
 
 		// Uniforms location
-		int64_t m_UL_Tex;// g_AttribLocationTex;
-		int64_t m_UL_ProjMat;// g_AttribLocationProjMtx;
-
-		// Vertex attributes location
-		int64_t m_AL_vPos;// g_AttribLocationVtxPos;
-		int64_t m_AL_vTex0;// g_AttribLocationVtxUV;
-		int64_t m_AL_vColor0;// g_AttribLocationVtxColor;
+		int32_t m_UL_Tex;// g_AttribLocationTex;
+		int32_t m_UL_ProjMat;// g_AttribLocationProjMtx;
 
 		tstring m_ClipboardText;
 

@@ -47,9 +47,9 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_needsFinish = false;
 
 	m_clearZ = 1.0f;
-	m_DepthMode = DepthMode::DM_READWRITE;
-	m_DepthTest = Test::DT_LESSEREQUAL;
-	m_CullMode = CullMode::CM_BACK;
+	m_DepthMode = DepthMode::DM_NUMMODES;
+	m_DepthTest = Test::DT_NUMTESTS;
+	m_CullMode = CullMode::CM_NUMMODES;
 
 	m_StencilEnabled = false;
 	m_StencilTest = Test::DT_ALWAYS;
@@ -90,6 +90,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_GridTex = nullptr;
 
 	m_MatMan = nullptr;
+	m_mtlWhite = nullptr;
 
 	memset(&m_glARBWndClass, 0, sizeof(WNDCLASS));
 
@@ -275,13 +276,12 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	gl.ClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
 	gl.ClearDepthf(m_clearZ);
 
-	gl.Enable(GL_DEPTH_TEST);
-	gl.DepthFunc(GL_LEQUAL);
+	SetDepthMode(DepthMode::DM_READWRITE);
+	SetDepthTest(Test::DT_LESSEREQUAL);
 	gl.DepthMask(GL_TRUE);
 
-	gl.FrontFace(GL_CCW);
-	gl.Enable(GL_CULL_FACE);
-	gl.CullFace(GL_BACK);
+	gl.FrontFace(GL_CW);
+	SetCullMode(CullMode::CM_BACK);
 
 	gl.Enable(GL_BLEND);
 	gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -301,7 +301,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	GetBlueTexture();
 	GetGridTexture();
 
-	m_Gui = nullptr; //new GuiImpl(this);
+	m_Gui = nullptr;//new GuiImpl(this);
 
 	SetViewport();
 
@@ -610,17 +610,27 @@ void RendererImpl::SetDepthMode(DepthMode mode)
 {
 	if (mode != m_DepthMode)
 	{
+#if 0
 		if ((m_DepthMode == DM_DISABLED) || (m_DepthMode == DM_READONLY))
 			gl.DepthMask(GL_TRUE);
 
 		if ((m_DepthMode == DM_DISABLED) || (m_DepthMode == DM_WRITEONLY))
 			gl.Enable(GL_DEPTH_TEST);
+#endif
 
 		if ((mode == DM_DISABLED) || (mode == DM_READONLY))
 			gl.DepthMask(GL_FALSE);
+#if 1
+		else
+			gl.DepthMask(GL_TRUE);
+#endif
 
 		if ((mode == DM_DISABLED) || (mode == DM_WRITEONLY))
 			gl.Disable(GL_DEPTH_TEST);
+#if 1
+		else
+			gl.Enable(GL_DEPTH_TEST);
+#endif
 
 		m_DepthMode = mode;
 	}
@@ -721,7 +731,7 @@ void RendererImpl::SetCullMode(CullMode mode)
 	{
 		if (mode == CM_DISABLED)
 			gl.Disable(GL_CULL_FACE);
-		else if (m_CullMode == CM_DISABLED)
+		else// if (m_CullMode == CM_DISABLED)
 			gl.Enable(GL_CULL_FACE);
 
 		switch (mode)
@@ -1497,7 +1507,7 @@ VertexBuffer *RendererImpl::GetCubeVB()
 		};
 
 		void *buf;
-		if (m_CubeVB->Lock(&buf, 6 * 4, comps, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
+		if (m_CubeVB->Lock(&buf, 6 * 4, comps, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
 		{
 			memcpy(buf, v, sizeof(SCubeVert) * 6 * 4);
 
@@ -1538,7 +1548,7 @@ Mesh *RendererImpl::GetBoundsMesh()
 				};
 
 				void *buf;
-				if (pib->Lock(&buf, 12 * 2, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				if (pib->Lock(&buf, 12 * 2, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 				{
 					memcpy(buf, i, sizeof(uint16_t) * 12 * 2);
 
@@ -2037,4 +2047,42 @@ MaterialManager *RendererImpl::GetMaterialManager()
 		m_MatMan = new MaterialManagerImpl(this);
 
 	return m_MatMan;
+}
+
+
+const Material *RendererImpl::GetWhiteMaterial()
+{
+	if (!m_mtlWhite)
+	{
+		m_mtlWhite = GetMaterialManager()->CreateMaterial();
+
+		if (m_mtlWhite)
+		{
+			m_mtlWhite->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &Color::White);
+		}
+	}
+
+	return m_mtlWhite;
+}
+
+
+ShaderProgram *RendererImpl::GetBoundsShader()
+{
+	if (!m_spBounds)
+	{
+		m_spBounds = CreateShaderProgram();
+
+		if (m_spBounds)
+		{
+			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
+			m_vsBounds = (c3::ShaderComponent *)((m_pSys->GetResourceManager()->GetResource(_T("d:/proj/game data/shaders/bounds.vsh"), rf))->GetData());
+			m_fsBounds = (c3::ShaderComponent *)((m_pSys->GetResourceManager()->GetResource(_T("d:/proj/game data/shaders/bounds.fsh"), rf))->GetData());
+
+			m_spBounds->AttachShader(m_vsBounds);
+			m_spBounds->AttachShader(m_fsBounds);
+			m_spBounds->Link();
+		}
+	}
+
+	return m_spBounds;
 }

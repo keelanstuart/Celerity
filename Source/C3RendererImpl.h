@@ -65,6 +65,10 @@ namespace c3
 		ShaderProgram *m_CurProg;
 		GLuint m_CurProgID;
 
+		ShaderComponent *m_vsBounds;
+		ShaderComponent *m_fsBounds;
+		ShaderProgram *m_spBounds;
+
 		VertexBuffer *m_CurVB;
 		GLuint m_CurVBID;
 
@@ -106,6 +110,7 @@ namespace c3
 		Texture2D *m_GridTex;
 
 		MaterialManagerImpl *m_MatMan;
+		Material *m_mtlWhite;
 
 	public:
 
@@ -228,6 +233,9 @@ namespace c3
 		virtual Texture2D *GetGridTexture();
 
 		virtual MaterialManager *GetMaterialManager();
+		virtual const Material *GetWhiteMaterial();
+
+		virtual ShaderProgram *GetBoundsShader();
 
 	};
 

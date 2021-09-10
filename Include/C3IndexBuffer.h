@@ -44,6 +44,7 @@ namespace c3
 		#define IBLOCKFLAG_DYNAMIC		0x0004
 		#define IBLOCKFLAG_USERBUFFER	0x0008
 		#define IBLOCKFLAG_UPDATENOW	0x0010
+		#define IBLOCKFLAG_CACHE		0x0020
 
 		virtual RETURNCODE Lock(void **buffer, size_t numindices, IndexSize sz, props::TFlags64 flags) = NULL;
 		virtual void Unlock() = NULL;

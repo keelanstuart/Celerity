@@ -20,6 +20,7 @@ IndexBufferImpl::IndexBufferImpl(RendererImpl *prend)
 	m_IndexSize = IS_16BIT;
 	m_glID = GL_INVALID_VALUE;
 	m_LastBoundBuffer = 0;
+	m_Cache = nullptr;
 }
 
 
@@ -27,6 +28,12 @@ IndexBufferImpl::~IndexBufferImpl()
 {
 	if (m_Buffer)
 		Unlock();
+
+	if (m_Cache)
+	{
+		free(m_Cache);
+		m_Cache = nullptr;
+	}
 
 	m_NumIndices = 0;
 	m_IndexSize = IS_16BIT;
@@ -51,11 +58,39 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, 
 	if (m_Buffer)
 		return RET_ALREADY_LOCKED;
 
+	if (!buffer)
+		return RET_NULL_BUFFER;
+
 	if (!numindices)
 		return RET_ZERO_ELEMENTS;
 
-	if (!buffer)
-		return RET_NULL_BUFFER;
+	if (flags.IsSet(IBLOCKFLAG_CACHE))
+	{
+		if (m_Cache)
+		{
+			size_t cache_sz = _msize(m_Cache);
+			if (cache_sz != (sz * numindices))
+				free(m_Cache);
+		}
+
+		m_Cache = malloc(sz * numindices);
+	}
+
+	// if we want read-only access, then use the cache if one is available. this avoids a map/unmap
+	if (flags.IsSet(IBLOCKFLAG_READ) && !flags.IsSet(IBLOCKFLAG_WRITE))
+	{
+		if (m_Cache)
+		{
+			m_Buffer = m_Cache;
+			*buffer = m_Buffer;
+
+			return RET_OK;
+		}
+		else
+		{
+			assert(0 && "Cache never created; expect poor performance. Use IBLOCKFLAG_CACHE when calling Lock()!");
+		}
+	}
 
 	bool init = false;
 	if (m_glID == GL_INVALID_VALUE)
@@ -107,7 +142,13 @@ void IndexBufferImpl::Unlock()
 {
 	if (m_Buffer)
 	{
-		m_Rend->gl.UnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+		if (m_Buffer != m_Cache)
+		{
+			m_Rend->gl.UnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
+
+			if (m_Cache)
+				memcpy(m_Cache, m_Buffer, m_IndexSize * m_NumIndices);
+		}
 
 		m_Buffer = NULL;
 	}

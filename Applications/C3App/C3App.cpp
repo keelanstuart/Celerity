@@ -87,42 +87,33 @@ bool UIControl::Initialize(c3::Object *powner)
 	c3::ResourceManager *rm = powner->GetSystem()->GetResourceManager();
 
 	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
-	m_VS = (c3::ShaderComponent *)((rm->GetResource(_T("d:/proj/game data/shaders/std.vsh"), rf))->GetData());
-	m_FS = (c3::ShaderComponent *)((rm->GetResource(_T("d:/proj/game data/shaders/std.fsh"), rf))->GetData());
 
-	m_TexRes = rm->GetResource(_T("D:\\IAC\\Proj\\Game Data\\Textures\\GrassObj.tga"));
+	m_TexRes = rm->GetResource(_T("D:\\proj\\C3\\third-party\\assimp\\test\\models\\Collada\\duckCM.tga"));
 	m_NormRes = rm->GetResource(_T("D:\\Proj\\C3\\Applications\\C3App\\normal.png"));
 
 #if 0
-	m_ModRes = powner->GetSystem()->GetResourceManager()->GetResource(_T("D:/proj/three.js/examples/models/fbx/stanford-bunny.fbx"));
+	m_ModRes = rm->GetResource(_T("D:/proj/three.js/examples/models/fbx/stanford-bunny.fbx"));
 #else
-	m_ModRes = powner->GetSystem()->GetResourceManager()->GetResource(_T("D:\\proj\\C3\\third-party\\assimp\\test\\models\\OBJ\\box.obj"));
+	m_ModRes = rm->GetResource(_T("D:\\proj\\C3\\third-party\\assimp\\test\\models\\Collada\\duck.dae"), rf);
 #endif
 
 	c3::MaterialManager *pmm = prend->GetMaterialManager();
 	m_Mtl = pmm->CreateMaterial();
 	m_Mtl->SetColor(c3::Material::CCT_DIFFUSE, &c3::Color::White);
 	m_Mtl->SetTexture(c3::Material::TCT_DIFFUSE, prend->GetGridTexture());
+	//m_Mtl->RenderModeFlags().Set(c3::Material::RENDERMODEFLAG(c3::Material::RMF_RENDERBACK));
 
+	m_VS = (c3::ShaderComponent *)((rm->GetResource(_T("d:/proj/game data/shaders/std.vsh"), rf))->GetData());
+	m_FS = (c3::ShaderComponent *)((rm->GetResource(_T("d:/proj/game data/shaders/std.fsh"), rf))->GetData());
 	m_SP = prend->CreateShaderProgram();
 	if (m_SP)
 	{
 		m_SP->AttachShader(m_VS);
 		m_SP->AttachShader(m_FS);
-
-		if (m_SP->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
-		{
-			m_iMatMVP = m_SP->GetUniformLocation(_T("MatMVP"));
-			m_iMatN = m_SP->GetUniformLocation(_T("MatN"));
-		}
+		m_SP->Link();
 	}
 
-#if 1
-	//m_M = prend->GetHemisphereMesh();
-	m_M = prend->GetCubeMesh();
-#else
-	m_M = (c3::Mesh *)(m_ModRes->GetData());
-#endif
+	m_M = (c3::Model *)(m_ModRes->GetData());
 
 	return true;
 }
@@ -146,25 +137,15 @@ bool UIControl::Prerender(c3::Object *powner, props::TFlags64 rendflags)
 
 void UIControl::Render(c3::Object *powner, props::TFlags64 rendflags)
 {
-	if (m_M && m_SP)
+	if (m_SP)
 	{
 		c3::Renderer *prend = powner->GetSystem()->GetRenderer();
 		prend->UseProgram(m_SP);
-
 		m_Mtl->Apply(m_SP);
-		m_SP->SetUniformMatrix(m_iMatMVP, prend->GetWorldViewProjectionMatrix());
-		m_SP->SetUniformMatrix(m_iMatN, prend->GetNormalMatrix());
+		m_SP->ApplyUniforms();
 
-		prend->SetCullMode(c3::Renderer::CM_DISABLED);
-
-		m_M->Draw(c3::Renderer::PrimType::TRILIST);
-
-//		if (m_ModRes && (m_ModRes->GetStatus() == c3::Resource::RS_LOADED) && m_ModRes->GetData())
-			//((c3::Model *)(m_ModRes->GetData()))->Draw();
-
-//		prend->UseProgram(m_SP[0]);
-//		m_SP[0]->SetUniformMatrix(m_MVP, prend->GetWorldViewProjectionMatrix());
-//		m_SP[0]->SetUniformTexture(m_TEX0, 0, (!m_TexRes || (m_TexRes->GetStatus() != c3::Resource::Status::RS_LOADED)) ? m_Tex : (c3::Texture2D *)(m_TexRes->GetData()));
+		if (m_ModRes && (m_ModRes->GetStatus() == c3::Resource::RS_LOADED) && m_ModRes->GetData())
+			((c3::Model *)(m_ModRes->GetData()))->Draw();
 	}
 }
 

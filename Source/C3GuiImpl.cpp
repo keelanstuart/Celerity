@@ -29,11 +29,6 @@ GuiImpl::GuiImpl(Renderer *prend)
 	m_UL_Tex = -1;
 	m_UL_ProjMat = -1;
 
-	// Vertex attributes location
-	m_AL_vPos = -1;
-	m_AL_vTex0 = -1;
-	m_AL_vColor0 = -1;
-
 	if (!m_pRend->Initialized())
 	{
 		m_pRend->GetSystem()->GetLog()->Print(_T("Gui Error: You must Initialize your Renderer before calling GetGui\n"));
@@ -46,46 +41,18 @@ GuiImpl::GuiImpl(Renderer *prend)
 	ImGuiIO &io = ImGui::GetIO();
 	io.BackendRendererName = "imgui_impl_celerity";
 
-	const TCHAR *vertex_shader = _T(
-		"uniform mat4 ProjMtx;\n"
-		"layout (location = 0) in vec2 vPos;\n"
-		"layout (location = 1) in vec2 vTex0;\n"
-		"layout (location = 2) in vec4 vColor0;\n"
-		"out vec2 fTex0;\n"
-		"out vec4 fColor0;\n"
-		"void main()\n"
-		"{\n"
-		"    fTex0 = vTex0;\n"
-		"    fColor0 = vColor0;\n"
-		"    gl_Position = ProjMtx * vec4(vPos.xy, 0, 1);\n"
-		"}\n"
-	);
+	c3::ResourceManager *rm = prend->GetSystem()->GetResourceManager();
+	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
-	const TCHAR *fragment_shader = _T(
-		"in vec2 fTex0;\n"
-		"in vec4 fColor0;\n"
-		"uniform sampler2D TEX0;\n"
-		"layout (location = 0) out vec4 Out_Color;\n"
-		"void main()\n"
-		"{\n"
-		"    Out_Color = fColor0 * texture(TEX0, fTex0.st);\n"
-		"}\n"
-	);
-
-	// Create shaders
-	m_VS = m_pRend->CreateShaderComponent(c3::Renderer::ShaderComponentType::ST_VERTEX);
-	m_VS->CompileProgram(vertex_shader);
-
-	m_FS = m_pRend->CreateShaderComponent(c3::Renderer::ShaderComponentType::ST_FRAGMENT);
-	m_FS->CompileProgram(fragment_shader);
+	m_VS = (c3::ShaderComponent *)((rm->GetResource(_T("d:/proj/game data/shaders/ui.vsh"), rf))->GetData());
+	m_FS = (c3::ShaderComponent *)((rm->GetResource(_T("d:/proj/game data/shaders/ui.fsh"), rf))->GetData());
 
 	m_Prog = m_pRend->CreateShaderProgram();
 	m_Prog->AttachShader(m_VS);
 	m_Prog->AttachShader(m_FS);
 	m_Prog->Link();
 
-	m_UL_Tex = m_Prog->GetUniformLocation(_T("TEX0"));
-	m_UL_ProjMat = m_Prog->GetUniformLocation(_T("ProjMtx"));
+	m_UL_ProjMat = m_Prog->GetUniformLocation(_T("uMatrixP"));
 
 	// Create buffers
 	m_VB = m_pRend->CreateVertexBuffer();
@@ -137,18 +104,6 @@ GuiImpl::~GuiImpl()
 		m_Prog = nullptr;
 	}
 
-	if (m_VS)
-	{
-		m_VS->Release();
-		m_VS = nullptr;
-	}
-
-	if (m_FS)
-	{
-		m_FS->Release();
-		m_FS = nullptr;
-	}
-
 	ImGui::DestroyContext(m_ImGui);
 }
 
@@ -188,8 +143,10 @@ void GuiImpl::SetupRenderState(ImDrawData *draw_data, int fb_width, int fb_heigh
 	};
 
 	m_pRend->UseProgram(m_Prog);
-	m_Prog->SetUniform1(m_UL_Tex, 0);
+	//m_Prog->UpdateGlobalUniforms();
 	m_Prog->SetUniformMatrix(m_UL_ProjMat, &ortho_projection);
+	m_Prog->ApplyUniforms(false);
+
 
 	// Bind vertex/index buffers and setup attributes for ImDrawVert
 	m_pRend->UseVertexBuffer(m_VB);

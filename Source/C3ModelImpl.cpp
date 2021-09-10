@@ -31,7 +31,6 @@ ModelImpl::~ModelImpl()
 
 void ModelImpl::Release()
 {
-
 	delete this;
 }
 
@@ -363,7 +362,7 @@ bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
 
 		if (mesh->pmtl)
 		{
-			// apply the material for this mesh now
+			//mesh->pmtl->Apply(m_pRend->);
 		}
 
 		mesh->pmesh->Draw();
@@ -439,23 +438,39 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 			return ResourceType::LoadResult::LR_ERROR;
 		}
 
-		ModelImpl *pmi = new ModelImpl((RendererImpl *)(psys->GetRenderer()));
+		RendererImpl *pr = (RendererImpl *)(psys->GetRenderer());
+		ModelImpl *pmi = new ModelImpl(pr);
 
 		*returned_data = pmi;
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;
 
+		std::vector<Material *> mtlvec;
+		mtlvec.reserve(scene->mNumMaterials);
+		MaterialManager *pmm = pr->GetMaterialManager();
+		for (size_t j = 0; j < scene->mNumMaterials; j++)
+		{
+			Material *pmtl = pmm->CreateMaterial();
+			aiMaterial *paim = scene->mMaterials[j];
+
+			mtlvec.push_back(pmtl);
+		}
+
 		TMeshIndexMap mim;
 
 		for (size_t i = 0; i < scene->mNumMeshes; i++)
 		{
+			Mesh *pm = psys->GetRenderer()->CreateMesh();
+
 			VertexBuffer *pvb = psys->GetRenderer()->CreateVertexBuffer();
 			IndexBuffer *pib = psys->GetRenderer()->CreateIndexBuffer();
-			Mesh *pm = psys->GetRenderer()->CreateMesh();
 
 			Model::MeshIndex midx = pmi->AddMesh(pm);
 			if (midx == Model::INVALID_INDEX)
 				continue;
+
+			unsigned int mtlidx = scene->mMeshes[i]->mMaterialIndex;
+			pmi->SetMaterial(midx, (mtlidx < mtlvec.size()) ? mtlvec[mtlidx] : pr->GetWhiteMaterial());
 
 			// associate the aiMesh with a MeshIndex so we can attach it to the appropriate ModelIndex
 			mim.insert(TMeshIndexMap::value_type(i, midx));
@@ -481,7 +496,6 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 				ci++;
 			}
 
-#if 0
 			if (scene->mMeshes[i]->HasTangentsAndBitangents())
 			{
 				vcd[ci].m_Count = 3;
@@ -494,7 +508,6 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 				vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_BINORMAL;
 				ci++;
 			}
-#endif
 
 			for (unsigned int t = 0; t < 4; t++)
 			{
@@ -505,6 +518,8 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 					vcd[ci].m_Usage = (VertexBuffer::ComponentDescription::EUsage)(VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD0 + t);
 					ci++;
 				}
+				else
+					break;	// can't have uv set #2 without #1, right?
 			}
 
 			for (unsigned int c = 0; c < 4; c++)
@@ -516,7 +531,11 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 					vcd[ci].m_Usage = (VertexBuffer::ComponentDescription::EUsage)(VertexBuffer::ComponentDescription::EUsage::VU_COLOR0 + c);
 					ci++;
 				}
+				else
+					break;	// can't have vertex color set #2 without #1, right?
 			}
+
+			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_NONE;
 
 			ci = 0;
 			size_t vsz = 0;
@@ -528,7 +547,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 			size_t vct = scene->mMeshes[i]->mNumVertices;
 
 			BYTE *vbuf;
-			if (pvb->Lock((void **)&vbuf, vct, vcd, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
+			if (pvb->Lock((void **)&vbuf, vct, vcd, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
 			{
 				ci = 0;
 				size_t ofs = 0;
@@ -576,6 +595,8 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 					{
 						for (size_t j = 0; j < vct; j++)
 						{
+							// this may seem wrong because you could have texture coordinates with 2 components...
+							// but only the relevant ones are copied, based on the count defined by the vertex component
 							memcpy(pv, &pmd_3f[j], sizeof(float) * vcd[ci].m_Count);
 
 							pv += vsz;
@@ -615,7 +636,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 
 			BYTE *ibuf;
 			bool large_indices = (scene->mMeshes[i]->mNumVertices >= SHRT_MAX);
-			if (pib->Lock((void **)&ibuf, numfaces * 3, large_indices ? IndexBuffer::EIndexSize::IS_32BIT : IndexBuffer::EIndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+			if (pib->Lock((void **)&ibuf, numfaces * 3, large_indices ? IndexBuffer::EIndexSize::IS_32BIT : IndexBuffer::EIndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 			{
 				size_t ii = 0;
 
@@ -628,7 +649,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 							continue;
 
 						memcpy(&ibuf[ii], &pf.mIndices[0], sizeof(uint32_t) * 3);
-						ii += 3;
+						ii += sizeof(uint32_t) * 3;
 					}
 				}
 				else

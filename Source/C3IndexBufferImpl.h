@@ -23,6 +23,8 @@ namespace c3
 		IndexBuffer::IndexSize m_IndexSize;
 		GLuint m_LastBoundBuffer;
 
+		void *m_Cache;
+
 	public:
 		IndexBufferImpl(RendererImpl *prend);
 		virtual ~IndexBufferImpl();

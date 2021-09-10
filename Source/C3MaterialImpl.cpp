@@ -148,46 +148,63 @@ Renderer::Test MaterialImpl::GetStencilTest(uint8_t *ref, uint8_t *mask) const
 
 bool MaterialImpl::Apply(ShaderProgram *shader) const
 {
-	m_pRend->SetDepthMode(m_DepthMode);
+	if (m_flags.IsSet(RENDERMODEFLAG(RMF_WRITEDEPTH) | RENDERMODEFLAG(RMF_READDEPTH)))
+		m_pRend->SetDepthMode(Renderer::DepthMode::DM_READWRITE);
+	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_WRITEDEPTH)))
+		m_pRend->SetDepthMode(Renderer::DepthMode::DM_WRITEONLY);
+	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_WRITEDEPTH)))
+		m_pRend->SetDepthMode(Renderer::DepthMode::DM_READONLY);
+	else
+		m_pRend->SetDepthMode(Renderer::DepthMode::DM_DISABLED);
+
 	m_pRend->SetDepthTest(m_DepthTest);
-	m_pRend->SetCullMode(m_CullMode);
+
+	if (m_flags.IsSet(RENDERMODEFLAG(RMF_RENDERFRONT) | RENDERMODEFLAG(RMF_RENDERBACK)))
+		m_pRend->SetCullMode(Renderer::CullMode::CM_DISABLED);
+	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_RENDERFRONT)))
+		m_pRend->SetCullMode(Renderer::CullMode::CM_BACK);
+	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_RENDERBACK)))
+		m_pRend->SetCullMode(Renderer::CullMode::CM_FRONT);
+	else
+		m_pRend->SetCullMode(Renderer::CullMode::CM_ALL);
+
 	m_pRend->SetStencilEnabled(m_StencilEnabled);
 	m_pRend->SetStencilTest(m_StencilTest, m_StencilRef, m_StencilMask);
 	m_pRend->SetStencilOperation(m_StencilFailOp, m_StencilZFailOp, m_StencilZPassOp);
 
 	if (shader)
 	{
-		int64_t ul_coldiff = shader->GetUniformLocation(_T("colDiffuse"));
-		if (ul_coldiff >= 0)
+		int32_t ul_coldiff = shader->GetUniformLocation(_T("uColorDiffuse"));
+		if (ul_coldiff != ShaderProgram::INVALID_UNIFORM)
 			shader->SetUniform4(ul_coldiff, &m_color[CCT_DIFFUSE]);
 
-		int64_t ul_colemis = shader->GetUniformLocation(_T("colEmissive"));
-		if (ul_colemis >= 0)
+		int32_t ul_colemis = shader->GetUniformLocation(_T("uColorEmissive"));
+		if (ul_colemis != ShaderProgram::INVALID_UNIFORM)
 			shader->SetUniform4(ul_colemis, &m_color[CCT_EMISSIVE]);
 
-		int64_t ul_colspec = shader->GetUniformLocation(_T("colSpecular"));
-		if (ul_colspec >= 0)
+		int32_t ul_colspec = shader->GetUniformLocation(_T("uColorSpecular"));
+		if (ul_colspec != ShaderProgram::INVALID_UNIFORM)
 			shader->SetUniform4(ul_colspec, &m_color[CCT_SPECULAR]);
 
-		int64_t ul_texdiff = shader->GetUniformLocation(_T("sampDiffuse"));
-		if (ul_texdiff >= 0)
-			shader->SetUniformTexture(ul_texdiff, 0, m_tex[TCT_DIFFUSE]);
+		int32_t ul_texdiff = shader->GetUniformLocation(_T("uSamplerDiffuse"));
+		if (ul_texdiff != ShaderProgram::INVALID_UNIFORM)
+			shader->SetUniformTexture(ul_texdiff, TCT_DIFFUSE, m_tex[TCT_DIFFUSE]);
 
-		int64_t ul_texnorm = shader->GetUniformLocation(_T("sampNormal"));
-		if (ul_texnorm >= 0)
-			shader->SetUniformTexture(ul_texnorm, 1, m_tex[TCT_NORMAL]);
+		int32_t ul_texnorm = shader->GetUniformLocation(_T("uSamplerNormal"));
+		if (ul_texnorm != ShaderProgram::INVALID_UNIFORM)
+			shader->SetUniformTexture(ul_texnorm, TCT_NORMAL, m_tex[TCT_NORMAL]);
 
-		int64_t ul_texsurf = shader->GetUniformLocation(_T("sampSurface"));
-		if (ul_texsurf >= 0)
-			shader->SetUniformTexture(ul_texsurf, 2, m_tex[TCT_SURFACEDESC]);
+		int32_t ul_texsurf = shader->GetUniformLocation(_T("uSamplerSurface"));
+		if (ul_texsurf != ShaderProgram::INVALID_UNIFORM)
+			shader->SetUniformTexture(ul_texsurf, TCT_SURFACEDESC, m_tex[TCT_SURFACEDESC]);
 
-		int64_t ul_texemis = shader->GetUniformLocation(_T("sampEmissive"));
-		if (ul_texemis >= 0)
-			shader->SetUniformTexture(ul_texemis, 3, m_tex[TCT_EMISSIVE]);
+		int32_t ul_texemis = shader->GetUniformLocation(_T("uSamplerEmissive"));
+		if (ul_texemis != ShaderProgram::INVALID_UNIFORM)
+			shader->SetUniformTexture(ul_texemis, TCT_EMISSIVE, m_tex[TCT_EMISSIVE]);
 
-		int64_t ul_texdepth = shader->GetUniformLocation(_T("sampPosDepth"));
-		if (ul_texdepth >= 0)
-			shader->SetUniformTexture(ul_texdepth, 4, m_tex[TCT_POSITIONDEPTH]);
+		int32_t ul_texdepth = shader->GetUniformLocation(_T("uSamplerPosDepth"));
+		if (ul_texdepth != ShaderProgram::INVALID_UNIFORM)
+			shader->SetUniformTexture(ul_texdepth, TCT_POSITIONDEPTH, m_tex[TCT_POSITIONDEPTH]);
 	}
 
 	return true;

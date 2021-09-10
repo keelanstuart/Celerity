@@ -121,12 +121,16 @@ bool PositionableImpl::Prerender(Object *pobject, props::TFlags64 rendflags)
 
 void PositionableImpl::Render(Object *pobject, props::TFlags64 rendflags)
 {
+#if 0
 	Renderer *pr = pobject->GetSystem()->GetRenderer();
-	Mesh *pbm = pr->GetBoundsMesh();
-	if (pbm)
-	{
-		pbm->Draw(c3::Renderer::PrimType::LINELIST);
-	}
+
+	ShaderProgram *sp = pr->GetBoundsShader();
+	pr->UseProgram(sp);
+	pr->GetWhiteMaterial()->Apply(sp);
+	sp->ApplyUniforms();
+
+	pr->GetBoundsMesh()->Draw(c3::Renderer::PrimType::LINELIST);
+#endif
 }
 
 
