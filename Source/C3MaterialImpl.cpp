@@ -8,8 +8,16 @@
 
 #include <C3MaterialImpl.h>
 #include <C3MaterialManagerImpl.h>
+#include <C3Resource.h>
 
 using namespace c3;
+
+Material::MTL_ALT_TEXNAME_FUNC MaterialImpl::s_pfAltTexFilenameFunc = nullptr;
+
+void Material::SetAlternateTextureFilenameFunc(Material::MTL_ALT_TEXNAME_FUNC func)
+{
+	MaterialImpl::s_pfAltTexFilenameFunc = func;
+}
 
 
 MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend)
@@ -19,11 +27,11 @@ MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend)
 
 	m_flags = RENDERMODEFLAG(RMF_RENDERFRONT) | RENDERMODEFLAG(RMF_WRITEDEPTH) | RENDERMODEFLAG(RMF_READDEPTH);
 
-	m_tex[ETextureComponentType::TCT_DIFFUSE] = prend->GetWhiteTexture();
-	m_tex[ETextureComponentType::TCT_NORMAL] = prend->GetBlueTexture();
-	m_tex[ETextureComponentType::TCT_EMISSIVE] = prend->GetBlackTexture();
-	m_tex[ETextureComponentType::TCT_SURFACEDESC] = prend->GetBlackTexture();
-	m_tex[ETextureComponentType::TCT_POSITIONDEPTH] = prend->GetBlackTexture();
+	m_tex[ETextureComponentType::TCT_DIFFUSE] = TTexOrRes(prend->GetWhiteTexture(), nullptr);
+	m_tex[ETextureComponentType::TCT_NORMAL] = TTexOrRes(prend->GetBlueTexture(), nullptr);
+	m_tex[ETextureComponentType::TCT_EMISSIVE] = TTexOrRes(prend->GetBlackTexture(), nullptr);
+	m_tex[ETextureComponentType::TCT_SURFACEDESC] = TTexOrRes(prend->GetBlackTexture(), nullptr);
+	m_tex[ETextureComponentType::TCT_POSITIONDEPTH] = TTexOrRes(prend->GetBlackTexture(), nullptr);
 
 	m_color[EColorComponentType::CCT_DIFFUSE] = Color::White;
 	m_color[EColorComponentType::CCT_EMISSIVE] = Color::Black;
@@ -38,6 +46,8 @@ MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend)
 	m_StencilZPassOp = Renderer::StencilOperation::SO_REPLACE;
 	m_StencilRef = 0;
 	m_StencilMask = 0xff;
+
+	m_WindingOrder = Renderer::WindingOrder::WO_CW;
 }
 
 
@@ -70,19 +80,45 @@ const glm::fvec4 *MaterialImpl::GetColor(ColorComponentType comptype, glm::fvec4
 
 void MaterialImpl::SetTexture(TextureComponentType comptype, Texture *ptex)
 {
-	m_tex[comptype] = ptex;
+	m_tex[comptype].first = ptex;
+}
+
+
+void MaterialImpl::SetTexture(TextureComponentType comptype, Resource *ptexres)
+{
+	m_tex[comptype].second = ptexres;
 }
 
 
 Texture *MaterialImpl::GetTexture(TextureComponentType comptype) const
 {
-	return m_tex[comptype];
+	if (m_tex[comptype].second && (m_tex[comptype].second->GetStatus() == Resource::Status::RS_LOADED))
+	{
+		// if the resource is loaded and actually a texture, then return it
+		Texture *pt = dynamic_cast<Texture *>((Texture *)(m_tex[comptype].second->GetData()));
+		if (pt)
+			return pt;
+	}
+
+	return m_tex[comptype].first;
 }
 
 
 props::TFlags64 &MaterialImpl::RenderModeFlags()
 {
 	return m_flags;
+}
+
+
+void MaterialImpl::SetWindingOrder(Renderer::WindingOrder mode)
+{
+	m_WindingOrder = mode;
+}
+
+
+Renderer::WindingOrder MaterialImpl::GetWindingOrder()
+{
+	return m_WindingOrder;
 }
 
 
@@ -172,6 +208,8 @@ bool MaterialImpl::Apply(ShaderProgram *shader) const
 	m_pRend->SetStencilTest(m_StencilTest, m_StencilRef, m_StencilMask);
 	m_pRend->SetStencilOperation(m_StencilFailOp, m_StencilZFailOp, m_StencilZPassOp);
 
+	m_pRend->SetWindingOrder(m_WindingOrder);
+
 	if (shader)
 	{
 		int32_t ul_coldiff = shader->GetUniformLocation(_T("uColorDiffuse"));
@@ -188,23 +226,23 @@ bool MaterialImpl::Apply(ShaderProgram *shader) const
 
 		int32_t ul_texdiff = shader->GetUniformLocation(_T("uSamplerDiffuse"));
 		if (ul_texdiff != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(ul_texdiff, TCT_DIFFUSE, m_tex[TCT_DIFFUSE]);
+			shader->SetUniformTexture(ul_texdiff, TCT_DIFFUSE, GetTexture(TCT_DIFFUSE));
 
 		int32_t ul_texnorm = shader->GetUniformLocation(_T("uSamplerNormal"));
 		if (ul_texnorm != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(ul_texnorm, TCT_NORMAL, m_tex[TCT_NORMAL]);
+			shader->SetUniformTexture(ul_texnorm, TCT_NORMAL, GetTexture(TCT_NORMAL));
 
 		int32_t ul_texsurf = shader->GetUniformLocation(_T("uSamplerSurface"));
 		if (ul_texsurf != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(ul_texsurf, TCT_SURFACEDESC, m_tex[TCT_SURFACEDESC]);
+			shader->SetUniformTexture(ul_texsurf, TCT_SURFACEDESC, GetTexture(TCT_SURFACEDESC));
 
 		int32_t ul_texemis = shader->GetUniformLocation(_T("uSamplerEmissive"));
 		if (ul_texemis != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(ul_texemis, TCT_EMISSIVE, m_tex[TCT_EMISSIVE]);
+			shader->SetUniformTexture(ul_texemis, TCT_EMISSIVE, GetTexture(TCT_EMISSIVE));
 
 		int32_t ul_texdepth = shader->GetUniformLocation(_T("uSamplerPosDepth"));
 		if (ul_texdepth != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(ul_texdepth, TCT_POSITIONDEPTH, m_tex[TCT_POSITIONDEPTH]);
+			shader->SetUniformTexture(ul_texdepth, TCT_POSITIONDEPTH, GetTexture(TCT_POSITIONDEPTH));
 	}
 
 	return true;

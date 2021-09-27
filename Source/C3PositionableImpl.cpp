@@ -88,7 +88,7 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 		m_LocalUp = glm::normalize(glm::vec4(0, 0, 1, 0) * tmp);
 
 		// Recalculate the local left vector
-		m_LocalLeft = glm::normalize(glm::cross(m_LocalUp, m_Facing));
+		m_LocalLeft = glm::normalize(glm::cross(m_Facing, m_LocalUp));
 
 		// Scale first, then rotate...
 		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * tmp;
@@ -385,7 +385,20 @@ void PositionableImpl::AdjustYaw(float dy)
 	if (dy == 0)
 		return;
 
-	glm::fquat qy = glm::angleAxis(dy, glm::fvec3(0, 0, 1));
+	glm::fquat qy = glm::angleAxis(dy, m_LocalUp);
+
+	m_Ori = m_Ori * qy;
+
+	m_Flags.Set(POSFLAG_ORICHANGED);
+}
+
+
+void PositionableImpl::AdjustYawFlat(float dy)
+{
+	if (dy == 0)
+		return;
+
+	glm::fquat qy = glm::angleAxis(dy, glm::vec3(0, 0, 1));
 
 	m_Ori = m_Ori * qy;
 
@@ -398,7 +411,7 @@ void PositionableImpl::AdjustPitch(float dp)
 	if (dp == 0)
 		return;
 
-	glm::fquat qp = glm::angleAxis(dp, glm::fvec3(1, 0, 0));
+	glm::fquat qp = glm::angleAxis(dp, m_LocalLeft);
 
 	m_Ori = m_Ori * qp;
 
@@ -411,7 +424,7 @@ void PositionableImpl::AdjustRoll(float dr)
 	if (dr == 0)
 		return;
 
-	glm::fquat qr = glm::angleAxis(dr, glm::fvec3(0, 1, 0));
+	glm::fquat qr = glm::angleAxis(dr, m_Facing);
 
 	m_Ori = m_Ori * qr;
 

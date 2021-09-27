@@ -20,16 +20,9 @@ class UIControl : public c3::Feature
 
 protected:
 	c3::Object *m_Owner;
-	c3::ShaderComponent *m_VS;
-	c3::ShaderComponent *m_FS;
-	c3::ShaderProgram *m_SP;
-	c3::Material *m_Mtl;
-	c3::Model *m_M;
-	c3::Texture2D *m_Tex;
-	c3::Resource *m_NormRes;
-	c3::Resource *m_TexRes;
-	int64_t m_iMatMVP, m_iMatN;
-	c3::Model *m_Mod;
+	c3::ShaderComponent *m_VS_defobj;
+	c3::ShaderComponent *m_FS_defobj;
+	c3::ShaderProgram *m_SP_defobj;
 	c3::Resource *m_ModRes;
 
 
@@ -49,7 +42,9 @@ public:
 
 };
 
+#if 0
 DEFINE_FEATURETYPE(UIControl, UIControl, GUID({0x8e92d07e, 0x3169, 0x41e8, { 0x81, 0x2a, 0x4, 0x96, 0x4e, 0x3c, 0xd5, 0x7b }}), "UIControl", "");
+#endif
 
 class C3App : public CWinApp
 {

@@ -7,7 +7,7 @@
 #include "pch.h"
 
 #include <C3VertexBufferImpl.h>
-
+#include <C3RendererImpl.h>
 
 using namespace c3;
 
@@ -18,8 +18,8 @@ VertexBufferImpl::VertexBufferImpl(RendererImpl *prend)
 	m_Buffer = nullptr;
 	m_NumVerts = 0;
 	m_VertSize = 0;
-	m_glID = GL_INVALID_VALUE;
-	m_LastBoundBuffer = 0;
+	m_VAOglID = GL_INVALID_VALUE;
+	m_VBglID = GL_INVALID_VALUE;
 	m_Components.reserve(5);
 	m_Cache = nullptr;
 }
@@ -39,11 +39,21 @@ VertexBufferImpl::~VertexBufferImpl()
 	m_NumVerts = 0;
 	m_VertSize = 0;
 
-	if (m_Rend && (m_glID != GL_INVALID_VALUE))
+	if (m_Rend)
 	{
-		m_Rend->UseVertexBuffer(nullptr);
-		m_Rend->gl.DeleteBuffers(1, &m_glID);
-		m_glID = GL_INVALID_VALUE;
+		if (m_VBglID != GL_INVALID_VALUE)
+		{
+			m_Rend->UseVertexBuffer(nullptr);
+			m_Rend->gl.DeleteBuffers(1, &m_VBglID);
+			m_VBglID = GL_INVALID_VALUE;
+		}
+
+		if (m_VAOglID != GL_INVALID_VALUE)
+		{
+			// Delete the global vertex array
+			m_Rend->gl.BindVertexArray(0);
+			m_Rend->gl.DeleteVertexArrays(1, &m_VAOglID);
+		}
 	}
 }
 
@@ -112,14 +122,20 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 		}
 	}
 
-	bool init = false;
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_VBglID == GL_INVALID_VALUE)
 	{
-		m_Rend->gl.GenBuffers(1, &m_glID);
+		m_Rend->gl.GenVertexArrays(1, &m_VAOglID);
+		m_Rend->gl.BindVertexArray(m_VAOglID);
+	}
+
+	bool init = false;
+	if (m_VBglID == GL_INVALID_VALUE)
+	{
+		m_Rend->gl.GenBuffers(1, &m_VBglID);
 		init = true;
 	}
 
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_VBglID == GL_INVALID_VALUE)
 		return RET_GENBUFFER_FAILED;
 
 	bool update_now = flags.IsSet(VBLOCKFLAG_UPDATENOW);
@@ -175,6 +191,8 @@ void VertexBufferImpl::Unlock()
 
 		m_Buffer = NULL;
 	}
+
+	ConfigureAttributes();
 }
 
 
@@ -202,4 +220,29 @@ const VertexBuffer::ComponentDescription *VertexBufferImpl::Component(size_t com
 size_t VertexBufferImpl::VertexSize()
 {
 	return m_VertSize;
+}
+
+
+void VertexBufferImpl::ConfigureAttributes()
+{
+	size_t vsz = VertexSize();
+	size_t vo = 0;
+
+	constexpr static const GLenum t[VertexBuffer::ComponentDescription::ComponentType::VCT_NUM_TYPES] = { 0, GL_UNSIGNED_BYTE, GL_BYTE, GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT };
+
+	for (size_t i = 0, maxi = NumComponents(); i < maxi; i++)
+	{
+		const VertexBuffer::ComponentDescription *pcd = Component(i);
+		if (!pcd || !pcd->m_Count || (pcd->m_Type == VertexBuffer::ComponentDescription::VCT_NONE) || (pcd->m_Usage == VertexBuffer::ComponentDescription::Usage::VU_NONE))
+			break;
+
+		bool is_color = (pcd->m_Usage >= VertexBuffer::ComponentDescription::Usage::VU_COLOR0) && (pcd->m_Usage <= VertexBuffer::ComponentDescription::Usage::VU_COLOR3);
+		bool is_byte = (pcd->m_Type >= VertexBuffer::ComponentDescription::VCT_U8) && (pcd->m_Type <= VertexBuffer::ComponentDescription::VCT_S8);
+		GLuint norm = (is_color && is_byte);
+
+		m_Rend->gl.EnableVertexAttribArray((GLuint)i);
+		m_Rend->gl.VertexAttribPointer((GLuint)i, (GLint)pcd->m_Count, t[pcd->m_Type], norm, (GLsizei)vsz, (void *)vo);
+
+		vo += pcd->size();
+	}
 }

@@ -15,20 +15,21 @@ namespace c3
 	class VertexBufferImpl : public VertexBuffer
 	{
 
+	public:
+		typedef std::vector<ComponentDescription> TVertexComponentDescriptionArray;
+
 	protected:
 		RendererImpl *m_Rend;
 
 		void *m_Buffer;
 		size_t m_NumVerts;
-		GLuint m_glID;
+		GLuint m_VBglID;
+		GLuint m_VAOglID;
 		size_t m_VertSize;
 
 		void *m_Cache;
 
-		typedef std::vector<ComponentDescription> TVertexComponentDescriptionArray;
 		TVertexComponentDescriptionArray m_Components;
-
-		GLuint m_LastBoundBuffer;
 
 	public:
 		VertexBufferImpl(RendererImpl *prend);
@@ -46,7 +47,12 @@ namespace c3
 
 		virtual size_t VertexSize();
 
-		operator GLuint() const { return m_glID; }
+		operator GLuint() const { return m_VBglID; }
+		GLuint VAOglID() const { return m_VAOglID; }
+		GLuint VBglID() const { return m_VBglID; }
+
+	protected:
+		void ConfigureAttributes();
 
 	};
 

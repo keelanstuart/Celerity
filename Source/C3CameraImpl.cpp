@@ -28,6 +28,8 @@ CameraImpl::CameraImpl()
 	m_fov = 60.0f;
 	m_eyepos = glm::vec3(0, -10.0f, 0);
 	m_targpos = glm::vec3(0, 0, 0);
+	m_nearclip = 0.01f;
+	m_farclip = 5000.0f;
 
 	m_orbitdist = 10.0f;
 
@@ -36,6 +38,8 @@ CameraImpl::CameraImpl()
 	m_pdim = nullptr;
 	m_pfov = nullptr;
 	m_porbitdist = nullptr;
+	m_pnearclip = nullptr;
+	m_pfarclip = nullptr;
 
 	m_Flags.SetAll(CAMFLAG_REBUILDMATRICES);
 }
@@ -71,8 +75,10 @@ bool CameraImpl::Initialize(Object *pobject)
 	m_pviewmode = props->CreateReferenceProperty(_T("ViewMode"), 'C:VM', &m_viewmode, props::IProperty::PT_INT);
 	m_pprojpmode = props->CreateReferenceProperty(_T("ProjectionMode"), 'C:PM', &m_projmode, props::IProperty::PT_INT);
 	m_pdim = props->CreateReferenceProperty(_T("Dimensions(Orthographic)"), 'C:DM', &m_dim, props::IProperty::PT_FLOAT_V2);
-	m_pfov = props->CreateReferenceProperty(_T("FOV(Perspective)"), 'C:FV', &m_viewmode, props::IProperty::PT_FLOAT);
-	m_porbitdist = props->CreateReferenceProperty(_T("OrbitDistance(Polar)"), 'C:OD', &m_viewmode, props::IProperty::PT_FLOAT);
+	m_pfov = props->CreateReferenceProperty(_T("FOV(Perspective)"), 'C:FV', &m_fov, props::IProperty::PT_FLOAT);
+	m_porbitdist = props->CreateReferenceProperty(_T("OrbitDistance(Polar)"), 'C:OD', &m_orbitdist, props::IProperty::PT_FLOAT);
+	m_pnearclip = props->CreateReferenceProperty(_T("NearClip"), 'C:NC', &m_nearclip, props::IProperty::PT_FLOAT);
+	m_pfarclip = props->CreateReferenceProperty(_T("FarClip"), 'C:FC', &m_farclip, props::IProperty::PT_FLOAT);
 
 	return true;
 }
@@ -120,11 +126,11 @@ void CameraImpl::Update(Object *pobject, float elapsed_time)
 		{
 			default:
 			case PM_PERSPECTIVE:
-				m_proj = glm::perspectiveFovLH(m_fov, m_dim.x, m_dim.y, 0.01f, 500.0f);
+				m_proj = glm::perspectiveFovLH(m_fov, m_dim.x, m_dim.y, m_nearclip, m_farclip);
 				break;
 
 			case PM_ORTHOGRAPHIC:
-				m_proj = glm::orthoLH(0.0f, 2048.0f, 0.0f, 2048.0f, 0.01f, 1.0f);
+				m_proj = glm::orthoLH(0.0f, 2048.0f, 0.0f, 2048.0f, m_nearclip, m_farclip);
 				break;
 		}
 

@@ -107,6 +107,9 @@ namespace c3
 		// adjust the yaw (in radians)
 		virtual void AdjustYaw(float dy);
 
+		// adjust the yaw (in radians) about the world-space up axis
+		virtual void AdjustYawFlat(float dy);
+
 		// adjust the pitch (in radians)
 		virtual void AdjustPitch(float dp);
 

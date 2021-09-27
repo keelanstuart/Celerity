@@ -14,10 +14,9 @@
 
 #pragma once
 #include "FileView.h"
-#include "ClassView.h"
+#include "PrototypeView.h"
 #include "OutputWnd.h"
 #include "PropertiesWnd.h"
-#include "CalendarBar.h"
 #include "Resource.h"
 
 class COutlookBar : public CMFCOutlookBar
@@ -57,11 +56,10 @@ protected:  // control bar embedded members
 	CMFCToolBarImages m_PanelImages;
 	CMFCRibbonStatusBar  m_wndStatusBar;
 	CFileView         m_wndFileView;
-	CClassView        m_wndClassView;
+	CPrototypeView        m_wndPrototypeView;
 	COutputWnd        m_wndOutput;
 	CPropertiesWnd    m_wndProperties;
 	CMFCShellTreeCtrl m_wndTree;
-	CCalendarBar      m_wndCalendar;
 	CMFCCaptionBar    m_wndCaptionBar;
 
 // Generated message map functions
@@ -85,7 +83,7 @@ protected:
 
 	BOOL CreateDockingWindows();
 	void SetDockingWindowIcons(BOOL bHiColorIcons);
-	BOOL CreateOutlookBar(CMFCOutlookBar& bar, UINT uiID, CMFCShellTreeCtrl& tree, CCalendarBar& calendar, int nInitialWidth);
+	BOOL CreateOutlookBar(CMFCOutlookBar& bar, UINT uiID, CMFCShellTreeCtrl& tree, int nInitialWidth);
 	BOOL CreateCaptionBar();
 
 	int FindFocusedOutlookWnd(CMFCOutlookBarTabCtrl** ppOutlookWnd);

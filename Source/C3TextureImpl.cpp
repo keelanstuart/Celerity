@@ -52,7 +52,7 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 	if (flags.IsSet(TEXCREATEFLAG_MIRROR_V))
 		m_Flags.Set(TEXFLAG_MIRROR_V);
 
-	if (flags.IsSet(TEXCREATEFLAG_RENDERTARGET))
+	if (flags.IsSet(TEXCREATEFLAG_RENDERTARGET) || flags.IsSet(TEXCREATEFLAG_RENDERTARGETSMOOTH))
 	{
 		m_Rend->gl.CreateTextures(GL_TEXTURE_2D, 1, &m_glID);
 
@@ -65,6 +65,17 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 		Bind();
 
 		m_Rend->gl.TexStorage2D(GL_TEXTURE_2D, (GLsizei)m_MipCount, m_Rend->GLInternalFormat(m_Type), (GLsizei)m_Width, (GLsizei)m_Height);
+
+		if (!flags.IsSet(TEXCREATEFLAG_RENDERTARGETSMOOTH))
+		{
+			m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		}
+		else
+		{
+			m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
 	}
 }
 
@@ -254,7 +265,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::Syste
 {
 	if (returned_data)
 	{
-		*returned_data = psys->GetRenderer()->CreateTexture2DFromFile(filename);
+		*returned_data = psys->GetRenderer()->CreateTexture2DFromFile(filename, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V);
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;
 	}

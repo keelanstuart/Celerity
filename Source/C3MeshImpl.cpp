@@ -71,6 +71,13 @@ IndexBuffer *MeshImpl::GetIndexBuffer() const
 }
 
 
+const Frustum *MeshImpl::GetBounds() const
+{
+	return nullptr;
+}
+
+
+
 Mesh::RETURNCODE MeshImpl::Draw(Renderer::PrimType type) const
 {
 	if (m_VB)
@@ -96,7 +103,67 @@ Mesh::RETURNCODE MeshImpl::Draw(Renderer::PrimType type) const
 
 
 bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
-					   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
+						float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
 {
-	return false;
+	if (!pRayPos || !pRayDir)
+		return false;
+
+	bool ret = false;
+
+	BYTE *pvb = nullptr;
+	if (m_VB)
+		m_VB->Lock((void **)&pvb, 0, nullptr, VBLOCKFLAG_READ);
+
+	if (pvb)
+	{
+		size_t vsz = m_VB->VertexSize();
+
+		uint16_t *pib = nullptr;
+		if (m_IB)
+			m_IB->Lock((void **)&pib, 0, IndexBuffer::IS_16BIT, IBLOCKFLAG_READ);
+
+		if (pib)
+		{
+
+			float cdist, *pcdist = pDistance ? pDistance : &cdist;
+			*pcdist = FLT_MAX;
+
+			size_t cface, *pcface = pFaceIndex ? pFaceIndex : &cface;
+			*pcface = 0;
+
+			glm::vec2 cuv, *pcuv = pUV ? pUV : &cuv;
+			*pcuv = glm::vec2(0, 0);
+
+			for (size_t face = 0, max_face = m_IB->Count() / 3, i = 0; face < max_face; face++)
+			{
+				glm::vec3 *v[3];
+				v[0] = (glm::vec3 *)(pvb + (vsz * pib[i++]));
+				v[1] = (glm::vec3 *)(pvb + (vsz * pib[i++]));
+				v[2] = (glm::vec3 *)(pvb + (vsz * pib[i++]));
+
+				glm::vec2 luv;
+				float ldist;
+
+				bool hit = glm::intersectRayTriangle(*pRayPos, *pRayDir, *v[0], *v[1], *v[2], luv, ldist);
+
+				if (hit)
+				{
+					if (ldist < *pcdist)
+					{
+						*pcdist = ldist;
+						*pcface = face;
+						*pcuv = luv;
+					}
+
+					ret = true;
+				}
+			}
+
+			m_IB->Unlock();
+		}
+
+		m_VB->Unlock();
+	}
+
+	return ret;
 }

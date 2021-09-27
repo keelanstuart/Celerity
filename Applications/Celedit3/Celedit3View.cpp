@@ -23,7 +23,7 @@
 #include "Celedit3Doc.h"
 #include "Celedit3View.h"
 
-#include <C3Renderable.h>
+#include <C3ModelRenderer.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -57,18 +57,8 @@ CCeledit3View::CCeledit3View() noexcept
 	m_CamPitch = 0.0f;
 	m_CamYaw = 0.0f;
 
-	m_pProjectorCam = nullptr;
-	m_pProjectorCamPos = nullptr;
-
 	m_FB = nullptr;
-	m_DB = nullptr;
-	m_DiffuseTarg = nullptr;
-	m_NormSpecTarg = nullptr;
-	m_PosDepthTarg = nullptr;
-
-	memset(m_SP, 0, sizeof(c3::ShaderProgram *) * NUMSHADERS);
-	memset(m_VS, 0, sizeof(c3::ShaderComponent *) * NUMSHADERS);
-	memset(m_FS, 0, sizeof(c3::ShaderComponent *) * NUMSHADERS);
+	ZeroMemory(m_ColorTarg, 3 * sizeof(c3::Texture2D *));
 }
 
 CCeledit3View::~CCeledit3View()
@@ -94,51 +84,42 @@ void CCeledit3View::OnDraw(CDC *pDC)
 		m_Rend->SetClearColor(&m_ClearColor);
 		m_Rend->SetClearDepth(1.0f);
 
-		pDoc->m_Projector->Update();
 		pDoc->m_Observer->Update();
 		pDoc->m_RootObj->Update();
-		c3::Positionable *pos = (c3::Positionable *)(pDoc->m_RootObj->FindFeature(c3::Positionable::Type()));
-#if 1
-		if (pos)
+
+		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pDoc->m_Observer->FindFeature(c3::Positionable::Type()));
+		c3::Camera *pcam = dynamic_cast<c3::Camera *>(pDoc->m_Observer->FindFeature(c3::Camera::Type()));
+		if (pcam)
 		{
-			pos->SetPosX(sinf(float(theApp.m_C3->GetCurrentFrameNumber()) / 10.0f) * 10.0f);
+			m_Rend->SetViewMatrix(pcam->GetViewMatrix());
+			m_Rend->SetProjectionMatrix(pcam->GetProjectionMatrix());
 		}
-#endif
+
+		theApp.m_C3->UpdateTime();
+
+		m_Rend->UseFrameBuffer(m_FB);
 
 		if (m_Rend->BeginScene())
 		{
-			m_Rend->UseFrameBuffer(m_FB, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARCOLOR);
-
-			// render the actual content here
-			if (m_pProjectorCam)
-			{
-				m_Rend->SetProjectionMatrix(m_pProjectorCam->GetProjectionMatrix());
-				m_Rend->SetViewMatrix(m_pProjectorCam->GetViewMatrix());
-			}
-
-			m_Rend->UseProgram(m_SP[SCENE]);
 			if (pDoc->m_RootObj->Prerender())
 				pDoc->m_RootObj->Render();
 
-			// this is the observer... render the dome with the projector's texture on it
-			m_Rend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST);
-			if (m_pCam)
-			{
-				glm::fmat4x4 ident = glm::identity<glm::fmat4x4>();
-				m_Rend->SetProjectionMatrix(m_pCam->GetProjectionMatrix());
-				m_Rend->SetViewMatrix(m_pCam->GetViewMatrix());
-				m_Rend->SetWorldMatrix(&ident);
+			m_Rend->UseFrameBuffer(nullptr);
+			m_Rend->UseProgram(m_SP_copyback);
 
-				m_SP[LIGHT]->SetUniformTexture(m_UP_TEX0[LIGHT], 0, m_DiffuseTarg);
-				m_SP[LIGHT]->SetUniformTexture(m_UP_TEX1[LIGHT], 1, m_NormSpecTarg);
-				m_SP[LIGHT]->SetUniformTexture(m_UP_TEX2[LIGHT], 2, m_PosDepthTarg);
+			int32_t ul;
+			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerDiffuse"))))
+				m_SP_copyback->SetUniformTexture(ul, 0, m_ColorTarg[0]);
+			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerNormal"))))
+				m_SP_copyback->SetUniformTexture(ul, 1, m_ColorTarg[1]);
+			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerPosDepth"))))
+				m_SP_copyback->SetUniformTexture(ul, 2, m_ColorTarg[2]);
 
-				m_Rend->GetHemisphereMesh()->Draw();
+			m_SP_copyback->ApplyUniforms(false);
 
-				//m_Rend->UseTexture(0, nullptr);
-				//m_Rend->UseTexture(1, nullptr);
-				//m_Rend->UseTexture(2, nullptr);
-			}
+			m_Rend->UseVertexBuffer(m_Rend->GetFullscreenPlaneVB());
+			m_Rend->SetCullMode(c3::Renderer::ECullMode::CM_DISABLED);
+			m_Rend->DrawPrimitives(c3::Renderer::EPrimType::TRISTRIP, 4);
 
 			m_Rend->EndScene();
 			m_Rend->Present();
@@ -194,6 +175,8 @@ void CCeledit3View::OnInitialUpdate()
 	if (!m_Rend)
 		return;
 
+	c3::ResourceManager *rm = theApp.m_C3->GetResourceManager();
+
 	if (!m_Rend->Initialized())
 	{
 		CRect r;
@@ -201,159 +184,26 @@ void CCeledit3View::OnInitialUpdate()
 
 		if (m_Rend->Initialize(GetSafeHwnd(), 0))
 		{
-			const size_t tw = 2048;
-			const size_t th = 2048;
+			const size_t w = 2048;
+			const size_t h = 2048;
 
 			m_FB = m_Rend->CreateFrameBuffer(0);
 
-			m_DB = m_Rend->CreateDepthBuffer(tw, th, c3::Renderer::DepthType::U32_D, TEXCREATEFLAG_RENDERTARGET);
-			m_DiffuseTarg = m_Rend->CreateTexture2D(tw, th, c3::Renderer::TextureType::U8_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
-			m_NormSpecTarg = m_Rend->CreateTexture2D(tw, th, c3::Renderer::TextureType::U8_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
-			m_PosDepthTarg = m_Rend->CreateTexture2D(tw, th, c3::Renderer::TextureType::U8_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
+			m_ColorTarg[0] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::U8_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
+			m_ColorTarg[1] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::F16_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
+			m_ColorTarg[2] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::F32_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
+			m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
 
-			m_FB->AttachDepthTarget(m_DB);
-			m_FB->AttachColorTarget(m_DiffuseTarg, 0);
-			m_FB->AttachColorTarget(m_NormSpecTarg, 1);
-			m_FB->AttachColorTarget(m_PosDepthTarg, 2);
+			m_FB->AttachDepthTarget(m_DepthTarg);
+			for (size_t i = 0; i < 3; i++)
+				m_FB->AttachColorTarget(m_ColorTarg[i], i);
+
 			m_FB->Seal();
 
-			m_SP[SCENE] = m_Rend->CreateShaderProgram();
-
-			static const TCHAR *pvst_scene = _T("\
-				#version 410\n\
-				uniform mat4 matWorldViewProj; \n\
-				uniform mat4 matWorld; \n\
-				layout (location=0) in vec3 vPos; \n\
-				layout (location=1) in vec3 vNorm; \n\
-				layout (location=2) in vec2 vTex0; \n\
-				layout (location=3) in vec3 vTang; \n\
-				out VS_OUT \n\
-				{ \n\
-					vec3 Pos; \n\
-					vec4 Color; \n\
-					vec2 Tex0; \n\
-					mat3 Trans; \n\
-				} o; \n\
-				void main()\n\
-				{\n\
-					vec4 p = matWorldViewProj * vec4(vPos, 1.0); \n\
-					gl_Position = p; \n\
-					vec3 T = normalize(vec3(matWorld * vec4(vTang, 0.0))); \n\
-					vec3 N = normalize(vec3(matWorld * vec4(vNorm, 0.0))); \n\
-					vec3 B = normalize(cross(N, T)); \n\
-					o.Pos = p.xyz; \n\
-					o.Color = vec4(1, 1, 1, 1); \n\
-					o.Tex0 = vTex0; \n\
-					o.Trans = transpose(mat3(T, B, N)); \n\
-				}\n\
-			");
-
-			m_VS[SCENE] = m_Rend->CreateShaderComponent(c3::Renderer::ShaderComponentType::ST_VERTEX);
-			if (m_VS[SCENE])
-				m_VS[SCENE]->CompileProgram(pvst_scene);
-
-			static const TCHAR *pfst_scene = _T("\
-				#version 410 \n\
-				in VS_OUT \n\
-				{ \n\
-					vec3 Pos; \n\
-					vec4 Color; \n\
-					vec2 Tex0; \n\
-					mat3 Trans; \n\
-				} i; \n\
-				uniform sampler2D texDiffuse; \n\
-				uniform sampler2D texNormal; \n\
-				uniform sampler2D texMaterial; \n\
-				layout (location=0) out vec4 diffuse; \n\
-				layout (location=1) out vec4 normspec; \n\
-				layout (location=2) out vec4 posdepth; \n\
-				void main() \n\
-				{ \n\
-					vec4 d = texture(texDiffuse, i.Tex0) * i.Color; \n\
-					if (d.a < 0.01) discard; \n\
-					diffuse = d; \n\
-					vec3 n = texture(texNormal, i.Tex0).rgb; \n\
-					n = normalize(n * 2.0 - 1.0); \n\
-					n = normalize(i.Trans * n); \n\
-					normspec = vec4(n, 0.2); \n\
-					posdepth = vec4(i.Pos, gl_FragCoord.z); \n\
-				} \n\
-			");
-
-			m_FS[SCENE] = m_Rend->CreateShaderComponent(c3::Renderer::ShaderComponentType::ST_FRAGMENT);
-			if (m_FS[SCENE])
-				m_FS[SCENE]->CompileProgram(pfst_scene);
-
-			m_SP[SCENE]->AttachShader(m_VS[SCENE]);
-			m_SP[SCENE]->AttachShader(m_FS[SCENE]);
-			if (m_SP[SCENE]->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
-			{
-				m_UP_MVP[SCENE] = m_SP[SCENE]->GetUniformLocation(_T("matWorldViewProj"));
-				m_UP_M[SCENE] = m_SP[SCENE]->GetUniformLocation(_T("matWorld"));
-				m_UP_TEX0[SCENE] = m_SP[SCENE]->GetUniformLocation(_T("texDiffuse"));
-				m_UP_TEX1[SCENE] = m_SP[SCENE]->GetUniformLocation(_T("texNormal"));
-				m_UP_TEX2[SCENE] = m_SP[SCENE]->GetUniformLocation(_T("texMaterial"));
-			}
-
-
-
-			m_SP[LIGHT] = m_Rend->CreateShaderProgram();
-
-			static const TCHAR *pvst_light = _T("\
-				#version 410\n\
-				uniform mat4 matWorldViewProj; \n\
-				layout (location=0) in vec3 vPos; \n\
-				layout (location=1) in vec3 vNorm; \n\
-				out VS_OUT \n\
-				{ \n\
-					vec3 Pos; \n\
-					vec4 Color; \n\
-				} o; \n\
-				void main()\n\
-				{\n\
-					vec4 p = matWorldViewProj * vec4(vPos, 1.0); \n\
-					gl_Position = p; \n\
-					o.Pos = p.xyz; \n\
-					o.Color = vec4(1, 1, 1, 1); \n\
-				}\n\
-			");
-
-			m_VS[LIGHT] = m_Rend->CreateShaderComponent(c3::Renderer::ShaderComponentType::ST_VERTEX);
-			if (m_VS[LIGHT])
-				m_VS[LIGHT]->CompileProgram(pvst_light);
-
-			static const TCHAR *pfst_light = _T("\
-				#version 410 \n\
-				in VS_OUT \n\
-				{ \n\
-					vec3 Pos; \n\
-					vec4 Color; \n\
-				} i; \n\
-				uniform sampler2D texDiffuse; \n\
-				uniform sampler2D texNormSpec; \n\
-				uniform sampler2D texPosDepth; \n\
-				layout (location=0) out vec4 frag; \n\
-				void main() \n\
-				{ \n\
-					vec4 d = texture(texDiffuse, gl_FragCoord.xy) * i.Color; \n\
-					frag = d; \n\
-				} \n\
-			");
-
-			m_FS[LIGHT] = m_Rend->CreateShaderComponent(c3::Renderer::ShaderComponentType::ST_FRAGMENT);
-			if (m_FS[LIGHT])
-				m_FS[LIGHT]->CompileProgram(pfst_scene);
-
-			m_SP[LIGHT]->AttachShader(m_VS[LIGHT]);
-			m_SP[LIGHT]->AttachShader(m_FS[LIGHT]);
-			if (m_SP[LIGHT]->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
-			{
-				m_UP_MVP[LIGHT] = m_SP[LIGHT]->GetUniformLocation(_T("matWorldViewProj"));
-				m_UP_TEX0[LIGHT] = m_SP[LIGHT]->GetUniformLocation(_T("texDiffuse"));
-				m_UP_TEX1[LIGHT] = m_SP[LIGHT]->GetUniformLocation(_T("texNormSpec"));
-				m_UP_TEX2[LIGHT] = m_SP[LIGHT]->GetUniformLocation(_T("texPosDepth"));
-			}
-
+			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
+			m_VS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("copyback.vsh"), rf))->GetData());
+			m_FS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("copyback.fsh"), rf))->GetData());
+			m_SP_copyback = m_Rend->CreateShaderProgram();
 		}
 	}
 
@@ -364,18 +214,11 @@ void CCeledit3View::OnInitialUpdate()
 	m_pCamPos = dynamic_cast<c3::Positionable *>(pdoc->m_Observer->FindFeature(c3::Positionable::Type()));
 	m_pCamPos->SetPos(-3.0f, 0, -10.0f);
 	m_pCam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindFeature(c3::Camera::Type()));
-	m_pCam->SetFOV(glm::radians(60.0f));
+	m_pCam->SetFOV(glm::radians(70.0f));
 	m_pCam->SetViewMode(c3::Camera::ViewMode::VM_POLAR);
 	m_pCam->SetPolarDistance(1.0f);
 
-	m_pProjectorCamPos = dynamic_cast<c3::Positionable *>(pdoc->m_Projector->FindFeature(c3::Positionable::Type()));
-	m_pProjectorCamPos->AdjustPitch(glm::radians(-90.0f));
-	m_pProjectorCam = dynamic_cast<c3::Camera *>(pdoc->m_Projector->FindFeature(c3::Camera::Type()));
-	m_pProjectorCam->SetFOV(glm::radians(170.0f));
-	m_pProjectorCam->SetViewMode(c3::Camera::ViewMode::VM_LOOKAT);
-	m_pProjectorCam->SetPolarDistance(1.0f);
-
-	SetTimer('DRAW', 33, nullptr);
+	SetTimer('DRAW', 16, nullptr);
 }
 
 
@@ -383,31 +226,20 @@ void CCeledit3View::OnDestroy()
 {
 	KillTimer('DRAW');
 
-	if (m_Rend && m_Rend->Initialized())
+	for (size_t i = 0; i < 3; i++)
 	{
-		m_Rend->Shutdown();
-		m_Rend = nullptr;
+		if (m_ColorTarg[i])
+		{
+			m_ColorTarg[i]->Release();
+			m_ColorTarg[i] = nullptr;
+		}
 	}
 
-#if 0
-	if (m_SP)
+	if (m_DepthTarg)
 	{
-		m_SP->Release();
-		m_SP = nullptr;
+		m_DepthTarg->Release();
+		m_DepthTarg = nullptr;
 	}
-
-	if (m_VS)
-	{
-		m_VS->Release();
-		m_VS = nullptr;
-	}
-
-	if (m_FS)
-	{
-		m_FS->Release();
-		m_FS = nullptr;
-	}
-#endif
 
 	if (m_FB)
 	{
@@ -415,28 +247,16 @@ void CCeledit3View::OnDestroy()
 		m_FB = nullptr;
 	}
 
-	if (m_DB)
+	if (m_SP_copyback)
 	{
-		m_DB->Release();
-		m_DB = nullptr;
+		m_SP_copyback->Release();
+		m_SP_copyback = nullptr;
 	}
 
-	if (m_DiffuseTarg)
+	if (m_Rend && m_Rend->Initialized())
 	{
-		m_DiffuseTarg->Release();
-		m_DiffuseTarg = nullptr;
-	}
-
-	if (m_NormSpecTarg)
-	{
-		m_NormSpecTarg->Release();
-		m_NormSpecTarg = nullptr;
-	}
-
-	if (m_PosDepthTarg)
-	{
-		m_PosDepthTarg->Release();
-		m_PosDepthTarg = nullptr;
+		m_Rend->Shutdown();
+		m_Rend = nullptr;
 	}
 
 	CView::OnDestroy();
@@ -518,7 +338,7 @@ void CCeledit3View::OnMouseMove(UINT nFlags, CPoint point)
 		SetCapture();
 
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindFeature(c3::Camera::Type()));
-	c3::Renderable *pbr = pdoc->m_Brush ? dynamic_cast<c3::Renderable *>(pdoc->m_Brush->FindFeature(c3::Renderable::Type())) : nullptr;
+	c3::ModelRenderer *pbr = pdoc->m_Brush ? dynamic_cast<c3::ModelRenderer *>(pdoc->m_Brush->FindFeature(c3::ModelRenderer::Type())) : nullptr;
 	c3::Positionable *pbp = pdoc->m_Brush ? dynamic_cast<c3::Positionable *>(pdoc->m_Brush->FindFeature(c3::Positionable::Type())) : nullptr;
 
 	if ((active_tool == CCeledit3App::ToolType::TT_WAND) && pcam && pbr && pbp)

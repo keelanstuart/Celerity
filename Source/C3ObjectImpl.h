@@ -54,6 +54,8 @@ namespace c3
 
 		virtual void AddChild(Object *pchild);
 
+		virtual void RemoveChild(Object *pchild, bool release = false);
+
 		virtual props::TFlags64 &Flags();
 
 		virtual props::IPropertySet *GetProperties();
@@ -64,7 +66,7 @@ namespace c3
 
 		virtual Feature *FindFeature(const FeatureType *pctype);
 
-		virtual Feature *AddFeature(const FeatureType *pctype);
+		virtual Feature *AddFeature(const FeatureType *pctype, bool init = true);
 
 		virtual void RemoveFeature(Feature *pcomportmemt);
 

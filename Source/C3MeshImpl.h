@@ -38,6 +38,8 @@ namespace c3
 
 		virtual IndexBuffer *GetIndexBuffer() const;
 
+		virtual const Frustum *GetBounds() const;
+
 		virtual RETURNCODE Draw(Renderer::PrimType type) const;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,

@@ -8,10 +8,13 @@
 
 #include <C3ModelImpl.h>
 #include <C3Resource.h>
+#include <C3MaterialImpl.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+
+#include <Shlwapi.h>
 
 using namespace c3;
 
@@ -353,6 +356,8 @@ bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
 	// set up the world matrix to draw meshes at this node level
 	m_pRend->SetWorldMatrix(m_MatStack->Top(&m));
 
+	ShaderProgram *pprog = m_pRend->GetActiveProgram();
+
 	for (const auto &mit : pnode->meshes)
 	{
 		// render each of the meshes on this node
@@ -361,9 +366,9 @@ bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
 			continue;
 
 		if (mesh->pmtl)
-		{
-			//mesh->pmtl->Apply(m_pRend->);
-		}
+			mesh->pmtl->Apply(pprog);
+		if (pprog)
+			pprog->ApplyUniforms();
 
 		mesh->pmesh->Draw();
 	}
@@ -382,6 +387,91 @@ bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
 	m_MatStack->Pop();
 
 	return true;
+}
+
+bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
+							float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
+							const glm::fmat4x4 *pmat) const
+{
+	bool ret = false;
+
+	float d = FLT_MAX;
+
+	if (pmat)
+		m_MatStack->Push(pmat);
+
+	for (const auto cit : m_Nodes)
+	{
+		const SNodeInfo *node = cit;
+		if (!node)
+			continue;
+
+		// from this point, only draw top-level nodes
+		if (node->parent == NO_PARENT)
+			ret = IntersectNode(cit, pRayPos, pRayDir, &d, pFaceIndex, pUV);
+	}
+
+	if (pmat)
+		m_MatStack->Pop();
+
+	return ret;
+}
+
+bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
+				   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
+{
+	if (!pnode)
+		return false;
+
+	bool ret = false;
+
+	// push the node's transform to build the hierarchy correctly
+	m_MatStack->Push(&pnode->mat);
+
+	glm::fmat4x4 m;
+	m_MatStack->Top(&m);
+
+	glm::vec4 rp(pRayPos->x, pRayPos->y, pRayPos->z, 0);
+	glm::vec3 rpt = m * rp;
+
+	glm::fmat4x4 mit = glm::inverseTranspose(m);
+	glm::vec4 rd(pRayDir->x, pRayDir->y, pRayDir->z, 0);
+	glm::vec3 rdt = mit * rd;
+
+	for (const auto &mit : pnode->meshes)
+	{
+		// render each of the meshes on this node
+		const SMeshInfo *mesh = m_Meshes[mit];
+		if (!mesh)
+			continue;
+
+		float d = FLT_MAX;
+		if (mesh->pmesh->Intersect(&rpt, &rdt, &d, pFaceIndex, pUV))
+		{
+			ret = true;
+
+			if (!pDistance)
+				break;
+
+			if (*pDistance > d)
+				*pDistance = d;
+		}
+	}
+
+	for (const auto &cit : pnode->children)
+	{
+		// recursively draw each of the child nodes here
+		const SNodeInfo *child = m_Nodes[cit];
+		if (!child)
+			continue;
+
+		ret |= IntersectNode(child, &rpt, &rdt, pDistance, pFaceIndex, pUV);
+	}
+
+	// pop the node's transform
+	m_MatStack->Pop();
+
+	return ret;
 }
 
 
@@ -404,7 +494,13 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, TNode
 
 	pm->SetNodeName(nidx, name);
 	pm->SetParent(nidx, parent_nidx);
-	pm->SetTransform(nidx, (const glm::fmat4x4 *)&(pn->mTransformation));
+
+	glm::fmat4x4 t;
+	for (unsigned int j = 0; j < 4; j++)
+		for (unsigned int k = 0; k < 4; k++)
+			t[j][k] = (float)(pn->mTransformation[k][j]);
+
+	pm->SetTransform(nidx, &t);
 
 	for (size_t i = 0; i < pn->mNumChildren; i++)
 		AddModelNode(pm, nidx, pn->mChildren[i], nidxmap, midxmap);
@@ -430,8 +526,9 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 
 		Assimp::Importer import;
 		const aiScene *scene = import.ReadFile(fn,
-			aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace | aiProcess_FlipUVs | 
-			aiProcess_JoinIdenticalVertices | aiProcess_OptimizeMeshes | aiProcess_ImproveCacheLocality);
+			aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs | aiProcess_ImproveCacheLocality
+			| aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_OptimizeMeshes
+		);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
@@ -448,10 +545,121 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 		std::vector<Material *> mtlvec;
 		mtlvec.reserve(scene->mNumMaterials);
 		MaterialManager *pmm = pr->GetMaterialManager();
+
+		aiString aipath;
+		TCHAR *textmp, *texfilename;
+		TCHAR modbasepath[MAX_PATH], texpath[MAX_PATH];
+
 		for (size_t j = 0; j < scene->mNumMaterials; j++)
 		{
 			Material *pmtl = pmm->CreateMaterial();
 			aiMaterial *paim = scene->mMaterials[j];
+
+			glm::vec4 diff(1, 1, 1, 1);
+			for (size_t pidx = 0, maxpidx = paim->mNumProperties; pidx < maxpidx; pidx++)
+			{
+				aiMaterialProperty *pmp = paim->mProperties[pidx];
+				aiString key = pmp->mKey;
+
+				if (!_stricmp(key.C_Str(), "$clr.diffuse"))
+				{
+					memcpy(&diff, pmp->mData, sizeof(aiColor3D));
+				}
+			}
+			pmtl->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &diff);
+
+			TCHAR difftexpath[MAX_PATH], texpathtemp[MAX_PATH];
+
+			_tcscpy_s(modbasepath, filename);
+			PathRemoveFileSpec(modbasepath);
+
+			// HACK HACK HACK!!!
+			// Obviously DEMANDLOAD works, but defeats the purpose of all the asych mechanisms built in
+			// this is because in this case, the renderer's task list is locked when this function
+			// executes... so come up with a double-buffer system.
+			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
+
+			bool has_difftex = false;
+			if (true == (has_difftex = (paim->GetTextureCount(aiTextureType_DIFFUSE) > 0)))
+				paim->GetTexture(aiTextureType_DIFFUSE, 0, &aipath);
+			else if (!has_difftex && (true == (has_difftex = (paim->GetTextureCount(aiTextureType_BASE_COLOR) > 0))))
+				paim->GetTexture(aiTextureType_BASE_COLOR, 0, &aipath);
+
+			if (has_difftex)
+			{
+				CONVERT_MBCS2TCS(aipath.C_Str(), textmp);
+				PathCombine(texpath, modbasepath, textmp);
+				bool loctex = psys->GetFileMapper()->FindFile(texpath);
+				texfilename = loctex ? texpath : PathFindFileName(texpath);
+				_tcsncpy_s(difftexpath, textmp, MAX_PATH - 1);
+				pmtl->SetTexture(Material::TextureComponentType::TCT_DIFFUSE, psys->GetResourceManager()->GetResource(texfilename, rf));
+			}
+
+			bool has_normtex = false;
+			if (true == (has_normtex = (paim->GetTextureCount(aiTextureType_NORMALS) > 0)))
+				paim->GetTexture(aiTextureType_NORMALS, 0, &aipath);
+			else if (!has_normtex && (true == (has_normtex = (paim->GetTextureCount(aiTextureType_NORMAL_CAMERA) > 0))))
+				paim->GetTexture(aiTextureType_NORMAL_CAMERA, 0, &aipath);
+			else if (has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_normtex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_NORMAL, texpathtemp, MAX_PATH - 1)) == true))
+			{
+				char *c;
+				CONVERT_TCS2MBCS(texpathtemp, c);
+				aipath = c;
+			}
+
+			if (has_normtex)
+			{
+				CONVERT_MBCS2TCS(aipath.C_Str(), textmp);
+				PathCombine(texpath, modbasepath, textmp);
+				bool loctex = psys->GetFileMapper()->FindFile(texpath);
+				texfilename = loctex ? texpath : PathFindFileName(texpath);
+				pmtl->SetTexture(Material::TextureComponentType::TCT_NORMAL, psys->GetResourceManager()->GetResource(texfilename, rf));
+			}
+
+			bool has_emistex = false;
+			if (true == (has_emistex = (paim->GetTextureCount(aiTextureType_EMISSIVE) > 0)))
+				paim->GetTexture(aiTextureType_EMISSIVE, 0, &aipath);
+			else if (!has_emistex && (true == (has_emistex = (paim->GetTextureCount(aiTextureType_EMISSION_COLOR) > 0))))
+				paim->GetTexture(aiTextureType_EMISSION_COLOR, 0, &aipath);
+			else if (has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_emistex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_EMISSIVE, texpathtemp, MAX_PATH - 1)) == true))
+			{
+				char *c;
+				CONVERT_TCS2MBCS(texpathtemp, c);
+				aipath = c;
+			}
+
+			if (has_emistex)
+			{
+				CONVERT_MBCS2TCS(aipath.C_Str(), textmp);
+				PathCombine(texpath, modbasepath, textmp);
+				bool loctex = psys->GetFileMapper()->FindFile(texpath);
+				texfilename = loctex ? texpath : PathFindFileName(texpath);
+				pmtl->SetTexture(Material::TextureComponentType::TCT_EMISSIVE, psys->GetResourceManager()->GetResource(texfilename, rf));
+			}
+
+			// metalness / roughness / ao -- all together
+			bool has_surftex = false;
+			unsigned int tidx_metalness = paim->GetTextureCount(aiTextureType_METALNESS);
+			unsigned int tidx_roughness = paim->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS);
+			unsigned int tidx_ambocc = paim->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION);
+			has_surftex = (tidx_metalness > 0) && (tidx_roughness == tidx_metalness) && (tidx_ambocc == tidx_metalness);
+			if (has_surftex)
+				paim->GetTexture(aiTextureType_METALNESS, 0, &aipath);
+			else if (has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_surftex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_SURFACEDESC, texpathtemp, MAX_PATH - 1)) == true))
+			{
+				char *c;
+				CONVERT_TCS2MBCS(texpathtemp, c);
+				aipath = c;
+			}
+
+			if (has_surftex)
+			{
+				CONVERT_MBCS2TCS(aipath.C_Str(), textmp);
+				PathCombine(texpath, modbasepath, textmp);
+				bool loctex = psys->GetFileMapper()->FindFile(texpath);
+				texfilename = loctex ? texpath : PathFindFileName(texpath);
+				pmtl->SetTexture(Material::TextureComponentType::TCT_SURFACEDESC, psys->GetResourceManager()->GetResource(texfilename, rf));
+			}
 
 			mtlvec.push_back(pmtl);
 		}
@@ -612,7 +820,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 							BYTE a = BYTE(std::min(std::max(0.0f, pmd_c[j].a), 1.0f) * 255.0f);
 							uint32_t c = r | (g << 8) | (b << 16) | (a << 24);
 
-							((uint32_t *)pv)[j] = c;
+							*((uint32_t *)pv) = c;
 
 							pv += vsz;
 						}

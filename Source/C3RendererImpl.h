@@ -84,6 +84,7 @@ namespace c3
 		DepthMode m_DepthMode;
 		Test m_DepthTest;
 
+		WindingOrder m_WindingOrder;
 		CullMode m_CullMode;
 
 		bool m_StencilEnabled;
@@ -95,6 +96,7 @@ namespace c3
 		Mesh *m_BoundsMesh;
 		Mesh *m_CubeMesh;
 
+		VertexBuffer *m_FSPlaneVB;
 		VertexBuffer *m_PlanesVB;
 		Mesh *m_XYPlaneMesh;
 		Mesh *m_YZPlaneMesh;
@@ -163,6 +165,9 @@ namespace c3
 		virtual void SetStencilOperation(StencilOperation stencil_fail, StencilOperation zfail, StencilOperation zpass);
 		virtual void GetStencilOperation(StencilOperation &stencil_fail, StencilOperation &zfail, StencilOperation &zpass) const;
 
+		virtual void SetWindingOrder(WindingOrder mode);
+		virtual WindingOrder GetWindingOrder() const;
+
 		virtual void SetCullMode(CullMode mode);
 		virtual CullMode GetCullMode() const;
 
@@ -192,6 +197,8 @@ namespace c3
 		virtual FrameBuffer *GetActiveFrameBuffer();
 
 		virtual void UseProgram(ShaderProgram *pprog);
+		virtual ShaderProgram *GetActiveProgram();
+
 		virtual void UseVertexBuffer(VertexBuffer *pvbuf);
 		virtual void UseIndexBuffer(IndexBuffer *pibuf);
 
@@ -213,6 +220,8 @@ namespace c3
 		virtual const glm::fmat4x4 *GetNormalMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
+
+		virtual VertexBuffer *GetFullscreenPlaneVB();
 
 		VertexBuffer *GetCubeVB();
 		virtual Mesh *GetBoundsMesh();

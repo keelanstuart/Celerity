@@ -13,18 +13,18 @@ class CClassToolBar : public CMFCToolBar
 	virtual BOOL AllowShowOnList() const { return FALSE; }
 };
 
-class CClassView : public CDockablePane
+class CPrototypeView : public CDockablePane
 {
 public:
-	CClassView() noexcept;
-	virtual ~CClassView();
+	CPrototypeView() noexcept;
+	virtual ~CPrototypeView();
 
 	void AdjustLayout();
 	void OnChangeVisualStyle();
 
 protected:
 	CClassToolBar m_wndToolBar;
-	CViewTree m_wndClassView;
+	CViewTree m_wndPrototypeView;
 	CImageList m_ClassViewImages;
 	UINT m_nCurrSort;
 

@@ -113,8 +113,15 @@ namespace c3
 
 		virtual void Draw(const glm::fmat4x4 *pmat) const;
 
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
+							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
+							   const glm::fmat4x4 *pmat = nullptr) const;
+
 	protected:
 		bool DrawNode(const SNodeInfo *pnode) const;
+
+		bool IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
+						   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;
 
 	};
 

@@ -117,7 +117,7 @@
     <ClCompile Include="Source\C3GuiImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\C3RenderableImpl.cpp">
+    <ClCompile Include="Source\C3ModelRendererImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\C3ModelImpl.cpp">
@@ -145,6 +145,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\C3MaterialImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3OmniLightImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -344,10 +347,10 @@
     <ClInclude Include="Include\C3Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\C3Renderable.h">
+    <ClInclude Include="Include\C3ModelRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\C3RenderableImpl.h">
+    <ClInclude Include="Source\C3ModelRendererImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\C3Frustum.h">
@@ -396,6 +399,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\C3ColorDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3CommonVertexDefs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3OmniLight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3OmniLightImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

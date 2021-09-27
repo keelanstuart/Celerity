@@ -39,7 +39,7 @@
     <ClInclude Include="FileView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClassView.h">
+    <ClInclude Include="PrototypeView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ViewTree.h">
@@ -51,10 +51,31 @@
     <ClInclude Include="PropertiesWnd.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="calendarbar.h">
+    <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h">
+    <ClInclude Include="PropertyGrid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfcolorbar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfcolorbutton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfcolormenubutton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfcolorpopupmenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfpropertygridctrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfpropertygridtooltipctrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfvslistbox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -74,7 +95,7 @@
     <ClCompile Include="FileView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ClassView.cpp">
+    <ClCompile Include="PrototypeView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ViewTree.cpp">
@@ -86,10 +107,31 @@
     <ClCompile Include="PropertiesWnd.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="calendarbar.cpp">
+    <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="PropertyGrid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfcolorbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfcolorbutton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfcolormenubutton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfcolorpopupmenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfpropertygridctrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfpropertygridtooltipctrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfvslistbox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

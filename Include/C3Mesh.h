@@ -36,6 +36,8 @@ namespace c3
 
 		virtual IndexBuffer *GetIndexBuffer() const = NULL;
 
+		virtual const Frustum *GetBounds() const = NULL;
+
 		virtual RETURNCODE Draw(Renderer::PrimType type = Renderer::PrimType::TRILIST) const = NULL;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,

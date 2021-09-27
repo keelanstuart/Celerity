@@ -8,6 +8,7 @@
 
 #include <C3ShaderProgram.h>
 #include <C3RendererImpl.h>
+#include <C3VertexBufferImpl.h>
 
 namespace c3
 {
@@ -25,6 +26,8 @@ namespace c3
 		ShaderComponentImpl *m_Comp[Renderer::ShaderComponentType::ST_NUMTYPES];
 
 		props::IPropertySet *m_Uniforms;
+		
+		VertexBufferImpl::TVertexComponentDescriptionArray m_ExpectedInputs;
 
 	public:
 
@@ -49,13 +52,16 @@ namespace c3
 
 		operator GLuint() const { return m_glID; }
 
+		virtual const VertexBuffer::ComponentDescription *GetExpectedInputs() const;
+
 	protected:
 
 		/// Collects all uniforms, including globals (world, view, projection xforms, etc)
 		void CaptureUniforms();
+		void CaptureExpectedInputs();
 
 		void UpdateGlobalUniforms();
-
+	
 	};
 
 	DEFINE_RESOURCETYPE(ShaderProgram, RTFLAG_RUNBYRENDERER, GUID({0x9c62e3e0, 0x95d0, 0x4023, { 0xad, 0xb3, 0x6a, 0xb2, 0xd5, 0xcf, 0x4e, 0x9a }}), "ShaderProgram", "Shader Programs (GLSL)", "c3shader", "c3shader");

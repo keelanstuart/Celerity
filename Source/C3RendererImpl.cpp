@@ -16,6 +16,7 @@
 #include <C3MeshImpl.h>
 #include <C3FrameBufferImpl.h>
 #include <C3SystemImpl.h>
+#include <C3CommonVertexDefs.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -49,6 +50,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_clearZ = 1.0f;
 	m_DepthMode = DepthMode::DM_NUMMODES;
 	m_DepthTest = Test::DT_NUMTESTS;
+	m_WindingOrder = WindingOrder::WO_NUMMODES;
 	m_CullMode = CullMode::CM_NUMMODES;
 
 	m_StencilEnabled = false;
@@ -75,6 +77,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_BoundsMesh = nullptr;
 	m_CubeMesh = nullptr;
 
+	m_FSPlaneVB = nullptr;
 	m_PlanesVB = nullptr;
 	m_XYPlaneMesh = nullptr;
 	m_XZPlaneMesh = nullptr;
@@ -268,11 +271,6 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	SetViewMatrix(&m_ident);
 	SetWorldMatrix(&m_ident);
 
-	// This vertex array is global... only using VBO/IBO pairs. I don't know if this is "correct",
-	// but I bind it only once and never touch it again.
-	gl.GenVertexArrays(1, &m_VAOglID);
-	gl.BindVertexArray(m_VAOglID);
-
 	gl.ClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
 	gl.ClearDepthf(m_clearZ);
 
@@ -280,13 +278,14 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	SetDepthTest(Test::DT_LESSEREQUAL);
 	gl.DepthMask(GL_TRUE);
 
-	gl.FrontFace(GL_CW);
+	SetWindingOrder(WindingOrder::WO_CW);
 	SetCullMode(CullMode::CM_BACK);
 
 	gl.Enable(GL_BLEND);
 	gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	// Initialize meshes
+	GetFullscreenPlaneVB();
 	GetCubeMesh();
 	GetBoundsMesh();
 	GetHemisphereMesh();
@@ -414,6 +413,12 @@ void RendererImpl::Shutdown()
 		m_PlanesVB = nullptr;
 	}
 
+	if (m_FSPlaneVB)
+	{
+		m_FSPlaneVB->Release();
+		m_FSPlaneVB = nullptr;
+	}
+
 	if (m_HemisphereMesh)
 	{
 		m_HemisphereMesh->AttachVertexBuffer(nullptr);
@@ -432,10 +437,6 @@ void RendererImpl::Shutdown()
 		delete m_MatMan;
 		m_MatMan;
 	}
-
-	// Delete the global vertex array
-	gl.BindVertexArray(0);
-	gl.DeleteVertexArrays(1, &m_VAOglID);
 
 	wglMakeCurrent(NULL, NULL);
 
@@ -722,6 +723,26 @@ void RendererImpl::GetStencilOperation(StencilOperation &stencil_fail, StencilOp
 	stencil_fail = m_StencilFailOp;
 	zfail = m_StencilZFailOp;
 	zpass = m_StencilZPassOp;
+}
+
+
+void RendererImpl::SetWindingOrder(WindingOrder mode)
+{
+	if (mode != m_WindingOrder)
+	{
+		if (mode == WO_CW)
+			gl.FrontFace(GL_CW);
+		else
+			gl.Enable(GL_CCW);
+
+		m_WindingOrder = mode;
+	}
+}
+
+
+Renderer::WindingOrder RendererImpl::GetWindingOrder() const
+{
+	return m_WindingOrder;
 }
 
 
@@ -1107,11 +1128,17 @@ void RendererImpl::UseProgram(ShaderProgram *pprog)
 	if (glid == m_CurProgID)
 		return;
 
-	m_Config = true;
+	//m_Config = true;
 
 	m_CurProgID = glid;
 
 	gl.UseProgram(m_CurProgID);
+}
+
+
+ShaderProgram *RendererImpl::GetActiveProgram()
+{
+	return m_CurProg;
 }
 
 
@@ -1121,18 +1148,18 @@ void RendererImpl::UseVertexBuffer(VertexBuffer *pvbuf)
 		return;
 
 	m_CurVB = pvbuf;
-	GLuint glid = m_CurVB ? (GLuint)(c3::VertexBufferImpl &)*pvbuf : 0;
-	if (glid == GL_INVALID_VALUE)
-		glid = 0;
+	GLuint glid_vb = m_CurVB ? ((VertexBufferImpl *)pvbuf)->VBglID() : 0;
+	GLuint glid_vao = m_CurVB ? ((VertexBufferImpl *)pvbuf)->VAOglID() : 0;
+	if (glid_vb == GL_INVALID_VALUE)
+		glid_vb = 0;
 
-	if (glid == m_CurVBID)
+	if (glid_vb == m_CurVBID)
 		return;
 
-	m_Config = true;
+	m_CurVBID = glid_vb;
 
-	m_CurVBID = glid;
-
-	gl.BindBuffer(GL_ARRAY_BUFFER, glid);
+	gl.BindBuffer(GL_ARRAY_BUFFER, glid_vb);
+	gl.BindVertexArray(glid_vao);
 }
 
 
@@ -1217,12 +1244,12 @@ void RendererImpl::UseTexture(uint64_t sampler, Texture *ptex)
 
 bool RendererImpl::ConfigureDrawing()
 {
-	if (!m_Config)
-		return true;
+	//if (!m_Config)
+//		return true;
 
-	if (m_CurVB && m_CurProg)
+	if (m_CurVB /* && m_CurProg*/)
 	{
-		static const GLenum t[VertexBuffer::ComponentDescription::ComponentType::VCT_NUM_TYPES] = { 0, GL_UNSIGNED_BYTE, GL_BYTE, GL_HALF_FLOAT, GL_UNSIGNED_INT, GL_FLOAT };
+		static const GLenum t[VertexBuffer::ComponentDescription::ComponentType::VCT_NUM_TYPES] = { 0, GL_UNSIGNED_BYTE, GL_BYTE, GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT };
 
 		size_t vsz = m_CurVB->VertexSize();
 		size_t vo = 0;
@@ -1252,11 +1279,12 @@ bool RendererImpl::ConfigureDrawing()
 			const VertexBuffer::ComponentDescription *pcd = m_CurVB->Component(i);
 			if (!pcd || !pcd->m_Count || (pcd->m_Type == VertexBuffer::ComponentDescription::VCT_NONE) || (pcd->m_Usage == VertexBuffer::ComponentDescription::Usage::VU_NONE))
 				break;
-
+#if 0
 			GLint vloc = gl.GetAttribLocation(m_CurProgID, vattrname[pcd->m_Usage]);
 
 			if (vloc < 0)
 				return false;
+#endif
 
 			//assert(vloc == i);
 
@@ -1264,13 +1292,13 @@ bool RendererImpl::ConfigureDrawing()
 			bool is_byte = (pcd->m_Type >= VertexBuffer::ComponentDescription::VCT_U8) && (pcd->m_Type <= VertexBuffer::ComponentDescription::VCT_S8);
 			GLuint norm = (is_color && is_byte);
 
-			gl.EnableVertexAttribArray(vloc);
-			gl.VertexAttribPointer(vloc, (GLint)pcd->m_Count, t[pcd->m_Type], norm, (GLsizei)vsz, (void *)vo);
+			gl.EnableVertexAttribArray((GLuint)i /*vloc*/);
+			gl.VertexAttribPointer((GLuint)i /*vloc*/, (GLint)pcd->m_Count, t[pcd->m_Type], norm, (GLsizei)vsz, (void *)vo);
 			vo += pcd->size();
 		}
 	}
 
-	m_Config = false;
+	//m_Config = false;
 	return true;
 }
 
@@ -1284,8 +1312,10 @@ bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
 		if (count == -1)
 			count = m_CurVB->Count();
 
+#if 0
 		if (m_Config)
 			ConfigureDrawing();
+#endif
 
 		gl.DrawArrays(typelu[type], 0, (GLsizei)count);
 
@@ -1310,8 +1340,10 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 
 		static const GLuint glidxs[3] = {GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT};
 
+#if 0
 		if (m_Config)
 			ConfigureDrawing();
+#endif
 
 		gl.DrawElements(typelu[type], (GLsizei)count, glidxs[idxs], NULL);
 
@@ -1402,7 +1434,7 @@ const glm::fmat4x4 *RendererImpl::GetNormalMatrix(glm::fmat4x4 *m)
 {
 	if (m_matupflags.AnySet(MATRIXUPDATE_NORMAL))
 	{
-		m_normal = glm::inverseTranspose(m_view * m_world);
+		m_normal = glm::inverseTranspose(m_world);
 		m_matupflags.Clear(MATRIXUPDATE_NORMAL);
 	}
 
@@ -1446,70 +1478,72 @@ const glm::fmat4x4 *RendererImpl::GetWorldViewProjectionMatrix(glm::fmat4x4 *m)
 }
 
 
+void ComputeTangentBinorm(Vertex::PNYT1::s *v, const Vertex::PNYT1::s *adj)
+{
+	v->tang = glm::normalize(adj->pos - v->pos);
+	v->binorm = glm::normalize(glm::cross(v->norm, v->binorm));
+}
+
 VertexBuffer *RendererImpl::GetCubeVB()
 {
 	if (!m_CubeVB)
 	{
 		m_CubeVB = CreateVertexBuffer(0);
 
-		c3::VertexBuffer::ComponentDescription comps[4] ={
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_NORMAL},
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
-
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
-		};
-
-		typedef struct
-		{
-			glm::fvec3 pos;
-			glm::fvec3 norm;
-			glm::fvec2 uv;
-		} SCubeVert;
-
-		static const SCubeVert v[6 * 4] =
+		static Vertex::PNYT1::s v[6 * 4] =
 		{
 			// TOP +Z 0
-			{ { -1, -1,  1 }, {  0,  0,  1 }, {  0,  0 } },
-			{ {  1, -1,  1 }, {  0,  0,  1 }, {  0,  1 } },
-			{ {  1,  1,  1 }, {  0,  0,  1 }, {  1,  1 } },
-			{ { -1,  1,  1 }, {  0,  0,  1 }, {  1,  0 } },
+			{ { -1, -1,  1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  0 } },
+			{ {  1, -1,  1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  1 } },
+			{ {  1,  1,  1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  1 } },
+			{ { -1,  1,  1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  0 } },
 
 			// RIGHT +X 4
-			{ {  1,  1,  1 }, {  1,  0,  0 }, {  0,  0 } },
-			{ {  1,  1, -1 }, {  1,  0,  0 }, {  0,  1 } },
-			{ {  1, -1, -1 }, {  1,  0,  0 }, {  1,  1 } },
-			{ {  1, -1,  1 }, {  1,  0,  0 }, {  1,  0 } },
+			{ {  1,  1,  1 }, {  1,  0,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  0 } },
+			{ {  1,  1, -1 }, {  1,  0,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  1 } },
+			{ {  1, -1, -1 }, {  1,  0,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  1 } },
+			{ {  1, -1,  1 }, {  1,  0,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  0 } },
 
 			// BOTTOM -Z 8
-			{ { -1, -1, -1 }, {  0,  0, -1 }, {  0,  0 } },
-			{ {  1, -1, -1 }, {  0,  0, -1 }, {  0,  1 } },
-			{ {  1,  1, -1 }, {  0,  0, -1 }, {  1,  1 } },
-			{ { -1,  1, -1 }, {  0,  0, -1 }, {  1,  0 } },
+			{ { -1, -1, -1 }, {  0,  0, -1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  0 } },
+			{ {  1, -1, -1 }, {  0,  0, -1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  1 } },
+			{ {  1,  1, -1 }, {  0,  0, -1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  1 } },
+			{ { -1,  1, -1 }, {  0,  0, -1 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  0 } },
 
 			// LEFT -X 12
-			{ { -1, -1, -1 }, { -1,  0,  0 }, {  0,  0 } },
-			{ { -1, -1,  1 }, { -1,  0,  0 }, {  0,  1 } },
-			{ { -1,  1,  1 }, { -1,  0,  0 }, {  1,  1 } },
-			{ { -1,  1, -1 }, { -1,  0,  0 }, {  1,  0 } },
+			{ { -1, -1, -1 }, { -1,  0,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  0 } },
+			{ { -1, -1,  1 }, { -1,  0,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  1 } },
+			{ { -1,  1,  1 }, { -1,  0,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  1 } },
+			{ { -1,  1, -1 }, { -1,  0,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  0 } },
 
 			// FRONT +Y 16
-			{ { -1,  1, -1 }, {  0,  1,  0 }, {  0,  0 } },
-			{ {  1,  1, -1 }, {  0,  1,  0 }, {  0,  1 } },
-			{ {  1,  1,  1 }, {  0,  1,  0 }, {  1,  1 } },
-			{ { -1,  1,  1 }, {  0,  1,  0 }, {  1,  0 } },
+			{ { -1,  1, -1 }, {  0,  1,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  0 } },
+			{ {  1,  1, -1 }, {  0,  1,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  1 } },
+			{ {  1,  1,  1 }, {  0,  1,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  1 } },
+			{ { -1,  1,  1 }, {  0,  1,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  0 } },
 
 			// FRONT -Y 20
-			{ { -1, -1, -1 }, {  0, -1,  0 }, {  0,  0 } },
-			{ {  1, -1, -1 }, {  0, -1,  0 }, {  0,  1 } },
-			{ {  1, -1,  1 }, {  0, -1,  0 }, {  1,  1 } },
-			{ { -1, -1,  1 }, {  0, -1,  0 }, {  1,  0 } }
+			{ { -1, -1, -1 }, {  0, -1,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  0 } },
+			{ {  1, -1, -1 }, {  0, -1,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  0,  1 } },
+			{ {  1, -1,  1 }, {  0, -1,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  1 } },
+			{ { -1, -1,  1 }, {  0, -1,  0 }, {  0,  0,  1 }, {  0,  0,  1 }, {  1,  0 } }
 		};
 
-		void *buf;
-		if (m_CubeVB->Lock(&buf, 6 * 4, comps, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
+		for (size_t i = 0; i < 6; i++)
 		{
-			memcpy(buf, v, sizeof(SCubeVert) * 6 * 4);
+			for (size_t j = 0; j < 4; j++)
+			{
+				size_t idx = i * 4 + j;
+				size_t nidx = (idx + 1) % 4;
+				Vertex::PNYT1::s *a = &v[idx], *b = &v[nidx];
+				ComputeTangentBinorm(a, b);
+			}
+		}
+
+		void *buf;
+		if (m_CubeVB->Lock(&buf, 6 * 4, Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
+		{
+			memcpy(buf, v, sizeof(Vertex::PNYT1::s) * 6 * 4);
 
 			m_CubeVB->Unlock();
 		}
@@ -1609,22 +1643,7 @@ VertexBuffer *RendererImpl::GetPlanesVB()
 	{
 		m_PlanesVB = CreateVertexBuffer(0);
 
-		c3::VertexBuffer::ComponentDescription comps[4] ={
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_NORMAL},
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
-
-			{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
-		};
-
-		typedef struct
-		{
-			glm::fvec3 pos;
-			glm::fvec3 norm;
-			glm::fvec2 uv;
-		} SPlaneVert;
-
-		static const SPlaneVert v[3 * 4] =
+		static const Vertex::PNT1::s v[3 * 4] =
 		{
 			// XY
 			{ { -1, -1,  0 }, {  0,  0,  1 }, {  0,  0 } },
@@ -1643,12 +1662,13 @@ VertexBuffer *RendererImpl::GetPlanesVB()
 			{ {  1,  0, -1 }, {  0,  1,  0 }, {  0,  1 } },
 			{ {  1,  0,  1 }, {  0,  1,  0 }, {  1,  1 } },
 			{ { -1,  0,  1 }, {  0,  1,  0 }, {  1,  0 } }
+
 		};
 
 		void *buf;
-		if (m_PlanesVB->Lock(&buf, 3 * 4, comps, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
+		if (m_PlanesVB->Lock(&buf, 3 * 4, Vertex::PNT1::d, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
 		{
-			memcpy(buf, v, sizeof(SPlaneVert) * 3 * 4);
+			memcpy(buf, v, sizeof(Vertex::PNT1::s) * 3 * 4);
 
 			m_PlanesVB->Unlock();
 		}
@@ -1762,22 +1782,42 @@ Mesh *RendererImpl::GetXZPlaneMesh()
 }
 
 
+VertexBuffer *RendererImpl::GetFullscreenPlaneVB()
+{
+	if (!m_FSPlaneVB)
+	{
+		m_FSPlaneVB = CreateVertexBuffer(0);
+
+		static const Vertex::WT1::s v[4] =
+		{
+			{ {-1.0f,  1.0f, 0.0f, 1.0f}, {0, 1} },
+			{ {-1.0f, -1.0f, 0.0f, 1.0f}, {0, 0} },
+			{ { 1.0f,  1.0f, 0.0f, 1.0f}, {1, 1} },
+			{ { 1.0f, -1.0f, 0.0f, 1.0f}, {1, 0} }
+		};
+
+		void *buf;
+		if (m_FSPlaneVB->Lock(&buf, 4, Vertex::WT1::d, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
+		{
+			memcpy(buf, v, sizeof(Vertex::WT1::s) * 4);
+
+			m_FSPlaneVB->Unlock();
+		}
+	}
+
+	return m_FSPlaneVB;
+}
+
+
 size_t hemisphereSectorCount = 40;
 size_t hemisphereStackCount = 20;
 
 VertexBuffer *RendererImpl::GetHemisphereVB()
 {
-	typedef struct
-	{
-		glm::fvec3 pos;
-		glm::fvec3 norm;
-		glm::fvec2 uv;
-	} SHemisphereVert;
-
-	typedef std::vector<SHemisphereVert> TVertexArray;
+	typedef std::vector<Vertex::PNYT1::s> TVertexArray;
 	TVertexArray verts;
 
-	SHemisphereVert v;
+	Vertex::PNYT1::s v;
 
 	glm::fvec4 n(0, 0, 1, 0);
 
@@ -1808,21 +1848,13 @@ VertexBuffer *RendererImpl::GetHemisphereVB()
 		//v.uv.y = (float)i;
 	}
 
-	c3::VertexBuffer::ComponentDescription comps[4] ={
-		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
-		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_NORMAL},
-		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
-
-		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
-	};
-
 	m_HemisphereVB = CreateVertexBuffer(0);
 	if (m_HemisphereVB)
 	{
 		void *buf;
-		if ((m_HemisphereVB->Lock(&buf, verts.size(), comps, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
+		if ((m_HemisphereVB->Lock(&buf, verts.size(), Vertex::PNYT1::d, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
 		{
-			memcpy(buf, &(verts.at(0)), sizeof(SHemisphereVert) * verts.size());
+			memcpy(buf, &(verts.at(0)), sizeof(Vertex::PNYT1::s) * verts.size());
 
 			m_HemisphereVB->Unlock();
 		}
@@ -1996,7 +2028,7 @@ Texture2D *RendererImpl::GetBlueTexture()
 				{
 					for (size_t x = 0, maxx = li.width; x < maxx; x++)
 					{
-						buf[x] = 0xFFFF0000;
+						buf[x] = 0xFFFF7F7F;
 					}
 
 					buf = (uint32_t *)((BYTE *)buf + li.stride);
@@ -2059,6 +2091,8 @@ const Material *RendererImpl::GetWhiteMaterial()
 		if (m_mtlWhite)
 		{
 			m_mtlWhite->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &Color::White);
+			m_mtlWhite->SetWindingOrder(Renderer::WindingOrder::WO_CCW);
+			m_mtlWhite->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERFRONT));
 		}
 	}
 

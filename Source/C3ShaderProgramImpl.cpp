@@ -1,7 +1,7 @@
-// **************************************************************
+﻿// **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright � 2001-2021, Keelan Stuart
+// Copyright © 2001-2021, Keelan Stuart
 
 
 #include "pch.h"
@@ -73,6 +73,7 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::AttachShader(ShaderComponent *pshad
 	m_Comp[shtype] = (ShaderComponentImpl *)pshader;
 
 	m_Linked = false;
+	m_ExpectedInputs.clear();
 	m_Uniforms->DeleteAll();
 
 	m_Rend->gl.AttachShader(m_glID, (ShaderComponentImpl &)*pshader);
@@ -119,6 +120,7 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::Link()
 
 	m_Linked = true;
 	CaptureUniforms();
+	CaptureExpectedInputs();
 
 	return ShaderProgram::RETURNCODE::RET_OK;
 }
@@ -299,10 +301,18 @@ void ShaderProgramImpl::CaptureUniforms()
 
 				if (!_tcscmp(n, _T("uMatrixMVP")))
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWPROJECTION);
+				else if (!_tcscmp(n, _T("uMatrixM")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLD);
+				else if (!_tcscmp(n, _T("uMatrixV")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_VIEW);
 				else if (!_tcscmp(n, _T("uMatrixN")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWINVTRANS);
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_NORMALMAT);
 				else if (!_tcscmp(n, _T("uMatrixP")))
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_PROJECTION);
+				else if (!_tcscmp(n, _T("uMatrixMV")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEW);
+				else if (!_tcscmp(n, _T("uMatrixVP")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_VIEWPROJECTION);
 
 				break;
 			}
@@ -376,16 +386,32 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_MAT4X4:
 				switch (p->GetAspect())
 				{
-					case props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWPROJECTION:
+					case props::IProperty::PROPERTY_ASPECT::PA_WORLD:
 						SetUniformMatrix(p->GetID(), m_Rend->GetWorldViewProjectionMatrix());
 						break;
 
-					case props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWINVTRANS:
-						SetUniformMatrix(p->GetID(), m_Rend->GetNormalMatrix());
+					case props::IProperty::PROPERTY_ASPECT::PA_VIEW:
+						SetUniformMatrix(p->GetID(), m_Rend->GetViewMatrix());
 						break;
 
 					case props::IProperty::PROPERTY_ASPECT::PA_PROJECTION:
 						SetUniformMatrix(p->GetID(), m_Rend->GetProjectionMatrix());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEW:
+						SetUniformMatrix(p->GetID(), m_Rend->GetWorldViewMatrix());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_VIEWPROJECTION:
+						SetUniformMatrix(p->GetID(), m_Rend->GetViewProjectionMatrix());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWPROJECTION:
+						SetUniformMatrix(p->GetID(), m_Rend->GetWorldViewProjectionMatrix());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_NORMALMAT:
+						SetUniformMatrix(p->GetID(), m_Rend->GetNormalMatrix());
 						break;
 				}
 				break;
@@ -456,6 +482,142 @@ void ShaderProgramImpl::ApplyUniforms(bool update_globals)
 			case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:
 				break;
 		}
+	}
+}
+
+
+const VertexBuffer::ComponentDescription *ShaderProgramImpl::GetExpectedInputs() const
+{
+	if (m_Linked)
+	{
+
+	}
+	return nullptr;
+}
+
+
+void ShaderProgramImpl::CaptureExpectedInputs()
+{
+	if (!m_Linked)
+		return;
+
+	static const char *vattrname[VertexBuffer::ComponentDescription::Usage::VU_NUM_USAGES] =
+	{
+		"",
+		"vPos",
+		"vNorm",
+		"vTex0",
+		"vTex1",
+		"vTex2",
+		"vTex3",
+		"vTan",
+		"vBinorm",
+		"vIndex",
+		"vWeight",
+		"vColor0",
+		"vColor1",
+		"vColor2",
+		"vColor3",
+		"vSize"
+	};
+
+	static const GLenum t[VertexBuffer::ComponentDescription::ComponentType::VCT_NUM_TYPES] = { 0, GL_UNSIGNED_BYTE, GL_BYTE, GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT };
+
+	GLuint numattrs = 0;
+	m_Rend->gl.GetProgramiv(m_glID, GL_ACTIVE_ATTRIBUTES, (GLint *)&numattrs);
+
+	m_ExpectedInputs.clear();
+	m_ExpectedInputs.reserve(numattrs);
+
+	VertexBuffer::ComponentDescription comp;
+
+	char name[256];
+	GLsizei namelen = 0;
+#if WTF
+	GLint size;
+	GLenum type;
+#endif
+
+	for (GLuint i = 0; i < numattrs; i++)
+	{
+#if WTF
+		m_Rend->gl.GetActiveAttrib(m_glID, i, (GLsizei)sizeof(name), (GLsizei *)&namelen, nullptr, nullptr, name);//(GLint *)size​, (GLenum *)&type​, (GLchar *)name​);
+#endif
+		name[namelen] = '\0';
+
+		// get the component type from the GL type
+		comp.m_Type = VertexBuffer::ComponentDescription::EComponentType::VCT_NONE;
+		while (comp.m_Type != VertexBuffer::ComponentDescription::EComponentType::VCT_NUM_TYPES)
+		{
+			(*(uint8_t *)&(comp.m_Type))++;
+#if WTF
+			if (type == t[comp.m_Type])
+				break;
+#endif
+		}
+		// the type wasn't found, so maybe it's another one...
+		if (comp.m_Type == VertexBuffer::ComponentDescription::EComponentType::VCT_NUM_TYPES)
+		{
+#if WTF
+			switch (type)
+			{
+				case GL_FLOAT:
+					comp.m_Count = size;
+					break;
+				case GL_FLOAT_VEC2:
+					comp.m_Count = 2;
+					break;
+				case GL_FLOAT_VEC3:
+					comp.m_Count = 3;
+					break;
+				case GL_FLOAT_VEC4:
+					comp.m_Count = 4;
+					break;
+				case GL_INT:
+					comp.m_Count = size;
+					break;
+				case GL_INT_VEC2:
+					comp.m_Count = 2;
+					break;
+				case GL_INT_VEC3:
+					comp.m_Count = 3;
+					break;
+				case GL_INT_VEC4:
+					comp.m_Count = 4;
+					break;
+				case GL_UNSIGNED_INT:
+					comp.m_Count = size;
+					break;
+				case GL_UNSIGNED_INT_VEC2:
+					comp.m_Count = 2;
+					break;
+				case GL_UNSIGNED_INT_VEC3:
+					comp.m_Count = 3;
+					break;
+				case GL_UNSIGNED_INT_VEC4:
+					comp.m_Count = 4;
+					break;
+				default:
+					break;
+			}
+#endif
+		}
+
+
+		// assign usage for a component based on the name
+		comp.m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_NONE;
+		while (comp.m_Usage != VertexBuffer::ComponentDescription::EUsage::VU_NUM_USAGES)
+		{
+			(*(uint8_t *)&(comp.m_Usage))++;
+#if WTF
+			if (!_stricmp(name, vattrname[comp.m_Usage]))
+				break;
+#endif
+		}
+
+#if WTF
+		m_ExpectedInputs.push_back(comp);
+#endif
 	}
 }
 

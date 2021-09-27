@@ -30,6 +30,7 @@
 
 // GLM init
 #define GLM_FORCE_CTOR_INIT
+#define GLM_ENABLE_EXPERIMENTAL
 
 #include <glm/glm.hpp>
 #include <glm/ext.hpp>
@@ -52,6 +53,7 @@
 #include <C3Feature.h>
 #include <C3Positionable.h>
 #include <C3Camera.h>
+#include <C3ModelRenderer.h>
 #include <C3Object.h>
 #include <C3Prototype.h>
 #include <C3Factory.h>

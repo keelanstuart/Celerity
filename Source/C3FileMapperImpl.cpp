@@ -164,15 +164,15 @@ void FileMapperImpl::AddMapping(const TCHAR *extension, const TCHAR *path)
 			TExtToPathMap::value_type p(extension, path);
 			for (auto &it : p.second)
 			{
-				if (it == _T('\\'))
+				if (it == _T('/'))
 				{
-					it = _T('/');
+					it = _T('\\');
 				}
 			}
 
-			if (p.second.size() && (*(p.second.rbegin()) != _T('/')))
+			if (p.second.size() && (*(p.second.rbegin()) != _T('\\')))
 			{
-				p.second.append(_T("/"));
+				p.second.append(_T("\\"));
 			}
 
 			m_mapExts.insert(p);
@@ -234,12 +234,12 @@ bool FileMapperImpl::FindFile(const TCHAR *filename, TCHAR *fullpath, size_t ful
 
 			size_t plen = i->second.length();
 
-			if (plen && (internal_fullpath[plen - 1] != '/'))
+			if (plen && (internal_fullpath[plen - 1] != '\\'))
 			{
-				if (internal_fullpath[plen - 1] == '\\')
-					internal_fullpath[plen - 1] = '/';
+				if (internal_fullpath[plen - 1] == '/')
+					internal_fullpath[plen - 1] = '\\';
 				else
-					_tcsncat_s(internal_fullpath, _T("/"), MAX_PATH - 1);
+					_tcsncat_s(internal_fullpath, _T("\\"), MAX_PATH - 1);
 			}
 
 			_tcsncat_s(internal_fullpath, filename, MAX_PATH - 1);

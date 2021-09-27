@@ -101,7 +101,7 @@ namespace c3
 		virtual Feature *FindFeature(const FeatureType *pctype) = NULL;
 
 		/// Creates, attaches, and returns a Feature of the given FeatureType
-		virtual Feature *AddFeature(const FeatureType *pctype) = NULL;
+		virtual Feature *AddFeature(const FeatureType *pctype, bool init = true) = NULL;
 
 		/// Removes the given Feature
 		virtual void RemoveFeature(Feature *pcomportmemt) = NULL;

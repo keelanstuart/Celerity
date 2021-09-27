@@ -9,11 +9,10 @@
 #include <C3.h>
 #include <C3Material.h>
 #include <C3Renderer.h>
-#include <C3Texture.h>
+#include <C3TextureImpl.h>
 
 namespace c3
 {
-
 	class MaterialImpl : public Material
 	{
 
@@ -22,8 +21,11 @@ namespace c3
 		Renderer *m_pRend;
 
 		props::TFlags64 m_flags;
-		Texture *m_tex[TextureComponentType::NUM_TEXTURETYPES];
+		typedef std::pair<Texture *, Resource *> TTexOrRes;
+		TTexOrRes m_tex[TextureComponentType::NUM_TEXTURETYPES];
 		glm::fvec4 m_color[ColorComponentType::NUM_COLORTYPES];
+
+		Renderer::WindingOrder m_WindingOrder;
 
 		Renderer::Test m_DepthTest;
 
@@ -31,6 +33,9 @@ namespace c3
 		Renderer::Test m_StencilTest;
 		uint8_t m_StencilRef, m_StencilMask;
 		Renderer::StencilOperation m_StencilFailOp, m_StencilZFailOp, m_StencilZPassOp;
+
+	public:
+		static Material::MTL_ALT_TEXNAME_FUNC s_pfAltTexFilenameFunc;
 
 
 	public:
@@ -46,9 +51,15 @@ namespace c3
 
 		virtual void SetTexture(TextureComponentType comptype, Texture *ptex);
 
+		virtual void SetTexture(TextureComponentType comptype, Resource *ptexres);
+
 		virtual Texture *GetTexture(TextureComponentType comptype) const;
 
 		virtual props::TFlags64 &RenderModeFlags();
+
+		virtual void SetWindingOrder(Renderer::WindingOrder mode);
+
+		virtual Renderer::WindingOrder GetWindingOrder();
 
 		virtual void SetDepthTest(Renderer::Test test);
 

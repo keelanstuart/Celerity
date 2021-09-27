@@ -7,13 +7,13 @@
 #pragma once
 
 #include <C3.h>
-#include <C3Renderable.h>
+#include <C3OmniLight.h>
 #include <C3PositionableImpl.h>
 
 namespace c3
 {
 
-	class RenderableImpl : public Renderable, props::IPropertyChangeListener
+	class OmniLightImpl : public OmniLight, props::IPropertyChangeListener
 	{
 
 	protected:
@@ -23,9 +23,9 @@ namespace c3
 
 	public:
 
-		RenderableImpl();
+		OmniLightImpl();
 
-		virtual ~RenderableImpl();
+		virtual ~OmniLightImpl();
 
 		virtual void Release();
 
@@ -45,24 +45,14 @@ namespace c3
 
 		virtual bool HitTest(glm::fvec3 *ray_pos, glm::fvec3 *rayvec) const;
 
-		virtual void SetMesh(const Mesh *pmesh);
-
-		virtual const Mesh *GetMesh() const;
-
-		virtual void SetTexture(const Texture *ptex);
-
-		virtual const Texture *GetTexture() const;
-
-		virtual void SetMaterial(const Material *pmaterial);
-
-		virtual const Material *GetMaterial() const;
-
 		virtual void SetShaderProgram(const ShaderProgram *pshader);
+
+		virtual void SetShaderProgram(const Resource *pshaderres);
 
 		virtual const ShaderProgram *GetShaderProgram() const;
 
 	};
 
-	DEFINE_FEATURETYPE(Renderable, RenderableImpl, GUID({0x15558c71, 0xe301, 0x4911, { 0xa1, 0xa9, 0x8d, 0x88, 0x6c, 0x3c, 0x45, 0xd1 }}), "Renderable", "Renderable draws a Model if it's visible (requires Positionable)");
+	DEFINE_FEATURETYPE(OmniLight, OmniLightImpl, GUID({0xfc8732ad, 0x580b, 0x4a78, { 0xa2, 0xc9, 0xff, 0x1, 0xdf, 0x93, 0x95, 0x6f }}), "OmniLight", "OmniLight provides an omni-directional light source (requires Positionable)");
 
 };

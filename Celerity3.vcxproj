@@ -33,12 +33,13 @@
     <ClCompile Include="Source\C3MeshImpl.cpp" />
     <ClCompile Include="Source\C3ModelImpl.cpp" />
     <ClCompile Include="Source\C3ObjectImpl.cpp" />
+    <ClCompile Include="Source\C3OmniLightImpl.cpp" />
     <ClCompile Include="Source\C3PluginImpl.cpp" />
     <ClCompile Include="Source\C3PluginManagerImpl.cpp" />
     <ClCompile Include="Source\C3PositionableImpl.cpp" />
     <ClCompile Include="Source\C3PrototypeImpl.cpp" />
     <ClCompile Include="Source\C3PublisherImpl.cpp" />
-    <ClCompile Include="Source\C3RenderableImpl.cpp" />
+    <ClCompile Include="Source\C3ModelRendererImpl.cpp" />
     <ClCompile Include="Source\C3RendererImpl.cpp" />
     <ClCompile Include="Source\C3ResourceManagerImpl.cpp" />
     <ClCompile Include="Source\C3ShaderBuilderImpl.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="Include\C3.h" />
     <ClInclude Include="Include\C3Camera.h" />
     <ClInclude Include="Include\C3ColorDefs.h" />
+    <ClInclude Include="Include\C3CommonVertexDefs.h" />
     <ClInclude Include="Include\C3Configuration.h" />
     <ClInclude Include="Include\C3CRC.h" />
     <ClInclude Include="Include\C3DepthBuffer.h" />
@@ -107,12 +109,13 @@
     <ClInclude Include="Include\C3Mesh.h" />
     <ClInclude Include="Include\C3Model.h" />
     <ClInclude Include="Include\C3Object.h" />
+    <ClInclude Include="Include\C3OmniLight.h" />
     <ClInclude Include="Include\C3Plugin.h" />
     <ClInclude Include="Include\C3PluginManager.h" />
     <ClInclude Include="Include\C3Positionable.h" />
     <ClInclude Include="Include\C3Prototype.h" />
     <ClInclude Include="Include\C3Publisher.h" />
-    <ClInclude Include="Include\C3Renderable.h" />
+    <ClInclude Include="Include\C3ModelRenderer.h" />
     <ClInclude Include="Include\C3Renderer.h" />
     <ClInclude Include="Include\C3Resource.h" />
     <ClInclude Include="Include\C3ResourceManager.h" />
@@ -139,12 +142,13 @@
     <ClInclude Include="Source\C3MeshImpl.h" />
     <ClInclude Include="Source\C3ModelImpl.h" />
     <ClInclude Include="Source\C3ObjectImpl.h" />
+    <ClInclude Include="Source\C3OmniLightImpl.h" />
     <ClInclude Include="Source\C3PluginImpl.h" />
     <ClInclude Include="Source\C3PluginManagerImpl.h" />
     <ClInclude Include="Source\C3PositionableImpl.h" />
     <ClInclude Include="Source\C3PrototypeImpl.h" />
     <ClInclude Include="Source\C3PublisherImpl.h" />
-    <ClInclude Include="Source\C3RenderableImpl.h" />
+    <ClInclude Include="Source\C3ModelRendererImpl.h" />
     <ClInclude Include="Source\C3RendererImpl.h" />
     <ClInclude Include="Source\C3ResourceImpl.h" />
     <ClInclude Include="Source\C3ResourceManagerImpl.h" />
@@ -249,6 +253,8 @@
       <PreprocessorDefinitions>_DEBUG;C3_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -272,6 +278,7 @@
       <PreprocessorDefinitions>_DEBUG;C3_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -295,6 +302,8 @@
       <PreprocessorDefinitions>NDEBUG;C3_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

@@ -71,6 +71,9 @@ public:
 	UINT  m_nAppLook;
 	BOOL  m_bHiColorIcons;
 
+	tstring m_AppDataRoot;
+	tstring m_ProtoFilename;
+
 	c3::System *m_C3;
 
 	c3::Configuration *m_Config;

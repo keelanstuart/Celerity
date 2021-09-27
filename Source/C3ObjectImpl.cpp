@@ -19,6 +19,7 @@ ObjectImpl::ObjectImpl(SystemImpl *psys, GUID guid)
 	m_pSys = psys;
 	m_GUID = guid;
 	m_Props = props::IPropertySet::CreatePropertySet();
+	m_Props->SetChangeListener(this);
 	m_Flags.SetAll(OBJFLAG(UPDATE) | OBJFLAG(DRAW));
 	m_Owner = nullptr;
 }
@@ -31,6 +32,11 @@ ObjectImpl::~ObjectImpl()
 		it->GetType()->Destroy(it);
 	}
 	m_Features.clear();
+
+	for (auto child : m_Children)
+	{
+		child->Release();
+	}
 
 	if (m_Props)
 	{
@@ -99,14 +105,31 @@ Object *ObjectImpl::GetChild(size_t index)
 
 void ObjectImpl::AddChild(Object *pchild)
 {
-	if (!pchild)
+	if (!pchild || (pchild == this))
 		return;
 
-	if (std::find(m_Children.cbegin(), m_Children.cend(), pchild) != m_Children.cend())
+	if (std::find(m_Children.cbegin(), m_Children.cend(), pchild) == m_Children.cend())
 	{
 		m_Children.push_back(pchild);
 
 		pchild->SetOwner(this);
+	}
+}
+
+
+void ObjectImpl::RemoveChild(Object *pchild, bool release)
+{
+	if (!pchild || (pchild == this))
+		return;
+
+	TObjectArray::const_iterator it = std::find(m_Children.cbegin(), m_Children.cend(), pchild);
+	if (it == m_Children.cend())
+	{
+		(*it)->SetOwner(nullptr);
+		if (release)
+			(*it)->Release();
+
+		m_Children.erase(it);
 	}
 }
 
@@ -155,7 +178,7 @@ Feature *ObjectImpl::FindFeature(const FeatureType *pctype)
 }
 
 
-Feature *ObjectImpl::AddFeature(const FeatureType *pctype)
+Feature *ObjectImpl::AddFeature(const FeatureType *pctype, bool init)
 {
 	if (!pctype)
 		return nullptr;
@@ -170,7 +193,8 @@ Feature *ObjectImpl::AddFeature(const FeatureType *pctype)
 
 	m_Features.push_back(pc);
 
-	pc->Initialize(this);
+	if (init)
+		pc->Initialize(this);
 
 	return pc;
 }
@@ -213,6 +237,11 @@ bool ObjectImpl::Prerender(props::TFlags64 rendflags)
 			ret = true;
 	}
 
+	for (auto child : m_Children)
+	{
+		child->Prerender(rendflags);
+	}
+
 	return ret;
 }
 
@@ -225,6 +254,11 @@ bool ObjectImpl::Render(props::TFlags64 rendflags)
 	for (const auto &it : m_Features)
 	{
 		it->Render(this, rendflags);
+	}
+
+	for (auto child : m_Children)
+	{
+		child->Render(rendflags);
 	}
 
 	return true;

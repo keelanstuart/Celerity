@@ -9,12 +9,14 @@
 #include <C3SystemImpl.h>
 #include <C3ConfigurationImpl.h>
 
-#include <C3PositionableImpl.h>
-#include <C3CameraImpl.h>
-
 #include <C3TextureImpl.h>
 #include <C3ModelImpl.h>
 #include <C3ShaderComponentImpl.h>
+
+#include <C3PositionableImpl.h>
+#include <C3CameraImpl.h>
+#include <C3ModelRendererImpl.h>
+
 
 
 using namespace c3;
@@ -100,6 +102,7 @@ void SystemImpl::Release()
 		// *************************************************
 		UNREGISTER_FEATURETYPE(Positionable, m_Factory);
 		UNREGISTER_FEATURETYPE(Camera, m_Factory);
+		UNREGISTER_FEATURETYPE(ModelRenderer, m_Factory);
 		// *************************************************
 
 		delete m_Factory;
@@ -173,6 +176,7 @@ Factory *SystemImpl::GetFactory()
 		// *************************************************
 		REGISTER_FEATURETYPE(Positionable, m_Factory);
 		REGISTER_FEATURETYPE(Camera, m_Factory);
+		REGISTER_FEATURETYPE(ModelRenderer, m_Factory);
 		// *************************************************
 	}
 

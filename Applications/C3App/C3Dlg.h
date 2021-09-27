@@ -11,12 +11,17 @@ class C3Dlg : public CDialog
 protected:
 	c3::Renderer *m_Rend;
 	c3::FrameBuffer *m_FB;
-	c3::Texture2D *m_ColorTarg[2];
+	c3::Texture2D *m_ColorTarg[4];
 	c3::DepthBuffer *m_DepthTarg;
+	c3::ShaderComponent *m_VS_copyback;
+	c3::ShaderComponent *m_FS_copyback;
+	c3::ShaderProgram *m_SP_copyback;
 
 	c3::Factory *m_Factory;
 	c3::Object *m_RootObj;
 	c3::Object *m_Camera;
+
+	bool m_MoveF, m_MoveL, m_MoveR, m_MoveB, m_Run, m_MoveU, m_MoveD;
 
 	LARGE_INTEGER m_PerfFreq;
 	LARGE_INTEGER m_PerfTime;
@@ -53,4 +58,7 @@ public:
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 };

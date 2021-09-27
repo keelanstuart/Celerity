@@ -62,26 +62,14 @@ protected:
 	c3::Positionable *m_pCamPos;
 	float m_CamPitch, m_CamYaw;
 
-	c3::Camera *m_pProjectorCam;
-	c3::Positionable *m_pProjectorCamPos;
-
 	c3::FrameBuffer *m_FB;
-	c3::DepthBuffer *m_DB;
-	c3::Texture2D *m_DiffuseTarg;
-	c3::Texture2D *m_NormSpecTarg;
-	c3::Texture2D *m_PosDepthTarg;
+	c3::Texture2D *m_ColorTarg[3];
+	c3::DepthBuffer *m_DepthTarg;
 
-	enum {
-		SCENE = 0,
-		LIGHT,
-		PROJECTED,
+	c3::ShaderComponent *m_VS_copyback;
+	c3::ShaderComponent *m_FS_copyback;
+	c3::ShaderProgram *m_SP_copyback;
 
-		NUMSHADERS
-	};
-	c3::ShaderProgram *m_SP[NUMSHADERS];
-	c3::ShaderComponent *m_VS[NUMSHADERS], *m_FS[NUMSHADERS];
-	int64_t m_UP_MVP[NUMSHADERS], m_UP_M[NUMSHADERS];
-	int64_t m_UP_TEX0[NUMSHADERS], m_UP_TEX1[NUMSHADERS], m_UP_TEX2[NUMSHADERS];
 
 // Generated message map functions
 protected:

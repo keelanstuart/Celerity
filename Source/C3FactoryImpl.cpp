@@ -49,18 +49,22 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid)
 	{
 		o->SetName(pproto->GetName());
 		o->Flags().SetAll(pproto->Flags());
-		o->GetProperties()->AppendPropertySet(pproto->GetProperties());
 
 		for (size_t i = 0, maxi = pproto->GetNumFeatures(); i < maxi; i++)
 		{
-			const FeatureType *pct = pproto->GetFeature(i);
-			if (!pct)
-				continue;
+			o->AddFeature(pproto->GetFeature(i), false);
+		}
 
-			Feature *pc = o->AddFeature(pct);
+		for (size_t i = 0, maxi = o->GetNumFeatures(); i < maxi; i++)
+		{
+			Feature *pc = o->GetFeature(i);
 			if (!pc)
 				continue;
+
+			pc->Initialize(o);
 		}
+
+		o->GetProperties()->AppendPropertySet(pproto->GetProperties());
 	}
 
 	o->PostLoad();
@@ -89,7 +93,12 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid)
 			if (!ppc)
 				continue;
 
-			Feature *pc = o->AddFeature(ppc->GetType());
+			Feature *pc = o->AddFeature(ppc->GetType(), false);
+		}
+
+		for (size_t i = 0, maxi = pobject->GetNumFeatures(); i < maxi; i++)
+		{
+			Feature *pc = o->GetFeature(i);
 			if (!pc)
 				continue;
 
@@ -119,11 +128,7 @@ Prototype *FactoryImpl::CreatePrototype(Prototype *pproto)
 
 		for (size_t i = 0, maxi = pproto->GetNumFeatures(); i < maxi; i++)
 		{
-			const FeatureType *pct = pproto->GetFeature(i);
-			if (!pct)
-				continue;
-
-			p->AddFeature(pct);
+			p->AddFeature(pproto->GetFeature(i));
 		}
 	}
 
@@ -151,11 +156,7 @@ Prototype *FactoryImpl::MakePrototype(Object *pobject)
 			if (!ppc)
 				continue;
 
-			FeatureType *pct = ppc->GetType();
-			if (!pct)
-				continue;
-
-			p->AddFeature(pct);
+			p->AddFeature(ppc->GetType());
 		}
 	}
 
@@ -243,7 +244,7 @@ bool FactoryImpl::LoadPrototypes(genio::IInputStream *is)
 				uint32_t namelen;
 				is->ReadUINT32(namelen);
 				name.resize(namelen, _T('#'));
-				is->ReadString(name.c_str());
+				is->ReadString((TCHAR *)name.c_str());
 				p->SetName(name.c_str());
 
 				uint64_t flags;

@@ -13,7 +13,7 @@
 namespace c3
 {
 
-	class C3_API Renderable : public Feature
+	class C3_API OmniLight : public Feature
 	{
 
 	public:
@@ -38,19 +38,9 @@ namespace c3
 
 		virtual bool HitTest(glm::fvec3 *ray_pos, glm::fvec3 *rayvec) const = NULL;
 
-		virtual void SetMesh(const Mesh *pmesh) = NULL;
-
-		virtual const Mesh *GetMesh() const = NULL;
-
-		virtual void SetTexture(const Texture *ptex) = NULL;
-
-		virtual const Texture *GetTexture() const = NULL;
-
-		virtual void SetMaterial(const Material *pmaterial) = NULL;
-
-		virtual const Material *GetMaterial() const = NULL;
-
 		virtual void SetShaderProgram(const ShaderProgram *pshader) = NULL;
+
+		virtual void SetShaderProgram(const Resource *pshaderres) = NULL;
 
 		virtual const ShaderProgram *GetShaderProgram() const = NULL;
 

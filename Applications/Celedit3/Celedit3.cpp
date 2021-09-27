@@ -91,21 +91,34 @@ BOOL CCeledit3App::InitInstance()
 	if (!pf)
 		return FALSE;
 
+	PWSTR appdata = nullptr;
+	if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appdata) == S_OK)
+	{
+		TCHAR *appdatat;
+		CONVERT_WCS2TCS(appdata, appdatat);
+		m_AppDataRoot = appdatat;
+		m_AppDataRoot += _T("\\Celerity\\Celedit3\\");
+		CoTaskMemFree(appdata);
+	}
+	m_ProtoFilename += _T("Prototypes.xml");
+
+	if (PathFileExists(m_ProtoFilename.c_str()))
+	{
+		FILE *protof;
+		if (!_tfopen_s(&protof, m_ProtoFilename.c_str(), _T("r, css=UTF-8")))
+		{
+			HANDLE h = (HANDLE)_fileno(protof);
+			genio::IInputStream *pis = genio::IInputStream::Create(h);
+			pf->LoadPrototypes(pis);
+			pis->Release();
+		}
+	}
+
 	c3::PluginManager *ppm = m_C3->GetPluginManager();
 	if (!ppm)
 		return FALSE;
 
 	ppm->DiscoverPlugins();
-
-	c3::Prototype *pcamproto = pf->CreatePrototype();
-	pcamproto->AddFeature(c3::Positionable::Type());
-	pcamproto->AddFeature(c3::Camera::Type());
-	pcamproto->SetName(_T("Camera"));
-
-	c3::Prototype *pslideproto = pf->CreatePrototype();
-	pslideproto->AddFeature(c3::Positionable::Type());
-	pslideproto->AddFeature(pf->FindFeatureType(_T("SimpleSlide"), false));
-	pslideproto->SetName(_T("SimpleSlide"));
 
 	// Initialize OLE libraries
 	if (!AfxOleInit())
@@ -118,7 +131,7 @@ BOOL CCeledit3App::InitInstance()
 
 	EnableTaskbarInteraction(FALSE);
 
-	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
+	SetRegistryKey(_T("Celerity3\\Celedit3"));
 	LoadStdProfileSettings(4);  // Load standard INI file options (including MRU)
 
 	InitContextMenuManager();

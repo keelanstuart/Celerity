@@ -41,7 +41,6 @@ END_MESSAGE_MAP()
 CCeledit3Doc::CCeledit3Doc() noexcept
 {
 	m_Observer = nullptr;
-	m_Projector = nullptr;
 	m_RootObj = nullptr;
 	m_Brush = nullptr;
 }
@@ -52,12 +51,6 @@ CCeledit3Doc::~CCeledit3Doc()
 	{
 		m_Observer->Release();
 		m_Observer = nullptr;
-	}
-
-	if (m_Projector)
-	{
-		m_Projector->Release();
-		m_Projector = nullptr;
 	}
 
 	if (m_RootObj)
@@ -82,10 +75,12 @@ BOOL CCeledit3Doc::OnNewDocument()
 	if (!pf)
 		return FALSE;
 
-	m_Observer = pf->Build(pf->FindPrototype(_T("Camera")));
-	m_Projector = pf->Build(pf->FindPrototype(_T("Camera")));
+	m_Observer = pf->Build();
+	m_Observer->AddFeature(c3::Positionable::Type());
+	m_Observer->AddFeature(c3::Camera::Type());
+	m_Observer->SetName(_T("Camera"));
 
-	m_RootObj = pf->Build(pf->FindPrototype(_T("SimpleSlide")));
+	m_RootObj = pf->Build();
 
 	return TRUE;
 }

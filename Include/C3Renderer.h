@@ -135,6 +135,14 @@ namespace c3
 			SO_NUMOPMODES
 		} StencilOperation;
 
+		typedef enum EWindingOrder
+		{
+			WO_CW = 0,
+			WO_CCW,
+
+			WO_NUMMODES
+		} WindingOrder;
+
 		typedef enum ECullMode
 		{
 			CM_DISABLED = 0,
@@ -193,6 +201,9 @@ namespace c3
 		virtual void SetStencilOperation(StencilOperation stencil_fail, StencilOperation zfail, StencilOperation zpass) = NULL;
 		virtual void GetStencilOperation(StencilOperation &stencil_fail, StencilOperation &zfail, StencilOperation &zpass) const = NULL;
 
+		virtual void SetWindingOrder(WindingOrder mode) = NULL;
+		virtual WindingOrder GetWindingOrder() const = NULL;
+
 		virtual void SetCullMode(CullMode mode) = NULL;
 		virtual CullMode GetCullMode() const = NULL;
 
@@ -225,6 +236,7 @@ namespace c3
 		virtual void UseProgram(ShaderProgram *pprog) = NULL;
 		virtual void UseVertexBuffer(VertexBuffer *pvbuf) = NULL;
 		virtual void UseIndexBuffer(IndexBuffer *pibuf) = NULL;
+		virtual ShaderProgram *GetActiveProgram() = NULL;
 
 		virtual bool DrawPrimitives(PrimType type, size_t count = -1) = NULL;
 
@@ -241,6 +253,8 @@ namespace c3
 		virtual const glm::fmat4x4 *GetNormalMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+
+		virtual VertexBuffer *GetFullscreenPlaneVB() = NULL;
 
 		virtual Mesh *GetBoundsMesh() = NULL;
 		virtual Mesh *GetCubeMesh() = NULL;

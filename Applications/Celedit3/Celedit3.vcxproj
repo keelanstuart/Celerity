@@ -23,7 +23,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -31,7 +31,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfMfc>Static</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -71,10 +71,11 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>Celerity$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>Celerity$(PlatformArchitecture)$(ShortConfiguration).lib;Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -97,12 +98,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>Celerity$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>Celerity$(PlatformArchitecture)$(ShortConfiguration).lib;Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -116,27 +118,33 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="calendarbar.h" />
     <ClInclude Include="Celedit3.h" />
     <ClInclude Include="Celedit3Doc.h" />
     <ClInclude Include="Celedit3View.h" />
-    <ClInclude Include="ClassView.h" />
+    <ClInclude Include="PrototypeView.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="OutputWnd.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PropertiesWnd.h" />
+    <ClInclude Include="PropertyGrid.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ViewTree.h" />
+    <ClInclude Include="wtfcolorbar.h" />
+    <ClInclude Include="wtfcolorbutton.h" />
+    <ClInclude Include="wtfcolormenubutton.h" />
+    <ClInclude Include="wtfcolorpopupmenu.h" />
+    <ClInclude Include="wtfpropertygridctrl.h" />
+    <ClInclude Include="wtfpropertygridtooltipctrl.h" />
+    <ClInclude Include="wtfvslistbox.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="calendarbar.cpp" />
     <ClCompile Include="Celedit3.cpp" />
     <ClCompile Include="Celedit3Doc.cpp" />
     <ClCompile Include="Celedit3View.cpp" />
-    <ClCompile Include="ClassView.cpp" />
+    <ClCompile Include="PrototypeView.cpp" />
     <ClCompile Include="FileView.cpp" />
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="OutputWnd.cpp" />
@@ -145,7 +153,15 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="PropertiesWnd.cpp" />
+    <ClCompile Include="PropertyGrid.cpp" />
     <ClCompile Include="ViewTree.cpp" />
+    <ClCompile Include="wtfcolorbar.cpp" />
+    <ClCompile Include="wtfcolorbutton.cpp" />
+    <ClCompile Include="wtfcolormenubutton.cpp" />
+    <ClCompile Include="wtfcolorpopupmenu.cpp" />
+    <ClCompile Include="wtfpropertygridctrl.cpp" />
+    <ClCompile Include="wtfpropertygridtooltipctrl.cpp" />
+    <ClCompile Include="wtfvslistbox.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Celedit3.reg" />

@@ -32,6 +32,12 @@ namespace c3
 		props::IProperty *m_pfov;
 		float m_fov;
 
+		props::IProperty *m_pnearclip;
+		float m_nearclip;
+
+		props::IProperty *m_pfarclip;
+		float m_farclip;
+
 		glm::fvec3 m_eyepos, m_targpos;
 		props::IProperty *m_porbitdist;
 		float m_orbitdist;

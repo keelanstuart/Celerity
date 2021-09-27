@@ -46,7 +46,7 @@ protected:  // control bar embedded members
 	CDialogBar        m_wndDlgBar;
 	CStatusBar        m_wndStatusBar;
 	CFileView         m_wndFileView;
-	CClassView        m_wndClassView;
+	CPrototypeView        m_wndPrototypeView;
 	COutputWnd        m_wndOutput;
 	CPropertiesWnd    m_wndProperties;
 	COutlookBar       m_wndNavigationBar;
