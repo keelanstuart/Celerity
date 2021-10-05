@@ -109,11 +109,11 @@ void CCeledit3View::OnDraw(CDC *pDC)
 
 			int32_t ul;
 			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerDiffuse"))))
-				m_SP_copyback->SetUniformTexture(ul, 0, m_ColorTarg[0]);
+				m_SP_copyback->SetUniformTexture(m_ColorTarg[0], ul);
 			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerNormal"))))
-				m_SP_copyback->SetUniformTexture(ul, 1, m_ColorTarg[1]);
+				m_SP_copyback->SetUniformTexture(m_ColorTarg[1], ul);
 			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerPosDepth"))))
-				m_SP_copyback->SetUniformTexture(ul, 2, m_ColorTarg[2]);
+				m_SP_copyback->SetUniformTexture(m_ColorTarg[2], ul);
 
 			m_SP_copyback->ApplyUniforms(false);
 

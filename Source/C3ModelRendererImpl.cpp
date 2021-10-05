@@ -66,13 +66,15 @@ void ModelRendererImpl::Update(Object *pobject, float elapsed_time)
 {
 	if (!m_pPos)
 		return;
-
 }
 
 
 bool ModelRendererImpl::Prerender(Object *pobject, props::TFlags64 rendflags)
 {
-	return true;
+	if (rendflags.AnySet(Object::OBJFLAG(Object::DRAW) || Object::OBJFLAG(Object::DRAWINEDITOR)))
+		return true;
+
+	return false;
 }
 
 
@@ -91,19 +93,19 @@ void ModelRendererImpl::Render(Object *pobject, props::TFlags64 rendflags)
 
 	if (!m_SP_defobj)
 	{
-		ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
+		ResourceManager *prm = pobject->GetSystem()->GetResourceManager();
 
 		props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
-		props::IProperty *pvsh = m_pOwner->GetProperties()->GetPropertyById('VSHF');
-		props::IProperty *pfsh = m_pOwner->GetProperties()->GetPropertyById('FSHF');
+		props::IProperty *pvsh = pobject->GetProperties()->GetPropertyById('VSHF');
+		props::IProperty *pfsh = pobject->GetProperties()->GetPropertyById('FSHF');
 		if (!m_VS_defobj)
 			m_VS_defobj = (c3::ShaderComponent *)((prm->GetResource(pvsh ? pvsh->AsString() : _T("def-obj.vsh"), rf))->GetData());
 
 		if (!m_FS_defobj)
 			m_FS_defobj = (c3::ShaderComponent *)((prm->GetResource(pfsh ? pfsh->AsString() : _T("def-obj.fsh"), rf))->GetData());
 
-		m_SP_defobj = m_pOwner->GetSystem()->GetRenderer()->CreateShaderProgram();
+		m_SP_defobj = pobject->GetSystem()->GetRenderer()->CreateShaderProgram();
 
 		if (m_SP_defobj && m_VS_defobj && m_FS_defobj)
 		{

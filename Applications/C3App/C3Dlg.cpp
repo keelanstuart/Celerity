@@ -23,10 +23,10 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 
 	m_Rend = nullptr;
-	m_FB = nullptr;
+	m_GBuf = nullptr;
+	m_LCBuf = nullptr;
 	m_FS_copyback = m_VS_copyback = nullptr;
 	m_SP_copyback = nullptr;
-	memset(m_ColorTarg, 0, sizeof(c3::Texture2D *) * 2);;
 	m_DepthTarg = nullptr;
 	m_MoveF = false;
 	m_MoveL = false;
@@ -35,6 +35,9 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_Run = false;
 	m_MoveU = false;
 	m_MoveD = false;
+	m_Light[0] = nullptr;
+	m_Light[1] = nullptr;
+	m_Light[2] = nullptr;
 }
 
 void C3Dlg::DoDataExchange(CDataExchange* pDX)
@@ -55,6 +58,27 @@ BEGIN_MESSAGE_MAP(C3Dlg, CDialog)
 	ON_WM_KEYUP()
 END_MESSAGE_MAP()
 
+typedef struct sTargData
+{
+	const TCHAR *name;
+	c3::Renderer::ETextureType type;
+	uint64_t flags;
+} STargData;
+
+STargData GBufTargData[] =
+{
+	{ _T("uSamplerDiffuse"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },
+	{ _T("uSamplerNormal"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },
+	{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F32_3CH, TEXCREATEFLAG_RENDERTARGET },
+	{ _T("uSamplerEmission"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGETSMOOTH }
+};
+
+// It SEEEEMS like in order to get blending to work, the light combine buffer needs to pre-multiply alpha,
+// but then write alpha=1 in the shader... the depth test is still a problem
+STargData LCBufTargData[] =
+{
+	{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },
+};
 
 // C3Dlg message handlers
 
@@ -76,50 +100,100 @@ BOOL C3Dlg::OnInitDialog()
 
 	m_Factory = theApp.m_C3->GetFactory();
 
+	theApp.m_C3->GetLog()->Print(_T("Creating Renderer... "));
 	m_Rend = theApp.m_C3->GetRenderer();
 	if (!m_Rend)
+	{
+		theApp.m_C3->GetLog()->Print(_T("failed\n"));
 		exit(-1);
+	}
+	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
+	theApp.m_C3->GetLog()->Print(_T("Initializing Renderer... "));
 	m_Rend->SetClearColor(&c3::Color::Black);
 	CRect r;
 	GetClientRect(r);
 	if (!m_Rend->Initialize(GetSafeHwnd(), 0))
+	{
+		theApp.m_C3->GetLog()->Print(_T("failed\n"));
 		exit(-2);
+	}
+	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
 	c3::ResourceManager *rm = theApp.m_C3->GetResourceManager();
 	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
-	m_VS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("copyback.vsh"), rf))->GetData());
-	m_FS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("copyback.fsh"), rf))->GetData());
+	theApp.m_C3->GetLog()->Print(_T("Creating G-buffer... "));
+	bool gbok = true;
+	m_GBuf = m_Rend->CreateFrameBuffer();
+	if (m_GBuf)
+	{
+		size_t w = r.Width();
+		size_t h = r.Height();
+
+		m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
+		m_GBuf->AttachDepthTarget(m_DepthTarg);
+
+		for (size_t i = 0; i < _countof(GBufTargData); i++)
+		{
+			c3::Texture2D *pt = m_Rend->CreateTexture2D(w, h, GBufTargData[i].type, 1, GBufTargData[i].flags);
+			gbok &= (pt != nullptr);
+			if (!gbok)
+				break;
+
+			m_GBuf->AttachColorTarget(pt, i);
+			pt->SetName(GBufTargData[i].name);
+			m_ColorTarg.push_back(pt);
+		}
+
+		if (gbok)
+			gbok &= (c3::FrameBuffer::RETURNCODE::RET_OK == m_GBuf->Seal());
+	}
+	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+	theApp.m_C3->GetLog()->Print(_T("Creating light combine buffer... "));
+	gbok = true;
+	m_LCBuf = m_Rend->CreateFrameBuffer();
+	if (m_LCBuf)
+	{
+		size_t w = r.Width();
+		size_t h = r.Height();
+
+		m_LCBuf->AttachDepthTarget(m_DepthTarg);
+
+		for (size_t i = 0; i < _countof(LCBufTargData); i++)
+		{
+			c3::Texture2D *pt = m_Rend->CreateTexture2D(w, h, LCBufTargData[i].type, 1, LCBufTargData[i].flags);
+			gbok &= (pt != nullptr);
+			if (!gbok)
+				break;
+
+			m_LCBuf->AttachColorTarget(pt, i);
+			pt->SetName(LCBufTargData[i].name);
+		}
+
+		if (gbok)
+			gbok &= (c3::FrameBuffer::RETURNCODE::RET_OK == m_LCBuf->Seal());
+	}
+	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+
+	m_VS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.vsh"), rf))->GetData());
+	m_FS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.fsh"), rf))->GetData());
 	m_SP_copyback = m_Rend->CreateShaderProgram();
 	if (m_SP_copyback)
 	{
 		m_SP_copyback->AttachShader(m_VS_copyback);
 		m_SP_copyback->AttachShader(m_FS_copyback);
-		m_SP_copyback->Link();
-	}
-
-	m_FB = m_Rend->CreateFrameBuffer();
-	if (m_FB)
-	{
-		size_t w = r.Width();
-		size_t h = r.Height();
-
-		m_ColorTarg[0] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::U8_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
-		m_ColorTarg[1] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::F16_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
-		m_ColorTarg[2] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::F32_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
-		m_ColorTarg[3] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::U8_4CH, 1, TEXCREATEFLAG_RENDERTARGETSMOOTH);
-		m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
-
-		if (m_ColorTarg[0] && m_ColorTarg[1] && m_ColorTarg[2] && m_DepthTarg)
+		if (m_SP_copyback->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
 		{
-			m_FB->AttachColorTarget(m_ColorTarg[0], 0);
-			m_FB->AttachColorTarget(m_ColorTarg[1], 1);
-			m_FB->AttachColorTarget(m_ColorTarg[2], 2);
-			m_FB->AttachColorTarget(m_ColorTarg[3], 3);
-			m_FB->AttachDepthTarget(m_DepthTarg);
+			uint32_t i;
+			for (i = 0; i < m_ColorTarg.size(); i++)
+			{
+					m_SP_copyback->SetUniformTexture(m_ColorTarg[i]);
+			}
 
-			m_FB->Seal();
+			m_SP_copyback->SetUniformTexture(m_LCBuf->GetColorTarget(0));
 		}
 	}
 
@@ -127,6 +201,7 @@ BOOL C3Dlg::OnInitDialog()
 	m_Camera->AddFeature(c3::Positionable::Type());
 	m_Camera->AddFeature(c3::Camera::Type());
 	m_Camera->SetName(_T("Camera"));
+	theApp.m_C3->GetLog()->Print(_T("Camera created\n"));
 
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
 	if (pcam)
@@ -137,6 +212,7 @@ BOOL C3Dlg::OnInitDialog()
 
 	m_RootObj = m_Factory->Build((c3::Prototype *)nullptr);
 	m_RootObj->AddFeature(c3::Positionable::Type());
+	m_RootObj->Flags().Set(c3::Object::OBJFLAG(c3::Object::LIGHT));
 
 	c3::Prototype *pproto;
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Sponza"))))
@@ -152,9 +228,12 @@ BOOL C3Dlg::OnInitDialog()
 				ppos->Update(0);
 			}
 			m_RootObj->AddChild(pobj);
+
+			theApp.m_C3->GetLog()->Print(_T("Sponza created\n"));
 		}
 	}
 
+#if 0
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("AH64e"))))
 	{
 		c3::Object *pobj = m_Factory->Build(pproto);
@@ -167,8 +246,45 @@ BOOL C3Dlg::OnInitDialog()
 				ppos->Update(0);
 			}
 			m_RootObj->AddChild(pobj);
+
+			theApp.m_C3->GetLog()->Print(_T("Chopper created\n"));
 		}
 	}
+#endif
+
+#if 1
+	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Light"))))
+	{
+		for (size_t i = 0; i < _countof(m_Light); i++)
+		{
+			float f = float(i);
+			m_Light[i] = m_Factory->Build(pproto);
+			if (m_Light[i])
+			{
+				c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindFeature(c3::Positionable::Type()));
+				if (ppos)
+				{
+					ppos->SetPos((f - 1) * 30.0f, 0.0f, 1.0f);
+					ppos->SetScl(130.0f, 130.0f, 130.0f);
+					ppos->Update(0);
+				}
+
+				c3::OmniLight *plight = dynamic_cast<c3::OmniLight *>(m_Light[i]->FindFeature(c3::OmniLight::Type()));
+				if (plight)
+					plight->SetSourceFrameBuffer(m_GBuf);
+
+				props::IPropertySet *pps = m_Light[i]->GetProperties();
+				props::IProperty *pp = pps->CreateProperty(_T("uLightColor"), 'LCLR');
+				const props::TVec3F c[3] = {{0, 1, 0}, {0, 0, 1}, {1, 0, 0}};
+				pp->SetVec3F(c[i]);
+
+				m_RootObj->AddChild(m_Light[i]);
+
+				theApp.m_C3->GetLog()->Print(_T("Light %d created\n"), i);
+			}
+		}
+	}
+#endif
 
 	SetTimer('DRAW', 5, NULL);
 
@@ -212,35 +328,50 @@ void C3Dlg::OnPaint()
 			m_Rend->SetProjectionMatrix(pcam->GetProjectionMatrix());
 		}
 
-		if (m_Rend->BeginScene())
+#if 0
+		for (size_t i = 0; i < 3; i++)
 		{
-			m_RootObj->Update(dt);
-			c3::Positionable *ppos = (c3::Positionable *)(m_RootObj->FindFeature(c3::Positionable::Type()));
-			m_Rend->SetWorldMatrix(ppos->GetTransformMatrix());
+			if (!m_Light[i])
+				continue;
 
-			m_Rend->UseFrameBuffer(m_FB, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
+			c3::Positionable *plpos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindFeature(c3::Positionable::Type()));
+			float adjx = sinf((float)theApp.m_C3->GetCurrentFrameNumber() * 0.01f) * 30.0f;
+			float adjy = 0.0f;
+			float adjz = cosf((float)theApp.m_C3->GetCurrentFrameNumber() * 0.01f) * 5.0f + 5.0f;
+			plpos->AdjustPos(adjx, adjy, adjz);
+		}
+#endif
 
-			if (m_RootObj->Prerender())
-				if (m_RootObj->Render())
-					m_RootObj->Postrender();
+		m_RootObj->Update(dt);
 
-			m_Rend->UseFrameBuffer(nullptr);
+		if (m_Rend->BeginScene(0))
+		{
+			// Color pass
+			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
+			m_Rend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
+			m_Rend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
+			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ALPHA);
+			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
+			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::DRAW));
+
+			// Lighting pass(es)
+			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
+			m_Rend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
+			m_Rend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
+			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
+			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
+			m_LCBuf->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
+			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::LIGHT));
+
+			// Resolve
+			m_Rend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
+			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
+			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
+			m_Rend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			m_Rend->UseProgram(m_SP_copyback);
-			int32_t ul;
-
-			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerDiffuse"))))
-				m_SP_copyback->SetUniformTexture(ul, 0, m_ColorTarg[0]);
-			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerNormal"))))
-				m_SP_copyback->SetUniformTexture(ul, 1, m_ColorTarg[1]);
-			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerPosDepth"))))
-				m_SP_copyback->SetUniformTexture(ul, 2, m_ColorTarg[2]);
-			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerEmission"))))
-				m_SP_copyback->SetUniformTexture(ul, 3, m_ColorTarg[3]);
-
 			m_SP_copyback->ApplyUniforms(false);
 			m_Rend->UseVertexBuffer(m_Rend->GetFullscreenPlaneVB());
-			m_Rend->SetCullMode(c3::Renderer::ECullMode::CM_DISABLED);
-			m_Rend->DrawPrimitives(c3::Renderer::EPrimType::TRISTRIP, 4);
+			m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
 			m_Rend->EndScene();
 			m_Rend->Present();
@@ -262,22 +393,9 @@ void C3Dlg::Cleanup()
 {
 	KillTimer('DRAW');
 
-	if (m_ColorTarg[0])
+	for (auto targ : m_ColorTarg)
 	{
-		m_ColorTarg[0]->Release();
-		m_ColorTarg[0] = nullptr;
-	}
-
-	if (m_ColorTarg[1])
-	{
-		m_ColorTarg[1]->Release();
-		m_ColorTarg[1] = nullptr;
-	}
-
-	if (m_ColorTarg[2])
-	{
-		m_ColorTarg[2]->Release();
-		m_ColorTarg[2] = nullptr;
+		targ->Release();
 	}
 
 	if (m_DepthTarg)
@@ -286,10 +404,16 @@ void C3Dlg::Cleanup()
 		m_DepthTarg = nullptr;
 	}
 
-	if (m_FB)
+	if (m_GBuf)
 	{
-		m_FB->Release();
-		m_FB = nullptr;
+		m_GBuf->Release();
+		m_GBuf = nullptr;
+	}
+
+	if (m_LCBuf)
+	{
+		m_LCBuf->Release();
+		m_LCBuf = nullptr;
 	}
 
 	if (m_Rend)
@@ -401,7 +525,12 @@ void C3Dlg::OnSize(UINT nType, int cx, int cy)
 
 	CDialog::OnSize(nType, cx, cy);
 
-	theApp.m_C3->GetRenderer()->SetViewport();
+	RECT r;
+	r.left = 0;
+	r.right = cx;
+	r.top = 0;
+	r.bottom = cy;
+//	theApp.m_C3->GetRenderer()->SetViewport(&r);
 
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
 	if (pcam)

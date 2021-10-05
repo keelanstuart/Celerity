@@ -30,6 +30,12 @@ namespace c3
 
 		virtual void Release() = NULL;
 
+		/// Sets the name of the Texture - this is done automatically for resources, but can be done manually in other cases
+		virtual void SetName(const TCHAR *name) = NULL;
+
+		/// Gets the name of the Texture
+		virtual const TCHAR *GetName() const = NULL;
+
 		/// Describes the type and arrangement of the texels
 		virtual Renderer::ETextureType Format() = NULL;
 

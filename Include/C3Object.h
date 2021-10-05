@@ -48,6 +48,7 @@ namespace c3
 			BILLBOARD,					// Aligns the object to the view matrix of the renderer when drawn
 			CHILDRENDIRTY,				// Indicates that the children have changed since the last update
 			PARENTDIRTY,				// Indicates that the parent has changed since the last update
+			LIGHT,
 		} EObjFlag;
 
 		// compile time helper for making bitwise flags out of EObjFlag enum values

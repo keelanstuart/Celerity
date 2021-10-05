@@ -37,7 +37,7 @@ MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend)
 	m_color[EColorComponentType::CCT_EMISSIVE] = Color::Black;
 	m_color[EColorComponentType::CCT_SPECULAR] = Color::DarkGrey;
 
-	m_DepthTest = Renderer::Test::DT_LESSEREQUAL;
+	m_DepthTest = Renderer::Test::DT_LESSER;
 
 	m_StencilEnabled = false;
 	m_StencilTest = Renderer::Test::DT_ALWAYS;
@@ -226,23 +226,23 @@ bool MaterialImpl::Apply(ShaderProgram *shader) const
 
 		int32_t ul_texdiff = shader->GetUniformLocation(_T("uSamplerDiffuse"));
 		if (ul_texdiff != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(ul_texdiff, TCT_DIFFUSE, GetTexture(TCT_DIFFUSE));
+			shader->SetUniformTexture(GetTexture(TCT_DIFFUSE), ul_texdiff, TCT_DIFFUSE);
 
 		int32_t ul_texnorm = shader->GetUniformLocation(_T("uSamplerNormal"));
 		if (ul_texnorm != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(ul_texnorm, TCT_NORMAL, GetTexture(TCT_NORMAL));
+			shader->SetUniformTexture(GetTexture(TCT_NORMAL), ul_texnorm, TCT_NORMAL);
 
 		int32_t ul_texsurf = shader->GetUniformLocation(_T("uSamplerSurface"));
 		if (ul_texsurf != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(ul_texsurf, TCT_SURFACEDESC, GetTexture(TCT_SURFACEDESC));
+			shader->SetUniformTexture(GetTexture(TCT_SURFACEDESC), ul_texsurf, TCT_SURFACEDESC);
 
 		int32_t ul_texemis = shader->GetUniformLocation(_T("uSamplerEmissive"));
 		if (ul_texemis != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(ul_texemis, TCT_EMISSIVE, GetTexture(TCT_EMISSIVE));
+			shader->SetUniformTexture(GetTexture(TCT_EMISSIVE), ul_texemis, TCT_EMISSIVE);
 
 		int32_t ul_texdepth = shader->GetUniformLocation(_T("uSamplerPosDepth"));
 		if (ul_texdepth != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(ul_texdepth, TCT_POSITIONDEPTH, GetTexture(TCT_POSITIONDEPTH));
+			shader->SetUniformTexture(GetTexture(TCT_POSITIONDEPTH), ul_texdepth, TCT_POSITIONDEPTH);
 	}
 
 	return true;

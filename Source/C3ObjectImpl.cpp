@@ -237,18 +237,13 @@ bool ObjectImpl::Prerender(props::TFlags64 rendflags)
 			ret = true;
 	}
 
-	for (auto child : m_Children)
-	{
-		child->Prerender(rendflags);
-	}
-
 	return ret;
 }
 
 
 bool ObjectImpl::Render(props::TFlags64 rendflags)
 {
-	if (!rendflags.AnySet(m_Flags))
+	if (!Prerender(rendflags))
 		return false;
 
 	for (const auto &it : m_Features)
@@ -261,14 +256,14 @@ bool ObjectImpl::Render(props::TFlags64 rendflags)
 		child->Render(rendflags);
 	}
 
+	Postrender(rendflags);
+
 	return true;
 }
 
 
 void ObjectImpl::Postrender(props::TFlags64 rendflags)
 {
-	if (!rendflags.AnySet(m_Flags))
-		return;
 }
 
 

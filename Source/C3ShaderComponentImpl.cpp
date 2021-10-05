@@ -144,6 +144,9 @@ DECLARE_RESOURCETYPE(ShaderComponent);
 
 c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
 {
+	if (!filename || !*filename)
+		return ResourceType::LoadResult::LR_ERROR;
+
 	if (returned_data)
 	{
 		Renderer::ShaderComponentType t;

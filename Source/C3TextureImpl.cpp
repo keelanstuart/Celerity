@@ -103,6 +103,18 @@ void Texture2DImpl::Release()
 }
 
 
+void Texture2DImpl::SetName(const TCHAR *name)
+{
+	m_Name = name;
+}
+
+
+const TCHAR *Texture2DImpl::GetName() const
+{
+	return m_Name.c_str();
+}
+
+
 Renderer::ETextureType Texture2DImpl::Format()
 {
 	return m_Type;
@@ -349,6 +361,18 @@ void TextureCubeImpl::Release()
 }
 
 
+void TextureCubeImpl::SetName(const TCHAR *name)
+{
+	m_Name = name;
+}
+
+
+const TCHAR *TextureCubeImpl::GetName() const
+{
+	return m_Name.c_str();
+}
+
+
 Renderer::ETextureType TextureCubeImpl::Format()
 {
 	return m_Type;
@@ -585,6 +609,18 @@ Texture3DImpl::~Texture3DImpl()
 void Texture3DImpl::Release()
 {
 	delete this;
+}
+
+
+void Texture3DImpl::SetName(const TCHAR *name)
+{
+	m_Name = name;
+}
+
+
+const TCHAR *Texture3DImpl::GetName() const
+{
+	return m_Name.c_str();
 }
 
 

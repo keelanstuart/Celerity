@@ -86,6 +86,8 @@ namespace c3
 
 		WindingOrder m_WindingOrder;
 		CullMode m_CullMode;
+		BlendMode m_BlendMode;
+		BlendEquation m_BlendEq;
 
 		bool m_StencilEnabled;
 		Test m_StencilTest;
@@ -138,7 +140,7 @@ namespace c3
 		virtual const RECT *GetViewport(RECT *viewport = nullptr) const;
 
 		virtual void SetOverrideHwnd(HWND hwnd);
-		virtual HWND GetOverrideHwnd();
+		virtual HWND GetOverrideHwnd() const;
 
 		virtual bool BeginScene(props::TFlags64 flags);
 		virtual bool EndScene(props::TFlags64 flags);
@@ -170,6 +172,12 @@ namespace c3
 
 		virtual void SetCullMode(CullMode mode);
 		virtual CullMode GetCullMode() const;
+
+		virtual void SetBlendMode(BlendMode mode);
+		virtual BlendMode GetBlendMode() const;
+
+		virtual void SetBlendEquation(BlendEquation eq);
+		virtual BlendEquation GetBlendEquation() const;
 
 		size_t PixelSize(TextureType type);
 		GLenum GLType(TextureType type);

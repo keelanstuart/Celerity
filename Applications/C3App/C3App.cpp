@@ -74,9 +74,14 @@ BOOL C3App::InitInstance()
 	if (!m_C3)
 		return FALSE;
 
+	m_C3->GetLog()->SetLogFile(_T("C3App.log"));
+	theApp.m_C3->GetLog()->Print(_T("Celerity3 system created\nC3App starting up...\n"));
+
 	c3::Factory *pfactory = m_C3->GetFactory();
 
 	c3::Material::SetAlternateTextureFilenameFunc(AltTextureName);
+
+	theApp.m_C3->GetLog()->Print(_T("Mapping file types... "));
 
 	c3::FileMapper *pfm = m_C3->GetFileMapper();
 	pfm->AddMapping(_T("tga"), _T("assets\\textures"));
@@ -91,8 +96,11 @@ BOOL C3App::InitInstance()
 	pfm->AddMapping(_T("fsh"), _T("assets\\shaders"));
 	pfm->AddMapping(_T("gsh"), _T("assets\\shaders"));
 
+	theApp.m_C3->GetLog()->Print(_T("done\n"));
 
 	c3::Prototype *pproto;
+
+	theApp.m_C3->GetLog()->Print(_T("Creating prototypes... "));
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("Sponza"));
@@ -109,6 +117,16 @@ BOOL C3App::InitInstance()
 	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-obj.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-obj.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("ah64e\\ah64e.fbx"));
+
+	pproto = pfactory->CreatePrototype();
+	pproto->SetName(_T("Light"));
+	pproto->AddFeature(c3::Positionable::Type());
+	pproto->AddFeature(c3::OmniLight::Type());
+	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-omnilight.vsh"));
+	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-omnilight.fsh"));
+	pproto->Flags().SetAll(c3::Object::OBJFLAG(c3::Object::UPDATE) | c3::Object::OBJFLAG(c3::Object::DRAWINEDITOR) | c3::Object::OBJFLAG(c3::Object::LIGHT));
+
+	theApp.m_C3->GetLog()->Print(_T("done\n"));
 
 	// Standard initialization
 

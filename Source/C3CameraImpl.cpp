@@ -29,7 +29,7 @@ CameraImpl::CameraImpl()
 	m_eyepos = glm::vec3(0, -10.0f, 0);
 	m_targpos = glm::vec3(0, 0, 0);
 	m_nearclip = 0.01f;
-	m_farclip = 5000.0f;
+	m_farclip = 20000.0f;
 
 	m_orbitdist = 10.0f;
 

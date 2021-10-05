@@ -38,11 +38,7 @@ namespace c3
 
 		virtual bool HitTest(glm::fvec3 *ray_pos, glm::fvec3 *rayvec) const = NULL;
 
-		virtual void SetShaderProgram(const ShaderProgram *pshader) = NULL;
-
-		virtual void SetShaderProgram(const Resource *pshaderres) = NULL;
-
-		virtual const ShaderProgram *GetShaderProgram() const = NULL;
+		virtual void SetSourceFrameBuffer(FrameBuffer *psource) = NULL;
 
 	};
 

@@ -154,6 +154,34 @@ namespace c3
 
 		} CullMode;
 
+		typedef enum EBlendMode
+		{
+			BM_DISABLED = 0,
+			BM_REPLACE,
+			BM_ALPHA,
+			BM_ADD,
+			BM_ADDALPHA,
+
+			BM_NUMMODES
+
+		} BlendMode;
+
+		typedef enum EBlendEquation
+		{
+			BE_ADD = 0,
+			BE_SUBTRACT,
+			BE_REVERSE_SUBTRACT,
+			BE_MIN,
+			BE_MAX,
+
+			BE_NUMMODES
+
+		} BlendEquation;
+
+#define UFBFLAG_CLEARCOLOR			0x0001
+#define UFBFLAG_CLEARDEPTH			0x0002
+#define UFBFLAG_FINISHLAST			0x0004
+
 		/// Returns the System that created this Renderer
 		virtual System *GetSystem() = NULL;
 
@@ -170,10 +198,10 @@ namespace c3
 		virtual const RECT *GetViewport(RECT *viewport = nullptr) const = NULL;
 
 		virtual void SetOverrideHwnd(HWND hwnd = NULL) = NULL;
-		virtual HWND GetOverrideHwnd() = NULL;
+		virtual HWND GetOverrideHwnd() const = NULL;
 
 		/// Prepares the Renderer for rendering
-		virtual bool BeginScene(props::TFlags64 flags = 0) = NULL;
+		virtual bool BeginScene(props::TFlags64 flags = UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH) = NULL;
 
 		/// Finalizes rendering and presents the result to the display
 		virtual bool EndScene(props::TFlags64 flags = 0) = NULL;
@@ -207,6 +235,12 @@ namespace c3
 		virtual void SetCullMode(CullMode mode) = NULL;
 		virtual CullMode GetCullMode() const = NULL;
 
+		virtual void SetBlendMode(BlendMode mode) = NULL;
+		virtual BlendMode GetBlendMode() const = NULL;
+
+		virtual void SetBlendEquation(BlendEquation eq) = NULL;
+		virtual BlendEquation GetBlendEquation() const = NULL;
+
 		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
 		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
 		virtual Texture3D *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
@@ -224,11 +258,6 @@ namespace c3
 
 		virtual ShaderProgram *CreateShaderProgram() = NULL;
 		virtual ShaderComponent *CreateShaderComponent(ShaderComponentType type) = NULL;
-
-
-		#define UFBFLAG_CLEARCOLOR			0x0001
-		#define UFBFLAG_CLEARDEPTH			0x0002
-		#define UFBFLAG_FINISHLAST			0x0004
 
 		virtual void UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags = UFBFLAG_FINISHLAST) = NULL;
 		virtual FrameBuffer *GetActiveFrameBuffer() = NULL;

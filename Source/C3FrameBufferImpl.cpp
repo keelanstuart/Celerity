@@ -32,7 +32,12 @@ FrameBufferImpl::FrameBufferImpl(RendererImpl* prend)
 	m_Rend = prend;
 	m_glID = GL_INVALID_VALUE;
 	m_DepthTarget = nullptr;
-	m_ColorTarget.reserve(MAX_COLORTARGETS);
+	m_BlendMode = Renderer::BlendMode::BM_NUMMODES;
+
+	GLint maxAttach = 0;
+	m_Rend->gl.GetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxAttach);
+
+	m_ColorTarget.reserve(maxAttach);
 
 	if (m_Rend)
 	{
@@ -93,6 +98,21 @@ Texture2D *FrameBufferImpl::GetColorTarget(size_t position)
 }
 
 
+Texture2D *FrameBufferImpl::GetColorTargetByName(const TCHAR *name)
+{
+	for (auto targ : m_ColorTarget)
+	{
+		if (!targ)
+			continue;
+
+		if (!_tcsicmp(name, targ->GetName()))
+			return targ;
+	}
+
+	return nullptr;
+}
+
+
 FrameBuffer::RETURNCODE FrameBufferImpl::AttachDepthTarget(DepthBuffer* pdepth)
 {
 	if (!pdepth)
@@ -103,7 +123,10 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachDepthTarget(DepthBuffer* pdepth)
 		FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
 		m_Rend->UseFrameBuffer(this);
 
-		m_Rend->gl.FramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, (const DepthBufferImpl &)*pdepth);
+		GLenum attach_type = ((pdepth->Format() == Renderer::DepthType::F32_DS) || (pdepth->Format() == Renderer::DepthType::U32_DS)) ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
+
+		m_Rend->gl.FramebufferRenderbuffer(GL_FRAMEBUFFER, attach_type, GL_RENDERBUFFER, (const DepthBufferImpl &)*pdepth);
+		m_DepthTarget = pdepth;
 
 		m_Rend->UseFrameBuffer(curfb);
 	}
@@ -136,4 +159,85 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Seal()
 	}
 
 	return ret;
+}
+
+
+void FrameBufferImpl::SetBlendMode(Renderer::BlendMode mode)
+{
+	if (mode != m_BlendMode)
+	{
+		if ((m_BlendMode != Renderer::BlendMode::BM_ALPHA) && (m_BlendMode != Renderer::BlendMode::BM_ADD) && (m_BlendMode != Renderer::BlendMode::BM_ADDALPHA))
+			m_Rend->gl.Enablei(GL_BLEND, m_glID);
+		else if ((mode != Renderer::BlendMode::BM_ALPHA) && (mode != Renderer::BlendMode::BM_ADD) && (mode != Renderer::BlendMode::BM_ADDALPHA))
+			m_Rend->gl.Disablei(GL_BLEND, m_glID);
+
+		switch (mode)
+		{
+			case Renderer::BlendMode::BM_ALPHA:
+				m_Rend->gl.BlendFunci(m_glID, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				break;
+
+			case Renderer::BlendMode::BM_ADD:
+				m_Rend->gl.BlendFunci(m_glID, GL_ONE, GL_ONE);
+				break;
+
+			case Renderer::BlendMode::BM_ADDALPHA:
+				m_Rend->gl.BlendFunci(m_glID, GL_SRC_ALPHA, GL_ONE);
+				break;
+
+			case Renderer::BlendMode::BM_REPLACE:
+				m_Rend->gl.BlendFunci(m_glID, GL_ONE, GL_ZERO);
+				break;
+
+			case Renderer::BlendMode::BM_DISABLED:
+				m_Rend->gl.BlendFunci(m_glID, GL_ZERO, GL_ZERO);
+				break;
+		}
+
+		m_BlendMode = mode;
+	}
+}
+
+
+Renderer::BlendMode FrameBufferImpl::GetBlendMode() const
+{
+	return m_BlendMode;
+}
+
+
+void FrameBufferImpl::SetBlendEquation(Renderer::BlendEquation eq)
+{
+	if (eq != m_BlendEq)
+	{
+		switch (eq)
+		{
+			case Renderer::BlendEquation::BE_ADD:
+				m_Rend->gl.BlendEquationi(m_glID, GL_FUNC_ADD);
+				break;
+
+			case Renderer::BlendEquation::BE_SUBTRACT:
+				m_Rend->gl.BlendEquationi(m_glID, GL_FUNC_SUBTRACT);
+				break;
+
+			case Renderer::BlendEquation::BE_REVERSE_SUBTRACT:
+				m_Rend->gl.BlendEquationi(m_glID, GL_FUNC_REVERSE_SUBTRACT);
+				break;
+
+			case Renderer::BlendEquation::BE_MIN:
+				m_Rend->gl.BlendEquationi(m_glID, GL_MIN);
+				break;
+
+			case Renderer::BlendEquation::BE_MAX:
+				m_Rend->gl.BlendEquationi(m_glID, GL_MAX);
+				break;
+		}
+
+		m_BlendEq = eq;
+	}
+}
+
+
+Renderer::BlendEquation FrameBufferImpl::GetBlendEquation() const
+{
+	return m_BlendEq;
 }

@@ -52,6 +52,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_DepthTest = Test::DT_NUMTESTS;
 	m_WindingOrder = WindingOrder::WO_NUMMODES;
 	m_CullMode = CullMode::CM_NUMMODES;
+	m_BlendMode = BlendMode::BM_NUMMODES;
+	m_BlendEq = BlendEquation::BE_NUMMODES;
 
 	m_StencilEnabled = false;
 	m_StencilTest = Test::DT_ALWAYS;
@@ -276,13 +278,12 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 	SetDepthMode(DepthMode::DM_READWRITE);
 	SetDepthTest(Test::DT_LESSEREQUAL);
-	gl.DepthMask(GL_TRUE);
 
 	SetWindingOrder(WindingOrder::WO_CW);
 	SetCullMode(CullMode::CM_BACK);
 
-	gl.Enable(GL_BLEND);
-	gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	SetBlendMode(BM_ALPHA);
+	SetBlendEquation(BE_ADD);
 
 	// Initialize meshes
 	GetFullscreenPlaneVB();
@@ -474,9 +475,9 @@ void RendererImpl::SetViewport(const RECT *viewport)
 
 	memcpy(&m_Viewport, viewport, sizeof(RECT));
 
-	LONG w = r.right - r.left;
-	LONG h = r.bottom - r.top;
-	gl.Viewport(r.left, r.top, w, h);
+	LONG w = m_Viewport.right - m_Viewport.left;
+	LONG h = m_Viewport.bottom - m_Viewport.top;
+	gl.Viewport(m_Viewport.left, m_Viewport.top, w, h);
 
 	if (m_Gui)
 	{
@@ -503,7 +504,7 @@ void RendererImpl::SetOverrideHwnd(HWND hwnd)
 }
 
 
-HWND RendererImpl::GetOverrideHwnd()
+HWND RendererImpl::GetOverrideHwnd() const
 {
 	return m_hwnd_override;
 }
@@ -521,7 +522,8 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 	if (m_Gui)
 		m_Gui->BeginFrame();
 
-	gl.Clear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH))
+		gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) | (flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_DEPTH_BUFFER_BIT : 0));
 
 	return true;
 }
@@ -596,7 +598,7 @@ void RendererImpl::SetClearDepth(float depth)
 	if (depth != m_clearZ)
 	{
 		m_clearZ = depth;
-		gl.ClearDepth(m_clearZ);
+		gl.ClearDepthf(m_clearZ);
 	}
 }
 
@@ -611,27 +613,15 @@ void RendererImpl::SetDepthMode(DepthMode mode)
 {
 	if (mode != m_DepthMode)
 	{
-#if 0
-		if ((m_DepthMode == DM_DISABLED) || (m_DepthMode == DM_READONLY))
+		if ((mode == DM_READWRITE) || (mode == DM_WRITEONLY))
 			gl.DepthMask(GL_TRUE);
-
-		if ((m_DepthMode == DM_DISABLED) || (m_DepthMode == DM_WRITEONLY))
-			gl.Enable(GL_DEPTH_TEST);
-#endif
-
-		if ((mode == DM_DISABLED) || (mode == DM_READONLY))
+		else
 			gl.DepthMask(GL_FALSE);
-#if 1
-		else
-			gl.DepthMask(GL_TRUE);
-#endif
 
-		if ((mode == DM_DISABLED) || (mode == DM_WRITEONLY))
-			gl.Disable(GL_DEPTH_TEST);
-#if 1
-		else
+		if ((mode == DM_READWRITE) || (mode == DM_READONLY))
 			gl.Enable(GL_DEPTH_TEST);
-#endif
+		else
+			gl.Disable(GL_DEPTH_TEST);
 
 		m_DepthMode = mode;
 	}
@@ -778,6 +768,97 @@ void RendererImpl::SetCullMode(CullMode mode)
 Renderer::CullMode RendererImpl::GetCullMode() const
 {
 	return m_CullMode;
+}
+
+
+void RendererImpl::SetBlendMode(BlendMode mode)
+{
+	if (mode != m_BlendMode)
+	{
+		if ((m_BlendMode != BM_ALPHA) && (m_BlendMode != BM_ADD) && (m_BlendMode != BM_ADDALPHA))
+			gl.Enable(GL_BLEND);
+		else if ((mode != BM_ALPHA) && (mode != BM_ADD) && (mode != BM_ADDALPHA))
+			gl.Disable(GL_BLEND);
+
+		switch (mode)
+		{
+			case BlendMode::BM_ALPHA:
+				gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				break;
+
+			case BlendMode::BM_ADD:
+				gl.BlendFunc(GL_ONE, GL_ONE);
+				break;
+
+			case BlendMode::BM_ADDALPHA:
+				gl.BlendFunc(GL_SRC_ALPHA, GL_ONE);
+				break;
+
+			case BlendMode::BM_REPLACE:
+				gl.BlendFunc(GL_ONE, GL_ZERO);
+				break;
+
+			case BlendMode::BM_DISABLED:
+				gl.BlendFunc(GL_ZERO, GL_ZERO);
+				break;
+		}
+
+		m_BlendMode = mode;
+	}
+
+#if 0
+	if (m_CurFB)
+		m_CurFB->SetBlendMode(mode);
+#endif
+}
+
+
+Renderer::BlendMode RendererImpl::GetBlendMode() const
+{
+	return m_BlendMode;
+}
+
+
+void RendererImpl::SetBlendEquation(Renderer::BlendEquation eq)
+{
+	if (eq != m_BlendEq)
+	{
+		switch (eq)
+		{
+			case BlendEquation::BE_ADD:
+				gl.BlendEquation(GL_FUNC_ADD);
+				break;
+
+			case BlendEquation::BE_SUBTRACT:
+				gl.BlendEquation(GL_FUNC_SUBTRACT);
+				break;
+
+			case BlendEquation::BE_REVERSE_SUBTRACT:
+				gl.BlendEquation(GL_FUNC_REVERSE_SUBTRACT);
+				break;
+
+			case BlendEquation::BE_MIN:
+				gl.BlendEquation(GL_MIN);
+				break;
+
+			case BlendEquation::BE_MAX:
+				gl.BlendEquation(GL_MAX);
+				break;
+		}
+
+		m_BlendEq = eq;
+	}
+
+#if 0
+	if (m_CurFB)
+		m_CurFB->SetBlendEquation(eq);
+#endif
+}
+
+
+Renderer::BlendEquation RendererImpl::GetBlendEquation() const
+{
+	return m_BlendEq;
 }
 
 
@@ -1082,6 +1163,7 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 	if (flags.IsSet(UFBFLAG_FINISHLAST))
 		gl.Finish();
 
+	// we set the initial viewport based on the dimensions of the depth target -- or the hwnd, in lieu of that
 	DepthBuffer *pdb = pfb ? pfb->GetDepthTarget() : nullptr;
 	if (pdb)
 	{
@@ -1104,8 +1186,28 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 
 	gl.BindFramebuffer(GL_FRAMEBUFFER, glid);
 
+#if 0
+	if (m_CurFB)
+		m_CurFB->SetBlendMode(m_BlendMode);
+#endif
+
 	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH))
-		gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) | (flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_DEPTH_BUFFER_BIT : 0));
+	{
+		DepthMode dm = GetDepthMode();
+		bool changed_dm = false;
+
+		// the depth buffer must be writable if the request was made to clear it
+		if (flags.IsSet(UFBFLAG_CLEARDEPTH) && (dm != DepthMode::DM_READWRITE) && (dm != DepthMode::DM_WRITEONLY))
+		{
+			SetDepthMode(DepthMode::DM_WRITEONLY);
+			changed_dm = true;
+		}
+
+		gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) | (flags.IsSet(UFBFLAG_CLEARDEPTH) ? GL_DEPTH_BUFFER_BIT : 0));
+
+		if (changed_dm)
+			SetDepthMode(dm);
+	}
 }
 
 
@@ -1790,10 +1892,10 @@ VertexBuffer *RendererImpl::GetFullscreenPlaneVB()
 
 		static const Vertex::WT1::s v[4] =
 		{
-			{ {-1.0f,  1.0f, 0.0f, 1.0f}, {0, 1} },
-			{ {-1.0f, -1.0f, 0.0f, 1.0f}, {0, 0} },
-			{ { 1.0f,  1.0f, 0.0f, 1.0f}, {1, 1} },
-			{ { 1.0f, -1.0f, 0.0f, 1.0f}, {1, 0} }
+			{ {-1.0f,  1.0f, 0.5f, 1.0f}, {0, 1} },
+			{ { 1.0f,  1.0f, 0.5f, 1.0f}, {1, 1} },
+			{ {-1.0f, -1.0f, 0.5f, 1.0f}, {0, 0} },
+			{ { 1.0f, -1.0f, 0.5f, 1.0f}, {1, 0} }
 		};
 
 		void *buf;

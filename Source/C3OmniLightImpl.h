@@ -17,7 +17,20 @@ namespace c3
 	{
 
 	protected:
-		Positionable *m_pcpos;
+		Object *m_pOwner;
+		Positionable *m_pPos;
+		ShaderComponent *m_VS_deflight;
+		ShaderComponent *m_FS_deflight;
+		ShaderProgram *m_SP_deflight;
+		props::IProperty *m_propColor;
+		FrameBuffer *m_SourceFB;
+		int32_t m_uniPos;
+		int32_t m_uniRadius;
+		int32_t m_uniColor;
+		int32_t m_uniScreenSize;
+		int32_t m_uniSampDiff;
+		int32_t m_uniSampNorm;
+		int32_t m_uniSampPosDepth;
 
 		props::TFlags64 m_Flags;
 
@@ -45,11 +58,7 @@ namespace c3
 
 		virtual bool HitTest(glm::fvec3 *ray_pos, glm::fvec3 *rayvec) const;
 
-		virtual void SetShaderProgram(const ShaderProgram *pshader);
-
-		virtual void SetShaderProgram(const Resource *pshaderres);
-
-		virtual const ShaderProgram *GetShaderProgram() const;
+		virtual void SetSourceFrameBuffer(FrameBuffer *psource);
 
 	};
 

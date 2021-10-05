@@ -82,21 +82,26 @@ void ResourceImpl::AddRef()
 	{
 		if (m_pResType)
 		{
+			m_pSys->GetLog()->Print(_T("Loading \"%s\" ..."), m_Filename.c_str());
+
 			m_Status = Resource::Status::RS_LOADING;
 			ResourceType::LoadResult r = m_pResType->ReadFromFile(m_pSys, m_Filename.c_str(), &m_Data);
 			switch (r)
 			{
 				case ResourceType::LoadResult::LR_NOTFOUND:
 					m_Status = Resource::Status::RS_NOTFOUND;
+					m_pSys->GetLog()->Print(_T("not found\n"));
 					break;
 
 				default:
 				case ResourceType::LoadResult::LR_ERROR:
 					m_Status = Resource::Status::RS_LOADERROR;
+					m_pSys->GetLog()->Print(_T("load error\n"));
 					break;
 
 				case ResourceType::LoadResult::LR_SUCCESS:
 					m_Status = Resource::Status::RS_LOADED;
+					m_pSys->GetLog()->Print(_T("ok\n"));
 					break;
 			}
 		}

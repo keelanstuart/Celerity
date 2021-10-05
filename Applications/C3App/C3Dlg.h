@@ -10,8 +10,9 @@ class C3Dlg : public CDialog
 {
 protected:
 	c3::Renderer *m_Rend;
-	c3::FrameBuffer *m_FB;
-	c3::Texture2D *m_ColorTarg[4];
+	c3::FrameBuffer *m_GBuf;
+	c3::FrameBuffer *m_LCBuf;
+	std::vector<c3::Texture2D *> m_ColorTarg;
 	c3::DepthBuffer *m_DepthTarg;
 	c3::ShaderComponent *m_VS_copyback;
 	c3::ShaderComponent *m_FS_copyback;
@@ -20,6 +21,7 @@ protected:
 	c3::Factory *m_Factory;
 	c3::Object *m_RootObj;
 	c3::Object *m_Camera;
+	c3::Object *m_Light[3];
 
 	bool m_MoveF, m_MoveL, m_MoveR, m_MoveB, m_Run, m_MoveU, m_MoveD;
 

@@ -18,6 +18,7 @@ PositionableImpl::PositionableImpl()
 {
 	m_Mat = glm::identity<glm::fmat4x4>();
 	m_Ori = glm::identity<glm::fquat>();
+	m_Flags = Object::OBJFLAG(Object::DRAWINEDITOR);
 }
 
 
@@ -97,7 +98,7 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 		//m_Mat = m_Mat * glm::translate(glm::identity<glm::fmat4x4>(), m_RotCenter);
 
 		// Then translate last... 
-		m_Mat = m_Mat * glm::translate(glm::identity<glm::fmat4x4>(), m_Pos);
+		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * m_Mat;
 
 		//m_Bounds.Align(&m_Mat);
 
@@ -112,8 +113,10 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 bool PositionableImpl::Prerender(Object *pobject, props::TFlags64 rendflags)
 {
 	Renderer *pr = pobject->GetSystem()->GetRenderer();
-
 	pr->SetWorldMatrix(&m_Mat);
+
+//	if (!rendflags.AnySet(m_Flags))
+		//return false;
 
 	return true;
 }
@@ -121,7 +124,9 @@ bool PositionableImpl::Prerender(Object *pobject, props::TFlags64 rendflags)
 
 void PositionableImpl::Render(Object *pobject, props::TFlags64 rendflags)
 {
-#if 0
+	if (!rendflags.AnySet(m_Flags))
+		return;
+
 	Renderer *pr = pobject->GetSystem()->GetRenderer();
 
 	ShaderProgram *sp = pr->GetBoundsShader();
@@ -130,7 +135,6 @@ void PositionableImpl::Render(Object *pobject, props::TFlags64 rendflags)
 	sp->ApplyUniforms();
 
 	pr->GetBoundsMesh()->Draw(c3::Renderer::PrimType::LINELIST);
-#endif
 }
 
 

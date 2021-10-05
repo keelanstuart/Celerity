@@ -43,7 +43,10 @@ namespace c3
 		virtual bool SetUniform2(int32_t location, const glm::fvec2 *v2) = NULL;
 		virtual bool SetUniform3(int32_t location, const glm::fvec3 *v3) = NULL;
 		virtual bool SetUniform4(int32_t location, const glm::fvec4 *v4) = NULL;
-		virtual bool SetUniformTexture(int32_t location, uint32_t sampler, Texture *tex) = NULL;
+
+		// The texture name (Texture::SetName), if correspondent to the uniform name, will determine the location if -1 is given there
+		// a particular sampler can be used, but if one is not given, one will be automatically assigned
+		virtual bool SetUniformTexture(Texture *tex, int32_t location = -1, int32_t sampler = -1) = NULL;
 
 		/// Actually sets the uniform values in the program
 		virtual void ApplyUniforms(bool update_globals = true) = NULL;

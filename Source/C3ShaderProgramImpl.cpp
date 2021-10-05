@@ -240,17 +240,18 @@ bool ShaderProgramImpl::SetUniform4(int32_t location, const glm::fvec4 *v4)
 }
 
 
-bool ShaderProgramImpl::SetUniformTexture(int32_t location, uint32_t sampler, Texture *tex)
+bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_t sampler)
 {
-	if (location < 0)
-		return false;
-
 	props::IProperty *p = m_Uniforms->GetPropertyById(location);
+	if (!p)
+		p = m_Uniforms->GetPropertyByName(tex->GetName());
+
 	if (!p)
 		return false;
 
-	p->SetInt((int64_t)tex);
-	p->SetAspect(props::IProperty::PROPERTY_ASPECT((size_t)props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_DIFFUSE + sampler));
+	// Vec3I = (uniform index, sampler, texture)
+	p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D);
+	p->SetVec3I(props::TVec3I(p->AsVec3I()->x, sampler >= 0 ? sampler : p->AsVec3I()->y, (int64_t)tex));
 
 #ifdef IMMEDIATE_UNIFORMS
 	m_Rend->UseTexture(sampler, tex);
@@ -265,6 +266,9 @@ void ShaderProgramImpl::CaptureUniforms()
 {
 	if (!m_Linked)
 		return;
+
+	int64_t sampleridx = 0;
+	int32_t texidx = 0;
 
 	GLint total = 0;
 	m_Rend->gl.GetProgramiv(m_glID, GL_ACTIVE_UNIFORMS, &total); 
@@ -343,6 +347,7 @@ void ShaderProgramImpl::CaptureUniforms()
 
 			case GL_FLOAT_VEC2:
 				p->SetVec2F(props::TVec2F(0, 0));
+
 				break;
 
 			case GL_FLOAT:
@@ -357,20 +362,9 @@ void ShaderProgramImpl::CaptureUniforms()
 				p->SetBool(false);
 				break;
 
+			// Vec3I = (uniform index, sampler, texture)
 			case GL_SAMPLER_2D:
-				p->SetInt(0);
-
-				if (!_tcscmp(n, _T("uSamplerDiffuse")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_DIFFUSE);
-				else if (!_tcscmp(n, _T("uSamplerNormal")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_NORMAL);
-				else if (!_tcscmp(n, _T("uSamplerSurfDesc")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_SURFDESC);
-				else if (!_tcscmp(n, _T("uSamplerEmissive")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_EMISSIVE);
-				else if (!_tcscmp(n, _T("uSamplerPosDepth")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_POSITIONDEPTH);
-
+				p->SetVec3I(props::TVec3I(i, sampleridx++, (int64_t)(m_Rend->GetBlackTexture())));
 				break;
 		}
 	}
@@ -446,37 +440,43 @@ void ShaderProgramImpl::ApplyUniforms(bool update_globals)
 				break;
 
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
+#if 0
 				m_Rend->gl.ProgramUniform3fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec3F());
+#else
+				{
+					const GLfloat *f = (const GLfloat *)p->AsVec3F();
+					m_Rend->gl.ProgramUniform3f(m_glID, (GLint)(GLint)p->GetID(), f[0], f[1], f[2]);
+				}
+#endif
 				break;
 
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:
-				m_Rend->gl.ProgramUniform3fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec2F());
+				m_Rend->gl.ProgramUniform2fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec2F());
 				break;
 
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT:
 				m_Rend->gl.ProgramUniform1f(m_glID, (GLint)p->GetID(), p->AsFloat());
 				break;
 
-			case props::IProperty::PROPERTY_TYPE::PT_INT:
+			case props::IProperty::PROPERTY_TYPE::PT_INT_V3:
 				switch (p->GetAspect())
 				{
-					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_DIFFUSE:
-					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_NORMAL:
-					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_SURFDESC:
-					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_EMISSIVE:
-					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_POSITIONDEPTH:
+					// Vec3I = (uniform index, sampler, texture)
+					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D:
 					{
-						GLint sampler = p->GetAspect() - props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D_DIFFUSE;
+						GLint id = (GLint)p->AsVec3I()->x;
+						GLint sampler = (GLint)p->AsVec3I()->y;
+						Texture *tex = (Texture *)p->AsVec3I()->z;
 
-						m_Rend->UseTexture(sampler, (Texture *)p->AsInt());
-						m_Rend->gl.ProgramUniform1i(m_glID, (GLint)p->GetID(), (GLint)sampler);
+						m_Rend->UseTexture(sampler, tex);
+						m_Rend->gl.ProgramUniform1i(m_glID, id, sampler);
 						break;
 					}
-
-					default:
-						m_Rend->gl.ProgramUniform1i(m_glID, (GLint)p->GetID(), (GLint)p->AsInt());
-						break;
 				}
+				break;
+
+			case props::IProperty::PROPERTY_TYPE::PT_INT:
+				m_Rend->gl.ProgramUniform1i(m_glID, (GLint)p->GetID(), (GLint)p->AsInt());
 				break;
 
 			case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:
@@ -533,16 +533,9 @@ void ShaderProgramImpl::CaptureExpectedInputs()
 
 	char name[256];
 	GLsizei namelen = 0;
-#if WTF
-	GLint size;
-	GLenum type;
-#endif
 
 	for (GLuint i = 0; i < numattrs; i++)
 	{
-#if WTF
-		m_Rend->gl.GetActiveAttrib(m_glID, i, (GLsizei)sizeof(name), (GLsizei *)&namelen, nullptr, nullptr, name);//(GLint *)size​, (GLenum *)&type​, (GLchar *)name​);
-#endif
 		name[namelen] = '\0';
 
 		// get the component type from the GL type
@@ -550,57 +543,10 @@ void ShaderProgramImpl::CaptureExpectedInputs()
 		while (comp.m_Type != VertexBuffer::ComponentDescription::EComponentType::VCT_NUM_TYPES)
 		{
 			(*(uint8_t *)&(comp.m_Type))++;
-#if WTF
-			if (type == t[comp.m_Type])
-				break;
-#endif
 		}
 		// the type wasn't found, so maybe it's another one...
 		if (comp.m_Type == VertexBuffer::ComponentDescription::EComponentType::VCT_NUM_TYPES)
 		{
-#if WTF
-			switch (type)
-			{
-				case GL_FLOAT:
-					comp.m_Count = size;
-					break;
-				case GL_FLOAT_VEC2:
-					comp.m_Count = 2;
-					break;
-				case GL_FLOAT_VEC3:
-					comp.m_Count = 3;
-					break;
-				case GL_FLOAT_VEC4:
-					comp.m_Count = 4;
-					break;
-				case GL_INT:
-					comp.m_Count = size;
-					break;
-				case GL_INT_VEC2:
-					comp.m_Count = 2;
-					break;
-				case GL_INT_VEC3:
-					comp.m_Count = 3;
-					break;
-				case GL_INT_VEC4:
-					comp.m_Count = 4;
-					break;
-				case GL_UNSIGNED_INT:
-					comp.m_Count = size;
-					break;
-				case GL_UNSIGNED_INT_VEC2:
-					comp.m_Count = 2;
-					break;
-				case GL_UNSIGNED_INT_VEC3:
-					comp.m_Count = 3;
-					break;
-				case GL_UNSIGNED_INT_VEC4:
-					comp.m_Count = 4;
-					break;
-				default:
-					break;
-			}
-#endif
 		}
 
 
@@ -609,15 +555,7 @@ void ShaderProgramImpl::CaptureExpectedInputs()
 		while (comp.m_Usage != VertexBuffer::ComponentDescription::EUsage::VU_NUM_USAGES)
 		{
 			(*(uint8_t *)&(comp.m_Usage))++;
-#if WTF
-			if (!_stricmp(name, vattrname[comp.m_Usage]))
-				break;
-#endif
 		}
-
-#if WTF
-		m_ExpectedInputs.push_back(comp);
-#endif
 	}
 }
 

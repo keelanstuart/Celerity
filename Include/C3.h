@@ -50,10 +50,13 @@
 #include <C3Model.h>
 #include <C3Renderer.h>
 #include <C3Log.h>
+
 #include <C3Feature.h>
 #include <C3Positionable.h>
 #include <C3Camera.h>
 #include <C3ModelRenderer.h>
+#include <C3OmniLight.h>
+
 #include <C3Object.h>
 #include <C3Prototype.h>
 #include <C3Factory.h>

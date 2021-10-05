@@ -46,7 +46,7 @@ namespace c3
 		virtual bool SetUniform2(int32_t location, const glm::fvec2 *v2);
 		virtual bool SetUniform3(int32_t location, const glm::fvec3 *v3);
 		virtual bool SetUniform4(int32_t location, const glm::fvec4 *v4);
-		virtual bool SetUniformTexture(int32_t location, uint32_t sampler, Texture *tex);
+		virtual bool SetUniformTexture(Texture *tex, int32_t location = -1, int32_t sampler = -1);
 
 		virtual void ApplyUniforms(bool update_globals = true);
 

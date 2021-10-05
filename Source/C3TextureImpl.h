@@ -38,12 +38,17 @@ namespace c3
 		size_t m_LockMip;
 		props::TFlags64 m_Flags;
 		int64_t m_SamplerID;
+		tstring m_Name;
 
 	public:
 		Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);
 		virtual ~Texture2DImpl();
 
 		virtual void Release();
+
+		virtual void SetName(const TCHAR *name);
+
+		virtual const TCHAR *GetName() const;
 
 		virtual Renderer::ETextureType Format();
 
@@ -83,12 +88,17 @@ namespace c3
 		size_t m_LockHeight;
 		props::TFlags64 m_Flags;
 		int64_t m_SamplerID;
+		tstring m_Name;
 
 	public:
 		TextureCubeImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);
 		virtual ~TextureCubeImpl();
 
 		virtual void Release();
+
+		virtual void SetName(const TCHAR *name);
+
+		virtual const TCHAR *GetName() const;
 
 		virtual Renderer::ETextureType Format();
 
@@ -125,12 +135,17 @@ namespace c3
 		size_t m_LockMip;
 		props::TFlags64 m_Flags;
 		int64_t m_SamplerID;
+		tstring m_Name;
 
 	public:
 		Texture3DImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);
 		virtual ~Texture3DImpl();
 
 		virtual void Release();
+
+		virtual void SetName(const TCHAR *name);
+
+		virtual const TCHAR *GetName() const;
 
 		virtual Renderer::ETextureType Format();
 

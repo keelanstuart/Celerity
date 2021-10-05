@@ -21,11 +21,14 @@ namespace c3
 		RendererImpl *m_Rend;
 		GLuint m_glID;
 
-		DepthBufferImpl *m_DepthTarget;
+		DepthBuffer *m_DepthTarget;
 		typedef std::vector<Texture2D *> TColorTargetArray;
 		TColorTargetArray m_ColorTarget;
 
 		const static GLuint targenum[MAX_COLORTARGETS];
+
+		Renderer::BlendMode m_BlendMode;
+		Renderer::BlendEquation m_BlendEq;
 
 	public:
 
@@ -40,11 +43,19 @@ namespace c3
 
 		virtual Texture2D* GetColorTarget(size_t position);
 
+		virtual Texture2D *GetColorTargetByName(const TCHAR *name);
+
 		virtual RETURNCODE AttachDepthTarget(DepthBuffer *pdepth);
 
 		virtual DepthBuffer *GetDepthTarget();
 
 		virtual RETURNCODE Seal();
+
+		virtual void SetBlendMode(Renderer::BlendMode mode);
+		virtual Renderer::BlendMode GetBlendMode() const;
+
+		virtual void SetBlendEquation(Renderer::BlendEquation eq);
+		virtual Renderer::BlendEquation GetBlendEquation() const;
 
 		operator GLuint() const { return m_glID; }
 

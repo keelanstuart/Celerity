@@ -50,6 +50,9 @@ namespace c3
 		/// Returns the target at the given position
 		virtual Texture2D *GetColorTarget(size_t position) = NULL;
 
+		/// Returns the target with the given name
+		virtual Texture2D *GetColorTargetByName(const TCHAR *name) = NULL;
+
 		/// Attaches a depth target
 		virtual RETURNCODE AttachDepthTarget(DepthBuffer *pdepth) = NULL;
 
@@ -58,6 +61,18 @@ namespace c3
 
 		/// Finalizes the creation of the frame buffer and indicates whether it is complete
 		virtual RETURNCODE Seal() = NULL;
+
+		/// Sets the blend mode for this render target
+		virtual void SetBlendMode(Renderer::BlendMode mode) = NULL;
+
+		/// Gets the blend mode for this render target
+		virtual Renderer::BlendMode GetBlendMode() const = NULL;
+
+		/// Sets the blend equation for this render target
+		virtual void SetBlendEquation(Renderer::BlendEquation eq) = NULL;
+
+		/// Gets the blend equation for this render target
+		virtual Renderer::BlendEquation GetBlendEquation() const = NULL;
 
 	};
 
