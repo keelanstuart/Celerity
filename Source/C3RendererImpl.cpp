@@ -235,11 +235,15 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 			// make that the pixel format of the device context  
 			SetPixelFormat(m_hdc, iPixelFormat, &pfd);
 
-			const int contextAttribList[] =
+			int contextAttribList[] =
 			{
 				WGL_CONTEXT_MAJOR_VERSION_ARB,	(int)m_glVersionMaj,
 				WGL_CONTEXT_MINOR_VERSION_ARB,	(int)m_glVersionMin,
+#if defined(_DEBUG)
+				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB | WGL_CONTEXT_DEBUG_BIT_ARB,
+#else
 				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
+#endif
 				WGL_CONTEXT_PROFILE_MASK_ARB,	WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 				0, 0	// end
 			};
@@ -261,9 +265,42 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	if (!gl.Initialize())
 		return false;
 
+	// make use of opengl messages, log them
+	gl.DebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
+	{
+		c3::System* psys = (c3::System*)userParam;
+		if (message)
+		{
+			TCHAR *tmp;
+			CONVERT_MBCS2TCS(message, tmp);
+			psys->GetLog()->Print(_T("\n"));
+			psys->GetLog()->Print(tmp);
+			psys->GetLog()->Print(_T("\n"));
+		}
+	}, m_pSys);
+
+	// turn on all opengl mesages
+	gl.DebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+
 	m_Initialized = true;
 
 	ResetEvent(m_event_shutdown);
+
+	const char *devname = (const char *)gl.GetString(GL_RENDERER);
+	if (devname)
+	{
+		TCHAR *tmp;
+		CONVERT_MBCS2TCS(devname, tmp);
+		m_DeviceName = tmp;
+	}
+
+	const char *vendorname = (const char *)gl.GetString(GL_VENDOR);
+	if (vendorname)
+	{
+		TCHAR *tmp;
+		CONVERT_MBCS2TCS(vendorname, tmp);
+		m_VendorName = tmp;
+	}
 
 	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
 	if (wglSwapIntervalEXT)
@@ -313,6 +350,37 @@ bool RendererImpl::Initialized()
 {
 	return m_Initialized;
 }
+
+
+void RendererImpl::FlushErrors(const TCHAR *msgformat, ...)
+{
+	GLenum err;
+	bool wrotehdr = false;
+	// check OpenGL error
+	do
+	{
+		err = gl.GetError();
+		if (err != GL_NO_ERROR)
+		{
+			if (!wrotehdr)
+			{
+#define PRINT_BUFSIZE	1024
+				TCHAR buf[PRINT_BUFSIZE];	// Temporary buffer for output
+
+				va_list marker;
+				va_start(marker, msgformat);
+				_vsntprintf_s(buf, PRINT_BUFSIZE - 1, msgformat, marker);
+
+				m_pSys->GetLog()->Print(_T("\n*** %s ***\n"));
+				wrotehdr = true;
+			}
+
+			m_pSys->GetLog()->Print(_T("\tOpenGL error: $d\n"), err);
+		}
+	}
+	while (err != GL_NO_ERROR);
+}
+
 
 bool __cdecl UnloadRenderResource(c3::Resource *pres)
 {
@@ -449,6 +517,18 @@ void RendererImpl::Shutdown()
 	m_hwnd = NULL;
 
 	m_Initialized = false;
+}
+
+
+const TCHAR *RendererImpl::GetVendorName() const
+{
+	return m_VendorName.c_str();
+}
+
+
+const TCHAR *RendererImpl::GetDeviceName() const
+{
+	return m_DeviceName.c_str();
 }
 
 
@@ -805,11 +885,6 @@ void RendererImpl::SetBlendMode(BlendMode mode)
 
 		m_BlendMode = mode;
 	}
-
-#if 0
-	if (m_CurFB)
-		m_CurFB->SetBlendMode(mode);
-#endif
 }
 
 
@@ -848,11 +923,6 @@ void RendererImpl::SetBlendEquation(Renderer::BlendEquation eq)
 
 		m_BlendEq = eq;
 	}
-
-#if 0
-	if (m_CurFB)
-		m_CurFB->SetBlendEquation(eq);
-#endif
 }
 
 
@@ -1186,11 +1256,6 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 
 	gl.BindFramebuffer(GL_FRAMEBUFFER, glid);
 
-#if 0
-	if (m_CurFB)
-		m_CurFB->SetBlendMode(m_BlendMode);
-#endif
-
 	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH))
 	{
 		DepthMode dm = GetDepthMode();
@@ -1344,67 +1409,6 @@ void RendererImpl::UseTexture(uint64_t sampler, Texture *ptex)
 }
 
 
-bool RendererImpl::ConfigureDrawing()
-{
-	//if (!m_Config)
-//		return true;
-
-	if (m_CurVB /* && m_CurProg*/)
-	{
-		static const GLenum t[VertexBuffer::ComponentDescription::ComponentType::VCT_NUM_TYPES] = { 0, GL_UNSIGNED_BYTE, GL_BYTE, GL_UNSIGNED_INT, GL_HALF_FLOAT, GL_FLOAT };
-
-		size_t vsz = m_CurVB->VertexSize();
-		size_t vo = 0;
-
-		static const char *vattrname[VertexBuffer::ComponentDescription::Usage::VU_NUM_USAGES] =
-		{
-				"",
-				"vPos",
-				"vNorm",
-				"vTex0",
-				"vTex1",
-				"vTex2",
-				"vTex3",
-				"vTan",
-				"vBinorm",
-				"vIndex",
-				"vWeight",
-				"vColor0",
-				"vColor1",
-				"vColor2",
-				"vColor3",
-				"vSize"
-		};
-
-		for (size_t i = 0, maxi = m_CurVB->NumComponents(); i < maxi; i++)
-		{
-			const VertexBuffer::ComponentDescription *pcd = m_CurVB->Component(i);
-			if (!pcd || !pcd->m_Count || (pcd->m_Type == VertexBuffer::ComponentDescription::VCT_NONE) || (pcd->m_Usage == VertexBuffer::ComponentDescription::Usage::VU_NONE))
-				break;
-#if 0
-			GLint vloc = gl.GetAttribLocation(m_CurProgID, vattrname[pcd->m_Usage]);
-
-			if (vloc < 0)
-				return false;
-#endif
-
-			//assert(vloc == i);
-
-			bool is_color = (pcd->m_Usage >= VertexBuffer::ComponentDescription::Usage::VU_COLOR0) && (pcd->m_Usage <= VertexBuffer::ComponentDescription::Usage::VU_COLOR3);
-			bool is_byte = (pcd->m_Type >= VertexBuffer::ComponentDescription::VCT_U8) && (pcd->m_Type <= VertexBuffer::ComponentDescription::VCT_S8);
-			GLuint norm = (is_color && is_byte);
-
-			gl.EnableVertexAttribArray((GLuint)i /*vloc*/);
-			gl.VertexAttribPointer((GLuint)i /*vloc*/, (GLint)pcd->m_Count, t[pcd->m_Type], norm, (GLsizei)vsz, (void *)vo);
-			vo += pcd->size();
-		}
-	}
-
-	//m_Config = false;
-	return true;
-}
-
-
 static const GLenum typelu[Renderer::PrimType::NUM_PRIMTYPES] = { GL_POINTS, GL_LINES, GL_LINE_STRIP, GL_TRIANGLES, GL_TRIANGLE_STRIP, GL_TRIANGLE_FAN };
 
 bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
@@ -1413,11 +1417,6 @@ bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
 	{
 		if (count == -1)
 			count = m_CurVB->Count();
-
-#if 0
-		if (m_Config)
-			ConfigureDrawing();
-#endif
 
 		gl.DrawArrays(typelu[type], 0, (GLsizei)count);
 
@@ -1438,16 +1437,16 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 		size_t idxs = m_CurIB->GetIndexSize();
 		if (!idxs)
 			return false;
-		idxs--;
 
-		static const GLuint glidxs[3] = {GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT};
+		GLuint glidxs;
+		switch (idxs)
+		{
+			case IndexBuffer::IndexSize::IS_8BIT: glidxs = GL_UNSIGNED_BYTE; break;
+			case IndexBuffer::IndexSize::IS_16BIT: glidxs = GL_UNSIGNED_SHORT; break;
+			case IndexBuffer::IndexSize::IS_32BIT: glidxs = GL_UNSIGNED_INT; break;
+		}
 
-#if 0
-		if (m_Config)
-			ConfigureDrawing();
-#endif
-
-		gl.DrawElements(typelu[type], (GLsizei)count, glidxs[idxs], NULL);
+		gl.DrawElements(typelu[type], (GLsizei)count, glidxs, NULL);
 
 		return true;
 	}

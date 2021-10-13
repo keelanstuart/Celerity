@@ -35,18 +35,23 @@ DepthBufferImpl::DepthBufferImpl(RendererImpl* prend, size_t width, size_t heigh
 				break;
 
 			case Renderer::EDepthType::U32_DS:
-				glct = GL_DEPTH_COMPONENT24;
+				glct = GL_DEPTH24_STENCIL8;// GL_DEPTH_COMPONENT24;
 				break;
 
 			case Renderer::EDepthType::F32_D:
+				glct = GL_DEPTH_COMPONENT32F; //GL_DEPTH_COMPONENT32F;
+				break;
+
 			case Renderer::EDepthType::F32_DS:
-				glct = GL_DEPTH_COMPONENT32F;
+				glct = GL_DEPTH32F_STENCIL8; //GL_DEPTH_COMPONENT32F;
 				break;
 		}
 
 		prend->gl.GenRenderbuffers(1, &m_glID);
 		prend->gl.BindRenderbuffer(GL_RENDERBUFFER, m_glID);
 		prend->gl.RenderbufferStorage(GL_RENDERBUFFER, glct, (GLsizei)m_Width, (GLsizei)m_Height);
+
+		prend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 	}
 }
 

@@ -178,9 +178,11 @@ namespace c3
 
 		} BlendEquation;
 
-#define UFBFLAG_CLEARCOLOR			0x0001
-#define UFBFLAG_CLEARDEPTH			0x0002
-#define UFBFLAG_FINISHLAST			0x0004
+		// Flags for use with UseFrameBuffer
+		#define UFBFLAG_CLEARCOLOR			0x0001
+		#define UFBFLAG_CLEARDEPTH			0x0002
+		#define UFBFLAG_CLEARSTENCIL		0x0004
+		#define UFBFLAG_FINISHLAST			0x0008
 
 		/// Returns the System that created this Renderer
 		virtual System *GetSystem() = NULL;
@@ -190,7 +192,15 @@ namespace c3
 
 		virtual bool Initialized() = NULL;
 
+		virtual void FlushErrors(const TCHAR *msgformat, ...) = NULL;
+
 		virtual void Shutdown() = NULL;
+
+		// Returns the name of the active graphics adapter manufacturer
+		virtual const TCHAR* GetVendorName() const = NULL;
+
+		// Returns the name of the active graphics adapter
+		virtual const TCHAR* GetDeviceName() const = NULL;
 
 		virtual Gui *GetGui() = NULL;
 

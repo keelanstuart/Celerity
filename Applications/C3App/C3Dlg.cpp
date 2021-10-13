@@ -68,16 +68,16 @@ typedef struct sTargData
 STargData GBufTargData[] =
 {
 	{ _T("uSamplerDiffuse"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },
-	{ _T("uSamplerNormal"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },
-	{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F32_3CH, TEXCREATEFLAG_RENDERTARGET },
-	{ _T("uSamplerEmission"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGETSMOOTH }
+	{ _T("uSamplerNormal"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
+	{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },
+	{ _T("uSamplerEmission"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET }
 };
 
 // It SEEEEMS like in order to get blending to work, the light combine buffer needs to pre-multiply alpha,
 // but then write alpha=1 in the shader... the depth test is still a problem
 STargData LCBufTargData[] =
 {
-	{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },
+	{ _T("uSamplerLights"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },
 };
 
 // C3Dlg message handlers
@@ -122,6 +122,8 @@ BOOL C3Dlg::OnInitDialog()
 
 	c3::ResourceManager *rm = theApp.m_C3->GetResourceManager();
 	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
+
+	m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 
 	theApp.m_C3->GetLog()->Print(_T("Creating G-buffer... "));
 	bool gbok = true;
@@ -233,7 +235,7 @@ BOOL C3Dlg::OnInitDialog()
 		}
 	}
 
-#if 0
+#if 1
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("AH64e"))))
 	{
 		c3::Object *pobj = m_Factory->Build(pproto);
@@ -355,9 +357,9 @@ void C3Dlg::OnPaint()
 			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::DRAW));
 
 			// Lighting pass(es)
-			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 			m_Rend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
-			m_Rend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
+			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
+			m_Rend->SetDepthTest(c3::Renderer::Test::DT_LESSEREQUAL);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
 			m_LCBuf->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);

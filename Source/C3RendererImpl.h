@@ -34,6 +34,9 @@ namespace c3
 		SystemImpl *m_pSys;
 		HANDLE m_event_shutdown;
 
+		tstring m_DeviceName;
+		tstring m_VendorName;
+
 		HWND m_hwnd;
 		HDC m_hdc;
 		HGLRC m_glrc;
@@ -130,7 +133,12 @@ namespace c3
 
 		virtual bool Initialized();
 
+		virtual void FlushErrors(const TCHAR *msgformat, ...);
+
 		virtual void Shutdown();
+
+		virtual const TCHAR* GetVendorName() const;
+		virtual const TCHAR* GetDeviceName() const;
 
 		pool::IThreadPool *GetTaskPool();
 
@@ -211,8 +219,6 @@ namespace c3
 		virtual void UseIndexBuffer(IndexBuffer *pibuf);
 
 		virtual void UseTexture(uint64_t sampler, Texture *ptex = nullptr);
-
-		bool ConfigureDrawing();
 
 		virtual bool DrawPrimitives(PrimType type, size_t count = -1);
 		virtual bool DrawIndexedPrimitives(PrimType type, size_t offset = -1, size_t count = -1);

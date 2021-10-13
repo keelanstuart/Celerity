@@ -42,6 +42,7 @@ FrameBufferImpl::FrameBufferImpl(RendererImpl* prend)
 	if (m_Rend)
 	{
 		prend->gl.GenFramebuffers(1, &m_glID);
+		prend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 	}
 }
 
@@ -74,7 +75,11 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachColorTarget(Texture2D *target, si
 
 		m_ColorTarget[position] = target;
 
-		m_Rend->gl.FramebufferTexture(GL_FRAMEBUFFER, targenum[position], (const Texture2DImpl &)*target, 0);
+		if (target)
+		{
+			m_Rend->gl.FramebufferTexture(GL_FRAMEBUFFER, targenum[position], (const Texture2DImpl &)*target, 0);
+			m_Rend->FlushErrors(_T("AttachColorTarget: %s"), __FILEW__, __LINE__);
+		}
 
 		m_Rend->UseFrameBuffer(curfb);
 	}
@@ -126,6 +131,7 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachDepthTarget(DepthBuffer* pdepth)
 		GLenum attach_type = ((pdepth->Format() == Renderer::DepthType::F32_DS) || (pdepth->Format() == Renderer::DepthType::U32_DS)) ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
 
 		m_Rend->gl.FramebufferRenderbuffer(GL_FRAMEBUFFER, attach_type, GL_RENDERBUFFER, (const DepthBufferImpl &)*pdepth);
+		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 		m_DepthTarget = pdepth;
 
 		m_Rend->UseFrameBuffer(curfb);
@@ -151,9 +157,40 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Seal()
 		m_Rend->UseFrameBuffer(this);
 
 		m_Rend->gl.DrawBuffers((GLsizei)m_ColorTarget.size(), targenum);
+		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 
-		if (m_Rend->gl.CheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
-			ret = RETURNCODE::RET_OK;
+		m_Rend->GetSystem()->GetLog()->Print(_T("FrameBuffer::Seal - "));
+		GLenum status = (GLenum) m_Rend->gl.CheckFramebufferStatus(GL_FRAMEBUFFER);
+		switch(status)
+		{
+			case GL_FRAMEBUFFER_COMPLETE:
+				ret = RETURNCODE::RET_OK;
+				break;
+
+			case GL_FRAMEBUFFER_UNSUPPORTED:
+				m_Rend->GetSystem()->GetLog()->Print(_T("Unsupported framebuffer format\n"));
+				break;
+
+			case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+				m_Rend->GetSystem()->GetLog()->Print(_T("Framebuffer incomplete, missing attachment\n"));
+				break;
+
+			case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+				m_Rend->GetSystem()->GetLog()->Print(_T("Framebuffer incomplete, missing draw buffer\n"));
+				break;
+
+			case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+				m_Rend->GetSystem()->GetLog()->Print(_T("Framebuffer incomplete, missing read buffer\n"));
+				break;
+
+			case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+				m_Rend->GetSystem()->GetLog()->Print(_T("Framebuffer incomplete, incomplete attachment\n"));
+				break;
+
+			default:
+				m_Rend->GetSystem()->GetLog()->Print(_T("Error %x\n"), status);
+				break;
+		}
 
 		m_Rend->UseFrameBuffer(curfb);
 	}
