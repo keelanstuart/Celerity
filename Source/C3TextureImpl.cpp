@@ -54,9 +54,8 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 
 	if (flags.IsSet(TEXCREATEFLAG_RENDERTARGET) || flags.IsSet(TEXCREATEFLAG_RENDERTARGETSMOOTH))
 	{
-		m_Rend->gl.CreateTextures(GL_TEXTURE_2D, 1, &m_glID);
-
-		//m_Width = (x != 0) && ((x & (x - 1)) == 0);
+		if (!m_Rend->isnv)
+			m_Rend->gl.CreateTextures(GL_TEXTURE_2D, 1, &m_glID);
 
 		// if we can't get a gl 4.5 context, then we may have to use gen instead of create
 		if (m_glID == GL_INVALID_VALUE)
@@ -65,19 +64,19 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 		}
 
 		m_Rend->gl.BindTexture(GL_TEXTURE_2D, m_glID);
-#if 0
-		GLenum intfmt = m_Rend->GLInternalFormat(m_Type);
-		GLenum fmt = m_Rend->GLFormat(m_Type);
-		GLenum t = m_Rend->GLType(m_Type);
 
-		m_Rend->gl.TexImage2D(GL_TEXTURE_2D, 0, intfmt, (GLsizei)m_Width, (GLsizei)m_Height, 0, fmt, t, nullptr);
+		if (!m_Rend->isnv)
+		{
+			m_Rend->gl.TexStorage2D(GL_TEXTURE_2D, (GLsizei)m_MipCount, m_Rend->GLInternalFormat(m_Type), (GLsizei)m_Width, (GLsizei)m_Height);
+		}
+		else
+		{
+			GLenum intfmt = m_Rend->GLInternalFormat(m_Type);
+			GLenum fmt = m_Rend->GLFormat(m_Type);
+			GLenum t = m_Rend->GLType(m_Type);
 
-		GLuint cc[4] = {0, 0, 0, 0};
-		m_Rend->gl.ClearTexImage(m_glID, 0, t, GL_UNSIGNED_BYTE, &cc);
-		//m_Rend->gl.GenerateMipmap(GL_TEXTURE_2D);
-#else
-		m_Rend->gl.TexStorage2D(GL_TEXTURE_2D, (GLsizei)m_MipCount, m_Rend->GLInternalFormat(m_Type), (GLsizei)m_Width, (GLsizei)m_Height);
-#endif
+			m_Rend->gl.TexImage2D(GL_TEXTURE_2D, 0, intfmt, (GLsizei)m_Width, (GLsizei)m_Height, 0, fmt, t, nullptr);
+		}
 
 		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -93,7 +92,7 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 			m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		}
 
-		m_Rend->gl.BindTexture(GL_TEXTURE_2D, 0);
+		//m_Rend->gl.BindTexture(GL_TEXTURE_2D, 0);
 	}
 
 	m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);

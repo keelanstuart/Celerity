@@ -226,23 +226,23 @@ bool MaterialImpl::Apply(ShaderProgram *shader) const
 
 		int32_t ul_texdiff = shader->GetUniformLocation(_T("uSamplerDiffuse"));
 		if (ul_texdiff != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(GetTexture(TCT_DIFFUSE), ul_texdiff, TCT_DIFFUSE);
+			shader->SetUniformTexture(GetTexture(TCT_DIFFUSE), ul_texdiff);
 
 		int32_t ul_texnorm = shader->GetUniformLocation(_T("uSamplerNormal"));
 		if (ul_texnorm != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(GetTexture(TCT_NORMAL), ul_texnorm, TCT_NORMAL);
+			shader->SetUniformTexture(GetTexture(TCT_NORMAL), ul_texnorm);
 
 		int32_t ul_texsurf = shader->GetUniformLocation(_T("uSamplerSurface"));
 		if (ul_texsurf != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(GetTexture(TCT_SURFACEDESC), ul_texsurf, TCT_SURFACEDESC);
+			shader->SetUniformTexture(GetTexture(TCT_SURFACEDESC), ul_texsurf);
 
 		int32_t ul_texemis = shader->GetUniformLocation(_T("uSamplerEmissive"));
 		if (ul_texemis != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(GetTexture(TCT_EMISSIVE), ul_texemis, TCT_EMISSIVE);
+			shader->SetUniformTexture(GetTexture(TCT_EMISSIVE), ul_texemis);
 
 		int32_t ul_texdepth = shader->GetUniformLocation(_T("uSamplerPosDepth"));
 		if (ul_texdepth != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(GetTexture(TCT_POSITIONDEPTH), ul_texdepth, TCT_POSITIONDEPTH);
+			shader->SetUniformTexture(GetTexture(TCT_POSITIONDEPTH), ul_texdepth);
 	}
 
 	return true;

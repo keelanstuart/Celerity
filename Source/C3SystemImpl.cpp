@@ -98,11 +98,11 @@ void SystemImpl::Release()
 
 	if (m_Factory)
 	{
-		/// UNREGISTER NATIVE FEATURES BETWEEN THESE LINES
+		/// UNREGISTER NATIVE COMPONENTS BETWEEN THESE LINES
 		// *************************************************
-		UNREGISTER_FEATURETYPE(Positionable, m_Factory);
-		UNREGISTER_FEATURETYPE(Camera, m_Factory);
-		UNREGISTER_FEATURETYPE(ModelRenderer, m_Factory);
+		UNREGISTER_COMPONENTTYPE(Positionable, m_Factory);
+		UNREGISTER_COMPONENTTYPE(Camera, m_Factory);
+		UNREGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);
 		// *************************************************
 
 		delete m_Factory;
@@ -172,11 +172,11 @@ Factory *SystemImpl::GetFactory()
 	{
 		m_Factory = new FactoryImpl(this);
 
-		/// REGISTER NATIVE FEATURES BETWEEN THESE LINES
+		/// REGISTER NATIVE COMPONENTS BETWEEN THESE LINES
 		// *************************************************
-		REGISTER_FEATURETYPE(Positionable, m_Factory);
-		REGISTER_FEATURETYPE(Camera, m_Factory);
-		REGISTER_FEATURETYPE(ModelRenderer, m_Factory);
+		REGISTER_COMPONENTTYPE(Positionable, m_Factory);
+		REGISTER_COMPONENTTYPE(Camera, m_Factory);
+		REGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);
 		// *************************************************
 	}
 

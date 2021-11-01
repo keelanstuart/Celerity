@@ -7,19 +7,19 @@
 #pragma once
 
 #include <C3.h>
-#include <C3Feature.h>
+#include <C3Component.h>
 
 namespace c3
 {
 
 	#define CAMFLAG_REBUILDMATRICES		0x0001
 
-	class C3_API Camera : public Feature
+	class C3_API Camera : public Component
 	{
 
 	public:
 
-		static const FeatureType *Type();
+		static const ComponentType *Type();
 
 		typedef enum EViewMode
 		{

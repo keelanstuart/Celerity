@@ -7,22 +7,22 @@
 #pragma once
 
 #include <C3.h>
-#include <C3Feature.h>
+#include <C3Component.h>
 
 
 namespace c3
 {
 
-	class C3_API ModelRenderer : public Feature
+	class C3_API ModelRenderer : public Component
 	{
 
 	public:
 
-		static const FeatureType *Type();
+		static const ComponentType *Type();
 
 		virtual void Release() = NULL;
 
-		virtual FeatureType *GetType() = NULL;
+		virtual ComponentType *GetType() = NULL;
 
 		virtual props::TFlags64 Flags() = NULL;
 

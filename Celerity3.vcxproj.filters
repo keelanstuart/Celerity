@@ -359,7 +359,7 @@
     <ClInclude Include="Source\C3ModelImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\C3Feature.h">
+    <ClInclude Include="Include\C3Component.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3FrustumImpl.h">
@@ -408,6 +408,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3OmniLightImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3FlowNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3FlowGraph.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

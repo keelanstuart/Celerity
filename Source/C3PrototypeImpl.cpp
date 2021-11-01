@@ -25,7 +25,7 @@ PrototypeImpl::PrototypeImpl(System *psys, GUID guid)
 
 PrototypeImpl::~PrototypeImpl()
 {
-	m_Features.clear();
+	m_Components.clear();
 
 	if (m_Props)
 	{
@@ -65,26 +65,26 @@ props::IPropertySet *PrototypeImpl::GetProperties()
 }
 
 
-bool PrototypeImpl::AddFeature(const FeatureType *pcomptype)
+bool PrototypeImpl::AddComponent(const ComponentType *pcomptype)
 {
 	if (!pcomptype)
 		return false;
 
-	if (std::find(m_Features.cbegin(), m_Features.cend(), pcomptype) != m_Features.cend())
+	if (std::find(m_Components.cbegin(), m_Components.cend(), pcomptype) != m_Components.cend())
 		return false;
 
-	m_Features.push_back(pcomptype);
+	m_Components.push_back(pcomptype);
 
 	return true;
 }
 
 
-bool PrototypeImpl::RemoveFeature(const FeatureType *pcomp)
+bool PrototypeImpl::RemoveComponent(const ComponentType *pcomp)
 {
-	TFeatureArray::iterator it = std::find(m_Features.begin(), m_Features.end(), pcomp);
-	if (it != m_Features.end())
+	TComponentArray::iterator it = std::find(m_Components.begin(), m_Components.end(), pcomp);
+	if (it != m_Components.end())
 	{
-		m_Features.erase(it);
+		m_Components.erase(it);
 
 		return true;
 	}
@@ -93,16 +93,16 @@ bool PrototypeImpl::RemoveFeature(const FeatureType *pcomp)
 }
 
 
-size_t PrototypeImpl::GetNumFeatures()
+size_t PrototypeImpl::GetNumComponents()
 {
-	return m_Features.size();
+	return m_Components.size();
 }
 
 
-const FeatureType *PrototypeImpl::GetFeature(size_t index)
+const ComponentType *PrototypeImpl::GetComponent(size_t index)
 {
-	if (index >= m_Features.size())
+	if (index >= m_Components.size())
 		return nullptr;
 
-	return m_Features[index];
+	return m_Components[index];
 }

@@ -122,6 +122,7 @@ namespace c3
 	public:
 
 		COpenGL gl;
+		bool isnv;
 
 		RendererImpl(SystemImpl *psys);
 

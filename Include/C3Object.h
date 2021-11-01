@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include <C3Feature.h>
+#include <C3Component.h>
 #include <PowerProps.h>
 #include <GenIO.h>
 
 namespace c3
 {
 
-	class Feature;
-	class FeatureType;
+	class Component;
+	class ComponentType;
 
 	/// All world objects in Celerity are Objects. Objects have their own properties and maintain
-	/// a list of Features -- the dictionary definition of "Feature" is: behavior, bearing -- and
+	/// a list of Components -- the dictionary definition of "Component" is: behavior, bearing -- and
 	/// can receive time-based updates and process requests to draw themselves.
 
 	/// Previous versions of Celerity followed a paradigm of sub-classes derived from the base object class to be
@@ -92,20 +92,20 @@ namespace c3
 		/// Returns the IPropertySet owned by the Object
 		virtual props::IPropertySet *GetProperties() = NULL;
 
-		/// Returns the number of Features currently attached to this Object
-		virtual size_t GetNumFeatures() = NULL;
+		/// Returns the number of Components currently attached to this Object
+		virtual size_t GetNumComponents() = NULL;
 
-		/// Returns the attached Feature at the given index
-		virtual Feature *GetFeature(size_t index) = NULL;
+		/// Returns the attached Component at the given index
+		virtual Component *GetComponent(size_t index) = NULL;
 
-		/// Returns an attached Feature with the given FeatureType
-		virtual Feature *FindFeature(const FeatureType *pctype) = NULL;
+		/// Returns an attached Component with the given ComponentType
+		virtual Component *FindComponent(const ComponentType *pctype) = NULL;
 
-		/// Creates, attaches, and returns a Feature of the given FeatureType
-		virtual Feature *AddFeature(const FeatureType *pctype, bool init = true) = NULL;
+		/// Creates, attaches, and returns a Component of the given ComponentType
+		virtual Component *AddComponent(const ComponentType *pctype, bool init = true) = NULL;
 
-		/// Removes the given Feature
-		virtual void RemoveFeature(Feature *pcomportmemt) = NULL;
+		/// Removes the given Component
+		virtual void RemoveComponent(Component *pcomportmemt) = NULL;
 
 		/// Updates the object by the given amount of elapsed time (in seconds)
 		virtual void Update(float elapsed_time = 0.0f) = NULL;

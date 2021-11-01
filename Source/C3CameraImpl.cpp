@@ -11,7 +11,7 @@
 using namespace c3;
 
 
-DECLARE_FEATURETYPE(Camera, CameraImpl);
+DECLARE_COMPONENTTYPE(Camera, CameraImpl);
 
 
 CameraImpl::CameraImpl()
@@ -88,7 +88,7 @@ void CameraImpl::Update(Object *pobject, float elapsed_time)
 {
 	// get a positionable feature from the object -- and if we can't, don't proceed
 	if (!m_pcpos)
-		m_pcpos = dynamic_cast<PositionableImpl *>(pobject->FindFeature(Positionable::Type()));
+		m_pcpos = dynamic_cast<PositionableImpl *>(pobject->FindComponent(Positionable::Type()));
 
 	if (!m_pcpos)
 		return;

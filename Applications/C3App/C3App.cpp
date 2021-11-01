@@ -104,24 +104,24 @@ BOOL C3App::InitInstance()
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("Sponza"));
-	pproto->AddFeature(c3::Positionable::Type());
-	pproto->AddFeature(c3::ModelRenderer::Type());
+	pproto->AddComponent(c3::Positionable::Type());
+	pproto->AddComponent(c3::ModelRenderer::Type());
 	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-obj.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-obj.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("sponza\\sponza.gltf"));
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("AH64e"));
-	pproto->AddFeature(c3::Positionable::Type());
-	pproto->AddFeature(c3::ModelRenderer::Type());
+	pproto->AddComponent(c3::Positionable::Type());
+	pproto->AddComponent(c3::ModelRenderer::Type());
 	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-obj.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-obj.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("ah64e\\ah64e.fbx"));
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("Light"));
-	pproto->AddFeature(c3::Positionable::Type());
-	pproto->AddFeature(c3::OmniLight::Type());
+	pproto->AddComponent(c3::Positionable::Type());
+	pproto->AddComponent(c3::OmniLight::Type());
 	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-omnilight.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-omnilight.fsh"));
 	pproto->Flags().SetAll(c3::Object::OBJFLAG(c3::Object::UPDATE) | c3::Object::OBJFLAG(c3::Object::DRAWINEDITOR) | c3::Object::OBJFLAG(c3::Object::LIGHT));

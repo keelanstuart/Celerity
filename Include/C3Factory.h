@@ -8,15 +8,16 @@
 
 #include <C3.h>
 #include <C3Object.h>
-#include <C3Feature.h>
+#include <C3Component.h>
 #include <C3Prototype.h>
+#include <C3FlowNode.h>
 
 #include <tinyxml2.h>
 
 namespace c3
 {
 
-	/// The Celerity Factory is the hub for creating all Object instances and for obtaining registered FeatureTypes.
+	/// The Celerity Factory is the hub for creating all Object instances and for obtaining registered ComponentTypes.
 	/// As in previous versions of Celerity, Prototypes are used to easily create objects with specific initial
 	/// properties, and the Factory is also where those are maintained.
 
@@ -68,23 +69,41 @@ namespace c3
 		/// Saves [maybe, given a hueristic - nullptr saves all] all Prototypes to a tinyxml2 root node
 		virtual bool SavePrototypes(tinyxml2::XMLNode *proot, PROTO_SAVE_HUERISTIC_FUNCTION pshfunc = nullptr) = NULL;
 
-		/// Makes a FeatureType discoverable by all clients of the Celerity System that created this Factory
-		virtual bool RegisterFeatureType(FeatureType *pctype) = NULL;
+		/// Makes a ComponentType discoverable by all clients of the Celerity System that created this Factory
+		virtual bool RegisterComponentType(ComponentType *pctype) = NULL;
 
-		/// Removes the given FeatureType from the Factory
-		virtual bool UnregisterFeatureType(FeatureType *pctype) = NULL;
+		/// Removes the given ComponentType from the Factory
+		virtual bool UnregisterComponentType(ComponentType *pctype) = NULL;
 
-		/// Returns the number of FeatureTypes currently registered
-		virtual size_t GetNumFeatureTypes() = NULL;
+		/// Returns the number of ComponentTypes currently registered
+		virtual size_t GetNumComponentTypes() = NULL;
 
-		/// Returns a FeatureType given an index
-		virtual const FeatureType *GetFeatureType(size_t index) = NULL;
+		/// Returns a ComponentType given an index
+		virtual const ComponentType *GetComponentType(size_t index) = NULL;
 
-		/// Returns a FeatureType with the given name, or nullptr if one is not found
-		virtual const FeatureType *FindFeatureType(const TCHAR *name, bool case_sensitive = true) = NULL;
+		/// Returns a ComponentType with the given name, or nullptr if one is not found
+		virtual const ComponentType *FindComponentType(const TCHAR *name, bool case_sensitive = true) = NULL;
 
-		/// Returns a FeatureType with the given GUID, or nullptr if one is not found
-		virtual const FeatureType *FindFeatureType(GUID guid) = NULL;
+		/// Returns a ComponentType with the given GUID, or nullptr if one is not found
+		virtual const ComponentType *FindComponentType(GUID guid) = NULL;
+
+		/// Makes a FlowNodeType discoverable by all clients of the Celerity System that created this Factory
+		virtual bool RegisterFlowNodeType(FlowNodeType *pfntype) = NULL;
+
+		/// Removes the given FlowNodeType from the Factory
+		virtual bool UnregisterFlowNodeType(FlowNodeType *pfntype) = NULL;
+
+		/// Returns the number of FlowNodeTypes currently registered
+		virtual size_t GetNumFlowNodeTypes() = NULL;
+
+		/// Returns a FlowNodeType given an index
+		virtual const FlowNodeType *GetFlowNodeType(size_t index) = NULL;
+
+		/// Returns a FlowNodeType with the given name, or nullptr if one is not found
+		virtual const FlowNodeType *FindFlowNodeType(const TCHAR *name, bool case_sensitive = true) = NULL;
+
+		/// Returns a FlowNodeType with the given GUID, or nullptr if one is not found
+		virtual const FlowNodeType *FindFlowNodeType(GUID guid) = NULL;
 
 	};
 

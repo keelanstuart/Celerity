@@ -15,7 +15,7 @@ layout (location=3) out vec3 oDefEmis;
 void main()
 {
 	vec4 diff = texture(uSamplerDiffuse, fTex0);
-	if (diff.a != 1)
+	if (diff.a == 0)
 		discard;
 
 	diff.rgb *= fColor0.rgb;

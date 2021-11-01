@@ -51,7 +51,7 @@
 #include <C3Renderer.h>
 #include <C3Log.h>
 
-#include <C3Feature.h>
+#include <C3Component.h>
 #include <C3Positionable.h>
 #include <C3Camera.h>
 #include <C3ModelRenderer.h>
@@ -67,3 +67,6 @@
 #include <C3ResourceManager.h>
 #include <C3System.h>
 #include <C3ColorDefs.h>
+
+#include <C3FlowGraph.h>
+#include <C3FlowNode.h>

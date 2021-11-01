@@ -107,7 +107,8 @@ BOOL CCeledit3App::InitInstance()
 		FILE *protof;
 		if (!_tfopen_s(&protof, m_ProtoFilename.c_str(), _T("r, css=UTF-8")))
 		{
-			HANDLE h = (HANDLE)_fileno(protof);
+			int f = _fileno(protof);
+			HANDLE h = (f > 0) ? (HANDLE)f : INVALID_HANDLE_VALUE;
 			genio::IInputStream *pis = genio::IInputStream::Create(h);
 			pf->LoadPrototypes(pis);
 			pis->Release();

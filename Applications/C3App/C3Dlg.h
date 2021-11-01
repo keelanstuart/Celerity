@@ -4,10 +4,20 @@
 
 #pragma once
 
+#include "renderdoc_app.h"
+
 
 // C3Dlg dialog
 class C3Dlg : public CDialog
 {
+public:
+	typedef struct sTargData
+	{
+		const TCHAR* name;
+		c3::Renderer::ETextureType type;
+		uint64_t flags;
+	} STargData;
+
 protected:
 	c3::Renderer *m_Rend;
 	c3::FrameBuffer *m_GBuf;
@@ -27,6 +37,11 @@ protected:
 
 	LARGE_INTEGER m_PerfFreq;
 	LARGE_INTEGER m_PerfTime;
+
+	RENDERDOC_API_1_4_0 *m_pRDoc;
+	bool m_bCapturedFirstFrame;
+
+	bool InitializeFrameBuffer(c3::FrameBuffer **pfb, size_t fbtd_sz, const STargData *pfbtd, c3::DepthBuffer *pdb, CRect &r);
 
 // Construction
 public:

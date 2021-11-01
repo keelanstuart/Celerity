@@ -244,7 +244,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 #else
 				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 #endif
-				WGL_CONTEXT_PROFILE_MASK_ARB,	WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+				//WGL_CONTEXT_PROFILE_MASK_ARB,	WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 				0, 0	// end
 			};
 
@@ -292,6 +292,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		TCHAR *tmp;
 		CONVERT_MBCS2TCS(devname, tmp);
 		m_DeviceName = tmp;
+		std::transform(m_DeviceName.begin(), m_DeviceName.end(), m_DeviceName.begin(), std::tolower);
 	}
 
 	const char *vendorname = (const char *)gl.GetString(GL_VENDOR);
@@ -300,7 +301,11 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		TCHAR *tmp;
 		CONVERT_MBCS2TCS(vendorname, tmp);
 		m_VendorName = tmp;
+		std::transform(m_VendorName.begin(), m_VendorName.end(), m_VendorName.begin(), std::tolower);
 	}
+	const TCHAR *vn = GetVendorName();
+	if (_tcsstr(vn, _T("nvidia")) != nullptr)
+		isnv = true;
 
 	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>(wglGetProcAddress("wglSwapIntervalEXT"));
 	if (wglSwapIntervalEXT)
@@ -1233,22 +1238,25 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 	if (flags.IsSet(UFBFLAG_FINISHLAST))
 		gl.Finish();
 
-	// we set the initial viewport based on the dimensions of the depth target -- or the hwnd, in lieu of that
-	DepthBuffer *pdb = pfb ? pfb->GetDepthTarget() : nullptr;
-	if (pdb)
+	if (flags.IsSet(UFBFLAG_UPDATEVIEWPORT))
 	{
-		RECT r;
+		// we set the initial viewport based on the dimensions of the depth target -- or the hwnd, in lieu of that
+		DepthBuffer* pdb = pfb ? pfb->GetDepthTarget() : nullptr;
+		if (pdb)
+		{
+			RECT r;
 
-		r.left = 0;
-		r.top = 0;
-		r.right = (LONG)pdb->Width();
-		r.bottom = (LONG)pdb->Height();
+			r.left = 0;
+			r.top = 0;
+			r.right = (LONG)pdb->Width();
+			r.bottom = (LONG)pdb->Height();
 
-		SetViewport(&r);
-	}
-	else
-	{
-		SetViewport();
+			SetViewport(&r);
+		}
+		else
+		{
+			SetViewport();
+		}
 	}
 
 	m_CurFB = pfb;
@@ -1404,7 +1412,6 @@ void RendererImpl::UseTexture(uint64_t sampler, Texture *ptex)
 	ptexcache[sampler] = ptex;
 
 	gl.ActiveTexture(sampleridlu[sampler]);
-
 	gl.BindTexture(textype, ptex ? glid : 0);
 }
 

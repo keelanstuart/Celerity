@@ -20,8 +20,8 @@ namespace c3
 
 		props::IPropertySet *m_Props;
 
-		typedef std::deque<Feature *> TFeatureArray;
-		TFeatureArray m_Features;
+		typedef std::deque<Component *> TComponentArray;
+		TComponentArray m_Components;
 
 		Object *m_Owner;
 
@@ -60,15 +60,15 @@ namespace c3
 
 		virtual props::IPropertySet *GetProperties();
 
-		virtual size_t GetNumFeatures();
+		virtual size_t GetNumComponents();
 
-		virtual Feature *GetFeature(size_t index);
+		virtual Component *GetComponent(size_t index);
 
-		virtual Feature *FindFeature(const FeatureType *pctype);
+		virtual Component *FindComponent(const ComponentType *pctype);
 
-		virtual Feature *AddFeature(const FeatureType *pctype, bool init = true);
+		virtual Component *AddComponent(const ComponentType *pctype, bool init = true);
 
-		virtual void RemoveFeature(Feature *pcomportmemt);
+		virtual void RemoveComponent(Component *pcomportmemt);
 
 		virtual void Update(float elapsed_time = 0.0f);
 

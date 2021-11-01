@@ -34,15 +34,16 @@ FrameBufferImpl::FrameBufferImpl(RendererImpl* prend)
 	m_DepthTarget = nullptr;
 	m_BlendMode = Renderer::BlendMode::BM_NUMMODES;
 
-	GLint maxAttach = 0;
-	m_Rend->gl.GetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxAttach);
-
-	m_ColorTarget.reserve(maxAttach);
-
 	if (m_Rend)
 	{
-		prend->gl.GenFramebuffers(1, &m_glID);
-		prend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
+		GLint maxAttach = 0;
+		m_Rend->gl.GetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxAttach);
+
+		m_ColorTarget.reserve(maxAttach);
+
+		if (!m_Rend->isnv)
+		m_Rend->gl.GenFramebuffers(1, &m_glID);
+		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 	}
 }
 
@@ -67,8 +68,8 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachColorTarget(Texture2D *target, si
 {
 	if (m_Rend && (m_glID != GL_INVALID_VALUE))
 	{
-		FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
-		m_Rend->UseFrameBuffer(this);
+		//FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
+		m_Rend->UseFrameBuffer(this, 0);
 
 		if (position <= m_ColorTarget.size())
 			m_ColorTarget.resize(position + 1, nullptr);
@@ -77,11 +78,12 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachColorTarget(Texture2D *target, si
 
 		if (target)
 		{
-			m_Rend->gl.FramebufferTexture(GL_FRAMEBUFFER, targenum[position], (const Texture2DImpl &)*target, 0);
+			m_Rend->gl.FramebufferTexture2D(GL_FRAMEBUFFER, targenum[position], GL_TEXTURE_2D, (const Texture2DImpl &)*target, 0);
+
 			m_Rend->FlushErrors(_T("AttachColorTarget: %s"), __FILEW__, __LINE__);
 		}
 
-		m_Rend->UseFrameBuffer(curfb);
+		//m_Rend->UseFrameBuffer(curfb, 0);
 	}
 
 	return FrameBuffer::RETURNCODE::RET_OK;
@@ -125,8 +127,8 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachDepthTarget(DepthBuffer* pdepth)
 
 	if (m_Rend)
 	{
-		FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
-		m_Rend->UseFrameBuffer(this);
+//		FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
+		m_Rend->UseFrameBuffer(this, 0);
 
 		GLenum attach_type = ((pdepth->Format() == Renderer::DepthType::F32_DS) || (pdepth->Format() == Renderer::DepthType::U32_DS)) ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
 
@@ -134,7 +136,7 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachDepthTarget(DepthBuffer* pdepth)
 		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 		m_DepthTarget = pdepth;
 
-		m_Rend->UseFrameBuffer(curfb);
+//		m_Rend->UseFrameBuffer(curfb, 0);
 	}
 
 	return FrameBuffer::RETURNCODE::RET_OK;
@@ -153,8 +155,8 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Seal()
 
 	if (m_Rend)
 	{
-		FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
-		m_Rend->UseFrameBuffer(this);
+	//	FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
+		m_Rend->UseFrameBuffer(this, 0);
 
 		m_Rend->gl.DrawBuffers((GLsizei)m_ColorTarget.size(), targenum);
 		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
@@ -192,7 +194,7 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Seal()
 				break;
 		}
 
-		m_Rend->UseFrameBuffer(curfb);
+//		m_Rend->UseFrameBuffer(curfb, 0);
 	}
 
 	return ret;

@@ -54,7 +54,7 @@ namespace c3
 
 		virtual void Release();
 
-		virtual FeatureType *GetType();
+		virtual ComponentType *GetType();
 
 		virtual props::TFlags64 Flags();
 
@@ -93,6 +93,6 @@ namespace c3
 
 	};
 
-	DEFINE_FEATURETYPE(Camera, CameraImpl, GUID({0xfcc880c3, 0x54a2, 0x4168, { 0xbd, 0x4, 0xe9, 0x91, 0xfe, 0xee, 0x29, 0xef }}), "Camera", "Camera generates view and projection matrices for scene rendering (requires Positionable)");
+	DEFINE_COMPONENTTYPE(Camera, CameraImpl, GUID({0xfcc880c3, 0x54a2, 0x4168, { 0xbd, 0x4, 0xe9, 0x91, 0xfe, 0xee, 0x29, 0xef }}), "Camera", "Camera generates view and projection matrices for scene rendering (requires Positionable)");
 
 };

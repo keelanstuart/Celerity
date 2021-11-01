@@ -19,7 +19,8 @@
 using namespace c3;
 
 
-FactoryImpl::TFeatureTypeArray FactoryImpl::s_FeatureTypes;
+FactoryImpl::TComponentTypeArray FactoryImpl::s_ComponentTypes;
+FactoryImpl::TFlowNodeTypeArray FactoryImpl::s_FlowNodeTypes;
 
 
 FactoryImpl::FactoryImpl(SystemImpl *psys)
@@ -50,14 +51,14 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid)
 		o->SetName(pproto->GetName());
 		o->Flags().SetAll(pproto->Flags());
 
-		for (size_t i = 0, maxi = pproto->GetNumFeatures(); i < maxi; i++)
+		for (size_t i = 0, maxi = pproto->GetNumComponents(); i < maxi; i++)
 		{
-			o->AddFeature(pproto->GetFeature(i), false);
+			o->AddComponent(pproto->GetComponent(i), false);
 		}
 
-		for (size_t i = 0, maxi = o->GetNumFeatures(); i < maxi; i++)
+		for (size_t i = 0, maxi = o->GetNumComponents(); i < maxi; i++)
 		{
-			Feature *pc = o->GetFeature(i);
+			Component *pc = o->GetComponent(i);
 			if (!pc)
 				continue;
 
@@ -87,18 +88,18 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid)
 		o->Flags().SetAll(pobject->Flags());
 		o->GetProperties()->AppendPropertySet(pobject->GetProperties());
 
-		for (size_t i = 0, maxi = pobject->GetNumFeatures(); i < maxi; i++)
+		for (size_t i = 0, maxi = pobject->GetNumComponents(); i < maxi; i++)
 		{
-			Feature *ppc = pobject->GetFeature(i);
+			Component *ppc = pobject->GetComponent(i);
 			if (!ppc)
 				continue;
 
-			Feature *pc = o->AddFeature(ppc->GetType(), false);
+			Component *pc = o->AddComponent(ppc->GetType(), false);
 		}
 
-		for (size_t i = 0, maxi = pobject->GetNumFeatures(); i < maxi; i++)
+		for (size_t i = 0, maxi = pobject->GetNumComponents(); i < maxi; i++)
 		{
-			Feature *pc = o->GetFeature(i);
+			Component *pc = o->GetComponent(i);
 			if (!pc)
 				continue;
 
@@ -126,9 +127,9 @@ Prototype *FactoryImpl::CreatePrototype(Prototype *pproto)
 		p->Flags().SetAll(pproto->Flags());
 		p->GetProperties()->AppendPropertySet(pproto->GetProperties());
 
-		for (size_t i = 0, maxi = pproto->GetNumFeatures(); i < maxi; i++)
+		for (size_t i = 0, maxi = pproto->GetNumComponents(); i < maxi; i++)
 		{
-			p->AddFeature(pproto->GetFeature(i));
+			p->AddComponent(pproto->GetComponent(i));
 		}
 	}
 
@@ -150,13 +151,13 @@ Prototype *FactoryImpl::MakePrototype(Object *pobject)
 		p->Flags().SetAll(pobject->Flags());
 		p->GetProperties()->AppendPropertySet(pobject->GetProperties());
 
-		for (size_t i = 0, maxi = pobject->GetNumFeatures(); i < maxi; i++)
+		for (size_t i = 0, maxi = pobject->GetNumComponents(); i < maxi; i++)
 		{
-			Feature *ppc = pobject->GetFeature(i);
+			Component *ppc = pobject->GetComponent(i);
 			if (!ppc)
 				continue;
 
-			p->AddFeature(ppc->GetType());
+			p->AddComponent(ppc->GetType());
 		}
 	}
 
@@ -307,13 +308,13 @@ bool FactoryImpl::SavePrototypes(tinyxml2::XMLNode *proot, PROTO_SAVE_HUERISTIC_
 }
 
 
-bool FactoryImpl::RegisterFeatureType(FeatureType *pctype)
+bool FactoryImpl::RegisterComponentType(ComponentType *pctype)
 {
 	if (!pctype)
 		return false;
 
-	m_pSys->GetLog()->Print(_T("Registering FeatureType \"%s\" ... "), pctype->GetName());
-	for (const auto &it : s_FeatureTypes)
+	m_pSys->GetLog()->Print(_T("Registering ComponentType \"%s\" ... "), pctype->GetName());
+	for (const auto &it : s_ComponentTypes)
 	{
 		if (!_tcscmp(it->GetName(), pctype->GetName()) || (it->GetGUID() == pctype->GetGUID()))
 		{
@@ -323,21 +324,21 @@ bool FactoryImpl::RegisterFeatureType(FeatureType *pctype)
 	}
 
 	m_pSys->GetLog()->Print(_T("OK\n"));
-	s_FeatureTypes.push_back(pctype);
+	s_ComponentTypes.push_back(pctype);
 
 	return true;
 }
 
 
-bool FactoryImpl::UnregisterFeatureType(FeatureType *pctype)
+bool FactoryImpl::UnregisterComponentType(ComponentType *pctype)
 {
 	if (!pctype)
 		return false;
 
-	TFeatureTypeArray::iterator it = std::find(s_FeatureTypes.begin(), s_FeatureTypes.end(), pctype);
-	if (it != s_FeatureTypes.end())
+	TComponentTypeArray::iterator it = std::find(s_ComponentTypes.begin(), s_ComponentTypes.end(), pctype);
+	if (it != s_ComponentTypes.end())
 	{
-		s_FeatureTypes.erase(it);
+		s_ComponentTypes.erase(it);
 		return true;
 	}
 
@@ -345,29 +346,29 @@ bool FactoryImpl::UnregisterFeatureType(FeatureType *pctype)
 }
 
 
-size_t FactoryImpl::GetNumFeatureTypes()
+size_t FactoryImpl::GetNumComponentTypes()
 {
-	return s_FeatureTypes.size();
+	return s_ComponentTypes.size();
 }
 
 
-const FeatureType *FactoryImpl::GetFeatureType(size_t index)
+const ComponentType *FactoryImpl::GetComponentType(size_t index)
 {
-	if (index >= s_FeatureTypes.size())
+	if (index >= s_ComponentTypes.size())
 		return nullptr;
 
-	return s_FeatureTypes[index];
+	return s_ComponentTypes[index];
 }
 
 
-const FeatureType *FactoryImpl::FindFeatureType(const TCHAR *name, bool case_sensitive)
+const ComponentType *FactoryImpl::FindComponentType(const TCHAR *name, bool case_sensitive)
 {
 	if (!name)
 		return nullptr;
 
 	if (case_sensitive)
 	{
-		for (const auto &it : s_FeatureTypes)
+		for (const auto &it : s_ComponentTypes)
 		{
 			if (!_tcscmp(it->GetName(), name))
 			{
@@ -377,7 +378,7 @@ const FeatureType *FactoryImpl::FindFeatureType(const TCHAR *name, bool case_sen
 	}
 	else
 	{
-		for (const auto &it : s_FeatureTypes)
+		for (const auto &it : s_ComponentTypes)
 		{
 			if (!_tcsicmp(it->GetName(), name))
 			{
@@ -390,9 +391,106 @@ const FeatureType *FactoryImpl::FindFeatureType(const TCHAR *name, bool case_sen
 }
 
 
-const FeatureType *FactoryImpl::FindFeatureType(GUID guid)
+const ComponentType *FactoryImpl::FindComponentType(GUID guid)
 {
-	for (const auto &it : s_FeatureTypes)
+	for (const auto &it : s_ComponentTypes)
+	{
+		if (it->GetGUID() == guid)
+		{
+			return it;
+		}
+	}
+
+	return nullptr;
+}
+
+
+bool FactoryImpl::RegisterFlowNodeType(FlowNodeType *pfntype)
+{
+	if (!pfntype)
+		return false;
+
+	m_pSys->GetLog()->Print(_T("Registering FlowNodeType \"%s\" ... "), pfntype->GetName());
+	for (const auto &it : s_FlowNodeTypes)
+	{
+		if (!_tcscmp(it->GetName(), pfntype->GetName()) || (it->GetGUID() == pfntype->GetGUID()))
+		{
+			m_pSys->GetLog()->Print(_T("FAILED (duplicate)\n"));
+			return false;
+		}
+	}
+
+	m_pSys->GetLog()->Print(_T("OK\n"));
+	s_FlowNodeTypes.push_back(pfntype);
+
+	return true;
+}
+
+
+bool FactoryImpl::UnregisterFlowNodeType(FlowNodeType *pfntype)
+{
+	if (!pfntype)
+		return false;
+
+	TFlowNodeTypeArray::iterator it = std::find(s_FlowNodeTypes.begin(), s_FlowNodeTypes.end(), pfntype);
+	if (it != s_FlowNodeTypes.end())
+	{
+		s_FlowNodeTypes.erase(it);
+		return true;
+	}
+
+	return false;
+}
+
+
+size_t FactoryImpl::GetNumFlowNodeTypes()
+{
+	return s_FlowNodeTypes.size();
+}
+
+
+const FlowNodeType *FactoryImpl::GetFlowNodeType(size_t index)
+{
+	if (index >= s_FlowNodeTypes.size())
+		return nullptr;
+
+	return s_FlowNodeTypes[index];
+}
+
+
+const FlowNodeType *FactoryImpl::FindFlowNodeType(const TCHAR *name, bool case_sensitive)
+{
+	if (!name)
+		return nullptr;
+
+	if (case_sensitive)
+	{
+		for (const auto &it : s_FlowNodeTypes)
+		{
+			if (!_tcscmp(it->GetName(), name))
+			{
+				return it;
+			}
+		}
+	}
+	else
+	{
+		for (const auto &it : s_FlowNodeTypes)
+		{
+			if (!_tcsicmp(it->GetName(), name))
+			{
+				return it;
+			}
+		}
+	}
+
+	return nullptr;
+}
+
+
+const FlowNodeType *FactoryImpl::FindFlowNodeType(GUID guid)
+{
+	for (const auto &it : s_FlowNodeTypes)
 	{
 		if (it->GetGUID() == guid)
 		{

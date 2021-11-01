@@ -36,7 +36,7 @@ namespace c3
 
 		virtual void Release();
 
-		virtual FeatureType *GetType();
+		virtual ComponentType *GetType();
 
 		virtual props::TFlags64 Flags();
 
@@ -54,6 +54,6 @@ namespace c3
 
 	};
 
-	DEFINE_FEATURETYPE(ModelRenderer, ModelRendererImpl, GUID({0x15558c71, 0xe301, 0x4911, { 0xa1, 0xa9, 0x8d, 0x88, 0x6c, 0x3c, 0x45, 0xd1 }}), "ModelRenderer", "ModelRenderer draws a Model if it's visible (requires Positionable)");
+	DEFINE_COMPONENTTYPE(ModelRenderer, ModelRendererImpl, GUID({0x15558c71, 0xe301, 0x4911, { 0xa1, 0xa9, 0x8d, 0x88, 0x6c, 0x3c, 0x45, 0xd1 }}), "ModelRenderer", "ModelRenderer draws a Model if it's visible (requires Positionable)");
 
 };

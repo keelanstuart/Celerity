@@ -87,8 +87,8 @@ void CCeledit3View::OnDraw(CDC *pDC)
 		pDoc->m_Observer->Update();
 		pDoc->m_RootObj->Update();
 
-		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pDoc->m_Observer->FindFeature(c3::Positionable::Type()));
-		c3::Camera *pcam = dynamic_cast<c3::Camera *>(pDoc->m_Observer->FindFeature(c3::Camera::Type()));
+		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pDoc->m_Observer->FindComponent(c3::Positionable::Type()));
+		c3::Camera *pcam = dynamic_cast<c3::Camera *>(pDoc->m_Observer->FindComponent(c3::Camera::Type()));
 		if (pcam)
 		{
 			m_Rend->SetViewMatrix(pcam->GetViewMatrix());
@@ -211,9 +211,9 @@ void CCeledit3View::OnInitialUpdate()
 	if (!pdoc)
 		return;
 
-	m_pCamPos = dynamic_cast<c3::Positionable *>(pdoc->m_Observer->FindFeature(c3::Positionable::Type()));
+	m_pCamPos = dynamic_cast<c3::Positionable *>(pdoc->m_Observer->FindComponent(c3::Positionable::Type()));
 	m_pCamPos->SetPos(-3.0f, 0, -10.0f);
-	m_pCam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindFeature(c3::Camera::Type()));
+	m_pCam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindComponent(c3::Camera::Type()));
 	m_pCam->SetFOV(glm::radians(70.0f));
 	m_pCam->SetViewMode(c3::Camera::ViewMode::VM_POLAR);
 	m_pCam->SetPolarDistance(1.0f);
@@ -337,9 +337,9 @@ void CCeledit3View::OnMouseMove(UINT nFlags, CPoint point)
 	if ((nFlags & (MK_SHIFT | MK_MBUTTON | MK_LBUTTON)) && (this != GetCapture()))
 		SetCapture();
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindFeature(c3::Camera::Type()));
-	c3::ModelRenderer *pbr = pdoc->m_Brush ? dynamic_cast<c3::ModelRenderer *>(pdoc->m_Brush->FindFeature(c3::ModelRenderer::Type())) : nullptr;
-	c3::Positionable *pbp = pdoc->m_Brush ? dynamic_cast<c3::Positionable *>(pdoc->m_Brush->FindFeature(c3::Positionable::Type())) : nullptr;
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindComponent(c3::Camera::Type()));
+	c3::ModelRenderer *pbr = pdoc->m_Brush ? dynamic_cast<c3::ModelRenderer *>(pdoc->m_Brush->FindComponent(c3::ModelRenderer::Type())) : nullptr;
+	c3::Positionable *pbp = pdoc->m_Brush ? dynamic_cast<c3::Positionable *>(pdoc->m_Brush->FindComponent(c3::Positionable::Type())) : nullptr;
 
 	if ((active_tool == CCeledit3App::ToolType::TT_WAND) && pcam && pbr && pbp)
 	{
@@ -559,7 +559,7 @@ BOOL CCeledit3View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	CCeledit3Doc *pdoc = GetDocument();
 	ASSERT_VALID(pdoc);
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindFeature(c3::Camera::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
 		float d = pcam->GetPolarDistance();

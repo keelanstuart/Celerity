@@ -11,7 +11,7 @@
 using namespace c3;
 
 
-DECLARE_FEATURETYPE(OmniLight, OmniLightImpl);
+DECLARE_COMPONENTTYPE(OmniLight, OmniLightImpl);
 
 
 OmniLightImpl::OmniLightImpl()
@@ -51,7 +51,7 @@ bool OmniLightImpl::Initialize(Object *pobject)
 		return false;
 
 	// get a positionable feature from the object -- and if we can't, don't proceed
-	if (nullptr == (m_pPos = dynamic_cast<PositionableImpl *>(pobject->FindFeature(Positionable::Type()))))
+	if (nullptr == (m_pPos = dynamic_cast<PositionableImpl *>(pobject->FindComponent(Positionable::Type()))))
 		return false;
 
 	props::IPropertySet *props = pobject->GetProperties();

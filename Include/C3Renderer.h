@@ -183,6 +183,7 @@ namespace c3
 		#define UFBFLAG_CLEARDEPTH			0x0002
 		#define UFBFLAG_CLEARSTENCIL		0x0004
 		#define UFBFLAG_FINISHLAST			0x0008
+		#define UFBFLAG_UPDATEVIEWPORT		0x0010
 
 		/// Returns the System that created this Renderer
 		virtual System *GetSystem() = NULL;

@@ -47,9 +47,19 @@ DepthBufferImpl::DepthBufferImpl(RendererImpl* prend, size_t width, size_t heigh
 				break;
 		}
 
-		prend->gl.GenRenderbuffers(1, &m_glID);
-		prend->gl.BindRenderbuffer(GL_RENDERBUFFER, m_glID);
-		prend->gl.RenderbufferStorage(GL_RENDERBUFFER, glct, (GLsizei)m_Width, (GLsizei)m_Height);
+		if (!m_Rend->isnv)
+		{
+			prend->gl.GenRenderbuffers(1, &m_glID);
+			prend->gl.BindRenderbuffer(GL_RENDERBUFFER, m_glID);
+			prend->gl.RenderbufferStorage(GL_RENDERBUFFER, glct, (GLsizei)m_Width, (GLsizei)m_Height);
+		}
+		else
+		{
+			prend->gl.GenRenderbuffersEXT(1, &m_glID);
+			prend->gl.BindRenderbufferEXT(GL_RENDERBUFFER_EXT, m_glID);
+			prend->gl.RenderbufferStorageEXT(GL_RENDERBUFFER_EXT, glct, (GLsizei)m_Width, (GLsizei)m_Height);
+
+		}
 
 		prend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 	}

@@ -76,8 +76,8 @@ BOOL CCeledit3Doc::OnNewDocument()
 		return FALSE;
 
 	m_Observer = pf->Build();
-	m_Observer->AddFeature(c3::Positionable::Type());
-	m_Observer->AddFeature(c3::Camera::Type());
+	m_Observer->AddComponent(c3::Positionable::Type());
+	m_Observer->AddComponent(c3::Camera::Type());
 	m_Observer->SetName(_T("Camera"));
 
 	m_RootObj = pf->Build();

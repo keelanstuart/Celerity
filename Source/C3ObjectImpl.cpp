@@ -27,11 +27,11 @@ ObjectImpl::ObjectImpl(SystemImpl *psys, GUID guid)
 
 ObjectImpl::~ObjectImpl()
 {
-	for (const auto &it : m_Features)
+	for (const auto &it : m_Components)
 	{
 		it->GetType()->Destroy(it);
 	}
-	m_Features.clear();
+	m_Components.clear();
 
 	for (auto child : m_Children)
 	{
@@ -146,30 +146,30 @@ props::IPropertySet *ObjectImpl::GetProperties()
 }
 
 
-size_t ObjectImpl::GetNumFeatures()
+size_t ObjectImpl::GetNumComponents()
 {
-	return m_Features.size();
+	return m_Components.size();
 }
 
 
-Feature *ObjectImpl::GetFeature(size_t index)
+Component *ObjectImpl::GetComponent(size_t index)
 {
-	if (index >= m_Features.size())
+	if (index >= m_Components.size())
 		return nullptr;
 
-	return m_Features[index];
+	return m_Components[index];
 }
 
 
-Feature *ObjectImpl::FindFeature(const FeatureType *pctype)
+Component *ObjectImpl::FindComponent(const ComponentType *pctype)
 {
-	Feature *ret = nullptr;
+	Component *ret = nullptr;
 
-	for (size_t i = 0, maxi = m_Features.size(); i < maxi; i++)
+	for (size_t i = 0, maxi = m_Components.size(); i < maxi; i++)
 	{
-		if (m_Features[i]->GetType() == pctype)
+		if (m_Components[i]->GetType() == pctype)
 		{
-			ret = m_Features[i];
+			ret = m_Components[i];
 			break;
 		}
 	}
@@ -178,12 +178,12 @@ Feature *ObjectImpl::FindFeature(const FeatureType *pctype)
 }
 
 
-Feature *ObjectImpl::AddFeature(const FeatureType *pctype, bool init)
+Component *ObjectImpl::AddComponent(const ComponentType *pctype, bool init)
 {
 	if (!pctype)
 		return nullptr;
 
-	Feature *pc = FindFeature(pctype);
+	Component *pc = FindComponent(pctype);
 	if (pc)
 		return pc;
 
@@ -191,7 +191,7 @@ Feature *ObjectImpl::AddFeature(const FeatureType *pctype, bool init)
 	if (!pc)
 		return nullptr;
 
-	m_Features.push_back(pc);
+	m_Components.push_back(pc);
 
 	if (init)
 		pc->Initialize(this);
@@ -200,13 +200,13 @@ Feature *ObjectImpl::AddFeature(const FeatureType *pctype, bool init)
 }
 
 
-void ObjectImpl::RemoveFeature(Feature *pcomportmemt)
+void ObjectImpl::RemoveComponent(Component *pcomportmemt)
 {
-	TFeatureArray::iterator it = std::find(m_Features.begin(), m_Features.end(), pcomportmemt);
-	if (it != m_Features.end())
+	TComponentArray::iterator it = std::find(m_Components.begin(), m_Components.end(), pcomportmemt);
+	if (it != m_Components.end())
 	{
 		(*it)->GetType()->Destroy((*it));
-		m_Features.erase(it);
+		m_Components.erase(it);
 	}
 }
 
@@ -216,7 +216,7 @@ void ObjectImpl::Update(float elapsed_time)
 	if (!m_Flags.IsSet(OBJFLAG(UPDATE)))
 		return;
 
-	for (const auto &it : m_Features)
+	for (const auto &it : m_Components)
 	{
 		it->Update(this, elapsed_time);
 	}
@@ -231,7 +231,7 @@ bool ObjectImpl::Prerender(props::TFlags64 rendflags)
 	// TODO: port visibility culling
 	bool ret = false;
 
-	for (const auto it : m_Features)
+	for (const auto it : m_Components)
 	{
 		if (it->Prerender(this, rendflags))
 			ret = true;
@@ -246,7 +246,7 @@ bool ObjectImpl::Render(props::TFlags64 rendflags)
 	if (!Prerender(rendflags))
 		return false;
 
-	for (const auto &it : m_Features)
+	for (const auto &it : m_Components)
 	{
 		it->Render(this, rendflags);
 	}
@@ -296,7 +296,7 @@ void ObjectImpl::PropertyChanged(const props::IProperty *pprop)
 	if (!pprop)
 		return;
 
-	for (const auto &it : m_Features)
+	for (const auto &it : m_Components)
 	{
 		it->PropertyChanged(pprop);
 	}

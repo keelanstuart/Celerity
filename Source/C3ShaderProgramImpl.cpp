@@ -242,6 +242,9 @@ bool ShaderProgramImpl::SetUniform4(int32_t location, const glm::fvec4 *v4)
 
 bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_t sampler)
 {
+	if (!tex)
+		tex = m_Rend->GetBlackTexture();
+
 	props::IProperty *p = m_Uniforms->GetPropertyById(location);
 	if (!p)
 		p = m_Uniforms->GetPropertyByName(tex->GetName());
@@ -483,16 +486,6 @@ void ShaderProgramImpl::ApplyUniforms(bool update_globals)
 				break;
 		}
 	}
-}
-
-
-const VertexBuffer::ComponentDescription *ShaderProgramImpl::GetExpectedInputs() const
-{
-	if (m_Linked)
-	{
-
-	}
-	return nullptr;
 }
 
 

@@ -19,8 +19,11 @@ namespace c3
 	protected:
 		SystemImpl *m_pSys;
 
-		typedef std::deque<FeatureType *> TFeatureTypeArray;
-		static TFeatureTypeArray s_FeatureTypes;
+		typedef std::deque<ComponentType *> TComponentTypeArray;
+		static TComponentTypeArray s_ComponentTypes;
+
+		typedef std::deque<FlowNodeType *> TFlowNodeTypeArray;
+		static TFlowNodeTypeArray s_FlowNodeTypes;
 
 		typedef std::deque<Prototype *> TPrototypeArray;
 		TPrototypeArray m_Prototypes;
@@ -57,17 +60,29 @@ namespace c3
 
 		virtual bool SavePrototypes(tinyxml2::XMLNode *proot, PROTO_SAVE_HUERISTIC_FUNCTION pshfunc);
 
-		virtual bool RegisterFeatureType(FeatureType *pctype);
+		virtual bool RegisterComponentType(ComponentType *pctype);
 
-		virtual bool UnregisterFeatureType(FeatureType *pctype);
+		virtual bool UnregisterComponentType(ComponentType *pctype);
 		
-		virtual size_t GetNumFeatureTypes();
+		virtual size_t GetNumComponentTypes();
 
-		virtual const FeatureType *GetFeatureType(size_t index);
+		virtual const ComponentType *GetComponentType(size_t index);
 
-		virtual const FeatureType *FindFeatureType(const TCHAR *name, bool case_sensitive);
+		virtual const ComponentType *FindComponentType(const TCHAR *name, bool case_sensitive);
 
-		virtual const FeatureType *FindFeatureType(GUID guid);
+		virtual const ComponentType *FindComponentType(GUID guid);
+
+		virtual bool RegisterFlowNodeType(FlowNodeType *pfntype);
+
+		virtual bool UnregisterFlowNodeType(FlowNodeType *pfntype);
+
+		virtual size_t GetNumFlowNodeTypes();
+
+		virtual const FlowNodeType *GetFlowNodeType(size_t index);
+
+		virtual const FlowNodeType *FindFlowNodeType(const TCHAR *name, bool case_sensitive = true);
+
+		virtual const FlowNodeType *FindFlowNodeType(GUID guid);
 
 	};
 

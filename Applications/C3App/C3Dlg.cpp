@@ -38,6 +38,9 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_Light[0] = nullptr;
 	m_Light[1] = nullptr;
 	m_Light[2] = nullptr;
+	m_pRDoc = nullptr;
+	m_bCapturedFirstFrame = false;
+
 }
 
 void C3Dlg::DoDataExchange(CDataExchange* pDX)
@@ -58,14 +61,7 @@ BEGIN_MESSAGE_MAP(C3Dlg, CDialog)
 	ON_WM_KEYUP()
 END_MESSAGE_MAP()
 
-typedef struct sTargData
-{
-	const TCHAR *name;
-	c3::Renderer::ETextureType type;
-	uint64_t flags;
-} STargData;
-
-STargData GBufTargData[] =
+C3Dlg::STargData GBufTargData[] =
 {
 	{ _T("uSamplerDiffuse"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },
 	{ _T("uSamplerNormal"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
@@ -75,16 +71,63 @@ STargData GBufTargData[] =
 
 // It SEEEEMS like in order to get blending to work, the light combine buffer needs to pre-multiply alpha,
 // but then write alpha=1 in the shader... the depth test is still a problem
-STargData LCBufTargData[] =
+C3Dlg::STargData LCBufTargData[] =
 {
-	{ _T("uSamplerLights"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },
+	{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
 };
+
+bool C3Dlg::InitializeFrameBuffer(c3::FrameBuffer **pfb, size_t fbtd_sz, const STargData *pfbtd, c3::DepthBuffer *pdb, CRect &r)
+{
+	if (!pfb)
+		return false;
+
+	bool ret = false;
+
+	*pfb = m_Rend->CreateFrameBuffer();
+	if (*pfb)
+	{
+		ret = true;
+
+		size_t w = r.Width();
+		size_t h = r.Height();
+
+		if (!pdb)
+			pdb = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
+
+		(*pfb)->AttachDepthTarget(pdb);
+
+		for (size_t i = 0; i < fbtd_sz; i++)
+		{
+			c3::Texture2D* pt = m_Rend->CreateTexture2D(w, h, pfbtd[i].type, 1, pfbtd[i].flags);
+			ret &= (pt != nullptr);
+			if (!ret)
+				break;
+
+			(*pfb)->AttachColorTarget(pt, i);
+			pt->SetName(pfbtd[i].name);
+			m_ColorTarg.push_back(pt);
+		}
+
+		if (ret)
+			ret &= (c3::FrameBuffer::RETURNCODE::RET_OK == (*pfb)->Seal());
+	}
+
+	return ret;
+}
 
 // C3Dlg message handlers
 
 BOOL C3Dlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+
+	// At init, on windows
+	if (HMODULE mod = GetModuleHandle(_T("C:/Program Files/RenderDoc/renderdoc.dll")))
+	{
+		pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
+		int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_4_2, (void **)&m_pRDoc);
+		//MessageBox(_T("RenderDoc detected -- click OK to capture frame 0"), _T("C3App"), MB_OK);
+	}
 
 	DWM_BLURBEHIND bb;
 	bb.dwFlags = DWM_BB_ENABLE | DWM_BB_TRANSITIONONMAXIMIZED | DWM_BB_BLURREGION;
@@ -120,63 +163,31 @@ BOOL C3Dlg::OnInitDialog()
 	}
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
+	// To start a frame capture, call StartFrameCapture.
+	// You can specify NULL, NULL for the device to capture on if you have only one device and
+	// either no windows at all or only one window, and it will capture from that device.
+	// See the documentation below for a longer explanation
+	if (m_pRDoc)
+		m_pRDoc->StartFrameCapture(NULL, NULL);
+
 	c3::ResourceManager *rm = theApp.m_C3->GetResourceManager();
 	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
 	m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 
+	size_t w = r.Width();
+	size_t h = r.Height();
+
+	m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
+
+	bool gbok = false;
+
 	theApp.m_C3->GetLog()->Print(_T("Creating G-buffer... "));
-	bool gbok = true;
-	m_GBuf = m_Rend->CreateFrameBuffer();
-	if (m_GBuf)
-	{
-		size_t w = r.Width();
-		size_t h = r.Height();
-
-		m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
-		m_GBuf->AttachDepthTarget(m_DepthTarg);
-
-		for (size_t i = 0; i < _countof(GBufTargData); i++)
-		{
-			c3::Texture2D *pt = m_Rend->CreateTexture2D(w, h, GBufTargData[i].type, 1, GBufTargData[i].flags);
-			gbok &= (pt != nullptr);
-			if (!gbok)
-				break;
-
-			m_GBuf->AttachColorTarget(pt, i);
-			pt->SetName(GBufTargData[i].name);
-			m_ColorTarg.push_back(pt);
-		}
-
-		if (gbok)
-			gbok &= (c3::FrameBuffer::RETURNCODE::RET_OK == m_GBuf->Seal());
-	}
+	gbok = InitializeFrameBuffer(&m_GBuf, _countof(GBufTargData), GBufTargData, m_DepthTarg, r);
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	theApp.m_C3->GetLog()->Print(_T("Creating light combine buffer... "));
-	gbok = true;
-	m_LCBuf = m_Rend->CreateFrameBuffer();
-	if (m_LCBuf)
-	{
-		size_t w = r.Width();
-		size_t h = r.Height();
-
-		m_LCBuf->AttachDepthTarget(m_DepthTarg);
-
-		for (size_t i = 0; i < _countof(LCBufTargData); i++)
-		{
-			c3::Texture2D *pt = m_Rend->CreateTexture2D(w, h, LCBufTargData[i].type, 1, LCBufTargData[i].flags);
-			gbok &= (pt != nullptr);
-			if (!gbok)
-				break;
-
-			m_LCBuf->AttachColorTarget(pt, i);
-			pt->SetName(LCBufTargData[i].name);
-		}
-
-		if (gbok)
-			gbok &= (c3::FrameBuffer::RETURNCODE::RET_OK == m_LCBuf->Seal());
-	}
+	gbok = InitializeFrameBuffer(&m_LCBuf, _countof(LCBufTargData), LCBufTargData, m_DepthTarg, r);
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 
@@ -195,17 +206,17 @@ BOOL C3Dlg::OnInitDialog()
 					m_SP_copyback->SetUniformTexture(m_ColorTarg[i]);
 			}
 
-			m_SP_copyback->SetUniformTexture(m_LCBuf->GetColorTarget(0));
+			//m_SP_copyback->SetUniformTexture(m_LCBuf->GetColorTarget(0));
 		}
 	}
 
 	m_Camera = m_Factory->Build();
-	m_Camera->AddFeature(c3::Positionable::Type());
-	m_Camera->AddFeature(c3::Camera::Type());
+	m_Camera->AddComponent(c3::Positionable::Type());
+	m_Camera->AddComponent(c3::Camera::Type());
 	m_Camera->SetName(_T("Camera"));
 	theApp.m_C3->GetLog()->Print(_T("Camera created\n"));
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
 		pcam->SetPolarDistance(10.0f);
@@ -213,16 +224,18 @@ BOOL C3Dlg::OnInitDialog()
 	}
 
 	m_RootObj = m_Factory->Build((c3::Prototype *)nullptr);
-	m_RootObj->AddFeature(c3::Positionable::Type());
+	m_RootObj->AddComponent(c3::Positionable::Type());
 	m_RootObj->Flags().Set(c3::Object::OBJFLAG(c3::Object::LIGHT));
 
 	c3::Prototype *pproto;
+
+#if 1
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Sponza"))))
 	{
 		c3::Object *pobj = m_Factory->Build(pproto);
 		if (pobj)
 		{
-			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindFeature(c3::Positionable::Type()));
+			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
 			if (ppos)
 			{
 				ppos->SetScl(50.0f, 50.0f, 50.0f);
@@ -234,14 +247,15 @@ BOOL C3Dlg::OnInitDialog()
 			theApp.m_C3->GetLog()->Print(_T("Sponza created\n"));
 		}
 	}
+#endif
 
-#if 1
+#if 0
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("AH64e"))))
 	{
 		c3::Object *pobj = m_Factory->Build(pproto);
 		if (pobj)
 		{
-			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindFeature(c3::Positionable::Type()));
+			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
 			if (ppos)
 			{
 				ppos->SetScl(0.1f, 0.1f, 0.1f);
@@ -263,7 +277,7 @@ BOOL C3Dlg::OnInitDialog()
 			m_Light[i] = m_Factory->Build(pproto);
 			if (m_Light[i])
 			{
-				c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindFeature(c3::Positionable::Type()));
+				c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindComponent(c3::Positionable::Type()));
 				if (ppos)
 				{
 					ppos->SetPos((f - 1) * 30.0f, 0.0f, 1.0f);
@@ -271,7 +285,7 @@ BOOL C3Dlg::OnInitDialog()
 					ppos->Update(0);
 				}
 
-				c3::OmniLight *plight = dynamic_cast<c3::OmniLight *>(m_Light[i]->FindFeature(c3::OmniLight::Type()));
+				c3::OmniLight *plight = dynamic_cast<c3::OmniLight *>(m_Light[i]->FindComponent(c3::OmniLight::Type()));
 				if (plight)
 					plight->SetSourceFrameBuffer(m_GBuf);
 
@@ -322,8 +336,8 @@ void C3Dlg::OnPaint()
 		float dt = theApp.m_C3->GetElapsedTime();
 
 		m_Camera->Update(dt);
-		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindFeature(c3::Positionable::Type()));
-		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
+		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
+		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 		if (pcam)
 		{
 			m_Rend->SetViewMatrix(pcam->GetViewMatrix());
@@ -336,7 +350,7 @@ void C3Dlg::OnPaint()
 			if (!m_Light[i])
 				continue;
 
-			c3::Positionable *plpos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindFeature(c3::Positionable::Type()));
+			c3::Positionable *plpos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindComponent(c3::Positionable::Type()));
 			float adjx = sinf((float)theApp.m_C3->GetCurrentFrameNumber() * 0.01f) * 30.0f;
 			float adjy = 0.0f;
 			float adjz = cosf((float)theApp.m_C3->GetCurrentFrameNumber() * 0.01f) * 5.0f + 5.0f;
@@ -377,6 +391,14 @@ void C3Dlg::OnPaint()
 
 			m_Rend->EndScene();
 			m_Rend->Present();
+			if (!m_bCapturedFirstFrame)
+			{
+				m_bCapturedFirstFrame = true;
+				// stop the capture
+
+				if (m_pRDoc)
+					m_pRDoc->EndFrameCapture(NULL, NULL);
+			}
 		}
 
 		CDialog::OnPaint();
@@ -461,7 +483,7 @@ void C3Dlg::OnTimer(UINT_PTR nIDEvent)
 {
 	if (nIDEvent == 'DRAW')
 	{
-		c3::Positionable *cam = dynamic_cast<c3::Positionable *>(m_Camera->FindFeature(c3::Positionable::Type()));
+		c3::Positionable *cam = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
 		if (cam)
 		{
 			glm::vec3 mv(0, 0, 0);
@@ -506,7 +528,7 @@ BOOL C3Dlg::DestroyWindow()
 
 BOOL C3Dlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
 		float d = pcam->GetPolarDistance();
@@ -534,7 +556,7 @@ void C3Dlg::OnSize(UINT nType, int cx, int cy)
 	r.bottom = cy;
 //	theApp.m_C3->GetRenderer()->SetViewport(&r);
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindFeature(c3::Camera::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
 		glm::fvec2 dim;
@@ -571,7 +593,7 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 
 	lastpos = point;
 
-	c3::Positionable *cam = dynamic_cast<c3::Positionable *>(m_Camera->FindFeature(c3::Positionable::Type()));
+	c3::Positionable *cam = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
 	if (cam)
 	{
 		campitch -= deltay;

@@ -52,8 +52,6 @@ namespace c3
 
 		operator GLuint() const { return m_glID; }
 
-		virtual const VertexBuffer::ComponentDescription *GetExpectedInputs() const;
-
 	protected:
 
 		/// Collects all uniforms, including globals (world, view, projection xforms, etc)
