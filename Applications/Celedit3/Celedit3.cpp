@@ -85,12 +85,6 @@ BOOL CCeledit3App::InitInstance()
 	if (!m_C3)
 		return FALSE;
 
-	m_Config = m_C3->CreateConfiguration(_T("Celedit3.cfg"));
-
-	c3::Factory *pf = m_C3->GetFactory();
-	if (!pf)
-		return FALSE;
-
 	PWSTR appdata = nullptr;
 	if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appdata) == S_OK)
 	{
@@ -100,6 +94,54 @@ BOOL CCeledit3App::InitInstance()
 		m_AppDataRoot += _T("\\Celerity\\Celedit3\\");
 		CoTaskMemFree(appdata);
 	}
+
+	TCHAR *adr;
+	CONVERT_WCS2TCS(m_AppDataRoot.c_str(), adr);
+
+	theApp.m_C3->GetLog()->Print(_T("Mapping file types... "));
+
+	c3::FileMapper *pfm = m_C3->GetFileMapper();
+
+	tstring resroot;
+
+	resroot = _T("assets\\textures");
+	pfm->AddMapping(_T("tga"), resroot.c_str());
+	pfm->AddMapping(_T("png"), resroot.c_str());
+	pfm->AddMapping(_T("jpg"), resroot.c_str());
+	resroot.insert(0, m_AppDataRoot.c_str());
+	pfm->AddMapping(_T("tga"), resroot.c_str());
+	pfm->AddMapping(_T("png"), resroot.c_str());
+	pfm->AddMapping(_T("jpg"), resroot.c_str());
+
+	resroot = _T("assets\\models");
+	pfm->AddMapping(_T("fbx"), resroot.c_str());
+	pfm->AddMapping(_T("gltf"), resroot.c_str());
+	pfm->AddMapping(_T("obj"), resroot.c_str());
+	pfm->AddMapping(_T("3ds"), resroot.c_str());
+	resroot.insert(0, m_AppDataRoot.c_str());
+	pfm->AddMapping(_T("fbx"), resroot.c_str());
+	pfm->AddMapping(_T("gltf"), resroot.c_str());
+	pfm->AddMapping(_T("obj"), resroot.c_str());
+	pfm->AddMapping(_T("3ds"), resroot.c_str());
+
+	resroot = _T("assets\\shaders");
+	pfm->AddMapping(_T("vsh"), resroot.c_str());
+	pfm->AddMapping(_T("fsh"), resroot.c_str());
+	pfm->AddMapping(_T("gsh"), resroot.c_str());
+	resroot.insert(0, m_AppDataRoot.c_str());
+	pfm->AddMapping(_T("vsh"), resroot.c_str());
+	pfm->AddMapping(_T("fsh"), resroot.c_str());
+	pfm->AddMapping(_T("gsh"), resroot.c_str());
+
+	theApp.m_C3->GetLog()->Print(_T("done\n"));
+
+	m_Config = m_C3->CreateConfiguration(_T("Celedit3.cfg"));
+
+	c3::Factory *pf = m_C3->GetFactory();
+	if (!pf)
+		return FALSE;
+
+	m_ProtoFilename = m_AppDataRoot;
 	m_ProtoFilename += _T("Prototypes.xml");
 
 	if (PathFileExists(m_ProtoFilename.c_str()))
@@ -108,7 +150,11 @@ BOOL CCeledit3App::InitInstance()
 		if (!_tfopen_s(&protof, m_ProtoFilename.c_str(), _T("r, css=UTF-8")))
 		{
 			int f = _fileno(protof);
+
+#pragma warning(disable: 4312)
 			HANDLE h = (f > 0) ? (HANDLE)f : INVALID_HANDLE_VALUE;
+#pragma warning(default: 4312)
+
 			genio::IInputStream *pis = genio::IInputStream::Create(h);
 			pf->LoadPrototypes(pis);
 			pis->Release();

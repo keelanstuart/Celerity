@@ -40,29 +40,33 @@ END_MESSAGE_MAP()
 
 CCeledit3Doc::CCeledit3Doc() noexcept
 {
-	m_Observer = nullptr;
 	m_RootObj = nullptr;
+	for (size_t i = 0; i < CAM_NUMCAMS; i++)
+		m_Camera[i] = nullptr;
 	m_Brush = nullptr;
 }
 
 CCeledit3Doc::~CCeledit3Doc()
 {
-	if (m_Observer)
+	if (m_Brush)
 	{
-		m_Observer->Release();
-		m_Observer = nullptr;
+		m_Brush->Release();
+		m_Brush = nullptr;
+	}
+
+	for (size_t i = 0; i < CAM_NUMCAMS; i++)
+	{
+		if (m_Camera[i])
+		{
+			m_Camera[i]->Release();
+			m_Camera[i] = nullptr;
+		}
 	}
 
 	if (m_RootObj)
 	{
 		m_RootObj->Release();
 		m_RootObj = nullptr;
-	}
-
-	if (m_Brush)
-	{
-		m_Brush->Release();
-		m_Brush = nullptr;
 	}
 }
 
@@ -75,10 +79,13 @@ BOOL CCeledit3Doc::OnNewDocument()
 	if (!pf)
 		return FALSE;
 
-	m_Observer = pf->Build();
-	m_Observer->AddComponent(c3::Positionable::Type());
-	m_Observer->AddComponent(c3::Camera::Type());
-	m_Observer->SetName(_T("Camera"));
+	for (size_t i = 0; i < CAM_NUMCAMS; i++)
+	{
+		m_Camera[i] = pf->Build();
+		m_Camera[i]->AddComponent(c3::Positionable::Type());
+		m_Camera[i]->AddComponent(c3::Camera::Type());
+		m_Camera[i]->SetName(_T("Camera"));
+	}
 
 	m_RootObj = pf->Build();
 
@@ -92,11 +99,77 @@ void CCeledit3Doc::Serialize(CArchive& ar)
 {
 	if (ar.IsStoring())
 	{
-		// TODO: add storing code here
+		genio::IOutputStream *os = genio::IOutputStream::Create(ar.GetFile());
+		if (os->BeginBlock('CEL0'))
+		{
+			uint16_t len;
+
+			len = (uint16_t)m_Name.length();
+			os->WriteUINT16(len);
+			os->WriteString((TCHAR *)(m_Name.c_str()));
+
+			len = (uint16_t)m_Description.length();
+			os->WriteUINT16(len);
+			os->WriteString((TCHAR *)(m_Description.c_str()));
+
+			len = (uint16_t)m_Author.length();
+			os->WriteUINT16(len);
+			os->WriteString((TCHAR *)(m_Author.c_str()));
+
+			len = (uint16_t)m_Website.length();
+			os->WriteUINT16(len);
+			os->WriteString((TCHAR *)(m_Website.c_str()));
+
+			len = (uint16_t)m_Copyright.length();
+			os->WriteUINT16(len);
+			os->WriteString((TCHAR *)(m_Name.c_str()));
+
+			m_RootObj->Save(os, 0);
+
+			for (size_t i = 0; i < CAM_NUMCAMS; i++)
+				m_Camera[i]->Save(os, 0);
+
+			os->EndBlock();
+		}
 	}
 	else
 	{
-		// TODO: add loading code here
+		genio::IInputStream *is = genio::IInputStream::Create(ar.GetFile());
+		genio::FOURCHARCODE b = is->NextBlockId();
+		if (b == 'CEL0')
+		{
+			if (is->BeginBlock(b))
+			{
+				uint16_t len;
+
+				is->ReadUINT16(len);
+				m_Name.resize(len);
+				is->ReadString((TCHAR *)(m_Name.c_str()));
+
+				is->ReadUINT16(len);
+				m_Description.resize(len);
+				is->ReadString((TCHAR *)(m_Description.c_str()));
+
+				is->ReadUINT16(len);
+				m_Author.resize(len);
+				is->ReadString((TCHAR *)(m_Author.c_str()));
+
+				is->ReadUINT16(len);
+				m_Website.resize(len);
+				is->ReadString((TCHAR *)(m_Website.c_str()));
+
+				is->ReadUINT16(len);
+				m_Copyright.resize(len);
+				is->ReadString((TCHAR *)(m_Name.c_str()));
+
+				m_RootObj->Load(is);
+
+				for (size_t i = 0; i < CAM_NUMCAMS; i++)
+					m_Camera[i]->Load(is);
+
+				is->EndBlock();
+			}
+		}
 	}
 }
 

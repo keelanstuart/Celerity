@@ -24,9 +24,28 @@ protected: // create from serialization only
 
 // Attributes
 public:
+	typedef enum
+	{
+		CAM_FREE = 0,
+		CAM_LEFT,
+		CAM_RIGHT,
+		CAM_TOP,
+		CAM_BOTTOM,
+		CAM_FRONT,
+		CAM_BACK,
+
+		CAM_NUMCAMS
+	} CAMTYPE;
+
 	c3::Object *m_RootObj;
-	c3::Object *m_Observer;
+	c3::Object *m_Camera[CAM_NUMCAMS];
 	c3::Object *m_Brush;
+
+	tstring m_Name;
+	tstring m_Description;
+	tstring m_Author;
+	tstring m_Website;
+	tstring m_Copyright;
 
 // Operations
 public:

@@ -52,10 +52,9 @@ namespace c3
 			P16_3CHT,			// packed 16-bit, R5G5B5A1
 			P16_4CH,			// packed 16-bit, R4G4B4A4
 			U8_1CH,				// 8-bit uint, 1 channel
-			U8_2CH,				// 8-bit uint, 2 channel
-			U8_3CH,				// 24-bit uint, 3 channel
-			U8_3CHX,			// 32-bit uint, 3 channel *primary
-			U8_4CH,				// 32-bit uint, 4 channel
+			U8_2CH,				// packed 16-bit uint, 2 channels
+			U8_3CH,				// packed 24-bit uint, 3 channels
+			U8_4CH,				// packed 32-bit uint, 4 channels
 			F16_1CH,			// 16-bit float, 1 channel
 			F16_2CH,			// 16-bit float, 2 channel
 			F16_3CH,			// 16-bit float, 3 channel

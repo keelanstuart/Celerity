@@ -78,6 +78,9 @@
     <ClInclude Include="wtfvslistbox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="renderdoc_app.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Celedit3.cpp">

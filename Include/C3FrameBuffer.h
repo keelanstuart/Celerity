@@ -37,9 +37,18 @@ namespace c3
 		// The practical limit is 4, but...
 		enum { MAX_COLORTARGETS = 32 };
 
+		typedef struct TargetDesc
+		{
+			const TCHAR* name;
+			Renderer::ETextureType type;
+			uint64_t flags;
+		} TargetDesc;
 
 		/// Releases the resources owned by the framebuffer (note: does not release any attached surfaces)
 		virtual void Release() = NULL;
+
+		/// Fills out a complete FrameBuffer based on the descriptions of a target
+		virtual RETURNCODE Setup(size_t numtargs, const TargetDesc *ptargdescs, DepthBuffer *pdb, RECT &r) = NULL;
 
 		/// Attaches a texture target to the given position
 		virtual RETURNCODE AttachColorTarget(Texture2D *target, size_t position) = NULL;
@@ -61,6 +70,28 @@ namespace c3
 
 		/// Finalizes the creation of the frame buffer and indicates whether it is complete
 		virtual RETURNCODE Seal() = NULL;
+
+		/// Sets the clear color for an individual target at the given position
+		virtual void SetClearColor(size_t position, uint32_t color) = NULL;
+
+		/// Gets the clear color for an individual target at the given position
+		virtual uint32_t GetClearColor(size_t position) const = NULL;
+
+		/// Sets the clear depth
+		virtual void SetClearDepth(float depth = 1.0f) = NULL;
+
+		/// Gets the clear depth
+		virtual float GetClearDepth() const = NULL;
+
+		/// Sets the clear stencil value
+		virtual void SetClearStencil(int8_t stencil = 0) = NULL;
+
+		/// Gets the clear depth
+		virtual int8_t GetClearStencil() const = NULL;
+
+		/// Clears the FrameBuffer with the values given to the SetClearColor method
+		/// NOTE: Uses the same flags as Renderer::UserFrameBuffer for selecting what to clear
+		virtual void Clear(props::TFlags64 flags) = NULL;
 
 		/// Sets the blend mode for this render target
 		virtual void SetBlendMode(Renderer::BlendMode mode) = NULL;

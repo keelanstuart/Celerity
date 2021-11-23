@@ -19,6 +19,8 @@
 #include "PropertiesWnd.h"
 #include "Resource.h"
 
+#include "renderdoc_app.h"
+
 class COutlookBar : public CMFCOutlookBar
 {
 	virtual BOOL AllowShowOnPaneMenu() const { return TRUE; }
@@ -34,6 +36,15 @@ protected: // create from serialization only
 
 // Attributes
 public:
+	c3::FrameBuffer *m_GBuf, *m_LCBuf;
+	std::vector<c3::Texture2D *> m_ColorTarg;
+	c3::DepthBuffer *m_DepthTarg;
+
+	c3::ShaderComponent *m_VS_copyback;
+	c3::ShaderComponent *m_FS_copyback;
+	c3::ShaderProgram *m_SP_copyback;
+
+	RENDERDOC_API_1_4_0 *m_pRDoc;
 
 // Operations
 public:
@@ -91,6 +102,8 @@ protected:
 	CMFCOutlookBarTabCtrl* FindOutlookParent(CWnd* pWnd);
 	CMFCOutlookBarTabCtrl* m_pCurrOutlookWnd;
 	CMFCOutlookBarPane*    m_pCurrOutlookPage;
+public:
+	virtual BOOL DestroyWindow();
 };
 
 

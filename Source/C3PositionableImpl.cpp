@@ -134,7 +134,7 @@ void PositionableImpl::Render(Object *pobject, props::TFlags64 rendflags)
 	pr->GetWhiteMaterial()->Apply(sp);
 	sp->ApplyUniforms();
 
-	pr->GetBoundsMesh()->Draw(c3::Renderer::PrimType::LINELIST);
+	//pr->GetBoundsMesh()->Draw(c3::Renderer::PrimType::LINELIST);
 }
 
 

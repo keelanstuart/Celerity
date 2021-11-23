@@ -41,10 +41,12 @@ FrameBufferImpl::FrameBufferImpl(RendererImpl* prend)
 
 		m_ColorTarget.reserve(maxAttach);
 
-		if (!m_Rend->isnv)
 		m_Rend->gl.GenFramebuffers(1, &m_glID);
 		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 	}
+
+	m_ClearDepth = 1.0f;
+	m_ClearStencil = 0;
 }
 
 
@@ -64,17 +66,76 @@ void FrameBufferImpl::Release()
 }
 
 
+FrameBuffer::RETURNCODE FrameBufferImpl::Setup(size_t numtargs, const TargetDesc *ptargdescs, c3::DepthBuffer *pdb, RECT &r)
+{
+	if (!numtargs || !ptargdescs)
+		return RETURNCODE::RET_NOTARGETS;
+
+	size_t w = r.right - r.left;
+	size_t h = r.bottom - r.top;
+
+	if (!pdb)
+		pdb = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS, 0);
+
+	RETURNCODE ret;
+
+	if (pdb)
+		ret = AttachDepthTarget(pdb);
+	if (ret != RETURNCODE::RET_OK)
+		return ret;
+
+#if 0
+	// on nVidia systems, actually follow the openGL spec and normalize texture types to the largest
+	if (m_Rend->isnv)
+	{
+		Renderer::TextureType h = Renderer::TextureType::P8_3CH;
+		for (size_t i = 0; i < numtargs; i++)
+			if (ptargdescs[i].type > h)
+				h = ptargdescs[i].type;
+
+		for (size_t i = 0; i < numtargs; i++)
+		{
+			if ((ptargdescs[i].type >= Renderer::TextureType::U8_1CH) && (h >= Renderer::TextureType::F16_1CH))
+			{
+				*((uint8_t *)ptargdescs[i].type) += 4;
+			}
+
+			if ((ptargdescs[i].type >= Renderer::TextureType::F16_1CH) && (h >= Renderer::TextureType::F32_1CH))
+			{
+				*((uint8_t *)ptargdescs[i].type) += 4;
+			}
+		}
+	}
+#endif
+
+	for (size_t i = 0; i < numtargs; i++)
+	{
+		c3::Texture2D* pt = m_Rend->CreateTexture2D(w, h, ptargdescs[i].type, 1, ptargdescs[i].flags);
+		if (!pt)
+			return RETURNCODE::RET_UNKNOWN;
+
+		ret = AttachColorTarget(pt, i);
+		if (ret != RETURNCODE::RET_OK)
+			return ret;
+
+		pt->SetName(ptargdescs[i].name);
+	}
+
+	return Seal();
+}
+
+
 FrameBuffer::RETURNCODE FrameBufferImpl::AttachColorTarget(Texture2D *target, size_t position)
 {
 	if (m_Rend && (m_glID != GL_INVALID_VALUE))
 	{
-		//FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
 		m_Rend->UseFrameBuffer(this, 0);
 
 		if (position <= m_ColorTarget.size())
-			m_ColorTarget.resize(position + 1, nullptr);
+			m_ColorTarget.resize(position + 1);
 
-		m_ColorTarget[position] = target;
+		m_ColorTarget[position].tex = target;
+		m_ColorTarget[position].clearcolor.pu = 0;
 
 		if (target)
 		{
@@ -82,8 +143,6 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachColorTarget(Texture2D *target, si
 
 			m_Rend->FlushErrors(_T("AttachColorTarget: %s"), __FILEW__, __LINE__);
 		}
-
-		//m_Rend->UseFrameBuffer(curfb, 0);
 	}
 
 	return FrameBuffer::RETURNCODE::RET_OK;
@@ -99,7 +158,7 @@ size_t FrameBufferImpl::GetNumColorTargets()
 Texture2D *FrameBufferImpl::GetColorTarget(size_t position)
 {
 	if (position < m_ColorTarget.size())
-		return m_ColorTarget[position];
+		return m_ColorTarget[position].tex;
 
 	return nullptr;
 }
@@ -107,13 +166,14 @@ Texture2D *FrameBufferImpl::GetColorTarget(size_t position)
 
 Texture2D *FrameBufferImpl::GetColorTargetByName(const TCHAR *name)
 {
-	for (auto targ : m_ColorTarget)
+	for (size_t i = 0; i < m_ColorTarget.size(); i++)
 	{
-		if (!targ)
+		TColorTargetArray::value_type &targ = m_ColorTarget[i];
+		if (!targ.tex)
 			continue;
 
-		if (!_tcsicmp(name, targ->GetName()))
-			return targ;
+		if (!_tcsicmp(name, targ.tex->GetName()))
+			return targ.tex;
 	}
 
 	return nullptr;
@@ -127,7 +187,6 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachDepthTarget(DepthBuffer* pdepth)
 
 	if (m_Rend)
 	{
-//		FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
 		m_Rend->UseFrameBuffer(this, 0);
 
 		GLenum attach_type = ((pdepth->Format() == Renderer::DepthType::F32_DS) || (pdepth->Format() == Renderer::DepthType::U32_DS)) ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
@@ -135,8 +194,6 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachDepthTarget(DepthBuffer* pdepth)
 		m_Rend->gl.FramebufferRenderbuffer(GL_FRAMEBUFFER, attach_type, GL_RENDERBUFFER, (const DepthBufferImpl &)*pdepth);
 		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 		m_DepthTarget = pdepth;
-
-//		m_Rend->UseFrameBuffer(curfb, 0);
 	}
 
 	return FrameBuffer::RETURNCODE::RET_OK;
@@ -155,7 +212,6 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Seal()
 
 	if (m_Rend)
 	{
-	//	FrameBuffer *curfb = m_Rend->GetActiveFrameBuffer();
 		m_Rend->UseFrameBuffer(this, 0);
 
 		m_Rend->gl.DrawBuffers((GLsizei)m_ColorTarget.size(), targenum);
@@ -193,11 +249,150 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Seal()
 				m_Rend->GetSystem()->GetLog()->Print(_T("Error %x\n"), status);
 				break;
 		}
-
-//		m_Rend->UseFrameBuffer(curfb, 0);
 	}
 
 	return ret;
+}
+
+
+void FrameBufferImpl::SetClearColor(size_t position, uint32_t color)
+{
+	if (position < m_ColorTarget.size())
+	{
+		glm::vec4 c;
+		c.r = float(color & 0xff) / 255.0f;
+		c.g = float((color >> 8) & 0xff) / 255.0f;
+		c.b = float((color >> 16) & 0xff) / 255.0f;
+		c.a = float((color >> 24) & 0xff) / 255.0f;
+
+		switch (m_ColorTarget[position].tex->Format())
+		{
+			case Renderer::TextureType::U8_1CH:
+			case Renderer::TextureType::U8_2CH:
+			case Renderer::TextureType::U8_3CH:
+			case Renderer::TextureType::U8_4CH:
+			{
+				m_ColorTarget[position].clearcolor.pu = color;
+				break;
+			}
+
+			case Renderer::TextureType::F16_1CH:
+			case Renderer::TextureType::F16_2CH:
+			case Renderer::TextureType::F16_3CH:
+			case Renderer::TextureType::F16_4CH:
+			{
+				m_ColorTarget[position].clearcolor.ph = glm::packHalf4x16(c);
+				break;
+			}
+
+			case Renderer::TextureType::F32_1CH:
+			case Renderer::TextureType::F32_2CH:
+			case Renderer::TextureType::F32_3CH:
+			case Renderer::TextureType::F32_4CH:
+			{
+				m_ColorTarget[position].clearcolor.fr = c.r;
+				m_ColorTarget[position].clearcolor.fg = c.g;
+				m_ColorTarget[position].clearcolor.fb = c.b;
+				m_ColorTarget[position].clearcolor.fa = c.a;
+				break;
+			}
+		}
+	}
+}
+
+
+uint32_t FrameBufferImpl::GetClearColor(size_t position) const
+{
+	if (position < m_ColorTarget.size())
+	{
+		switch (m_ColorTarget[position].tex->Format())
+		{
+			case Renderer::TextureType::U8_1CH:
+			case Renderer::TextureType::U8_2CH:
+			case Renderer::TextureType::U8_3CH:
+			case Renderer::TextureType::U8_4CH:
+			{
+				return m_ColorTarget[position].clearcolor.pu;
+			}
+
+			case Renderer::TextureType::F16_1CH:
+			case Renderer::TextureType::F16_2CH:
+			case Renderer::TextureType::F16_3CH:
+			case Renderer::TextureType::F16_4CH:
+			{
+				glm::vec4 c = glm::unpackHalf4x16(m_ColorTarget[position].clearcolor.ph);
+				return uint32_t(uint8_t(c.r * 255.0f) | (uint8_t(c.g * 255.0f) << 8) | (uint8_t(c.b * 255.0f) << 16) | (uint8_t(c.a * 255.0f) << 24));
+				break;
+			}
+
+			case Renderer::TextureType::F32_1CH:
+			case Renderer::TextureType::F32_2CH:
+			case Renderer::TextureType::F32_3CH:
+			case Renderer::TextureType::F32_4CH:
+			{
+				glm::vec4 *c = (glm::vec4 *)&(m_ColorTarget[position].clearcolor.f[0]);
+				return uint32_t(uint8_t(c->r * 255.0f) | (uint8_t(c->g * 255.0f) << 8) | (uint8_t(c->b * 255.0f) << 16) | (uint8_t(c->a * 255.0f) << 24));
+			}
+		}
+	}
+
+	return 0;
+}
+
+
+void FrameBufferImpl::SetClearDepth(float depth)
+{
+	m_ClearDepth = depth;
+}
+
+
+float FrameBufferImpl::GetClearDepth() const
+{
+	return m_ClearDepth;
+}
+
+
+void FrameBufferImpl::SetClearStencil(int8_t stencil)
+{
+	m_ClearStencil = stencil;
+}
+
+
+int8_t FrameBufferImpl::GetClearStencil() const
+{
+	return m_ClearStencil;
+}
+
+
+void FrameBufferImpl::Clear(props::TFlags64 flags)
+{
+	if (flags.IsSet(UFBFLAG_CLEARCOLOR))
+	{
+		for (size_t i = 0; i < m_ColorTarget.size(); i++)
+		{
+			m_Rend->gl.ClearBufferiv(GL_COLOR, (GLint)i, (const GLint *)&(m_ColorTarget[i].clearcolor.pu));
+		}
+	}
+
+	if (m_DepthTarget)
+	{
+		switch (m_DepthTarget->Format())
+		{
+			case Renderer::DepthType::U32_DS:
+			case Renderer::DepthType::F32_DS:
+				if (flags.IsSet(UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL))
+					m_Rend->gl.ClearBufferfi(GL_DEPTH_STENCIL, 0, m_ClearDepth, m_ClearStencil);
+				else if (flags.IsSet(UFBFLAG_CLEARDEPTH))
+					m_Rend->gl.ClearBufferfv(GL_DEPTH, 0, &m_ClearDepth);
+				break;
+
+			case Renderer::DepthType::U16_D:
+			case Renderer::DepthType::U32_D:
+			case Renderer::DepthType::F32_D:
+				m_Rend->gl.ClearBufferfv(GL_DEPTH, 0, &m_ClearDepth);
+				break;
+		}
+	}
 }
 
 

@@ -96,7 +96,8 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 
 		if (!only_create_entry)
 		{
-			m_pSys->GetFileMapper()->FindFile(key.c_str(), fullpath, MAX_PATH);
+			if (!m_pSys->GetFileMapper()->FindFile(key.c_str(), fullpath, MAX_PATH))
+				return nullptr;
 		}
 
 		pres = new ResourceImpl(m_pSys, only_create_entry ? key.c_str() : fullpath, restype);

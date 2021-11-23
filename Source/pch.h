@@ -27,6 +27,7 @@
 #include <mutex>
 #include <unordered_map>
 
+//#define GLLIBGEN_LOGCALLS
 
 #define C3_PI		3.14159f
 

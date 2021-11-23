@@ -44,8 +44,8 @@ GuiImpl::GuiImpl(Renderer *prend)
 	c3::ResourceManager *rm = prend->GetSystem()->GetResourceManager();
 	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
-	m_VS = (c3::ShaderComponent *)((rm->GetResource(_T("d:/proj/game data/shaders/ui.vsh"), rf))->GetData());
-	m_FS = (c3::ShaderComponent *)((rm->GetResource(_T("d:/proj/game data/shaders/ui.fsh"), rf))->GetData());
+	m_VS = (c3::ShaderComponent *)((rm->GetResource(_T("ui.vsh"), rf))->GetData());
+	m_FS = (c3::ShaderComponent *)((rm->GetResource(_T("ui.fsh"), rf))->GetData());
 
 	m_Prog = m_pRend->CreateShaderProgram();
 	m_Prog->AttachShader(m_VS);
@@ -64,6 +64,7 @@ GuiImpl::GuiImpl(Renderer *prend)
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   // Load as RGBA 32-bit (75% of the memory is wasted, but default font is so small) because it is more likely to be compatible with user's existing shaders. If your ImTextureId represent a higher-level concept than just a GL texture id, consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
 
 	m_FontTex = m_pRend->CreateTexture2D(width, height, c3::Renderer::TextureType::U8_4CH, 1);
+	m_FontTex->SetName(_T("uSamplerDiffuse"));
 	c3::Texture2D::SLockInfo li;
 	void *ubuf;
 	if (m_FontTex->Lock(&ubuf, li, 0) == c3::Texture::RETURNCODE::RET_OK)
@@ -117,12 +118,7 @@ void GuiImpl::SetupRenderState(ImDrawData *draw_data, int fb_width, int fb_heigh
 
 	m_pRend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 	m_pRend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
-#if 0
-	glEnable(GL_BLEND);
-	glBlendEquation(GL_FUNC_ADD);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glEnable(GL_SCISSOR_TEST);
-#endif
+	m_pRend->SetBlendMode(Renderer::BlendMode::BM_ALPHA);
 
 #if 0
 	// Setup viewport, orthographic projection matrix
@@ -145,8 +141,8 @@ void GuiImpl::SetupRenderState(ImDrawData *draw_data, int fb_width, int fb_heigh
 	m_pRend->UseProgram(m_Prog);
 	//m_Prog->UpdateGlobalUniforms();
 	m_Prog->SetUniformMatrix(m_UL_ProjMat, &ortho_projection);
-	m_Prog->ApplyUniforms(false);
-
+	m_Prog->SetUniformTexture(m_FontTex);
+	m_Prog->ApplyUniforms();
 
 	// Bind vertex/index buffers and setup attributes for ImDrawVert
 	m_pRend->UseVertexBuffer(m_VB);
@@ -222,9 +218,6 @@ void GuiImpl::Render()
 					else
 						glScissor((int)clip_rect.x, (int)clip_rect.y, (int)clip_rect.z, (int)clip_rect.w); // Support for GL 4.5 rarely used glClipControl(GL_UPPER_LEFT)
 #endif
-
-					// Bind texture, Draw
-					//m_pRend->UseTexture(0, (Texture *)pcmd->TextureId);
 
 					m_pRend->DrawIndexedPrimitives(c3::Renderer::PrimType::TRILIST, pcmd->IdxOffset, cmd_list->IdxBuffer.Size);
 				}

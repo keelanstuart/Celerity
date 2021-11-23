@@ -527,7 +527,8 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 		Assimp::Importer import;
 		const aiScene *scene = import.ReadFile(fn,
 			aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs | aiProcess_ImproveCacheLocality
-			| aiProcess_GenSmoothNormals | aiProcess_JoinIdenticalVertices | aiProcess_OptimizeMeshes
+				| aiProcess_JoinIdenticalVertices | aiProcess_OptimizeMeshes
+				| aiProcess_GenNormals
 		);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)

@@ -24,8 +24,6 @@ namespace c3
 
 		virtual size_t GetNumInputPins() = NULL;
 
-		virtual 
-
 		/// Allows access to the FlowNode's flags
 		virtual props::TFlags64 &Flags() = NULL;
 

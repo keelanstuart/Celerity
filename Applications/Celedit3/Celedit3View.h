@@ -55,21 +55,11 @@ protected:
 	CPoint m_MousePos;
 	UINT_PTR m_DrawTimer;
 
-	c3::Renderer *m_Rend;
 	glm::fvec4 m_ClearColor;
 
-	c3::Camera *m_pCam;
-	c3::Positionable *m_pCamPos;
 	float m_CamPitch, m_CamYaw;
 
-	c3::FrameBuffer *m_FB;
-	c3::Texture2D *m_ColorTarg[3];
-	c3::DepthBuffer *m_DepthTarg;
-
-	c3::ShaderComponent *m_VS_copyback;
-	c3::ShaderComponent *m_FS_copyback;
-	c3::ShaderProgram *m_SP_copyback;
-
+	bool m_RDCaptureFrame;
 
 // Generated message map functions
 protected:

@@ -50,6 +50,7 @@ CMainFrame::CMainFrame() noexcept
 {
 	// TODO: add member initialization code here
 	theApp.m_nAppLook = theApp.GetInt(_T("ApplicationLook"), ID_VIEW_APPLOOK_VS_2008);
+	m_pRDoc = nullptr;
 }
 
 CMainFrame::~CMainFrame()
@@ -132,6 +133,79 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// set the visual manager and style based on persisted value
 	OnApplicationLook(theApp.m_nAppLook);
 
+	c3::Renderer *prend = theApp.m_C3->GetRenderer();
+	c3::ResourceManager *presman = theApp.m_C3->GetResourceManager();
+
+	if (!prend->Initialized())
+	{
+		// At init, on windows
+		if (HMODULE mod = GetModuleHandle(_T("C:/Program Files/RenderDoc/renderdoc.dll")))
+		{
+			pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
+			int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_4_2, (void **)&m_pRDoc);
+			theApp.m_C3->GetLog()->Print(_T("RenderDoc detected; capturing initialization...\n"));
+		}
+
+		if (prend->Initialize(GetSafeHwnd(), 0))
+		{
+			if (m_pRDoc)
+				m_pRDoc->StartFrameCapture(NULL, NULL);
+
+			c3::FrameBuffer::TargetDesc GBufTargData[] =
+			{
+				{ _T("uSamplerDiffuse"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
+				{ _T("uSamplerNormal"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
+				{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
+				{ _T("uSamplerEmission"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET }
+			};
+
+			// It SEEEEMS like in order to get blending to work, the light combine buffer needs to pre-multiply alpha,
+			// but then write alpha=1 in the shader... the depth test is still a problem
+			c3::FrameBuffer::TargetDesc LCBufTargData[] =
+			{
+				{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
+			};
+
+			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
+
+			CRect r;
+			GetClientRect(r);
+
+			m_DepthTarg = prend->CreateDepthBuffer(r.Width(), r.Height(), c3::Renderer::DepthType::U32_DS);
+
+			bool gbok = false;
+
+			theApp.m_C3->GetLog()->Print(_T("Creating G-buffer... "));
+			m_GBuf = prend->CreateFrameBuffer();
+			gbok = m_GBuf->Setup(_countof(GBufTargData), GBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+			theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+			theApp.m_C3->GetLog()->Print(_T("Creating light combine buffer... "));
+			m_LCBuf = prend->CreateFrameBuffer();
+			gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+			theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+			m_SP_copyback = prend->CreateShaderProgram();
+			if (m_SP_copyback)
+			{
+				c3::Resource *tmp;
+				tmp = presman->GetResource(_T("resolve.vsh"), rf);
+				m_VS_copyback = tmp ? (c3::ShaderComponent *)(tmp->GetData()) : nullptr;
+				tmp = presman->GetResource(_T("resolve.fsh"), rf);
+				m_FS_copyback = tmp ? (c3::ShaderComponent *)(tmp->GetData()) : nullptr;
+
+				m_SP_copyback->AttachShader(m_VS_copyback);
+				m_SP_copyback->AttachShader(m_FS_copyback);
+				if (m_SP_copyback->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
+				{
+				}
+			}
+
+			if (m_pRDoc)
+				m_pRDoc->EndFrameCapture(NULL, NULL);
+		}
+	}
+
 	return 0;
 }
 
@@ -139,8 +213,6 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
 	if( !CFrameWndEx::PreCreateWindow(cs) )
 		return FALSE;
-	// TODO: Modify the Window class or styles here by modifying
-	//  the CREATESTRUCT cs
 
 	return TRUE;
 }
@@ -420,4 +492,45 @@ void CMainFrame::OnSettingChange(UINT uFlags, LPCTSTR lpszSection)
 {
 	CFrameWndEx::OnSettingChange(uFlags, lpszSection);
 	m_wndOutput.UpdateFonts();
+}
+
+
+BOOL CMainFrame::DestroyWindow()
+{
+	for (auto targ : m_ColorTarg)
+	{
+		if (targ)
+			targ->Release();
+	}
+	m_ColorTarg.clear();
+
+	if (m_DepthTarg)
+	{
+		m_DepthTarg->Release();
+		m_DepthTarg = nullptr;
+	}
+
+	if (m_GBuf)
+	{
+		m_GBuf->Release();
+		m_GBuf = nullptr;
+	}
+
+	if (m_LCBuf)
+	{
+		m_LCBuf->Release();
+		m_LCBuf = nullptr;
+	}
+
+	if (m_SP_copyback)
+	{
+		m_SP_copyback->Release();
+		m_SP_copyback = nullptr;
+	}
+
+	c3::Renderer *prend = theApp.m_C3->GetRenderer();
+	if (prend && prend->Initialized())
+		prend->Shutdown();
+
+	return CFrameWndEx::DestroyWindow();
 }

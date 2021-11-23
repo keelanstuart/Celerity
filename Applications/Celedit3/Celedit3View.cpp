@@ -22,6 +22,7 @@
 
 #include "Celedit3Doc.h"
 #include "Celedit3View.h"
+#include "MainFrm.h"
 
 #include <C3ModelRenderer.h>
 
@@ -48,17 +49,8 @@ END_MESSAGE_MAP()
 
 CCeledit3View::CCeledit3View() noexcept
 {
-	m_Rend = nullptr;
-
+	m_RDCaptureFrame = true;
 	m_ClearColor = glm::fvec4(0, 0, 0, 1);
-
-	m_pCam = nullptr;
-	m_pCamPos = nullptr;
-	m_CamPitch = 0.0f;
-	m_CamYaw = 0.0f;
-
-	m_FB = nullptr;
-	ZeroMemory(m_ColorTarg, 3 * sizeof(c3::Texture2D *));
 }
 
 CCeledit3View::~CCeledit3View()
@@ -79,52 +71,81 @@ void CCeledit3View::OnDraw(CDC *pDC)
 	if (!pDoc)
 		return;
 
-	if (m_Rend && m_Rend->Initialized())
-	{
-		m_Rend->SetClearColor(&m_ClearColor);
-		m_Rend->SetClearDepth(1.0f);
+	CMainFrame *pmf = (CMainFrame *)theApp.GetMainWnd();
 
-		pDoc->m_Observer->Update();
+	c3::Renderer *prend = theApp.m_C3->GetRenderer();
+	if (prend && prend->Initialized())
+	{
+		if (pmf->m_pRDoc && m_RDCaptureFrame)
+			pmf->m_pRDoc->StartFrameCapture(NULL, NULL);
+
+		prend->SetOverrideHwnd(GetSafeHwnd());
+
+		prend->SetClearColor(&m_ClearColor);
+		prend->SetClearDepth(1.0f);
+
+		for (size_t i = 0; i < CCeledit3Doc::CAMTYPE::CAM_NUMCAMS; i++)
+			if (pDoc->m_Camera[i])
+				pDoc->m_Camera[i]->Update();
+
 		pDoc->m_RootObj->Update();
 
-		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pDoc->m_Observer->FindComponent(c3::Positionable::Type()));
-		c3::Camera *pcam = dynamic_cast<c3::Camera *>(pDoc->m_Observer->FindComponent(c3::Camera::Type()));
-		if (pcam)
-		{
-			m_Rend->SetViewMatrix(pcam->GetViewMatrix());
-			m_Rend->SetProjectionMatrix(pcam->GetProjectionMatrix());
-		}
+		if (pDoc->m_Brush)
+			pDoc->m_Brush->Update();
+
+		CCeledit3Doc::CAMTYPE t = CCeledit3Doc::CAMTYPE::CAM_FREE;
+
+		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pDoc->m_Camera[t]->FindComponent(c3::Positionable::Type()));
+		c3::Camera *pcam = dynamic_cast<c3::Camera *>(pDoc->m_Camera[t]->FindComponent(c3::Camera::Type()));
 
 		theApp.m_C3->UpdateTime();
+		theApp.m_C3->SetCurrentFrameNumber(theApp.m_C3->GetCurrentFrameNumber() + 1);
 
-		m_Rend->UseFrameBuffer(m_FB);
-
-		if (m_Rend->BeginScene())
+		if (prend->BeginScene())
 		{
-			if (pDoc->m_RootObj->Prerender())
-				pDoc->m_RootObj->Render();
+			if (pcam)
+			{
+				prend->SetViewMatrix(pcam->GetViewMatrix());
+				prend->SetProjectionMatrix(pcam->GetProjectionMatrix());
+			}
 
-			m_Rend->UseFrameBuffer(nullptr);
-			m_Rend->UseProgram(m_SP_copyback);
+			// Color pass
+			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
+			prend->UseFrameBuffer(pmf->m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
+			prend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
+			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ALPHA);
+			prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
+			if (pDoc->m_RootObj->Prerender(c3::Object::DRAW))
+				pDoc->m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::DRAW));
 
-			int32_t ul;
-			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerDiffuse"))))
-				m_SP_copyback->SetUniformTexture(m_ColorTarg[0], ul);
-			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerNormal"))))
-				m_SP_copyback->SetUniformTexture(m_ColorTarg[1], ul);
-			if (c3::ShaderProgram::INVALID_UNIFORM != (ul = m_SP_copyback->GetUniformLocation(_T("uSamplerPosDepth"))))
-				m_SP_copyback->SetUniformTexture(m_ColorTarg[2], ul);
+			// Lighting pass(es)
+			prend->UseFrameBuffer(pmf->m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
+			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
+			prend->SetDepthTest(c3::Renderer::Test::DT_LESSEREQUAL);
+			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
+			prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
+			pmf->m_LCBuf->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
+			if (pDoc->m_RootObj->Prerender(c3::Object::LIGHT))
+				pDoc->m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::LIGHT));
 
-			m_SP_copyback->ApplyUniforms(false);
+			// Resolve
+			prend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
+			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
+			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
+			prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
+			prend->UseProgram(pmf->m_SP_copyback);
+			pmf->m_SP_copyback->ApplyUniforms(false);
+			prend->UseVertexBuffer(prend->GetFullscreenPlaneVB());
+			prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
-			m_Rend->UseVertexBuffer(m_Rend->GetFullscreenPlaneVB());
-			m_Rend->SetCullMode(c3::Renderer::ECullMode::CM_DISABLED);
-			m_Rend->DrawPrimitives(c3::Renderer::EPrimType::TRISTRIP, 4);
+			prend->EndScene();
+			prend->Present();
+		}
 
-			m_Rend->EndScene();
-			m_Rend->Present();
-
-			theApp.m_C3->SetCurrentFrameNumber(theApp.m_C3->GetCurrentFrameNumber() + 1);
+		if (pmf->m_pRDoc && m_RDCaptureFrame)
+		{
+			pmf->m_pRDoc->EndFrameCapture(NULL, NULL);
+			m_RDCaptureFrame = false;
 		}
 	}
 }
@@ -171,52 +192,28 @@ void CCeledit3View::OnInitialUpdate()
 {
 	CView::OnInitialUpdate();
 
-	m_Rend = theApp.m_C3->GetRenderer();
-	if (!m_Rend)
+	c3::Renderer *prend = theApp.m_C3->GetRenderer();
+	if (!prend || !prend->Initialized())
 		return;
 
-	c3::ResourceManager *rm = theApp.m_C3->GetResourceManager();
-
-	if (!m_Rend->Initialized())
-	{
-		CRect r;
-		GetClientRect(r);
-
-		if (m_Rend->Initialize(GetSafeHwnd(), 0))
-		{
-			const size_t w = 2048;
-			const size_t h = 2048;
-
-			m_FB = m_Rend->CreateFrameBuffer(0);
-
-			m_ColorTarg[0] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::U8_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
-			m_ColorTarg[1] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::F16_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
-			m_ColorTarg[2] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::F32_4CH, 1, TEXCREATEFLAG_RENDERTARGET);
-			m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
-
-			m_FB->AttachDepthTarget(m_DepthTarg);
-			for (size_t i = 0; i < 3; i++)
-				m_FB->AttachColorTarget(m_ColorTarg[i], i);
-
-			m_FB->Seal();
-
-			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
-			m_VS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("copyback.vsh"), rf))->GetData());
-			m_FS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("copyback.fsh"), rf))->GetData());
-			m_SP_copyback = m_Rend->CreateShaderProgram();
-		}
-	}
+	c3::ResourceManager *presman = theApp.m_C3->GetResourceManager();
 
 	CCeledit3Doc *pdoc = GetDocument();
 	if (!pdoc)
 		return;
 
-	m_pCamPos = dynamic_cast<c3::Positionable *>(pdoc->m_Observer->FindComponent(c3::Positionable::Type()));
-	m_pCamPos->SetPos(-3.0f, 0, -10.0f);
-	m_pCam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindComponent(c3::Camera::Type()));
-	m_pCam->SetFOV(glm::radians(70.0f));
-	m_pCam->SetViewMode(c3::Camera::ViewMode::VM_POLAR);
-	m_pCam->SetPolarDistance(1.0f);
+	CMainFrame *pmf = (CMainFrame *)theApp.GetMainWnd();
+
+	CCeledit3Doc::CAMTYPE t = CCeledit3Doc::CAMTYPE::CAM_FREE;
+
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pdoc->m_Camera[t]->FindComponent(c3::Positionable::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Camera[t]->FindComponent(c3::Camera::Type()));
+	if (pcam)
+	{
+		pcam->SetFOV(glm::radians(70.0f));
+		pcam->SetViewMode(c3::Camera::ViewMode::VM_POLAR);
+		pcam->SetPolarDistance(1.0f);
+	}
 
 	SetTimer('DRAW', 16, nullptr);
 }
@@ -225,39 +222,6 @@ void CCeledit3View::OnInitialUpdate()
 void CCeledit3View::OnDestroy()
 {
 	KillTimer('DRAW');
-
-	for (size_t i = 0; i < 3; i++)
-	{
-		if (m_ColorTarg[i])
-		{
-			m_ColorTarg[i]->Release();
-			m_ColorTarg[i] = nullptr;
-		}
-	}
-
-	if (m_DepthTarg)
-	{
-		m_DepthTarg->Release();
-		m_DepthTarg = nullptr;
-	}
-
-	if (m_FB)
-	{
-		m_FB->Release();
-		m_FB = nullptr;
-	}
-
-	if (m_SP_copyback)
-	{
-		m_SP_copyback->Release();
-		m_SP_copyback = nullptr;
-	}
-
-	if (m_Rend && m_Rend->Initialized())
-	{
-		m_Rend->Shutdown();
-		m_Rend = nullptr;
-	}
 
 	CView::OnDestroy();
 }
@@ -337,13 +301,17 @@ void CCeledit3View::OnMouseMove(UINT nFlags, CPoint point)
 	if ((nFlags & (MK_SHIFT | MK_MBUTTON | MK_LBUTTON)) && (this != GetCapture()))
 		SetCapture();
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindComponent(c3::Camera::Type()));
+	CCeledit3Doc::CAMTYPE t = CCeledit3Doc::CAMTYPE::CAM_FREE;
+
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Camera[t]->FindComponent(c3::Camera::Type()));
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pdoc->m_Camera[t]->FindComponent(c3::Positionable::Type()));
+
 	c3::ModelRenderer *pbr = pdoc->m_Brush ? dynamic_cast<c3::ModelRenderer *>(pdoc->m_Brush->FindComponent(c3::ModelRenderer::Type())) : nullptr;
 	c3::Positionable *pbp = pdoc->m_Brush ? dynamic_cast<c3::Positionable *>(pdoc->m_Brush->FindComponent(c3::Positionable::Type())) : nullptr;
 
 	if ((active_tool == CCeledit3App::ToolType::TT_WAND) && pcam && pbr && pbp)
 	{
-		pdoc->m_Observer->Update();
+		pdoc->m_Camera[t]->Update();
 
 		glm::fvec3 pos3d_near((float)m_MousePos.x, (float)m_MousePos.y, 0.0f);
 		glm::fvec3 pos3d_far((float)m_MousePos.x, (float)m_MousePos.y, 1.0f);
@@ -400,37 +368,38 @@ void CCeledit3View::OnMouseMove(UINT nFlags, CPoint point)
 
 		if (theApp.m_Config->GetBool(_T("environment.camera.lockroll"), true))
 		{
+
 			m_CamYaw += (float)deltax;
 			m_CamPitch += (float)-deltay;
 
-			props::IProperty *campitch_min = pdoc->m_Observer->GetProperties()->GetPropertyById('PCAN');
-			props::IProperty *campitch_max = pdoc->m_Observer->GetProperties()->GetPropertyById('PCAX');
+			props::IProperty *campitch_min = pdoc->m_Camera[t]->GetProperties()->GetPropertyById('PCAN');
+			props::IProperty *campitch_max = pdoc->m_Camera[t]->GetProperties()->GetPropertyById('PCAX');
 
 			float pitchmin = campitch_min ? campitch_min->AsFloat() : -FLT_MAX;
 			float pitchmax = campitch_max ? campitch_max->AsFloat() :  FLT_MAX;
 
 			m_CamPitch = std::min(std::max(pitchmin, m_CamPitch), pitchmax);
 
-			m_pCamPos->SetYawPitchRoll(0, 0, 0);
-			m_pCamPos->Update(0);
-			m_pCamPos->AdjustYaw(glm::radians(m_CamYaw));
-			m_pCamPos->Update(0);
-			m_pCamPos->AdjustPitch(glm::radians(m_CamPitch));
-			m_pCamPos->Update(0);
+			pcampos->SetYawPitchRoll(0, 0, 0);
+			pcampos->Update(0);
+			pcampos->AdjustYaw(glm::radians(m_CamYaw));
+			pcampos->Update(0);
+			pcampos->AdjustPitch(glm::radians(m_CamPitch));
+			pcampos->Update(0);
 
 			RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 		}
 		else
 		{
-			m_pCamPos->AdjustPitch(glm::radians((float)deltay));
-			m_pCamPos->AdjustYaw(glm::radians((float)deltax));
+			pcampos->AdjustPitch(glm::radians((float)deltay));
+			pcampos->AdjustYaw(glm::radians((float)deltax));
 		}
 	}
 	else if (nFlags & MK_MBUTTON)
 	{
 		// If the user is holding down the middle mouse button, zoom the camera when they move up/down
 
-		m_pCam->SetPolarDistance(m_pCam->GetPolarDistance() + (float)deltay);
+		pcam->SetPolarDistance(pcam->GetPolarDistance() + (float)deltay);
 
 		RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 
@@ -559,7 +528,10 @@ BOOL CCeledit3View::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	CCeledit3Doc *pdoc = GetDocument();
 	ASSERT_VALID(pdoc);
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Observer->FindComponent(c3::Camera::Type()));
+	CCeledit3Doc::CAMTYPE t = CCeledit3Doc::CAMTYPE::CAM_FREE;
+
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pdoc->m_Camera[t]->FindComponent(c3::Positionable::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pdoc->m_Camera[t]->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
 		float d = pcam->GetPolarDistance();

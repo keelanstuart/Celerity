@@ -272,6 +272,58 @@ bool ObjectImpl::Load(genio::IInputStream *is)
 	if (!is)
 		return false;
 
+	genio::FOURCHARCODE b = is->NextBlockId();
+	if (b == 'OBJ0')
+	{
+		if (is->BeginBlock(b))
+		{
+			is->Read(&m_GUID, sizeof(GUID));
+
+			uint16_t len;
+			is->ReadUINT16(len);
+			m_Name.resize(len);
+			is->ReadString((TCHAR *)(m_Name.c_str()));
+
+			is->Read(&m_Flags, sizeof(props::TFlags64));
+
+			size_t propssz, propsbr;
+			is->ReadUINT64(propssz);
+			if (propssz)
+			{
+				BYTE *propsbuf = (BYTE *)_alloca(propssz);
+				is->Read(propsbuf, propssz);
+				m_Props->Deserialize(propsbuf, propssz, &propsbr);
+			}
+
+			size_t ct;
+
+			// read components
+			is->ReadUINT64(ct);
+			while (ct--)
+			{
+				GUID g;
+				is->Read(&g, sizeof(GUID));
+				AddComponent(m_pSys->GetFactory()->FindComponentType(g));
+			}
+
+			// read children
+			is->ReadUINT64(ct);
+			while (ct--)
+			{
+				Object *obj = m_pSys->GetFactory()->Build();
+				if (obj)
+				{
+					obj->Load(is);
+					AddChild(obj);
+				}
+			}
+
+			is->EndBlock();
+		}
+
+		PostLoad();
+	}
+
 	return true;
 }
 
@@ -280,6 +332,40 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags)
 {
 	if (!os)
 		return false;
+
+	if (os->BeginBlock('OBJ0'))
+	{
+		os->Write(&m_GUID, sizeof(GUID));
+
+		uint16_t len = (uint16_t)m_Name.length();
+		os->WriteUINT16(len);
+		os->WriteString((TCHAR *)(m_Name.c_str()));
+
+		os->Write(&m_Flags, sizeof(props::TFlags64));
+
+		size_t propssz = 0;
+		if (m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_TERSE, nullptr, 0, &propssz) && propssz)
+		{
+			BYTE *propsbuf = (BYTE *)_alloca(propssz);
+			m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_TERSE, propsbuf, propssz);
+			os->Write(propsbuf, propssz);
+		}
+
+		os->WriteUINT64(GetNumComponents());
+		for (auto comp : m_Components)
+		{
+			GUID g = comp->GetType()->GetGUID();
+			os->Write(&g, sizeof(GUID));
+		}
+
+		os->WriteUINT64(GetNumChildren());
+		for (auto child : m_Children)
+		{
+			child->Save(os, saveflags);
+		}
+
+		os->EndBlock();
+	}
 
 	return true;
 }

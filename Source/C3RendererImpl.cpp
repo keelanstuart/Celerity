@@ -244,7 +244,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 #else
 				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 #endif
-				//WGL_CONTEXT_PROFILE_MASK_ARB,	WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+				WGL_CONTEXT_PROFILE_MASK_ARB,	WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
 				0, 0	// end
 			};
 
@@ -264,6 +264,14 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 	if (!gl.Initialize())
 		return false;
+
+	gl.SetLogFunc([](const wchar_t *msg, void *userdata)
+	{
+			RendererImpl *_this = (RendererImpl *)userdata;
+			_this->m_pSys->GetLog()->Print(L"[GL] ");
+			_this->m_pSys->GetLog()->Print(msg);
+			_this->m_pSys->GetLog()->Print(L"\n");
+		}, this);
 
 	// make use of opengl messages, log them
 	gl.DebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
@@ -585,7 +593,12 @@ const RECT *RendererImpl::GetViewport(RECT *viewport) const
 
 void RendererImpl::SetOverrideHwnd(HWND hwnd)
 {
-	m_hwnd_override = hwnd;
+	if (m_hwnd_override != hwnd)
+	{
+		m_hwnd_override = hwnd;
+		m_hdc = GetDC(hwnd ? hwnd : m_hwnd);
+		wglMakeCurrent(m_hdc, m_glrc);
+	}
 }
 
 
@@ -630,6 +643,7 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 			ImGui::ShowMetricsWindow(&show_metrics);
 		}
 
+		m_Gui->EndFrame();
 		m_Gui->Render();
 	}
 
@@ -805,10 +819,7 @@ void RendererImpl::SetWindingOrder(WindingOrder mode)
 {
 	if (mode != m_WindingOrder)
 	{
-		if (mode == WO_CW)
-			gl.FrontFace(GL_CW);
-		else
-			gl.Enable(GL_CCW);
+		gl.FrontFace((mode == WO_CW) ? GL_CW : GL_CCW);
 
 		m_WindingOrder = mode;
 	}
@@ -954,7 +965,6 @@ size_t RendererImpl::PixelSize(Renderer::TextureType type)
 		case Renderer::TextureType::U8_3CH:
 			return sizeof(uint8_t) * 3;
 
-		case Renderer::TextureType::U8_3CHX:
 		case Renderer::TextureType::U8_4CH:
 			return sizeof(uint8_t) * 4;
 
@@ -991,7 +1001,6 @@ GLenum RendererImpl::GLType(TextureType type)
 		case Renderer::TextureType::U8_1CH:
 		case Renderer::TextureType::U8_2CH:
 		case Renderer::TextureType::U8_3CH:
-		case Renderer::TextureType::U8_3CHX:
 		case Renderer::TextureType::U8_4CH:
 			return GL_UNSIGNED_BYTE;
 
@@ -1046,7 +1055,6 @@ GLenum RendererImpl::GLInternalFormat(TextureType type)
 		case Renderer::TextureType::P16_4CH:
 			return GL_UNSIGNED_SHORT_4_4_4_4;
 
-		case Renderer::TextureType::U8_3CHX:
 		case Renderer::TextureType::U8_4CH:
 			return GL_RGBA8;
 
@@ -1096,7 +1104,6 @@ GLenum RendererImpl::GLFormat(TextureType type)
 		case Renderer::TextureType::P16_3CH:
 		case Renderer::TextureType::P16_3CHT:
 		case Renderer::TextureType::U8_3CH:
-		case Renderer::TextureType::U8_3CHX:
 		case Renderer::TextureType::F16_3CH:
 		case Renderer::TextureType::F32_3CH:
 			return GL_RGB;
@@ -1175,6 +1182,8 @@ Texture2D *RendererImpl::CreateTexture2DFromFile(const TCHAR *filename, props::T
 
 				ret->Unlock();
 			}
+
+			ret->SetName(filename);
 		}
 
 		free(data);
@@ -1236,7 +1245,12 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 		glid = (c3::FrameBufferImpl &)*pfb;
 
 	if (flags.IsSet(UFBFLAG_FINISHLAST))
+	{
 		gl.Finish();
+
+		for (uint64_t s = 0; s < 32; s++)
+			UseTexture(s, nullptr);
+	}
 
 	if (flags.IsSet(UFBFLAG_UPDATEVIEWPORT))
 	{
@@ -1276,7 +1290,10 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 			changed_dm = true;
 		}
 
-		gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) | (flags.IsSet(UFBFLAG_CLEARDEPTH) ? GL_DEPTH_BUFFER_BIT : 0));
+		if (!m_CurFB)
+			gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) | (flags.IsSet(UFBFLAG_CLEARDEPTH) ? GL_DEPTH_BUFFER_BIT : 0));
+		else
+			m_CurFB->Clear(flags);
 
 		if (changed_dm)
 			SetDepthMode(dm);
@@ -1325,10 +1342,8 @@ void RendererImpl::UseVertexBuffer(VertexBuffer *pvbuf)
 	m_CurVB = pvbuf;
 	GLuint glid_vb = m_CurVB ? ((VertexBufferImpl *)pvbuf)->VBglID() : 0;
 	GLuint glid_vao = m_CurVB ? ((VertexBufferImpl *)pvbuf)->VAOglID() : 0;
-	if (glid_vb == GL_INVALID_VALUE)
-		glid_vb = 0;
 
-	if (glid_vb == m_CurVBID)
+	if ((glid_vb == m_CurVBID) || (glid_vb == GL_INVALID_VALUE))
 		return;
 
 	m_CurVBID = glid_vb;

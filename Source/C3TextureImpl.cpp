@@ -22,7 +22,7 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 	m_Width = std::max(width, size_t(1));
 	m_Height = std::max(height, size_t(1));
 
-	if (!flags.IsSet(TEXCREATEFLAG_RENDERTARGET) && !flags.IsSet(TEXCREATEFLAG_RENDERTARGETSMOOTH) && (mipcount < 1))
+	if (!flags.IsSet(TEXCREATEFLAG_RENDERTARGET) && (mipcount < 1))
 	{
 		mipcount = 0;
 		size_t mr = std::min(width, height);
@@ -33,7 +33,7 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 		}
 	}
 
-	m_MipCount = (flags.IsSet(TEXCREATEFLAG_RENDERTARGET) || flags.IsSet(TEXCREATEFLAG_RENDERTARGETSMOOTH)) ? 1 : mipcount;
+	m_MipCount = flags.IsSet(TEXCREATEFLAG_RENDERTARGET) ? 1 : mipcount;
 	m_Type = type;
 	m_Buffer = nullptr;
 	m_glID = GL_INVALID_VALUE;
@@ -52,48 +52,22 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 	if (flags.IsSet(TEXCREATEFLAG_MIRROR_V))
 		m_Flags.Set(TEXFLAG_MIRROR_V);
 
-	if (flags.IsSet(TEXCREATEFLAG_RENDERTARGET) || flags.IsSet(TEXCREATEFLAG_RENDERTARGETSMOOTH))
+	if (flags.IsSet(TEXCREATEFLAG_RENDERTARGET))
 	{
-		if (!m_Rend->isnv)
-			m_Rend->gl.CreateTextures(GL_TEXTURE_2D, 1, &m_glID);
-
-		// if we can't get a gl 4.5 context, then we may have to use gen instead of create
-		if (m_glID == GL_INVALID_VALUE)
-		{
-			m_Rend->gl.GenTextures(1, &m_glID);
-		}
+		m_Rend->gl.GenTextures(1, &m_glID);
 
 		m_Rend->gl.BindTexture(GL_TEXTURE_2D, m_glID);
 
-		if (!m_Rend->isnv)
-		{
-			m_Rend->gl.TexStorage2D(GL_TEXTURE_2D, (GLsizei)m_MipCount, m_Rend->GLInternalFormat(m_Type), (GLsizei)m_Width, (GLsizei)m_Height);
-		}
-		else
-		{
-			GLenum intfmt = m_Rend->GLInternalFormat(m_Type);
-			GLenum fmt = m_Rend->GLFormat(m_Type);
-			GLenum t = m_Rend->GLType(m_Type);
-
-			m_Rend->gl.TexImage2D(GL_TEXTURE_2D, 0, intfmt, (GLsizei)m_Width, (GLsizei)m_Height, 0, fmt, t, nullptr);
-		}
+		m_Rend->gl.TexStorage2D(GL_TEXTURE_2D, (GLsizei)m_MipCount, m_Rend->GLInternalFormat(m_Type), (GLsizei)m_Width, (GLsizei)m_Height);
 
 		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-		if (!flags.IsSet(TEXCREATEFLAG_RENDERTARGETSMOOTH))
-		{
-			m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-			m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		}
-		else
-		{
-			m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		}
-
-		//m_Rend->gl.BindTexture(GL_TEXTURE_2D, 0);
+		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
+
+	m_Rend->gl.BindTexture(GL_TEXTURE_2D, 0);
 
 	m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 }

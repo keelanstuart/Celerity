@@ -91,6 +91,7 @@ BOOL C3App::InitInstance()
 	pfm->AddMapping(_T("fbx"), _T("assets\\models"));
 	pfm->AddMapping(_T("gltf"), _T("assets\\models"));
 	pfm->AddMapping(_T("obj"), _T("assets\\models"));
+	pfm->AddMapping(_T("3ds"), _T("assets\\models"));
 
 	pfm->AddMapping(_T("vsh"), _T("assets\\shaders"));
 	pfm->AddMapping(_T("fsh"), _T("assets\\shaders"));
@@ -117,6 +118,14 @@ BOOL C3App::InitInstance()
 	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-obj.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-obj.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("ah64e\\ah64e.fbx"));
+
+	pproto = pfactory->CreatePrototype();
+	pproto->SetName(_T("TestBox"));
+	pproto->AddComponent(c3::Positionable::Type());
+	pproto->AddComponent(c3::ModelRenderer::Type());
+	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-obj.vsh"));
+	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-obj.fsh"));
+	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("TestBox\\cube.obj"));
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("Light"));

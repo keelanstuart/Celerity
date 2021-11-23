@@ -111,7 +111,10 @@ void ModelRendererImpl::Render(Object *pobject, props::TFlags64 rendflags)
 		{
 			m_SP_defobj->AttachShader(m_VS_defobj);
 			m_SP_defobj->AttachShader(m_FS_defobj);
-			m_SP_defobj->Link();
+			if (m_SP_defobj->Link() == ShaderProgram::RETURNCODE::RET_OK)
+			{
+				// anything special to do when the shader links correctly
+			}
 		}
 	}
 
