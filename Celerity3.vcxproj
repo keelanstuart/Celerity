@@ -85,7 +85,7 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
     </ClCompile>
-    <ClCompile Include="Source\ResourceImpl.cpp" />
+    <ClCompile Include="Source\C3ResourceImpl.cpp" />
     <ClCompile Include="third-party\imgui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -158,8 +158,10 @@
     <ClInclude Include="Include\C3Subscription.h" />
     <ClInclude Include="Include\C3System.h" />
     <ClInclude Include="Include\C3Texture.h" />
+    <ClInclude Include="Include\C3TString.h" />
     <ClInclude Include="Include\C3VertexBuffer.h" />
     <ClInclude Include="Include\C3FlowGraph.h" />
+    <ClInclude Include="resource.h" />
     <ClInclude Include="Source\C3CameraImpl.h" />
     <ClInclude Include="Source\C3ConfigurationImpl.h" />
     <ClInclude Include="Source\C3DepthBufferImpl.h" />
@@ -194,7 +196,6 @@
     <ClInclude Include="Source\C3SystemImpl.h" />
     <ClInclude Include="Source\C3TextureImpl.h" />
     <ClInclude Include="Source\C3VertexBufferImpl.h" />
-    <ClInclude Include="Source\framework.h" />
     <ClInclude Include="Source\gl.h" />
     <ClInclude Include="Source\glext.h" />
     <ClInclude Include="Source\gl_wrapper.h" />
@@ -208,6 +209,13 @@
     <ClInclude Include="third-party\imgui\imstb_rectpack.h" />
     <ClInclude Include="third-party\imgui\imstb_textedit.h" />
     <ClInclude Include="third-party\imgui\imstb_truetype.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Source\Celerity.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Source\c3splash.png" />
+    <Image Include="Source\c3splash2.png" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -223,6 +231,7 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -230,18 +239,21 @@
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
     <PreferredToolArchitecture>x86</PreferredToolArchitecture>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -249,6 +261,7 @@
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -257,6 +270,7 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
     <PreferredToolArchitecture>x86</PreferredToolArchitecture>
+    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -354,7 +368,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PreBuildEvent>
@@ -379,7 +393,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PreBuildEvent>
@@ -403,7 +417,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(SolutionDir)Bin\glLibGen64.exe -class:"COpenGL" -basefile:"gl_wrapper" -outdir:"$(SolutionDir)Source" -ver:4.5 -glh:"C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um\gl\GL.h" -glexth:"https://www.khronos.org/registry/OpenGL/api/GL/glext.h" -wglexth:"https://www.khronos.org/registry/OpenGL/api/GL/wglext.h" -khrh:"https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h" -pch -ext -logcb</Command>
@@ -425,7 +439,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(SolutionDir)Bin\glLibGen64.exe -class:"COpenGL" -basefile:"gl_wrapper" -outdir:"$(SolutionDir)Source" -ver:4.5 -glh:"C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um\gl\GL.h" -glexth:"https://www.khronos.org/registry/OpenGL/api/GL/glext.h" -wglexth:"https://www.khronos.org/registry/OpenGL/api/GL/wglext.h" -khrh:"https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h" -pch -ext -logcb</Command>
@@ -451,7 +465,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
     </Link>
     <PreBuildEvent>
@@ -479,7 +493,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
     </Link>
     <PreBuildEvent>

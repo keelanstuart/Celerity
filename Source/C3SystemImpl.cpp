@@ -29,6 +29,12 @@ System *System::Create(props::TFlags64 flags)
 	return ret;
 }
 
+extern HWND g_hPostSplashWnd;
+void SystemImpl::SetOwner(HWND owner)
+{
+	g_hPostSplashWnd = owner;
+}
+
 void InitializeCrc16Table();
 void InitializeCrc32Table();
 

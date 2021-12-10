@@ -25,13 +25,13 @@ namespace c3
 		};
 
 		#if defined(DEBUG)
-			#define DEFAULT_CELERITY_PLUGIN_EXT			_T("*.dcll")
+			#define DEFAULT_CELERITY_PLUGIN_EXT			_T("*.c3plugd")
 		#else
-			#define DEFAULT_CELERITY_PLUGIN_EXT			_T("*.cll")
+			#define DEFAULT_CELERITY_PLUGIN_EXT			_T("*.c3plug")
 		#endif
 
 		/// Discovers plug-ins matching the given filespec and can auto-activate them if desired
-		virtual RETURNCODE DiscoverPlugins(const TCHAR *filespec = DEFAULT_CELERITY_PLUGIN_EXT, bool auto_activate = true, size_t *numfound = nullptr) = NULL;
+		virtual RETURNCODE DiscoverPlugins(const TCHAR *path = nullptr, const TCHAR *filespec = DEFAULT_CELERITY_PLUGIN_EXT, bool auto_activate = true, size_t *numfound = nullptr) = NULL;
 
 		/// Unloads a specific plug-in
 		virtual RETURNCODE UnloadPlugin(Plugin *pplug) = NULL;

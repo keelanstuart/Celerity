@@ -58,6 +58,7 @@ namespace c3
 
 		glm::fvec4 m_clearColor;
 		float m_clearZ;
+		uint8_t m_clearStencil;
 
 		bool m_Initialized;
 		WNDCLASS m_glARBWndClass;
@@ -160,6 +161,9 @@ namespace c3
 
 		virtual void SetClearDepth(float depth);
 		virtual float GetClearDepth() const;
+
+		virtual void SetClearStencil(uint8_t stencil);
+		virtual uint8_t GetClearStencil() const;
 
 		virtual void SetDepthMode(DepthMode mode);
 		virtual DepthMode GetDepthMode() const;

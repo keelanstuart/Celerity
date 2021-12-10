@@ -19,10 +19,18 @@ namespace c3
 
 	/// See the macros at the bottom to see how to get custom Components integrated
 
-	class Component
+	class C3_API Component
 	{
 
 	public:
+
+		typedef enum
+		{
+			ALLOW_MULTIPLE = 0,		// Indicates that multiple Component instances of this type can be added to a single Object instance
+
+		} EComponentFlag;
+
+		static constexpr uint64_t COMPFLAG(EComponentFlag f) { return (1LL << (f)); }
 
 		virtual void Release() = NULL;
 

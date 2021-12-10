@@ -1,6 +1,6 @@
 // This MFC Samples source code demonstrates using MFC Microsoft Office Fluent User Interface 
 // (the "Fluent UI") and is provided only as referential material to supplement the 
-// Microsoft Foundation Classes Reference and related electronic documentation 
+// Microsoft Foundation Prototypees Reference and related electronic documentation 
 // included with the MFC C++ library software.  
 // License terms to copy, use or distribute the Fluent UI are available separately.  
 // To learn more about our Fluent UI licensing program, please visit 
@@ -15,6 +15,7 @@
 #include "PrototypeView.h"
 #include "Resource.h"
 #include "Celedit3.h"
+#include "PrototypeEditorDlg.h"
 
 class CPrototypeViewMenuButton : public CMFCToolBarMenuButton
 {
@@ -60,10 +61,10 @@ BEGIN_MESSAGE_MAP(CPrototypeView, CDockablePane)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
 	ON_WM_CONTEXTMENU()
-	ON_COMMAND(ID_CLASS_ADD_MEMBER_FUNCTION, OnClassAddMemberFunction)
-	ON_COMMAND(ID_CLASS_ADD_MEMBER_VARIABLE, OnClassAddMemberVariable)
-	ON_COMMAND(ID_CLASS_DEFINITION, OnClassDefinition)
-	ON_COMMAND(ID_CLASS_PROPERTIES, OnClassProperties)
+	ON_COMMAND(ID_CLASS_ADD_MEMBER_FUNCTION, OnPrototypeAddMemberFunction)
+	ON_COMMAND(ID_CLASS_ADD_MEMBER_VARIABLE, OnPrototypeAddMemberVariable)
+	ON_COMMAND(ID_CLASS_DEFINITION, OnPrototypeDefinition)
+	ON_COMMAND(ID_CLASS_PROPERTIES, OnPrototypeProperties)
 	ON_COMMAND(ID_NEW_FOLDER, OnNewFolder)
 	ON_WM_PAINT()
 	ON_WM_SETFOCUS()
@@ -87,7 +88,7 @@ int CPrototypeView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	if (!m_wndPrototypeView.Create(dwViewStyle, rectDummy, this, 2))
 	{
-		TRACE0("Failed to create Class View\n");
+		TRACE0("Failed to create Prototype View\n");
 		return -1;      // fail to create
 	}
 
@@ -121,7 +122,7 @@ int CPrototypeView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 	// Fill in some static tree view data (dummy code, nothing magic here)
-	FillClassView();
+	FillPrototypeView();
 
 	return 0;
 }
@@ -132,43 +133,121 @@ void CPrototypeView::OnSize(UINT nType, int cx, int cy)
 	AdjustLayout();
 }
 
-void CPrototypeView::FillClassView()
+HTREEITEM CPrototypeView::FindChildItem(HTREEITEM hroot, const TCHAR *itemname)
 {
-	HTREEITEM hRoot = m_wndPrototypeView.InsertItem(_T("FakeApp classes"), 0, 0);
+	HTREEITEM hret = m_wndPrototypeView.GetNextItem(hroot, TVGN_CHILD);
+	while (hret)
+	{
+		if (!_tcsicmp(m_wndPrototypeView.GetItemText(hret), itemname))
+			break;
+
+		hret = m_wndPrototypeView.GetNextItem(hret, TVGN_NEXT);
+	}
+
+	return hret;
+}
+
+HTREEITEM CPrototypeView::MakeProtoGroup(HTREEITEM hroot, const TCHAR *group)
+{
+	if (!group || !*group)
+	{
+		return hroot;
+	}
+
+	HTREEITEM hcurr = hroot;
+
+	CString gname;
+	while (*group && (*group != '/') && (*group != '\\'))
+	{
+		gname += *group;
+		if (*group)
+			group++;
+	}
+
+	if (!gname.IsEmpty())
+	{
+		if (*group)
+			group++;
+
+		HTREEITEM hexisting = FindChildItem(hcurr, gname);
+		hcurr = hexisting ? hexisting : m_wndPrototypeView.InsertItem(gname, 0, 0, hcurr);
+
+		HTREEITEM hnext = MakeProtoGroup(hcurr, group);
+
+		m_wndPrototypeView.Expand(hcurr, TVE_EXPAND);
+
+		hcurr = hnext;
+	}
+
+	return hcurr;
+}
+void CPrototypeView::FillPrototypeView()
+{
+	HTREEITEM hRoot = m_wndPrototypeView.InsertItem(_T("All Prototypes"), 0, 0);
 	m_wndPrototypeView.SetItemState(hRoot, TVIS_BOLD, TVIS_BOLD);
 
-	HTREEITEM hClass = m_wndPrototypeView.InsertItem(_T("CFakeAboutDlg"), 1, 1, hRoot);
-	m_wndPrototypeView.InsertItem(_T("CFakeAboutDlg()"), 3, 3, hClass);
+	c3::Factory *pfac = theApp.m_C3->GetFactory();
+	for (size_t i = 0, maxi = pfac->GetNumPrototypes(); i < maxi; i++)
+	{
+		c3::Prototype *pproto = pfac->GetPrototype(i);
+		assert(pproto);
+
+		HTREEITEM hgroup = MakeProtoGroup(hRoot, pproto->GetGroup());
+
+		CString tmp = pproto->GetName();
+		HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, 1, 1, hgroup);
+		m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)pproto);
+	}
 
 	m_wndPrototypeView.Expand(hRoot, TVE_EXPAND);
-
-	hClass = m_wndPrototypeView.InsertItem(_T("CFakeApp"), 1, 1, hRoot);
-	m_wndPrototypeView.InsertItem(_T("CFakeApp()"), 3, 3, hClass);
-	m_wndPrototypeView.InsertItem(_T("InitInstance()"), 3, 3, hClass);
-	m_wndPrototypeView.InsertItem(_T("OnAppAbout()"), 3, 3, hClass);
-
-	hClass = m_wndPrototypeView.InsertItem(_T("CFakeAppDoc"), 1, 1, hRoot);
-	m_wndPrototypeView.InsertItem(_T("CFakeAppDoc()"), 4, 4, hClass);
-	m_wndPrototypeView.InsertItem(_T("~CFakeAppDoc()"), 3, 3, hClass);
-	m_wndPrototypeView.InsertItem(_T("OnNewDocument()"), 3, 3, hClass);
-
-	hClass = m_wndPrototypeView.InsertItem(_T("CFakeAppView"), 1, 1, hRoot);
-	m_wndPrototypeView.InsertItem(_T("CFakeAppView()"), 4, 4, hClass);
-	m_wndPrototypeView.InsertItem(_T("~CFakeAppView()"), 3, 3, hClass);
-	m_wndPrototypeView.InsertItem(_T("GetDocument()"), 3, 3, hClass);
-	m_wndPrototypeView.Expand(hClass, TVE_EXPAND);
-
-	hClass = m_wndPrototypeView.InsertItem(_T("CFakeAppFrame"), 1, 1, hRoot);
-	m_wndPrototypeView.InsertItem(_T("CFakeAppFrame()"), 3, 3, hClass);
-	m_wndPrototypeView.InsertItem(_T("~CFakeAppFrame()"), 3, 3, hClass);
-	m_wndPrototypeView.InsertItem(_T("m_wndMenuBar"), 6, 6, hClass);
-	m_wndPrototypeView.InsertItem(_T("m_wndToolBar"), 6, 6, hClass);
-	m_wndPrototypeView.InsertItem(_T("m_wndStatusBar"), 6, 6, hClass);
-
-	hClass = m_wndPrototypeView.InsertItem(_T("Globals"), 2, 2, hRoot);
-	m_wndPrototypeView.InsertItem(_T("theFakeApp"), 5, 5, hClass);
-	m_wndPrototypeView.Expand(hClass, TVE_EXPAND);
 }
+
+void MyAppendMenuItem(HMENU menu, UINT32 type, const TCHAR *text = NULL, BOOL enabled = true, HMENU submenu = NULL, UINT id = -1, DWORD_PTR data = NULL);
+
+void MyAppendMenuItem(HMENU menu, UINT32 type, const TCHAR *text, BOOL enabled, HMENU submenu, UINT id, DWORD_PTR data)
+{
+	MENUITEMINFO mii;
+	memset(&mii, 0, sizeof(MENUITEMINFO));
+
+	mii.cbSize = sizeof(MENUITEMINFO);
+
+	mii.fMask = MIIM_TYPE | MIIM_ID | MIIM_DATA;
+
+	mii.wID = (id == -1) ? GetMenuItemCount(menu) : id;
+
+	mii.fType = type;
+
+	if ((type == MFT_STRING) || text)
+	{
+		mii.dwTypeData = (LPWSTR)text;
+		mii.cch = (UINT)_tcslen(text);
+	}
+
+	if (!enabled)
+	{
+		mii.fMask |= MIIM_STATE;
+		mii.fState = MFS_GRAYED;
+	}
+
+	if (submenu)
+	{
+		mii.hSubMenu = submenu;
+		mii.fMask |= MIIM_SUBMENU;
+	}
+
+	mii.dwItemData = data;
+
+	InsertMenuItem(menu, GetMenuItemCount(menu), true, &mii);
+}
+
+enum EPopupCommand
+{
+	PC_DELETE = 1,
+	PC_CREATEPROTO,
+	PC_CREATEGROUP,
+	PC_EDIT,
+	PC_DUPLICATE
+};
 
 void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 {
@@ -181,8 +260,21 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 		return;
 	}
 
+	c3::Factory *pfac = theApp.m_C3->GetFactory();
+
+	HMENU menu = ::CreatePopupMenu();
+	HMENU submenu = ::CreatePopupMenu();
+
+	MyAppendMenuItem(submenu, MFT_STRING, _T("Prototype"), true, 0, PC_CREATEPROTO);
+	MyAppendMenuItem(submenu, MFT_STRING, _T("Group"), true, 0, PC_CREATEGROUP);
+
+	MyAppendMenuItem(menu, MFT_STRING, _T("New"), TRUE, submenu);
+	MyAppendMenuItem(menu, MFT_SEPARATOR);
+
 	if (point != CPoint(-1, -1))
 	{
+		c3::Prototype *pproto = nullptr;
+
 		// Select clicked item:
 		CPoint ptTree = point;
 		pWndTree->ScreenToClient(&ptTree);
@@ -191,26 +283,90 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 		HTREEITEM hTreeItem = pWndTree->HitTest(ptTree, &flags);
 		if (hTreeItem != nullptr)
 		{
+			MyAppendMenuItem(menu, MFT_STRING, _T("Delete"), true, 0, PC_DELETE);
+
 			pWndTree->SelectItem(hTreeItem);
+			pproto = (c3::Prototype *)pWndTree->GetItemData(hTreeItem);
+			if (pproto)
+			{
+				MyAppendMenuItem(menu, MFT_STRING, _T("Edit"), true, 0, PC_EDIT);
+				MyAppendMenuItem(menu, MFT_STRING, _T("Duplicate"), true, 0, PC_DUPLICATE);
+			}
+		}
+
+		HTREEITEM hpi = hTreeItem;
+		if (!hpi || !pWndTree->GetParentItem(hpi))
+			hpi = pWndTree->GetRootItem();
+		else
+			hpi = pWndTree->GetParentItem(hpi);
+
+		UINT ret = TrackPopupMenu(menu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_LEFTALIGN, point.x, point.y, 0, GetSafeHwnd(), NULL);
+		switch (ret)
+		{
+			case PC_CREATEPROTO:
+			{
+				c3::Prototype *pcp = pfac->CreatePrototype();
+				tstring groupname;
+				if (pproto)
+				{
+					pcp->SetGroup(pproto->GetGroup());
+				}
+				else
+				{
+					HTREEITEM hi = hpi;
+					while (hi && pWndTree->GetParentItem(hi))
+					{
+						if (!groupname.empty())
+							groupname.insert(_T('/'), 0);
+
+						groupname = tstring((LPCTSTR)(pWndTree->GetItemText(hi))) + groupname;
+
+						hi = pWndTree->GetParentItem(hi);
+					}
+				}
+
+				CPrototypeEditorDlg ped(pcp, this);
+				if (ped.DoModal() == IDOK)
+				{
+					CString tmp = pcp->GetName();
+					HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, 1, 1, hpi);
+					m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)pcp);
+				}
+				else
+				{
+					pfac->RemovePrototype(pcp);
+				}
+				break;
+			}
+
+			case PC_CREATEGROUP:
+			{
+				break;
+			}
+
+			case PC_EDIT:
+			{
+				CPrototypeEditorDlg ped(pproto, this);
+				ped.DoModal();
+				break;
+			}
+
+			case PC_DELETE:
+			{
+				if (pproto)
+				{
+					pfac->RemovePrototype(pproto);
+					pWndTree->DeleteItem(hTreeItem);
+				}
+				break;
+			}
 		}
 	}
 
 	pWndTree->SetFocus();
-	CMenu menu;
-	menu.LoadMenu(IDR_POPUP_SORT);
 
-	CMenu* pSumMenu = menu.GetSubMenu(0);
-
-	if (AfxGetMainWnd()->IsKindOf(RUNTIME_CLASS(CMDIFrameWndEx)))
-	{
-		CMFCPopupMenu* pPopupMenu = new CMFCPopupMenu;
-
-		if (!pPopupMenu->Create(this, point.x, point.y, (HMENU)pSumMenu->m_hMenu, FALSE, TRUE))
-			return;
-
-		((CMDIFrameWndEx*)AfxGetMainWnd())->OnShowPopupMenu(pPopupMenu);
-		UpdateDialogControls(this, FALSE);
-	}
+	::DestroyMenu(submenu);
+	::DestroyMenu(menu);
 }
 
 void CPrototypeView::AdjustLayout()
@@ -258,22 +414,22 @@ void CPrototypeView::OnUpdateSort(CCmdUI* pCmdUI)
 	pCmdUI->SetCheck(pCmdUI->m_nID == m_nCurrSort);
 }
 
-void CPrototypeView::OnClassAddMemberFunction()
+void CPrototypeView::OnPrototypeAddMemberFunction()
 {
 	AfxMessageBox(_T("Add member function..."));
 }
 
-void CPrototypeView::OnClassAddMemberVariable()
+void CPrototypeView::OnPrototypeAddMemberVariable()
 {
 	// TODO: Add your command handler code here
 }
 
-void CPrototypeView::OnClassDefinition()
+void CPrototypeView::OnPrototypeDefinition()
 {
 	// TODO: Add your command handler code here
 }
 
-void CPrototypeView::OnClassProperties()
+void CPrototypeView::OnPrototypeProperties()
 {
 	// TODO: Add your command handler code here
 }
@@ -304,7 +460,7 @@ void CPrototypeView::OnSetFocus(CWnd* pOldWnd)
 
 void CPrototypeView::OnChangeVisualStyle()
 {
-	m_ClassViewImages.DeleteImageList();
+	m_PrototypeViewImages.DeleteImageList();
 
 	UINT uiBmpId = theApp.m_bHiColorIcons ? IDB_CLASS_VIEW_24 : IDB_CLASS_VIEW;
 
@@ -323,10 +479,10 @@ void CPrototypeView::OnChangeVisualStyle()
 
 	nFlags |= (theApp.m_bHiColorIcons) ? ILC_COLOR24 : ILC_COLOR4;
 
-	m_ClassViewImages.Create(16, bmpObj.bmHeight, nFlags, 0, 0);
-	m_ClassViewImages.Add(&bmp, RGB(255, 0, 0));
+	m_PrototypeViewImages.Create(16, bmpObj.bmHeight, nFlags, 0, 0);
+	m_PrototypeViewImages.Add(&bmp, RGB(255, 0, 0));
 
-	m_wndPrototypeView.SetImageList(&m_ClassViewImages, TVSIL_NORMAL);
+	m_wndPrototypeView.SetImageList(&m_PrototypeViewImages, TVSIL_NORMAL);
 
 	m_wndToolBar.CleanUpLockedImages();
 	m_wndToolBar.LoadBitmap(theApp.m_bHiColorIcons ? IDB_SORT_24 : IDR_SORT, 0, 0, TRUE /* Locked */);

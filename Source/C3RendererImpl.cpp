@@ -18,6 +18,7 @@
 #include <C3SystemImpl.h>
 #include <C3CommonVertexDefs.h>
 
+//#define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
@@ -127,7 +128,7 @@ c3::System *RendererImpl::GetSystem()
 
 bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 {
-	m_hwnd = hwnd;
+	m_hwnd = m_hwnd_override = hwnd;
 	m_hdc = ::GetDC(hwnd);
 
 	PIXELFORMATDESCRIPTOR pfd =
@@ -325,6 +326,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 	gl.ClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
 	gl.ClearDepthf(m_clearZ);
+	gl.ClearStencil((GLint)m_clearStencil);
 
 	SetDepthMode(DepthMode::DM_READWRITE);
 	SetDepthTest(Test::DT_LESSEREQUAL);
@@ -339,10 +341,12 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	GetFullscreenPlaneVB();
 	GetCubeMesh();
 	GetBoundsMesh();
+#if 0
 	GetHemisphereMesh();
 	GetXYPlaneMesh();
 	GetXZPlaneMesh();
 	GetYZPlaneMesh();
+#endif
 
 	// Initizlie textures
 	GetBlackTexture();
@@ -562,7 +566,7 @@ void RendererImpl::SetViewport(const RECT *viewport)
 	RECT r;
 	if (!viewport)
 	{
-		GetClientRect(m_hwnd, &r);
+		GetClientRect(m_hwnd_override ? m_hwnd_override : m_hwnd, &r);
 		viewport = &r;
 	}
 
@@ -570,7 +574,7 @@ void RendererImpl::SetViewport(const RECT *viewport)
 
 	LONG w = m_Viewport.right - m_Viewport.left;
 	LONG h = m_Viewport.bottom - m_Viewport.top;
-	gl.Viewport(m_Viewport.left, m_Viewport.top, w, h);
+	gl.Viewport(0, 0, w, h);
 
 	if (m_Gui)
 	{
@@ -620,8 +624,10 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 	if (m_Gui)
 		m_Gui->BeginFrame();
 
-	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH))
-		gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) | (flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_DEPTH_BUFFER_BIT : 0));
+	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL))
+		gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) |
+			(flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_DEPTH_BUFFER_BIT : 0) |
+			(flags.IsSet(UFBFLAG_CLEARSTENCIL) ? GL_STENCIL_BUFFER_BIT : 0));
 
 	return true;
 }
@@ -705,6 +711,22 @@ void RendererImpl::SetClearDepth(float depth)
 float RendererImpl::GetClearDepth() const
 {
 	return m_clearZ;
+}
+
+
+void RendererImpl::SetClearStencil(uint8_t stencil)
+{
+	if (stencil != m_clearStencil)
+	{
+		m_clearStencil = stencil;
+		gl.ClearStencil((GLint)m_clearStencil);
+	}
+}
+
+
+uint8_t RendererImpl::GetClearStencil() const
+{
+	return m_clearStencil;
 }
 
 
@@ -1278,7 +1300,7 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 
 	gl.BindFramebuffer(GL_FRAMEBUFFER, glid);
 
-	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH))
+	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL))
 	{
 		DepthMode dm = GetDepthMode();
 		bool changed_dm = false;
@@ -1291,7 +1313,9 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 		}
 
 		if (!m_CurFB)
-			gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) | (flags.IsSet(UFBFLAG_CLEARDEPTH) ? GL_DEPTH_BUFFER_BIT : 0));
+			gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) |
+				(flags.IsSet(UFBFLAG_CLEARDEPTH) ? GL_DEPTH_BUFFER_BIT : 0) |
+				(flags.IsSet(UFBFLAG_CLEARSTENCIL) ? GL_STENCIL_BUFFER_BIT : 0));
 		else
 			m_CurFB->Clear(flags);
 

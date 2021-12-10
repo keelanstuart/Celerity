@@ -99,9 +99,6 @@
     <ClCompile Include="Source\C3ResourceManagerImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\ResourceImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="third-party\imgui\imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -150,11 +147,11 @@
     <ClCompile Include="Source\C3OmniLightImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3ResourceImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Include\C3.h">
-      <Filter>Header Files\Public</Filter>
-    </ClInclude>
     <ClInclude Include="Include\C3FrameBuffer.h">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
@@ -192,9 +189,6 @@
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Source\glext.h">
-      <Filter>Header Files\Private</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\framework.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Source\pch.h">
@@ -416,5 +410,27 @@
     <ClInclude Include="Include\C3FlowGraph.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Include\C3TString.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Source\Celerity.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Source\c3splash2.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Source\c3splash.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

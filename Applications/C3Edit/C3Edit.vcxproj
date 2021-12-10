@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{86949A13-6C13-486F-BE44-835C3A02C685}</ProjectGuid>
+    <Keyword>MFCProj</Keyword>
+    <RootNamespace>C3Edit</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Static</UseOfMfc>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Debug.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Release.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Debug.props" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="Release.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\include;$(C3_SDK)\third-party\PowerProps\include;$(C3_SDK)\third-party\Pool\include;$(C3_SDK)\third-party\mqme\include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\GenIO\include;$(C3_SDK)\third-party\tinyxml2</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(C3_SDK)\lib</LibraryPath>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
+    <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\include;$(C3_SDK)\third-party\PowerProps\include;$(C3_SDK)\third-party\Pool\include;$(C3_SDK)\third-party\mqme\include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\GenIO\include;$(C3_SDK)\third-party\tinyxml2</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(C3_SDK)\lib</LibraryPath>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
+    <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\include;$(C3_SDK)\third-party\PowerProps\include;$(C3_SDK)\third-party\Pool\include;$(C3_SDK)\third-party\mqme\include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\GenIO\include;$(C3_SDK)\third-party\tinyxml2</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(C3_SDK)\lib</LibraryPath>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
+    <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\include;$(C3_SDK)\third-party\PowerProps\include;$(C3_SDK)\third-party\Pool\include;$(C3_SDK)\third-party\mqme\include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\GenIO\include;$(C3_SDK)\third-party\tinyxml2</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(C3_SDK)\lib</LibraryPath>
+    <OutDir>$(SolutionDir)bin\</OutDir>
+    <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
+    <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Celerity$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>Celerity$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>Celerity$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>Celerity$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+    </Link>
+    <Midl>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+      <ValidateAllParameters>true</ValidateAllParameters>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </Midl>
+    <ResourceCompile>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="C3Edit.h" />
+    <ClInclude Include="C3EditDoc.h" />
+    <ClInclude Include="C3EditFrame.h" />
+    <ClInclude Include="C3EditView.h" />
+    <ClInclude Include="calendarbar.h" />
+    <ClInclude Include="framework.h" />
+    <ClInclude Include="OutputWnd.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="PropertiesWnd.h" />
+    <ClInclude Include="PropertyGrid.h" />
+    <ClInclude Include="PrototypeView.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="targetver.h" />
+    <ClInclude Include="ViewTree.h" />
+    <ClInclude Include="wtfcolorbar.h" />
+    <ClInclude Include="wtfcolorbutton.h" />
+    <ClInclude Include="wtfcolormenubutton.h" />
+    <ClInclude Include="wtfcolorpopupmenu.h" />
+    <ClInclude Include="wtfpropertygridctrl.h" />
+    <ClInclude Include="wtfpropertygridtooltipctrl.h" />
+    <ClInclude Include="wtfvslistbox.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="C3Edit.cpp" />
+    <ClCompile Include="C3EditDoc.cpp" />
+    <ClCompile Include="C3EditFrame.cpp" />
+    <ClCompile Include="C3EditView.cpp" />
+    <ClCompile Include="calendarbar.cpp" />
+    <ClCompile Include="OutputWnd.cpp" />
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="PropertiesWnd.cpp" />
+    <ClCompile Include="PropertyGrid.cpp" />
+    <ClCompile Include="PrototypeView.cpp" />
+    <ClCompile Include="ViewTree.cpp" />
+    <ClCompile Include="wtfcolorbar.cpp" />
+    <ClCompile Include="wtfcolorbutton.cpp" />
+    <ClCompile Include="wtfcolormenubutton.cpp" />
+    <ClCompile Include="wtfcolorpopupmenu.cpp" />
+    <ClCompile Include="wtfpropertygridctrl.cpp" />
+    <ClCompile Include="wtfpropertygridtooltipctrl.cpp" />
+    <ClCompile Include="wtfvslistbox.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C3Edit.reg" />
+    <None Include="res\C3Edit.rc2" />
+    <None Include="res\cursor_camrot.cur" />
+    <None Include="res\cursor_move.cur" />
+    <None Include="res\cursor_rotate.cur" />
+    <None Include="res\cursor_scale.cur" />
+    <None Include="res\cursor_select.cur" />
+    <None Include="res\cursor_selminus.cur" />
+    <None Include="res\cursor_selplus.cur" />
+    <None Include="res\cursor_uniscale.cur" />
+    <None Include="res\cursor_wand.cur" />
+    <None Include="res\cursor_zoom.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C3Edit.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\C3Edit.ico" />
+    <Image Include="res\C3EditDoc.ico" />
+    <Image Include="res\classview.bmp" />
+    <Image Include="res\classview_hc.bmp" />
+    <Image Include="res\class_view.ico" />
+    <Image Include="res\class_view_hc.ico" />
+    <Image Include="res\explorer.bmp" />
+    <Image Include="res\explorer_hc.bmp" />
+    <Image Include="res\fileview.bmp" />
+    <Image Include="res\fileview_hc.bmp" />
+    <Image Include="res\file_view.ico" />
+    <Image Include="res\file_view_hc.ico" />
+    <Image Include="res\info.bmp" />
+    <Image Include="res\menuimages.bmp" />
+    <Image Include="res\menuimages_hc.bmp" />
+    <Image Include="res\nav_large.bmp" />
+    <Image Include="res\nav_large_hc.bmp" />
+    <Image Include="res\output_wnd.ico" />
+    <Image Include="res\output_wnd_hc.ico" />
+    <Image Include="res\pages.bmp" />
+    <Image Include="res\pages_hc.bmp" />
+    <Image Include="res\pages_small.bmp" />
+    <Image Include="res\pages_small_hc.bmp" />
+    <Image Include="res\properties.bmp" />
+    <Image Include="res\properties_hc.bmp" />
+    <Image Include="res\properties_wnd.ico" />
+    <Image Include="res\properties_wnd_hc.ico" />
+    <Image Include="res\sort.bmp" />
+    <Image Include="res\sort_hc.bmp" />
+    <Image Include="res\Toolbar.bmp" />
+    <Image Include="res\Toolbar256.bmp" />
+    <Image Include="res\toolbar_3dtools.bmp" />
+    <Image Include="res\toolbar_axes.bmp" />
+    <Image Include="res\userimages.bmp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

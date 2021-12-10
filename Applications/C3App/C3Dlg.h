@@ -5,13 +5,22 @@
 #pragma once
 
 #include "renderdoc_app.h"
-
+#include <PowerProps.h>
 
 // C3Dlg dialog
 class C3Dlg : public CDialog
 {
 public:
 
+#define MOVE_FORWARD	0x0001
+#define MOVE_BACKWARD	0x0002
+#define MOVE_LEFT		0x0004
+#define MOVE_RIGHT		0x0008
+#define MOVE_UP			0x0010
+#define MOVE_DOWN		0x0020
+#define MOVE_RUN		0x0040
+
+	props::TFlags64 m_fMovement;
 
 protected:
 	c3::Renderer *m_Rend;
@@ -36,6 +45,8 @@ protected:
 	RENDERDOC_API_1_4_0 *m_pRDoc;
 	bool m_bCapturedFirstFrame;
 
+	bool m_bMouseCursorEnabled;
+
 // Construction
 public:
 	C3Dlg(CWnd* pParent = nullptr);	// standard constructor
@@ -49,6 +60,8 @@ public:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 
 	void Cleanup();
+
+	void SetMouseEnabled(bool b);
 
 // Implementation
 protected:
@@ -71,4 +84,10 @@ public:
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
+	virtual void OnOK();
+	virtual void OnCancel();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnCaptureChanged(CWnd* pWnd);
+	afx_msg void OnActivateApp(BOOL bActive, DWORD dwThreadID);
+	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 };

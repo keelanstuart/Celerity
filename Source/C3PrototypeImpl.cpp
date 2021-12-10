@@ -53,6 +53,18 @@ GUID PrototypeImpl::GetGUID()
 }
 
 
+const TCHAR *PrototypeImpl::GetGroup()
+{
+	return m_Group.c_str();
+}
+
+
+void PrototypeImpl::SetGroup(const TCHAR *group)
+{
+	m_Group = group ? group : _T("");
+}
+
+
 props::TFlags64 &PrototypeImpl::Flags()
 {
 	return m_Flags;

@@ -211,7 +211,7 @@ namespace c3
 		virtual HWND GetOverrideHwnd() const = NULL;
 
 		/// Prepares the Renderer for rendering
-		virtual bool BeginScene(props::TFlags64 flags = UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH) = NULL;
+		virtual bool BeginScene(props::TFlags64 flags = UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL) = NULL;
 
 		/// Finalizes rendering and presents the result to the display
 		virtual bool EndScene(props::TFlags64 flags = 0) = NULL;
@@ -223,6 +223,9 @@ namespace c3
 
 		virtual void SetClearDepth(float depth = 1.0f) = NULL;
 		virtual float GetClearDepth() const = NULL;
+
+		virtual void SetClearStencil(uint8_t stencil = 0) = NULL;
+		virtual uint8_t GetClearStencil() const = NULL;
 
 		virtual void SetDepthMode(DepthMode mode) = NULL;
 		virtual DepthMode GetDepthMode() const = NULL;

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -225,6 +225,7 @@
     <ClInclude Include="Celedit3.h" />
     <ClInclude Include="Celedit3Doc.h" />
     <ClInclude Include="Celedit3View.h" />
+    <ClInclude Include="PrototypeEditorDlg.h" />
     <ClInclude Include="PrototypeView.h" />
     <ClInclude Include="FileView.h" />
     <ClInclude Include="framework.h" />
@@ -249,6 +250,7 @@
     <ClCompile Include="Celedit3.cpp" />
     <ClCompile Include="Celedit3Doc.cpp" />
     <ClCompile Include="Celedit3View.cpp" />
+    <ClCompile Include="PrototypeEditorDlg.cpp" />
     <ClCompile Include="PrototypeView.cpp" />
     <ClCompile Include="FileView.cpp" />
     <ClCompile Include="MainFrm.cpp" />
@@ -326,6 +328,8 @@
     <Image Include="res\sort_hc.bmp" />
     <Image Include="res\Toolbar.bmp" />
     <Image Include="res\Toolbar256.bmp" />
+    <Image Include="res\toolbar_3dtools_hc.bmp" />
+    <Image Include="res\toolbar_axes.bmp" />
     <Image Include="res\writelarge.bmp" />
     <Image Include="res\writesmall.bmp" />
   </ItemGroup>

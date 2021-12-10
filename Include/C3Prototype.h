@@ -31,6 +31,16 @@ namespace c3
 		/// Returns the system-generated GUID assigned to the Prototype
 		virtual GUID GetGUID() = NULL;
 
+		/// Returns the name of the group to which this prototype belongs
+		/// It is used as a way to organize prototypes in the editor...
+		/// '\\' or '/' delimits the hierarchy.
+		virtual const TCHAR *GetGroup() = NULL;
+
+		/// Sets the group to which this Prototype belongs
+		/// It is used as a way to organize prototypes in the editor...
+		/// '\\' or '/' delimits the hierarchy.
+		virtual void SetGroup(const TCHAR *group) = NULL;
+
 		/// Allows the flags conferred to an Object instance to be manipulated
 		virtual props::TFlags64 &Flags() = NULL;
 

@@ -45,6 +45,7 @@
 #define ID_EXPAND_ALL                   154
 #define IDS_FILE_VIEW                   155
 #define IDS_CLASS_VIEW                  156
+#define IDS_PROTOTYPE_VIEW              156
 #define IDS_OUTPUT_WND                  157
 #define IDS_PROPERTIES_WND              158
 #define IDI_FILE_VIEW                   161
@@ -104,14 +105,15 @@
 #define IDS_SHORTCUTS                   252
 #define IDS_FOLDERS                     253
 #define IDS_OUTLOOKBAR                  258
-#define IDS_TOOLBAR_3DTOOLS				259
-#define IDS_TOOLBAR_AXES				260
+#define IDS_TOOLBAR_3DTOOLS             259
+#define IDS_TOOLBAR_AXES                260
 #define IDS_BUILD_TAB                   300
 #define IDS_DEBUG_TAB                   301
 #define IDS_FIND_TAB                    302
 #define IDS_EXPLORER                    305
 #define IDS_EDIT_MENU                   306
 #define IDR_RIBBON                      307
+#define IDD_CPrototypeEditorDlg         310
 #define IDC_CAMERA_PANTILT              311
 #define IDC_TRANSLATE                   312
 #define IDC_ROTATE                      313
@@ -125,25 +127,31 @@
 #define IDC_ZOOM                        321
 #define IDR_TOOLBAR_3DTOOLS             322
 #define IDR_TOOLBAR_AXES                323
-#define ID_AXIS_X						324
-#define ID_AXIS_Y						325
-#define ID_AXIS_Z						326
-#define ID_AXIS_SCREENREL				327
-#define ID_TOOL_SELECT					328
-#define ID_TOOL_TRANSLATE				329
-#define ID_TOOL_ROTATE					330
-#define ID_TOOL_UNISCALE				331
-#define ID_TOOL_SCALE					332
-#define ID_TOOL_WAND					333
+#define ID_AXIS_X                       324
+#define ID_AXIS_Y                       325
+#define ID_AXIS_Z                       326
+#define ID_AXIS_SCREENREL               327
+#define ID_TOOL_SELECT                  328
+#define ID_TOOL_TRANSLATE               329
+#define ID_TOOL_ROTATE                  330
+#define ID_TOOL_UNISCALE                331
+#define ID_TOOL_SCALE                   332
+#define ID_TOOL_WAND                    333
+#define IDC_PROPERTIES                  1001
+#define IDC_LIST_COMPS                  1003
+#define IDC_COMBO_COMPS                 1004
+#define IDC_BUTTON_ADDCOMP              1006
+#define IDC_EDIT_NAME                   1007
+#define IDC_FLAGS                       1008
 #define ID_WRITE_PASTEASHYPERLINK       32770
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        324
+#define _APS_NEXT_RESOURCE_VALUE        326
 #define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1000
-#define _APS_NEXT_SYMED_VALUE           310
+#define _APS_NEXT_CONTROL_VALUE         1009
+#define _APS_NEXT_SYMED_VALUE           311
 #endif
 #endif

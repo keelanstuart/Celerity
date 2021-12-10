@@ -59,6 +59,9 @@ BEGIN_MESSAGE_MAP(C3Dlg, CDialog)
 	ON_WM_MOUSEMOVE()
 	ON_WM_KEYDOWN()
 	ON_WM_KEYUP()
+	ON_WM_CAPTURECHANGED()
+	ON_WM_ACTIVATEAPP()
+	ON_WM_ACTIVATE()
 END_MESSAGE_MAP()
 
 c3::FrameBuffer::TargetDesc GBufTargData[] =
@@ -82,6 +85,8 @@ c3::FrameBuffer::TargetDesc LCBufTargData[] =
 BOOL C3Dlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+
+	theApp.m_C3->SetOwner(GetSafeHwnd());
 
 	// At init, on windows
 	if (HMODULE mod = GetModuleHandle(_T("C:/Program Files/RenderDoc/renderdoc.dll")))
@@ -215,7 +220,7 @@ BOOL C3Dlg::OnInitDialog()
 	}
 #endif
 
-#if 1
+#if 0
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("AH64e"))))
 	{
 		c3::Object *pobj = m_Factory->Build(pproto);
@@ -284,6 +289,10 @@ BOOL C3Dlg::OnInitDialog()
 
 	SetTimer('DRAW', 5, NULL);
 
+	m_bMouseCursorEnabled = false;
+	SetCapture();
+	ShowCursor(FALSE);
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -342,6 +351,30 @@ void C3Dlg::OnPaint()
 
 		if (m_Rend->BeginScene(0))
 		{
+#if 0
+			for (size_t idp = 0; idp < 4; idp++)
+			{
+				//clear color buffer
+					//depth unit 0:
+
+				m_Rend->SetDepthMode((idp == 0) ? c3::Renderer::DepthMode::DM_WRITEONLY : c3::Renderer::DepthMode::DM_READWRITE);
+
+				bind depth buffer (i % 2)
+					disable depth writes /* read-only depth test */
+					set depth func to GREATER
+					depth unit 1:
+				bind depth buffer ((
+					i+1) % 2)
+					clear depth buffer
+					enable depth writes;
+				enable depth test;
+				set depth func to LESS
+					render scene
+					save color buffer RGBA as layer
+					i
+			}
+#endif
+
 			// Solid color pass
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 			m_Rend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
@@ -462,24 +495,24 @@ void C3Dlg::OnTimer(UINT_PTR nIDEvent)
 		{
 			glm::vec3 mv(0, 0, 0);
 
-#define MOVE_SPEED		(m_Run ? 2.5f : 0.5f)
+#define MOVE_SPEED		(m_fMovement.IsSet(MOVE_RUN) ? 2.5f : 0.5f)
 
-			if (m_MoveF)
+			if (m_fMovement.IsSet(MOVE_FORWARD))
 				mv += *(cam->GetFacingVector()) * MOVE_SPEED;
 
-			if (m_MoveB)
+			if (m_fMovement.IsSet(MOVE_BACKWARD))
 				mv -= *(cam->GetFacingVector()) * MOVE_SPEED;
 
-			if (m_MoveL)
+			if (m_fMovement.IsSet(MOVE_LEFT))
 				mv += *(cam->GetLocalLeftVector()) * MOVE_SPEED;
 
-			if (m_MoveR)
+			if (m_fMovement.IsSet(MOVE_RIGHT))
 				mv -= *(cam->GetLocalLeftVector()) * MOVE_SPEED;
 
-			if (m_MoveU)
+			if (m_fMovement.IsSet(MOVE_UP))
 				mv.z += MOVE_SPEED;
 
-			if (m_MoveD)
+			if (m_fMovement.IsSet(MOVE_DOWN))
 				mv.z -= MOVE_SPEED;
 
 			cam->AdjustPos(mv.x, mv.y, mv.z);
@@ -554,38 +587,43 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	CDialog::OnMouseMove(nFlags, point);
 
-	static CPoint lastpos(-1, -1);
+	if ((m_bMouseCursorEnabled) || (this != GetCapture()))
+		return;
+
+	CRect r;
+	GetClientRect(&r);
+
+	CPoint cp = r.CenterPoint(), cpc = cp;
+	ClientToScreen(&cp);
+
 	static float campitch = 0;
 	static float camyaw = 0;
 
-	int deltax = 0;
-	int deltay = 0;
+	int deltax = cpc.x - point.x;
+	int deltay = cpc.y - point.y;
 
-	if (lastpos.x > 0)
-		deltax = lastpos.x - point.x;
-	if (lastpos.y > 0)
-		deltay = lastpos.y - point.y;
+	SetCursorPos(cp.x, cp.y);
 
-	lastpos = point;
-
-	c3::Positionable *cam = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
-	if (cam)
+	c3::Positionable *pos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
+	c3::Camera *cam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
+	if (cam && pos)
 	{
 		campitch -= deltay;
 		camyaw += deltax;
 
-		//campitch = std::min(std::max(-88.0f, campitch), 88.0f);
+		campitch = std::min(std::max(-88.0f, campitch), 88.0f);
 
 		glm::quat q;
 		glm::vec3 posx(1, 0, 0);
 		q = glm::angleAxis(0.0f, posx);
-		cam->SetOriQuat(&q);
-		cam->Update(0);
-		cam->AdjustYaw(glm::radians(camyaw));
-		cam->Update(0);
-		cam->AdjustPitch(glm::radians(campitch));
+		pos->SetOriQuat(&q);
+		pos->Update(m_Camera);
+		pos->AdjustYaw(glm::radians(camyaw));
+		pos->Update(m_Camera);
+		pos->AdjustPitch(glm::radians(campitch));
+		pos->Update(m_Camera);
+		cam->Update(m_Camera);
 	}
-
 }
 
 
@@ -593,13 +631,13 @@ void C3Dlg::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	switch (nChar)
 	{
-		case VK_UP:		case 'W':	m_MoveF = true;	break;
-		case VK_LEFT:	case 'A':	m_MoveL = true;	break;
-		case VK_DOWN:	case 'S':	m_MoveB = true;	break;
-		case VK_RIGHT:	case 'D':	m_MoveR = true;	break;
-		case VK_SHIFT:				m_Run = true;	break;
-		case 'Q':					m_MoveU = true;	break;
-		case 'Z':					m_MoveD = true;	break;
+		case VK_UP:		case 'W':	m_fMovement.Set(MOVE_FORWARD);	break;
+		case VK_LEFT:	case 'A':	m_fMovement.Set(MOVE_LEFT);		break;
+		case VK_DOWN:	case 'S':	m_fMovement.Set(MOVE_BACKWARD);	break;
+		case VK_RIGHT:	case 'D':	m_fMovement.Set(MOVE_RIGHT);	break;
+		case 'Q':					m_fMovement.Set(MOVE_UP);		break;
+		case 'Z':					m_fMovement.Set(MOVE_DOWN);		break;
+		case VK_SHIFT:				m_fMovement.Set(MOVE_RUN);		break;
 	}
 
 	CDialog::OnKeyDown(nChar, nRepCnt, nFlags);
@@ -610,14 +648,80 @@ void C3Dlg::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	switch (nChar)
 	{
-		case VK_UP:		case 'W':	m_MoveF = false; break;
-		case VK_LEFT:	case 'A':	m_MoveL = false; break;
-		case VK_DOWN:	case 'S':	m_MoveB = false; break;
-		case VK_RIGHT:	case 'D':	m_MoveR = false; break;
-		case VK_SHIFT:				m_Run = false;	break;
-		case 'Q':					m_MoveU = false;	break;
-		case 'Z':					m_MoveD = false;	break;
+	case VK_UP:		case 'W':	m_fMovement.Clear(MOVE_FORWARD);	break;
+	case VK_LEFT:	case 'A':	m_fMovement.Clear(MOVE_LEFT);		break;
+	case VK_DOWN:	case 'S':	m_fMovement.Clear(MOVE_BACKWARD);	break;
+	case VK_RIGHT:	case 'D':	m_fMovement.Clear(MOVE_RIGHT);		break;
+	case 'Q':					m_fMovement.Clear(MOVE_UP);			break;
+	case 'Z':					m_fMovement.Clear(MOVE_DOWN);		break;
+	case VK_SHIFT:				m_fMovement.Clear(MOVE_RUN);		break;
 	}
 
 	CDialog::OnKeyUp(nChar, nRepCnt, nFlags);
+}
+
+
+void C3Dlg::OnOK()
+{
+	//__super::OnOK();
+}
+
+
+void C3Dlg::OnCancel()
+{
+	__super::OnCancel();
+}
+
+
+BOOL C3Dlg::PreTranslateMessage(MSG* pMsg)
+{
+	if ((pMsg->message == WM_KEYDOWN) && (pMsg->wParam == VK_ESCAPE))
+	{
+		SetMouseEnabled(!m_bMouseCursorEnabled);
+
+		return TRUE;
+	}
+
+	return CDialog::PreTranslateMessage(pMsg);
+}
+
+
+void C3Dlg::OnCaptureChanged(CWnd* pWnd)
+{
+	CDialog::OnCaptureChanged(pWnd);
+}
+
+
+void C3Dlg::OnActivateApp(BOOL bActive, DWORD dwThreadID)
+{
+	CDialog::OnActivateApp(bActive, dwThreadID);
+}
+
+
+void C3Dlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
+{
+	CDialog::OnActivate(nState, pWndOther, bMinimized);
+	if (nState != WA_INACTIVE)
+	{
+		//SetMouseEnabled(m_bMouseCursorEnabled);
+	}
+}
+
+void C3Dlg::SetMouseEnabled(bool b)
+{
+	m_bMouseCursorEnabled = b;
+
+	if (this != GetFocus())
+		return;
+
+	if (m_bMouseCursorEnabled && (this == GetCapture()))
+		ReleaseCapture();
+	else if (this != GetCapture())
+		SetCapture();
+
+	CURSORINFO ci = { 0 };
+	ci.cbSize = sizeof(CURSORINFO);
+	GetCursorInfo(&ci);
+	if (m_bMouseCursorEnabled != ((ci.flags & CURSOR_SHOWING) ? true : false))
+		ShowCursor(m_bMouseCursorEnabled ? TRUE : FALSE);
 }

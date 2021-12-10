@@ -14,7 +14,10 @@
 #define PCH_H
 
 // add headers that you want to pre-compile here
-#include "framework.h"
+#define WINVER 0x0A00
+#define _WIN32_WINNT 0x0A00
+
+#include <Windows.h>
 
 #include <tchar.h>
 
@@ -26,6 +29,7 @@
 #include <algorithm>
 #include <mutex>
 #include <unordered_map>
+
 
 //#define GLLIBGEN_LOGCALLS
 

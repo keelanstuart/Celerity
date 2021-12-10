@@ -36,15 +36,25 @@ void __cdecl ActivatePlugin(LPVOID param0, LPVOID param1, size_t task_number)
 }
 
 
-PluginManager::RETURNCODE PluginManagerImpl::DiscoverPlugins(const TCHAR *filespec, bool auto_activate, size_t *numfound)
+PluginManager::RETURNCODE PluginManagerImpl::DiscoverPlugins(const TCHAR *path, const TCHAR *filespec, bool auto_activate, size_t *numfound)
 {
 	if (!filespec)
 		return RETURNCODE::RET_BADFILESPEC;
 
 	size_t ret = 0;
 
-	TCHAR _filespec[MAX_PATH];
-	_tcsncpy_s(_filespec, MAX_PATH, filespec, MAX_PATH - 1);
+	TCHAR _filespec[MAX_PATH] = { 0 };
+
+	if (path)
+		_tcsncpy_s(_filespec, MAX_PATH, path, MAX_PATH - 1);
+	size_t fslen = _tcslen(_filespec);
+	if (fslen)
+	{
+		fslen--;
+		if ((_filespec[fslen] != _T('\\')) && (_filespec[fslen] != _T('/')))
+			_tcsncat_s(_filespec, MAX_PATH, _T("/"), MAX_PATH - 1);
+	}
+	_tcsncat_s(_filespec, MAX_PATH, filespec, MAX_PATH - 1);
 
 	TCHAR *c = _filespec;
 	while (*c)

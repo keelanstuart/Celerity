@@ -22,6 +22,8 @@ namespace c3
 	public:
 		static System *Create(props::TFlags64 flags);
 
+		virtual void SetOwner(HWND owner) = NULL;
+
 		virtual void Release() = NULL;
 
 		virtual ResourceManager *GetResourceManager() = NULL;

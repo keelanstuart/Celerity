@@ -19,21 +19,19 @@
 #define C3_API __declspec(dllimport)
 #endif
 
-#if defined(_WIN32) || defined(_WIN64)
-#include <Windows.h>
-#endif
-
 #include <stdint.h>
 
-#include <PowerProps.h>
-#include <Pool.h>
+#include <C3TString.h>
+
+#include <PowerProps.h>		// https://github.com/keelanstuart/PowerProps	==> third-party/PowerProps/Include
+#include <Pool.h>			// https://github.com/keelanstuart/Pool			==> third-party/Pool/Include
 
 // GLM init
 #define GLM_FORCE_CTOR_INIT
 #define GLM_ENABLE_EXPERIMENTAL
 
-#include <glm/glm.hpp>
-#include <glm/ext.hpp>
+#include <glm/glm.hpp>		// https://github.com/g-truc/glm				==> third-party/glm
+#include <glm/ext.hpp>		// https://github.com/g-truc/glm				==> third-party/glm
 
 #include <C3MatrixStack.h>
 #include <C3Frustum.h>

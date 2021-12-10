@@ -81,6 +81,9 @@
     <ClInclude Include="renderdoc_app.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PrototypeEditorDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Celedit3.cpp">
@@ -135,6 +138,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="wtfvslistbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PrototypeEditorDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -298,6 +304,12 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="res\Toolbar256.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\toolbar_3dtools_hc.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="res\toolbar_axes.bmp">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

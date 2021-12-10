@@ -17,6 +17,7 @@ namespace c3
 	protected:
 		System *m_pSys;
 		tstring m_Name;
+		tstring m_Group;
 		GUID m_GUID;
 
 		props::TFlags64 m_Flags;
@@ -37,6 +38,10 @@ namespace c3
 		virtual void SetName(const TCHAR *name);
 
 		virtual GUID GetGUID();
+
+		virtual const TCHAR *GetGroup();
+
+		virtual void SetGroup(const TCHAR *group);
 
 		virtual props::TFlags64 &Flags();
 

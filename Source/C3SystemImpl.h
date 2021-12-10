@@ -43,6 +43,8 @@ namespace c3
 
 		virtual ~SystemImpl();
 
+		virtual void SetOwner(HWND owner);
+
 		virtual void Release();
 
 		virtual ResourceManager *GetResourceManager();

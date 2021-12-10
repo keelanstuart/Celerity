@@ -217,7 +217,6 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Seal()
 		m_Rend->gl.DrawBuffers((GLsizei)m_ColorTarget.size(), targenum);
 		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 
-		m_Rend->GetSystem()->GetLog()->Print(_T("FrameBuffer::Seal - "));
 		GLenum status = (GLenum) m_Rend->gl.CheckFramebufferStatus(GL_FRAMEBUFFER);
 		switch(status)
 		{
