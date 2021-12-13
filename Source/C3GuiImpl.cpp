@@ -25,10 +25,6 @@ GuiImpl::GuiImpl(Renderer *prend)
 	m_VB = nullptr;
 	m_IB = nullptr;
 
-	// Uniforms location
-	m_UL_Tex = -1;
-	m_UL_ProjMat = -1;
-
 	if (!m_pRend->Initialized())
 	{
 		m_pRend->GetSystem()->GetLog()->Print(_T("Gui Error: You must Initialize your Renderer before calling GetGui\n"));
@@ -51,8 +47,6 @@ GuiImpl::GuiImpl(Renderer *prend)
 	m_Prog->AttachShader(m_VS);
 	m_Prog->AttachShader(m_FS);
 	m_Prog->Link();
-
-	m_UL_ProjMat = m_Prog->GetUniformLocation(_T("uMatrixP"));
 
 	// Create buffers
 	m_VB = m_pRend->CreateVertexBuffer();
@@ -139,8 +133,7 @@ void GuiImpl::SetupRenderState(ImDrawData *draw_data, int fb_width, int fb_heigh
 	};
 
 	m_pRend->UseProgram(m_Prog);
-	//m_Prog->UpdateGlobalUniforms();
-	m_Prog->SetUniformMatrix(m_UL_ProjMat, &ortho_projection);
+	m_pRend->SetProjectionMatrix(&ortho_projection);
 	m_Prog->SetUniformTexture(m_FontTex);
 	m_Prog->ApplyUniforms();
 
@@ -162,10 +155,8 @@ void GuiImpl::Render()
 	// Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
 	int fb_width = (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
 	int fb_height = (int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
-	if (fb_width <= 0 || fb_height <= 0)
+	if ((fb_width <= 0) || (fb_height <= 0))
 		return;
-
-	SetupRenderState(draw_data, fb_width, fb_height);
 
 	// Will project scissor/clipping rectangles into framebuffer space
 	ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
@@ -184,20 +175,26 @@ void GuiImpl::Render()
 	{
 		const ImDrawList *cmd_list = draw_data->CmdLists[n];
 
+		if (!cmd_list->VtxBuffer.Size || !cmd_list->IdxBuffer.Size)
+			continue;
+
 		// Upload vertex/index buffers
-		m_VB->Lock((void **)&(cmd_list->VtxBuffer.Data), cmd_list->VtxBuffer.Size, comps, VBLOCKFLAG_DYNAMIC | VBLOCKFLAG_UPDATENOW | VBLOCKFLAG_USERBUFFER);
-		m_IB->Lock((void **)&(cmd_list->IdxBuffer.Data), cmd_list->IdxBuffer.Size, c3::IndexBuffer::IS_16BIT, IBLOCKFLAG_DYNAMIC | IBLOCKFLAG_UPDATENOW | IBLOCKFLAG_USERBUFFER);
+		if (c3::VertexBuffer::RETURNCODE::RET_OK == m_VB->Lock((void **)&(cmd_list->VtxBuffer.Data), cmd_list->VtxBuffer.Size, comps, VBLOCKFLAG_DYNAMIC | VBLOCKFLAG_UPDATENOW | VBLOCKFLAG_USERBUFFER | VBLOCKFLAG_WRITE))
+			m_VB->Unlock();
+
+		if (c3::IndexBuffer::RETURNCODE::RET_OK == m_IB->Lock((void **)&(cmd_list->IdxBuffer.Data), cmd_list->IdxBuffer.Size, c3::IndexBuffer::IS_16BIT, IBLOCKFLAG_DYNAMIC | IBLOCKFLAG_UPDATENOW | IBLOCKFLAG_USERBUFFER | VBLOCKFLAG_WRITE))
+			m_IB->Unlock();
 
 		for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
 		{
+			SetupRenderState(draw_data, fb_width, fb_height);
+
 			const ImDrawCmd *pcmd = &cmd_list->CmdBuffer[cmd_i];
 			if (pcmd->UserCallback != NULL)
 			{
 				// User callback, registered via ImDrawList::AddCallback()
 				// (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
-				if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
-					SetupRenderState(draw_data, fb_width, fb_height);
-				else
+				if (pcmd->UserCallback != ImDrawCallback_ResetRenderState)
 					pcmd->UserCallback(cmd_list, pcmd);
 			}
 			else

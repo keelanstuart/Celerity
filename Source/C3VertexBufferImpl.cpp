@@ -18,10 +18,11 @@ VertexBufferImpl::VertexBufferImpl(RendererImpl *prend)
 	m_Buffer = nullptr;
 	m_NumVerts = 0;
 	m_VertSize = 0;
-	m_VAOglID = GL_INVALID_VALUE;
-	m_VBglID = GL_INVALID_VALUE;
+	m_VAOglID = NULL;
+	m_VBglID = NULL;
 	m_Components.reserve(5);
 	m_Cache = nullptr;
+	m_NeedsConfig = true;
 }
 
 
@@ -41,14 +42,14 @@ VertexBufferImpl::~VertexBufferImpl()
 
 	if (m_Rend)
 	{
-		if (m_VBglID != GL_INVALID_VALUE)
+		if (m_VBglID != NULL)
 		{
 			m_Rend->UseVertexBuffer(nullptr);
 			m_Rend->gl.DeleteBuffers(1, &m_VBglID);
-			m_VBglID = GL_INVALID_VALUE;
+			m_VBglID = NULL;
 		}
 
-		if (m_VAOglID != GL_INVALID_VALUE)
+		if (m_VAOglID != NULL)
 		{
 			// Delete the global vertex array
 			m_Rend->gl.BindVertexArray(0);
@@ -63,6 +64,22 @@ void VertexBufferImpl::Release()
 	delete this;
 }
 
+bool IdenticalComponents(const VertexBuffer::ComponentDescription* c, const VertexBufferImpl::TVertexComponentDescriptionArray& tc)
+{
+	if (c && tc.empty())
+		return false;
+
+	size_t i = 0;
+	const VertexBuffer::ComponentDescription* cc = tc.data();
+	while (c && (c->m_Type != VertexBuffer::ComponentDescription::VCT_NONE) && (i < tc.size()))
+	{
+		if (memcmp(c, cc, sizeof(VertexBuffer::ComponentDescription)))
+			return false;
+		i++;
+	}
+
+	return (i == tc.size());
+}
 
 VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, const ComponentDescription *components, props::TFlags64 flags)
 {
@@ -72,26 +89,35 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 	if (!buffer)
 		return RET_NULL_BUFFER;
 
-	size_t sz = 0;
+	size_t sz = m_VertSize;
 
 	if (flags.IsSet(VBLOCKFLAG_WRITE))
 	{
+		if (!components)
+			return RET_NULL_VERTEX_DESCRIPTION;
+
 		if (!numverts)
 			return RET_ZERO_ELEMENTS;
 
-		m_Components.clear();
-
-		const ComponentDescription *c = components;
-		size_t cc = 0;
-		while (c && (c->m_Type != VertexBuffer::ComponentDescription::VCT_NONE) && (c->m_Count > 0))
+		if (!IdenticalComponents(components, m_Components))
 		{
-			m_Components.push_back(*c);
-			sz += c->size();
-			c++;
-		}
+			sz = 0;
+			m_Components.clear();
 
-		if (!sz)
-			return RET_BAD_VERTEX_DESCRIPTION;
+			const ComponentDescription *c = components;
+			size_t cc = 0;
+			while (c && (c->m_Type != VertexBuffer::ComponentDescription::VCT_NONE) && (c->m_Count > 0))
+			{
+				m_Components.push_back(*c);
+				sz += c->size();
+				c++;
+			}
+
+			if (!sz)
+				return RET_BAD_VERTEX_DESCRIPTION;
+
+			m_NeedsConfig = true;
+		}
 	}
 
 	if (flags.IsSet(VBLOCKFLAG_CACHE))
@@ -122,28 +148,28 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 		}
 	}
 
-	if (m_VBglID == GL_INVALID_VALUE)
+	if (m_VAOglID == NULL)
 	{
 		m_Rend->gl.GenVertexArrays(1, &m_VAOglID);
-		m_Rend->gl.BindVertexArray(m_VAOglID);
 	}
-
-	bool init = false;
-	if (m_VBglID == GL_INVALID_VALUE)
-	{
-		m_Rend->gl.GenBuffers(1, &m_VBglID);
-		init = true;
-	}
-
-	if (m_VBglID == GL_INVALID_VALUE)
-		return RET_GENBUFFER_FAILED;
 
 	bool update_now = flags.IsSet(VBLOCKFLAG_UPDATENOW);
 	bool user_buffer = flags.IsSet(VBLOCKFLAG_USERBUFFER);
 	if (update_now && !user_buffer)
 		return RET_UPDATENOW_NEEDS_USERBUFFER;
 
-	GLint mode;
+	bool init = false;
+
+	if (m_VBglID == NULL)
+	{
+		m_Rend->gl.GenBuffers(1, &m_VBglID);
+		init = true;
+	}
+
+	if (m_VBglID == NULL)
+		return RET_GENBUFFER_FAILED;
+
+	GLint mode = 0;
 	if (flags.IsSet(VBLOCKFLAG_READ | VBLOCKFLAG_WRITE))
 		mode = GL_READ_WRITE;
 	else if (flags.IsSet(VBLOCKFLAG_READ))
@@ -240,9 +266,11 @@ void VertexBufferImpl::ConfigureAttributes()
 		bool is_byte = (pcd->m_Type >= VertexBuffer::ComponentDescription::VCT_U8) && (pcd->m_Type <= VertexBuffer::ComponentDescription::VCT_S8);
 		GLuint norm = (is_color && is_byte);
 
-		m_Rend->gl.EnableVertexAttribArray((GLuint)i);
 		m_Rend->gl.VertexAttribPointer((GLuint)i, (GLint)pcd->m_Count, t[pcd->m_Type], norm, (GLsizei)vsz, (void *)vo);
+		m_Rend->gl.EnableVertexAttribArray((GLuint)i);
 
 		vo += pcd->size();
 	}
+
+	m_NeedsConfig = false;
 }

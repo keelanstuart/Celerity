@@ -65,16 +65,16 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_StencilZPassOp = StencilOperation::SO_KEEP;
 
 	m_CurFB = nullptr;
-	m_CurFBID = 0;
+	m_CurFBID = NULL;
 
 	m_CurIB = nullptr;
-	m_CurIBID = 0;
+	m_CurIBID = NULL;
 
 	m_CurVB = nullptr;
-	m_CurVBID = 0;
+	m_CurVBID = NULL;
 
 	m_CurProg = nullptr;
-	m_CurProgID = 0;
+	m_CurProgID = NULL;
 
 	m_CubeVB = nullptr;
 	m_BoundsMesh = nullptr;
@@ -355,7 +355,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	GetBlueTexture();
 	GetGridTexture();
 
-	m_Gui = nullptr;//new GuiImpl(this);
+	m_Gui = new GuiImpl(this);
 
 	SetViewport();
 
@@ -412,15 +412,15 @@ void RendererImpl::Shutdown()
 	if (!m_Initialized)
 		return;
 
-	m_pSys->GetResourceManager()->ForAllResourcesDo(UnloadRenderResource, nullptr, RTFLAG_RUNBYRENDERER, ResourceManager::ResTypeFlagMode::RTFM_ANY);
-
-	SetEvent(m_event_shutdown);
-
 	if (m_Gui)
 	{
 		delete m_Gui;
 		m_Gui = nullptr;
 	}
+
+	m_pSys->GetResourceManager()->ForAllResourcesDo(UnloadRenderResource, nullptr, RTFLAG_RUNBYRENDERER, ResourceManager::ResTypeFlagMode::RTFM_ANY);
+
+	SetEvent(m_event_shutdown);
 
 	if (m_BlackTex)
 	{
@@ -622,7 +622,14 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 	m_TaskPool->Flush();
 
 	if (m_Gui)
+	{
 		m_Gui->BeginFrame();
+
+		int32_t mx, my;
+		m_pSys->GetMousePos(mx, my);
+		ImGui::GetIO().MousePos = glm::fvec2(float(mx), float(my));
+		//ImGui::GetIO().MouseClicked
+	}
 
 	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL))
 		gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) |
@@ -1336,16 +1343,9 @@ void RendererImpl::UseProgram(ShaderProgram *pprog)
 	if (pprog == m_CurProg)
 		return;
 
+	GLuint glid = pprog ? (GLuint)(c3::ShaderProgramImpl &)*pprog : NULL;
+
 	m_CurProg = pprog;
-	GLuint glid = m_CurProg ? (GLuint)(c3::ShaderProgramImpl &)*pprog : 0;
-	if (glid == GL_INVALID_VALUE)
-		glid = 0;
-
-	if (glid == m_CurProgID)
-		return;
-
-	//m_Config = true;
-
 	m_CurProgID = glid;
 
 	gl.UseProgram(m_CurProgID);
@@ -1363,17 +1363,15 @@ void RendererImpl::UseVertexBuffer(VertexBuffer *pvbuf)
 	if (pvbuf == m_CurVB)
 		return;
 
+	GLuint glid_vb = pvbuf ? ((VertexBufferImpl *)pvbuf)->VBglID() : NULL;
+	GLuint glid_vao = pvbuf ? ((VertexBufferImpl *)pvbuf)->VAOglID() : NULL;
+
 	m_CurVB = pvbuf;
-	GLuint glid_vb = m_CurVB ? ((VertexBufferImpl *)pvbuf)->VBglID() : 0;
-	GLuint glid_vao = m_CurVB ? ((VertexBufferImpl *)pvbuf)->VAOglID() : 0;
-
-	if ((glid_vb == m_CurVBID) || (glid_vb == GL_INVALID_VALUE))
-		return;
-
 	m_CurVBID = glid_vb;
+	m_VAOglID = glid_vao;
 
-	gl.BindBuffer(GL_ARRAY_BUFFER, glid_vb);
-	gl.BindVertexArray(glid_vao);
+	gl.BindBuffer(GL_ARRAY_BUFFER, m_CurVBID);
+	gl.BindVertexArray(m_VAOglID);
 }
 
 
@@ -1382,14 +1380,9 @@ void RendererImpl::UseIndexBuffer(IndexBuffer *pibuf)
 	if (pibuf == m_CurIB)
 		return;
 
+	GLuint glid = pibuf ? ((c3::IndexBufferImpl *)pibuf)->IBglID() : NULL;
+
 	m_CurIB = pibuf;
-	GLuint glid = m_CurIB ? (GLuint)(c3::IndexBufferImpl &)*pibuf : 0;
-	if (glid == GL_INVALID_VALUE)
-		glid = 0;
-
-	if (glid == m_CurIBID)
-		return;
-
 	m_CurIBID = glid;
 
 	gl.BindBuffer(GL_ELEMENT_ARRAY_BUFFER, glid);
@@ -1416,7 +1409,7 @@ void RendererImpl::UseTexture(uint64_t sampler, Texture *ptex)
 
 	Texture *luptex = ptex ? ptex : ptexcache[sampler];
 
-	GLuint glid = GL_INVALID_VALUE;
+	GLuint glid = NULL;
 	GLenum textype;
 
 	c3::Texture2DImpl *tex2d = dynamic_cast<c3::Texture2DImpl *>(luptex);
@@ -1475,29 +1468,27 @@ bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
 
 bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t count)
 {
-	if (m_CurIBID && m_CurVBID)
+	if ((m_CurIBID == NULL) || (m_CurVBID == NULL))
+		return false;
+
+	if (count == -1)
+		count = m_CurIB->Count();
+
+	size_t idxs = m_CurIB->GetIndexSize();
+	if (!idxs)
+		return false;
+
+	GLuint glidxs;
+	switch (idxs)
 	{
-		if (count == -1)
-			count = m_CurIB->Count();
-
-		size_t idxs = m_CurIB->GetIndexSize();
-		if (!idxs)
-			return false;
-
-		GLuint glidxs;
-		switch (idxs)
-		{
-			case IndexBuffer::IndexSize::IS_8BIT: glidxs = GL_UNSIGNED_BYTE; break;
-			case IndexBuffer::IndexSize::IS_16BIT: glidxs = GL_UNSIGNED_SHORT; break;
-			case IndexBuffer::IndexSize::IS_32BIT: glidxs = GL_UNSIGNED_INT; break;
-		}
-
-		gl.DrawElements(typelu[type], (GLsizei)count, glidxs, NULL);
-
-		return true;
+		case IndexBuffer::IndexSize::IS_8BIT: glidxs = GL_UNSIGNED_BYTE; break;
+		case IndexBuffer::IndexSize::IS_16BIT: glidxs = GL_UNSIGNED_SHORT; break;
+		case IndexBuffer::IndexSize::IS_32BIT: glidxs = GL_UNSIGNED_INT; break;
 	}
 
-	return false;
+	gl.DrawElements(typelu[type], (GLsizei)count, glidxs, NULL);
+
+	return true;
 }
 
 

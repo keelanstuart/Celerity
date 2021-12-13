@@ -219,9 +219,24 @@ Configuration *SystemImpl::CreateConfiguration(const TCHAR *filename)
 	return ret;
 }
 
+
 Log *SystemImpl::GetLog()
 {
 	return m_Log;
+}
+
+
+void SystemImpl::SetMousePos(int32_t x, int32_t y)
+{
+	m_MousePos.x = x;
+	m_MousePos.y = y;
+}
+
+
+void SystemImpl::GetMousePos(int32_t& x, int32_t& y)
+{
+	x = m_MousePos.x;
+	y = m_MousePos.y;
 }
 
 

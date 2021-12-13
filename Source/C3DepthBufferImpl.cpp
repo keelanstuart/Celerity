@@ -18,7 +18,7 @@ DepthBufferImpl::DepthBufferImpl(RendererImpl* prend, size_t width, size_t heigh
 	m_Type = type;
 	m_Width = width;
 	m_Height = height;
-	m_glID = GL_INVALID_VALUE;
+	m_glID = NULL;
 
 	if (m_Rend)
 	{
@@ -69,10 +69,10 @@ DepthBufferImpl::DepthBufferImpl(RendererImpl* prend, size_t width, size_t heigh
 
 DepthBufferImpl::~DepthBufferImpl()
 {
-	if (m_Rend && (m_glID != GL_INVALID_VALUE))
+	if (m_Rend && (m_glID != NULL))
 	{
 		m_Rend->gl.DeleteBuffers(1, &m_glID);
-		m_glID = GL_INVALID_VALUE;
+		m_glID = NULL;
 	}
 }
 

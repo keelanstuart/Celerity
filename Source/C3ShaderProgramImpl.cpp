@@ -19,7 +19,7 @@ using namespace c3;
 ShaderProgramImpl::ShaderProgramImpl(RendererImpl *prend)
 {
 	m_Rend = prend;
-	m_glID = GL_INVALID_VALUE;
+	m_glID = NULL;
 	m_Linked = false;
 	memset(m_Comp, 0, sizeof(ShaderComponentImpl *) * Renderer::ShaderComponentType::ST_NUMTYPES);
 	m_Uniforms = props::IPropertySet::CreatePropertySet();
@@ -30,7 +30,7 @@ ShaderProgramImpl::~ShaderProgramImpl()
 {
 	m_Uniforms->Release();
 
-	if (m_Rend && (m_glID != GL_INVALID_VALUE))
+	if (m_Rend && (m_glID != NULL))
 	{
 		for (UINT i = (Renderer::ShaderComponentType::ST_NONE + 1), maxi = Renderer::ShaderComponentType::ST_NUMTYPES; i < maxi; i++)
 		{
@@ -42,7 +42,7 @@ ShaderProgramImpl::~ShaderProgramImpl()
 		}
 
 		m_Rend->gl.DeleteProgram(m_glID);
-		m_glID = GL_INVALID_VALUE;
+		m_glID = NULL;
 	}
 }
 
@@ -62,10 +62,10 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::AttachShader(ShaderComponent *pshad
 	if ((shtype < 0) || (shtype >= c3::Renderer::ShaderComponentType::ST_NUMTYPES))
 		return ShaderProgram::RETURNCODE::RET_BAD_TYPE;
 
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 		m_glID = m_Rend->gl.CreateProgram();
 
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 		return ShaderProgram::RETURNCODE::RET_CREATE_FAILED;
 
 	if (m_Comp[shtype])
@@ -84,7 +84,7 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::AttachShader(ShaderComponent *pshad
 
 ShaderProgram::RETURNCODE ShaderProgramImpl::Link()
 {
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 		return ShaderProgram::RETURNCODE::RET_CREATE_FAILED;
 
 	m_Rend->gl.LinkProgram(m_glID);

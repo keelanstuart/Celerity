@@ -7,6 +7,7 @@
 #include "C3App.h"
 #include "C3Dlg.h"
 #include "afxdialogex.h"
+#include <C3Gui.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -129,6 +130,8 @@ BOOL C3Dlg::OnInitDialog()
 		exit(-2);
 	}
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
+
+	//m_Rend->GetGui()->SetWindowFocus();
 
 	// To start a frame capture, call StartFrameCapture.
 	// You can specify NULL, NULL for the device to capture on if you have only one device and
@@ -588,7 +591,14 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 	CDialog::OnMouseMove(nFlags, point);
 
 	if ((m_bMouseCursorEnabled) || (this != GetCapture()))
+	{
+		theApp.m_C3->SetMousePos(point.x, point.y);
+		//m_Rend->GetGui()->SetCursorScreenPos(glm::fvec2(point.x, point.y));
+		//m_Rend->GetGui()->SetMouseCursor(c3::Gui::MouseCursor::MCUR_ARROW);
 		return;
+	}
+
+	theApp.m_C3->SetMousePos(point.x, point.y);
 
 	CRect r;
 	GetClientRect(&r);

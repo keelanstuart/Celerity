@@ -26,10 +26,6 @@ namespace c3
 		VertexBuffer *m_VB;// g_imgui_vbptr;
 		IndexBuffer *m_IB;// g_imgui_ibptr;
 
-		// Uniforms location
-		int32_t m_UL_Tex;// g_AttribLocationTex;
-		int32_t m_UL_ProjMat;// g_AttribLocationProjMtx;
-
 		tstring m_ClipboardText;
 
 		void SetupRenderState(ImDrawData *draw_data, int fb_width, int fb_height);

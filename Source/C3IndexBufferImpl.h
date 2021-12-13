@@ -39,6 +39,7 @@ namespace c3
 		virtual size_t GetIndexSize();
 
 		operator GLuint() const { return m_glID; }
+		GLuint IBglID() const { return m_glID; }
 
 	};
 

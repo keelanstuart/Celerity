@@ -30,7 +30,7 @@ const GLuint FrameBufferImpl::targenum[MAX_COLORTARGETS] =
 FrameBufferImpl::FrameBufferImpl(RendererImpl* prend)
 {
 	m_Rend = prend;
-	m_glID = GL_INVALID_VALUE;
+	m_glID = NULL;
 	m_DepthTarget = nullptr;
 	m_BlendMode = Renderer::BlendMode::BM_NUMMODES;
 
@@ -52,10 +52,10 @@ FrameBufferImpl::FrameBufferImpl(RendererImpl* prend)
 
 FrameBufferImpl::~FrameBufferImpl()
 {
-	if (m_Rend && (m_glID != GL_INVALID_VALUE))
+	if (m_Rend && (m_glID != NULL))
 	{
 		m_Rend->gl.DeleteFramebuffers(1, &m_glID);
-		m_glID = GL_INVALID_VALUE;
+		m_glID = NULL;
 	}
 }
 
@@ -127,7 +127,7 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Setup(size_t numtargs, const TargetDesc
 
 FrameBuffer::RETURNCODE FrameBufferImpl::AttachColorTarget(Texture2D *target, size_t position)
 {
-	if (m_Rend && (m_glID != GL_INVALID_VALUE))
+	if (m_Rend && (m_glID != NULL))
 	{
 		m_Rend->UseFrameBuffer(this, 0);
 

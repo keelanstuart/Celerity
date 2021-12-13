@@ -41,17 +41,17 @@ ShaderComponentImpl::ShaderComponentImpl(RendererImpl *prend, Renderer::ShaderCo
 			break;
 	}
 
-	m_glID = GL_INVALID_VALUE;
+	m_glID = NULL;
 	m_Compiled = false;
 }
 
 
 ShaderComponentImpl::~ShaderComponentImpl()
 {
-	if (m_Rend && (m_glID != GL_INVALID_VALUE))
+	if (m_Rend && (m_glID != NULL))
 	{
 		m_Rend->gl.DeleteShader(m_glID);
-		m_glID = GL_INVALID_VALUE;
+		m_glID = NULL;
 	}
 }
 
@@ -73,10 +73,10 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 	if (!program)
 		return ShaderComponent::RETURNCODE::RET_NULL_PROGRAM;
 
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 		m_glID = m_Rend->gl.CreateShader(m_glType);
 
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 		return ShaderComponent::RETURNCODE::RET_CREATE_FAILED;
 
 	m_ProgramText = program;

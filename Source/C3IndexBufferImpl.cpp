@@ -18,7 +18,7 @@ IndexBufferImpl::IndexBufferImpl(RendererImpl *prend)
 	m_Buffer = NULL;
 	m_NumIndices = 0;
 	m_IndexSize = IS_16BIT;
-	m_glID = GL_INVALID_VALUE;
+	m_glID = NULL;
 	m_LastBoundBuffer = 0;
 	m_Cache = nullptr;
 }
@@ -38,7 +38,7 @@ IndexBufferImpl::~IndexBufferImpl()
 	m_NumIndices = 0;
 	m_IndexSize = IS_16BIT;
 
-	if (m_Rend && (m_glID != GL_INVALID_VALUE))
+	if (m_Rend && (m_glID != NULL))
 	{
 		m_Rend->UseIndexBuffer(nullptr);
 		m_Rend->gl.DeleteBuffers(1, &m_glID);
@@ -93,13 +93,13 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, 
 	}
 
 	bool init = false;
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 	{
 		m_Rend->gl.GenBuffers(1, &m_glID);
 		init = true;
 	}
 
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 		return RET_GENBUFFER_FAILED;
 
 	bool update_now = flags.IsSet(IBLOCKFLAG_UPDATENOW);

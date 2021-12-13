@@ -8,7 +8,7 @@
 <powerprops:property id="BOOT" type="BOOLEAN">no</powerprops:property>
 <powerprops:property id="CBSZ" type="ENUM">Default,Smallest,Smaller,Small,Normal,Large,Larger,Largest:0</powerprops:property>
 <powerprops:property id="CPTN" type="STRING">Celerity3 Demo Setup</powerprops:property>
-<powerprops:property id="DDST" type="STRING">%USERPROFILE%\Desktop\Celerity3 Demo (Sep21)</powerprops:property>
+<powerprops:property id="DDST" type="STRING">%USERPROFILE%\Desktop\Celerity3 Demo (Dec21)</powerprops:property>
 <powerprops:property id="ENEX" type="BOOLEAN">yes</powerprops:property>
 <powerprops:property id="ICON" type="STRING"></powerprops:property>
 <powerprops:property id="IMAG" type="STRING"></powerprops:property>
@@ -20,7 +20,7 @@
 <powerprops:property id="OUTP" type="STRING">Celerity3DemoSetup.exe</powerprops:property>
 <powerprops:property id="VCPY" type="STRING">Copyright (c) 2001-2021, Keelan Stuart</powerprops:property>
 <powerprops:property id="VDSC" type="STRING"></powerprops:property>
-<powerprops:property id="VERS" type="STRING">September 2021</powerprops:property>
+<powerprops:property id="VERS" type="STRING">December 2021 (b)</powerprops:property>
 <powerprops:property id="VPRD" type="STRING"></powerprops:property>
 <powerprops:property id="WLCM" type="STRING">Installs a Celerity3 tech demo. Huzzah!</powerprops:property>
 </powerprops:property_set>
@@ -33,7 +33,7 @@
 
 <powerprops:property_set>
 <powerprops:property id="DSTP" type="STRING">\assets</powerprops:property>
-<powerprops:property id="EXCL" type="STRING"></powerprops:property>
+<powerprops:property id="EXCL" type="STRING">*.fbx;*.tga</powerprops:property>
 <powerprops:property id="NAME" type="STRING">*</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>

@@ -42,6 +42,9 @@ namespace c3
 
 		virtual Log *GetLog() = NULL;
 
+		virtual void SetMousePos(int32_t x, int32_t y) = NULL;
+
+		virtual void GetMousePos(int32_t &x, int32_t &y) = NULL;
 
 		virtual size_t GetCurrentFrameNumber() = NULL;
 

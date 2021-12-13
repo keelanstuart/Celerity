@@ -36,7 +36,7 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 	m_MipCount = flags.IsSet(TEXCREATEFLAG_RENDERTARGET) ? 1 : mipcount;
 	m_Type = type;
 	m_Buffer = nullptr;
-	m_glID = GL_INVALID_VALUE;
+	m_glID = NULL;
 	m_LockMip = 0;
 	m_Flags = 0;
 
@@ -83,7 +83,7 @@ Texture2DImpl::~Texture2DImpl()
 		m_Buffer = nullptr;
 	}
 
-	if (m_glID != GL_INVALID_VALUE)
+	if (m_glID != NULL)
 	{
 		m_Rend->gl.DeleteTextures(1, &m_glID);
 	}
@@ -136,7 +136,7 @@ void Texture2DImpl::Bind()
 {
 	assert(m_Rend);
 
-	if (m_glID != GL_INVALID_VALUE)
+	if (m_glID != NULL)
 	{
 		m_Rend->gl.BindTexture(GL_TEXTURE_2D, m_glID);
 	}
@@ -162,12 +162,12 @@ Texture::RETURNCODE Texture2DImpl::Lock(void **buffer, Texture2D::SLockInfo &loc
 		return RET_NULL_BUFFER;
 
 	bool init = false;
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 	{
 		m_Rend->gl.CreateTextures(GL_TEXTURE_2D, 1, &m_glID);
 
 		// if we can't get a gl 4.5 context, then we may have to use gen instead of create
-		if (m_glID == GL_INVALID_VALUE)
+		if (m_glID == NULL)
 		{
 			m_Rend->gl.GenTextures(1, &m_glID);
 		}
@@ -175,7 +175,7 @@ Texture::RETURNCODE Texture2DImpl::Lock(void **buffer, Texture2D::SLockInfo &loc
 		init = true;
 	}
 
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 		return RET_GENBUFFER_FAILED;
 
 	bool update_now = flags.IsSet(TEXLOCKFLAG_UPDATENOW);
@@ -325,7 +325,7 @@ TextureCubeImpl::TextureCubeImpl(RendererImpl *prend, size_t width, size_t heigh
 	m_MipCount = mipcount;
 	m_Type = type;
 	m_Buffer = nullptr;
-	m_glID = GL_INVALID_VALUE;
+	m_glID = NULL;
 	m_LockMip = 0;
 	m_Flags = 0;
 }
@@ -341,7 +341,7 @@ TextureCubeImpl::~TextureCubeImpl()
 		m_Buffer = nullptr;
 	}
 
-	if (m_glID != GL_INVALID_VALUE)
+	if (m_glID != NULL)
 	{
 		m_Rend->gl.DeleteTextures(1, &m_glID);
 	}
@@ -400,7 +400,7 @@ void TextureCubeImpl::Bind()
 {
 	assert(m_Rend);
 
-	if (m_glID != GL_INVALID_VALUE)
+	if (m_glID != NULL)
 	{
 		m_Rend->gl.BindTexture(GL_TEXTURE_CUBE_MAP, m_glID);
 	}
@@ -433,12 +433,12 @@ Texture::RETURNCODE TextureCubeImpl::Lock(void **buffer, CubeFace face, TextureC
 		return RET_NULL_BUFFER;
 
 	bool init = false;
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 	{
 		m_Rend->gl.CreateTextures(GL_TEXTURE_CUBE_MAP, 1, &m_glID);
 
 		// if we can't get a gl 4.5 context, then we may have to use gen instead of create
-		if (m_glID == GL_INVALID_VALUE)
+		if (m_glID == NULL)
 		{
 			m_Rend->gl.GenTextures(1, &m_glID);
 		}
@@ -446,7 +446,7 @@ Texture::RETURNCODE TextureCubeImpl::Lock(void **buffer, CubeFace face, TextureC
 		init = true;
 	}
 
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 		return RET_GENBUFFER_FAILED;
 
 	// bind the buffer
@@ -558,7 +558,7 @@ Texture3DImpl::Texture3DImpl(RendererImpl *prend, size_t width, size_t height, s
 	m_MipCount = mipcount;
 	m_Type = type;
 	m_Buffer = nullptr;
-	m_glID = GL_INVALID_VALUE;
+	m_glID = NULL;
 	m_LockMip = 0;
 	m_Flags = 0;
 
@@ -592,7 +592,7 @@ Texture3DImpl::~Texture3DImpl()
 		m_Buffer = nullptr;
 	}
 
-	if (m_glID != GL_INVALID_VALUE)
+	if (m_glID != NULL)
 	{
 		m_Rend->gl.DeleteTextures(1, &m_glID);
 	}
@@ -651,7 +651,7 @@ void Texture3DImpl::Bind()
 {
 	assert(m_Rend);
 
-	if (m_glID != GL_INVALID_VALUE)
+	if (m_glID != NULL)
 	{
 		m_Rend->gl.BindTexture(GL_TEXTURE_3D, m_glID);
 	}
@@ -677,12 +677,12 @@ Texture::RETURNCODE Texture3DImpl::Lock(void **buffer, Texture3D::SLockInfo &loc
 		return RET_NULL_BUFFER;
 
 	bool init = false;
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 	{
 		m_Rend->gl.CreateTextures(GL_TEXTURE_3D, 1, &m_glID);
 
 		// if we can't get a gl 4.5 context, then we may have to use gen instead of create
-		if (m_glID == GL_INVALID_VALUE)
+		if (m_glID == NULL)
 		{
 			m_Rend->gl.GenTextures(1, &m_glID);
 		}
@@ -690,7 +690,7 @@ Texture::RETURNCODE Texture3DImpl::Lock(void **buffer, Texture3D::SLockInfo &loc
 		init = true;
 	}
 
-	if (m_glID == GL_INVALID_VALUE)
+	if (m_glID == NULL)
 		return RET_GENBUFFER_FAILED;
 
 	// bind the buffer

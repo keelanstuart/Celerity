@@ -37,6 +37,10 @@ namespace c3
 		float m_CurrentTime;
 		float m_LastTime;
 		float m_ElapsedTime;
+		struct
+		{
+			int32_t x, y;
+		} m_MousePos;
 
 	public:
 		SystemImpl();
@@ -63,6 +67,9 @@ namespace c3
 
 		virtual Log *GetLog();
 
+		virtual void SetMousePos(int32_t x, int32_t y);
+
+		virtual void GetMousePos(int32_t &x, int32_t &y);
 
 		virtual size_t GetCurrentFrameNumber();
 
