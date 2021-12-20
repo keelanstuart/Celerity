@@ -373,7 +373,7 @@ void FrameBufferImpl::Clear(props::TFlags64 flags)
 		}
 	}
 
-	if (m_DepthTarget)
+	if (m_DepthTarget && flags.AnySet(UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL))
 	{
 		switch (m_DepthTarget->Format())
 		{

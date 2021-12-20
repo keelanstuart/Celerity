@@ -35,7 +35,8 @@ protected:
 	c3::Factory *m_Factory;
 	c3::Object *m_RootObj;
 	c3::Object *m_Camera;
-	c3::Object *m_Light[3];
+	std::deque<c3::Object *> m_Light;
+	std::deque<glm::fvec3> m_LightMove;
 
 	bool m_MoveF, m_MoveL, m_MoveR, m_MoveB, m_Run, m_MoveU, m_MoveD;
 
@@ -46,6 +47,8 @@ protected:
 	bool m_bCapturedFirstFrame;
 
 	bool m_bMouseCursorEnabled;
+
+public:
 
 // Construction
 public:
@@ -76,7 +79,6 @@ public:
 	virtual void OnFinalRelease();
 	virtual BOOL PreCreateWindow(CREATESTRUCT &cs);
 	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	virtual BOOL DestroyWindow();
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnSize(UINT nType, int cx, int cy);

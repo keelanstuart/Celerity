@@ -9,6 +9,7 @@
 #include <C3.h>
 #include <C3OmniLight.h>
 #include <C3PositionableImpl.h>
+#include <C3FrustumImpl.h>
 
 namespace c3
 {
@@ -31,6 +32,8 @@ namespace c3
 		int32_t m_uniSampDiff;
 		int32_t m_uniSampNorm;
 		int32_t m_uniSampPosDepth;
+		int32_t m_uniSampEmisRough;
+		FrustumImpl m_Bounds;
 
 		props::TFlags64 m_Flags;
 

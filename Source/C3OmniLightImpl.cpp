@@ -110,12 +110,17 @@ void OmniLightImpl::Render(Object *pobject, props::TFlags64 rendflags)
 				m_uniPos = m_SP_deflight->GetUniformLocation(_T("uLightPos"));
 				m_uniRadius = m_SP_deflight->GetUniformLocation(_T("uLightRadius"));
 				m_uniScreenSize = m_SP_deflight->GetUniformLocation(_T("uScreenSize"));
-				m_uniSampDiff = m_SP_deflight->GetUniformLocation(_T("uSamplerDiffuse"));
-				m_uniSampNorm = m_SP_deflight->GetUniformLocation(_T("uSamplerNormal"));
+				m_uniSampDiff = m_SP_deflight->GetUniformLocation(_T("uSamplerDiffuseMetalness"));
+				m_uniSampNorm = m_SP_deflight->GetUniformLocation(_T("uSamplerNormalAmbOcc"));
 				m_uniSampPosDepth = m_SP_deflight->GetUniformLocation(_T("uSamplerPosDepth"));
+				m_uniSampEmisRough = m_SP_deflight->GetUniformLocation(_T("uSamplerEmissionRoughness"));
 			}
 		}
 	}
+
+	props::IProperty *ppos = pobject->GetProperties()->GetPropertyById('POS');
+	props::IProperty *pscl = pobject->GetProperties()->GetPropertyById('SCL');
+	float scl = pscl->AsVec3F()->x;
 
 	if (m_SP_deflight)
 	{
@@ -125,16 +130,28 @@ void OmniLightImpl::Render(Object *pobject, props::TFlags64 rendflags)
 		ss.y = (float)m_SourceFB->GetDepthTarget()->Height();
 
 		m_SP_deflight->SetUniform3(m_uniColor, (const glm::fvec3 *)(m_propColor->AsVec3F()));
-		props::IProperty *ppos = pobject->GetProperties()->GetPropertyById('POS');
 		m_SP_deflight->SetUniform3(m_uniPos, (const glm::fvec3 *)ppos->AsVec3F());
-		props::IProperty *pscl = pobject->GetProperties()->GetPropertyById('SCL');
-		m_SP_deflight->SetUniform1(m_uniRadius, pscl->AsVec3F()->x);
+		m_SP_deflight->SetUniform1(m_uniRadius, scl);
 		m_SP_deflight->SetUniform2(m_uniScreenSize, &ss);
-		m_SP_deflight->SetUniformTexture(m_SourceFB->GetColorTargetByName(_T("uSamplerDiffuse")), m_uniSampDiff);
-		m_SP_deflight->SetUniformTexture(m_SourceFB->GetColorTargetByName(_T("uSamplerNormal")), m_uniSampNorm);
+		m_SP_deflight->SetUniformTexture(m_SourceFB->GetColorTargetByName(_T("uSamplerDiffuseMetalness")), m_uniSampDiff);
+		m_SP_deflight->SetUniformTexture(m_SourceFB->GetColorTargetByName(_T("uSamplerNormalAmbOcc")), m_uniSampNorm);
 		m_SP_deflight->SetUniformTexture(m_SourceFB->GetColorTargetByName(_T("uSamplerPosDepth")), m_uniSampPosDepth);
+		m_SP_deflight->SetUniformTexture(m_SourceFB->GetColorTargetByName(_T("uSamplerEmissionRoughness")), m_uniSampEmisRough);
 		prend->SetWorldMatrix(m_pPos->GetTransformMatrix());
 		m_SP_deflight->ApplyUniforms();
+	}
+
+	m_Bounds.CalculateForBounds(scl, m_pPos->GetTransformMatrix());
+	bool isinside = m_Bounds.IsPointInside(prend->GetEyePosition());
+	if (isinside)
+	{
+		prend->SetCullMode(c3::Renderer::CullMode::CM_FRONT);
+		prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
+	}
+	else
+	{
+		prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
+		prend->SetDepthTest(c3::Renderer::Test::DT_LESSEREQUAL);
 	}
 
 	prend->GetCubeMesh()->Draw();

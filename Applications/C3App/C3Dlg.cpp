@@ -8,6 +8,7 @@
 #include "C3Dlg.h"
 #include "afxdialogex.h"
 #include <C3Gui.h>
+#include <Pool.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -36,9 +37,6 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_Run = false;
 	m_MoveU = false;
 	m_MoveD = false;
-	m_Light[0] = nullptr;
-	m_Light[1] = nullptr;
-	m_Light[2] = nullptr;
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
 
@@ -53,7 +51,6 @@ BEGIN_MESSAGE_MAP(C3Dlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_ERASEBKGND()
-	ON_WM_TIMER()
 	ON_WM_MOUSEWHEEL()
 	ON_WM_SIZE()
 	ON_WM_SIZING()
@@ -67,17 +64,17 @@ END_MESSAGE_MAP()
 
 c3::FrameBuffer::TargetDesc GBufTargData[] =
 {
-	{ _T("uSamplerDiffuse"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },
-	{ _T("uSamplerNormal"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
-	{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },
-	{ _T("uSamplerEmission"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET }
+	{ _T("uSamplerDiffuseMetalness"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },	// diffuse color (rgb) and metalness (a)
+	{ _T("uSamplerNormalAmbOcc"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },		// fragment normal (rgb) and ambient occlusion (a)
+	{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },			// fragment position in world space (rgb) and dpeth in screen space (a)
+	{ _T("uSamplerEmissionRoughness"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET }	// emission color (rgb) and roughness (a)
 };
 
 // It SEEEEMS like in order to get blending to work, the light combine buffer needs to pre-multiply alpha,
 // but then write alpha=1 in the shader... the depth test is still a problem
 c3::FrameBuffer::TargetDesc LCBufTargData[] =
 {
-	{ _T("uSamplerLights"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },
+	{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },
 };
 
 
@@ -131,6 +128,7 @@ BOOL C3Dlg::OnInitDialog()
 	}
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
+	m_Rend->SetAlphaCoverage(0.5f, false);
 	//m_Rend->GetGui()->SetWindowFocus();
 
 	// To start a frame capture, call StartFrameCapture.
@@ -257,40 +255,59 @@ BOOL C3Dlg::OnInitDialog()
 #endif
 
 #if 1
+#define NUMLIGHTS		300
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Light"))))
 	{
-		for (size_t i = 0; i < _countof(m_Light); i++)
+		for (size_t i = 0; i < NUMLIGHTS; i++)
 		{
 			float f = float(i);
-			m_Light[i] = m_Factory->Build(pproto);
-			if (m_Light[i])
+			c3::Object *temp  = m_Factory->Build(pproto);
+			if (temp)
 			{
-				c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindComponent(c3::Positionable::Type()));
+				m_Light.push_back(temp);
+
+				glm::fvec3 mv(0.0f, 0.0f, 20.0f);
+
+				if (i > 0)
+				{
+					mv.x = (float)(RAND_MAX / 2 - rand());
+					mv.y = (float)(RAND_MAX / 2 - rand());
+					mv.z = (float)(RAND_MAX / 2 - rand());
+				}
+				m_LightMove.push_back(glm::normalize(mv) * (float)(rand() % 10));
+
+				c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(temp->FindComponent(c3::Positionable::Type()));
 				if (ppos)
 				{
-					ppos->SetPos((f - 1) * 30.0f, 0.0f, 1.0f);
-					ppos->SetScl(130.0f, 130.0f, 130.0f);
+					float s = 150;
+					if (i > 0)
+					{
+						ppos->SetPos((float)(rand() % 1000) - 500.0f, (float)(rand() % 500) - 250.0f, (float)(rand() % 400) + 5.0f);
+						s = (float)(rand() % 100) + 50.0f;
+					}
+					else
+						ppos->AdjustPos(0, 0, 10.0f);
+
+					ppos->SetScl(s, s, s);
 					ppos->Update(0);
 				}
 
-				c3::OmniLight *plight = dynamic_cast<c3::OmniLight *>(m_Light[i]->FindComponent(c3::OmniLight::Type()));
+				c3::OmniLight *plight = dynamic_cast<c3::OmniLight *>(temp->FindComponent(c3::OmniLight::Type()));
 				if (plight)
 					plight->SetSourceFrameBuffer(m_GBuf);
 
-				props::IPropertySet *pps = m_Light[i]->GetProperties();
+				props::IPropertySet *pps = temp->GetProperties();
 				props::IProperty *pp = pps->CreateProperty(_T("uLightColor"), 'LCLR');
-				const props::TVec3F c[3] = {{0, 1, 0}, {0, 0, 1}, {1, 0, 0}};
-				pp->SetVec3F(c[i]);
+				const props::TVec3F c((float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX);
+				pp->SetVec3F(c);
 
-				m_RootObj->AddChild(m_Light[i]);
+				m_RootObj->AddChild(temp);
 
 				theApp.m_C3->GetLog()->Print(_T("Light %d created\n"), i);
 			}
 		}
 	}
 #endif
-
-	SetTimer('DRAW', 5, NULL);
 
 	m_bMouseCursorEnabled = false;
 	SetCapture();
@@ -327,26 +344,52 @@ void C3Dlg::OnPaint()
 		theApp.m_C3->UpdateTime();
 		float dt = theApp.m_C3->GetElapsedTime();
 
-		m_Camera->Update(dt);
 		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
+		if (pcampos)
+		{
+			glm::vec3 mv(0, 0, 0);
+
+#define MOVE_SPEED		(m_fMovement.IsSet(MOVE_RUN) ? 2.5f : 0.5f)
+
+			if (m_fMovement.IsSet(MOVE_FORWARD))
+				mv += *(pcampos->GetFacingVector()) * MOVE_SPEED;
+
+			if (m_fMovement.IsSet(MOVE_BACKWARD))
+				mv -= *(pcampos->GetFacingVector()) * MOVE_SPEED;
+
+			if (m_fMovement.IsSet(MOVE_LEFT))
+				mv += *(pcampos->GetLocalLeftVector()) * MOVE_SPEED;
+
+			if (m_fMovement.IsSet(MOVE_RIGHT))
+				mv -= *(pcampos->GetLocalLeftVector()) * MOVE_SPEED;
+
+			if (m_fMovement.IsSet(MOVE_UP))
+				mv.z += MOVE_SPEED;
+
+			if (m_fMovement.IsSet(MOVE_DOWN))
+				mv.z -= MOVE_SPEED;
+
+			pcampos->AdjustPos(mv.x, mv.y, mv.z);
+		}
+		m_Camera->Update(dt);
+
 		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 		if (pcam)
 		{
 			m_Rend->SetViewMatrix(pcam->GetViewMatrix());
 			m_Rend->SetProjectionMatrix(pcam->GetProjectionMatrix());
+			m_Rend->SetEyePosition(pcam->GetEyePos());
+			glm::fvec3 eyedir = glm::normalize(*pcam->GetTargetPos() - *(pcam->GetEyePos()));
+			m_Rend->SetEyeDirection(&eyedir);
 		}
 
-#if 0
-		for (size_t i = 0; i < 3; i++)
+#if 1
+		for (size_t i = 0; i < m_Light.size(); i++)
 		{
-			if (!m_Light[i])
-				continue;
-
 			c3::Positionable *plpos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindComponent(c3::Positionable::Type()));
-			float adjx = sinf((float)theApp.m_C3->GetCurrentFrameNumber() * 0.01f) * 30.0f;
-			float adjy = 0.0f;
-			float adjz = cosf((float)theApp.m_C3->GetCurrentFrameNumber() * 0.01f) * 5.0f + 5.0f;
-			plpos->AdjustPos(adjx, adjy, adjz);
+			float s = sinf((float)(theApp.m_C3->GetCurrentFrameNumber() + i) * 3.14159f / 180.0f * 1.0f) * 0.5f;
+			plpos->AdjustPos(m_LightMove[i].x * s, m_LightMove[i].x * s, m_LightMove[i].x * s);
+			plpos->Update(m_Light[i]);
 		}
 #endif
 
@@ -354,51 +397,27 @@ void C3Dlg::OnPaint()
 
 		if (m_Rend->BeginScene(0))
 		{
-#if 0
-			for (size_t idp = 0; idp < 4; idp++)
-			{
-				//clear color buffer
-					//depth unit 0:
-
-				m_Rend->SetDepthMode((idp == 0) ? c3::Renderer::DepthMode::DM_WRITEONLY : c3::Renderer::DepthMode::DM_READWRITE);
-
-				bind depth buffer (i % 2)
-					disable depth writes /* read-only depth test */
-					set depth func to GREATER
-					depth unit 1:
-				bind depth buffer ((
-					i+1) % 2)
-					clear depth buffer
-					enable depth writes;
-				enable depth test;
-				set depth func to LESS
-					render scene
-					save color buffer RGBA as layer
-					i
-			}
-#endif
-
 			// Solid color pass
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
-			m_Rend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
+			m_Rend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL);
 			m_Rend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
-			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ALPHA);
+			m_Rend->SetAlphaPassRange(3.0f / 255.0f);
+			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
 			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::DRAW));
 
 			// Lighting pass(es)
 			m_Rend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR);
+			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 			m_Rend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
-			m_LCBuf->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::LIGHT));
 
 			// Resolve
 			m_Rend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-			m_Rend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
+			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
 			m_Rend->UseProgram(m_SP_copyback);
 			m_SP_copyback->ApplyUniforms(false);
 			m_Rend->UseVertexBuffer(m_Rend->GetFullscreenPlaneVB());
@@ -417,6 +436,9 @@ void C3Dlg::OnPaint()
 		}
 
 		CDialog::OnPaint();
+
+		// Cue up another paint op
+		RedrawWindow(nullptr, nullptr, RDW_NOERASE | RDW_INVALIDATE);
 	}
 }
 
@@ -430,8 +452,6 @@ HCURSOR C3Dlg::OnQueryDragIcon()
 
 void C3Dlg::Cleanup()
 {
-	KillTimer('DRAW');
-
 	if (m_DepthTarg)
 	{
 		m_DepthTarg->Release();
@@ -486,45 +506,6 @@ BOOL C3Dlg::PreCreateWindow(CREATESTRUCT &cs)
 BOOL C3Dlg::OnEraseBkgnd(CDC *pDC)
 {
 	return FALSE;
-}
-
-
-void C3Dlg::OnTimer(UINT_PTR nIDEvent)
-{
-	if (nIDEvent == 'DRAW')
-	{
-		c3::Positionable *cam = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
-		if (cam)
-		{
-			glm::vec3 mv(0, 0, 0);
-
-#define MOVE_SPEED		(m_fMovement.IsSet(MOVE_RUN) ? 2.5f : 0.5f)
-
-			if (m_fMovement.IsSet(MOVE_FORWARD))
-				mv += *(cam->GetFacingVector()) * MOVE_SPEED;
-
-			if (m_fMovement.IsSet(MOVE_BACKWARD))
-				mv -= *(cam->GetFacingVector()) * MOVE_SPEED;
-
-			if (m_fMovement.IsSet(MOVE_LEFT))
-				mv += *(cam->GetLocalLeftVector()) * MOVE_SPEED;
-
-			if (m_fMovement.IsSet(MOVE_RIGHT))
-				mv -= *(cam->GetLocalLeftVector()) * MOVE_SPEED;
-
-			if (m_fMovement.IsSet(MOVE_UP))
-				mv.z += MOVE_SPEED;
-
-			if (m_fMovement.IsSet(MOVE_DOWN))
-				mv.z -= MOVE_SPEED;
-
-			cam->AdjustPos(mv.x, mv.y, mv.z);
-		}
-			
-		RedrawWindow(nullptr, nullptr, RDW_NOERASE | RDW_UPDATENOW | RDW_INVALIDATE);
-	}
-
-	CDialog::OnTimer(nIDEvent);
 }
 
 

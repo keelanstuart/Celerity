@@ -345,16 +345,26 @@ void ShaderProgramImpl::CaptureUniforms()
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE);
 				else if (!_tcscmp(n, _T("uColorSpecular")))
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR);
+				else if (!_tcscmp(n, _T("uEyePos")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_EYE_POSITION);
+				else if (!_tcscmp(n, _T("uEyeDir")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_EYE_DIRECTION);
 
 				break;
 
 			case GL_FLOAT_VEC2:
 				p->SetVec2F(props::TVec2F(0, 0));
 
+				if (!_tcscmp(n, _T("uAlphaPass")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ALPHAPASS);
+
 				break;
 
 			case GL_FLOAT:
 				p->SetFloat(0);
+
+				if (!_tcscmp(n, _T("uAlphaPass")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ALPHAPASS);
 				break;
 
 			case GL_INT:
@@ -380,11 +390,50 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 		props::IProperty *p = m_Uniforms->GetProperty(i);
 		switch (p->GetType())
 		{
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT:
+				switch (p->GetAspect())
+				{
+					case props::IProperty::PROPERTY_ASPECT::PA_ALPHAPASS:
+					{
+						glm::fvec2 alphapass;
+						m_Rend->GetAlphaPassRange(alphapass.x, alphapass.y);
+						SetUniform1(p->GetID(), alphapass.x);
+						break;
+					}
+				}
+				break;
+
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:
+				switch (p->GetAspect())
+				{
+					case props::IProperty::PROPERTY_ASPECT::PA_ALPHAPASS:
+					{
+						glm::fvec2 alphapass;
+						m_Rend->GetAlphaPassRange(alphapass.x, alphapass.y);
+						SetUniform2(p->GetID(), &alphapass);
+						break;
+					}
+				}	
+				break;
+
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
+				switch (p->GetAspect())
+				{
+					case props::IProperty::PROPERTY_ASPECT::PA_EYE_POSITION:
+						SetUniform3(p->GetID(), m_Rend->GetEyePosition());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_EYE_DIRECTION:
+						SetUniform3(p->GetID(), m_Rend->GetEyeDirection());
+						break;
+				}	
+				break;
+
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_MAT4X4:
 				switch (p->GetAspect())
 				{
 					case props::IProperty::PROPERTY_ASPECT::PA_WORLD:
-						SetUniformMatrix(p->GetID(), m_Rend->GetWorldViewProjectionMatrix());
+						SetUniformMatrix(p->GetID(), m_Rend->GetWorldMatrix());
 						break;
 
 					case props::IProperty::PROPERTY_ASPECT::PA_VIEW:

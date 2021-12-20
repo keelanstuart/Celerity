@@ -30,7 +30,7 @@ MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend)
 	m_tex[ETextureComponentType::TCT_DIFFUSE] = TTexOrRes(prend->GetWhiteTexture(), nullptr);
 	m_tex[ETextureComponentType::TCT_NORMAL] = TTexOrRes(prend->GetBlueTexture(), nullptr);
 	m_tex[ETextureComponentType::TCT_EMISSIVE] = TTexOrRes(prend->GetBlackTexture(), nullptr);
-	m_tex[ETextureComponentType::TCT_SURFACEDESC] = TTexOrRes(prend->GetBlackTexture(), nullptr);
+	m_tex[ETextureComponentType::TCT_SURFACEDESC] = TTexOrRes(prend->GetGreyTexture(), nullptr);
 	m_tex[ETextureComponentType::TCT_POSITIONDEPTH] = TTexOrRes(prend->GetBlackTexture(), nullptr);
 
 	m_color[EColorComponentType::CCT_DIFFUSE] = Color::White;
@@ -232,7 +232,7 @@ bool MaterialImpl::Apply(ShaderProgram *shader) const
 		if (ul_texnorm != ShaderProgram::INVALID_UNIFORM)
 			shader->SetUniformTexture(GetTexture(TCT_NORMAL), ul_texnorm);
 
-		int32_t ul_texsurf = shader->GetUniformLocation(_T("uSamplerSurface"));
+		int32_t ul_texsurf = shader->GetUniformLocation(_T("uSamplerSurfaceDesc"));
 		if (ul_texsurf != ShaderProgram::INVALID_UNIFORM)
 			shader->SetUniformTexture(GetTexture(TCT_SURFACEDESC), ul_texsurf);
 

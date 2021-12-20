@@ -29,6 +29,8 @@ namespace c3
 
 		virtual void CalculateForBounds(const glm::fvec3 *boundsmin, const glm::fvec3 *boundsmax, const glm::fmat4x4 *matrix);
 
+		virtual void CalculateForBounds(float halfdim, const glm::fmat4x4 *matrix);
+
 		virtual bool IsPointInside(float x, float y, float z);
 
 		virtual bool IsPointInside(const glm::fvec3 *point);

@@ -155,11 +155,12 @@ namespace c3
 
 		typedef enum EBlendMode
 		{
-			BM_DISABLED = 0,
-			BM_REPLACE,
-			BM_ALPHA,
-			BM_ADD,
-			BM_ADDALPHA,
+			BM_DISABLED = 0,	// blend(zero, zero)
+			BM_REPLACE,			// blend(one, zero)
+			BM_ALPHA,			// blend(src_alpha, inv_src_alpha)
+			BM_ADD,				// blend(one, one)
+			BM_ADDALPHA,		// blend(src_alpha, one)
+			BM_ALPHATOCOVERAGE,	// replace, but with atoc enabled
 
 			BM_NUMMODES
 
@@ -251,6 +252,13 @@ namespace c3
 		virtual void SetBlendMode(BlendMode mode) = NULL;
 		virtual BlendMode GetBlendMode() const = NULL;
 
+		// Sets the range in which pixels will no be discarded
+		virtual void SetAlphaPassRange(float minalpha = 0, float maxalpha = FLT_MAX) = NULL;
+		virtual void GetAlphaPassRange(float &minalpha, float &maxalpha) = NULL;
+
+		virtual void SetAlphaCoverage(float coverage = 1.0f, bool invert = false) = NULL;
+		virtual void GetAlphaCoverage(float &coverage, bool &invert) = NULL;
+
 		virtual void SetBlendEquation(BlendEquation eq) = NULL;
 		virtual BlendEquation GetBlendEquation() const = NULL;
 
@@ -295,6 +303,12 @@ namespace c3
 		virtual const glm::fmat4x4 *GetNormalMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+
+		virtual void SetEyePosition(const glm::fvec3 *pos) = NULL;
+		virtual void SetEyeDirection(const glm::fvec3 *dir) = NULL;
+
+		virtual const glm::fvec3 *GetEyePosition(glm::fvec3 *pos = nullptr) const = NULL;
+		virtual const glm::fvec3 *GetEyeDirection(glm::fvec3 *dir = nullptr) const = NULL;
 
 		virtual VertexBuffer *GetFullscreenPlaneVB() = NULL;
 

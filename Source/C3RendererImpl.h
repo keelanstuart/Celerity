@@ -53,6 +53,7 @@ namespace c3
 
 		glm::fmat4x4 m_ident;
 
+		glm::fvec3 m_eyepos, m_eyedir;
 		glm::fmat4x4 m_proj, m_view, m_world, m_worldview, m_normal, m_viewproj, m_worldviewproj;
 		props::TFlags32 m_matupflags;
 
@@ -93,10 +94,14 @@ namespace c3
 		BlendMode m_BlendMode;
 		BlendEquation m_BlendEq;
 
+		float m_AlphaPassMin, m_AlphaPassMax;
 		bool m_StencilEnabled;
 		Test m_StencilTest;
 		uint8_t m_StencilRef, m_StencilMask;
 		StencilOperation m_StencilFailOp, m_StencilZFailOp, m_StencilZPassOp;
+
+		float m_AlphaCoverage;
+		bool m_AlphaCoverageInv;
 
 		VertexBuffer *m_CubeVB;
 		Mesh *m_BoundsMesh;
@@ -119,6 +124,8 @@ namespace c3
 
 		MaterialManagerImpl *m_MatMan;
 		Material *m_mtlWhite;
+
+		size_t m_VertsPerFrame, m_IndicesPerFrame, m_TrisPerFrame, m_LinesPerFrame, m_PointsPerFrame;
 
 	public:
 
@@ -189,6 +196,12 @@ namespace c3
 		virtual void SetBlendMode(BlendMode mode);
 		virtual BlendMode GetBlendMode() const;
 
+		virtual void SetAlphaPassRange(float minalpha, float maxalpha);
+		virtual void GetAlphaPassRange(float &minalpha, float &maxalpha);
+
+		virtual void SetAlphaCoverage(float coverage, bool invert);
+		virtual void GetAlphaCoverage(float &coverage, bool &invert);
+
 		virtual void SetBlendEquation(BlendEquation eq);
 		virtual BlendEquation GetBlendEquation() const;
 
@@ -239,6 +252,12 @@ namespace c3
 		virtual const glm::fmat4x4 *GetNormalMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
+
+		virtual void SetEyePosition(const glm::fvec3 *pos);
+		virtual void SetEyeDirection(const glm::fvec3 *dir);
+
+		virtual const glm::fvec3 *GetEyePosition(glm::fvec3 *pos = nullptr) const;
+		virtual const glm::fvec3 *GetEyeDirection(glm::fvec3 *dir = nullptr) const;
 
 		virtual VertexBuffer *GetFullscreenPlaneVB();
 

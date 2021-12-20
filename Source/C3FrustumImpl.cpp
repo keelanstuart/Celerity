@@ -63,9 +63,9 @@ void PlaneFromPoints(const glm::fvec3 &p1, const glm::fvec3 &p2, const glm::fvec
 	
 	edge1 = p2 - p1;
 	edge2 = p3 - p1;
-	normal = glm::normalize(glm::cross(edge1, edge2));
+	normal = glm::cross(edge1, edge2);
 
-	PlaneFromPointNormal(p1, normal, out_plane);
+	PlaneFromPointNormal(p1, glm::normalize(normal), out_plane);
 }
 
 
@@ -82,7 +82,8 @@ bool PlaneIntersectLine(const glm::fvec4 &plane, const glm::fvec3 v1, const glm:
 	dir.z = v2.z - v1.z;
 
 	float dot = glm::dot(norm, dir);
-	if (!dot)
+	// if it's really close to 0, the line is orthogonal to the plane
+	if (fabs(dot) < 0.00001f)
 		return false;
 
 	if (out_point)
@@ -150,40 +151,29 @@ void FrustumImpl::CalculateForView(const glm::fmat4x4 *viewmat, const glm::fmat4
 
 void FrustumImpl::CalculateForBounds(const glm::fvec3 *boundsmin, const glm::fvec3 *boundsmax, const glm::fmat4x4 *matrix)
 {
-	corner[FRUSTCORN_xyz].x = boundsmin->x;
-	corner[FRUSTCORN_xyz].y = boundsmin->y;
-	corner[FRUSTCORN_xyz].z = boundsmin->z;
-	
-	corner[FRUSTCORN_xyZ].x = boundsmin->x;
-	corner[FRUSTCORN_xyZ].y = boundsmin->y;
-	corner[FRUSTCORN_xyZ].z = boundsmax->z;
+	assert(boundsmin && boundsmax && matrix);
 
-	corner[FRUSTCORN_xYz].x = boundsmin->x;
-	corner[FRUSTCORN_xYz].y = boundsmax->y;
-	corner[FRUSTCORN_xYz].z = boundsmin->z;
+	glm::fmat4x4 invmat = glm::inverseTranspose(*matrix);
 
-	corner[FRUSTCORN_xYZ].x = boundsmin->x;
-	corner[FRUSTCORN_xYZ].y = boundsmax->y;
-	corner[FRUSTCORN_xYZ].z = boundsmax->z;
+	glm::fvec3 org(glm::fvec4(
+		(boundsmin->x + boundsmax->x) * 0.5f,
+		(boundsmin->y + boundsmax->y) * 0.5f,
+		(boundsmin->z + boundsmax->z) * 0.5f, 1) * *matrix);
 
-	corner[FRUSTCORN_Xyz].x = boundsmax->x;
-	corner[FRUSTCORN_Xyz].y = boundsmin->y;
-	corner[FRUSTCORN_Xyz].z = boundsmin->z;
+	glm::fvec3 ext(*boundsmax - *boundsmin);
+	ext *= 0.5f;
+	glm::fvec3 extx(glm::fvec4(ext.x, 0, 0, 0) * invmat);
+	glm::fvec3 exty(glm::fvec4(0, ext.y, 0, 0) * invmat);
+	glm::fvec3 extz(glm::fvec4(0, 0, ext.z, 0) * invmat);
 
-	corner[FRUSTCORN_XyZ].x = boundsmax->x;
-	corner[FRUSTCORN_XyZ].y = boundsmin->y;
-	corner[FRUSTCORN_XyZ].z = boundsmax->z;
-
-	corner[FRUSTCORN_XYz].x = boundsmax->x;
-	corner[FRUSTCORN_XYz].y = boundsmax->y;
-	corner[FRUSTCORN_XYz].z = boundsmin->z;
-
-	corner[FRUSTCORN_XYZ].x = boundsmax->x;
-	corner[FRUSTCORN_XYZ].y = boundsmax->y;
-	corner[FRUSTCORN_XYZ].z = boundsmax->z;
-
-	for (size_t i = 0; i < FRUSTCORN_NUMCORNERS; i++)
-		corner[i] = glm::fvec4(corner[i].x, corner[i].y, corner[i].z, 1.0f) * *matrix;
+	corner[FRUSTCORN_xyz] = org - extx - exty - extz;
+	corner[FRUSTCORN_xyZ] = org - extx - exty + extz;
+	corner[FRUSTCORN_xYz] = org - extx + exty - extz;
+	corner[FRUSTCORN_xYZ] = org - extx + exty + extz;
+	corner[FRUSTCORN_Xyz] = org + extx - exty - extz;
+	corner[FRUSTCORN_XyZ] = org + extx - exty + extz;
+	corner[FRUSTCORN_XYz] = org + extx + exty - extz;
+	corner[FRUSTCORN_XYZ] = org + extx + exty + extz;
 
 	PlaneFromPoints(corner[FRUSTCORN_xyz], corner[FRUSTCORN_xYz], corner[FRUSTCORN_Xyz], face[FRUSTFACE_NEAR]);		// Near
 	PlaneFromPoints(corner[FRUSTCORN_xyZ], corner[FRUSTCORN_xYZ], corner[FRUSTCORN_XyZ], face[FRUSTFACE_FAR]);		// Far
@@ -195,9 +185,45 @@ void FrustumImpl::CalculateForBounds(const glm::fvec3 *boundsmin, const glm::fve
 	PlaneFromPoints(corner[FRUSTCORN_xyz], corner[FRUSTCORN_xyZ], corner[FRUSTCORN_xYZ], face[FRUSTFACE_BOTTOM]);	// Bottom
 }
 
+void FrustumImpl::CalculateForBounds(float halfdim, const glm::fmat4x4 *matrix)
+{
+	assert(matrix);
 
+	glm::fmat4x4 invmat = glm::inverseTranspose(*matrix);
+
+	glm::fvec3 torigin(*matrix * glm::fvec4(0, 0, 0, 1));
+
+	glm::fvec3 extx(invmat * glm::fvec4(1, 0, 0, 0));
+	extx *= halfdim * halfdim;
+	glm::fvec3 exty(invmat * glm::fvec4(0, 1, 0, 0));
+	exty *= halfdim * halfdim;
+	glm::fvec3 extz(invmat * glm::fvec4(0, 0, 1, 0));
+	extz *= halfdim * halfdim;
+
+	corner[FRUSTCORN_xyz] = torigin - extx - exty - extz;
+	corner[FRUSTCORN_xyZ] = torigin - extx - exty + extz;
+	corner[FRUSTCORN_xYz] = torigin - extx + exty - extz;
+	corner[FRUSTCORN_xYZ] = torigin - extx + exty + extz;
+	corner[FRUSTCORN_Xyz] = torigin + extx - exty - extz;
+	corner[FRUSTCORN_XyZ] = torigin + extx - exty + extz;
+	corner[FRUSTCORN_XYz] = torigin + extx + exty - extz;
+	corner[FRUSTCORN_XYZ] = torigin + extx + exty + extz;
+
+	PlaneFromPoints(corner[FRUSTCORN_xyz], corner[FRUSTCORN_xYz], corner[FRUSTCORN_Xyz], face[FRUSTFACE_NEAR]);		// Near
+	PlaneFromPoints(corner[FRUSTCORN_xyZ], corner[FRUSTCORN_xYZ], corner[FRUSTCORN_XyZ], face[FRUSTFACE_FAR]);		// Far
+
+	PlaneFromPoints(corner[FRUSTCORN_xyz], corner[FRUSTCORN_xyZ], corner[FRUSTCORN_xYz], face[FRUSTFACE_LEFT]);		// Left
+	PlaneFromPoints(corner[FRUSTCORN_Xyz], corner[FRUSTCORN_XyZ], corner[FRUSTCORN_XYz], face[FRUSTFACE_RIGHT]);	// Right
+
+	PlaneFromPoints(corner[FRUSTCORN_xYz], corner[FRUSTCORN_xYZ], corner[FRUSTCORN_XYz], face[FRUSTFACE_TOP]);		// Top
+	PlaneFromPoints(corner[FRUSTCORN_xyz], corner[FRUSTCORN_xyZ], corner[FRUSTCORN_xYZ], face[FRUSTFACE_BOTTOM]);	// Bottom
+}
+
+// TODO HACK HACK HACK TODO
+// glm works a little differently than d3dx math... sigh. figure this out.
 bool FrustumImpl::IsPointInside(float x, float y, float z)
 {
+#if 0
 	uint32_t bOutside = 0;
 
 	// Go through each plane and see if the point is inside it
@@ -215,6 +241,13 @@ bool FrustumImpl::IsPointInside(float x, float y, float z)
 		return true;
 
 	return false;
+#else
+	bool x_inside = (corner[FRUSTCORN_XYZ].x >= x) && (corner[FRUSTCORN_xyz].x <= x);
+	bool y_inside = (corner[FRUSTCORN_XYZ].y >= y) && (corner[FRUSTCORN_xyz].y <= y);
+	bool z_inside = (corner[FRUSTCORN_XYZ].z >= z) && (corner[FRUSTCORN_xyz].z <= z);
+
+	return x_inside && y_inside && z_inside;
+#endif
 }
 
 

@@ -56,6 +56,12 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_BlendMode = BlendMode::BM_NUMMODES;
 	m_BlendEq = BlendEquation::BE_NUMMODES;
 
+	m_AlphaPassMin = 0.0f;
+	m_AlphaPassMax = 1.0f;
+
+	m_AlphaCoverage = 1.0f;
+	m_AlphaCoverageInv = false;
+
 	m_StencilEnabled = false;
 	m_StencilTest = Test::DT_ALWAYS;
 	m_StencilRef = 0;
@@ -107,6 +113,12 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_Initialized = false;
 
 	m_Gui = nullptr;
+
+	m_VertsPerFrame = 0;
+	m_IndicesPerFrame = 0;
+	m_TrisPerFrame = 0;
+	m_LinesPerFrame = 0;
+	m_PointsPerFrame = 0;
 }
 
 
@@ -617,6 +629,12 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 	if (!m_Initialized)
 		return false;
 
+	m_VertsPerFrame = 0;
+	m_IndicesPerFrame = 0;
+	m_TrisPerFrame = 0;
+	m_LinesPerFrame = 0;
+	m_PointsPerFrame = 0;
+
 	m_needsFinish = true;
 
 	m_TaskPool->Flush();
@@ -653,6 +671,9 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 		static bool show_metrics = true;
 		if (show_metrics)
 		{
+			ImGui::GetIO().MetricsRenderVertices = (int)m_VertsPerFrame;
+			ImGui::GetIO().MetricsRenderIndices = (int)m_IndicesPerFrame;
+
 			ImGui::ShowMetricsWindow(&show_metrics);
 		}
 
@@ -905,6 +926,11 @@ void RendererImpl::SetBlendMode(BlendMode mode)
 		else if ((mode != BM_ALPHA) && (mode != BM_ADD) && (mode != BM_ADDALPHA))
 			gl.Disable(GL_BLEND);
 
+		if (m_BlendMode == BlendMode::BM_ALPHATOCOVERAGE)
+			gl.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+		else if (mode == BlendMode::BM_ALPHATOCOVERAGE)
+			gl.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+
 		switch (mode)
 		{
 			case BlendMode::BM_ALPHA:
@@ -919,6 +945,7 @@ void RendererImpl::SetBlendMode(BlendMode mode)
 				gl.BlendFunc(GL_SRC_ALPHA, GL_ONE);
 				break;
 
+			case BlendMode::BM_ALPHATOCOVERAGE:
 			case BlendMode::BM_REPLACE:
 				gl.BlendFunc(GL_ONE, GL_ZERO);
 				break;
@@ -936,6 +963,39 @@ void RendererImpl::SetBlendMode(BlendMode mode)
 Renderer::BlendMode RendererImpl::GetBlendMode() const
 {
 	return m_BlendMode;
+}
+
+
+void RendererImpl::SetAlphaPassRange(float minalpha, float maxalpha)
+{
+	m_AlphaPassMin = minalpha;
+	m_AlphaPassMax = maxalpha;
+}
+
+
+void RendererImpl::GetAlphaPassRange(float &minalpha, float &maxalpha)
+{
+	minalpha = m_AlphaPassMin;
+	maxalpha = m_AlphaPassMax;
+}
+
+
+void RendererImpl::SetAlphaCoverage(float coverage, bool invert)
+{
+	if ((m_AlphaCoverage != coverage) || (m_AlphaCoverageInv != invert))
+	{
+		m_AlphaCoverage = coverage;
+		m_AlphaCoverageInv = invert;
+
+		gl.SampleCoverage(m_AlphaCoverage, m_AlphaCoverageInv);
+	}
+}
+
+
+void RendererImpl::GetAlphaCoverage(float& coverage, bool& invert)
+{
+	coverage = m_AlphaCoverage;
+	invert = m_AlphaCoverageInv;
 }
 
 
@@ -1459,6 +1519,38 @@ bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
 
 		gl.DrawArrays(typelu[type], 0, (GLsizei)count);
 
+		m_VertsPerFrame += m_CurVB->Count();
+
+		switch (type)
+		{
+			case PrimType::POINTLIST:
+				m_PointsPerFrame += count;
+				break;
+
+			case PrimType::LINELIST:
+				m_LinesPerFrame += (count / 2);
+				break;
+
+			case PrimType::LINESTRIP:
+				m_LinesPerFrame += (count / 2) + 1;
+				break;
+
+			case PrimType::TRILIST:
+				m_TrisPerFrame += (count / 3);
+				break;
+
+			case PrimType::TRISTRIP:
+				m_TrisPerFrame += (count / 3) + 1;
+				break;
+
+			case PrimType::TRIFAN:
+				m_TrisPerFrame += (count / 3) + 2;
+				break;
+
+			default:
+				break;
+		}
+
 		return true;
 	}
 
@@ -1487,6 +1579,39 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 	}
 
 	gl.DrawElements(typelu[type], (GLsizei)count, glidxs, NULL);
+
+	m_VertsPerFrame += m_CurVB->Count();
+	m_IndicesPerFrame += m_CurIB->Count();
+
+	switch (type)
+	{
+		case PrimType::POINTLIST:
+			m_PointsPerFrame += count;
+			break;
+
+		case PrimType::LINELIST:
+			m_LinesPerFrame += (count / 2);
+			break;
+
+		case PrimType::LINESTRIP:
+			m_LinesPerFrame += (count / 2) + 1;
+			break;
+
+		case PrimType::TRILIST:
+			m_TrisPerFrame += (count / 3);
+			break;
+
+		case PrimType::TRISTRIP:
+			m_TrisPerFrame += (count / 3) + 1;
+			break;
+
+		case PrimType::TRIFAN:
+			m_TrisPerFrame += (count / 3) + 2;
+			break;
+
+		default:
+			break;
+	}
 
 	return true;
 }
@@ -1613,6 +1738,44 @@ const glm::fmat4x4 *RendererImpl::GetWorldViewProjectionMatrix(glm::fmat4x4 *m)
 
 	*m = m_worldviewproj;
 	return m;
+}
+
+
+void RendererImpl::SetEyePosition(const glm::fvec3* pos)
+{
+	if (!pos)
+		return;
+
+	m_eyepos = *pos;
+}
+
+
+void RendererImpl::SetEyeDirection(const glm::fvec3* dir)
+{
+	if (!dir)
+		return;
+
+	m_eyedir = *dir;
+}
+
+
+const glm::fvec3* RendererImpl::GetEyePosition(glm::fvec3* pos) const
+{
+	if (!pos)
+		return &m_eyepos;
+
+	*pos = m_eyepos;
+	return pos;
+}
+
+
+const glm::fvec3* RendererImpl::GetEyeDirection(glm::fvec3* dir) const
+{
+	if (!dir)
+		return &m_eyedir;
+
+	*dir = m_eyedir;
+	return dir;
 }
 
 
@@ -1750,12 +1913,12 @@ Mesh *RendererImpl::GetCubeMesh()
 			{
 				static const uint16_t i[6][2][3] =
 				{
-					 { {  0,  2,  1 }, {  0,  3, 2  } }		// top
-					,{ {  4,  5,  6 }, {  4,  6, 7  } }		// right
-					,{ {  8,  9, 10 }, {  8, 10, 11 } }		// bottom
-					,{ { 12, 14, 13 }, { 12, 15, 14 } }		// left fix
-					,{ { 16, 17, 18 }, { 16, 18, 19 } }		// front
-					,{ { 20, 22, 21 }, { 20, 23, 22 } }		// back
+					 { {  0,  1,  2 }, {  0,  2,  3 } }		// top
+					,{ {  4,  6,  5 }, {  4,  7,  6 } }		// right
+					,{ {  8, 10,  9 }, {  8, 11, 10 } }		// bottom
+					,{ { 12, 13, 14 }, { 12, 14, 15 } }		// left fix
+					,{ { 16, 18, 17 }, { 16, 19, 18 } }		// front
+					,{ { 20, 21, 22 }, { 20, 22, 23 } }		// back
 				};
 
 				void *buf;
