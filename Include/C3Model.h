@@ -62,7 +62,7 @@ namespace c3
 
 		virtual const Material *GetMaterial(MeshIndex idx) const = NULL;
 
-		virtual const Frustum *GetBounds() const = NULL;
+		virtual const BoundingBox *GetBounds() const = NULL;
 
 		virtual void Draw(const glm::fmat4x4 *pmat = nullptr) const = NULL;
 

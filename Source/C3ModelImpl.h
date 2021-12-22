@@ -9,7 +9,7 @@
 #include <C3Model.h>
 #include <C3RendererImpl.h>
 #include <C3Resource.h>
-#include <C3Frustum.h>
+#include <C3BoundingBox.h>
 
 
 namespace c3
@@ -61,7 +61,7 @@ namespace c3
 		typedef std::vector<SMeshInfo *> TMeshInfoArray;
 		TMeshInfoArray m_Meshes;
 
-		Frustum *m_Bounds;
+		BoundingBox *m_Bounds;
 
 		MatrixStack *m_MatStack;
 
@@ -109,7 +109,7 @@ namespace c3
 
 		virtual const Material *GetMaterial(MeshIndex midx) const;
 
-		virtual const Frustum *GetBounds() const;
+		virtual const BoundingBox *GetBounds() const;
 
 		virtual void Draw(const glm::fmat4x4 *pmat) const;
 

@@ -38,7 +38,7 @@ namespace c3
 
 		virtual IndexBuffer *GetIndexBuffer() const;
 
-		virtual const Frustum *GetBounds() const;
+		virtual const BoundingBox *GetBounds() const;
 
 		virtual RETURNCODE Draw(Renderer::PrimType type) const;
 

@@ -316,7 +316,7 @@ const Material *ModelImpl::GetMaterial(MeshIndex midx) const
 }
 
 
-const Frustum *ModelImpl::GetBounds() const
+const BoundingBox *ModelImpl::GetBounds() const
 {
 	return nullptr;
 }

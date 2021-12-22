@@ -71,7 +71,7 @@ IndexBuffer *MeshImpl::GetIndexBuffer() const
 }
 
 
-const Frustum *MeshImpl::GetBounds() const
+const BoundingBox *MeshImpl::GetBounds() const
 {
 	return nullptr;
 }

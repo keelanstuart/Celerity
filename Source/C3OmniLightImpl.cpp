@@ -141,7 +141,9 @@ void OmniLightImpl::Render(Object *pobject, props::TFlags64 rendflags)
 		m_SP_deflight->ApplyUniforms();
 	}
 
-	m_Bounds.CalculateForBounds(scl, m_pPos->GetTransformMatrix());
+	m_Bounds.SetOrigin(-1, -1, -1);
+	m_Bounds.SetExtents(2.0f, 2.0f, 2.0f);
+	m_Bounds.Align(m_pPos->GetTransformMatrix());
 	bool isinside = m_Bounds.IsPointInside(prend->GetEyePosition());
 	if (isinside)
 	{

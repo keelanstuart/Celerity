@@ -34,7 +34,7 @@
 #include <glm/ext.hpp>		// https://github.com/g-truc/glm				==> third-party/glm
 
 #include <C3MatrixStack.h>
-#include <C3Frustum.h>
+#include <C3BoundingBox.h>
 #include <C3Texture.h>
 #include <C3DepthBuffer.h>
 #include <C3FrameBuffer.h>

@@ -120,9 +120,6 @@
     <ClCompile Include="Source\C3ModelImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\C3FrustumImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\C3CRC.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -148,6 +145,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\C3ResourceImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3BoundingBoxImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -347,16 +347,10 @@
     <ClInclude Include="Source\C3ModelRendererImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Include\C3Frustum.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\C3ModelImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\C3Component.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3FrustumImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Include\C3CRC.h">
@@ -417,6 +411,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3BoundingBox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3BoundingBoxImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
