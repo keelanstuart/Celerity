@@ -33,7 +33,9 @@ namespace c3
 		int32_t m_uniSampNorm;
 		int32_t m_uniSampPosDepth;
 		int32_t m_uniSampEmisRough;
+		int32_t m_uniTexAtten;
 		BoundingBoxImpl m_Bounds;
+		Resource *m_TexAttenRes;
 
 		props::TFlags64 m_Flags;
 

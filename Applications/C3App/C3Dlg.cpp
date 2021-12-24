@@ -303,7 +303,7 @@ BOOL C3Dlg::OnInitDialog()
 
 				m_RootObj->AddChild(temp);
 
-				theApp.m_C3->GetLog()->Print(_T("Light %d created\n"), i);
+				//theApp.m_C3->GetLog()->Print(_T("Light %d created\n"), i);
 			}
 		}
 	}

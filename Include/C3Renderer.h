@@ -262,19 +262,19 @@ namespace c3
 		virtual void SetBlendEquation(BlendEquation eq) = NULL;
 		virtual BlendEquation GetBlendEquation() const = NULL;
 
-		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
-		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
-		virtual Texture3D *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 flags = 0) = NULL;
+		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount = 0, props::TFlags64 createflags = 0) = NULL;
+		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 createflags = 0) = NULL;
+		virtual Texture3D *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 createflags = 0) = NULL;
 
-		virtual Texture2D *CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 flags = 0) = NULL;
+		virtual Texture2D *CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 createflags = 0) = NULL;
 
-		virtual DepthBuffer *CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 flags = 0) = NULL;
+		virtual DepthBuffer *CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 createflags = 0) = NULL;
 
 		/// Creates a frame buffer that facilitates rendering to textures
-		virtual FrameBuffer *CreateFrameBuffer(props::TFlags64 flags = 0) = NULL;
+		virtual FrameBuffer *CreateFrameBuffer(props::TFlags64 createflags = 0) = NULL;
 
-		virtual VertexBuffer *CreateVertexBuffer(props::TFlags64 flags = 0) = NULL;
-		virtual IndexBuffer *CreateIndexBuffer(props::TFlags64 flags = 0) = NULL;
+		virtual VertexBuffer *CreateVertexBuffer(props::TFlags64 createflags = 0) = NULL;
+		virtual IndexBuffer *CreateIndexBuffer(props::TFlags64 createflags = 0) = NULL;
 		virtual Mesh *CreateMesh() = NULL;
 
 		virtual ShaderProgram *CreateShaderProgram() = NULL;
@@ -326,6 +326,7 @@ namespace c3
 		virtual Texture2D *GetWhiteTexture() = NULL;
 		virtual Texture2D *GetBlueTexture() = NULL;
 		virtual Texture2D *GetGridTexture() = NULL;
+		virtual Texture2D *GetLinearGradientTexture() = NULL;
 
 		virtual MaterialManager *GetMaterialManager() = NULL;
 		virtual const Material *GetWhiteMaterial() = NULL;

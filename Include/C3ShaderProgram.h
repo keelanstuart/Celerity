@@ -8,6 +8,7 @@
 
 #include <C3.h>
 #include <C3Renderer.h>
+#include <C3Texture.h>
 
 namespace c3
 {
@@ -46,7 +47,7 @@ namespace c3
 
 		// The texture name (Texture::SetName), if correspondent to the uniform name, will determine the location if -1 is given there
 		// a particular sampler can be used, but if one is not given, one will be automatically assigned
-		virtual bool SetUniformTexture(Texture *tex, int32_t location = -1, int32_t sampler = -1) = NULL;
+		virtual bool SetUniformTexture(Texture *tex, int32_t location = -1, int32_t texunit = -1, props::TFlags32 texflags = TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR) = NULL;
 
 		/// Actually sets the uniform values in the program
 		virtual void ApplyUniforms(bool update_globals = true) = NULL;

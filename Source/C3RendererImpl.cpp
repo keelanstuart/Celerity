@@ -100,6 +100,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_WhiteTex = nullptr;
 	m_BlueTex = nullptr;
 	m_GridTex = nullptr;
+	m_LinearGradientTex = nullptr;
 
 	m_MatMan = nullptr;
 	m_mtlWhite = nullptr;
@@ -464,6 +465,12 @@ void RendererImpl::Shutdown()
 		m_GridTex = nullptr;
 	}
 
+	if (m_LinearGradientTex)
+	{
+		m_LinearGradientTex->Release();
+		m_LinearGradientTex = nullptr;
+	}
+
 	if (m_BoundsMesh)
 	{
 		m_BoundsMesh->AttachVertexBuffer(nullptr);
@@ -535,6 +542,12 @@ void RendererImpl::Shutdown()
 		delete m_MatMan;
 		m_MatMan;
 	}
+
+	for (auto sit : m_TexFlagsToSampler)
+	{
+		gl.DeleteSamplers(1, &sit.second);
+	}
+	m_TexFlagsToSampler.clear();
 
 	wglMakeCurrent(NULL, NULL);
 
@@ -1208,25 +1221,25 @@ GLenum RendererImpl::GLFormat(TextureType type)
 }
 
 
-Texture2D *RendererImpl::CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount, props::TFlags64 flags)
+Texture2D *RendererImpl::CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount, props::TFlags64 createflags)
 {
-	return new Texture2DImpl(this, width, height, type, mipcount, flags);
+	return new Texture2DImpl(this, width, height, type, mipcount, createflags);
 }
 
 
-TextureCube *RendererImpl::CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags)
+TextureCube *RendererImpl::CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 createflags)
 {
-	return new TextureCubeImpl(this, width, height, depth, type, mipcount, flags);
+	return new TextureCubeImpl(this, width, height, depth, type, mipcount, createflags);
 }
 
 
-Texture3D *RendererImpl::CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags)
+Texture3D *RendererImpl::CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 createflags)
 {
-	return new Texture3DImpl(this, width, height, depth, type, mipcount, flags);
+	return new Texture3DImpl(this, width, height, depth, type, mipcount, createflags);
 }
 
 
-Texture2D *RendererImpl::CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 flags)
+Texture2D *RendererImpl::CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 createflags)
 {
 	Texture2D *ret = nullptr;
 
@@ -1259,7 +1272,7 @@ Texture2D *RendererImpl::CreateTexture2DFromFile(const TCHAR *filename, props::T
 				break;
 		}
 
-		ret = CreateTexture2D(width, height, tt, 0, flags);
+		ret = CreateTexture2D(width, height, tt, 0, createflags);
 		
 		if (ret)
 		{
@@ -1282,25 +1295,25 @@ Texture2D *RendererImpl::CreateTexture2DFromFile(const TCHAR *filename, props::T
 }
 
 
-DepthBuffer* RendererImpl::CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 flags)
+DepthBuffer* RendererImpl::CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 createflags)
 {
 	return new DepthBufferImpl(this, width, height, type);
 }
 
 
-FrameBuffer *RendererImpl::CreateFrameBuffer(props::TFlags64 flags)
+FrameBuffer *RendererImpl::CreateFrameBuffer(props::TFlags64 createflags)
 {
 	return new FrameBufferImpl(this);
 }
 
 
-VertexBuffer *RendererImpl::CreateVertexBuffer(props::TFlags64 flags)
+VertexBuffer *RendererImpl::CreateVertexBuffer(props::TFlags64 createflags)
 {
 	return new VertexBufferImpl(this);
 }
 
 
-IndexBuffer *RendererImpl::CreateIndexBuffer(props::TFlags64 flags)
+IndexBuffer *RendererImpl::CreateIndexBuffer(props::TFlags64 createflags)
 {
 	return new IndexBufferImpl(this);
 }
@@ -1449,12 +1462,12 @@ void RendererImpl::UseIndexBuffer(IndexBuffer *pibuf)
 }
 
 
-void RendererImpl::UseTexture(uint64_t sampler, Texture *ptex)
+void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 texflags)
 {
-	if (sampler >= 32)
+	if (texunit >= 32)
 		return;
 
-	static const GLenum sampleridlu[32] =
+	static const GLenum texunitidlu[32] =
 	{
 		GL_TEXTURE0, GL_TEXTURE1, GL_TEXTURE2, GL_TEXTURE3, GL_TEXTURE4, GL_TEXTURE5, GL_TEXTURE6, GL_TEXTURE7,
 		GL_TEXTURE8, GL_TEXTURE9, GL_TEXTURE10, GL_TEXTURE11, GL_TEXTURE12, GL_TEXTURE13, GL_TEXTURE14, GL_TEXTURE15,
@@ -1462,12 +1475,81 @@ void RendererImpl::UseTexture(uint64_t sampler, Texture *ptex)
 		GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27, GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31
 	};
 
-	static Texture *ptexcache[32] ={0};
+	static Texture *ptexcache[32] = {0};
+	static uint32_t samplercache[32] = {0};
 
-	if (ptexcache[sampler] == ptex)
+	if (texflags != samplercache[texunit])
+	{
+		GLuint sampid;
+
+		TTexFlagsToSamplerMap::iterator it = m_TexFlagsToSampler.find((uint32_t)texflags);
+		if (it == m_TexFlagsToSampler.end())
+		{
+			//make a new sampler object
+			gl.GenSamplers(1, &sampid);
+
+			if (texflags.IsSet(TEXFLAG_MIRROR_U | TEXFLAG_WRAP_U))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+			else if (texflags.IsSet(TEXFLAG_WRAP_U))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			else if (texflags.IsSet(TEXFLAG_MIRROR_U))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
+			else
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+
+			if (texflags.IsSet(TEXFLAG_MIRROR_V | TEXFLAG_WRAP_V))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+			else if (texflags.IsSet(TEXFLAG_WRAP_V))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			else if (texflags.IsSet(TEXFLAG_MIRROR_V))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_MIRROR_CLAMP_TO_EDGE);
+			else
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+
+			if (texflags.IsSet(TEXFLAG_MIRROR_W | TEXFLAG_WRAP_W))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+			else if (texflags.IsSet(TEXFLAG_WRAP_W))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_REPEAT);
+			else if (texflags.IsSet(TEXFLAG_MIRROR_W))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_MIRROR_CLAMP_TO_EDGE);
+			else
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+			if (texflags.IsSet(TEXFLAG_MAGFILTER_LINEAR))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			else
+				gl.SamplerParameteri(sampid, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+			if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			else if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPNEAREST))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+			else if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			else if (texflags.IsSet(TEXFLAG_MINFILTER_MIPLINEAR))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+			else if (texflags.IsSet(TEXFLAG_MINFILTER_MIPNEAREST))
+				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+			else
+				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+			m_TexFlagsToSampler.insert(TTexFlagsToSamplerMap::value_type((uint32_t)texflags, sampid));
+		}
+		else
+		{
+			sampid = it->second;
+		}
+
+		gl.BindSampler((GLuint)texunit, sampid);
+		FlushErrors(_T(""));
+
+		samplercache[texunit] = texflags;
+	}
+
+	if (ptexcache[texunit] == ptex)
 		return;
 
-	Texture *luptex = ptex ? ptex : ptexcache[sampler];
+	Texture *luptex = ptex ? ptex : ptexcache[texunit];
 
 	GLuint glid = NULL;
 	GLenum textype;
@@ -1501,9 +1583,9 @@ void RendererImpl::UseTexture(uint64_t sampler, Texture *ptex)
 		glid = (GLuint)(c3::ShaderProgramImpl &)*tex2d;
 	}
 
-	ptexcache[sampler] = ptex;
+	ptexcache[texunit] = ptex;
 
-	gl.ActiveTexture(sampleridlu[sampler]);
+	gl.ActiveTexture(texunitidlu[texunit]);
 	gl.BindTexture(textype, ptex ? glid : 0);
 }
 
@@ -2348,7 +2430,7 @@ Texture2D *RendererImpl::GetGridTexture()
 {
 	if (!m_GridTex)
 	{
-		m_GridTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 0, TEXCREATEFLAG_WRAP_U | TEXCREATEFLAG_WRAP_V);
+		m_GridTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 0, 0);
 		if (m_GridTex)
 		{
 			uint32_t *buf;
@@ -2371,6 +2453,32 @@ Texture2D *RendererImpl::GetGridTexture()
 	}
 
 	return m_GridTex;
+}
+
+
+Texture2D *RendererImpl::GetLinearGradientTexture()
+{
+	if (!m_LinearGradientTex)
+	{
+		m_LinearGradientTex = CreateTexture2D(256, 1, TextureType::U8_4CH, 1, 0);
+		if (m_LinearGradientTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_LinearGradientTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				for (size_t x = 0, maxx = li.width; x < maxx; x++)
+				{
+					uint32_t v = (uint32_t)(x | (x << 8) | (x << 16) | (x << 24));
+					buf[x] = v;
+				}
+
+				m_LinearGradientTex->Unlock();
+			}
+		}
+	}
+
+	return m_LinearGradientTex;
 }
 
 

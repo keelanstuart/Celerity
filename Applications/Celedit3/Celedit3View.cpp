@@ -110,7 +110,7 @@ void CCeledit3View::OnDraw(CDC *pDC)
 			}
 
 			// Color pass
-			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
+			prend->SetDepthMode(c3::Renderer::DEPTHMODE::DM_READWRITE);
 			prend->UseFrameBuffer(pmf->m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
 			prend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ALPHA);
@@ -120,7 +120,7 @@ void CCeledit3View::OnDraw(CDC *pDC)
 
 			// Lighting pass(es)
 			prend->UseFrameBuffer(pmf->m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
-			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
+			prend->SetDepthMode(c3::Renderer::DEPTHMODE::DM_READONLY);
 			prend->SetDepthTest(c3::Renderer::Test::DT_LESSEREQUAL);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
@@ -130,7 +130,7 @@ void CCeledit3View::OnDraw(CDC *pDC)
 
 			// Resolve
 			prend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
-			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
+			prend->SetDepthMode(c3::Renderer::DEPTHMODE::DM_DISABLED);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			prend->UseProgram(pmf->m_SP_copyback);

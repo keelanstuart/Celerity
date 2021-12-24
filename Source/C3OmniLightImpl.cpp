@@ -20,6 +20,7 @@ OmniLightImpl::OmniLightImpl()
 	m_FS_deflight = m_VS_deflight = nullptr;
 	m_SP_deflight = nullptr;
 	m_SourceFB = nullptr;
+	m_TexAttenRes = nullptr;
 }
 
 
@@ -114,6 +115,7 @@ void OmniLightImpl::Render(Object *pobject, props::TFlags64 rendflags)
 				m_uniSampNorm = m_SP_deflight->GetUniformLocation(_T("uSamplerNormalAmbOcc"));
 				m_uniSampPosDepth = m_SP_deflight->GetUniformLocation(_T("uSamplerPosDepth"));
 				m_uniSampEmisRough = m_SP_deflight->GetUniformLocation(_T("uSamplerEmissionRoughness"));
+				m_uniTexAtten = m_SP_deflight->GetUniformLocation(_T("uSamplerAttenuation"));
 			}
 		}
 	}
@@ -137,6 +139,11 @@ void OmniLightImpl::Render(Object *pobject, props::TFlags64 rendflags)
 		m_SP_deflight->SetUniformTexture(m_SourceFB->GetColorTargetByName(_T("uSamplerNormalAmbOcc")), m_uniSampNorm);
 		m_SP_deflight->SetUniformTexture(m_SourceFB->GetColorTargetByName(_T("uSamplerPosDepth")), m_uniSampPosDepth);
 		m_SP_deflight->SetUniformTexture(m_SourceFB->GetColorTargetByName(_T("uSamplerEmissionRoughness")), m_uniSampEmisRough);
+		if (m_uniTexAtten != ShaderProgram::INVALID_UNIFORM)
+		{
+			Texture2D *ptex = m_TexAttenRes ? (Texture2D *)(m_TexAttenRes->GetData()) : prend->GetLinearGradientTexture();
+			m_SP_deflight->SetUniformTexture(ptex ? ptex : prend->GetLinearGradientTexture(), m_uniTexAtten, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+		}
 		prend->SetWorldMatrix(m_pPos->GetTransformMatrix());
 		m_SP_deflight->ApplyUniforms();
 	}
@@ -173,19 +180,26 @@ void OmniLightImpl::PropertyChanged(const props::IProperty *pprop)
 		return;
 
 	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
+	Resource *pr = nullptr;
 
 	switch (pprop->GetID())
 	{
 		case 'VSHF':
-			m_VS_deflight = (c3::ShaderComponent *)((prm->GetResource(pprop->AsString()))->GetData());
+			pr = prm->GetResource(pprop->AsString());
+			m_VS_deflight = pr ? (c3::ShaderComponent *)(pr->GetData()) : nullptr;
 			break;
 
 		case 'FSHF':
-			m_FS_deflight = (c3::ShaderComponent *)((prm->GetResource(pprop->AsString()))->GetData());
+			pr = prm->GetResource(pprop->AsString());
+			m_FS_deflight = pr ? (c3::ShaderComponent *)(pr->GetData()) : nullptr;
 			break;
 
 		case 'LCLR':
 			m_propColor = (props::IProperty *)pprop;
+			break;
+
+		case 'GRAD':
+			m_TexAttenRes = prm->GetResource(pprop->AsString());
 			break;
 	}
 }

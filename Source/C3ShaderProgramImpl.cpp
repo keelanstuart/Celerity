@@ -240,7 +240,7 @@ bool ShaderProgramImpl::SetUniform4(int32_t location, const glm::fvec4 *v4)
 }
 
 
-bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_t sampler)
+bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_t texunit, props::TFlags32 texflags)
 {
 	if (!tex)
 		tex = m_Rend->GetBlackTexture();
@@ -252,13 +252,13 @@ bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_
 	if (!p)
 		return false;
 
-	// Vec3I = (uniform index, sampler, texture)
+	// Vec3I = (uniform index, texunit, texture, texflags)
 	p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D);
-	p->SetVec3I(props::TVec3I(p->AsVec3I()->x, sampler >= 0 ? sampler : p->AsVec3I()->y, (int64_t)tex));
+	p->SetVec4I(props::TVec4I(p->AsVec4I()->x, texunit >= 0 ? texunit : p->AsVec4I()->y, (int64_t)tex, texflags));
 
 #ifdef IMMEDIATE_UNIFORMS
-	m_Rend->UseTexture(sampler, tex);
-	m_Rend->gl.ProgramUniform1i(m_glID, (GLint)location, (GLint)sampler);
+	m_Rend->UseTexture(texunit, tex);
+	m_Rend->gl.ProgramUniform1i(m_glID, (GLint)location, (GLint)texunit);
 #endif
 
 	return true;
@@ -375,9 +375,9 @@ void ShaderProgramImpl::CaptureUniforms()
 				p->SetBool(false);
 				break;
 
-			// Vec3I = (uniform index, sampler, texture)
+			// Vec4I = (uniform index, sampler, texture, texture flags)
 			case GL_SAMPLER_2D:
-				p->SetVec3I(props::TVec3I(i, sampleridx++, (int64_t)(m_Rend->GetBlackTexture())));
+				p->SetVec4I(props::TVec4I(i, sampleridx++, (int64_t)(m_Rend->GetBlackTexture()), TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR));
 				break;
 		}
 	}
@@ -510,18 +510,19 @@ void ShaderProgramImpl::ApplyUniforms(bool update_globals)
 				m_Rend->gl.ProgramUniform1f(m_glID, (GLint)p->GetID(), p->AsFloat());
 				break;
 
-			case props::IProperty::PROPERTY_TYPE::PT_INT_V3:
+			case props::IProperty::PROPERTY_TYPE::PT_INT_V4:
 				switch (p->GetAspect())
 				{
-					// Vec3I = (uniform index, sampler, texture)
+					// Vec4I = (uniform index, sampler, texture)
 					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D:
 					{
-						GLint id = (GLint)p->AsVec3I()->x;
-						GLint sampler = (GLint)p->AsVec3I()->y;
-						Texture *tex = (Texture *)p->AsVec3I()->z;
+						GLint id = (GLint)p->AsVec4I()->x;
+						GLint texunit = (GLint)p->AsVec4I()->y;
+						Texture *tex = (Texture *)p->AsVec4I()->z;
+						props::TFlags32 texflags((uint32_t)p->AsVec4I()->w);
 
-						m_Rend->UseTexture(sampler, tex);
-						m_Rend->gl.ProgramUniform1i(m_glID, id, sampler);
+						m_Rend->UseTexture(texunit, tex, texflags);
+						m_Rend->gl.ProgramUniform1i(m_glID, id, texunit);
 						break;
 					}
 				}

@@ -13,17 +13,8 @@
 namespace c3
 {
 
-	#define TEXFLAG_WRAP_U			0x00000001
-	#define TEXFLAG_MIRROR_U		0x00000002
-	#define TEXFLAG_WRAP_V			0x00000100
-	#define TEXFLAG_MIRROR_V		0x00000200
-	#define TEXFLAG_WRAP_W			0x00010000
-	#define TEXFLAG_MIRROR_W		0x00020000
-
-	#define TEXFLAG_GENMIPS			0x00100000
-
-	#define TEXLOCKFLAG_UPDATENOW	0x0001
-	#define TEXLOCKFLAG_USERBUFFER	0x0002
+	// PRIVATE don't use in UseTexture's texflags
+	#define TEXFLAG_GENMIPS			0x80000000
 
 	class Texture2DImpl : public Texture2D
 	{

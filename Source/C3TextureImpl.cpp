@@ -40,18 +40,6 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 	m_LockMip = 0;
 	m_Flags = 0;
 
-	if (flags.IsSet(TEXCREATEFLAG_WRAP_U))
-		m_Flags.Set(TEXFLAG_WRAP_U);
-
-	if (flags.IsSet(TEXCREATEFLAG_MIRROR_U))
-		m_Flags.Set(TEXFLAG_MIRROR_U);
-
-	if (flags.IsSet(TEXCREATEFLAG_WRAP_V))
-		m_Flags.Set(TEXFLAG_WRAP_V);
-
-	if (flags.IsSet(TEXCREATEFLAG_MIRROR_V))
-		m_Flags.Set(TEXFLAG_MIRROR_V);
-
 	if (flags.IsSet(TEXCREATEFLAG_RENDERTARGET))
 	{
 		m_Rend->gl.GenTextures(1, &m_glID);
@@ -270,7 +258,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::Syste
 {
 	if (returned_data)
 	{
-		*returned_data = psys->GetRenderer()->CreateTexture2DFromFile(filename, TEXCREATEFLAG_WRAP_U | TEXCREATEFLAG_WRAP_V);
+		*returned_data = psys->GetRenderer()->CreateTexture2DFromFile(filename, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;
 	}
@@ -561,24 +549,6 @@ Texture3DImpl::Texture3DImpl(RendererImpl *prend, size_t width, size_t height, s
 	m_glID = NULL;
 	m_LockMip = 0;
 	m_Flags = 0;
-
-	if (flags.IsSet(TEXCREATEFLAG_WRAP_U))
-		m_Flags.Set(TEXFLAG_WRAP_U);
-
-	if (flags.IsSet(TEXCREATEFLAG_MIRROR_U))
-		m_Flags.Set(TEXFLAG_MIRROR_U);
-
-	if (flags.IsSet(TEXCREATEFLAG_WRAP_V))
-		m_Flags.Set(TEXFLAG_WRAP_V);
-
-	if (flags.IsSet(TEXCREATEFLAG_MIRROR_V))
-		m_Flags.Set(TEXFLAG_MIRROR_V);
-
-	if (flags.IsSet(TEXCREATEFLAG_WRAP_W))
-		m_Flags.Set(TEXFLAG_WRAP_W);
-
-	if (flags.IsSet(TEXCREATEFLAG_MIRROR_W))
-		m_Flags.Set(TEXFLAG_MIRROR_W);
 }
 
 

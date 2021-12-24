@@ -133,6 +133,7 @@ BOOL C3App::InitInstance()
 	pproto->AddComponent(c3::OmniLight::Type());
 	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-omnilight.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-omnilight.fsh"));
+	pproto->GetProperties()->CreateProperty(_T("AttenGradientTexture"), 'GRAD')->SetString(_T("LightAtten.png"));
 	pproto->Flags().SetAll(c3::Object::OBJFLAG(c3::Object::UPDATE) | c3::Object::OBJFLAG(c3::Object::DRAWINEDITOR) | c3::Object::OBJFLAG(c3::Object::LIGHT));
 
 	theApp.m_C3->GetLog()->Print(_T("done\n"));

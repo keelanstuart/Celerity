@@ -121,11 +121,15 @@ namespace c3
 		Texture2D *m_WhiteTex;
 		Texture2D *m_BlueTex;
 		Texture2D *m_GridTex;
+		Texture2D *m_LinearGradientTex;
 
 		MaterialManagerImpl *m_MatMan;
 		Material *m_mtlWhite;
 
 		size_t m_VertsPerFrame, m_IndicesPerFrame, m_TrisPerFrame, m_LinesPerFrame, m_PointsPerFrame;
+
+		typedef std::map<uint32_t, GLuint> TTexFlagsToSamplerMap;
+		TTexFlagsToSamplerMap m_TexFlagsToSampler;
 
 	public:
 
@@ -236,7 +240,7 @@ namespace c3
 		virtual void UseVertexBuffer(VertexBuffer *pvbuf);
 		virtual void UseIndexBuffer(IndexBuffer *pibuf);
 
-		virtual void UseTexture(uint64_t sampler, Texture *ptex = nullptr);
+		virtual void UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 texflags = TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
 
 		virtual bool DrawPrimitives(PrimType type, size_t count = -1);
 		virtual bool DrawIndexedPrimitives(PrimType type, size_t offset = -1, size_t count = -1);
@@ -278,6 +282,7 @@ namespace c3
 		virtual Texture2D *GetWhiteTexture();
 		virtual Texture2D *GetBlueTexture();
 		virtual Texture2D *GetGridTexture();
+		virtual Texture2D *GetLinearGradientTexture();
 
 		virtual MaterialManager *GetMaterialManager();
 		virtual const Material *GetWhiteMaterial();
