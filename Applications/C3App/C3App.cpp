@@ -109,7 +109,10 @@ BOOL C3App::InitInstance()
 	pproto->AddComponent(c3::ModelRenderer::Type());
 	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-obj.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-obj.fsh"));
+	pproto->GetProperties()->CreateProperty(_T("ShadowVertexShader"), 'VSSF')->SetString(_T("def-obj-shadow.vsh"));
+	pproto->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("sponza\\sponza.gltf"));
+	pproto->Flags().Set(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("AH64e"));
@@ -117,7 +120,10 @@ BOOL C3App::InitInstance()
 	pproto->AddComponent(c3::ModelRenderer::Type());
 	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-obj.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-obj.fsh"));
+	pproto->GetProperties()->CreateProperty(_T("ShadowVertexShader"), 'VSSF')->SetString(_T("def-obj-shadow.vsh"));
+	pproto->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("ah64e\\ah64e.fbx"));
+	pproto->Flags().Set(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("TestBox"));
@@ -125,7 +131,10 @@ BOOL C3App::InitInstance()
 	pproto->AddComponent(c3::ModelRenderer::Type());
 	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-obj.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-obj.fsh"));
+	pproto->GetProperties()->CreateProperty(_T("ShadowVertexShader"), 'VSSF')->SetString(_T("def-obj-shadow.vsh"));
+	pproto->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("TestBox\\cube.obj"));
+	pproto->Flags().Set(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("Light"));

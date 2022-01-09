@@ -150,6 +150,9 @@
     <ClCompile Include="Source\C3BoundingBoxImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3EnvironmentModifierImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -410,13 +413,16 @@
     <ClInclude Include="Include\C3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Include\C3BoundingBox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3BoundingBoxImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3EnvironmentModifier.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3EnvironmentModifierImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

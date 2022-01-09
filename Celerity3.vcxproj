@@ -32,6 +32,7 @@
     <ClCompile Include="Source\C3ConfigurationImpl.cpp" />
     <ClCompile Include="Source\C3CRC.cpp" />
     <ClCompile Include="Source\C3DepthBufferImpl.cpp" />
+    <ClCompile Include="Source\C3EnvironmentModifierImpl.cpp" />
     <ClCompile Include="Source\C3FactoryImpl.cpp" />
     <ClCompile Include="Source\C3FileMapperImpl.cpp" />
     <ClCompile Include="Source\C3FrameBufferImpl.cpp" />
@@ -128,6 +129,7 @@
     <ClInclude Include="Include\C3Configuration.h" />
     <ClInclude Include="Include\C3CRC.h" />
     <ClInclude Include="Include\C3DepthBuffer.h" />
+    <ClInclude Include="Include\C3EnvironmentModifier.h" />
     <ClInclude Include="Include\C3Factory.h" />
     <ClInclude Include="Include\C3Component.h" />
     <ClInclude Include="Include\C3FileMapper.h" />
@@ -161,11 +163,11 @@
     <ClInclude Include="Include\C3TString.h" />
     <ClInclude Include="Include\C3VertexBuffer.h" />
     <ClInclude Include="Include\C3FlowGraph.h" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="Source\C3BoundingBoxImpl.h" />
     <ClInclude Include="Source\C3CameraImpl.h" />
     <ClInclude Include="Source\C3ConfigurationImpl.h" />
     <ClInclude Include="Source\C3DepthBufferImpl.h" />
+    <ClInclude Include="Source\C3EnvironmentModifierImpl.h" />
     <ClInclude Include="Source\C3FactoryImpl.h" />
     <ClInclude Include="Source\C3FileMapperImpl.h" />
     <ClInclude Include="Source\C3FrameBufferImpl.h" />

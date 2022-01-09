@@ -345,10 +345,16 @@ void ShaderProgramImpl::CaptureUniforms()
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE);
 				else if (!_tcscmp(n, _T("uColorSpecular")))
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR);
-				else if (!_tcscmp(n, _T("uEyePos")))
+				else if (!_tcscmp(n, _T("uEyePosition")))
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_EYE_POSITION);
-				else if (!_tcscmp(n, _T("uEyeDir")))
+				else if (!_tcscmp(n, _T("uEyeDirection")))
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_EYE_DIRECTION);
+				else if (!_tcscmp(n, _T("uSunDirection")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_DIRECTION);
+				else if (!_tcscmp(n, _T("uSunColor")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR);
+				else if (!_tcscmp(n, _T("uAmbientColor")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR);
 
 				break;
 
@@ -426,6 +432,18 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 					case props::IProperty::PROPERTY_ASPECT::PA_EYE_DIRECTION:
 						SetUniform3(p->GetID(), m_Rend->GetEyeDirection());
 						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_SUN_DIRECTION:
+						//SetUniform3(p->GetID(), m_Rend->GetSunDirection());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
+						//SetUniform3(p->GetID(), m_Rend->GetSunColor());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+						//SetUniform3(p->GetID(), m_Rend->GetAmbientColor());
+						break;
 				}	
 				break;
 
@@ -458,6 +476,10 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 
 					case props::IProperty::PROPERTY_ASPECT::PA_NORMALMAT:
 						SetUniformMatrix(p->GetID(), m_Rend->GetNormalMatrix());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_SUNSHADOWMAT:
+						SetUniformMatrix(p->GetID(), m_Rend->GetSunShadowMatrix());
 						break;
 				}
 				break;

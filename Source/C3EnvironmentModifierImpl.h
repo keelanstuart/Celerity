@@ -7,37 +7,25 @@
 #pragma once
 
 #include <C3.h>
-#include <C3ModelRenderer.h>
+#include <C3EnvironmentModifier.h>
 #include <C3PositionableImpl.h>
 
 namespace c3
 {
 
-	class ModelRendererImpl : public ModelRenderer, props::IPropertyChangeListener
+	class EnvironmentModifierImpl : public EnvironmentModifier, props::IPropertyChangeListener
 	{
 
 	protected:
-		Object *m_pOwner;
 		Positionable *m_pPos;
-
-		ShaderComponent *m_VS_defobj;
-		ShaderComponent *m_FS_defobj;
-		ShaderProgram *m_SP_defobj;
-
-		ShaderComponent *m_VS_shadowobj;
-		ShaderComponent *m_FS_shadowobj;
-		ShaderProgram *m_SP_shadowobj;
-
-		typedef std::pair<Model *, Resource *> TModOrRes;
-		TModOrRes m_Mod;
 
 		props::TFlags64 m_Flags;
 
 	public:
 
-		ModelRendererImpl();
+		EnvironmentModifierImpl();
 
-		virtual ~ModelRendererImpl();
+		virtual ~EnvironmentModifierImpl();
 
 		virtual void Release();
 
@@ -59,6 +47,7 @@ namespace c3
 
 	};
 
-	DEFINE_COMPONENTTYPE(ModelRenderer, ModelRendererImpl, GUID({0x15558c71, 0xe301, 0x4911, { 0xa1, 0xa9, 0x8d, 0x88, 0x6c, 0x3c, 0x45, 0xd1 }}), "ModelRenderer", "ModelRenderer draws a Model if it's visible (requires Positionable)");
+	// {C8ED7967-2E22-46D2-BA1B-9FD0D1E7CAE2}
+	DEFINE_COMPONENTTYPE(EnvironmentModifier, EnvironmentModifierImpl, GUID({ 0xc8ed7967, 0x2e22, 0x46d2, { 0xba, 0x1b, 0x9f, 0xd0, 0xd1, 0xe7, 0xca, 0xe2 } }), "EnvironmentModifier", "EnvironmentModifier affects some, or all, of the environment settings, such as lighting/shadowing, fogging, audio, etc. (requires Positionable) Recursive; last one in hierarchy wins that the eyepoint is inside.");
 
 };

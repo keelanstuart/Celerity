@@ -68,9 +68,6 @@ void FrameBufferImpl::Release()
 
 FrameBuffer::RETURNCODE FrameBufferImpl::Setup(size_t numtargs, const TargetDesc *ptargdescs, c3::DepthBuffer *pdb, RECT &r)
 {
-	if (!numtargs || !ptargdescs)
-		return RETURNCODE::RET_NOTARGETS;
-
 	size_t w = r.right - r.left;
 	size_t h = r.bottom - r.top;
 
@@ -191,7 +188,11 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachDepthTarget(DepthBuffer* pdepth)
 
 		GLenum attach_type = ((pdepth->Format() == Renderer::DepthType::F32_DS) || (pdepth->Format() == Renderer::DepthType::U32_DS)) ? GL_DEPTH_STENCIL_ATTACHMENT : GL_DEPTH_ATTACHMENT;
 
-		m_Rend->gl.FramebufferRenderbuffer(GL_FRAMEBUFFER, attach_type, GL_RENDERBUFFER, (const DepthBufferImpl &)*pdepth);
+		if (pdepth->Format() < Renderer::DepthType::F16_SHADOW)
+			m_Rend->gl.FramebufferRenderbuffer(GL_FRAMEBUFFER, attach_type, GL_RENDERBUFFER, (const DepthBufferImpl &)*pdepth);
+		else
+			m_Rend->gl.FramebufferTexture(GL_FRAMEBUFFER, attach_type, (const DepthBufferImpl &)*pdepth, 0);
+
 		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 		m_DepthTarget = pdepth;
 	}
@@ -214,8 +215,17 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Seal()
 	{
 		m_Rend->UseFrameBuffer(this, 0);
 
-		m_Rend->gl.DrawBuffers((GLsizei)m_ColorTarget.size(), targenum);
-		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
+		// There might be no color targets if we're setting up a shadow map
+		if (m_ColorTarget.size() > 0)
+		{
+			m_Rend->gl.DrawBuffers((GLsizei)m_ColorTarget.size(), targenum);
+			m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
+		}
+		else
+		{
+			m_Rend->gl.DrawBuffer(GL_NONE);
+			//m_Rend->gl.ReadBuffer(GL_NONE);
+		}
 
 		GLenum status = (GLenum) m_Rend->gl.CheckFramebufferStatus(GL_FRAMEBUFFER);
 		switch(status)

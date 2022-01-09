@@ -39,7 +39,9 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_MoveD = false;
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
-
+	m_AmbientColor = c3::Color::DarkMagenta;
+	m_SunColor = c3::Color::DarkGrey;
+	m_SunDir = glm::normalize(glm::fvec3(0.2f, 0.5f, -1.0f));
 }
 
 void C3Dlg::DoDataExchange(CDataExchange* pDX)
@@ -70,8 +72,6 @@ c3::FrameBuffer::TargetDesc GBufTargData[] =
 	{ _T("uSamplerEmissionRoughness"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET }	// emission color (rgb) and roughness (a)
 };
 
-// It SEEEEMS like in order to get blending to work, the light combine buffer needs to pre-multiply alpha,
-// but then write alpha=1 in the shader... the depth test is still a problem
 c3::FrameBuffer::TargetDesc LCBufTargData[] =
 {
 	{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },
@@ -147,6 +147,7 @@ BOOL C3Dlg::OnInitDialog()
 	size_t h = r.Height();
 
 	m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
+	m_ShadowTarg = m_Rend->CreateDepthBuffer(2048, 2048, c3::Renderer::DepthType::F32_SHADOW);
 
 	bool gbok = false;
 
@@ -158,6 +159,12 @@ BOOL C3Dlg::OnInitDialog()
 	theApp.m_C3->GetLog()->Print(_T("Creating light combine buffer... "));
 	m_LCBuf = m_Rend->CreateFrameBuffer();
 	gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+	theApp.m_C3->GetLog()->Print(_T("Creating shadow buffer... "));
+	m_SSBuf = m_Rend->CreateFrameBuffer();
+	m_SSBuf->AttachDepthTarget(m_ShadowTarg);
+	gbok = m_SSBuf->Seal() == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	m_VS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.vsh"), rf))->GetData());
@@ -179,6 +186,10 @@ BOOL C3Dlg::OnInitDialog()
 			{
 				m_SP_copyback->SetUniformTexture(m_LCBuf->GetColorTarget(i));
 			}
+
+			m_ulSunDir = m_SP_copyback->GetUniformLocation(_T("uSunDirection"));
+			m_ulSunColor = m_SP_copyback->GetUniformLocation(_T("uSunColor"));
+			m_ulAmbientColor = m_SP_copyback->GetUniformLocation(_T("uAmbientColor"));
 		}
 	}
 
@@ -197,7 +208,7 @@ BOOL C3Dlg::OnInitDialog()
 
 	m_RootObj = m_Factory->Build((c3::Prototype *)nullptr);
 	m_RootObj->AddComponent(c3::Positionable::Type());
-	m_RootObj->Flags().Set(c3::Object::OBJFLAG(c3::Object::LIGHT));
+	m_RootObj->Flags().Set(c3::Object::OBJFLAG(c3::Object::LIGHT) | c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
 
 	c3::Prototype *pproto;
 
@@ -393,6 +404,15 @@ void C3Dlg::OnPaint()
 		}
 #endif
 
+		glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-50, 50, -50, 50, -50, 100);
+		glm::fmat4x4 depthViewMatrix = glm::lookAt(m_SunDir, glm::vec3(0,0,0), glm::vec3(0, 0, 1));
+		glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
+		m_Rend->SetSunShadowMatrix(&depthMVP);
+
+		m_SP_copyback->SetUniform3(m_ulAmbientColor, &m_AmbientColor);
+		m_SP_copyback->SetUniform3(m_ulSunColor, &m_SunColor);
+		m_SP_copyback->SetUniform3(m_ulSunDir, &m_SunDir);
+
 		m_RootObj->Update(dt);
 
 		if (m_Rend->BeginScene(0))
@@ -405,6 +425,10 @@ void C3Dlg::OnPaint()
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
 			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::DRAW));
+
+			// Shadow pass
+			m_Rend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH);
+			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
 
 			// Lighting pass(es)
 			m_Rend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR);

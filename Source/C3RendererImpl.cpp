@@ -1413,7 +1413,7 @@ FrameBuffer *RendererImpl::GetActiveFrameBuffer()
 
 void RendererImpl::UseProgram(ShaderProgram *pprog)
 {
-	if (pprog == m_CurProg)
+	if ((pprog == m_CurProg))
 		return;
 
 	GLuint glid = pprog ? (GLuint)(c3::ShaderProgramImpl &)*pprog : NULL;
@@ -1729,6 +1729,12 @@ void RendererImpl::SetWorldMatrix(const glm::fmat4x4 *m)
 }
 
 
+void RendererImpl::SetSunShadowMatrix(const glm::fmat4x4 *m)
+{
+	m_sunshadow = *m;
+}
+
+
 const glm::fmat4x4 *RendererImpl::GetProjectionMatrix(glm::fmat4x4 *m)
 {
 	if (!m)
@@ -1819,6 +1825,16 @@ const glm::fmat4x4 *RendererImpl::GetWorldViewProjectionMatrix(glm::fmat4x4 *m)
 		return &m_worldviewproj;
 
 	*m = m_worldviewproj;
+	return m;
+}
+
+
+const glm::fmat4x4 *RendererImpl::GetSunShadowMatrix(glm::fmat4x4 *m)
+{
+	if (!m)
+		return &m_sunshadow;
+
+	*m = m_sunshadow;
 	return m;
 }
 

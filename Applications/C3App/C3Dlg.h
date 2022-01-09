@@ -26,11 +26,16 @@ protected:
 	c3::Renderer *m_Rend;
 	c3::FrameBuffer *m_GBuf;
 	c3::FrameBuffer *m_LCBuf;
+	c3::FrameBuffer *m_SSBuf;
 	std::vector<c3::Texture2D *> m_ColorTarg;
 	c3::DepthBuffer *m_DepthTarg;
+	c3::DepthBuffer *m_ShadowTarg;
 	c3::ShaderComponent *m_VS_copyback;
 	c3::ShaderComponent *m_FS_copyback;
 	c3::ShaderProgram *m_SP_copyback;
+
+	int32_t m_ulSunDir, m_ulSunColor, m_ulAmbientColor;
+	glm::fvec3 m_SunDir, m_SunColor, m_AmbientColor;
 
 	c3::Factory *m_Factory;
 	c3::Object *m_RootObj;

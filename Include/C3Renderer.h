@@ -75,6 +75,8 @@ namespace c3
 			U32_DS,				// 24-bit uint, depth, 8-bit stencil
 			F32_D,				// 32-bit float, depth
 			F32_DS,				// 32-bit float, depth
+			F16_SHADOW,			// 16-bit float, shadow
+			F32_SHADOW,			// 32-bit float, shadow
 
 			NUM_DEPTHTYPES
 
@@ -295,6 +297,7 @@ namespace c3
 		virtual void SetProjectionMatrix(const glm::fmat4x4 *m) = NULL;
 		virtual void SetViewMatrix(const glm::fmat4x4 *m) = NULL;
 		virtual void SetWorldMatrix(const glm::fmat4x4 *m) = NULL;
+		virtual void SetSunShadowMatrix(const glm::fmat4x4 *m) = NULL;
 
 		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *m = nullptr) = NULL;
@@ -303,6 +306,7 @@ namespace c3
 		virtual const glm::fmat4x4 *GetNormalMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+		virtual const glm::fmat4x4 *GetSunShadowMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 
 		virtual void SetEyePosition(const glm::fvec3 *pos) = NULL;
 		virtual void SetEyeDirection(const glm::fvec3 *dir) = NULL;
