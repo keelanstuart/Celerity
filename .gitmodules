@@ -27,13 +27,16 @@
 	url = https://github.com/NVIDIAGameWorks/PhysX
 [submodule "third-party/imgui"]
 	path = third-party/imgui
-	url = https://github.com/keelanstuart/imgui
+	url = http://www.github.com/ocornut/imgui.git
 [submodule "third-party/assimp"]
 	path = third-party/assimp
-	url = https://github.com/keelanstuart/assimp
+	url = http://www.github.com/keelanstuart/assimp
 [submodule "third-party/irrXML"]
 	path = third-party/irrXML
 	url = https://github.com/keelanstuart/irrxml
 [submodule "third-party/zlib"]
 	path = third-party/zlib
 	url = https://github.com/keelanstuart/zlib
+[submodule "third-party/irrxml"]
+	path = third-party/irrxml
+	url = http://www.github.com/keelanstuart/irrxml.git
