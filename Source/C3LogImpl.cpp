@@ -94,7 +94,7 @@ void LogImpl::Print(const TCHAR *format, ...)
 
 	va_list marker;
 	va_start(marker, format);
-	_vsntprintf_s(buf, PRINT_BUFSIZE - 1, format, marker);
+	_vsntprintf_s(buf, PRINT_BUFSIZE - sizeof(TCHAR), format, marker);
 
 	// this writes the message to the log file...
 	if (m_File)

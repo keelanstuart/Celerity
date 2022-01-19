@@ -99,18 +99,6 @@
     <ClCompile Include="Source\C3ResourceManagerImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="third-party\imgui\imgui.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="third-party\imgui\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="third-party\imgui\imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="third-party\imgui\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\C3GuiImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -151,6 +139,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\C3EnvironmentModifierImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third-party\imgui\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third-party\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third-party\imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third-party\imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="third-party\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -311,12 +314,6 @@
     <ClInclude Include="Source\C3ResourceImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="third-party\imgui\imgui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="third-party\imgui\imconfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="third-party\imgui\imgui_internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -380,9 +377,6 @@
     <ClInclude Include="Source\C3ShaderBuilderImpl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Source\Header.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Include\C3MaterialManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -423,6 +417,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3EnvironmentModifierImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third-party\imgui\imconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="third-party\imgui\imgui.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

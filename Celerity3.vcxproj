@@ -88,36 +88,44 @@
     </ClCompile>
     <ClCompile Include="Source\C3ResourceImpl.cpp" />
     <ClCompile Include="third-party\imgui\imgui.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="third-party\imgui\imgui_demo.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="third-party\imgui\imgui_draw.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="third-party\imgui\imgui_tables.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="third-party\imgui\imgui_widgets.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|Win32'">NotUsing</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -202,7 +210,6 @@
     <ClInclude Include="Source\glext.h" />
     <ClInclude Include="Source\gl_wrapper.h" />
     <ClInclude Include="$(SolutionDir)third-party\tinyxml2\tinyxml2.h" />
-    <ClInclude Include="Source\Header.h" />
     <ClInclude Include="Source\pch.h" />
     <ClInclude Include="Source\wglext.h" />
     <ClInclude Include="third-party\imgui\imconfig.h" />
@@ -311,6 +318,8 @@
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
+    <CopyCppRuntimeToOutputDir>true</CopyCppRuntimeToOutputDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
@@ -320,6 +329,8 @@
     <ExcludePath>$(CommonExcludePath)</ExcludePath>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <OutDir>$(SolutionDir)bin\</OutDir>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
+    <CopyCppRuntimeToOutputDir>true</CopyCppRuntimeToOutputDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -328,6 +339,8 @@
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
+    <CopyCppRuntimeToOutputDir>true</CopyCppRuntimeToOutputDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|Win32'">
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
@@ -336,6 +349,8 @@
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <OutDir>$(SolutionDir)bin\</OutDir>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
+    <CopyCppRuntimeToOutputDir>true</CopyCppRuntimeToOutputDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -344,6 +359,8 @@
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
+    <CopyCppRuntimeToOutputDir>true</CopyCppRuntimeToOutputDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
@@ -352,6 +369,8 @@
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <OutDir>$(SolutionDir)bin\</OutDir>
+    <CopyLocalProjectReference>true</CopyLocalProjectReference>
+    <CopyCppRuntimeToOutputDir>true</CopyCppRuntimeToOutputDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -370,7 +389,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PreBuildEvent>
@@ -395,7 +414,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
     <PreBuildEvent>
@@ -419,10 +438,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>$(SolutionDir)Bin\glLibGen64.exe -class:"COpenGL" -basefile:"gl_wrapper" -outdir:"$(SolutionDir)Source" -ver:4.5 -glh:"C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um\gl\GL.h" -glexth:"https://www.khronos.org/registry/OpenGL/api/GL/glext.h" -wglexth:"https://www.khronos.org/registry/OpenGL/api/GL/wglext.h" -khrh:"https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h" -pch -ext -logcb</Command>
+      <Command>$(SolutionDir)Bin\glLibGen64.exe -class:"COpenGL" -basefile:"gl_wrapper" -outdir:"$(SolutionDir)Source" -ver:4.5 -glh:"C:\Program Files (x86)\Windows Kits\10\Include\10.0.19041.0\um\gl\GL.h" -glexth:"https://www.khronos.org/registry/OpenGL/api/GL/glext.h" -wglexth:"https://www.khronos.org/registry/OpenGL/api/GL/wglext.h" -khrh:"https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h" -pch -ext -logcb</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap (Debug)|Win32'">
@@ -441,7 +460,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>$(SolutionDir)Bin\glLibGen64.exe -class:"COpenGL" -basefile:"gl_wrapper" -outdir:"$(SolutionDir)Source" -ver:4.5 -glh:"C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\um\gl\GL.h" -glexth:"https://www.khronos.org/registry/OpenGL/api/GL/glext.h" -wglexth:"https://www.khronos.org/registry/OpenGL/api/GL/wglext.h" -khrh:"https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h" -pch -ext -logcb</Command>
@@ -467,7 +486,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
     </Link>
     <PreBuildEvent>
@@ -495,7 +514,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>gdiplus.lib;Msimg32.lib;winmm.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
     </Link>
     <PreBuildEvent>

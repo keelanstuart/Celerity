@@ -476,11 +476,11 @@ namespace c3
 
 		virtual bool SliderScalarN(const TCHAR *label, DataType data_type, void *p_data, int components, const void *p_min, const void *p_max, const TCHAR *format = nullptr, float power = 1.0f) = NULL;
 
-		virtual bool VSliderFloat(const TCHAR *label, const glm::fvec2 &size, float *v, float v_min, float v_max, const TCHAR *format = _T("%.3f"), float power = 1.0f) = NULL;
+		virtual bool VSliderFloat(const TCHAR *label, const glm::fvec2 &size, float *v, float v_min, float v_max, const TCHAR *format = _T("%.3f"), props::TFlags64 flags = 0) = NULL;
 
 		virtual bool VSliderInt(const TCHAR *label, const glm::fvec2 &size, int *v, int v_min, int v_max, const TCHAR *format = _T("%d")) = NULL;
 
-		virtual bool VSliderScalar(const TCHAR *label, const glm::fvec2 &size, DataType data_type, void *p_data, const void *p_min, const void *p_max, const TCHAR *format = nullptr, float power = 1.0f) = NULL;
+		virtual bool VSliderScalar(const TCHAR *label, const glm::fvec2 &size, DataType data_type, void *p_data, const void *p_min, const void *p_max, const TCHAR *format = nullptr, props::TFlags64 flags = 0) = NULL;
 
 #if 0
 		virtual bool InputText(const TCHAR *label, TCHAR *buf, size_t buf_size, props::TFlags64 inputtext_flags = 0, ImGuiInputTextCallback callback = nullptr, void *user_data = nullptr) = NULL;
@@ -626,7 +626,7 @@ namespace c3
 
 		virtual void EndPopup() = NULL;
 
-		virtual bool OpenPopupOnItemClick(const TCHAR *str_id = nullptr, MouseButton mouse_button = MouseButton::MBUT_LEFT) = NULL;
+		virtual void OpenPopupOnItemClick(const TCHAR *str_id = nullptr, MouseButton mouse_button = MouseButton::MBUT_LEFT) = NULL;
 
 		virtual bool IsPopupOpen(const TCHAR *str_id) = NULL;
 

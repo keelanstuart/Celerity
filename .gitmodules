@@ -22,21 +22,15 @@
 [submodule "third-party/stb"]
 	path = third-party/stb
 	url = https://github.com/nothings/stb
-[submodule "third-party/PhysX"]
-	path = third-party/PhysX
-	url = https://github.com/NVIDIAGameWorks/PhysX
 [submodule "third-party/imgui"]
 	path = third-party/imgui
-	url = http://www.github.com/ocornut/imgui.git
+	url = https://github.com/keelanstuart/imgui
 [submodule "third-party/assimp"]
 	path = third-party/assimp
-	url = http://www.github.com/keelanstuart/assimp
+	url = https://github.com/keelanstuart/assimp
 [submodule "third-party/irrXML"]
 	path = third-party/irrXML
 	url = https://github.com/keelanstuart/irrxml
 [submodule "third-party/zlib"]
 	path = third-party/zlib
-	url = https://github.com/keelanstuart/zlib
-[submodule "third-party/irrxml"]
-	path = third-party/irrxml
-	url = http://www.github.com/keelanstuart/irrxml.git
+	url = http://www.github.com/keelanstuart/zlib

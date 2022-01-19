@@ -1313,12 +1313,12 @@ bool GuiImpl::SliderScalarN(const TCHAR *label, DataType data_type, void *p_data
 }
 
 
-bool GuiImpl::VSliderFloat(const TCHAR *label, const glm::fvec2 &size, float *v, float v_min, float v_max, const TCHAR *format, float power)
+bool GuiImpl::VSliderFloat(const TCHAR *label, const glm::fvec2 &size, float *v, float v_min, float v_max, const TCHAR *format, props::TFlags64 flags)
 {
 	char *_label, *_format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
-	return ImGui::VSliderFloat(_label, size, v, v_min, v_max, _format, power);
+	return ImGui::VSliderFloat(_label, size, v, v_min, v_max, _format, (ImGuiSliderFlags)flags);
 }
 
 
@@ -1331,12 +1331,12 @@ bool GuiImpl::VSliderInt(const TCHAR *label, const glm::fvec2 &size, int *v, int
 }
 
 
-bool GuiImpl::VSliderScalar(const TCHAR *label, const glm::fvec2 &size, DataType data_type, void *p_data, const void *p_min, const void *p_max, const TCHAR *formatptr, float power)
+bool GuiImpl::VSliderScalar(const TCHAR *label, const glm::fvec2 &size, DataType data_type, void *p_data, const void *p_min, const void *p_max, const TCHAR *formatptr, props::TFlags64 flags)
 {
 	char *_label, *_formatptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(formatptr, _formatptr);
-	return ImGui::VSliderScalar(_label, size, data_type, p_data, p_min, p_max, _formatptr, power);
+	return ImGui::VSliderScalar(_label, size, data_type, p_data, p_min, p_max, _formatptr, (ImGuiSliderFlags)flags);
 }
 
 
@@ -1887,11 +1887,11 @@ void GuiImpl::EndPopup()
 }
 
 
-bool GuiImpl::OpenPopupOnItemClick(const TCHAR *str_idptr, MouseButton mouse_button)
+void GuiImpl::OpenPopupOnItemClick(const TCHAR *str_idptr, MouseButton mouse_button)
 {
 	char *_str_idptr;
 	CONVERT_TCS2MBCS(str_idptr, _str_idptr);
-	return ImGui::OpenPopupOnItemClick(_str_idptr, mouse_button);
+	ImGui::OpenPopupOnItemClick(_str_idptr, mouse_button);
 }
 
 
