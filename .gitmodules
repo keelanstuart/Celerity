@@ -28,9 +28,6 @@
 [submodule "third-party/assimp"]
 	path = third-party/assimp
 	url = https://github.com/keelanstuart/assimp
-[submodule "third-party/irrXML"]
-	path = third-party/irrXML
-	url = https://github.com/keelanstuart/irrxml
 [submodule "third-party/zlib"]
 	path = third-party/zlib
 	url = https://github.com/keelanstuart/zlib
