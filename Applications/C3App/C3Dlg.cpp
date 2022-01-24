@@ -67,7 +67,7 @@ END_MESSAGE_MAP()
 c3::FrameBuffer::TargetDesc GBufTargData[] =
 {
 	{ _T("uSamplerDiffuseMetalness"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },	// diffuse color (rgb) and metalness (a)
-	{ _T("uSamplerNormalAmbOcc"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },		// fragment normal (rgb) and ambient occlusion (a)
+	{ _T("uSamplerNormalAmbOcc"), c3::Renderer::TextureType::S8_4CH, TEXCREATEFLAG_RENDERTARGET },		// fragment normal (rgb) and ambient occlusion (a)
 	{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },			// fragment position in world space (rgb) and dpeth in screen space (a)
 	{ _T("uSamplerEmissionRoughness"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET }	// emission color (rgb) and roughness (a)
 };
@@ -179,12 +179,18 @@ BOOL C3Dlg::OnInitDialog()
 			uint32_t i;
 			for (i = 0; i < m_GBuf->GetNumColorTargets(); i++)
 			{
-				m_SP_copyback->SetUniformTexture(m_GBuf->GetColorTarget(i));
+				c3::Texture2D* pt = m_GBuf->GetColorTarget(i);
+				int32_t ul = m_SP_copyback->GetUniformLocation(pt->GetName());
+				if (ul > 0)
+					m_SP_copyback->SetUniformTexture(pt);
 			}
 
 			for (i = 0; i < m_LCBuf->GetNumColorTargets(); i++)
 			{
-				m_SP_copyback->SetUniformTexture(m_LCBuf->GetColorTarget(i));
+				c3::Texture2D* pt = m_LCBuf->GetColorTarget(i);
+				int32_t ul = m_SP_copyback->GetUniformLocation(pt->GetName());
+				if (ul > 0)
+					m_SP_copyback->SetUniformTexture(pt);
 			}
 
 			m_ulSunDir = m_SP_copyback->GetUniformLocation(_T("uSunDirection"));

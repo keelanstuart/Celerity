@@ -57,7 +57,7 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 
 	m_Rend->gl.BindTexture(GL_TEXTURE_2D, 0);
 
-	m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
+	//m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 }
 
 

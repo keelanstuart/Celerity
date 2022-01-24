@@ -55,6 +55,10 @@ namespace c3
 			U8_2CH,				// packed 16-bit uint, 2 channels
 			U8_3CH,				// packed 24-bit uint, 3 channels
 			U8_4CH,				// packed 32-bit uint, 4 channels
+			S8_1CH,				// 8-bit signed int, 1 channel
+			S8_2CH,				// packed 16-bit signed int, 2 channels
+			S8_3CH,				// packed 24-bit signed int, 3 channels
+			S8_4CH,				// packed 32-bit signed int, 4 channels
 			F16_1CH,			// 16-bit float, 1 channel
 			F16_2CH,			// 16-bit float, 2 channel
 			F16_3CH,			// 16-bit float, 3 channel

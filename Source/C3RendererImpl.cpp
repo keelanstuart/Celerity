@@ -1054,6 +1054,18 @@ size_t RendererImpl::PixelSize(Renderer::TextureType type)
 {
 	switch (type)
 	{
+		case Renderer::TextureType::S8_1CH:
+			return sizeof(int8_t) * 1;
+
+		case Renderer::TextureType::S8_2CH:
+			return sizeof(int8_t) * 2;
+
+		case Renderer::TextureType::S8_3CH:
+			return sizeof(int8_t) * 3;
+
+		case Renderer::TextureType::S8_4CH:
+			return sizeof(int8_t) * 4;
+
 		case Renderer::TextureType::P8_3CH:
 		case Renderer::TextureType::U8_1CH:
 			return sizeof(uint8_t) * 1;
@@ -1106,6 +1118,12 @@ GLenum RendererImpl::GLType(TextureType type)
 		case Renderer::TextureType::U8_4CH:
 			return GL_UNSIGNED_BYTE;
 
+		case Renderer::TextureType::S8_1CH:
+		case Renderer::TextureType::S8_2CH:
+		case Renderer::TextureType::S8_3CH:
+		case Renderer::TextureType::S8_4CH:
+			return GL_BYTE;
+
 		case Renderer::TextureType::P16_3CH:
 			return GL_UNSIGNED_SHORT_5_6_5;
 
@@ -1140,12 +1158,15 @@ GLenum RendererImpl::GLInternalFormat(TextureType type)
 			return GL_UNSIGNED_BYTE_3_3_2;
 
 		case Renderer::TextureType::U8_1CH:
+		case Renderer::TextureType::S8_1CH:
 			return GL_R8;
 
 		case Renderer::TextureType::U8_2CH:
+		case Renderer::TextureType::S8_2CH:
 			return GL_RG8;
 
 		case Renderer::TextureType::U8_3CH:
+		case Renderer::TextureType::S8_3CH:
 			return GL_RGB8;
 
 		case Renderer::TextureType::P16_3CH:
@@ -1158,6 +1179,7 @@ GLenum RendererImpl::GLInternalFormat(TextureType type)
 			return GL_UNSIGNED_SHORT_4_4_4_4;
 
 		case Renderer::TextureType::U8_4CH:
+		case Renderer::TextureType::S8_4CH:
 			return GL_RGBA8;
 
 		case Renderer::TextureType::F16_1CH:
@@ -1193,11 +1215,13 @@ GLenum RendererImpl::GLFormat(TextureType type)
 	switch (type)
 	{
 		case Renderer::TextureType::U8_1CH:
+		case Renderer::TextureType::S8_1CH:
 		case Renderer::TextureType::F16_1CH:
 		case Renderer::TextureType::F32_1CH:
 			return GL_RED;
 
 		case Renderer::TextureType::U8_2CH:
+		case Renderer::TextureType::S8_2CH:
 		case Renderer::TextureType::F16_2CH:
 		case Renderer::TextureType::F32_2CH:
 			return GL_RG;
@@ -1206,12 +1230,14 @@ GLenum RendererImpl::GLFormat(TextureType type)
 		case Renderer::TextureType::P16_3CH:
 		case Renderer::TextureType::P16_3CHT:
 		case Renderer::TextureType::U8_3CH:
+		case Renderer::TextureType::S8_3CH:
 		case Renderer::TextureType::F16_3CH:
 		case Renderer::TextureType::F32_3CH:
 			return GL_RGB;
 
 		case Renderer::TextureType::P16_4CH:
 		case Renderer::TextureType::U8_4CH:
+		case Renderer::TextureType::S8_4CH:
 		case Renderer::TextureType::F16_4CH:
 		case Renderer::TextureType::F32_4CH:
 			return GL_RGBA;
@@ -1541,7 +1567,7 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 		}
 
 		gl.BindSampler((GLuint)texunit, sampid);
-		FlushErrors(_T(""));
+		//FlushErrors(_T(""));
 
 		samplercache[texunit] = texflags;
 	}
@@ -2534,8 +2560,8 @@ ShaderProgram *RendererImpl::GetBoundsShader()
 		if (m_spBounds)
 		{
 			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
-			m_vsBounds = (c3::ShaderComponent *)((m_pSys->GetResourceManager()->GetResource(_T("d:/proj/game data/shaders/bounds.vsh"), rf))->GetData());
-			m_fsBounds = (c3::ShaderComponent *)((m_pSys->GetResourceManager()->GetResource(_T("d:/proj/game data/shaders/bounds.fsh"), rf))->GetData());
+			m_vsBounds = (c3::ShaderComponent *)((m_pSys->GetResourceManager()->GetResource(_T("bounds.vsh"), rf))->GetData());
+			m_fsBounds = (c3::ShaderComponent *)((m_pSys->GetResourceManager()->GetResource(_T("bounds.fsh"), rf))->GetData());
 
 			m_spBounds->AttachShader(m_vsBounds);
 			m_spBounds->AttachShader(m_fsBounds);
