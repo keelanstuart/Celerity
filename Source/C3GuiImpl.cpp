@@ -459,7 +459,8 @@ glm::fvec2 GuiImpl::GetWindowContentRegionMax()
 
 float GuiImpl::GetWindowContentRegionWidth()
 {
-	return ImGui::GetWindowContentRegionWidth();
+	//return ImGui::GetWindowContentRegionWidth();
+	return 0.0f;
 }
 
 
@@ -1219,7 +1220,8 @@ bool GuiImpl::SliderFloat(const TCHAR *label, float *v, float v_min, float v_max
 	char *_label, *_format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
-	return ImGui::SliderFloat(_label, v, v_min, v_max, _format, power);
+	//return ImGui::SliderFloat(_label, v, v_min, v_max, _format, power);
+	return false;
 }
 
 
@@ -1228,7 +1230,8 @@ bool GuiImpl::SliderFloat2(const TCHAR *label, float v[2], float v_min, float v_
 	char *_label, *_format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
-	return ImGui::SliderFloat2(_label, v, v_min, v_max, _format, power);
+	//return ImGui::SliderFloat2(_label, v, v_min, v_max, _format, power);
+	return false;
 }
 
 
@@ -1237,7 +1240,8 @@ bool GuiImpl::SliderFloat3(const TCHAR *label, float v[3], float v_min, float v_
 	char *_label, *_format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
-	return ImGui::SliderFloat(_label, v, v_min, v_max, _format, power);
+	//return ImGui::SliderFloat(_label, v, v_min, v_max, _format, power);
+	return false;
 }
 
 
@@ -1246,7 +1250,8 @@ bool GuiImpl::SliderFloat4(const TCHAR *label, float v[4], float v_min, float v_
 	char *_label, *_format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
-	return ImGui::SliderFloat(_label, v, v_min, v_max, _format, power);
+	//return ImGui::SliderFloat(_label, v, v_min, v_max, _format, power);
+	return false;
 }
 
 
@@ -1300,7 +1305,8 @@ bool GuiImpl::SliderScalar(const TCHAR *label, DataType data_type, void *p_data,
 	char *_label, *_formatptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(formatptr, _formatptr);
-	return ImGui::SliderScalar(_label, data_type, p_data, p_min, p_max, _formatptr, power);
+	//return ImGui::SliderScalar(_label, data_type, p_data, p_min, p_max, _formatptr, power);
+	return false;
 }
 
 
@@ -1309,7 +1315,8 @@ bool GuiImpl::SliderScalarN(const TCHAR *label, DataType data_type, void *p_data
 	char *_label, *_formatptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(formatptr, _formatptr);
-	return ImGui::SliderScalar(_label, data_type, p_data, p_min, p_max, _formatptr, power);
+	//return ImGui::SliderScalar(_label, data_type, p_data, p_min, p_max, _formatptr, power);
+	return false;
 }
 
 
@@ -1318,7 +1325,8 @@ bool GuiImpl::VSliderFloat(const TCHAR *label, const glm::fvec2 &size, float *v,
 	char *_label, *_format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
-	return ImGui::VSliderFloat(_label, size, v, v_min, v_max, _format, power);
+	//return ImGui::VSliderFloat(_label, size, v, v_min, v_max, _format, power);
+	return false;
 }
 
 
@@ -1336,7 +1344,8 @@ bool GuiImpl::VSliderScalar(const TCHAR *label, const glm::fvec2 &size, DataType
 	char *_label, *_formatptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(formatptr, _formatptr);
-	return ImGui::VSliderScalar(_label, size, data_type, p_data, p_min, p_max, _formatptr, power);
+	//return ImGui::VSliderScalar(_label, size, data_type, p_data, p_min, p_max, _formatptr, power);
+	return false;
 }
 
 
@@ -1659,7 +1668,8 @@ bool GuiImpl::ListBoxHeader(const TCHAR *label, const glm::fvec2 &size)
 {
 	char *_label;
 	CONVERT_TCS2MBCS(label, _label);
-	return ImGui::ListBoxHeader(_label, size);
+	//return ImGui::ListBoxHeader(_label, size);
+	return false;
 }
 
 
@@ -1667,13 +1677,15 @@ bool GuiImpl::ListBoxHeader(const TCHAR *label, int items_count, int height_in_i
 {
 	char *_label;
 	CONVERT_TCS2MBCS(label, _label);
-	return ImGui::ListBoxHeader(_label, items_count, height_in_items);
+	//return ImGui::ListBoxHeader(_label, items_count, height_in_items);
+	return false;
+
 }
 
 
 void GuiImpl::ListBoxFooter()
 {
-	ImGui::ListBoxFooter();
+	//ImGui::ListBoxFooter();
 }
 
 
@@ -1861,7 +1873,8 @@ bool GuiImpl::BeginPopupContextWindow(const TCHAR *str_idptr, MouseButton mouse_
 {
 	char *_str_idptr;
 	CONVERT_TCS2MBCS(str_idptr, _str_idptr);
-	return ImGui::BeginPopupContextWindow(_str_idptr, mouse_button, also_over_items);
+	//return ImGui::BeginPopupContextWindow(_str_idptr, mouse_button, also_over_items);
+	return false;
 }
 
 
@@ -1891,7 +1904,8 @@ bool GuiImpl::OpenPopupOnItemClick(const TCHAR *str_idptr, MouseButton mouse_but
 {
 	char *_str_idptr;
 	CONVERT_TCS2MBCS(str_idptr, _str_idptr);
-	return ImGui::OpenPopupOnItemClick(_str_idptr, mouse_button);
+	//return ImGui::OpenPopupOnItemClick(_str_idptr, mouse_button);
+	return false;
 }
 
 
@@ -1913,49 +1927,49 @@ void GuiImpl::Columns(int count, const TCHAR *idptr, bool border)
 {
 	char *_idptr;
 	CONVERT_TCS2MBCS(idptr, _idptr);
-	return ImGui::Columns(count, _idptr, border);
+	//return ImGui::Columns(count, _idptr, border);
 }
 
 
 void GuiImpl::NextColumn()
 {
-	ImGui::NextColumn();
+	//ImGui::NextColumn();
 }
 
 
 int GuiImpl::GetColumnIndex()
 {
-	return ImGui::GetColumnIndex();
+	return -1; // ImGui::GetColumnIndex();
 }
 
 
 float GuiImpl::GetColumnWidth(int column_index)
 {
-	return ImGui::GetColumnWidth(column_index);
+	return 0.0f; // ImGui::GetColumnWidth(column_index);
 }
 
 
 void GuiImpl::SetColumnWidth(int column_index, float width)
 {
-	ImGui::SetColumnWidth(column_index, width);
+	//ImGui::SetColumnWidth(column_index, width);
 }
 
 
 float GuiImpl::GetColumnOffset(int column_index)
 {
-	return ImGui::GetColumnOffset(column_index);
+	return 0.0f; // ImGui::GetColumnOffset(column_index);
 }
 
 
 void GuiImpl::SetColumnOffset(int column_index, float offset_x)
 {
-	ImGui::SetColumnOffset(column_index, offset_x);
+	//ImGui::SetColumnOffset(column_index, offset_x);
 }
 
 
 int GuiImpl::GetColumnsCount()
 {
-	return ImGui::GetColumnsCount();
+	return 0; // ImGui::GetColumnsCount();
 }
 
 
@@ -2271,7 +2285,7 @@ glm::fvec2 GuiImpl::CalcTextSize(const TCHAR *text, const TCHAR *text_endptr, bo
 
 void GuiImpl::CalcListClipping(int items_count, float items_height, int *out_items_display_start, int *out_items_display_end)
 {
-	ImGui::CalcListClipping(items_count, items_height, out_items_display_start, out_items_display_end);
+	//ImGui::CalcListClipping(items_count, items_height, out_items_display_start, out_items_display_end);
 }
 
 
