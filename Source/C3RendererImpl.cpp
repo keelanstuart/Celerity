@@ -654,7 +654,9 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 
 	if (m_Gui)
 	{
+#if 0
 		m_Gui->BeginFrame();
+#endif
 
 		int32_t mx, my;
 		m_pSys->GetMousePos(mx, my);
@@ -681,6 +683,7 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 
 	if (m_Gui)
 	{
+#if 0
 		static bool show_metrics = true;
 		if (show_metrics)
 		{
@@ -692,6 +695,7 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 
 		m_Gui->EndFrame();
 		m_Gui->Render();
+#endif
 	}
 
 	gl.Finish();
