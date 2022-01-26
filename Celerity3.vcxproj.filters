@@ -236,9 +236,6 @@
     <ClInclude Include="$(SolutionDir)third-party\tinyxml2\tinyxml2.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
-    <ClInclude Include="Source\wglext.h">
-      <Filter>Header Files\Private</Filter>
-    </ClInclude>
     <ClInclude Include="Include\C3Log.h">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
@@ -430,6 +427,9 @@
     </ClInclude>
     <ClInclude Include="Source\Header.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\wglext.h">
+      <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
