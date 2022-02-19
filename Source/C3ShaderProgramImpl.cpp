@@ -383,7 +383,7 @@ void ShaderProgramImpl::CaptureUniforms()
 
 			// Vec4I = (uniform index, sampler, texture, texture flags)
 			case GL_SAMPLER_2D:
-				p->SetVec4I(props::TVec4I(i, sampleridx++, (int64_t)(m_Rend->GetBlackTexture()), TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR));
+				p->SetVec4I(props::TVec4I(location, sampleridx++, (int64_t)(m_Rend->GetBlackTexture()), TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR));
 				break;
 		}
 	}

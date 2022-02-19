@@ -39,8 +39,8 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_MoveD = false;
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
-	m_AmbientColor = c3::Color::DarkMagenta;
-	m_SunColor = c3::Color::DarkGrey;
+	m_AmbientColor = c3::Color::DarkGrey;
+	m_SunColor = c3::Color::White;
 	m_SunDir = glm::normalize(glm::fvec3(0.2f, 0.5f, -1.0f));
 }
 
@@ -179,18 +179,16 @@ BOOL C3Dlg::OnInitDialog()
 			uint32_t i;
 			for (i = 0; i < m_GBuf->GetNumColorTargets(); i++)
 			{
-				c3::Texture2D* pt = m_GBuf->GetColorTarget(i);
+				c3::Texture2D *pt = m_GBuf->GetColorTarget(i);
 				int32_t ul = m_SP_copyback->GetUniformLocation(pt->GetName());
-				if (ul > 0)
-					m_SP_copyback->SetUniformTexture(pt);
+				m_SP_copyback->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : m_Rend->GetBlackTexture());
 			}
 
 			for (i = 0; i < m_LCBuf->GetNumColorTargets(); i++)
 			{
 				c3::Texture2D* pt = m_LCBuf->GetColorTarget(i);
 				int32_t ul = m_SP_copyback->GetUniformLocation(pt->GetName());
-				if (ul > 0)
-					m_SP_copyback->SetUniformTexture(pt);
+				m_SP_copyback->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : m_Rend->GetBlackTexture());
 			}
 
 			m_ulSunDir = m_SP_copyback->GetUniformLocation(_T("uSunDirection"));
@@ -257,7 +255,7 @@ BOOL C3Dlg::OnInitDialog()
 	}
 #endif
 
-#if 0
+#if 1
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("TestBox"))))
 	{
 		c3::Object *pobj = m_Factory->Build(pproto);

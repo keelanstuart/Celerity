@@ -905,7 +905,7 @@ void RendererImpl::SetCullMode(CullMode mode)
 	{
 		if (mode == CM_DISABLED)
 			gl.Disable(GL_CULL_FACE);
-		else// if (m_CullMode == CM_DISABLED)
+		else if ((m_CullMode == CM_DISABLED) || (m_CullMode == CM_NUMMODES))
 			gl.Enable(GL_CULL_FACE);
 
 		switch (mode)
