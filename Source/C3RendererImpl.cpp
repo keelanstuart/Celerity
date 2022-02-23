@@ -175,7 +175,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 	if (!GetClassInfo(hmod_temp, GLARBWND_CLASSNAME, &m_glARBWndClass))
 	{
-		m_glARBWndClass.style = CS_HREDRAW | CS_VREDRAW;
+		m_glARBWndClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
 		m_glARBWndClass.lpfnWndProc = DefWindowProc;
 		m_glARBWndClass.cbClsExtra = 0;
 		m_glARBWndClass.cbWndExtra = 0;
@@ -654,7 +654,7 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 
 	if (m_Gui)
 	{
-#if 0
+#if 1
 		m_Gui->BeginFrame();
 #endif
 
@@ -683,7 +683,7 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 
 	if (m_Gui)
 	{
-#if 0
+#if 1
 		static bool show_metrics = true;
 		if (show_metrics)
 		{
@@ -711,8 +711,12 @@ bool RendererImpl::Present()
 	if (!m_Initialized)
 		return false;
 
+	HWND tmphwnd = m_hwnd_override ? m_hwnd_override : m_hwnd;
 	HDC tmpdc = m_hwnd_override ? GetDC(m_hwnd_override) : m_hdc;
+
 	SwapBuffers(tmpdc);
+	ReleaseDC(tmphwnd, tmpdc);
+
 	return true;
 }
 

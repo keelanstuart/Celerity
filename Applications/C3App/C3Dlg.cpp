@@ -62,6 +62,7 @@ BEGIN_MESSAGE_MAP(C3Dlg, CDialog)
 	ON_WM_CAPTURECHANGED()
 	ON_WM_ACTIVATEAPP()
 	ON_WM_ACTIVATE()
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 c3::FrameBuffer::TargetDesc GBufTargData[] =
@@ -255,7 +256,7 @@ BOOL C3Dlg::OnInitDialog()
 	}
 #endif
 
-#if 1
+#if 0
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("TestBox"))))
 	{
 		c3::Object *pobj = m_Factory->Build(pproto);
@@ -323,6 +324,8 @@ BOOL C3Dlg::OnInitDialog()
 		}
 	}
 #endif
+
+	m_DrawTimerId = SetTimer('DRAW', 33, nullptr);
 
 	m_bMouseCursorEnabled = false;
 	SetCapture();
@@ -462,11 +465,7 @@ void C3Dlg::OnPaint()
 					m_pRDoc->EndFrameCapture(NULL, NULL);
 			}
 		}
-
-		CDialog::OnPaint();
-
-		// Cue up another paint op
-		RedrawWindow(nullptr, nullptr, RDW_NOERASE | RDW_INVALIDATE);
+		//CDialog::OnPaint();
 	}
 }
 
@@ -599,15 +598,10 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	CDialog::OnMouseMove(nFlags, point);
 
-	if ((m_bMouseCursorEnabled) || (this != GetCapture()))
-	{
-		theApp.m_C3->SetMousePos(point.x, point.y);
-		//m_Rend->GetGui()->SetCursorScreenPos(glm::fvec2(point.x, point.y));
-		//m_Rend->GetGui()->SetMouseCursor(c3::Gui::MouseCursor::MCUR_ARROW);
-		return;
-	}
-
 	theApp.m_C3->SetMousePos(point.x, point.y);
+
+	if ((m_bMouseCursorEnabled) || (this != GetCapture()))
+		return;
 
 	CRect r;
 	GetClientRect(&r);
@@ -743,4 +737,13 @@ void C3Dlg::SetMouseEnabled(bool b)
 	GetCursorInfo(&ci);
 	if (m_bMouseCursorEnabled != ((ci.flags & CURSOR_SHOWING) ? true : false))
 		ShowCursor(m_bMouseCursorEnabled ? TRUE : FALSE);
+}
+
+
+void C3Dlg::OnTimer(UINT_PTR nIDEvent)
+{
+	if (nIDEvent == m_DrawTimerId)
+		RedrawWindow(nullptr, nullptr, 0);
+
+	CDialog::OnTimer(nIDEvent);
 }

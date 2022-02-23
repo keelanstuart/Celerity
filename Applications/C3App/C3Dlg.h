@@ -34,6 +34,8 @@ protected:
 	c3::ShaderComponent *m_FS_copyback;
 	c3::ShaderProgram *m_SP_copyback;
 
+	UINT_PTR m_DrawTimerId;
+
 	int32_t m_ulSunDir, m_ulSunColor, m_ulAmbientColor;
 	glm::fvec3 m_SunDir, m_SunColor, m_AmbientColor;
 
@@ -97,4 +99,5 @@ public:
 	afx_msg void OnCaptureChanged(CWnd* pWnd);
 	afx_msg void OnActivateApp(BOOL bActive, DWORD dwThreadID);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
