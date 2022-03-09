@@ -159,6 +159,21 @@
     <ClCompile Include="third-party\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3InputDeviceImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3InputManagerImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3VirtualJoystickImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3VirtualKeyboardImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3VirtualMouseImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -248,188 +263,206 @@
     <ClInclude Include="Include\C3Object.h">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
-    <ClInclude Include="Include\C3Prototype.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3FactoryImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3PrototypeImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3ObjectImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3MeshImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Positionable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3PositionableImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3CameraImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3ResourceManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Resource.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Plugin.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3PluginManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3PluginManagerImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3PluginImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Configuration.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3ConfigurationImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3FileMapperImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3FileMapper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3ResourceManagerImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3ResourceImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="third-party\imgui\imgui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="third-party\imgui\imgui_internal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="third-party\imgui\imstb_truetype.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="third-party\imgui\imstb_textedit.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="third-party\imgui\imstb_rectpack.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3ImGuiConfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Gui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3GuiImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Model.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Material.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3ModelRenderer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3ModelRendererImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3ModelImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Component.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3CRC.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Math.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3PublisherImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3SubscriptionImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Publisher.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Subscription.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3MaterialImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3ShaderBuilderImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3MaterialManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3MaterialManagerImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3ColorDefs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3CommonVertexDefs.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3OmniLight.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3OmniLightImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3FlowNode.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3FlowGraph.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3TString.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3BoundingBox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3BoundingBoxImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3EnvironmentModifier.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3EnvironmentModifierImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="third-party\imgui\imgui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\Header.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\wglext.h">
       <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3InputDeviceImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3InputManagerImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3VirtualJoystickImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3VirtualKeyboardImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3VirtualMouseImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3BoundingBoxImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3CameraImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ConfigurationImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3EnvironmentModifierImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3FactoryImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3FileMapperImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3MaterialImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3MaterialManagerImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3MeshImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ModelImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ModelRendererImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ObjectImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3OmniLightImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3PluginImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3PluginManagerImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3PositionableImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3PrototypeImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3PublisherImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ResourceImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ResourceManagerImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ShaderBuilderImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3SubscriptionImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3TString.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3BoundingBox.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Camera.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3ColorDefs.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3CommonVertexDefs.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Component.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Configuration.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3CRC.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3EnvironmentModifier.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3FileMapper.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3FlowGraph.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3FlowNode.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Gui.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3GuiImpl.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ImGuiConfig.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Material.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3MaterialManager.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Math.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Mesh.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Model.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3ModelRenderer.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3OmniLight.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Plugin.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3PluginManager.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Positionable.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Prototype.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Publisher.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Resource.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3ResourceManager.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Subscription.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="third-party\imgui\imgui.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="third-party\imgui\imgui_internal.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="third-party\imgui\imstb_rectpack.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="third-party\imgui\imstb_textedit.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="third-party\imgui\imstb_truetype.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3InputDevice.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3InputManager.h">
+      <Filter>Header Files\Public</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2021, Keelan Stuart
+// Copyright © 2001-2022, Keelan Stuart
 
 
 #pragma once
@@ -20,35 +20,31 @@ namespace c3
 	{
 
 	public:
-		static System *Create(props::TFlags64 flags);
+		static System *Create(HWND owner, props::TFlags64 flags);
+
+		virtual void Release() = NULL;
 
 		virtual void SetOwner(HWND owner) = NULL;
 
-		virtual void Release() = NULL;
+		virtual HWND GetOwner() const = NULL;
+
+		virtual pool::IThreadPool *GetThreadPool() = NULL;
+
+		virtual PluginManager *GetPluginManager() = NULL;
 
 		virtual ResourceManager *GetResourceManager() = NULL;
 
 		virtual Renderer *GetRenderer() = NULL;
 
+		virtual InputManager *GetInputManager() = NULL;
+
 		virtual Factory *GetFactory() = NULL;
-
-		virtual PluginManager *GetPluginManager() = NULL;
-
-		virtual pool::IThreadPool *GetThreadPool() = NULL;
 
 		virtual FileMapper *GetFileMapper() = NULL;
 
 		virtual Configuration *CreateConfiguration(const TCHAR *filename) = NULL;
 
 		virtual Log *GetLog() = NULL;
-
-		virtual void SetMousePos(int32_t x, int32_t y) = NULL;
-
-		virtual void GetMousePos(int32_t &x, int32_t &y) = NULL;
-
-		virtual size_t GetCurrentFrameNumber() = NULL;
-
-		virtual void SetCurrentFrameNumber(size_t framenum) = NULL;
 
 		virtual float GetCurrentTime() = NULL;
 

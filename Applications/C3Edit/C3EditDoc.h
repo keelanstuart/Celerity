@@ -18,6 +18,8 @@ public:
 	typedef std::map<HWND, c3::Object *> TWndMappedObject;
 	TWndMappedObject m_Camera;
 	c3::Object *m_Brush;
+	float m_TimeWarp;
+	bool m_Paused;
 
 	tstring m_Name;
 	tstring m_Description;

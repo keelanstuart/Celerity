@@ -109,6 +109,15 @@ BOOL C3Dlg::OnInitDialog()
 
 	m_Factory = theApp.m_C3->GetFactory();
 
+	theApp.m_C3->GetLog()->Print(_T("Creating InputManager... "));
+	m_Input = theApp.m_C3->GetInputManager();
+	if (!m_Input)
+	{
+		theApp.m_C3->GetLog()->Print(_T("failed\n"));
+		exit(-1);
+	}
+	theApp.m_C3->GetLog()->Print(_T("ok\n"));
+
 	theApp.m_C3->GetLog()->Print(_T("Creating Renderer... "));
 	m_Rend = theApp.m_C3->GetRenderer();
 	if (!m_Rend)
@@ -367,25 +376,21 @@ void C3Dlg::OnPaint()
 		{
 			glm::vec3 mv(0, 0, 0);
 
-#define MOVE_SPEED		(m_fMovement.IsSet(MOVE_RUN) ? 2.5f : 0.5f)
+			float spd = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::BUTTON1) * 2.0f) + 1.5f;
 
-			if (m_fMovement.IsSet(MOVE_FORWARD))
-				mv += *(pcampos->GetFacingVector()) * MOVE_SPEED;
+			float mdf = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_W);
+			float mdb = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_S);
+			mv += *(pcampos->GetFacingVector()) * (mdf - mdb) * spd;
 
-			if (m_fMovement.IsSet(MOVE_BACKWARD))
-				mv -= *(pcampos->GetFacingVector()) * MOVE_SPEED;
+			float mdl = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_A);
+			float mdr = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_D);
+			mv += *(pcampos->GetLocalLeftVector()) * (mdl - mdr) * spd;
 
-			if (m_fMovement.IsSet(MOVE_LEFT))
-				mv += *(pcampos->GetLocalLeftVector()) * MOVE_SPEED;
+			float mdu = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Q);
+			mv.z += mdu * spd;
 
-			if (m_fMovement.IsSet(MOVE_RIGHT))
-				mv -= *(pcampos->GetLocalLeftVector()) * MOVE_SPEED;
-
-			if (m_fMovement.IsSet(MOVE_UP))
-				mv.z += MOVE_SPEED;
-
-			if (m_fMovement.IsSet(MOVE_DOWN))
-				mv.z -= MOVE_SPEED;
+			float mdd = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Z);
+			mv.z -= mdd * spd;
 
 			pcampos->AdjustPos(mv.x, mv.y, mv.z);
 		}
@@ -405,7 +410,7 @@ void C3Dlg::OnPaint()
 		for (size_t i = 0; i < m_Light.size(); i++)
 		{
 			c3::Positionable *plpos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindComponent(c3::Positionable::Type()));
-			float s = sinf((float)(theApp.m_C3->GetCurrentFrameNumber() + i) * 3.14159f / 180.0f * 1.0f) * 0.5f;
+			float s = sinf((float)(m_Rend->GetCurrentFrameNumber() + i) * 3.14159f / 180.0f * 1.0f) * 0.5f;
 			plpos->AdjustPos(m_LightMove[i].x * s, m_LightMove[i].x * s, m_LightMove[i].x * s);
 			plpos->Update(m_Light[i]);
 		}
@@ -598,7 +603,7 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	CDialog::OnMouseMove(nFlags, point);
 
-	theApp.m_C3->SetMousePos(point.x, point.y);
+	theApp.m_C3->GetInputManager()->SetMousePos(point.x, point.y);
 
 	if ((m_bMouseCursorEnabled) || (this != GetCapture()))
 		return;
@@ -637,40 +642,6 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 		pos->Update(m_Camera);
 		cam->Update(m_Camera);
 	}
-}
-
-
-void C3Dlg::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
-{
-	switch (nChar)
-	{
-		case VK_UP:		case 'W':	m_fMovement.Set(MOVE_FORWARD);	break;
-		case VK_LEFT:	case 'A':	m_fMovement.Set(MOVE_LEFT);		break;
-		case VK_DOWN:	case 'S':	m_fMovement.Set(MOVE_BACKWARD);	break;
-		case VK_RIGHT:	case 'D':	m_fMovement.Set(MOVE_RIGHT);	break;
-		case 'Q':					m_fMovement.Set(MOVE_UP);		break;
-		case 'Z':					m_fMovement.Set(MOVE_DOWN);		break;
-		case VK_SHIFT:				m_fMovement.Set(MOVE_RUN);		break;
-	}
-
-	CDialog::OnKeyDown(nChar, nRepCnt, nFlags);
-}
-
-
-void C3Dlg::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
-{
-	switch (nChar)
-	{
-	case VK_UP:		case 'W':	m_fMovement.Clear(MOVE_FORWARD);	break;
-	case VK_LEFT:	case 'A':	m_fMovement.Clear(MOVE_LEFT);		break;
-	case VK_DOWN:	case 'S':	m_fMovement.Clear(MOVE_BACKWARD);	break;
-	case VK_RIGHT:	case 'D':	m_fMovement.Clear(MOVE_RIGHT);		break;
-	case 'Q':					m_fMovement.Clear(MOVE_UP);			break;
-	case 'Z':					m_fMovement.Clear(MOVE_DOWN);		break;
-	case VK_SHIFT:				m_fMovement.Clear(MOVE_RUN);		break;
-	}
-
-	CDialog::OnKeyUp(nChar, nRepCnt, nFlags);
 }
 
 
@@ -716,7 +687,12 @@ void C3Dlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 	CDialog::OnActivate(nState, pWndOther, bMinimized);
 	if (nState != WA_INACTIVE)
 	{
+		theApp.m_C3->GetInputManager()->AcquireAll();
 		//SetMouseEnabled(m_bMouseCursorEnabled);
+	}
+	else
+	{
+		theApp.m_C3->GetInputManager()->UnacquireAll();
 	}
 }
 

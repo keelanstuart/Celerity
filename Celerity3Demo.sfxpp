@@ -8,21 +8,21 @@
 <powerprops:property id="BOOT" type="BOOLEAN">no</powerprops:property>
 <powerprops:property id="CBSZ" type="ENUM">Default,Smallest,Smaller,Small,Normal,Large,Larger,Largest:0</powerprops:property>
 <powerprops:property id="CPTN" type="STRING">Celerity3 Demo Setup</powerprops:property>
-<powerprops:property id="DDST" type="STRING">%USERPROFILE%\Desktop\Celerity3 Demo (Dec21)</powerprops:property>
+<powerprops:property id="DDST" type="STRING">%USERPROFILE%\Desktop\Celerity3 Demo (Jan22)</powerprops:property>
 <powerprops:property id="ENEX" type="BOOLEAN">yes</powerprops:property>
 <powerprops:property id="ICON" type="STRING"></powerprops:property>
-<powerprops:property id="IMAG" type="STRING"></powerprops:property>
+<powerprops:property id="IMAG" type="STRING">D:\temp\Celerity\c3install.bmp</powerprops:property>
 <powerprops:property id="LICM" type="STRING"></powerprops:property>
 <powerprops:property id="LNCH" type="STRING">C3App64.exe</powerprops:property>
 <powerprops:property id="MXSZ" type="INT">-1</powerprops:property>
 <powerprops:property id="OFSF" type="ENUM">None,Build Date,Version:1</powerprops:property>
 <powerprops:property id="OPMD" type="ENUM">Self-Extracting Executable,Executable With External Data:0</powerprops:property>
 <powerprops:property id="OUTP" type="STRING">Celerity3DemoSetup.exe</powerprops:property>
-<powerprops:property id="VCPY" type="STRING">Copyright (c) 2001-2021, Keelan Stuart</powerprops:property>
+<powerprops:property id="VCPY" type="STRING">Copyright (c) 2001-2022, Keelan Stuart</powerprops:property>
 <powerprops:property id="VDSC" type="STRING"></powerprops:property>
-<powerprops:property id="VERS" type="STRING">December 2021 (b)</powerprops:property>
+<powerprops:property id="VERS" type="STRING">February 2022</powerprops:property>
 <powerprops:property id="VPRD" type="STRING"></powerprops:property>
-<powerprops:property id="WLCM" type="STRING">Installs a Celerity3 tech demo. Huzzah!</powerprops:property>
+<powerprops:property id="WLCM" type="STRING">&lt;p&gt;This will install a tech demo for &lt;b&gt;Celerity&lt;/b&gt;&lt;sup&gt;tm&lt;/sup&gt;, a game / graphics / simulation engine written by Keelan Stuart, Copyright &amp;copy 2001-2022. All rights reserved.&lt;/p&gt;&lt;br&gt;&lt;p&gt;The controls are simple:&lt;br&gt;&lt;ul&gt;&lt;li&gt;&lt;b&gt;A, W, S, D&lt;/b&gt; - Moves you around in the world&lt;/li&gt;&lt;li&gt;&lt;b&gt;Q, Z&lt;/b&gt; - Moves you up and down&lt;/li&gt;&lt;li&gt;&lt;b&gt;MOUSE&lt;/b&gt; - Looks around&lt;/li&gt;&lt;li&gt;&lt;b&gt;MOUSEWHEEL&lt;/b&gt; - Zooms in and out, allows orbiting&lt;/li&gt;&lt;li&gt;&lt;b&gt;ESC&lt;/b&gt; - Toggles your mouse active&lt;/li&gt;&lt;/ul&gt;</powerprops:property>
 </powerprops:property_set>
 
 </settings2>
@@ -37,7 +37,7 @@
 <powerprops:property id="NAME" type="STRING">*</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\proj\C3\bin\assets</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -50,7 +50,7 @@
 <powerprops:property id="NAME" type="STRING">C3App64.exe</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\proj\C3\bin\C3App64.exe</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\C3App64.exe</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -63,7 +63,7 @@
 <powerprops:property id="NAME" type="STRING">assimp64.dll</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\proj\C3\bin\assimp64.dll</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assimp64.dll</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -76,7 +76,7 @@
 <powerprops:property id="NAME" type="STRING">Celerity64.dll</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\proj\C3\bin\Celerity64.dll</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\Celerity64.dll</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -89,7 +89,7 @@
 <powerprops:property id="NAME" type="STRING">GenIO64.dll</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\proj\C3\bin\GenIO64.dll</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\GenIO64.dll</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -102,7 +102,7 @@
 <powerprops:property id="NAME" type="STRING">mqme64.dll</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\proj\C3\bin\mqme64.dll</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\mqme64.dll</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -115,7 +115,7 @@
 <powerprops:property id="NAME" type="STRING">Pool64.dll</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\proj\C3\bin\Pool64.dll</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\Pool64.dll</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -128,7 +128,7 @@
 <powerprops:property id="NAME" type="STRING">PowerProps64.dll</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\proj\C3\bin\PowerProps64.dll</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\PowerProps64.dll</powerprops:property>
 </powerprops:property_set>
 
 </file2>

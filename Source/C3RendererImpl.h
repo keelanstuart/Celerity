@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2021, Keelan Stuart
+// Copyright © 2001-2022, Keelan Stuart
 
 
 #pragma once
@@ -42,6 +42,8 @@ namespace c3
 		HGLRC m_glrc;
 		HWND m_hwnd_override;
 		RECT m_Viewport;
+
+		size_t m_FrameNum;
 
 		GLuint m_glVersionMaj;
 		GLuint m_glVersionMin;
@@ -166,6 +168,8 @@ namespace c3
 		virtual bool BeginScene(props::TFlags64 flags);
 		virtual bool EndScene(props::TFlags64 flags);
 		virtual bool Present();
+
+		virtual size_t GetCurrentFrameNumber();
 
 		virtual void SetClearColor(const glm::fvec4 *color = nullptr);
 		virtual const glm::fvec4 *GetClearColor(glm::fvec4 *color = nullptr) const;

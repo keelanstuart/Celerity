@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2021, Keelan Stuart
+// Copyright © 2001-2022, Keelan Stuart
 
 
 // pch.cpp: source file corresponding to the pre-compiled header

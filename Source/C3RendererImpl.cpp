@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2021, Keelan Stuart
+// Copyright © 2001-2022, Keelan Stuart
 
 
 #include "pch.h"
@@ -372,6 +372,8 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 	SetViewport();
 
+	m_FrameNum = 0;
+
 	return true;
 }
 
@@ -659,7 +661,7 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 #endif
 
 		int32_t mx, my;
-		m_pSys->GetMousePos(mx, my);
+		m_pSys->GetInputManager()->GetMousePos(mx, my);
 		ImGui::GetIO().MousePos = glm::fvec2(float(mx), float(my));
 		//ImGui::GetIO().MouseClicked
 	}
@@ -700,8 +702,6 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 
 	gl.Finish();
 
-	m_pSys->SetCurrentFrameNumber(m_pSys->GetCurrentFrameNumber() + 1);
-
 	return true;
 }
 
@@ -717,7 +717,15 @@ bool RendererImpl::Present()
 	SwapBuffers(tmpdc);
 	ReleaseDC(tmphwnd, tmpdc);
 
+	m_FrameNum++;
+
 	return true;
+}
+
+
+size_t RendererImpl::GetCurrentFrameNumber()
+{
+	return m_FrameNum;
 }
 
 

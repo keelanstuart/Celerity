@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2021, Keelan Stuart
+// Copyright © 2001-2022, Keelan Stuart
 
 
 #include "pch.h"
@@ -40,13 +40,28 @@ GuiImpl::GuiImpl(Renderer *prend)
 	c3::ResourceManager *rm = prend->GetSystem()->GetResourceManager();
 	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
-	m_VS = (c3::ShaderComponent *)((rm->GetResource(_T("ui.vsh"), rf))->GetData());
-	m_FS = (c3::ShaderComponent *)((rm->GetResource(_T("ui.fsh"), rf))->GetData());
+	c3::Resource *pvsres = rm->GetResource(_T("ui.vsh"), rf);
+	if (!pvsres)
+	{
+		prend->GetSystem()->GetLog()->Print(_T("GUI Missing VSH\n"));
+	}
 
-	m_Prog = m_pRend->CreateShaderProgram();
-	m_Prog->AttachShader(m_VS);
-	m_Prog->AttachShader(m_FS);
-	m_Prog->Link();
+	c3::Resource *pfsres = rm->GetResource(_T("ui.fsh"), rf);
+	if (!pfsres)
+	{
+		prend->GetSystem()->GetLog()->Print(_T("GUI Missing FSH\n"));
+	}
+
+	if (pfsres && pvsres)
+	{
+		m_VS = (c3::ShaderComponent *)(pvsres->GetData());
+		m_FS = (c3::ShaderComponent *)(pfsres->GetData());
+
+		m_Prog = m_pRend->CreateShaderProgram();
+		m_Prog->AttachShader(m_VS);
+		m_Prog->AttachShader(m_FS);
+		m_Prog->Link();
+	}
 
 	// Create buffers
 	m_VB = m_pRend->CreateVertexBuffer();

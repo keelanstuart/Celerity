@@ -12,18 +12,9 @@ class C3Dlg : public CDialog
 {
 public:
 
-#define MOVE_FORWARD	0x0001
-#define MOVE_BACKWARD	0x0002
-#define MOVE_LEFT		0x0004
-#define MOVE_RIGHT		0x0008
-#define MOVE_UP			0x0010
-#define MOVE_DOWN		0x0020
-#define MOVE_RUN		0x0040
-
-	props::TFlags64 m_fMovement;
-
 protected:
 	c3::Renderer *m_Rend;
+	c3::InputManager *m_Input;
 	c3::FrameBuffer *m_GBuf;
 	c3::FrameBuffer *m_LCBuf;
 	c3::FrameBuffer *m_SSBuf;
@@ -91,8 +82,6 @@ public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
-	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
-	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 	virtual void OnOK();
 	virtual void OnCancel();
 	virtual BOOL PreTranslateMessage(MSG* pMsg);

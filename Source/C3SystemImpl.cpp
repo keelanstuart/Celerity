@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2021, Keelan Stuart
+// Copyright © 2001-2022, Keelan Stuart
 
 
 #include "pch.h"
@@ -22,18 +22,29 @@
 using namespace c3;
 
 
-System *System::Create(props::TFlags64 flags)
+System *System::Create(HWND owner, props::TFlags64 flags)
 {
-	System *ret = new SystemImpl();
+	SystemImpl *ret = new SystemImpl();
+
+	ret->SetOwner(owner);
 
 	return ret;
 }
 
+
 extern HWND g_hPostSplashWnd;
 void SystemImpl::SetOwner(HWND owner)
 {
-	g_hPostSplashWnd = owner;
+	g_hPostSplashWnd = m_hOwner = owner;
 }
+
+
+HWND SystemImpl::GetOwner() const
+{
+	return m_hOwner;
+}
+
+
 
 void InitializeCrc16Table();
 void InitializeCrc32Table();
@@ -44,6 +55,8 @@ SystemImpl::SystemImpl()
 	InitializeCrc16Table();
 	InitializeCrc32Table();
 
+	m_hOwner = GetDesktopWindow();
+
 	// we have a log by default... it will pipe to WARNINGS if nothing else
 	m_Log = new LogImpl(this);
 
@@ -53,8 +66,7 @@ SystemImpl::SystemImpl()
 	m_Factory = nullptr;
 	m_PluginManager = nullptr;
 	m_Pool = nullptr;
-
-	m_FrameNum = 0;
+	m_InputManager = nullptr;
 
 	QueryPerformanceFrequency(&m_PerfFreq);
 	QueryPerformanceCounter(&m_PerfCount);
@@ -71,6 +83,12 @@ SystemImpl::~SystemImpl()
 	{
 		delete m_Log;
 		m_Log = nullptr;
+	}
+
+	if (m_InputManager)
+	{
+		delete m_InputManager;
+		m_InputManager = nullptr;
 	}
 }
 
@@ -172,6 +190,19 @@ Renderer *SystemImpl::GetRenderer()
 }
 
 
+InputManager *SystemImpl::GetInputManager()
+{
+	if (!m_InputManager)
+	{
+		m_InputManager = new InputManagerImpl(this);
+		if (m_InputManager)
+			m_InputManager->Initialize(m_hOwner, GetModuleHandle(NULL));
+	}
+
+	return m_InputManager;
+}
+
+
 Factory *SystemImpl::GetFactory()
 {
 	if (!m_Factory)
@@ -226,32 +257,6 @@ Log *SystemImpl::GetLog()
 }
 
 
-void SystemImpl::SetMousePos(int32_t x, int32_t y)
-{
-	m_MousePos.x = x;
-	m_MousePos.y = y;
-}
-
-
-void SystemImpl::GetMousePos(int32_t& x, int32_t& y)
-{
-	x = m_MousePos.x;
-	y = m_MousePos.y;
-}
-
-
-size_t SystemImpl::GetCurrentFrameNumber()
-{
-	return m_FrameNum;
-}
-
-
-void SystemImpl::SetCurrentFrameNumber(size_t framenum)
-{
-	m_FrameNum = framenum;
-}
-
-
 float SystemImpl::GetCurrentTime()
 {
 	return m_CurrentTime;
@@ -274,4 +279,7 @@ void SystemImpl::UpdateTime()
 	m_ElapsedTime = (float)m_PerfDelta.QuadPart * 100.0f / (float)m_PerfFreq.QuadPart;
 	m_LastTime = m_CurrentTime;
 	m_CurrentTime += m_ElapsedTime;
+
+	if (m_InputManager)
+		m_InputManager->Update(m_ElapsedTime);
 }

@@ -51,8 +51,6 @@ protected:
 	static TTextureArray m_ColorTarg;
 	static c3::DepthBuffer *m_DepthTarg;
 
-	static c3::ShaderComponent *m_VS_copyback;
-	static c3::ShaderComponent *m_FS_copyback;
 	static c3::ShaderProgram *m_SP_copyback;
 
 	static RENDERDOC_API_1_4_0 *m_pRenderDoc;

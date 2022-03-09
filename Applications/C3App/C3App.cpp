@@ -70,7 +70,7 @@ BOOL C3App::InitInstance()
 
 	CWinApp::InitInstance();
 
-	m_C3 = c3::System::Create(0);
+	m_C3 = c3::System::Create(NULL, 0);
 	if (!m_C3)
 		return FALSE;
 

@@ -32,6 +32,8 @@ C3EditDoc::C3EditDoc() noexcept
 {
 	m_RootObj = nullptr;
 	m_Brush = nullptr;
+	m_TimeWarp = 1.0f;
+	m_Paused = false;
 
 	m_ClearColor = glm::fvec4(0, 0, 0, 1);
 	m_FogColor = glm::fvec4(0, 0, 0, 0);

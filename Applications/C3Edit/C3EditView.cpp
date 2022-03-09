@@ -40,8 +40,6 @@ c3::FrameBuffer *C3EditView::m_LCBuf = nullptr;
 C3EditView::TTextureArray C3EditView::m_ColorTarg;
 c3::DepthBuffer *C3EditView::m_DepthTarg = nullptr;
 
-c3::ShaderComponent *C3EditView::m_VS_copyback = nullptr;
-c3::ShaderComponent *C3EditView::m_FS_copyback = nullptr;
 c3::ShaderProgram *C3EditView::m_SP_copyback = nullptr;
 
 RENDERDOC_API_1_4_0 *C3EditView::m_pRenderDoc = nullptr;
@@ -85,18 +83,6 @@ C3EditView::~C3EditView()
 			ct->Release();
 		}
 		m_ColorTarg.clear();
-
-		if (m_VS_copyback)
-		{
-			m_VS_copyback->Release();
-			m_VS_copyback = nullptr;
-		}
-
-		if (m_FS_copyback)
-		{
-			m_FS_copyback->Release();
-			m_FS_copyback = nullptr;
-		}
 
 		if (m_SP_copyback)
 		{
@@ -151,17 +137,15 @@ int C3EditView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 			c3::FrameBuffer::TargetDesc GBufTargData[] =
 			{
-				{ _T("uSamplerDiffuse"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
-				{ _T("uSamplerNormal"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
-				{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
-				{ _T("uSamplerEmission"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET }
+				{ _T("uSamplerDiffuse"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },
+				{ _T("uSamplerNormal"), c3::Renderer::TextureType::S8_4CH, TEXCREATEFLAG_RENDERTARGET },
+				{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },
+				{ _T("uSamplerEmission"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET }
 			};
 
-			// It SEEEEMS like in order to get blending to work, the light combine buffer needs to pre-multiply alpha,
-			// but then write alpha=1 in the shader... the depth test is still a problem
 			c3::FrameBuffer::TargetDesc LCBufTargData[] =
 			{
-				{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_4CH, TEXCREATEFLAG_RENDERTARGET },
+				{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },
 			};
 
 			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
@@ -187,13 +171,15 @@ int C3EditView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 			if (m_SP_copyback)
 			{
 				c3::Resource *tmp;
-				tmp = presman->GetResource(_T("resolve.vsh"), rf);
-				m_VS_copyback = tmp ? (c3::ShaderComponent *)(tmp->GetData()) : nullptr;
-				tmp = presman->GetResource(_T("resolve.fsh"), rf);
-				m_FS_copyback = tmp ? (c3::ShaderComponent *)(tmp->GetData()) : nullptr;
 
-				m_SP_copyback->AttachShader(m_VS_copyback);
-				m_SP_copyback->AttachShader(m_FS_copyback);
+				tmp = presman->GetResource(_T("resolve.vsh"), rf);
+				c3::ShaderComponent *pvs = tmp ? (c3::ShaderComponent *)(tmp->GetData()) : nullptr;
+				m_SP_copyback->AttachShader(pvs);
+
+				tmp = presman->GetResource(_T("resolve.fsh"), rf);
+				c3::ShaderComponent *pfs = tmp ? (c3::ShaderComponent *)(tmp->GetData()) : nullptr;
+				m_SP_copyback->AttachShader(pfs);
+
 				if (m_SP_copyback->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
 				{
 				}
@@ -248,6 +234,8 @@ void C3EditView::OnDraw(CDC *pDC)
 
 	C3EditFrame *pmf = (C3EditFrame *)theApp.GetMainWnd();
 
+	float dt = pDoc->m_Paused ? 0.0f : (pDoc->m_TimeWarp * theApp.m_C3->GetElapsedTime());
+
 	c3::Renderer *prend = theApp.m_C3->GetRenderer();
 	if (prend && prend->Initialized())
 	{
@@ -265,18 +253,17 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		c3::Object *camobj = pDoc->GetCamera(GetSafeHwnd());
 		if (camobj)
-			camobj->Update();
+			camobj->Update(dt);
 
-		pDoc->m_RootObj->Update();
+		pDoc->m_RootObj->Update(dt);
 
 		if (pDoc->m_Brush)
-			pDoc->m_Brush->Update();
+			pDoc->m_Brush->Update(dt);
 
 		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 		c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
 
 		theApp.m_C3->UpdateTime();
-		theApp.m_C3->SetCurrentFrameNumber(theApp.m_C3->GetCurrentFrameNumber() + 1);
 
 		// BeginScene clears the back buffer when the flags are set with default values
 		if (prend->BeginScene())

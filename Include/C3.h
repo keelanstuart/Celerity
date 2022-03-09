@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2021, Keelan Stuart
+// Copyright © 2001-2022, Keelan Stuart
 
 
 #pragma once
@@ -63,6 +63,7 @@
 #include <C3Configuration.h>
 #include <C3FileMapper.h>
 #include <C3ResourceManager.h>
+#include <C3InputManager.h>
 #include <C3System.h>
 #include <C3ColorDefs.h>
 

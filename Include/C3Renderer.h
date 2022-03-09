@@ -203,6 +203,9 @@ namespace c3
 
 		virtual void Shutdown() = NULL;
 
+		// Each time Present is called, this is incremented by 1
+		virtual size_t GetCurrentFrameNumber() = NULL;
+
 		// Returns the name of the active graphics adapter manufacturer
 		virtual const TCHAR* GetVendorName() const = NULL;
 
