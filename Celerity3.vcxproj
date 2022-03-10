@@ -92,6 +92,9 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)$(TargetName).pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="Source\C3ResourceImpl.cpp" />
+    <ClCompile Include="Source\TinyJS.cpp" />
+    <ClCompile Include="Source\TinyJS_Functions.cpp" />
+    <ClCompile Include="Source\TinyJS_MathFunctions.cpp" />
     <ClCompile Include="third-party\imgui\imgui.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
@@ -207,6 +210,9 @@
     <ClInclude Include="Source\gl_wrapper.h" />
     <ClInclude Include="$(SolutionDir)third-party\tinyxml2\tinyxml2.h" />
     <ClInclude Include="Source\pch.h" />
+    <ClInclude Include="Source\TinyJS.h" />
+    <ClInclude Include="Source\TinyJS_Functions.h" />
+    <ClInclude Include="Source\TinyJS_MathFunctions.h" />
     <ClInclude Include="Source\wglext.h" />
     <ClInclude Include="third-party\imgui\imgui.h" />
     <ClInclude Include="third-party\imgui\imgui_internal.h" />

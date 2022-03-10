@@ -86,6 +86,7 @@ BOOL C3Dlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	theApp.m_C3->SetOwner(GetSafeHwnd());
+	theApp.m_C3->GetInputManager()->AcquireAll();
 
 	// At init, on windows
 	if (HMODULE mod = GetModuleHandle(_T("C:/Program Files/RenderDoc/renderdoc.dll")))
