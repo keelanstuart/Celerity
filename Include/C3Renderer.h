@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <c3.h>
+#include <C3.h>
 
 namespace c3
 {

@@ -317,12 +317,12 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(C3_SDK)\lib</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
     <ExcludePath>$(CommonExcludePath)</ExcludePath>
@@ -334,12 +334,12 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap|Win32'">
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(C3_SDK)\lib</LibraryPath>
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
@@ -350,12 +350,12 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\Include;$(C3_SDK)\Source;$(C3_SDK)\third-party\GenIO\Include;$(C3_SDK)\third-party\Pool\Include;$(C3_SDK)\third-party\PowerProps\Include;$(C3_SDK)\third-party\mqme\Include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\tinyxml2;$(C3_SDK)\third-party\stb;$(C3_SDK)\third-party\imgui;$(C3_SDK)\third-party\assimp\include</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(C3_SDK)\lib</LibraryPath>
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
