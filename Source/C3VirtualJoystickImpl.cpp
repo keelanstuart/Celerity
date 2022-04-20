@@ -30,6 +30,8 @@ BOOL FAR PASCAL EnumAxesCallback(const DIDEVICEOBJECTINSTANCE *pdidoi, void *con
 
 VirtualJoystickImpl::VirtualJoystickImpl(System *psys, LPDIRECTINPUTDEVICE8 pdid) : InputDeviceImpl(psys, pdid)
 {
+	m_MinProportion = 0.2f;
+
 	// Set the data format to the default one for keyboards...
 	m_pDIDevice->SetDataFormat(&c_dfDIJoystick2);
 
@@ -96,7 +98,34 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSZ] = abs(state.lZ);	// right motion
 
 			if ((state.lZ < 0) && (state.lZ < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSZ] = abs(state.lZ);	// left motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGZ] = abs(state.lZ);	// left motion
+		}
+
+		if (abs(state.lRx) > (InputDevice::BUTTONVAL_MAX / 16))
+		{
+			if ((state.lRx > 0) && (state.lRx > iminprop))
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSX] = abs(state.lRx);	// right motion
+
+			if ((state.lRx < 0) && (state.lRx < -iminprop))
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGX] = abs(state.lRx);	// left motion
+		}
+
+		if (abs(state.lRy) > (InputDevice::BUTTONVAL_MAX / 16))
+		{
+			if ((state.lRy > 0) && (state.lRy > iminprop))
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSY] = abs(state.lRy);	// right motion
+
+			if ((state.lRy < 0) && (state.lRy < -iminprop))
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGY] = abs(state.lRy);	// left motion
+		}
+
+		if (abs(state.lRz) > (InputDevice::BUTTONVAL_MAX / 16))
+		{
+			if ((state.lRz > 0) && (state.lRz > iminprop))
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSZ] = abs(state.lRz);	// right motion
+
+			if ((state.lRz < 0) && (state.lRz < -iminprop))
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGZ] = abs(state.lRz);	// left motion
 		}
 
 		m_ButtonState[InputDevice::VirtualButton::THROTTLE1] = state.rglSlider[0];
@@ -105,7 +134,7 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 
 	for (uint32_t i = 0; i < InputDevice::MAXBUTTONS; i++)
 	{
-		if (state.rgbButtons[i] & 0x80)	// if the high-order bit is set, the button is being pressed.
+		if (state.rgbButtons[i] >= (InputDevice::BUTTONVAL_MAX / 16))	// if the high-order bit is set, the button is being pressed.
 		{
 			if (!m_ButtonState[InputDevice::VirtualButton::BUTTON1 + i])
 				m_ButtonDelta[InputDevice::VirtualButton::BUTTON1 + i] = InputDevice::BUTTONVAL_MAX;
@@ -124,7 +153,10 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 			m_ButtonState[InputDevice::VirtualButton::BUTTON1 + i] = 0;
 		}
 	}
-	
+
+	m_ButtonState[InputDevice::VirtualButton::SHIFT] = m_ButtonState[InputDevice::VirtualButton::BUTTON9];
+	m_ButtonDelta[InputDevice::VirtualButton::SHIFT] = m_ButtonDelta[InputDevice::VirtualButton::BUTTON9];
+
 	__super::Update(elapsed_seconds);
 
 	return true;

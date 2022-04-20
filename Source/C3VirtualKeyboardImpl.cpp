@@ -95,8 +95,8 @@ void VirtualKeyboardImpl::SetDefaultKeyMapping()
 	real_to_virtual[DIK_NUMPAD9]	= InputDevice::VirtualButton::AXIS1_POSX;
 
 	real_to_virtual[DIK_SPACE]		= InputDevice::VirtualButton::BUTTON3;
-	real_to_virtual[DIK_LSHIFT]		= InputDevice::VirtualButton::BUTTON1;
-	real_to_virtual[DIK_RSHIFT]		= InputDevice::VirtualButton::BUTTON2;
+	real_to_virtual[DIK_LSHIFT]		= InputDevice::VirtualButton::SHIFT;
+	real_to_virtual[DIK_RSHIFT]		= InputDevice::VirtualButton::SHIFT;
 
 	// characters (keyboard emulation)
 	real_to_virtual[DIK_A]			= InputDevice::VirtualButton::LETTER_A;

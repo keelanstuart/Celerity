@@ -18,7 +18,7 @@ namespace c3
 	public:
 
 		// The maximum number of buttons that may be managed by a virtual joystick
-		enum { MAXBUTTONS = 256 };
+		enum { MAXBUTTONS = 127 };
 
 		// the maximum value that any button state may have
 		enum { BUTTONVAL_MAX = 127 };

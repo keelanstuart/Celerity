@@ -50,6 +50,8 @@ namespace c3
 
 		virtual HWND GetOwner() const;
 
+		virtual bool IsSplashWnd(HWND h) const;
+
 		virtual void Release();
 
 		virtual ResourceManager *GetResourceManager();

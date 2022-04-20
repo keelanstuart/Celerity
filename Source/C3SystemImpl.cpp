@@ -45,6 +45,12 @@ HWND SystemImpl::GetOwner() const
 }
 
 
+extern HWND g_hSplashWnd;
+bool SystemImpl::IsSplashWnd(HWND h) const
+{
+	return (g_hSplashWnd && (h == g_hSplashWnd));
+}
+
 
 void InitializeCrc16Table();
 void InitializeCrc32Table();

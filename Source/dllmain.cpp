@@ -21,6 +21,7 @@ namespace Gdiplus
 #include <gdiplus.h>
 #include <gdiplusimaging.h>
 #include <gdiplusgraphics.h>
+#include <shellscalingapi.h>
 
 
 HMODULE g_C3Mod = NULL;
@@ -28,6 +29,7 @@ HMODULE g_C3Mod = NULL;
 Gdiplus::Bitmap *g_SplashImage = nullptr;
 int g_SplashImageW = 0, g_SplashImageH = 0;
 HWND g_hPostSplashWnd = NULL;
+HWND g_hSplashWnd = NULL;
 
 
 INT_PTR CALLBACK SplashDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -36,26 +38,39 @@ INT_PTR CALLBACK SplashDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
 	if (uMsg == WM_PAINT)
 	{
+		RECT r;
+		GetWindowRect(hwnd, &r);
 		Gdiplus::Graphics gfx(GetDC(hwnd));
-		gfx.DrawImage(g_SplashImage, Gdiplus::Point(0, 0));
+		gfx.SetCompositingMode(Gdiplus::CompositingMode::CompositingModeSourceOver);
+		gfx.SetInterpolationMode(Gdiplus::InterpolationMode::InterpolationModeNearestNeighbor);
+		gfx.DrawImage(g_SplashImage, 0, 0, r.right - r.left, r.bottom - r.top);
 		ret = TRUE;
 	}
 	else if (uMsg != WM_ERASEBKGND)
 	{
 		ret = DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
+	else
+	{
+		Gdiplus::Graphics gfx(GetDC(hwnd));
+		gfx.Clear(Gdiplus::Color(255, 0, 255));
+		ret = TRUE;
+	}
 
 	return ret;
 }
 
-typedef bool (WINAPI *lpfnSLWA) (HWND hWnd, COLORREF cr, 
-	BYTE bAlpha, DWORD dwFlags);
+typedef bool (WINAPI *lpfnSLWA) (HWND hWnd, COLORREF cr, BYTE bAlpha, DWORD dwFlags);
 
-#define SPLASH_TIME		4000
+#define SPLASH_TIME		3000
 
 DWORD WINAPI SplashThreadProc(LPVOID lpParameter)
 {
 	HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+
+	// This sounds dumb, but... wait a second before showing the splash dialog -- this
+	// prevents the input devices being lost when the windows are shown
+	Sleep(1000);
 
 	// Initialize GDI+.
 	Gdiplus::GdiplusStartupInput gdiplusStartupInput;
@@ -110,29 +125,41 @@ DWORD WINAPI SplashThreadProc(LPVOID lpParameter)
 			_pix[x].r = pix->r;
 			_pix[x].g = pix->g;
 			_pix[x].b = pix->b;
-			_pix[x].a = pix->a;//(pix->a != 255) ? pix->a : (((pix->r == 255) && (pix->g == 0) && (pix->b == 255)) ? 0 : 255);
+			_pix[x].a = pix->a;
+
 			pix++;
 		}
 	}
 	g_SplashImage->UnlockBits(&dst);
-
+	
 	UnlockResource(hglob);
 	FreeResource(hglob);
 
-	HWND splashwnd = CreateDialog(g_C3Mod, MAKEINTRESOURCE(IDD_DIALOG_SPLASH), NULL, SplashDlgProc);
+	g_hSplashWnd = CreateDialog(g_C3Mod, MAKEINTRESOURCE(IDD_DIALOG_SPLASH), NULL, SplashDlgProc);
 
-	if (splashwnd)
+	if (g_hSplashWnd)
 	{
-		::SetWindowLong(splashwnd, GWL_EXSTYLE, ::GetWindowLong(splashwnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+		RECT r;
+		::GetWindowRect(g_hSplashWnd, &r);
+
+		HMONITOR hmon = MonitorFromWindow(g_hSplashWnd, MONITOR_DEFAULTTONEAREST);
+		UINT dpiX, dpiY;
+		hr = GetDpiForMonitor(hmon, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+		UINT rdpiX, rdpiY;
+		hr = GetDpiForMonitor(hmon, MDT_RAW_DPI, &rdpiX, &rdpiY);
+		UINT w = MulDiv(r.right - r.left, rdpiX, dpiX);
+		UINT h = MulDiv(r.bottom - r.top, rdpiY, dpiY);
+		MoveWindow(g_hSplashWnd, r.left, r.top, w, h, FALSE);
+
+		::SetWindowLong(g_hSplashWnd, GWL_EXSTYLE, ::GetWindowLong(g_hSplashWnd, GWL_EXSTYLE) | WS_EX_LAYERED);
 
 		if (gSetLayeredWindowAttributes)
 		{
-			SetLayeredWindowAttributes(splashwnd, RGB(255, 0, 255), 0, LWA_COLORKEY);
-			//gSetLayeredWindowAttributes(splashwnd, 0, 0, LWA_ALPHA);
+			SetLayeredWindowAttributes(g_hSplashWnd, RGB(255, 0, 255), 0, LWA_COLORKEY);
+			//gSetLayeredWindowAttributes(g_hSplashWnd, 0, 0, LWA_ALPHA);
 		}
 
-		//::SetWindowLong(splashwnd, GWL_STYLE, ::GetWindowLong(splashwnd, GWL_STYLE) | WS_VISIBLE);
-		ShowWindow(splashwnd, SW_SHOWNOACTIVATE);
+		ShowWindow(g_hSplashWnd, SW_SHOWNOACTIVATE);
 
 		MSG Message;
 		int32_t time_start = timeGetTime();
@@ -147,14 +174,18 @@ DWORD WINAPI SplashThreadProc(LPVOID lpParameter)
 				DispatchMessage(&Message);
 			}
 
+#if 0
 			if (gSetLayeredWindowAttributes)
 			{
 				float pct = (float)time_elapsed / (float)SPLASH_TIME;
 				float sine = std::min<float>(std::max<float>(0.0f, (sin(pct * 3.14159f) * 2.5f)), 1.0f);
 				uint32_t opacity = (uint32_t)(sine * 255.0f);
-				//gSetLayeredWindowAttributes(splashwnd, 0, opacity, LWA_ALPHA);
-				RedrawWindow(splashwnd, 0, 0, RDW_UPDATENOW);
+				if (opacity < 10)
+					opacity = 0;
+				gSetLayeredWindowAttributes(g_hSplashWnd, 0, opacity, LWA_ALPHA);
+				RedrawWindow(g_hSplashWnd, 0, 0, RDW_UPDATENOW | RDW_NOERASE);
 			}
+#endif
 
 			Sleep(1);
 
@@ -165,9 +196,13 @@ DWORD WINAPI SplashThreadProc(LPVOID lpParameter)
 		} while (time_elapsed < SPLASH_TIME);
 
 		if (g_hPostSplashWnd)
+		{
 			BringWindowToTop(g_hPostSplashWnd);
+		}
 
-		DestroyWindow(splashwnd);
+		DestroyWindow(g_hSplashWnd);
+
+		g_hSplashWnd = NULL;
 	}
 
 	delete g_SplashImage;

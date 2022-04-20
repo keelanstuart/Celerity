@@ -20,6 +20,7 @@ struct SVDEnumJoyScratch
 {
 	LPDIRECTINPUT8 pdi;
 	LPDIRECTINPUTDEVICE8 *pdid;
+	InputManagerImpl *_this;
 };
 
 
@@ -39,6 +40,32 @@ InputManagerImpl::InputManagerImpl(System *sys)
 InputManagerImpl::~InputManagerImpl()
 {
 	Shutdown();
+}
+
+
+BOOL FAR PASCAL InputManagerImpl::EnumJoysticksCallback(const DIDEVICEINSTANCE *did_instance, void *context)
+{
+	LPDIRECTINPUTDEVICE8 *did = ((SVDEnumJoyScratch *)context)->pdid;
+	LPDIRECTINPUT8 di = ((SVDEnumJoyScratch *)context)->pdi;
+	InputManagerImpl *_this = ((SVDEnumJoyScratch *)context)->_this;
+
+	// See if the device is plugged in or not...
+	HRESULT hr = di->GetDeviceStatus(did_instance->guidInstance);
+
+	// if it's not attached, then it's not a valid device after all...
+	if (hr == DI_NOTATTACHED)
+		return DIENUM_CONTINUE;
+
+	// Obtain an interface to the enumerated joystick.
+	hr = di->CreateDevice(did_instance->guidInstance, did, NULL);
+
+	if (SUCCEEDED(hr))
+	{
+		VirtualJoystickImpl *pjoy = new VirtualJoystickImpl(_this->m_pSys, *did);
+		_this->m_Devices.push_back(TDeviceArray::value_type(pjoy, USER_DEFAULT));
+	}
+
+	return DIENUM_CONTINUE;
 }
 
 
@@ -66,6 +93,10 @@ bool InputManagerImpl::Initialize(HWND app_hwnd, HINSTANCE app_inst)
 		VirtualMouseImpl *pmouse = new VirtualMouseImpl(m_pSys, pdid);
 		m_Devices.push_back(TDeviceArray::value_type(pmouse, USER_DEFAULT));
 	}
+
+	SVDEnumJoyScratch scratch = {m_pDI, &pdid, this};
+
+	hr = m_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, &scratch, DIEDFL_ATTACHEDONLY);
 
 	return true;
 }
@@ -120,32 +151,6 @@ void InputManagerImpl::Update(float elapsed_seconds)
 }
 
 
-bool CALLBACK InputManagerImpl::EnumJoysticksCallback(const DIDEVICEINSTANCE *did_instance, void *context)
-{
-	LPDIRECTINPUTDEVICE8 *did = ((SVDEnumJoyScratch *)context)->pdid;
-	LPDIRECTINPUT8 di = ((SVDEnumJoyScratch *)context)->pdi;
-
-	// See if the device is plugged in or not...
-	HRESULT hr = di->GetDeviceStatus(did_instance->guidInstance);
-
-	// if it's not attached, then it's not a valid device after all...
-	if (hr == DI_NOTATTACHED)
-        return DIENUM_CONTINUE;
-
-    // Obtain an interface to the enumerated joystick.
-    hr = di->CreateDevice(did_instance->guidInstance, did, NULL);
-
-    // If it failed, then we can't use this joystick. (Maybe the user unplugged
-    // it while we were in the middle of enumerating it.)
-    if(FAILED(hr)) 
-        return DIENUM_CONTINUE;
-
-    // Stop enumeration. Note: we're just taking the first joystick we get. You
-    // could store all the enumerated joysticks and let the user pick.
-    return DIENUM_STOP;
-}
-
-
 void InputManagerImpl::AssignUser(const InputDevice *pdevice, size_t user)
 {
 	for (auto pds : m_Devices)
@@ -157,6 +162,7 @@ void InputManagerImpl::AssignUser(const InputDevice *pdevice, size_t user)
 		}
 	}
 }
+
 
 bool InputManagerImpl::GetAssignedUser(const InputDevice *pdevice, size_t &user) const
 {
@@ -175,54 +181,11 @@ bool InputManagerImpl::GetAssignedUser(const InputDevice *pdevice, size_t &user)
 	return false;
 }
 
+
 size_t InputManagerImpl::GetNumUsers() const
 {
 	return m_NumUsers;
 }
-
-/*
-c3::InputDevice *InputManagerImpl::AddDevice(int32_t user, uint32_t devicetype, const TCHAR *device_name)
-{
-	C2VirtualDevice *dev = NULL;
-
-	LPDIRECTINPUTDEVICE8 pdid = NULL;
-
-	switch(devicetype)
-	{
-		case VDEVICE_KEYBOARD:
-			if (SUCCEEDED(m_pDI->CreateDevice(GUID_SysKeyboard, &pdid, NULL)))
-				dev = new C2VirtualKeyboard(m_pSys, user);
-			break;
-
-		case VDEVICE_MOUSE:
-			if (SUCCEEDED(m_pDI->CreateDevice(GUID_SysMouse, &pdid, NULL)))
-				dev = new C2VirtualMouse(m_pSys, user);
-			break;
-
-		case VDEVICE_JOYSTICK:
-		{
-			SVDEnumJoyScratch scratch = {m_pDI, &pdid};
-
-			HRESULT hr = m_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, &scratch, DIEDFL_ATTACHEDONLY);
-			if (SUCCEEDED(hr) && pdid)
-				dev = new VirtualJoystickImpl(m_pSys, user);
-			break;
-		}
-	}
-
-	// if the creation process was successful, then 
-	if (dev)
-	{
-		devices.push_back(dev);
-
-		dev->AssignDID(pdid);
-
-		dev->Initialize(m_hwnd, m_hinst);
-	}
-
-	return dev;
-}
-*/
 
 
 // Has the button been pressed?  A non-zero value is TRUE...
@@ -296,7 +259,6 @@ void InputManagerImpl::AcquireAll()
 		dev.first->Acquire();
 	}
 }
-
 
 
 void InputManagerImpl::UnacquireAll()

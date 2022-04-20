@@ -30,18 +30,14 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_FS_copyback = m_VS_copyback = nullptr;
 	m_SP_copyback = nullptr;
 	m_DepthTarg = nullptr;
-	m_MoveF = false;
-	m_MoveL = false;
-	m_MoveR = false;
-	m_MoveB = false;
-	m_Run = false;
-	m_MoveU = false;
-	m_MoveD = false;
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
 	m_AmbientColor = c3::Color::DarkGrey;
 	m_SunColor = c3::Color::White;
 	m_SunDir = glm::normalize(glm::fvec3(0.2f, 0.5f, -1.0f));
+	m_CamPitch = m_CamYaw = 0.0f;
+	m_Run = false;
+	m_bFirstDraw = true;
 }
 
 void C3Dlg::DoDataExchange(CDataExchange* pDX)
@@ -86,7 +82,6 @@ BOOL C3Dlg::OnInitDialog()
 	CDialog::OnInitDialog();
 
 	theApp.m_C3->SetOwner(GetSafeHwnd());
-	theApp.m_C3->GetInputManager()->AcquireAll();
 
 	// At init, on windows
 	if (HMODULE mod = GetModuleHandle(_T("C:/Program Files/RenderDoc/renderdoc.dll")))
@@ -118,6 +113,8 @@ BOOL C3Dlg::OnInitDialog()
 		exit(-1);
 	}
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
+
+	//m_Input->AcquireAll();
 
 	theApp.m_C3->GetLog()->Print(_T("Creating Renderer... "));
 	m_Rend = theApp.m_C3->GetRenderer();
@@ -354,13 +351,15 @@ void C3Dlg::OnPaint()
 	{
 		CPaintDC dc(this); // device context for painting
 
+		CRect rect;
+		GetClientRect(&rect);
+
 		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
 
 		// Center icon in client rectangle
 		int cxIcon = GetSystemMetrics(SM_CXICON);
 		int cyIcon = GetSystemMetrics(SM_CYICON);
-		CRect rect;
-		GetClientRect(&rect);
+
 		int x = (rect.Width() - cxIcon + 1) / 2;
 		int y = (rect.Height() - cyIcon + 1) / 2;
 
@@ -373,31 +372,56 @@ void C3Dlg::OnPaint()
 		float dt = theApp.m_C3->GetElapsedTime();
 
 		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
-		if (pcampos)
+		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
+		if (pcampos && pcam && !m_bMouseCursorEnabled)
 		{
 			glm::vec3 mv(0, 0, 0);
 
-			float spd = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::BUTTON1) * 2.0f) + 1.5f;
+			m_Run = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::SHIFT);
+			float spd = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::SHIFT) * 3.0f) + 1.5f;
 
-			float mdf = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_W);
-			float mdb = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_S);
+			float mdf = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_W) +
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSY)) / 2.0f;
+
+			float mdb = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_S) +
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_NEGY)) / 2.0f;
+
 			mv += *(pcampos->GetFacingVector()) * (mdf - mdb) * spd;
 
-			float mdl = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_A);
-			float mdr = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_D);
+			float mdl = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_A) + 
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_NEGX)) / 2.0f;
+
+			float mdr = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_D) +
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSX)) / 2.0f;
+
 			mv += *(pcampos->GetLocalLeftVector()) * (mdl - mdr) * spd;
 
-			float mdu = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Q);
+			float mdu = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Q) +
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSZ)) / 2.0f;
 			mv.z += mdu * spd;
 
-			float mdd = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Z);
+			float mdd = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Z) + 
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_NEGZ)) / 2.0f;
 			mv.z -= mdd * spd;
 
+			float zoo = pcam->GetPolarDistance();
+			zoo += theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::BUTTON5) -
+				theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::BUTTON6);
+			zoo = std::max(zoo, 0.1f);
+			pcam->SetPolarDistance(zoo);
+
 			pcampos->AdjustPos(mv.x, mv.y, mv.z);
+
+			float pau = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGY);
+			float pad = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSY);
+			float yal = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSX);
+			float yar = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGX);
+
+			pcampos->AdjustPitch((pad - pau) * 0.05f);
+			pcampos->AdjustYawFlat((yar - yal) * 0.05f);
 		}
 		m_Camera->Update(dt);
 
-		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 		if (pcam)
 		{
 			m_Rend->SetViewMatrix(pcam->GetViewMatrix());
@@ -471,7 +495,8 @@ void C3Dlg::OnPaint()
 					m_pRDoc->EndFrameCapture(NULL, NULL);
 			}
 		}
-		//CDialog::OnPaint();
+
+		RedrawWindow(nullptr, nullptr, RDW_NOERASE);
 	}
 }
 
@@ -615,9 +640,6 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 	CPoint cp = r.CenterPoint(), cpc = cp;
 	ClientToScreen(&cp);
 
-	static float campitch = 0;
-	static float camyaw = 0;
-
 	int deltax = cpc.x - point.x;
 	int deltay = cpc.y - point.y;
 
@@ -627,21 +649,8 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 	c3::Camera *cam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 	if (cam && pos)
 	{
-		campitch -= deltay;
-		camyaw += deltax;
-
-		campitch = std::min(std::max(-88.0f, campitch), 88.0f);
-
-		glm::quat q;
-		glm::vec3 posx(1, 0, 0);
-		q = glm::angleAxis(0.0f, posx);
-		pos->SetOriQuat(&q);
-		pos->Update(m_Camera);
-		pos->AdjustYaw(glm::radians(camyaw));
-		pos->Update(m_Camera);
-		pos->AdjustPitch(glm::radians(campitch));
-		pos->Update(m_Camera);
-		cam->Update(m_Camera);
+		m_CamPitch -= deltay;
+		m_CamYaw += deltax;
 	}
 }
 
@@ -680,6 +689,10 @@ void C3Dlg::OnCaptureChanged(CWnd* pWnd)
 void C3Dlg::OnActivateApp(BOOL bActive, DWORD dwThreadID)
 {
 	CDialog::OnActivateApp(bActive, dwThreadID);
+	if (!bActive)
+	{
+		SetMouseEnabled(true);
+	}
 }
 
 
@@ -689,10 +702,10 @@ void C3Dlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 	if (nState != WA_INACTIVE)
 	{
 		theApp.m_C3->GetInputManager()->AcquireAll();
-		//SetMouseEnabled(m_bMouseCursorEnabled);
 	}
-	else
+	else if (!theApp.m_C3->IsSplashWnd(pWndOther->GetSafeHwnd()))
 	{
+		SetMouseEnabled(true);
 		theApp.m_C3->GetInputManager()->UnacquireAll();
 	}
 }
@@ -719,8 +732,8 @@ void C3Dlg::SetMouseEnabled(bool b)
 
 void C3Dlg::OnTimer(UINT_PTR nIDEvent)
 {
-	if (nIDEvent == m_DrawTimerId)
-		RedrawWindow(nullptr, nullptr, 0);
+//	if (nIDEvent == m_DrawTimerId)
+//		RedrawWindow(nullptr, nullptr, 0);
 
 	CDialog::OnTimer(nIDEvent);
 }

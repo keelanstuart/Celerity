@@ -28,6 +28,8 @@ namespace c3
 
 		virtual HWND GetOwner() const = NULL;
 
+		virtual bool IsSplashWnd(HWND h) const = NULL;
+
 		virtual pool::IThreadPool *GetThreadPool() = NULL;
 
 		virtual PluginManager *GetPluginManager() = NULL;

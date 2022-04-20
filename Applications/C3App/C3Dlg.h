@@ -24,6 +24,7 @@ protected:
 	c3::ShaderComponent *m_VS_copyback;
 	c3::ShaderComponent *m_FS_copyback;
 	c3::ShaderProgram *m_SP_copyback;
+	bool m_bFirstDraw;
 
 	UINT_PTR m_DrawTimerId;
 
@@ -36,7 +37,8 @@ protected:
 	std::deque<c3::Object *> m_Light;
 	std::deque<glm::fvec3> m_LightMove;
 
-	bool m_MoveF, m_MoveL, m_MoveR, m_MoveB, m_Run, m_MoveU, m_MoveD;
+	float m_CamYaw, m_CamPitch;
+	bool m_Run;
 
 	LARGE_INTEGER m_PerfFreq;
 	LARGE_INTEGER m_PerfTime;

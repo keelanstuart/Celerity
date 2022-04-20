@@ -71,7 +71,7 @@ namespace c3
 
 		LPDIRECTINPUT8 m_pDI;
 
-		static bool CALLBACK EnumJoysticksCallback(const DIDEVICEINSTANCE* did_instance, void* context);
+		static BOOL FAR PASCAL EnumJoysticksCallback(const DIDEVICEINSTANCE* did_instance, void* context);
 
 		// We need these to determine our level of device cooperation and for DI to know who to deal with
 		HWND m_hwnd;
