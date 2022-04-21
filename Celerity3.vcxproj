@@ -122,6 +122,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3.h" />
+    <ClInclude Include="Include\C3ActionMapper.h" />
     <ClInclude Include="Include\C3BoundingBox.h" />
     <ClInclude Include="Include\C3Camera.h" />
     <ClInclude Include="Include\C3ColorDefs.h" />
@@ -323,7 +324,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(C3_SDK)\lib</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(SolutionDir)\lib</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
     <ExcludePath>$(CommonExcludePath)</ExcludePath>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
@@ -351,12 +352,12 @@
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(C3_SDK)\lib</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(C3_SDK)\lib</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86;$(SolutionDir)\lib</LibraryPath>
     <LinkIncremental>false</LinkIncremental>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <OutDir>$(SolutionDir)bin\</OutDir>

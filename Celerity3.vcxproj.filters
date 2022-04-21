@@ -482,6 +482,9 @@
     <ClInclude Include="Source\TinyJS_MathFunctions.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
+    <ClInclude Include="Include\C3ActionMapper.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Source\Celerity.rc">
