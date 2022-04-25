@@ -18,7 +18,7 @@ void main()
 	if (dist > uLightRadius)
 		discard;
 
-	vec3 pnorm = texture(uSamplerNormalAmbOcc, uv).xyz;
+	vec3 pnorm = normalize(texture(uSamplerNormalAmbOcc, uv).xyz * 2.0 - 1.0);
 
 	vec2 attenuv = vec2(1.0 - (dist / uLightRadius), 0);
 	vec3 lightstrength = texture(uSamplerAttenuation, attenuv).xyz;

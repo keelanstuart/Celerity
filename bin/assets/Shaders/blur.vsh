@@ -1,12 +1,10 @@
-#version 420 core
+layout (location=0) in vec4 vPos;
+layout (location=1) in vec2 vTex0;
 
-out vec2 v_texcoord;
-
-in vec2 position;
-in vec2 texcoord;
+out vec2 fTex0;
 
 void main()
 {
-	gl_Position = vec4(position, 0.0, 1.0);
-	v_texcoord = texcoord;
+	gl_Position = vPos;
+    fTex0 = vTex0;
 }

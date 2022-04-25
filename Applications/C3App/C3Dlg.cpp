@@ -27,8 +27,13 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_Rend = nullptr;
 	m_GBuf = nullptr;
 	m_LCBuf = nullptr;
-	m_FS_copyback = m_VS_copyback = nullptr;
-	m_SP_copyback = nullptr;
+	memset(m_BBuf, 0, sizeof(c3::FrameBuffer *) * BLURTARGS);
+	m_FS_combine = m_VS_combine = nullptr;
+	m_SP_combine = nullptr;
+	m_FS_resolve = m_VS_resolve = nullptr;
+	m_SP_resolve = nullptr;
+	m_FS_blur = m_VS_blur = nullptr;
+	m_SP_blur = nullptr;
 	m_DepthTarg = nullptr;
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
@@ -164,6 +169,17 @@ BOOL C3Dlg::OnInitDialog()
 	gbok = m_GBuf->Setup(_countof(GBufTargData), GBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
+	for (size_t c = 0; c < BLURTARGS; c++)
+	{
+		m_BTex[c] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::U8_3CH, 0, TEXCREATEFLAG_RENDERTARGET);
+		m_BBuf[c] = m_Rend->CreateFrameBuffer();
+		m_BBuf[c]->AttachDepthTarget(m_DepthTarg);
+		m_BBuf[c]->AttachColorTarget(m_BTex[c], 0);
+		m_BBuf[c]->Seal();
+		w /= 2;
+		h /= 2;
+	}
+
 	theApp.m_C3->GetLog()->Print(_T("Creating light combine buffer... "));
 	m_LCBuf = m_Rend->CreateFrameBuffer();
 	gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
@@ -175,33 +191,85 @@ BOOL C3Dlg::OnInitDialog()
 	gbok = m_SSBuf->Seal() == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
-	m_VS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.vsh"), rf))->GetData());
-	m_FS_copyback = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.fsh"), rf))->GetData());
-	m_SP_copyback = m_Rend->CreateShaderProgram();
-	if (m_SP_copyback)
+	m_VS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.vsh"), rf))->GetData());
+	m_FS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.fsh"), rf))->GetData());
+	m_SP_blur = m_Rend->CreateShaderProgram();
+	if (m_SP_blur)
 	{
-		m_SP_copyback->AttachShader(m_VS_copyback);
-		m_SP_copyback->AttachShader(m_FS_copyback);
-		if (m_SP_copyback->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
+		m_SP_blur->AttachShader(m_VS_blur);
+		m_SP_blur->AttachShader(m_FS_blur);
+		if (m_SP_blur->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
+		{
+			m_uBlurTex = m_SP_blur->GetUniformLocation(_T("uSamplerUpRes"));
+			m_uBlurScale = m_SP_blur->GetUniformLocation(_T("uBlurScale"));
+		}
+	}
+
+	m_VS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.vsh"), rf))->GetData());
+	m_FS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.fsh"), rf))->GetData());
+	m_SP_resolve = m_Rend->CreateShaderProgram();
+	if (m_SP_resolve)
+	{
+		m_SP_resolve->AttachShader(m_VS_resolve);
+		m_SP_resolve->AttachShader(m_FS_resolve);
+		if (m_SP_resolve->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
+		{
+			int32_t ut;
+
+			ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip0"));
+			m_SP_resolve->SetUniformTexture(m_BTex[0], ut);
+
+			ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip1"));
+			m_SP_resolve->SetUniformTexture(m_BTex[1], ut);
+
+#if (BLURTARGS > 2)
+			ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2"));
+			m_SP_resolve->SetUniformTexture(m_BTex[2], ut);
+#endif
+
+#if (BLURTARGS > 3)
+			ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip3"));
+			m_SP_resolve->SetUniformTexture(m_BTex[3], ut);
+#endif
+
+			ut = m_SP_resolve->GetUniformLocation(_T("uSamplerPosDepth"));
+			m_SP_resolve->SetUniformTexture(m_GBuf->GetColorTargetByName(_T("uSamplerPosDepth")), ut);
+
+			ut = m_SP_resolve->GetUniformLocation(_T("uFocusDist"));
+			m_SP_resolve->SetUniform1(ut, 0.1f);
+
+			ut = m_SP_resolve->GetUniformLocation(_T("uFocusFalloff"));
+			m_SP_resolve->SetUniform1(ut, 0.0f);
+		}
+	}
+
+	m_VS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.vsh"), rf))->GetData());
+	m_FS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.fsh"), rf))->GetData());
+	m_SP_combine = m_Rend->CreateShaderProgram();
+	if (m_SP_combine)
+	{
+		m_SP_combine->AttachShader(m_VS_combine);
+		m_SP_combine->AttachShader(m_FS_combine);
+		if (m_SP_combine->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
 		{
 			uint32_t i;
 			for (i = 0; i < m_GBuf->GetNumColorTargets(); i++)
 			{
 				c3::Texture2D *pt = m_GBuf->GetColorTarget(i);
-				int32_t ul = m_SP_copyback->GetUniformLocation(pt->GetName());
-				m_SP_copyback->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : m_Rend->GetBlackTexture());
+				int32_t ul = m_SP_combine->GetUniformLocation(pt->GetName());
+				m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : m_Rend->GetBlackTexture());
 			}
 
 			for (i = 0; i < m_LCBuf->GetNumColorTargets(); i++)
 			{
 				c3::Texture2D* pt = m_LCBuf->GetColorTarget(i);
-				int32_t ul = m_SP_copyback->GetUniformLocation(pt->GetName());
-				m_SP_copyback->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : m_Rend->GetBlackTexture());
+				int32_t ul = m_SP_combine->GetUniformLocation(pt->GetName());
+				m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : m_Rend->GetBlackTexture());
 			}
 
-			m_ulSunDir = m_SP_copyback->GetUniformLocation(_T("uSunDirection"));
-			m_ulSunColor = m_SP_copyback->GetUniformLocation(_T("uSunColor"));
-			m_ulAmbientColor = m_SP_copyback->GetUniformLocation(_T("uAmbientColor"));
+			m_ulSunDir = m_SP_combine->GetUniformLocation(_T("uSunDirection"));
+			m_ulSunColor = m_SP_combine->GetUniformLocation(_T("uSunColor"));
+			m_ulAmbientColor = m_SP_combine->GetUniformLocation(_T("uAmbientColor"));
 		}
 	}
 
@@ -446,9 +514,9 @@ void C3Dlg::OnPaint()
 		glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
 		m_Rend->SetSunShadowMatrix(&depthMVP);
 
-		m_SP_copyback->SetUniform3(m_ulAmbientColor, &m_AmbientColor);
-		m_SP_copyback->SetUniform3(m_ulSunColor, &m_SunColor);
-		m_SP_copyback->SetUniform3(m_ulSunDir, &m_SunDir);
+		m_SP_combine->SetUniform3(m_ulAmbientColor, &m_AmbientColor);
+		m_SP_combine->SetUniform3(m_ulSunColor, &m_SunColor);
+		m_SP_combine->SetUniform3(m_ulSunDir, &m_SunDir);
 
 		m_RootObj->Update(dt);
 
@@ -475,13 +543,31 @@ void C3Dlg::OnPaint()
 			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::LIGHT));
 
 			// Resolve
-			m_Rend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
+			m_Rend->UseFrameBuffer(m_BBuf[0], UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
-			m_Rend->UseProgram(m_SP_copyback);
-			m_SP_copyback->ApplyUniforms(false);
+			m_Rend->UseProgram(m_SP_combine);
+			m_SP_combine->ApplyUniforms(false);
 			m_Rend->UseVertexBuffer(m_Rend->GetFullscreenPlaneVB());
+			m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
+
+			float bs = 2.0f;
+			for (int b = 0; b < BLURTARGS - 1; b++)
+			{
+				m_Rend->UseFrameBuffer(m_BBuf[b + 1], UFBFLAG_FINISHLAST);
+				m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+				m_Rend->UseProgram(m_SP_blur);
+				m_SP_blur->SetUniformTexture(m_BTex[b], m_uBlurTex);
+				m_SP_blur->SetUniform1(m_uBlurScale, bs);
+				m_SP_blur->ApplyUniforms(true);
+				m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
+				bs *= 2.0f;
+			}
+
+			m_Rend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST);
+			m_Rend->UseProgram(m_SP_resolve);
+			m_SP_resolve->ApplyUniforms(true);
 			m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
 			m_Rend->EndScene();
@@ -540,10 +626,10 @@ void C3Dlg::Cleanup()
 		m_RootObj = nullptr;
 	}
 
-	if (m_SP_copyback)
+	if (m_SP_combine)
 	{
-		m_SP_copyback->Release();
-		m_SP_copyback = nullptr;
+		m_SP_combine->Release();
+		m_SP_combine = nullptr;
 	}
 }
 

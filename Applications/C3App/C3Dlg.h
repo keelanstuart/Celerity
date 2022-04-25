@@ -7,6 +7,9 @@
 #include "renderdoc_app.h"
 #include <PowerProps.h>
 
+#define BLURTARGS	4
+
+
 // C3Dlg dialog
 class C3Dlg : public CDialog
 {
@@ -21,15 +24,24 @@ protected:
 	std::vector<c3::Texture2D *> m_ColorTarg;
 	c3::DepthBuffer *m_DepthTarg;
 	c3::DepthBuffer *m_ShadowTarg;
-	c3::ShaderComponent *m_VS_copyback;
-	c3::ShaderComponent *m_FS_copyback;
-	c3::ShaderProgram *m_SP_copyback;
+	c3::Texture2D *m_BTex[BLURTARGS];
+	c3::FrameBuffer *m_BBuf[BLURTARGS];
+	c3::ShaderComponent *m_VS_resolve;
+	c3::ShaderComponent *m_FS_resolve;
+	c3::ShaderProgram *m_SP_resolve;
+	c3::ShaderComponent *m_VS_blur;
+	c3::ShaderComponent *m_FS_blur;
+	c3::ShaderProgram *m_SP_blur;
+	c3::ShaderComponent *m_VS_combine;
+	c3::ShaderComponent *m_FS_combine;
+	c3::ShaderProgram *m_SP_combine;
 	bool m_bFirstDraw;
 
 	UINT_PTR m_DrawTimerId;
 
 	int32_t m_ulSunDir, m_ulSunColor, m_ulAmbientColor;
 	glm::fvec3 m_SunDir, m_SunColor, m_AmbientColor;
+	int32_t m_uBlurTex, m_uBlurScale;
 
 	c3::Factory *m_Factory;
 	c3::Object *m_RootObj;
