@@ -5,7 +5,7 @@ Once you have cloned the repo, run SetupCelerityEnv.bat to create / update the C
 
 Next, load the main Celerity solution in Visual Studio and build the "Bootstrap (Debug)" target. Be prepared: it will be building the OpenGL wrapper code, which involves downloading and parsing header files and documentation (yes, the resulting code includes comments detailing the version of OpenGL the function comes from and what it does). Even if you leave it in the Bootstrap configuration, a CRC is generated based on the .h files and the parameters used to create it which, together, prevent re-processing of all the OpenGL headers. Even so, the initial download is slow enough that you'll want to switch to a Debug / Release config.
 
-![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20211219.png)
+![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20220424.png)
 Sponza with 300 deferred lights
 
 ______________________________________________
