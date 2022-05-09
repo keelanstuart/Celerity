@@ -1605,24 +1605,33 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 			c3::Texture3DImpl *tex3d = dynamic_cast<c3::Texture3DImpl *>(luptex);
 			if (!tex3d)
 			{
-				return;
+				c3::DepthBufferImpl *texdep = dynamic_cast<c3::DepthBufferImpl *>((c3::DepthBuffer *)luptex);
+				if (!texdep)
+				{
+					return;
+				}
+				else
+				{
+					textype = GL_TEXTURE_2D;
+					glid = (GLuint)(c3::DepthBufferImpl &)*texdep;
+				}
 			}
 			else
 			{
 				textype = GL_TEXTURE_3D;
-				glid = (GLuint)(c3::ShaderProgramImpl &)*tex3d;
+				glid = (GLuint)(c3::Texture3DImpl &)*tex3d;
 			}
 		}
 		else
 		{
 			textype = GL_TEXTURE_CUBE_MAP;
-			glid = (GLuint)(c3::ShaderProgramImpl &)*texcube;
+			glid = (GLuint)(c3::TextureCubeImpl &)*texcube;
 		}
 	}
 	else
 	{
 		textype = GL_TEXTURE_2D;
-		glid = (GLuint)(c3::ShaderProgramImpl &)*tex2d;
+		glid = (GLuint)(c3::Texture2DImpl &)*tex2d;
 	}
 
 	ptexcache[texunit] = ptex;

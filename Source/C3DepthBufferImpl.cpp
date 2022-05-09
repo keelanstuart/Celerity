@@ -55,7 +55,7 @@ DepthBufferImpl::DepthBufferImpl(RendererImpl* prend, size_t width, size_t heigh
 				break;
 		}
 
-		if (m_Type < Renderer::EDepthType::F16_SHADOW)
+		if ((m_Type != Renderer::EDepthType::F16_SHADOW) && (m_Type != Renderer::EDepthType::F32_SHADOW))
 		{
 			prend->gl.GenRenderbuffers(1, &m_glID);
 			prend->gl.BindRenderbuffer(GL_RENDERBUFFER, m_glID);
@@ -66,10 +66,14 @@ DepthBufferImpl::DepthBufferImpl(RendererImpl* prend, size_t width, size_t heigh
 			prend->gl.GenTextures(1, &m_glID);
 			prend->gl.BindTexture(GL_TEXTURE_2D, m_glID);
 			prend->gl.TexImage2D(GL_TEXTURE_2D, 0, glct, (GLsizei)m_Width, (GLsizei)m_Height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
-			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 			prend->UseTexture(0, nullptr);
 
 		}

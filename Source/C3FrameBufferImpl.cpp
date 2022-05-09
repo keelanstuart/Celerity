@@ -396,8 +396,10 @@ void FrameBufferImpl::Clear(props::TFlags64 flags)
 				break;
 
 			case Renderer::DepthType::U16_D:
+			case Renderer::DepthType::F16_SHADOW:
 			case Renderer::DepthType::U32_D:
 			case Renderer::DepthType::F32_D:
+			case Renderer::DepthType::F32_SHADOW:
 				m_Rend->gl.ClearBufferfv(GL_DEPTH, 0, &m_ClearDepth);
 				break;
 		}

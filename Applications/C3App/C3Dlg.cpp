@@ -37,9 +37,9 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_DepthTarg = nullptr;
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
-	m_AmbientColor = c3::Color::DarkGrey;
-	m_SunColor = c3::Color::White;
-	m_SunDir = glm::normalize(glm::fvec3(0.2f, 0.5f, -1.0f));
+	m_AmbientColor = c3::Color::VeryDarkGrey;
+	m_SunColor = c3::Color::DarkYellow;
+	m_SunDir = glm::normalize(glm::fvec3(0.1f, 0.2f, -1.0f));
 	m_CamPitch = m_CamYaw = 0.0f;
 	m_Run = false;
 	m_bFirstDraw = true;
@@ -119,8 +119,6 @@ BOOL C3Dlg::OnInitDialog()
 	}
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
-	//m_Input->AcquireAll();
-
 	theApp.m_C3->GetLog()->Print(_T("Creating Renderer... "));
 	m_Rend = theApp.m_C3->GetRenderer();
 	if (!m_Rend)
@@ -142,7 +140,6 @@ BOOL C3Dlg::OnInitDialog()
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
 	m_Rend->SetAlphaCoverage(0.5f, false);
-	//m_Rend->GetGui()->SetWindowFocus();
 
 	// To start a frame capture, call StartFrameCapture.
 	// You can specify NULL, NULL for the device to capture on if you have only one device and
@@ -253,19 +250,24 @@ BOOL C3Dlg::OnInitDialog()
 		if (m_SP_combine->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
 		{
 			uint32_t i;
+			int32_t ul;
 			for (i = 0; i < m_GBuf->GetNumColorTargets(); i++)
 			{
 				c3::Texture2D *pt = m_GBuf->GetColorTarget(i);
-				int32_t ul = m_SP_combine->GetUniformLocation(pt->GetName());
+				ul = m_SP_combine->GetUniformLocation(pt->GetName());
 				m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : m_Rend->GetBlackTexture());
 			}
 
 			for (i = 0; i < m_LCBuf->GetNumColorTargets(); i++)
 			{
 				c3::Texture2D* pt = m_LCBuf->GetColorTarget(i);
-				int32_t ul = m_SP_combine->GetUniformLocation(pt->GetName());
+				ul = m_SP_combine->GetUniformLocation(pt->GetName());
 				m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : m_Rend->GetBlackTexture());
 			}
+
+			ul = m_SP_combine->GetUniformLocation(_T("uSamplerShadow"));
+			if (ul >= 0)
+				m_SP_combine->SetUniformTexture((c3::Texture *)m_ShadowTarg, ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 			m_ulSunDir = m_SP_combine->GetUniformLocation(_T("uSunDirection"));
 			m_ulSunColor = m_SP_combine->GetUniformLocation(_T("uSunColor"));
@@ -284,6 +286,11 @@ BOOL C3Dlg::OnInitDialog()
 	{
 		pcam->SetPolarDistance(10.0f);
 		pcam->SetFOV(glm::radians(70.0f));
+	}
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
+	if (pcampos)
+	{
+		pcampos->AdjustPos(0, 0, 4.0f);
 	}
 
 	m_RootObj = m_Factory->Build((c3::Prototype *)nullptr);
@@ -346,7 +353,7 @@ BOOL C3Dlg::OnInitDialog()
 #endif
 
 #if 1
-#define NUMLIGHTS		300
+#define NUMLIGHTS		100
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Light"))))
 	{
 		for (size_t i = 0; i < NUMLIGHTS; i++)
@@ -509,8 +516,28 @@ void C3Dlg::OnPaint()
 		}
 #endif
 
-		glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-50, 50, -50, 50, -50, 100);
-		glm::fmat4x4 depthViewMatrix = glm::lookAt(m_SunDir, glm::vec3(0,0,0), glm::vec3(0, 0, 1));
+		glm::mat4 biasmat(
+			0.5, 0.0, 0.0, 0.0,
+			0.0, 0.5, 0.0, 0.0,
+			0.0, 0.0, 0.5, 0.0,
+			0.5, 0.5, 0.5, 1.0
+		);
+
+		float sunx = sinf((float)(m_Rend->GetCurrentFrameNumber() / 8) * 3.14159f / 180.0f * 1.0f) * 0.4f;
+		float suny = cosf((float)(m_Rend->GetCurrentFrameNumber() / 8) * 3.14159f / 180.0f * 1.0f) * 0.4f;
+		m_SunDir = glm::normalize(glm::fvec3(sunx, suny, -1.0f));
+		float sunDotUp = glm::dot(m_SunDir, glm::fvec3(0, 0, -1));
+		m_SunColor = glm::lerp(c3::Color::DarkYellow, c3::Color::White, sunDotUp * sunDotUp * sunDotUp * sunDotUp * sunDotUp);
+		m_AmbientColor = m_SunColor * 0.3f;
+
+		float farclip = m_Camera->GetProperties()->GetPropertyById('C:FC')->AsFloat();
+		float nearclip = m_Camera->GetProperties()->GetPropertyById('C:NC')->AsFloat();
+		glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-800, 800, -800, 800, nearclip, farclip);
+		glm::fvec3 sunpos = m_SunDir * -700.0f;
+		glm::fvec3 campos;
+		pcam->GetEyePos(&campos);
+//		sunpos += campos;
+		glm::fmat4x4 depthViewMatrix = glm::lookAt(sunpos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 		glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
 		m_Rend->SetSunShadowMatrix(&depthMVP);
 
@@ -532,11 +559,13 @@ void C3Dlg::OnPaint()
 			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::DRAW));
 
 			// Shadow pass
-			m_Rend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH);
+			m_Rend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
 			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
 
+			m_Rend->SetViewport();
+
 			// Lighting pass(es)
-			m_Rend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR);
+			m_Rend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 			m_Rend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
@@ -548,7 +577,7 @@ void C3Dlg::OnPaint()
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
 			m_Rend->UseProgram(m_SP_combine);
-			m_SP_combine->ApplyUniforms(false);
+			m_SP_combine->ApplyUniforms(true);
 			m_Rend->UseVertexBuffer(m_Rend->GetFullscreenPlaneVB());
 			m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 

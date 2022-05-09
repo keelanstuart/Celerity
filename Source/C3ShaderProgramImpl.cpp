@@ -320,6 +320,8 @@ void ShaderProgramImpl::CaptureUniforms()
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEW);
 				else if (!_tcscmp(n, _T("uMatrixVP")))
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_VIEWPROJECTION);
+				else if (!_tcscmp(n, _T("uMatrixS")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUNSHADOWMAT);
 
 				break;
 			}
