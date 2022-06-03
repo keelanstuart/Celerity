@@ -96,6 +96,8 @@ public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnUpdateEditTriggerrenderdoccapture(CCmdUI *pCmdUI);
 	afx_msg void OnEditTriggerrenderdoccapture();
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

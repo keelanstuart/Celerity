@@ -160,7 +160,7 @@ BOOL C3App::InitInstance()
 	pproto->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
 	pproto->Flags().SetAll(c3::Object::OBJFLAG(c3::Object::CASTSHADOW) | c3::Object::OBJFLAG(c3::Object::UPDATE) | c3::Object::OBJFLAG(c3::Object::DRAW));
 
-#if 
+#if 0
 	tinyxml2::XMLDocument protodoc;
 	tinyxml2::XMLElement *protoroot = protodoc.NewElement("prototypes");
 	protodoc.InsertEndChild(protoroot);

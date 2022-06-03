@@ -34,6 +34,8 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_WM_SIZE()
 	ON_UPDATE_COMMAND_UI(ID_EDIT_TRIGGERRENDERDOCCAPTURE, &C3EditView::OnUpdateEditTriggerrenderdoccapture)
 	ON_COMMAND(ID_EDIT_TRIGGERRENDERDOCCAPTURE, &C3EditView::OnEditTriggerrenderdoccapture)
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
 END_MESSAGE_MAP()
 
 c3::FrameBuffer *C3EditView::m_GBuf = nullptr;
@@ -870,4 +872,65 @@ void C3EditView::OnUpdateEditTriggerrenderdoccapture(CCmdUI *pCmdUI)
 void C3EditView::OnEditTriggerrenderdoccapture()
 {
 	m_RenderDocCaptureFrame = true;
+}
+
+
+void C3EditView::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	// TODO: Add your message handler code here and/or call default
+
+	CView::OnLButtonDown(nFlags, point);
+}
+
+
+void C3EditView::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	C3EditDoc *pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	CRect r;
+	GetClientRect(r);
+
+	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+
+	c3::Object *camobj = pvi->obj;
+
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
+
+	c3::ModelRenderer *pbr = pDoc->m_Brush ? dynamic_cast<c3::ModelRenderer *>(pDoc->m_Brush->FindComponent(c3::ModelRenderer::Type())) : nullptr;
+	c3::Positionable *pbp = pDoc->m_Brush ? dynamic_cast<c3::Positionable *>(pDoc->m_Brush->FindComponent(c3::Positionable::Type())) : nullptr;
+
+	camobj->Update();
+
+	glm::fvec3 pos3d_near((float)m_MousePos.x, (float)m_MousePos.y, 0.0f);
+	glm::fvec3 pos3d_far((float)m_MousePos.x, (float)m_MousePos.y, 1.0f);
+
+	glm::fmat4x4 viewmat, projmat;
+
+	// Get the current projection and view matrices from d3d
+	pcam->GetViewMatrix(&viewmat);
+	pcam->GetProjectionMatrix(&projmat);
+
+	c3::Renderer *pr = theApp.m_C3->GetRenderer();
+
+	// Construct a viewport that desribes our view metric
+	glm::fvec4 viewport(0.0f, 0.0f, (float)(r.right - r.left), (float)(r.bottom - r.top));
+
+	pos3d_near = glm::unProject(pos3d_near, viewmat, projmat, viewport);
+	pos3d_far = glm::unProject(pos3d_far, viewmat, projmat, viewport);
+
+	glm::fvec3 rayvec = pos3d_far;
+	rayvec -= pos3d_near;
+
+	float shortdist = FLT_MAX;
+
+	//pDoc->m_RootObj->CheckCollision(pos3d_near, rayvec, NULL, &tmp, true);
+
+	rayvec = glm::normalize(rayvec);
+
+	rayvec *= shortdist;
+	rayvec += pos3d_near;
+
+	CView::OnLButtonUp(nFlags, point);
 }
