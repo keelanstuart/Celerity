@@ -397,9 +397,9 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 
 				pwp->AddSubItem(new CWTFPropertyGridProperty(xname, (LONG)(p->AsVec2I()->x), NULL, NULL, NULL, NULL, _T("0123456789-")));
 				pwp->AddSubItem(new CWTFPropertyGridProperty(yname, (LONG)(p->AsVec2I()->y), NULL, NULL, NULL, NULL, _T("0123456789-")));
-				if (p->GetAspect() >= props::IProperty::PROPERTY_TYPE::PT_INT_V3)
+				if (p->GetType() >= props::IProperty::PROPERTY_TYPE::PT_INT_V3)
 					pwp->AddSubItem(new CWTFPropertyGridProperty(zname, (LONG)(p->AsVec3I()->z), NULL, NULL, NULL, NULL, _T("0123456789-")));
-				if (p->GetAspect() == props::IProperty::PROPERTY_TYPE::PT_INT_V4)
+				if (p->GetType() == props::IProperty::PROPERTY_TYPE::PT_INT_V4)
 					pwp->AddSubItem(new CWTFPropertyGridProperty(wname, (LONG)(p->AsVec4I()->w), NULL, NULL, NULL, NULL, _T("0123456789-")));
 
 				pwp->SetDescription(prop_desc ? prop_desc(p->GetID()) : _T(""));
@@ -460,9 +460,9 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 
 					pwp->AddSubItem(new CWTFPropertyGridProperty(xname, p->AsVec2F()->x, NULL, NULL, NULL, NULL, _T("0123456789.-")));
 					pwp->AddSubItem(new CWTFPropertyGridProperty(yname, p->AsVec2F()->y, NULL, NULL, NULL, NULL, _T("0123456789.-")));
-					if (p->GetAspect() >= props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3)
+					if (p->GetType() >= props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3)
 						pwp->AddSubItem(new CWTFPropertyGridProperty(zname, p->AsVec3F()->z, NULL, NULL, NULL, NULL, _T("0123456789.-")));
-					if (p->GetAspect() == props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4)
+					if (p->GetType() == props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4)
 						pwp->AddSubItem(new CWTFPropertyGridProperty(wname, p->AsVec4F()->w, NULL, NULL, NULL, NULL, _T("0123456789.-")));
 
 					pwp->SetDescription(prop_desc ? prop_desc(p->GetID()) : _T(""));

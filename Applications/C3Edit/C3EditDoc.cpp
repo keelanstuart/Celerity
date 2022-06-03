@@ -49,8 +49,8 @@ C3EditDoc::~C3EditDoc()
 		m_Brush = nullptr;
 	}
 
-	for (TWndMappedObject::iterator it = m_Camera.begin(), last_it = m_Camera.end(); it != last_it; it++)
-		it->second->Release();
+	for (auto it : m_PerViewInfo)
+		it.second.obj->Release();
 
 	if (m_RootObj)
 	{
@@ -69,6 +69,8 @@ BOOL C3EditDoc::OnNewDocument()
 		return FALSE;
 
 	m_RootObj = pf->Build();
+	m_RootObj->AddComponent(c3::Positionable::Type());
+	m_RootObj->Flags().Set(c3::Object::OBJFLAG(c3::Object::LIGHT) | c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
 
 	return TRUE;
 }
@@ -109,11 +111,12 @@ void C3EditDoc::Serialize(CArchive& ar)
 
 			if (os->BeginBlock('CAM0'))
 			{
-				c3::Object *cam = m_Camera.begin()->second;
+				SPerViewInfo *pvi = &m_PerViewInfo.begin()->second;
+				c3::Object *cam = pvi->obj;
 				cam->Save(os, 0);
 
-				os->WriteFloat(m_CamPitch);
-				os->WriteFloat(m_CamYaw);
+				os->WriteFloat(pvi->pitch);
+				os->WriteFloat(pvi->yaw);
 
 				os->EndBlock();
 			}
@@ -167,12 +170,15 @@ void C3EditDoc::Serialize(CArchive& ar)
 
 				if (is->BeginBlock('CAM0'))
 				{
-					c3::Object *cam = theApp.m_C3->GetFactory()->Build();
-					cam->Load(is);
-					m_Camera.insert(TWndMappedObject::value_type(0, cam));
+					SPerViewInfo pvi;
 
-					is->ReadFloat(m_CamPitch);
-					is->ReadFloat(m_CamYaw);
+					pvi.obj = theApp.m_C3->GetFactory()->Build();
+					pvi.obj->Load(is);
+
+					is->ReadFloat(pvi.pitch);
+					is->ReadFloat(pvi.yaw);
+					m_PerViewInfo.insert(TWndMappedObject::value_type(0, pvi));
+
 
 					is->EndBlock();
 				}
@@ -197,19 +203,19 @@ void C3EditDoc::Serialize(CArchive& ar)
 	}
 }
 
-c3::Object* C3EditDoc::GetCamera(HWND h)
+C3EditDoc::SPerViewInfo *C3EditDoc::GetPerViewInfo(HWND h)
 {
-	TWndMappedObject::iterator it = m_Camera.find(h);
-	if (it != m_Camera.end())
-		return it->second;
+	TWndMappedObject::iterator it = m_PerViewInfo.find(h);
+	if (it != m_PerViewInfo.end())
+		return &it->second;
 
-	if (!m_Camera.empty())
+	if (!m_PerViewInfo.empty())
 	{
-		it = m_Camera.find(0);
-		if (it != m_Camera.end())
+		it = m_PerViewInfo.find(0);
+		if (it != m_PerViewInfo.end())
 		{
-			m_Camera.insert(TWndMappedObject::value_type(h, it->second));
-			m_Camera.erase(0);
+			m_PerViewInfo.insert(TWndMappedObject::value_type(h, it->second));
+			m_PerViewInfo.erase(0);
 		}
 	}
 
@@ -223,9 +229,27 @@ c3::Object* C3EditDoc::GetCamera(HWND h)
 	c->AddComponent(c3::Camera::Type());
 	c->SetName(_T("Camera"));
 
-	m_Camera.insert(TWndMappedObject::value_type(h, c));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(c->FindComponent(c3::Camera::Type()));
+	if (pcam)
+	{
+		pcam->SetFOV(glm::radians(70.0f));
+		pcam->SetViewMode(c3::Camera::ViewMode::VM_POLAR);
+		pcam->SetPolarDistance(1.0f);
+	}
 
-	return c;
+	c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(c->FindComponent(c3::Positionable::Type()));
+	if (ppos)
+	{
+		ppos->SetYawPitchRoll(0, 0, 0);
+	}
+
+	SPerViewInfo pvi;
+	pvi.obj = c;
+	pvi.yaw = pvi.pitch = 0;
+
+	auto ret = m_PerViewInfo.insert(TWndMappedObject::value_type(h, pvi));
+
+	return &ret.first->second;
 }
 
 #ifdef SHARED_HANDLERS

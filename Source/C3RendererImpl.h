@@ -95,6 +95,7 @@ namespace c3
 		CullMode m_CullMode;
 		BlendMode m_BlendMode;
 		BlendEquation m_BlendEq;
+		FillMode m_FillMode;
 
 		float m_AlphaPassMin, m_AlphaPassMax;
 		bool m_StencilEnabled;
@@ -185,6 +186,9 @@ namespace c3
 
 		virtual void SetDepthTest(Test test);
 		virtual Test GetDepthTest() const;
+
+		virtual void SetFillMode(FillMode mode);
+		virtual FillMode GetFillMode() const;
 
 		virtual void SetStencilEnabled(bool en);
 		virtual bool GetStencilEnabled() const;

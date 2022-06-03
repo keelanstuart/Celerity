@@ -45,13 +45,34 @@ public:
 protected:
 	static size_t m_ResourcesRefCt;
 
-	static c3::FrameBuffer *m_GBuf, *m_LCBuf;
+#define BLURTARGS	4
 
-	typedef std::vector<c3::Texture2D *> TTextureArray;
-	static TTextureArray m_ColorTarg;
+	static c3::FrameBuffer *m_GBuf;
+	static c3::FrameBuffer *m_LCBuf;
+	static c3::FrameBuffer *m_SSBuf;
+	static std::vector<c3::Texture2D *> m_ColorTarg;
 	static c3::DepthBuffer *m_DepthTarg;
+	static c3::DepthBuffer *m_ShadowTarg;
+	static std::vector<c3::Texture2D *> m_BTex;
+	static std::vector<c3::FrameBuffer *> m_BBuf;
+	static c3::ShaderComponent *m_VS_resolve;
+	static c3::ShaderComponent *m_FS_resolve;
+	static c3::ShaderProgram *m_SP_resolve;
+	static c3::ShaderComponent *m_VS_blur;
+	static c3::ShaderComponent *m_FS_blur;
+	static c3::ShaderProgram *m_SP_blur;
+	static c3::ShaderComponent *m_VS_combine;
+	static c3::ShaderComponent *m_FS_combine;
+	static c3::ShaderProgram *m_SP_combine;
 
-	static c3::ShaderProgram *m_SP_copyback;
+	static int32_t m_ulSunDir;
+	static int32_t m_ulSunColor;
+	static int32_t m_ulAmbientColor;
+	static glm::fvec3 m_SunDir;
+	static glm::fvec3 m_SunColor;
+	static glm::fvec3 m_AmbientColor;
+	static int32_t m_uBlurTex;
+	static int32_t m_uBlurScale;
 
 	static RENDERDOC_API_1_4_0 *m_pRenderDoc;
 	bool m_RenderDocCaptureFrame;
@@ -73,6 +94,8 @@ public:
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnUpdateEditTriggerrenderdoccapture(CCmdUI *pCmdUI);
+	afx_msg void OnEditTriggerrenderdoccapture();
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

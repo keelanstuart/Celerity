@@ -29,7 +29,8 @@
 #include <algorithm>
 #include <mutex>
 #include <unordered_map>
-
+#include <locale>
+#include <codecvt>
 
 //#define GLLIBGEN_LOGCALLS
 
@@ -82,5 +83,12 @@ typedef std::basic_istream<TCHAR, std::char_traits<TCHAR> > tistream;
 
 #define IMGUI_USER_CONFIG	<C3ImGuiConfig.h>
 #include <../third-party/imgui/imgui.h>
+
+// a used in std::*_convert operations
+template <typename Facet>
+struct deletable_facet : Facet
+{
+	using Facet::Facet;
+};
 
 #endif //PCH_H

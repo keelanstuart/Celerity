@@ -69,7 +69,7 @@ END_MESSAGE_MAP()
 c3::FrameBuffer::TargetDesc GBufTargData[] =
 {
 	{ _T("uSamplerDiffuseMetalness"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },	// diffuse color (rgb) and metalness (a)
-	{ _T("uSamplerNormalAmbOcc"), c3::Renderer::TextureType::S8_4CH, TEXCREATEFLAG_RENDERTARGET },		// fragment normal (rgb) and ambient occlusion (a)
+	{ _T("uSamplerNormalAmbOcc"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },		// fragment normal (rgb) and ambient occlusion (a)
 	{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },			// fragment position in world space (rgb) and dpeth in screen space (a)
 	{ _T("uSamplerEmissionRoughness"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET }	// emission color (rgb) and roughness (a)
 };
@@ -309,12 +309,31 @@ BOOL C3Dlg::OnInitDialog()
 			if (ppos)
 			{
 				ppos->SetScl(50.0f, 50.0f, 50.0f);
-				ppos->SetYawPitchRoll(glm::radians(0.0f), glm::radians(90.0f), glm::radians(0.0f));
 				ppos->Update(0);
 			}
 			m_RootObj->AddChild(pobj);
 
 			theApp.m_C3->GetLog()->Print(_T("Sponza created\n"));
+		}
+	}
+#endif
+
+#if 0
+	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Terrain"))))
+	{
+		c3::Object *pobj = m_Factory->Build(pproto);
+		if (pobj)
+		{
+			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
+			if (ppos)
+			{
+				ppos->SetScl(50.0f, 50.0f, 5.0f);
+				//ppos->SetYawPitchRoll(glm::radians(0.0f), glm::radians(90.0f), glm::radians(0.0f));
+				ppos->Update(0);
+			}
+			m_RootObj->AddChild(pobj);
+
+			theApp.m_C3->GetLog()->Print(_T("Terrain created\n"));
 		}
 	}
 #endif
@@ -328,7 +347,8 @@ BOOL C3Dlg::OnInitDialog()
 			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
 			if (ppos)
 			{
-				ppos->SetScl(0.1f, 0.1f, 0.1f);
+				ppos->AdjustPos(0, 0, 80.0f);
+				ppos->SetScl(0.08f, 0.08f, 0.08f);
 				ppos->Update(0);
 			}
 			m_RootObj->AddChild(pobj);

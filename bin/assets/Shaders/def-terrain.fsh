@@ -1,36 +1,42 @@
-#version 420 core
+uniform sampler2D uSamplerDiffuse;
+uniform sampler2D uSamplerNormal;
+uniform sampler2D uSamplerEmissive;
+uniform sampler2D uSamplerSurfaceDesc;		// ao / roughness / metalness (UE4 style)
+uniform float uAlphaPass;
 
-uniform mat4 matMVP;
-uniform vec3 vLight;
+uniform vec4 uColorDiffuse;
 
-uniform vec3 vLightColor = vec3(1,0.9,0.8);
+in vec4 fPosDepth;
+in vec3 fT, fB, fN;
+in vec2 fTex0;
+in vec4 fColor0;
 
-in block
-{
-	vec3 texCoord;
-} In;
-
-layout(location = 0, index = 0) out vec4 FragColor;
-layout(binding = 0) uniform sampler2D coarse_height;
-layout(binding = 1) uniform sampler2D diffuseMap;
-layout(binding = 2) uniform sampler2D noise_height;
-layout(binding = 3) uniform sampler2D detailMap;
+layout (location=0) out vec4 oDefDiffuseMetalness;		// albedo color
+layout (location=1) out vec4 oDefNormalAmbOcc;
+layout (location=2) out vec4 oDefPosDepth;
+layout (location=3) out vec4 oDefEmissionRoughness;
 
 void main()
 {
-	vec3 diffuseColor = texture(diffuseMap, In.texCoord.xy).rgb;
-	vec3 detailColor = texture(detailMap, In.texCoord.xy*256).rgb;
+	vec4 diff = texture(uSamplerDiffuse, fTex0) * uColorDiffuse;
+	diff *= fColor0;
+	if (diff.a <= uAlphaPass)
+		discard;
 
-	vec3 normal = texture(coarse_height, In.texCoord.xy).rgb;
-	normal = normalize(normal* 2.0 - 1.0);	// scale back and normalize from (0,1) to (-1,1)
+	oDefPosDepth = fPosDepth;
 
-	vec3 diffuse = clamp( dot( normal, vLight ),0.0,1.0)*vLightColor;
-	vec3 finalColor = (0.4 + diffuse)*diffuseColor*detailColor*1.5;
+	// construct the normal transform
+	mat3 TBN = mat3(fT, fB, fN);
+	vec3 texN = normalize(texture(uSamplerNormal, fTex0).rgb) * 2.0 - 1.0;
+	vec3 N = normalize(TBN * texN);
+	oDefNormalAmbOcc.rgb = (N.rgb + 1.0) / 2.0;
 
-	//FragColor = vec4(normal, 1.0);
-	FragColor = vec4(clamp(finalColor, 0.0, 1.0), 1.0);
+	oDefDiffuseMetalness.rgb = diff.rgb;
 
-	// draw the boarder of terrain grid
-	if(In.texCoord.z==1.0f)
-	   FragColor = vec4(1,0,0,1);	   
+	vec4 surfdesc = texture(uSamplerSurfaceDesc, fTex0);
+	vec4 emis = texture(uSamplerEmissive, fTex0); 
+
+	oDefNormalAmbOcc.a = surfdesc.r;												// encode ambient occlusion as normal.a
+	oDefEmissionRoughness = vec4((emis.rgb * fColor0.rgb) * fColor0.a, surfdesc.g);	// encode roughness as emissive.a
+	oDefDiffuseMetalness.a = surfdesc.b;											// encode metalness as diffuse.a
 }

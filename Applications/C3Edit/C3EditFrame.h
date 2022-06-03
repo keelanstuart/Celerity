@@ -53,17 +53,19 @@ public:
 	props::TFlags64 GetAxes();
 	BOOL AxisActive(props::TFlags64 axis);
 
+	void SetActiveProperties(props::IPropertySet *props, bool readonly = false, const TCHAR *title = nullptr);
+
 protected:
 	CMFCToolBarButton *GetToolButtonByID(CMFCToolBar *toolbar, DWORD butid);
 
 protected:  // control bar embedded members
+	COutputWnd        m_wndOutput;
 	CMFCMenuBar       m_wndMenuBar;
 	CMFCToolBar       m_wndToolBar;
 	CMFCToolBar       m_wndAxesToolBar;
 	CMFCToolBar       m_wnd3DToolBar;
 	CMFCStatusBar     m_wndStatusBar;
 	CPrototypeView    m_wndProtoView;
-	COutputWnd        m_wndOutput;
 	CPropertiesWnd    m_wndProperties;
 	COutlookBar       m_wndNavigationBar;
 	CMFCShellTreeCtrl m_wndTree;

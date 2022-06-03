@@ -30,6 +30,8 @@ public:
 		m_wndPropList.SetGroupNameFullWidth(bSet);
 	}
 
+	void SetActiveProperties(props::IPropertySet* props, bool readonly, const TCHAR* title);
+
 protected:
 	CFont m_fntPropList;
 	CComboBox m_wndObjectCombo;
@@ -37,6 +39,8 @@ protected:
 	CPropertyGrid m_wndPropList;
 	CListCtrl m_wndCompList;
 	CCheckListBox m_wndFlagList;
+
+	props::IPropertySet *m_pProps;
 
 // Implementation
 public:

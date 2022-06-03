@@ -159,6 +159,15 @@ namespace c3
 
 		} CullMode;
 
+		typedef enum EFillMode
+		{
+			FM_FILL = 0,
+			FM_WIRE,
+			FM_POINT,
+
+			FM_NUMMODES
+		} FillMode;
+
 		typedef enum EBlendMode
 		{
 			BM_DISABLED = 0,	// blend(zero, zero)
@@ -242,6 +251,9 @@ namespace c3
 
 		virtual void SetDepthTest(Test test) = NULL;
 		virtual Test GetDepthTest() const = NULL;
+
+		virtual void SetFillMode(FillMode mode) = NULL;
+		virtual FillMode GetFillMode() const = NULL;
 
 		virtual void SetStencilEnabled(bool en) = NULL;
 		virtual bool GetStencilEnabled() const = NULL;

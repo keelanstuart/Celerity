@@ -20,7 +20,7 @@ namespace c3
 		glm::vec3 m_Pos;
 
 		props::IProperty *m_pori;
-		glm::quat m_Ori;
+		glm::fquat m_Ori;
 
 		props::IProperty *m_pscl;
 		glm::vec3 m_Scl;

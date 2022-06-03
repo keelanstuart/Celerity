@@ -40,6 +40,7 @@ protected:
 
 	HTREEITEM FindChildItem(HTREEITEM hroot, const TCHAR *itemname);
 	HTREEITEM MakeProtoGroup(HTREEITEM hroot, const TCHAR *group);
+	HTREEITEM MakePrototype(HTREEITEM hroot, const TCHAR *group);
 	void FillPrototypeView();
 
 // Overrides
@@ -60,7 +61,10 @@ protected:
 	afx_msg LRESULT OnChangeActiveTab(WPARAM, LPARAM);
 	afx_msg void OnSort(UINT id);
 	afx_msg void OnUpdateSort(CCmdUI* pCmdUI);
+	afx_msg void OnSelectionChanged(NMHDR *pNMHDR, LRESULT *pResult);
 
 	DECLARE_MESSAGE_MAP()
+public:
+	virtual BOOL OnCmdMsg(UINT nID, int nCode, void *pExtra, AFX_CMDHANDLERINFO *pHandlerInfo);
 };
 

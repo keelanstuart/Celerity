@@ -54,6 +54,7 @@
 #include <C3Camera.h>
 #include <C3ModelRenderer.h>
 #include <C3OmniLight.h>
+#include <C3QuadTerrain.h>
 
 #include <C3Object.h>
 #include <C3Prototype.h>
@@ -69,3 +70,5 @@
 
 #include <C3FlowGraph.h>
 #include <C3FlowNode.h>
+
+#define C3_SAFERELEASE(p)	if (p) { p->Release(); p = nullptr; }

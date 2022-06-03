@@ -373,7 +373,7 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags)
 
 void ObjectImpl::PostLoad()
 {
-
+	Update();
 }
 
 

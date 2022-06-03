@@ -155,38 +155,33 @@ BOOL C3EditApp::InitInstance()
 	if (!pf)
 		return FALSE;
 
-	tstring protopaths = m_Config->GetString(_T("resources.prototypes.paths"), _T("./;./Resources;./Resources/Prototypes"));
+	tstring protopaths = m_Config->GetString(_T("resources.prototypes.paths"), _T("./;./assets"));
 	protopaths += _T(";");
 	protopaths += m_AppDataRoot;
 	pfm->SetMappingsFromDelimitedStrings(
-		m_Config->GetString(_T("resources.prototypes.extensions"), _T("c3proto")),
+		m_Config->GetString(_T("resources.prototypes.extensions"), _T("c3protoa")),
 		protopaths.c_str(),
 		_T(';'));
 
-	for (size_t q = 0; q < pfm->GetNumPaths(_T("c3proto")); q++)
+	for (size_t q = 0; q < pfm->GetNumPaths(_T("c3protoa")); q++)
 	{
-		tstring ppath = pfm->GetPath(_T("c3proto"), q);
-		ppath.append(_T("*.c3proto"));
+		tstring ppath = pfm->GetPath(_T("c3protoa"), q);
+		tstring spath = ppath;
+		spath.append(_T("*.c3protoa"));
 
 		WIN32_FIND_DATA fd;
-		HANDLE hff = FindFirstFile(ppath.c_str(), &fd);
+		HANDLE hff = FindFirstFile(spath.c_str(), &fd);
 		if (hff != INVALID_HANDLE_VALUE)
 		{
 			do
 			{
-				FILE *protof;
-				if (!_tfopen_s(&protof, fd.cFileName, _T("r, css=UTF-8")))
-				{
-					int f = _fileno(protof);
-
-#pragma warning(disable: 4312)
-					HANDLE h = (f > 0) ? (HANDLE)f : INVALID_HANDLE_VALUE;
-#pragma warning(default: 4312)
-
-					genio::IInputStream *pis = genio::IInputStream::Create(h);
-					pf->LoadPrototypes(pis);
-					pis->Release();
-				}
+				tinyxml2::XMLDocument doc;
+				char *p;
+				tstring tpath = ppath;
+				tpath.append(fd.cFileName);
+				CONVERT_TCS2MBCS(tpath.c_str(), p);
+				doc.LoadFile(p);
+				pf->LoadPrototypes(doc.RootElement());
 			}
 			while (FindNextFile(hff, &fd));
 
@@ -424,4 +419,11 @@ int C3EditApp::ExitInstance()
 	m_C3->Release();
 
 	return CWinAppEx::ExitInstance();
+}
+
+
+void C3EditApp::SetActiveProperties(props::IPropertySet *props, bool readonly, const TCHAR *title)
+{
+	if (m_pMainWnd && m_pMainWnd->GetSafeHwnd())
+		((C3EditFrame *)m_pMainWnd)->SetActiveProperties(props, readonly, title);
 }

@@ -20,5 +20,5 @@ void main()
 
 	//float fblur = smoothstep(mindist, maxdist, abs(posd.a - uFocusDist));
 	//oColor = mix((smip0 * 0.8) + (smip3 * 0.2), (smip1 * 0.8) + (smip2 * 0.2), 0);
-	oColor = smip0 + (smip1 * 0.1) + (smip2 * 0.3) + (smip3 * 0.5);
+	oColor = smip0 + (smip1 * 0.75) + (smip2 * 0.5) + (smip3 * 0.25);
 }

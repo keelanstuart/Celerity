@@ -38,7 +38,7 @@ namespace c3
 
 		virtual Object *Build(Object *pobject, GUID *override_guid);
 
-		virtual Prototype *CreatePrototype(Prototype *pproto);
+		virtual Prototype *CreatePrototype(Prototype *pproto = nullptr);
 
 		virtual Prototype *MakePrototype(Object *pobject);
 
@@ -54,11 +54,11 @@ namespace c3
 
 		virtual bool LoadPrototypes(genio::IInputStream *is);
 
-		virtual bool LoadPrototypes(tinyxml2::XMLNode *proot);
+		virtual bool LoadPrototypes(const tinyxml2::XMLNode *proot);
 
-		virtual bool SavePrototypes(genio::IOutputStream *os, PROTO_SAVE_HUERISTIC_FUNCTION pshfunc);
+		virtual bool SavePrototypes(genio::IOutputStream *os, PROTO_SAVE_HUERISTIC_FUNCTION pshfunc = nullptr);
 
-		virtual bool SavePrototypes(tinyxml2::XMLNode *proot, PROTO_SAVE_HUERISTIC_FUNCTION pshfunc);
+		virtual bool SavePrototypes(tinyxml2::XMLNode *proot, PROTO_SAVE_HUERISTIC_FUNCTION pshfunc = nullptr);
 
 		virtual bool RegisterComponentType(ComponentType *pctype);
 

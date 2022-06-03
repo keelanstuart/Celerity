@@ -80,7 +80,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\include;$(C3_SDK)\third-party\PowerProps\include;$(C3_SDK)\third-party\Pool\include;$(C3_SDK)\third-party\mqme\include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\GenIO\include;$(C3_SDK)\third-party\tinyxml2</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\include;$(SolutionDir)\third-party\PowerProps\include;$(SolutionDir)\third-party\Pool\include;$(SolutionDir)\third-party\mqme\include;$(SolutionDir)\third-party\glm;$(SolutionDir)\third-party\GenIO\include;$(SolutionDir)\third-party\tinyxml2</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(SolutionDir)\lib</LibraryPath>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
@@ -88,23 +88,23 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\include;$(C3_SDK)\third-party\PowerProps\include;$(C3_SDK)\third-party\Pool\include;$(C3_SDK)\third-party\mqme\include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\GenIO\include;$(C3_SDK)\third-party\tinyxml2</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(C3_SDK)\lib</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\include;$(SolutionDir)\third-party\PowerProps\include;$(SolutionDir)\third-party\Pool\include;$(SolutionDir)\third-party\mqme\include;$(SolutionDir)\third-party\glm;$(SolutionDir)\third-party\GenIO\include;$(SolutionDir)\third-party\tinyxml2</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir)\lib</LibraryPath>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\include;$(C3_SDK)\third-party\PowerProps\include;$(C3_SDK)\third-party\Pool\include;$(C3_SDK)\third-party\mqme\include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\GenIO\include;$(C3_SDK)\third-party\tinyxml2</IncludePath>
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(C3_SDK)\lib</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\include;$(SolutionDir)\third-party\PowerProps\include;$(SolutionDir)\third-party\Pool\include;$(SolutionDir)\third-party\mqme\include;$(SolutionDir)\third-party\glm;$(SolutionDir)\third-party\GenIO\include;$(SolutionDir)\third-party\tinyxml2</IncludePath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(SolutionDir)\lib</LibraryPath>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(C3_SDK)\include;$(C3_SDK)\third-party\PowerProps\include;$(C3_SDK)\third-party\Pool\include;$(C3_SDK)\third-party\mqme\include;$(C3_SDK)\third-party\glm;$(C3_SDK)\third-party\GenIO\include;$(C3_SDK)\third-party\tinyxml2</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)\include;$(SolutionDir)\third-party\PowerProps\include;$(SolutionDir)\third-party\Pool\include;$(SolutionDir)\third-party\mqme\include;$(SolutionDir)\third-party\glm;$(SolutionDir)\third-party\GenIO\include;$(SolutionDir)\third-party\tinyxml2</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(SolutionDir)\lib</LibraryPath>
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>

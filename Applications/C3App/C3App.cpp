@@ -112,7 +112,12 @@ BOOL C3App::InitInstance()
 	pproto->GetProperties()->CreateProperty(_T("ShadowVertexShader"), 'VSSF')->SetString(_T("def-obj-shadow.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("sponza\\sponza.gltf"));
-	pproto->Flags().Set(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
+	glm::fquat qy = glm::angleAxis(0.0f, glm::fvec3(0, 0, 1));
+	glm::fquat qp = glm::angleAxis(90.0f, glm::fvec3(1, 0, 0));
+	glm::fquat qr = glm::angleAxis(0.0f, glm::fvec3(0, 1, 0));
+	glm::fquat ori = (qr * qp) * qy;
+	pproto->GetProperties()->CreateProperty(_T("Orientation"), 'ORI')->SetVec4F(props::TVec4F(ori.x, ori.y, ori.z, ori.w));
+	pproto->Flags().Set(c3::Object::OBJFLAG(c3::Object::CASTSHADOW) | c3::Object::OBJFLAG(c3::Object::DRAW));
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("AH64e"));
@@ -123,7 +128,7 @@ BOOL C3App::InitInstance()
 	pproto->GetProperties()->CreateProperty(_T("ShadowVertexShader"), 'VSSF')->SetString(_T("def-obj-shadow.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("ah64e\\ah64e.fbx"));
-	pproto->Flags().Set(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
+	pproto->Flags().Set(c3::Object::OBJFLAG(c3::Object::CASTSHADOW) | c3::Object::OBJFLAG(c3::Object::UPDATE) | c3::Object::OBJFLAG(c3::Object::DRAW));
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("TestBox"));
@@ -134,7 +139,7 @@ BOOL C3App::InitInstance()
 	pproto->GetProperties()->CreateProperty(_T("ShadowVertexShader"), 'VSSF')->SetString(_T("def-obj-shadow.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("TestBox\\cube.obj"));
-	pproto->Flags().Set(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
+	pproto->Flags().Set(c3::Object::OBJFLAG(c3::Object::CASTSHADOW) | c3::Object::OBJFLAG(c3::Object::DRAW));
 
 	pproto = pfactory->CreatePrototype();
 	pproto->SetName(_T("Light"));
@@ -144,6 +149,24 @@ BOOL C3App::InitInstance()
 	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-omnilight.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("AttenGradientTexture"), 'GRAD')->SetString(_T("LightAtten.png"));
 	pproto->Flags().SetAll(c3::Object::OBJFLAG(c3::Object::UPDATE) | c3::Object::OBJFLAG(c3::Object::DRAWINEDITOR) | c3::Object::OBJFLAG(c3::Object::LIGHT));
+
+	pproto = pfactory->CreatePrototype();
+	pproto->SetName(_T("Terrain"));
+	pproto->AddComponent(c3::Positionable::Type());
+	pproto->AddComponent(c3::QuadTerrain::Type());
+	pproto->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-terrain.vsh"));
+	pproto->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-terrain.fsh"));
+	pproto->GetProperties()->CreateProperty(_T("ShadowVertexShader"), 'VSSF')->SetString(_T("def-terrain-shadow.vsh"));
+	pproto->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
+	pproto->Flags().SetAll(c3::Object::OBJFLAG(c3::Object::CASTSHADOW) | c3::Object::OBJFLAG(c3::Object::UPDATE) | c3::Object::OBJFLAG(c3::Object::DRAW));
+
+#if 
+	tinyxml2::XMLDocument protodoc;
+	tinyxml2::XMLElement *protoroot = protodoc.NewElement("prototypes");
+	protodoc.InsertEndChild(protoroot);
+	pfactory->SavePrototypes(protoroot);
+	protodoc.SaveFile("assets/sample_protos.c3protoa");
+#endif
 
 	theApp.m_C3->GetLog()->Print(_T("done\n"));
 

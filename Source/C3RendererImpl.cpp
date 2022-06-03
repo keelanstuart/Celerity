@@ -55,6 +55,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_CullMode = CullMode::CM_NUMMODES;
 	m_BlendMode = BlendMode::BM_NUMMODES;
 	m_BlendEq = BlendEquation::BE_NUMMODES;
+	m_FillMode = FillMode::FM_FILL;
 
 	m_AlphaPassMin = 0.0f;
 	m_AlphaPassMax = 1.0f;
@@ -308,23 +309,28 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 	ResetEvent(m_event_shutdown);
 
-	const char *devname = (const char *)gl.GetString(GL_RENDERER);
-	if (devname)
+	char *devname = _strdup((const char *)gl.GetString(GL_RENDERER));
+	if (devname && *devname)
 	{
+		char *c = devname;
+		while (*c) { *c = tolower(*c); c++; }
 		TCHAR *tmp;
 		CONVERT_MBCS2TCS(devname, tmp);
 		m_DeviceName = tmp;
-		std::transform(m_DeviceName.begin(), m_DeviceName.end(), m_DeviceName.begin(), std::tolower);
+		free(devname);
 	}
 
-	const char *vendorname = (const char *)gl.GetString(GL_VENDOR);
-	if (vendorname)
+	char *vendorname = _strdup((const char *)gl.GetString(GL_VENDOR));
+	if (vendorname && *vendorname)
 	{
+		char *c = vendorname;
+		while (*c) { *c = tolower(*c); c++; }
 		TCHAR *tmp;
 		CONVERT_MBCS2TCS(vendorname, tmp);
 		m_VendorName = tmp;
-		std::transform(m_VendorName.begin(), m_VendorName.end(), m_VendorName.begin(), std::tolower);
+		free(vendorname);
 	}
+
 	const TCHAR *vn = GetVendorName();
 	if (_tcsstr(vn, _T("nvidia")) != nullptr)
 		isnv = true;
@@ -828,6 +834,35 @@ Renderer::Test RendererImpl::GetDepthTest() const
 	return m_DepthTest;
 }
 
+
+void RendererImpl::SetFillMode(FillMode mode)
+{
+	if (mode != m_FillMode)
+	{
+		switch (mode)
+		{
+			case FillMode::FM_FILL:
+				gl.PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				break;
+
+			case FillMode::FM_WIRE:
+				gl.PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				break;
+
+			case FillMode::FM_POINT:
+				gl.PolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+				break;
+		}
+
+		m_FillMode = mode;
+	}
+}
+
+
+Renderer::FillMode RendererImpl::GetFillMode() const
+{
+	return m_FillMode;
+}
 
 void RendererImpl::SetStencilEnabled(bool en)
 {

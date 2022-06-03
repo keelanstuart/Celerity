@@ -17,6 +17,7 @@ MeshImpl::MeshImpl(RendererImpl *prend)
 	m_pRend = prend;
 	m_IB = nullptr;
 	m_VB = nullptr;
+	m_pBounds = nullptr;
 
 	assert(m_pRend);
 }
@@ -25,7 +26,6 @@ MeshImpl::MeshImpl(RendererImpl *prend)
 MeshImpl::~MeshImpl()
 {
 	m_pRend = nullptr;
-	m_IB = nullptr;
 }
 
 
@@ -41,6 +41,12 @@ void MeshImpl::Release()
 	{
 		m_IB->Release();
 		m_IB = nullptr;
+	}
+
+	if (m_pBounds)
+	{
+		m_pBounds->Release();
+		m_pBounds = nullptr;
 	}
 
 	delete this;
@@ -71,9 +77,141 @@ IndexBuffer *MeshImpl::GetIndexBuffer() const
 }
 
 
-const BoundingBox *MeshImpl::GetBounds() const
+const BoundingBox *MeshImpl::GetBounds()
 {
-	return nullptr;
+	if (!m_pBounds)
+	{
+		this->m_pBounds = BoundingBox::Create();
+
+		if (m_VB)
+		{
+			void *vbuf = nullptr;
+			glm::fvec3 *ppos;
+
+			if (m_VB->Lock(&vbuf, -1, nullptr, VBLOCKFLAG_READ) == VertexBuffer::RETURNCODE::RET_OK)
+			{
+				size_t vofs = 0; // TODO: find the POS component's offset; currently assume POS is the first component
+
+				size_t vsz = m_VB->VertexSize();
+				glm::fvec3 minb(FLT_MAX, FLT_MAX, FLT_MAX), maxb(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+				if (m_IB)
+				{
+					void *ibuf = nullptr;
+					if (m_IB->Lock(&ibuf, -1, IndexBuffer::IndexSize::IS_NONE, IBLOCKFLAG_READ))
+					{
+						switch (m_IB->GetIndexSize())
+						{
+							case IndexBuffer::IS_8BIT:
+							{
+								uint8_t *pidx = (uint8_t *)ibuf;
+								for (size_t ii = 0; ii < m_IB->Count(); ii++)
+								{
+									ppos = (glm::fvec3 *)((char *)vbuf + (pidx[ii] * vsz) + vofs);
+
+									if (ppos->x < minb.x)
+										minb.x = ppos->x;
+									if (ppos->y < minb.y)
+										minb.y = ppos->y;
+									if (ppos->z < minb.z)
+										minb.z = ppos->z;
+
+									if (ppos->x > maxb.x)
+										maxb.x = ppos->x;
+									if (ppos->y > maxb.y)
+										maxb.y = ppos->y;
+									if (ppos->z > maxb.z)
+										maxb.z = ppos->z;
+								}
+
+								break;
+							}
+							case IndexBuffer::IS_16BIT:
+							{
+								uint16_t *pidx = (uint16_t *)ibuf;
+								for (size_t ii = 0; ii < m_IB->Count(); ii++)
+								{
+									ppos = (glm::fvec3 *)((char *)vbuf + (pidx[ii] * vsz) + vofs);
+
+									if (ppos->x < minb.x)
+										minb.x = ppos->x;
+									if (ppos->y < minb.y)
+										minb.y = ppos->y;
+									if (ppos->z < minb.z)
+										minb.z = ppos->z;
+
+									if (ppos->x > maxb.x)
+										maxb.x = ppos->x;
+									if (ppos->y > maxb.y)
+										maxb.y = ppos->y;
+									if (ppos->z > maxb.z)
+										maxb.z = ppos->z;
+								}
+
+								break;
+							}
+							case IndexBuffer::IS_32BIT:
+							{
+								uint32_t *pidx = (uint32_t *)ibuf;
+								for (size_t ii = 0; ii < m_IB->Count(); ii++)
+								{
+									ppos = (glm::fvec3 *)((char *)vbuf + (pidx[ii] * vsz) + vofs);
+
+									if (ppos->x < minb.x)
+										minb.x = ppos->x;
+									if (ppos->y < minb.y)
+										minb.y = ppos->y;
+									if (ppos->z < minb.z)
+										minb.z = ppos->z;
+
+									if (ppos->x > maxb.x)
+										maxb.x = ppos->x;
+									if (ppos->y > maxb.y)
+										maxb.y = ppos->y;
+									if (ppos->z > maxb.z)
+										maxb.z = ppos->z;
+								}
+
+								break;
+							}
+						}
+
+						m_IB->Unlock();
+					}
+				}
+				else
+				{
+					for (size_t vi = 0; vi < m_VB->Count(); vi++)
+					{
+						ppos = (glm::fvec3 *)((char *)vbuf + vofs);
+
+						if (ppos->x < minb.x)
+							minb.x = ppos->x;
+						if (ppos->y < minb.y)
+							minb.y = ppos->y;
+						if (ppos->z < minb.z)
+							minb.z = ppos->z;
+
+						if (ppos->x > maxb.x)
+							maxb.x = ppos->x;
+						if (ppos->y > maxb.y)
+							maxb.y = ppos->y;
+						if (ppos->z > maxb.z)
+							maxb.z = ppos->z;
+
+						vofs += vsz;
+					}
+				}
+
+				m_VB->Unlock();
+
+				m_pBounds->SetOrigin(&minb);
+				m_pBounds->SetExtents(&maxb);
+			}
+		}
+	}
+
+	return m_pBounds;
 }
 
 

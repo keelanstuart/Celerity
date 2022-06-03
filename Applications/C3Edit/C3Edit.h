@@ -69,6 +69,8 @@ public:
 
 	c3::Configuration *m_Config;
 
+	void SetActiveProperties(props::IPropertySet *props, bool readonly = false, const TCHAR *title = nullptr);
+
 	virtual void PreLoadState();
 	virtual void LoadCustomState();
 	virtual void SaveCustomState();

@@ -723,3 +723,10 @@ void C3EditFrame::OnAxisZ()
 		ExcludeAxis(C3EditApp::AT_Z);
 	}
 }
+
+void C3EditFrame::SetActiveProperties(props::IPropertySet *props, bool readonly, const TCHAR *title)
+{
+	if (m_wndProperties.GetSafeHwnd())
+		m_wndProperties.SetActiveProperties(props, readonly, title);
+}
+

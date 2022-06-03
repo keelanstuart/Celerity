@@ -57,6 +57,8 @@ CPrototypeView::~CPrototypeView()
 {
 }
 
+#define PROTOTREE_ID		2
+
 BEGIN_MESSAGE_MAP(CPrototypeView, CDockablePane)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
@@ -70,6 +72,7 @@ BEGIN_MESSAGE_MAP(CPrototypeView, CDockablePane)
 	ON_WM_SETFOCUS()
 	ON_COMMAND_RANGE(ID_SORTING_GROUPBYTYPE, ID_SORTING_SORTBYACCESS, OnSort)
 	ON_UPDATE_COMMAND_UI_RANGE(ID_SORTING_GROUPBYTYPE, ID_SORTING_SORTBYACCESS, OnUpdateSort)
+	ON_NOTIFY(TVN_SELCHANGED, PROTOTREE_ID, OnSelectionChanged)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -86,7 +89,7 @@ int CPrototypeView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// Create views:
 	const DWORD dwViewStyle = WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
 
-	if (!m_wndPrototypeView.Create(dwViewStyle, rectDummy, this, 2))
+	if (!m_wndPrototypeView.Create(dwViewStyle, rectDummy, this, PROTOTREE_ID))
 	{
 		TRACE0("Failed to create Prototype View\n");
 		return -1;      // fail to create
@@ -306,6 +309,13 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 			case PC_CREATEPROTO:
 			{
 				c3::Prototype *pcp = pfac->CreatePrototype();
+
+				TCHAR protoname[256];
+				GUID g = pcp->GetGUID();
+				_stprintf_s(protoname, _T("proto_%08x%04x%04x%02x%02x%02x%02x%02x%02x%02x%02x"), g.Data1, g.Data2, g.Data3,
+					g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
+				pcp->SetName(protoname);
+
 				tstring groupname;
 				if (pproto)
 				{
@@ -320,6 +330,7 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 							groupname.insert(_T('/'), 0);
 
 						groupname = tstring((LPCTSTR)(pWndTree->GetItemText(hi))) + groupname;
+						pWndTree->Expand(hi, TVE_EXPAND);
 
 						hi = pWndTree->GetParentItem(hi);
 					}
@@ -353,6 +364,7 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 		}
 	}
 
+	pWndTree->RedrawWindow();
 	pWndTree->SetFocus();
 
 	::DestroyMenu(submenu);
@@ -476,4 +488,45 @@ void CPrototypeView::OnChangeVisualStyle()
 
 	m_wndToolBar.CleanUpLockedImages();
 	m_wndToolBar.LoadBitmap(IDB_SORT_24, 0, 0, TRUE /* Locked */);
+}
+
+void CPrototypeView::OnSelectionChanged(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	*pResult = 1;
+
+	if (pNMHDR->code != TVN_SELCHANGED)
+		return;
+
+	HTREEITEM hti = m_wndPrototypeView.GetSelectedItem();
+	c3::Prototype *pproto = (c3::Prototype *)(m_wndPrototypeView.GetItemData(hti));
+	if (pproto)
+	{
+		theApp.SetActiveProperties(pproto->GetProperties());
+	}
+}
+
+BOOL CPrototypeView::OnCmdMsg(UINT nID, int nCode, void *pExtra, AFX_CMDHANDLERINFO *pHandlerInfo)
+{
+	if (nID == PROTOTREE_ID)
+	{
+		switch (nCode)
+		{
+			case NM_DBLCLK:
+			{
+				break;
+			}
+
+			case TVN_ENDLABELEDIT:
+			{
+				break;
+			}
+
+			case TVN_BEGINLABELEDIT:
+			{
+				break;
+			}
+		}
+	}
+
+	return CDockablePane::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }

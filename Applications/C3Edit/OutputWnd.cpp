@@ -75,6 +75,12 @@ int COutputWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	FillDebugWindow();
 	FillFindWindow();
 
+	theApp.m_C3->GetLog()->SetRedirectFunction([](void *userdata, const TCHAR *msg)
+	{
+		COutputList *pw = (COutputList *)userdata;
+		pw->AddString(msg);
+	}, &m_wndOutputDebug);
+
 	return 0;
 }
 
@@ -107,23 +113,17 @@ void COutputWnd::AdjustHorzScroll(CListBox& wndListBox)
 
 void COutputWnd::FillBuildWindow()
 {
-	m_wndOutputBuild.AddString(_T("Build output is being displayed here."));
-	m_wndOutputBuild.AddString(_T("The output is being displayed in rows of a list view"));
-	m_wndOutputBuild.AddString(_T("but you can change the way it is displayed as you wish..."));
+	//m_wndOutputBuild.AddString(_T("Build output is being displayed here."));
 }
 
 void COutputWnd::FillDebugWindow()
 {
-	m_wndOutputDebug.AddString(_T("Debug output is being displayed here."));
-	m_wndOutputDebug.AddString(_T("The output is being displayed in rows of a list view"));
-	m_wndOutputDebug.AddString(_T("but you can change the way it is displayed as you wish..."));
+	//m_wndOutputDebug.AddString(_T("Debug output is being displayed here."));
 }
 
 void COutputWnd::FillFindWindow()
 {
-	m_wndOutputFind.AddString(_T("Find output is being displayed here."));
-	m_wndOutputFind.AddString(_T("The output is being displayed in rows of a list view"));
-	m_wndOutputFind.AddString(_T("but you can change the way it is displayed as you wish..."));
+	//m_wndOutputFind.AddString(_T("Find output is being displayed here."));
 }
 
 void COutputWnd::UpdateFonts()

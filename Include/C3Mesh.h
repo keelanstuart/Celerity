@@ -36,7 +36,7 @@ namespace c3
 
 		virtual IndexBuffer *GetIndexBuffer() const = NULL;
 
-		virtual const BoundingBox *GetBounds() const = NULL;
+		virtual const BoundingBox *GetBounds() = NULL;
 
 		virtual RETURNCODE Draw(Renderer::PrimType type = Renderer::PrimType::TRILIST) const = NULL;
 

@@ -14,9 +14,16 @@ protected: // create from serialization only
 
 // Attributes
 public:
+
+	typedef struct sPerViewInfo
+	{
+		c3::Object *obj;
+		float yaw, pitch;
+	} SPerViewInfo;
+
 	c3::Object *m_RootObj;
-	typedef std::map<HWND, c3::Object *> TWndMappedObject;
-	TWndMappedObject m_Camera;
+	typedef std::map<HWND, SPerViewInfo> TWndMappedObject;
+	TWndMappedObject m_PerViewInfo;
 	c3::Object *m_Brush;
 	float m_TimeWarp;
 	bool m_Paused;
@@ -32,11 +39,9 @@ public:
 	glm::fvec4 m_FogColor;
 	float m_FogDensity;
 
-	float m_CamPitch, m_CamYaw;
-
 // Operations
 public:
-	c3::Object *GetCamera(HWND h);
+	SPerViewInfo *GetPerViewInfo(HWND h);
 
 // Overrides
 public:

@@ -21,6 +21,7 @@ namespace c3
 		RendererImpl *m_pRend;
 		IndexBufferImpl *m_IB;
 		VertexBufferImpl *m_VB;
+		BoundingBox *m_pBounds;
 
 	public:
 
@@ -38,7 +39,7 @@ namespace c3
 
 		virtual IndexBuffer *GetIndexBuffer() const;
 
-		virtual const BoundingBox *GetBounds() const;
+		virtual const BoundingBox *GetBounds();
 
 		virtual RETURNCODE Draw(Renderer::PrimType type) const;
 
