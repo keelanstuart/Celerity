@@ -306,11 +306,6 @@ BOOL C3Dlg::OnInitDialog()
 		if (pobj)
 		{
 			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
-			if (ppos)
-			{
-				ppos->SetScl(50.0f, 50.0f, 50.0f);
-				ppos->Update(0);
-			}
 			m_RootObj->AddChild(pobj);
 
 			theApp.m_C3->GetLog()->Print(_T("Sponza created\n"));

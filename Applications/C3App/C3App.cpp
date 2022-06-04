@@ -112,11 +112,12 @@ BOOL C3App::InitInstance()
 	pproto->GetProperties()->CreateProperty(_T("ShadowVertexShader"), 'VSSF')->SetString(_T("def-obj-shadow.vsh"));
 	pproto->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
 	pproto->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("sponza\\sponza.gltf"));
-	glm::fquat qy = glm::angleAxis(0.0f, glm::fvec3(0, 0, 1));
-	glm::fquat qp = glm::angleAxis(90.0f, glm::fvec3(1, 0, 0));
-	glm::fquat qr = glm::angleAxis(0.0f, glm::fvec3(0, 1, 0));
+	glm::fquat qy = glm::angleAxis(glm::radians(0.0f), glm::fvec3(0, 0, 1));
+	glm::fquat qp = glm::angleAxis(glm::radians(90.0f), glm::fvec3(1, 0, 0));
+	glm::fquat qr = glm::angleAxis(glm::radians(0.0f), glm::fvec3(0, 1, 0));
 	glm::fquat ori = (qr * qp) * qy;
 	pproto->GetProperties()->CreateProperty(_T("Orientation"), 'ORI')->SetVec4F(props::TVec4F(ori.x, ori.y, ori.z, ori.w));
+	pproto->GetProperties()->CreateProperty(_T("Scale"), 'SCL')->SetVec3F(props::TVec3F(50.0f, 50.0f, 50.0f));
 	pproto->Flags().Set(c3::Object::OBJFLAG(c3::Object::CASTSHADOW) | c3::Object::OBJFLAG(c3::Object::DRAW));
 
 	pproto = pfactory->CreatePrototype();
@@ -160,7 +161,7 @@ BOOL C3App::InitInstance()
 	pproto->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
 	pproto->Flags().SetAll(c3::Object::OBJFLAG(c3::Object::CASTSHADOW) | c3::Object::OBJFLAG(c3::Object::UPDATE) | c3::Object::OBJFLAG(c3::Object::DRAW));
 
-#if 0
+#if 1
 	tinyxml2::XMLDocument protodoc;
 	tinyxml2::XMLElement *protoroot = protodoc.NewElement("prototypes");
 	protodoc.InsertEndChild(protoroot);
