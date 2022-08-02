@@ -31,7 +31,7 @@ VirtualMouseImpl::~VirtualMouseImpl()
 bool VirtualMouseImpl::Update(float elapsed_seconds)
 {
 	HRESULT hr = m_pDIDevice->Poll();
-	m_bAttached = SUCCEEDED(hr);
+	m_bAttached = true;//SUCCEEDED(hr);
 
 	DIMOUSESTATE2 state;      // DirectInput mouse state structure
 	ZeroMemory(&state, sizeof(DIMOUSESTATE2));

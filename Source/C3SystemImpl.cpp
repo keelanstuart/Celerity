@@ -16,6 +16,7 @@
 #include <C3PositionableImpl.h>
 #include <C3CameraImpl.h>
 #include <C3ModelRendererImpl.h>
+#include <C3QuadTerrainImpl.h>
 
 
 
@@ -73,6 +74,7 @@ SystemImpl::SystemImpl()
 	m_PluginManager = nullptr;
 	m_Pool = nullptr;
 	m_InputManager = nullptr;
+	m_ActionMapper = nullptr;
 
 	QueryPerformanceFrequency(&m_PerfFreq);
 	QueryPerformanceCounter(&m_PerfCount);
@@ -95,6 +97,12 @@ SystemImpl::~SystemImpl()
 	{
 		delete m_InputManager;
 		m_InputManager = nullptr;
+	}
+
+	if (m_ActionMapper)
+	{
+		delete m_ActionMapper;
+		m_ActionMapper = nullptr;
 	}
 }
 
@@ -133,6 +141,7 @@ void SystemImpl::Release()
 		UNREGISTER_COMPONENTTYPE(Positionable, m_Factory);
 		UNREGISTER_COMPONENTTYPE(Camera, m_Factory);
 		UNREGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);
+		UNREGISTER_COMPONENTTYPE(QuadTerrain, m_Factory);
 		// *************************************************
 
 		delete m_Factory;
@@ -209,6 +218,17 @@ InputManager *SystemImpl::GetInputManager()
 }
 
 
+ActionMapper *SystemImpl::GetActionMapper()
+{
+	if (!m_ActionMapper)
+	{
+		m_ActionMapper = new ActionMapperImpl(this);
+	}
+
+	return m_ActionMapper;
+}
+
+
 Factory *SystemImpl::GetFactory()
 {
 	if (!m_Factory)
@@ -220,6 +240,7 @@ Factory *SystemImpl::GetFactory()
 		REGISTER_COMPONENTTYPE(Positionable, m_Factory);
 		REGISTER_COMPONENTTYPE(Camera, m_Factory);
 		REGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);
+		REGISTER_COMPONENTTYPE(QuadTerrain, m_Factory);
 		// *************************************************
 	}
 
@@ -288,4 +309,7 @@ void SystemImpl::UpdateTime()
 
 	if (m_InputManager)
 		m_InputManager->Update(m_ElapsedTime);
+
+	if (m_ActionMapper)
+		m_ActionMapper->Update();
 }

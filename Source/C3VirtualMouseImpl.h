@@ -27,6 +27,8 @@ namespace c3
 
 		virtual DeviceType GetType() const { return InputDevice::DeviceType::MOUSE; };
 
+		virtual size_t GetNumAxes() const { return 1; }
+
 		virtual bool Update(float elapsed_seconds = 0.0f);
 
 	protected:

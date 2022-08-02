@@ -36,7 +36,7 @@ namespace c3
 
 		virtual void PropertyChanged(const props::IProperty *pprop) = NULL;
 
-		virtual bool HitTest(glm::fvec3 *ray_pos, glm::fvec3 *rayvec) const = NULL;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const = NULL;
 
 		virtual void SetSourceFrameBuffer(FrameBuffer *psource) = NULL;
 

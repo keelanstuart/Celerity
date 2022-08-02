@@ -16,6 +16,7 @@
 #include <C3FileMapperImpl.h>
 #include <C3ResourceManagerImpl.h>
 #include <C3InputManagerImpl.h>
+#include <C3ActionMapperImpl.h>
 
 
 namespace c3
@@ -32,6 +33,7 @@ namespace c3
 		PluginManagerImpl *m_PluginManager;
 		ResourceManagerImpl *m_ResourceManager;
 		InputManagerImpl *m_InputManager;
+		ActionMapperImpl *m_ActionMapper;
 		pool::IThreadPool *m_Pool;
 		LogImpl *m_Log;
 		FileMapperImpl *m_FileMapper;
@@ -59,6 +61,8 @@ namespace c3
 		virtual Renderer *GetRenderer();
 
 		virtual InputManager *GetInputManager();
+
+		virtual ActionMapper *GetActionMapper();
 
 		virtual Factory *GetFactory();
 

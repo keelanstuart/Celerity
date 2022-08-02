@@ -51,11 +51,13 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid)
 		o->SetName(pproto->GetName());
 		o->Flags().SetAll(pproto->Flags());
 
+		// add all components first, before intializing them...
 		for (size_t i = 0, maxi = pproto->GetNumComponents(); i < maxi; i++)
 		{
 			o->AddComponent(pproto->GetComponent(i), false);
 		}
 
+		// now initialize so they can discover each other
 		for (size_t i = 0, maxi = o->GetNumComponents(); i < maxi; i++)
 		{
 			Component *pc = o->GetComponent(i);

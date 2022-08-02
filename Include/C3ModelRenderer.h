@@ -36,19 +36,30 @@ namespace c3
 
 		virtual void PropertyChanged(const props::IProperty *pprop) = NULL;
 
+		// Performs a raycast collision versus the model, returning the first hit
 		virtual bool HitTest(glm::fvec3 *ray_pos, glm::fvec3 *rayvec) const = NULL;
 
-		/*
-		virtual void SetModel(const Model *pmodel) = NULL;
+		// Sets the origin position of the model (offsets any effects of Positionable); linked to 'MPOS' property
+		virtual void SetPos(float x, float y, float z) = NULL;
 
-		virtual void SetModel(const Resource *pmodelres) = NULL;
+		// Gets the origina position of the model
+		virtual const glm::fvec3 *GetPosVec(glm::fvec3 *pos = nullptr) = NULL;
 
-		virtual const Model *GetModel() const = NULL;
+		// Sets the origin orientation of the model (offsets any effects of Positionable); linked to 'MORI' property
+		virtual void SetOriQuat(const glm::fquat *ori) = NULL;
 
-		virtual void SetShaderProgram(const ShaderProgram *pshader) = NULL;
+		// Gets the origin orientation of the model
+		virtual const glm::fquat *GetOriQuat(glm::fquat *ori = nullptr) = NULL;
 
-		virtual const ShaderProgram *GetShaderProgram() const = NULL;
-		*/
+		// Sets the origin scvale of the model (offsets any effects of Positionable); linked to 'MSCL' property
+		virtual void SetScl(float x, float y, float z) = NULL;
+
+		// Gets the origin scale of the model
+		virtual const glm::fvec3 *GetScl(glm::fvec3 *scl = nullptr) = NULL;
+
+		// Casts a ray against the model
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const = NULL;
+
 	};
 
 };

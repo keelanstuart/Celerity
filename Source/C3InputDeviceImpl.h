@@ -20,7 +20,6 @@ struct riffdata
 	LPDIRECTINPUTDEVICE8 pDIDevice;
 	uint32_t effcount;
 	LPDIRECTINPUTEFFECT eff[MAXEFFCOUNT];
-
 };
 
 
@@ -44,7 +43,13 @@ namespace c3
 
 		virtual const TCHAR *GetName() const;
 
+		virtual uint32_t GetUID() const;
+
 		virtual DeviceType GetType() const = NULL;
+
+		virtual size_t GetNumAxes() const;
+
+		virtual size_t GetNumButtons() const;
 
 		virtual int ButtonPressed(InputDevice::VirtualButton button, float time = 0.0f) const;
 
@@ -68,11 +73,15 @@ namespace c3
 
 		virtual void Unacquire();
 
+		virtual bool IsDIDevice(LPDIRECTINPUTDEVICE8 pdid);
+
 	protected:
 
 		System *m_pSys;
 
 		tstring m_Name;
+
+		uint32_t m_UID;
 
 		// This will be set if the device has been accquired
 		bool m_bActive;

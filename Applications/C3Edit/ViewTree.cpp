@@ -66,8 +66,21 @@ void CViewTree::OnNMDblclk(NMHDR *pNMHDR, LRESULT *pResult)
 	c3::Prototype *pproto = (c3::Prototype *)GetItemData(hti);
 	if (pproto)
 	{
+		HWND h = pfrm->GetActiveView()->GetSafeHwnd();
+		c3::Object *pcam = pdoc->GetPerViewInfo(h)->obj;
+		c3::Camera *pcampos = (c3::Camera *)(pcam->FindComponent(c3::Camera::Type()));
+		pcam->Update();
+
 		c3::Object *pobj = theApp.m_C3->GetFactory()->Build(pproto);
 		pdoc->m_RootObj->AddChild(pobj);
+
+		c3::Positionable *pobjpos = (c3::Positionable *)(pobj->FindComponent(c3::Positionable::Type()));
+
+		glm::fvec3 ct;
+		pcampos->GetTargetPos(&ct);
+		pobjpos->SetPosVec(&ct);
+
+		pdoc->SetModifiedFlag();
 	}
 
 	*pResult = 0;

@@ -389,7 +389,7 @@ bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
 	return true;
 }
 
-bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
+bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, size_t *pMeshIndex,
 							float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
 							const glm::fmat4x4 *pmat) const
 {
@@ -400,15 +400,28 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
 	if (pmat)
 		m_MatStack->Push(pmat);
 
-	for (const auto cit : m_Nodes)
+	float mindist = FLT_MAX;
+
+	for (size_t ni = 0, max_ni = m_Nodes.size(); ni < max_ni; ni++)
 	{
-		const SNodeInfo *node = cit;
+		const SNodeInfo *node = m_Nodes[ni];
 		if (!node)
 			continue;
 
 		// from this point, only draw top-level nodes
 		if (node->parent == NO_PARENT)
-			ret = IntersectNode(cit, pRayPos, pRayDir, &d, pFaceIndex, pUV);
+			ret = IntersectNode(node, pRayPos, pRayDir, &d, pFaceIndex, pUV);
+
+		if (ret && (d < mindist))
+		{
+			if (pMeshIndex)
+				*pMeshIndex = ni;
+
+			if (pDistance)
+				*pDistance = d;
+
+			d = mindist;
+		}
 	}
 
 	if (pmat)

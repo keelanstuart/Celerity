@@ -16,13 +16,8 @@ namespace c3
 	{
 
 	protected:
-		props::IProperty *m_ppos;
 		glm::vec3 m_Pos;
-
-		props::IProperty *m_pori;
 		glm::fquat m_Ori;
-
-		props::IProperty *m_pscl;
 		glm::vec3 m_Scl;
 
 		props::TFlags64 m_Flags;
@@ -66,22 +61,6 @@ namespace c3
 		virtual float GetPosZ();
 
 		virtual void AdjustPos(float xadj = 0.0f, float yadj = 0.0f, float zadj = 0.0f);
-
-
-		// *** ROTATION CENTER FUNCTIONS *******************************
-
-		virtual void SetRotCenter(float x, float y, float z);
-		virtual void SetRotCenterVec(const glm::fvec3 *rotc);
-		virtual void SetRotCenterX(float x);
-		virtual void SetRotCenterY(float y);
-		virtual void SetRotCenterZ(float z);
-
-		virtual const glm::fvec3 *GetRotCenterVec(glm::fvec3 *rotc = nullptr);
-		virtual float GetRotCenterX();
-		virtual float GetRotCenterY();
-		virtual float GetRotCenterZ();
-
-		virtual void AdjustRotCenter(float dx = 0.0f, float dy = 0.0f, float dz = 0.0f);
 
 
 		// *** ORIENTATION FUNCTIONS *******************************
@@ -140,6 +119,8 @@ namespace c3
 		// *** COMBINED TRANSFORM FUNCTIONS ******************
 
 		virtual const glm::fmat4x4 *GetTransformMatrix(glm::fmat4x4 *mat = nullptr);
+
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
 
 	};
 

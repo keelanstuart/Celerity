@@ -223,7 +223,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserv
 	switch (ul_reason_for_call)
     {
 		case DLL_PROCESS_ATTACH:
-#if 1 //!defined(_DEBUG)
+#if !defined(_DEBUG)
 			CreateThread(NULL, USHRT_MAX, SplashThreadProc, NULL, 0, NULL);
 #endif
 			break;

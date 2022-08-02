@@ -75,7 +75,11 @@ namespace c3
 			THROTTLE1,
 			THROTTLE2,
 
-			SHIFT,
+			LSHIFT,
+			RSHIFT,
+
+			LCTRL,
+			RCTRL,
 
 			// characters (keyboard emulation)
 			LETTER_A,
@@ -150,8 +154,17 @@ namespace c3
 		// Returns the name of the device
 		virtual const TCHAR *GetName() const = NULL;
 
+		// Returns the device's UID - probably just the UID for a device type (i.e., all xbox 360 controllers would have the same GUID)
+		virtual uint32_t GetUID() const = NULL;
+
 		// gets the type of the device
 		virtual DeviceType GetType() const = NULL;
+
+		// gets the number of directional axes on the device
+		virtual size_t GetNumAxes() const = NULL;
+
+		// gets the number of buttons on the device
+		virtual size_t GetNumButtons() const = NULL;
 
 		// Has the button been pressed?  A non-zero value is TRUE...
 		virtual int ButtonPressed(InputDevice::VirtualButton button, float time = 0.0f) const = NULL;

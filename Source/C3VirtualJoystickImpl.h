@@ -28,9 +28,14 @@ namespace c3
 
 		virtual DeviceType GetType() const { return InputDevice::DeviceType::JOYSTICK; }
 
+		virtual size_t GetNumAxes() const;
+
+		virtual size_t GetNumButtons() const;
+
 		//virtual void PlayForceFeedbackEffect(const TCHAR* fullpath, int32_t dir_offset = 0) = NULL;
 
 	protected:
+		DIDEVCAPS caps;
 
 	};
 

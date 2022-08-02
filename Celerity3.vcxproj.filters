@@ -183,6 +183,9 @@
     <ClCompile Include="Source\TinyJS_MathFunctions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\C3ActionMapperImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Source\C3QuadTerrainImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -487,6 +490,9 @@
     </ClInclude>
     <ClInclude Include="Include\C3ActionMapper.h">
       <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="source\C3ActionMapperImpl.h">
+      <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3QuadTerrainImpl.h">
       <Filter>Header Files\Private</Filter>

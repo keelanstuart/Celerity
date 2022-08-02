@@ -36,6 +36,7 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_COMMAND(ID_EDIT_TRIGGERRENDERDOCCAPTURE, &C3EditView::OnEditTriggerrenderdoccapture)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
+	ON_WM_SETFOCUS()
 END_MESSAGE_MAP()
 
 c3::FrameBuffer *C3EditView::m_GBuf = nullptr;
@@ -150,6 +151,9 @@ void C3EditView::OnDraw(CDC *pDC)
 	if (!pDoc)
 		return;
 
+	if (!pDoc->m_RootObj)
+		return;
+
 	C3EditFrame *pmf = (C3EditFrame *)theApp.GetMainWnd();
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
@@ -182,6 +186,59 @@ void C3EditView::OnDraw(CDC *pDC)
 		float dt = theApp.m_C3->GetElapsedTime();
 
 		C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+
+//		if (GetFocus() == this)
+		{
+			glm::vec3 mv(0, 0, 0);
+
+			bool run = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::LSHIFT);
+
+			float spd = theApp.m_Config->GetFloat(_T("environment.movement.speed"), 1.0f);
+
+			float mdf = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_W) +
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSY)) / 2.0f;
+
+			float mdb = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_S) +
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_NEGY)) / 2.0f;
+
+			mv += *(pcampos->GetFacingVector()) * (mdf - mdb) * spd;
+
+			float mdl = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_A) + 
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_NEGX)) / 2.0f;
+
+			float mdr = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_D) +
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSX)) / 2.0f;
+
+			mv += *(pcampos->GetLocalLeftVector()) * (mdl - mdr) * spd;
+
+			float mdu = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Q) +
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSZ)) / 2.0f;
+			mv.z += mdu * spd;
+
+			float mdd = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Z) + 
+						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_NEGZ)) / 2.0f;
+			mv.z -= mdd * spd;
+
+#if 0
+			float zoo = pcam->GetPolarDistance();
+			zoo += theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::BUTTON5) -
+				theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::BUTTON6);
+			zoo = std::max(zoo, 0.1f);
+			pcam->SetPolarDistance(zoo);
+#endif
+
+			pcampos->AdjustPos(mv.x, mv.y, mv.z);
+
+#if 0
+			float pau = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGY);
+			float pad = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSY);
+			float yal = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSX);
+			float yar = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGX);
+
+			pcampos->AdjustPitch((pad - pau) * 0.05f);
+			pcampos->AdjustYawFlat((yar - yal) * 0.05f);
+#endif
+		}
 
 		c3::Object *camobj = pvi->obj;
 		if (camobj)
@@ -235,7 +292,7 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		pDoc->m_RootObj->Update(dt);
 
-		if (prend->BeginScene(0))
+		if (prend->BeginScene())
 		{
 			if (m_pRenderDoc && m_RenderDocCaptureFrame)
 			{
@@ -642,12 +699,13 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		// If the user is holding down the shift key, pan / tilt the camera
 
+		C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+
+		pvi->pitch -= (float)deltay;
+		pvi->yaw += (float)deltax;
+
 		if (theApp.m_Config->GetBool(_T("environment.camera.lockroll"), true))
 		{
-			C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
-
-			pvi->pitch -= (float)deltay;
-			pvi->yaw += (float)deltax;
 
 			c3::Object *camobj = pvi->obj;
 
@@ -672,8 +730,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 			pcampos->AdjustPitch(glm::radians((float)deltay));
 		}
 
-		pcampos->Update(0);
-		pcam->Update(0);
+		pcam->SetPolarDistance(pcam->GetPolarDistance()); // HACK?!
 
 		RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 	}
@@ -933,4 +990,12 @@ void C3EditView::OnLButtonUp(UINT nFlags, CPoint point)
 	rayvec += pos3d_near;
 
 	CView::OnLButtonUp(nFlags, point);
+}
+
+
+void C3EditView::OnSetFocus(CWnd *pOldWnd)
+{
+	CView::OnSetFocus(pOldWnd);
+
+	theApp.m_C3->GetInputManager()->AcquireAll();
 }

@@ -91,6 +91,8 @@ namespace c3
 		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *mat);
 		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *mat);
 
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
+
 	};
 
 	DEFINE_COMPONENTTYPE(Camera, CameraImpl, GUID({0xfcc880c3, 0x54a2, 0x4168, { 0xbd, 0x4, 0xe9, 0x91, 0xfe, 0xee, 0x29, 0xef }}), "Camera", "Camera generates view and projection matrices for scene rendering (requires Positionable)");

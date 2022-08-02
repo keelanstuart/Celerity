@@ -38,8 +38,6 @@ namespace c3
 
 		virtual size_t GetNumUsers() const;
 
-		//InputDevice *AddVirtualDevice(size_t user, uint32_t devicetype, const TCHAR* device_name = NULL);
-
 		// Has the button been pressed?  A non-zero value is TRUE...
 		virtual int ButtonPressed(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, size_t user = USER_ANY, float time = 0.0f) const;
 
@@ -54,6 +52,8 @@ namespace c3
 
 		virtual void AcquireAll();
 		virtual void UnacquireAll();
+
+		virtual void Reset();
 
 		virtual size_t GetNumDevices();
 
@@ -84,5 +84,8 @@ namespace c3
 			int32_t x, y;
 		} m_MousePos;
 
+	public:
+		static DEVICECONNECTION_CALLBACK_FUNC s_DevConnCB;
+		static void *s_DevConnUserData;
 	};
 };

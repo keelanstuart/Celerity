@@ -199,6 +199,7 @@ namespace c3
 		#define UFBFLAG_CLEARSTENCIL		0x0004
 		#define UFBFLAG_FINISHLAST			0x0008
 		#define UFBFLAG_UPDATEVIEWPORT		0x0010
+		#define BSFLAG_SHOWGUI				0x0100		// BeginScene flag; Indicates that the GUI should be rendered
 
 		/// Returns the System that created this Renderer
 		virtual System *GetSystem() = NULL;

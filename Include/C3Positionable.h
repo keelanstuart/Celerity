@@ -42,22 +42,6 @@ namespace c3
 		virtual void AdjustPos(float xadj = 0.0f, float yadj = 0.0f, float zadj = 0.0f) = NULL;
 
 
-		// *** ROTATION CENTER FUNCTIONS *******************************
-
-		virtual void SetRotCenter(float x, float y, float z) = NULL;
-		virtual void SetRotCenterVec(const glm::fvec3 *rotc) = NULL;
-		virtual void SetRotCenterX(float x) = NULL;
-		virtual void SetRotCenterY(float y) = NULL;
-		virtual void SetRotCenterZ(float z) = NULL;
-
-		virtual const glm::fvec3 *GetRotCenterVec(glm::fvec3 *rotc = nullptr) = NULL;
-		virtual float GetRotCenterX() = NULL;
-		virtual float GetRotCenterY() = NULL;
-		virtual float GetRotCenterZ() = NULL;
-
-		virtual void AdjustRotCenter(float dx = 0.0f, float dy = 0.0f, float dz = 0.0f) = NULL;
-
-
 		// *** ORIENTATION FUNCTIONS *******************************
 
 		// Set the orientation by providing each element of the quaternion directly
@@ -114,6 +98,10 @@ namespace c3
 		// *** COMBINED TRANSFORM FUNCTIONS ******************
 
 		virtual const glm::fmat4x4 *GetTransformMatrix(glm::fmat4x4 *mat = nullptr) = NULL;
+
+
+		/// Casts a ray against the object
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const = NULL;
 
 	};
 

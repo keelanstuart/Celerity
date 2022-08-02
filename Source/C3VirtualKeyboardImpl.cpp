@@ -63,8 +63,8 @@ void VirtualKeyboardImpl::SetDefaultKeyMapping()
 		real_to_virtual[i] = -1;
 	
 	// map our debug key to the ctrl keys
-	real_to_virtual[DIK_LCONTROL]	= InputDevice::VirtualButton::DEBUGBUTTON;
-	real_to_virtual[DIK_RCONTROL]	= InputDevice::VirtualButton::DEBUGBUTTON;
+	real_to_virtual[DIK_LCONTROL]	= InputDevice::VirtualButton::LCTRL;
+	real_to_virtual[DIK_RCONTROL]	= InputDevice::VirtualButton::RCTRL;
 
 	// delete key
 	real_to_virtual[DIK_DELETE]			= InputDevice::VirtualButton::DELETEKEY;
@@ -95,8 +95,8 @@ void VirtualKeyboardImpl::SetDefaultKeyMapping()
 	real_to_virtual[DIK_NUMPAD9]	= InputDevice::VirtualButton::AXIS1_POSX;
 
 	real_to_virtual[DIK_SPACE]		= InputDevice::VirtualButton::BUTTON3;
-	real_to_virtual[DIK_LSHIFT]		= InputDevice::VirtualButton::SHIFT;
-	real_to_virtual[DIK_RSHIFT]		= InputDevice::VirtualButton::SHIFT;
+	real_to_virtual[DIK_LSHIFT]		= InputDevice::VirtualButton::LSHIFT;
+	real_to_virtual[DIK_RSHIFT]		= InputDevice::VirtualButton::RSHIFT;
 
 	// characters (keyboard emulation)
 	real_to_virtual[DIK_A]			= InputDevice::VirtualButton::LETTER_A;

@@ -44,11 +44,12 @@ int COutputWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 	// Create output panes:
-	const DWORD dwStyle = LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL;
+	const DWORD dwStyle_ol = LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL;
+	const DWORD dwStyle_e = ES_MULTILINE | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL;
 
-	if (!m_wndOutputBuild.Create(dwStyle, rectDummy, &m_wndTabs, 2) ||
-		!m_wndOutputDebug.Create(dwStyle, rectDummy, &m_wndTabs, 3) ||
-		!m_wndOutputFind.Create(dwStyle, rectDummy, &m_wndTabs, 4))
+	if (!m_wndOutputBuild.Create(dwStyle_ol, rectDummy, &m_wndTabs, 2) ||
+		!m_wndOutputDebug.Create(dwStyle_e, rectDummy, &m_wndTabs, 3) ||
+		!m_wndOutputFind.Create(dwStyle_ol, rectDummy, &m_wndTabs, 4))
 	{
 		TRACE0("Failed to create output windows\n");
 		return -1;      // fail to create
@@ -60,12 +61,12 @@ int COutputWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	BOOL bNameValid;
 
 	// Attach list windows to tab:
-	bNameValid = strTabName.LoadString(IDS_BUILD_TAB);
-	ASSERT(bNameValid);
-	m_wndTabs.AddTab(&m_wndOutputBuild, strTabName, (UINT)0);
 	bNameValid = strTabName.LoadString(IDS_DEBUG_TAB);
 	ASSERT(bNameValid);
 	m_wndTabs.AddTab(&m_wndOutputDebug, strTabName, (UINT)1);
+	bNameValid = strTabName.LoadString(IDS_BUILD_TAB);
+	ASSERT(bNameValid);
+	m_wndTabs.AddTab(&m_wndOutputBuild, strTabName, (UINT)0);
 	bNameValid = strTabName.LoadString(IDS_FIND_TAB);
 	ASSERT(bNameValid);
 	m_wndTabs.AddTab(&m_wndOutputFind, strTabName, (UINT)2);
@@ -77,8 +78,37 @@ int COutputWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	theApp.m_C3->GetLog()->SetRedirectFunction([](void *userdata, const TCHAR *msg)
 	{
-		COutputList *pw = (COutputList *)userdata;
-		pw->AddString(msg);
+		assert(msg);
+
+		CEdit *pw = (CEdit *)userdata;
+		CPoint cpos = pw->GetCaretPos();
+
+		// we have to replace all '\n' with "\r\n" pairs
+
+		// count '\n' chars
+		size_t sl = 1;
+		TCHAR *c = (TCHAR *)msg;
+		while (*c)
+		{
+			sl += (*c != _T('\n')) ? 1 : 2;
+			c++;
+		}
+
+		// allocate a new string -- on the stack
+		TCHAR *m = (TCHAR *)_alloca(sl * sizeof(TCHAR));
+		c = m;
+		while (*msg)
+		{
+			if (*msg == _T('\n'))
+				*(c++) = _T('\r');	// insert a '\r'
+
+			*(c++)  = *(msg++);
+		}
+		*c = _T('\0');
+
+		pw->SetSel(-1, -1);
+		pw->ReplaceSel(m);
+		pw->SetSel(-1, -1);
 	}, &m_wndOutputDebug);
 
 	return 0;

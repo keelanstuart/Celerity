@@ -8,6 +8,7 @@
 #include <C3InputDeviceImpl.h>
 #include <C3ResourceManager.h>
 #include <C3FileMapper.h>
+#include <C3CRC.h>
 
 
 using namespace c3;
@@ -45,12 +46,14 @@ InputDeviceImpl::InputDeviceImpl(System *sys, LPDIRECTINPUTDEVICE8 pdid)
 	m_Name += m_DIDInst.tszInstanceName;
 	m_Name += _T(")");
 
+	m_UID = c3::Crc32::CalculateString(m_Name.c_str());
+
 	memset(&m_DIDCaps, 0, sizeof(DIDEVCAPS));
 	m_DIDCaps.dwSize = sizeof(DIDEVCAPS);
 	pdid->GetCapabilities(&m_DIDCaps);
 
 	// Set the cooperative level...
-	m_pDIDevice->SetCooperativeLevel(sys->GetOwner(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+	HRESULT hr = m_pDIDevice->SetCooperativeLevel(sys->GetOwner(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
 }
 
 
@@ -67,6 +70,12 @@ InputDeviceImpl::~InputDeviceImpl()
 const TCHAR *InputDeviceImpl::GetName() const
 {
 	return m_Name.c_str();
+}
+
+
+uint32_t InputDeviceImpl::GetUID() const
+{
+	return m_UID;
 }
 
 
@@ -232,4 +241,22 @@ void InputDeviceImpl::SetProportionRange(float minprop, float maxprop)
 bool InputDeviceImpl::PluggedIn() const
 {
 	return m_bAttached;
+}
+
+
+bool InputDeviceImpl::IsDIDevice(LPDIRECTINPUTDEVICE8 pdid)
+{
+	return (pdid == m_pDIDevice) ? true : false;
+}
+
+
+size_t InputDeviceImpl::GetNumAxes() const
+{
+	return m_DIDCaps.dwAxes;
+}
+
+
+size_t InputDeviceImpl::GetNumButtons() const
+{
+	return m_DIDCaps.dwButtons;
 }

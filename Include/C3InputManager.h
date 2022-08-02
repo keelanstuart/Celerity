@@ -13,11 +13,15 @@
 namespace c3
 {
 
-	class InputManager
+	class C3_API InputManager
 	{
 
 	public:
 		enum { USER_ANY = -1, USER_DEFAULT };
+
+		typedef bool (__cdecl *DEVICECONNECTION_CALLBACK_FUNC)(InputDevice *device, bool conn, void *userdata);
+
+		static void SetDeviceConnectionCallback(DEVICECONNECTION_CALLBACK_FUNC func, void *userdata);
 
 		virtual size_t GetNumDevices() = NULL;
 
@@ -48,6 +52,10 @@ namespace c3
 		virtual void AcquireAll() = NULL;
 
 		virtual void UnacquireAll() = NULL;
+
+		// Removes and re-enumerates all devices - this should be handled when a WM_DEVICECHANGE message has been received
+		// If you are directly getting devices, rather than using the input manager, you will need to re-get your devices after this
+		virtual void Reset() = NULL;
 
 	};
 

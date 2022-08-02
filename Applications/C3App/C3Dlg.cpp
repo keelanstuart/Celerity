@@ -353,8 +353,8 @@ BOOL C3Dlg::OnInitDialog()
 	}
 #endif
 
-#if 0
-	if (nullptr != (pproto = m_Factory->FindPrototype(_T("TestBox"))))
+#if 1
+	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Building Cabin"))))
 	{
 		c3::Object *pobj = m_Factory->Build(pproto);
 		if (pobj)
@@ -362,7 +362,7 @@ BOOL C3Dlg::OnInitDialog()
 			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
 			m_RootObj->AddChild(pobj);
 
-			theApp.m_C3->GetLog()->Print(_T("TestBox created\n"));
+			theApp.m_C3->GetLog()->Print(_T("Cabin created\n"));
 		}
 	}
 #endif
@@ -467,8 +467,8 @@ void C3Dlg::OnPaint()
 		{
 			glm::vec3 mv(0, 0, 0);
 
-			m_Run = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::SHIFT);
-			float spd = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::SHIFT) * 3.0f) + 1.5f;
+			m_Run = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::LSHIFT);
+			float spd = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LSHIFT) * 3.0f) + 1.5f;
 
 			float mdf = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_W) +
 						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSY)) / 2.0f;

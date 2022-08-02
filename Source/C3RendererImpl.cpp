@@ -647,7 +647,7 @@ HWND RendererImpl::GetOverrideHwnd() const
 
 bool RendererImpl::BeginScene(props::TFlags64 flags)
 {
-	if (!m_Initialized)
+	if (!m_Initialized || m_needsFinish)
 		return false;
 
 	m_VertsPerFrame = 0;
@@ -656,11 +656,11 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 	m_LinesPerFrame = 0;
 	m_PointsPerFrame = 0;
 
-	m_needsFinish = true;
-
 	m_TaskPool->Flush();
 
-	if (m_Gui)
+	m_BeginSceneFlags = flags;
+
+	if (m_Gui && flags.IsSet(BSFLAG_SHOWGUI))
 	{
 #if 1
 		m_Gui->BeginFrame();
@@ -677,6 +677,8 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 			(flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_DEPTH_BUFFER_BIT : 0) |
 			(flags.IsSet(UFBFLAG_CLEARSTENCIL) ? GL_STENCIL_BUFFER_BIT : 0));
 
+	m_needsFinish = true;
+
 	return true;
 }
 
@@ -689,7 +691,9 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 	if (!m_needsFinish)
 		return false;
 
-	if (m_Gui)
+	m_needsFinish = false;
+
+	if (m_Gui && m_BeginSceneFlags.IsSet(BSFLAG_SHOWGUI))
 	{
 #if 1
 		static bool show_metrics = true;

@@ -154,10 +154,21 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 		}
 	}
 
-	m_ButtonState[InputDevice::VirtualButton::SHIFT] = m_ButtonState[InputDevice::VirtualButton::BUTTON9];
-	m_ButtonDelta[InputDevice::VirtualButton::SHIFT] = m_ButtonDelta[InputDevice::VirtualButton::BUTTON9];
+	m_ButtonState[InputDevice::VirtualButton::LSHIFT] = m_ButtonState[InputDevice::VirtualButton::BUTTON9];
+	m_ButtonDelta[InputDevice::VirtualButton::RSHIFT] = m_ButtonDelta[InputDevice::VirtualButton::BUTTON10];
 
 	__super::Update(elapsed_seconds);
 
 	return true;
 }
+
+size_t VirtualJoystickImpl::GetNumAxes() const
+{
+	return m_DIDCaps.dwAxes;
+}
+
+size_t VirtualJoystickImpl::GetNumButtons() const
+{
+	return m_DIDCaps.dwButtons;
+}
+

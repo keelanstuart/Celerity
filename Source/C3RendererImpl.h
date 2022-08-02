@@ -22,10 +22,11 @@ namespace c3
 	#define MATRIXUPDATE_VIEWPROJ			0x04
 	#define MATRIXUPDATE_NORMAL				0x08
 
-	#define MATRIXUPDATE_WORLD			(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_WORLDVIEW | MATRIXUPDATE_NORMAL)
-	#define MATRIXUPDATE_VIEW			(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_VIEWPROJ | MATRIXUPDATE_NORMAL)
-	#define MATRIXUPDATE_PROJ			(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_VIEWPROJ)
-	#define MATRIXUPDATE_ALL			(MATRIXUPDATE_WORLD | MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
+	#define MATRIXUPDATE_WORLD				(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_WORLDVIEW | MATRIXUPDATE_NORMAL)
+	#define MATRIXUPDATE_VIEW				(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_VIEWPROJ | MATRIXUPDATE_NORMAL)
+	#define MATRIXUPDATE_PROJ				(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_VIEWPROJ)
+	#define MATRIXUPDATE_ALL				(MATRIXUPDATE_WORLD | MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
+
 
 	class RendererImpl : public Renderer
 	{
@@ -42,6 +43,8 @@ namespace c3
 		HGLRC m_glrc;
 		HWND m_hwnd_override;
 		RECT m_Viewport;
+
+		props::TFlags64 m_BeginSceneFlags;
 
 		size_t m_FrameNum;
 
@@ -166,8 +169,8 @@ namespace c3
 		virtual void SetOverrideHwnd(HWND hwnd);
 		virtual HWND GetOverrideHwnd() const;
 
-		virtual bool BeginScene(props::TFlags64 flags);
-		virtual bool EndScene(props::TFlags64 flags);
+		virtual bool BeginScene(props::TFlags64 flags = 0);
+		virtual bool EndScene(props::TFlags64 flags = 0);
 		virtual bool Present();
 
 		virtual size_t GetCurrentFrameNumber();

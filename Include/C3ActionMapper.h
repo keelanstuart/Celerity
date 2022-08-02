@@ -18,26 +18,36 @@ namespace c3
 
 	public:
 
-		// When an action has been triggered, a callback of this type, supplied to RegisterAction, will be executed
-		typedef bool (__cdecl *ACTION_CALLBACK_FUNC)(InputDevice *from_device, size_t user, InputDevice::VirtualButton button);
+		typedef enum ETriggerType
+		{
+			DOWN_CONTINUOUS = 0,	// keeps generating the event as long as the button is down
+			DOWN_DELTA,				// generates the event only when the button is first depressed
+			UP_DELTA,				// generates the event only when the button is released
+		} TriggerType;
 
-		virtual size_t RegisterAction(const TCHAR *name, InputDevice::VirtualButton default_button, ACTION_CALLBACK_FUNC func) = NULL;
+		// a callback you provide when your action is triggered. gives you the device, user number, which button, and that button's value
+		typedef bool (__cdecl *ACTION_CALLBACK_FUNC)(InputDevice *from_device, size_t user, InputDevice::VirtualButton button, float value, void *userdata);
 
-		virtual bool AssignActionButton(size_t action_index, const TCHAR *device_name, InputDevice::VirtualButton default_button) = NULL;
+		// registers an acction with a name and your callback
+		virtual size_t RegisterAction(const TCHAR *name, TriggerType trigger, ACTION_CALLBACK_FUNC func, void *userdata) = NULL;
 
-		virtual bool UnregisterAction(size_t action_index) = NULL;
+		// unregisters a previously registered action
+		virtual bool UnregisterAction(size_t index) = NULL;
 
+		// returns the number of currently registered actions
 		virtual size_t GetNumActions() const = NULL;
 
+		// find the index of an action given its name
 		virtual size_t FindActionIndex(const TCHAR *name) const = NULL;
 
-		virtual const TCHAR *GetActionName(size_t action_index) const = NULL;
+		// returns the name of the action at the give index, or nullptr if the given index is invalid
+		virtual const TCHAR *GetActionName(size_t index) const = NULL;
 
-		virtual bool LoadActions(const TCHAR *filename) = NULL;
+		// associates a device's button with a particular action
+		virtual bool MakeAssociation(size_t actionidx, uint32_t devid, InputDevice::VirtualButton button) = NULL;
 
-		virtual bool SaveActions(const TCHAR *filename) const = NULL;
-
-		virtual void Update() = NULL;
+		// removes an association 
+		virtual bool BreakAssociation(size_t actionidx, uint32_t devid, InputDevice::VirtualButton button) = NULL;
 
 	};
 

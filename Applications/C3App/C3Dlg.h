@@ -49,6 +49,9 @@ protected:
 	std::deque<c3::Object *> m_Light;
 	std::deque<glm::fvec3> m_LightMove;
 
+	c3::Positionable *m_pControllablePos;
+	c3::Positionable *m_pCamPos;
+
 	float m_CamYaw, m_CamPitch;
 	bool m_Run;
 
@@ -59,6 +62,8 @@ protected:
 	bool m_bCapturedFirstFrame;
 
 	bool m_bMouseCursorEnabled;
+
+	static bool __cdecl DeviceConnected(c3::InputDevice *device, bool conn, void *userdata);
 
 public:
 
@@ -103,4 +108,5 @@ public:
 	afx_msg void OnActivateApp(BOOL bActive, DWORD dwThreadID);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg LRESULT OnDevChange(WPARAM wparam, LPARAM lparam);
 };

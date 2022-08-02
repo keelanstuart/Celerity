@@ -6,7 +6,6 @@
 #include "PrototypeView.h"
 #include "OutputWnd.h"
 #include "PropertiesWnd.h"
-#include "CalendarBar.h"
 #include "Resource.h"
 #include "C3Edit.h"
 
@@ -67,9 +66,7 @@ protected:  // control bar embedded members
 	CMFCStatusBar     m_wndStatusBar;
 	CPrototypeView    m_wndProtoView;
 	CPropertiesWnd    m_wndProperties;
-	COutlookBar       m_wndNavigationBar;
 	CMFCShellTreeCtrl m_wndTree;
-	CCalendarBar      m_wndCalendar;
 	CMFCCaptionBar    m_wndCaptionBar;
 
 // Generated message map functions
@@ -118,14 +115,7 @@ protected:
 
 	BOOL CreateDockingWindows();
 	void SetDockingWindowIcons(BOOL bHiColorIcons);
-	BOOL CreateOutlookBar(CMFCOutlookBar& bar, UINT uiID, CMFCShellTreeCtrl& tree, CCalendarBar& calendar, int nInitialWidth);
 	BOOL CreateCaptionBar();
-
-	int FindFocusedOutlookWnd(CMFCOutlookBarTabCtrl** ppOutlookWnd);
-
-	CMFCOutlookBarTabCtrl* FindOutlookParent(CWnd* pWnd);
-	CMFCOutlookBarTabCtrl* m_pCurrOutlookWnd;
-	CMFCOutlookBarPane*    m_pCurrOutlookPage;
 };
 
 

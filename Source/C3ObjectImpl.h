@@ -84,6 +84,8 @@ namespace c3
 
 		virtual void PostLoad();
 
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
+
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
 	};

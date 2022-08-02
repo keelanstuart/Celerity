@@ -13,6 +13,8 @@
 #include <C3FileMapper.h>
 #include <C3System.h>
 
+#include <dbt.h>
+
 
 using namespace c3;
 
@@ -31,7 +33,7 @@ struct SVDEnumJoyScratch
 InputManagerImpl::InputManagerImpl(System *sys)
 {
 	m_pSys = sys;
-	m_pDI = NULL;
+	m_pDI = nullptr;
 
 	m_PlugCheckTime = 0.0f;
 }
@@ -42,6 +44,7 @@ InputManagerImpl::~InputManagerImpl()
 	Shutdown();
 }
 
+static size_t devcount = 1;
 
 BOOL FAR PASCAL InputManagerImpl::EnumJoysticksCallback(const DIDEVICEINSTANCE *did_instance, void *context)
 {
@@ -56,13 +59,28 @@ BOOL FAR PASCAL InputManagerImpl::EnumJoysticksCallback(const DIDEVICEINSTANCE *
 	if (hr == DI_NOTATTACHED)
 		return DIENUM_CONTINUE;
 
+	// don't re-add devices we already know about
+#if 0
+	for (auto d : _this->m_Devices)
+	{
+		InputDeviceImpl *pd = d.first;
+		if (pd->IsDIDevice(*did))
+			return DIENUM_CONTINUE;
+	}
+#endif
+
 	// Obtain an interface to the enumerated joystick.
 	hr = di->CreateDevice(did_instance->guidInstance, did, NULL);
 
 	if (SUCCEEDED(hr))
 	{
 		VirtualJoystickImpl *pjoy = new VirtualJoystickImpl(_this->m_pSys, *did);
-		_this->m_Devices.push_back(TDeviceArray::value_type(pjoy, USER_DEFAULT));
+		if (pjoy)
+		{
+			_this->m_Devices.push_back(TDeviceArray::value_type(pjoy, devcount++));
+			if (s_DevConnCB)
+				s_DevConnCB(pjoy, true, s_DevConnUserData);
+		}
 	}
 
 	return DIENUM_CONTINUE;
@@ -80,23 +98,7 @@ bool InputManagerImpl::Initialize(HWND app_hwnd, HINSTANCE app_inst)
 	if (FAILED(hr))
 		return false;
 
-	LPDIRECTINPUTDEVICE8 pdid;
-
-	if (SUCCEEDED(m_pDI->CreateDevice(GUID_SysKeyboard, &pdid, NULL)))
-	{
-		VirtualKeyboardImpl *pkeyboard = new VirtualKeyboardImpl(m_pSys, pdid);
-		m_Devices.push_back(TDeviceArray::value_type(pkeyboard, USER_DEFAULT));
-	}
-
-	if (SUCCEEDED(m_pDI->CreateDevice(GUID_SysMouse, &pdid, NULL)))
-	{
-		VirtualMouseImpl *pmouse = new VirtualMouseImpl(m_pSys, pdid);
-		m_Devices.push_back(TDeviceArray::value_type(pmouse, USER_DEFAULT));
-	}
-
-	SVDEnumJoyScratch scratch = {m_pDI, &pdid, this};
-
-	hr = m_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, &scratch, DIEDFL_ATTACHEDONLY);
+	Reset();
 
 	return true;
 }
@@ -114,6 +116,15 @@ void InputManagerImpl::Shutdown()
 		m_pDI->Release();
 		m_pDI = NULL;
 	}
+}
+
+InputManager::DEVICECONNECTION_CALLBACK_FUNC InputManagerImpl::s_DevConnCB = nullptr;
+void *InputManagerImpl::s_DevConnUserData = nullptr;
+
+void InputManager::SetDeviceConnectionCallback(InputManager::DEVICECONNECTION_CALLBACK_FUNC func, void *userdata)
+{
+	InputManagerImpl::s_DevConnCB = func;
+	InputManagerImpl::s_DevConnUserData = userdata;
 }
 
 
@@ -136,6 +147,25 @@ void InputManagerImpl::Update(float elapsed_seconds)
 	if (!m_pDI)
 		return;
 
+#if 0
+	for (auto pdev : m_Devices)
+	{
+		if (!pdev.first->Update(elapsed_seconds))
+		{
+			if (s_DevConnCB)
+				s_DevConnCB(pdev.first, false, s_DevConnUserData);
+		}
+	}
+
+	for (TDeviceArray::iterator it = m_Devices.begin(); it != m_Devices.end(); it++)
+	{
+		if (!it->first)
+		{
+			m_Devices.erase(it);
+			it = m_Devices.begin();
+		}
+	}
+#else
 	bool checkplugs = false;
 	m_PlugCheckTime -= elapsed_seconds;
 	if (m_PlugCheckTime <= 0.0f)
@@ -148,6 +178,7 @@ void InputManagerImpl::Update(float elapsed_seconds)
 	{
 		pdev.first->Update(elapsed_seconds);
 	}
+#endif
 }
 
 
@@ -269,6 +300,66 @@ void InputManagerImpl::UnacquireAll()
 	}
 }
 
+void InputManagerImpl::Reset()
+{
+	for (auto pdev : m_Devices)
+	{
+		if (s_DevConnCB)
+			s_DevConnCB(pdev.first, false, s_DevConnUserData);
+
+		delete pdev.first;
+	}
+
+	m_Devices.clear();
+
+	InputDevice *pdev_keyboard = nullptr;
+	InputDevice *pdev_mouse = nullptr;
+
+	for (auto pdev : m_Devices)
+	{
+		switch (pdev.first->GetType())
+		{
+			case InputDevice::DeviceType::KEYBOARD:
+				pdev_keyboard = pdev.first;
+				break;
+
+			case InputDevice::DeviceType::MOUSE:
+				pdev_mouse = pdev.first;
+				break;
+		}
+	}
+
+	LPDIRECTINPUTDEVICE8 pdid;
+
+	if (!pdev_keyboard && SUCCEEDED(m_pDI->CreateDevice(GUID_SysKeyboard, &pdid, NULL)))
+	{
+		VirtualKeyboardImpl *pkeyboard = new VirtualKeyboardImpl(m_pSys, pdid);
+		if (pkeyboard)
+		{
+			m_Devices.push_back(TDeviceArray::value_type(pkeyboard, USER_DEFAULT));
+			if (s_DevConnCB)
+				s_DevConnCB(pkeyboard, true, s_DevConnUserData);
+		}
+	}
+
+	if (!pdev_mouse && SUCCEEDED(m_pDI->CreateDevice(GUID_SysMouse, &pdid, NULL)))
+	{
+		VirtualMouseImpl *pmouse = new VirtualMouseImpl(m_pSys, pdid);
+		if (pmouse)
+		{
+			m_Devices.push_back(TDeviceArray::value_type(pmouse, USER_DEFAULT));
+			if (s_DevConnCB)
+				s_DevConnCB(pmouse, true, s_DevConnUserData);
+		}
+	}
+
+	SVDEnumJoyScratch scratch = {m_pDI, &pdid, this};
+
+	HRESULT hr;
+	devcount = 1;
+	hr = m_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, &scratch, DIEDFL_ATTACHEDONLY);
+	//hr = m_pDI->EnumDevices(DI8DEVCLASS_DEVICE, EnumJoysticksCallback, &scratch, DIEDFL_ATTACHEDONLY);
+}
 
 void InputManagerImpl::PlayForceFeedbackEffect(const TCHAR *filename, int32_t dir_offset)
 {

@@ -86,6 +86,9 @@ bool CameraImpl::Initialize(Object *pobject)
 
 void CameraImpl::Update(Object *pobject, float elapsed_time)
 {
+	if (!pobject)
+		return;
+
 	// get a positionable feature from the object -- and if we can't, don't proceed
 	if (!m_pcpos)
 		m_pcpos = dynamic_cast<PositionableImpl *>(pobject->FindComponent(Positionable::Type()));
@@ -306,4 +309,10 @@ const glm::fmat4x4 *CameraImpl::GetProjectionMatrix(glm::fmat4x4 *mat)
 	}
 
 	return &m_proj;
+}
+
+
+bool CameraImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const
+{
+	return false;
 }

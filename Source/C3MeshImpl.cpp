@@ -240,8 +240,7 @@ Mesh::RETURNCODE MeshImpl::Draw(Renderer::PrimType type) const
 }
 
 
-bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
-						float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
+bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
 {
 	if (!pRayPos || !pRayDir)
 		return false;

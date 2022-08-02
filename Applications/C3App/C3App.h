@@ -50,6 +50,7 @@ class C3App : public CWinApp
 {
 public:
 	c3::System *m_C3;
+	c3::Configuration *m_Cfg;
 
 public:
 	C3App();

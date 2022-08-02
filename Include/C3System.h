@@ -40,6 +40,8 @@ namespace c3
 
 		virtual InputManager *GetInputManager() = NULL;
 
+		virtual ActionMapper *GetActionMapper() = NULL;
+
 		virtual Factory *GetFactory() = NULL;
 
 		virtual FileMapper *GetFileMapper() = NULL;

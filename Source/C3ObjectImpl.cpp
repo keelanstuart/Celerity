@@ -220,6 +220,12 @@ void ObjectImpl::Update(float elapsed_time)
 	{
 		it->Update(this, elapsed_time);
 	}
+
+	for (auto child : m_Children)
+	{
+		child->Update(elapsed_time);
+	}
+
 }
 
 
@@ -374,6 +380,12 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags)
 void ObjectImpl::PostLoad()
 {
 	Update();
+}
+
+
+bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const
+{
+	return false;
 }
 
 

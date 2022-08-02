@@ -65,6 +65,7 @@
 #include <C3FileMapper.h>
 #include <C3ResourceManager.h>
 #include <C3InputManager.h>
+#include <C3ActionMapper.h>
 #include <C3System.h>
 #include <C3ColorDefs.h>
 

@@ -20,6 +20,11 @@ namespace c3
 		Object *m_pOwner;
 		Positionable *m_pPos;
 
+		glm::fvec3 m_p;
+		glm::fquat m_o;
+		glm::fvec3 m_s;
+		glm::fmat4x4 m_m;
+
 		ShaderComponent *m_VS_defobj;
 		ShaderComponent *m_FS_defobj;
 		ShaderProgram *m_SP_defobj;
@@ -30,6 +35,8 @@ namespace c3
 
 		typedef std::pair<Model *, Resource *> TModOrRes;
 		TModOrRes m_Mod;
+
+#define MRIF_REBUILDMATRIX		0x0001
 
 		props::TFlags64 m_Flags;
 
@@ -56,6 +63,20 @@ namespace c3
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
 		virtual bool HitTest(glm::fvec3 *ray_pos, glm::fvec3 *rayvec) const;
+
+		virtual void SetPos(float x, float y, float z);
+
+		virtual const glm::fvec3 *GetPosVec(glm::fvec3 *pos = nullptr);
+
+		virtual void SetOriQuat(const glm::fquat *ori);
+
+		virtual const glm::fquat *GetOriQuat(glm::fquat *ori = nullptr);
+
+		virtual void SetScl(float x, float y, float z);
+
+		virtual const glm::fvec3 *GetScl(glm::fvec3 *scl = nullptr);
+
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
 
 	};
 

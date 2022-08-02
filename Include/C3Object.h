@@ -129,6 +129,9 @@ namespace c3
 		/// Called once Load has finished
 		virtual void PostLoad() = NULL;
 
+		/// Casts a ray against the object
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const = NULL;
+
 	};
 
 };

@@ -48,23 +48,23 @@ bool PositionableImpl::Initialize(Object *pobject)
 	if (!propset)
 		return false;
 
-	m_ppos = propset->CreateReferenceProperty(_T("Position"), 'POS', &m_Pos, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
-	if (m_ppos)
+	props::IProperty *ppos = propset->CreateReferenceProperty(_T("Position"), 'POS', &m_Pos, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	if (ppos)
 	{
-		m_ppos->SetVec3F(props::TVec3F(0, 0, 0));
+		ppos->SetVec3F(props::TVec3F(0, 0, 0));
 	}
 
-	m_pori = propset->CreateReferenceProperty(_T("Orientation"), 'ORI', &m_Ori, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4);
-	if (m_pori)
+	props::IProperty *pori = propset->CreateReferenceProperty(_T("Orientation"), 'ORI', &m_Ori, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4);
+	if (pori)
 	{
-		m_pori->SetVec4F(props::TVec4F(m_Ori.x, m_Ori.y, m_Ori.z, m_Ori.w));
-		m_pori->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_QUATERNION);
+		pori->SetVec4F(props::TVec4F(m_Ori.x, m_Ori.y, m_Ori.z, m_Ori.w));
+		pori->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_QUATERNION);
 	}
 
-	m_pscl = propset->CreateReferenceProperty(_T("Scale"), 'SCL', &m_Scl, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
-	if (m_pscl)
+	props::IProperty *pscl = propset->CreateReferenceProperty(_T("Scale"), 'SCL', &m_Scl, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	if (pscl)
 	{
-		m_pscl->SetVec3F(props::TVec3F(1, 1, 1));
+		pscl->SetVec3F(props::TVec3F(1, 1, 1));
 	}
 
 	m_Flags.SetAll(POSFLAG_REBUILDMATRIX);
@@ -245,66 +245,6 @@ void PositionableImpl::AdjustPos(float xadj, float yadj, float zadj)
 
 		m_Flags.Set(POSFLAG_POSCHANGED);
 	}
-}
-
-
-void PositionableImpl::SetRotCenter(float x, float y, float z)
-{
-
-}
-
-
-void PositionableImpl::SetRotCenterVec(const glm::fvec3 *rotc)
-{
-
-}
-
-
-void PositionableImpl::SetRotCenterX(float x)
-{
-
-}
-
-
-void PositionableImpl::SetRotCenterY(float y)
-{
-
-}
-
-
-void PositionableImpl::SetRotCenterZ(float z)
-{
-
-}
-
-
-const glm::fvec3 *PositionableImpl::GetRotCenterVec(glm::fvec3 *rotc)
-{
-	return nullptr;
-}
-
-
-float PositionableImpl::GetRotCenterX()
-{
-	return 0.0f;
-}
-
-
-float PositionableImpl::GetRotCenterY()
-{
-	return 0.0f;
-}
-
-
-float PositionableImpl::GetRotCenterZ()
-{
-	return 0.0f;
-}
-
-
-void PositionableImpl::AdjustRotCenter(float dx, float dy, float dz)
-{
-
 }
 
 
@@ -581,4 +521,10 @@ const glm::fmat4x4 *PositionableImpl::GetTransformMatrix(glm::fmat4x4 *mat)
 	}
 
 	return &m_Mat;
+}
+
+
+bool PositionableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const
+{
+	return false;
 }
