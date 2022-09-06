@@ -13,6 +13,8 @@ namespace c3
 
 	class ObjectImpl : public Object
 	{
+
+	protected:
 		SystemImpl *m_pSys;
 		tstring m_Name;
 		GUID m_GUID;
@@ -68,7 +70,7 @@ namespace c3
 
 		virtual Component *AddComponent(const ComponentType *pctype, bool init = true);
 
-		virtual void RemoveComponent(Component *pcomportmemt);
+		virtual void RemoveComponent(Component *pcomponent);
 
 		virtual void Update(float elapsed_time = 0.0f);
 
@@ -84,7 +86,7 @@ namespace c3
 
 		virtual void PostLoad();
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance = nullptr, Object **ppHitObj = nullptr, size_t child_depth = 0) const;
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 

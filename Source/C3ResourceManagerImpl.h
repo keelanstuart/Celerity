@@ -38,7 +38,7 @@ namespace c3
 
 		static pool::IThreadPool::TASK_RETURN __cdecl LoadingThreadProc(void *presmanimpl, void *pres, size_t task_number);
 
-		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype);
+		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype, const void *data);
 
 		virtual void ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype = nullptr, props::TFlags64 restypeflags = 0, ResTypeFlagMode flagmode = RTFM_IGNORE);
 

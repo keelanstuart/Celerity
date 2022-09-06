@@ -7,6 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
+#define WINVER 0x0A00
+#define WS_EX_COMPOSITED 0x02000000L
 #include "winres.h"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -32,6 +34,8 @@ END
 
 2 TEXTINCLUDE 
 BEGIN
+    "#define WINVER 0x0A00  // <--- make sure EX styles are all recognized\r\n"
+    "#define WS_EX_COMPOSITED 0x02000000L // <--- still didn't work! argh!\r\n"
     "#include ""winres.h""\r\n"
     "\0"
 END
@@ -91,6 +95,8 @@ END
 //
 
 IDB_PNG_SPLASH          PNG                     "c3splash2.png"
+
+IDB_PNG_ORTHOREF        PNG                     "ortho_ref.png"
 
 #endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////

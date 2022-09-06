@@ -5,11 +5,24 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4">-0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">50.000000,50.000000,50.000000</powerprops:property>
             <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-obj.fsh</powerprops:property>
             <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">sponza\sponza.gltf</powerprops:property>
+            <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
+            <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD5}" name="REFCUBE" group="" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-obj.fsh</powerprops:property>
+            <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
             <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
             <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
         </powerprops:property_set>
@@ -24,7 +37,7 @@
             <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-obj.fsh</powerprops:property>
             <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">ah64e\ah64e.fbx</powerprops:property>
-            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.000000,0.000000,0.707107,0.707107</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.000000,0.000000,0.707107,-0.707107</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.080000,0.080000,0.080000</powerprops:property>
             <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
             <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
@@ -1054,7 +1067,7 @@
             <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
         </powerprops:property_set>
     </prototype>
-    <prototype guid="{98B6F7EC-7E80-4C62-BBE3-93D529EA4EB8}" name="TestBox" group="" flags="131075">
+    <prototype guid="{98B6F7EC-7E80-4C62-BBE3-93D529EA4EB8}" name="BasicCharacter" group="" flags="131075">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
@@ -1063,7 +1076,9 @@
             <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
             <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-obj.fsh</powerprops:property>
             <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
-            <powerprops:property id="MODF" name="Model" type="STRING">TestBox\testbox.3ds</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">basicCharacter.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.0800,0.0800,0.0800</powerprops:property>
             <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
             <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
         </powerprops:property_set>
@@ -1085,9 +1100,9 @@
             <component guid="{EC67985C-B770-4BAE-AAA7-1BB63E0165A8}" name="QuadTerrain"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">50.000000,50.000000,10.000000</powerprops:property>
             <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-terrain.fsh</powerprops:property>
             <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">50.000000,50.000000,50.000000</powerprops:property>
             <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-terrain.vsh</powerprops:property>
             <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-terrain-shadow.vsh</powerprops:property>
         </powerprops:property_set>

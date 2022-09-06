@@ -18,6 +18,8 @@
 #include <C3SystemImpl.h>
 #include <C3CommonVertexDefs.h>
 
+#include "resource.h"
+
 //#define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -84,8 +86,10 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_CurProgID = NULL;
 
 	m_CubeVB = nullptr;
-	m_BoundsMesh = nullptr;
 	m_CubeMesh = nullptr;
+	m_RefCubeVB = nullptr;
+	m_RefCubeMesh = nullptr;
+	m_BoundsMesh = nullptr;
 
 	m_FSPlaneVB = nullptr;
 	m_PlanesVB = nullptr;
@@ -102,6 +106,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_BlueTex = nullptr;
 	m_GridTex = nullptr;
 	m_LinearGradientTex = nullptr;
+	m_OrthoRefTex = nullptr;
+	m_UtilityColorTex = nullptr;
 
 	m_MatMan = nullptr;
 	m_mtlWhite = nullptr;
@@ -350,7 +356,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	SetDepthMode(DepthMode::DM_READWRITE);
 	SetDepthTest(Test::DT_LESSEREQUAL);
 
-	SetWindingOrder(WindingOrder::WO_CW);
+	SetWindingOrder(WindingOrder::WO_CCW);
 	SetCullMode(CullMode::CM_BACK);
 
 	SetBlendMode(BM_ALPHA);
@@ -367,12 +373,32 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	GetYZPlaneMesh();
 #endif
 
-	// Initizlie textures
-	GetBlackTexture();
-	GetGreyTexture();
-	GetWhiteTexture();
-	GetBlueTexture();
-	GetGridTexture();
+	c3::ResourceManager *rm = m_pSys->GetResourceManager();
+	const c3::ResourceType *rt;
+	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::EResFlag::CREATEENTRYONLY);
+
+	// Initizlie utility textures and register them with the resource manager
+	rt = rm->FindResourceType(_T("png"));
+	rm->GetResource(_T("[black.tex]"), rf, rt, GetBlackTexture());
+	rm->GetResource(_T("[grey.tex]"), rf, rt, GetGreyTexture());
+	rm->GetResource(_T("[white.tex]"), rf, rt, GetWhiteTexture());
+	rm->GetResource(_T("[blue.tex]"), rf, rt, GetBlueTexture());
+	rm->GetResource(_T("[grid.tex]"), rf, rt, GetGridTexture());
+	rm->GetResource(_T("[lineargradient.tex]"), rf, rt, GetLinearGradientTexture());
+	rm->GetResource(_T("[utilitycolor.tex]"), rf, rt, GetUtilityColorTexture());
+	rm->GetResource(_T("[orthoref.tex]"), rf, rt, GetOrthoRefTexture());
+
+	// Initialize the reference cube model and register it with the resource manager
+	rt = rm->FindResourceType(_T("fbx"));
+	c3::Material *refmtl = GetMaterialManager()->CreateMaterial();
+	refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetOrthoRefTexture());
+	refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
+	c3::Model *refcube = c3::Model::Create(this);
+	c3::Model::MeshIndex mi = refcube->AddMesh(GetRefCubeMesh());
+	c3::Model::NodeIndex ni = refcube->AddNode();
+	refcube->AssignMeshToNode(ni, mi);
+	refcube->SetMaterial(mi, refmtl);
+	rm->GetResource(_T("[refcube.model]"), rf, rt, refcube);
 
 	m_Gui = new GuiImpl(this);
 
@@ -443,42 +469,6 @@ void RendererImpl::Shutdown()
 
 	SetEvent(m_event_shutdown);
 
-	if (m_BlackTex)
-	{
-		m_BlackTex->Release();
-		m_BlackTex = nullptr;
-	}
-
-	if (m_GreyTex)
-	{
-		m_GreyTex->Release();
-		m_GreyTex = nullptr;
-	}
-
-	if (m_WhiteTex)
-	{
-		m_WhiteTex->Release();
-		m_WhiteTex = nullptr;
-	}
-
-	if (m_BlueTex)
-	{
-		m_BlueTex->Release();
-		m_BlueTex = nullptr;
-	}
-
-	if (m_GridTex)
-	{
-		m_GridTex->Release();
-		m_GridTex = nullptr;
-	}
-
-	if (m_LinearGradientTex)
-	{
-		m_LinearGradientTex->Release();
-		m_LinearGradientTex = nullptr;
-	}
-
 	if (m_BoundsMesh)
 	{
 		m_BoundsMesh->AttachVertexBuffer(nullptr);
@@ -497,6 +487,19 @@ void RendererImpl::Shutdown()
 	{
 		m_CubeVB->Release();
 		m_CubeVB = nullptr;
+	}
+
+	if (m_RefCubeMesh)
+	{
+		m_RefCubeMesh->AttachVertexBuffer(nullptr);
+		m_RefCubeMesh->Release();
+		m_RefCubeMesh = nullptr;
+	}
+
+	if (m_RefCubeVB)
+	{
+		m_RefCubeVB->Release();
+		m_RefCubeVB = nullptr;
 	}
 
 	if (m_XYPlaneMesh)
@@ -2110,7 +2113,7 @@ Mesh *RendererImpl::GetCubeMesh()
 				};
 
 				void *buf;
-				if (pib->Lock(&buf, 2 * 3 * 6, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				if (pib->Lock(&buf, 2 * 3 * 6, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 				{
 					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3 * 6);
 
@@ -2123,6 +2126,147 @@ Mesh *RendererImpl::GetCubeMesh()
 	}
 
 	return m_CubeMesh;
+}
+
+
+VertexBuffer *RendererImpl::GetRefCubeVB()
+{
+	if (!m_RefCubeVB)
+	{
+		m_RefCubeVB = CreateVertexBuffer(0);
+
+		constexpr int w = 30;
+		constexpr int xofs = 2;
+		constexpr int yofs = 34;
+		constexpr int zofs = 66;
+		constexpr int h = 29;
+		constexpr int pos = 1;
+		constexpr int neg = 33;
+		constexpr int imgw = 128;
+		constexpr int imgh = 64;
+
+		constexpr float hpp = 1.0f / (float)imgh;
+		constexpr float wpp = 1.0f / (float)imgw;
+
+		constexpr float xpu0 = wpp * (float)(xofs);
+		constexpr float xpu1 = wpp * (float)(xofs + w);
+		constexpr float xpv0 = hpp * (float)(pos);
+		constexpr float xpv1 = hpp * (float)(pos + h);
+
+		constexpr float ypu0 = wpp * (float)(yofs);
+		constexpr float ypu1 = wpp * (float)(yofs + w);
+		constexpr float ypv0 = hpp * (float)(pos);
+		constexpr float ypv1 = hpp * (float)(pos + h);
+
+		constexpr float zpu0 = wpp * (float)(zofs);
+		constexpr float zpu1 = wpp * (float)(zofs + w);
+		constexpr float zpv0 = hpp * (float)(pos);
+		constexpr float zpv1 = hpp * (float)(pos + h);
+
+		constexpr float xnu0 = wpp * (float)(xofs);
+		constexpr float xnu1 = wpp * (float)(xofs + w);
+		constexpr float xnv0 = hpp * (float)(neg);
+		constexpr float xnv1 = hpp * (float)(neg + h);
+
+		constexpr float ynu0 = wpp * (float)(yofs);
+		constexpr float ynu1 = wpp * (float)(yofs + w);
+		constexpr float ynv0 = hpp * (float)(neg);
+		constexpr float ynv1 = hpp * (float)(neg + h);
+
+		constexpr float znu0 = wpp * (float)(zofs);
+		constexpr float znu1 = wpp * (float)(zofs + w);
+		constexpr float znv0 = hpp * (float)(neg);
+		constexpr float znv1 = hpp * (float)(neg + h);
+
+		static Vertex::PNYT1::s v[6 * 4] =
+		{
+			// RIGHT +X 0
+			{ {  1,  1,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu0, xpv0 } },
+			{ {  1,  1, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0, -1 }, { xpu0, xpv1 } },
+			{ {  1, -1, -1 }, {  1,  0,  0 }, {  0, -1,  0 }, {  0,  0, -1 }, { xpu1, xpv1 } },
+			{ {  1, -1,  1 }, {  1,  0,  0 }, {  0, -1,  0 }, {  0,  0,  1 }, { xpu1, xpv0 } },
+
+			// FRONT +Y 4
+			{ {  1,  1,  1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu1, ypv0 } },
+			{ {  1,  1, -1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0, -1 }, { ypu1, ypv1 } },
+			{ { -1,  1, -1 }, {  0,  1,  0 }, { -1,  0,  0 }, {  0,  0, -1 }, { ypu0, ypv1 } },
+			{ { -1,  1,  1 }, {  0,  1,  0 }, { -1,  0,  0 }, {  0,  0,  1 }, { ypu0, ypv0 } },
+
+			// TOP +Z 8
+			{ {  1,  1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu1, zpv1 } },
+			{ {  1, -1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0, -1,  0 }, { zpu1, zpv0 } },
+			{ { -1, -1,  1 }, {  0,  0,  1 }, { -1,  0,  0 }, {  0, -1,  0 }, { zpu0, zpv0 } },
+			{ { -1,  1,  1 }, {  0,  0,  1 }, { -1,  0,  0 }, {  0,  1,  0 }, { zpu0, zpv1 } },
+
+			// LEFT -X 12
+			{ { -1,  1,  1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu1, xnv0 } },
+			{ { -1,  1, -1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0, -1 }, { xnu1, xnv1 } },
+			{ { -1, -1, -1 }, { -1,  0,  0 }, {  0, -1,  0 }, {  0,  0, -1 }, { xnu0, xnv1 } },
+			{ { -1, -1,  1 }, { -1,  0,  0 }, {  0, -1,  0 }, {  0,  0,  1 }, { xnu0, xnv0 } },
+
+			// FRONT -Y 16
+			{ {  1, -1,  1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu0, ynv0 } },
+			{ {  1, -1, -1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0, -1 }, { ynu0, ynv1 } },
+			{ { -1, -1, -1 }, {  0, -1,  0 }, { -1,  0,  0 }, {  0,  0, -1 }, { ynu1, ynv1 } },
+			{ { -1, -1,  1 }, {  0, -1,  0 }, { -1,  0,  0 }, {  0,  0,  1 }, { ynu1, ynv0 } },
+
+			// BOTTOM -Z 20
+			{ {  1,  1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu0, znv1 } },
+			{ {  1, -1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0, -1,  0 }, { znu0, znv0 } },
+			{ { -1, -1, -1 }, {  0,  0, -1 }, { -1,  0,  0 }, {  0, -1,  0 }, { znu1, znv0 } },
+			{ { -1,  1, -1 }, {  0,  0, -1 }, { -1,  0,  0 }, {  0,  1,  0 }, { znu1, znv1 } },
+		};
+
+		void *buf;
+		if (m_RefCubeVB->Lock(&buf, 6 * 4, Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
+		{
+			memcpy(buf, v, sizeof(Vertex::PNYT1::s) * 6 * 4);
+
+			m_RefCubeVB->Unlock();
+		}
+	}
+
+	return m_RefCubeVB;
+}
+
+
+Mesh *RendererImpl::GetRefCubeMesh()
+{
+	if (!m_RefCubeMesh)
+	{
+		m_RefCubeMesh = CreateMesh();
+
+		m_RefCubeMesh->AttachVertexBuffer(GetRefCubeVB());
+
+		if (m_RefCubeVB)
+		{
+			IndexBuffer *pib = CreateIndexBuffer(0);
+			if (pib)
+			{
+				static const uint16_t i[6][2][3] =
+				{
+					 { {  0,  1,  2 }, {  0,  2,  3 } }		// right
+					,{ {  4,  6,  5 }, {  4,  7,  6 } }		// front
+					,{ {  8, 9,  10 }, {  8, 10, 11 } }		// top
+					,{ { 12, 14, 13 }, { 12, 15, 14 } }		// left
+					,{ { 16, 17, 18 }, { 16, 18, 19 } }		// back
+					,{ { 20, 22, 21 }, { 20, 23, 22 } }		// bottom
+				};
+
+				void *buf;
+				if (pib->Lock(&buf, 2 * 3 * 6, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
+				{
+					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3 * 6);
+
+					pib->Unlock();
+				}
+
+				m_RefCubeMesh->AttachIndexBuffer(pib);
+			}
+		}
+	}
+
+	return m_RefCubeMesh;
 }
 
 
@@ -2588,6 +2732,113 @@ Texture2D *RendererImpl::GetLinearGradientTexture()
 }
 
 
+Texture2D *RendererImpl::GetOrthoRefTexture()
+{
+	if (!m_OrthoRefTex)
+	{
+		HRSRC hres = ::FindResource(g_C3Mod, MAKEINTRESOURCE(IDB_PNG_ORTHOREF), L"PNG");
+		if (!hres)
+			return GetBlackTexture();
+
+		HGLOBAL hglob = LoadResource(g_C3Mod, hres);
+		if (!hglob)
+			return GetBlackTexture();
+
+		LPVOID buf = ::LockResource(hglob);
+		if (!buf)
+		{
+			FreeResource(hglob);
+			return GetBlackTexture();
+		}
+
+		int numchans = 0;
+		int imgw = 0, imgh = 0;
+		stbi_uc *pimg = stbi_load_from_memory((const stbi_uc *)buf, ::SizeofResource(g_C3Mod, hres), &imgw, &imgh, &numchans, 0);
+
+		ETextureType tt;
+		switch (numchans)
+		{
+			case 1: tt = TextureType::U8_1CH; break;
+			case 2: tt = TextureType::U8_2CH; break;
+			case 3: tt = TextureType::U8_3CH; break;
+			case 4: tt = TextureType::U8_4CH; break;
+		}
+
+		m_OrthoRefTex = CreateTexture2D(imgw, imgh, tt, 1, 0);
+		if (m_OrthoRefTex)
+		{
+			uint8_t *bufd, *bufs = pimg;
+			Texture2D::SLockInfo li;
+			if ((m_OrthoRefTex->Lock((void **)&bufd, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && bufd)
+			{
+				for (size_t y = 0; y < li.height; y++)
+				{
+					memcpy(bufd, bufs, imgw * numchans);
+					bufd += li.stride;
+					bufs += imgw * numchans;
+				}
+
+				m_OrthoRefTex->Unlock();
+			}
+		}
+
+		free(pimg);
+		UnlockResource(hglob);
+		FreeResource(hglob);
+	}
+
+	return m_OrthoRefTex;
+}
+
+
+#define UTILITY_COLORS_H		16
+#define UTILITY_COLORS_W		16
+Texture2D *RendererImpl::GetUtilityColorTexture()
+{
+	if (!m_UtilityColorTex)
+	{
+		m_UtilityColorTex = CreateTexture2D(UTILITY_COLORS_W, UTILITY_COLORS_H, TextureType::U8_4CH, 1, 0);
+		if (m_UtilityColorTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_UtilityColorTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				size_t idx = 0;
+
+				for (size_t y = 0; y < UTILITY_COLORS_H / 4; y++)
+				{
+					for (size_t x = 0; x < UTILITY_COLORS_W; x++)
+						buf[idx++] = *(uint32_t *)&c3::Color::iRed;
+				}
+
+				for (size_t y = 0; y < UTILITY_COLORS_H / 4; y++)
+				{
+					for (size_t x = 0; x < UTILITY_COLORS_W; x++)
+						buf[idx++] = *(uint32_t *)&c3::Color::iGreen;
+				}
+
+				for (size_t y = 0; y < UTILITY_COLORS_H / 4; y++)
+				{
+					for (size_t x = 0; x < UTILITY_COLORS_W; x++)
+						buf[idx++] = *(uint32_t *)&c3::Color::iBlue;
+				}
+
+				for (size_t y = 0; y < UTILITY_COLORS_H / 4; y++)
+				{
+					for (size_t x = 0; x < UTILITY_COLORS_W; x++)
+						buf[idx++] = *(uint32_t *)&c3::Color::iMagenta;
+				}
+
+				m_UtilityColorTex->Unlock();
+			}
+		}
+	}
+
+	return m_UtilityColorTex;
+}
+
+
 MaterialManager *RendererImpl::GetMaterialManager()
 {
 	if (!m_MatMan)
@@ -2605,7 +2856,7 @@ const Material *RendererImpl::GetWhiteMaterial()
 
 		if (m_mtlWhite)
 		{
-			m_mtlWhite->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &Color::White);
+			m_mtlWhite->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &Color::fWhite);
 			m_mtlWhite->SetWindingOrder(Renderer::WindingOrder::WO_CCW);
 			m_mtlWhite->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERFRONT));
 		}

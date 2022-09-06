@@ -345,7 +345,7 @@ void QuadTerrainImpl::Render(Object *pobject, props::TFlags64 rendflags)
 	}
 
 	Renderer::FillMode fillmode = prend->GetFillMode();
-//	prend->SetFillMode(Renderer::FillMode::FM_WIRE);
+	prend->SetFillMode(Renderer::FillMode::FM_WIRE);
 	RenderQuad(m_Root, rendflags);
 	prend->SetFillMode(fillmode);
 }
@@ -460,10 +460,10 @@ QuadTerrainImpl::CTerrainQuadNode *QuadTerrainImpl::GenerateGeometryQuadSet(size
 	{
 		ptq->m_Mtl->SetWindingOrder(Renderer::WindingOrder::WO_CCW);
 		props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
-		Resource *pnt = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("terrain-normal.jpg"), rf);
+		Resource *pnt = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("[blue.tex]" /*"terrain-normal.jpg"*/), rf);
 		ptq->m_Mtl->SetTexture(Material::TextureComponentType::TCT_NORMAL, pnt);
 
-		glm::fvec4 tc(0.55f, 0.48f, 0.12f, 1.0f);
+		glm::fvec4 tc(0.25f, 0.68f, 0.12f, 1.0f);
 		ptq->m_Mtl->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &tc);
 	}
 

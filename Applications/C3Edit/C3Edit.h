@@ -54,7 +54,7 @@ public:
 	C3EditApp() noexcept;
 
 protected:
-	CMultiDocTemplate* m_pDocTemplate;
+	CSingleDocTemplate* m_pDocTemplate;
 public:
 
 

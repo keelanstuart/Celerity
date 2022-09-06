@@ -12,12 +12,12 @@
 using namespace c3;
 
 
-ResourceImpl::ResourceImpl(System *psys, const TCHAR *filename, const ResourceType *prestype, void *data)
+ResourceImpl::ResourceImpl(System *psys, const TCHAR *filename, const ResourceType *prestype, const void *data)
 {
 	m_pSys = psys;
 	m_Filename = filename;
 	m_pResType = prestype;
-	m_Data = data;
+	m_Data = (void *)data;
 	if (!m_Data)
 	{
 		m_Status = Resource::Status::RS_NONE;

@@ -15,6 +15,7 @@ namespace c3
 
 	class VirtualKeyboardImpl : public InputDeviceImpl
 	{
+#define HW_KB_KEYS	256
 
 	public:
 
@@ -28,7 +29,7 @@ namespace c3
 		void SetDefaultKeyMapping();
 
 	protected:
-		int real_to_virtual[InputDevice::MAXBUTTONS];
+		int real_to_virtual[HW_KB_KEYS];
 
 	};
 

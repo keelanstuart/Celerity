@@ -45,7 +45,7 @@ namespace c3
 		// queue (non-blocking; returns "instantly") and brought in by a worker thread.
 		// In either case, the resource status should be checked prior to accessing it's
 		// data.
-		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags = 0, const ResourceType *restype = nullptr) = NULL;
+		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags = 0, const ResourceType *restype = nullptr, const void *data = nullptr) = NULL;
 
 		// For all the resources currently managed by the system, call back into this function. Optionally filter by ResourceType.
 		virtual void ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype = nullptr, props::TFlags64 restypeflags = 0, ResTypeFlagMode flagmode = RTFM_IGNORE) = NULL;

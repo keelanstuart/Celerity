@@ -216,6 +216,7 @@
     <ClInclude Include="Source\gl_wrapper.h" />
     <ClInclude Include="$(SolutionDir)third-party\tinyxml2\tinyxml2.h" />
     <ClInclude Include="Source\pch.h" />
+    <ClInclude Include="Source\resource.h" />
     <ClInclude Include="Source\TinyJS.h" />
     <ClInclude Include="Source\TinyJS_Functions.h" />
     <ClInclude Include="Source\TinyJS_MathFunctions.h" />
@@ -232,6 +233,7 @@
   <ItemGroup>
     <Image Include="Source\c3splash.png" />
     <Image Include="Source\c3splash2.png" />
+    <Image Include="Source\ortho_ref.png" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -27,8 +27,8 @@ bool VirtualKeyboardImpl::Update(float elapsed_seconds)
 	HRESULT hr = m_pDIDevice->Poll();
 	m_bAttached = SUCCEEDED(hr);
 
-	uint8_t raw_states[256];
-	ZeroMemory(&raw_states, 256);
+	uint8_t raw_states[HW_KB_KEYS];
+	ZeroMemory(&raw_states, HW_KB_KEYS);
 
 	// Get the input's device state, and put the state in dims
 	if (m_bAttached)
@@ -38,19 +38,21 @@ bool VirtualKeyboardImpl::Update(float elapsed_seconds)
 	memset(button_downnow, 0, sizeof(bool) * InputDevice::MAXBUTTONS);
 
 	// go through each key in the raw keyboard data...
-	for (size_t i = 0; i < InputDevice::MAXBUTTONS; i++)
+	for (size_t i = 0; i < HW_KB_KEYS; i++)
 	{
 		// get the "virtual" key that the real key maps to...
 		int mapto = real_to_virtual[i];
 
 		// if the mapping is valid, then update our virtual keys...
-		if (mapto >= 0)
-		{
-			button_downnow[mapto] |= raw_states[i] ? true : false;
+		if ((mapto >= 0) && raw_states[i])
+			button_downnow[mapto] |= true;
+	}
 
-			m_ButtonDelta[mapto] = button_downnow[mapto] - m_ButtonState[mapto];
-			m_ButtonState[mapto] = button_downnow[mapto] ? InputDevice::BUTTONVAL_MAX : 0;
-		}
+	for (size_t j = 0; j < InputDevice::MAXBUTTONS; j++)
+	{
+		int tmpstate = button_downnow[j] ? InputDevice::BUTTONVAL_MAX : 0;
+		m_ButtonDelta[j] = tmpstate - m_ButtonState[j];
+		m_ButtonState[j] = tmpstate;
 	}
 
 	return __super::Update(elapsed_seconds);
@@ -59,7 +61,7 @@ bool VirtualKeyboardImpl::Update(float elapsed_seconds)
 void VirtualKeyboardImpl::SetDefaultKeyMapping()
 {
 	// Reset all our mappings
-	for (size_t i = 0; i < InputDevice::MAXBUTTONS; i++)
+	for (size_t i = 0; i < HW_KB_KEYS; i++)
 		real_to_virtual[i] = -1;
 	
 	// map our debug key to the ctrl keys

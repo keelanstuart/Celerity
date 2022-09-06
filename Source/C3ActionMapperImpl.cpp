@@ -115,7 +115,6 @@ void ActionMapperImpl::Update()
 						a.func(pid, user, it->second, pid->ButtonPressedProportional(it->second), a.userdata);
 						break;
 					}
-					break;
 				}
 			}
 		}

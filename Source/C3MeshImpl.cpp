@@ -273,7 +273,9 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 
 			for (size_t face = 0, max_face = m_IB->Count() / 3, i = 0; face < max_face; face++)
 			{
+				// assume the first element in the vertex is position
 				glm::vec3 *v[3];
+
 				v[0] = (glm::vec3 *)(pvb + (vsz * pib[i++]));
 				v[1] = (glm::vec3 *)(pvb + (vsz * pib[i++]));
 				v[2] = (glm::vec3 *)(pvb + (vsz * pib[i++]));
@@ -281,10 +283,19 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 				glm::vec2 luv;
 				float ldist;
 
-				bool hit = glm::intersectRayTriangle(*pRayPos, *pRayDir, *v[0], *v[1], *v[2], luv, ldist);
+				// ignore backfacing triangles
+				glm::fvec3 na = glm::normalize(*v[1] - *v[0]);
+				glm::fvec3 nb = glm::normalize(*v[2] - *v[0]);
+				glm::fvec3 n = glm::normalize(glm::cross(na, nb));
+				if (glm::dot(n, *pRayDir) >= 0)
+					continue;
+
+				// check for a collision
+				bool hit = glm::intersectRayTriangle(*pRayPos, *pRayDir, *v[0], *v[2], *v[1], luv, ldist);
 
 				if (hit)
 				{
+					// get the nearest collision
 					if (ldist < *pcdist)
 					{
 						*pcdist = ldist;

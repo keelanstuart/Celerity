@@ -23,7 +23,7 @@ namespace c3
 
 	public:
 
-		ResourceImpl(System *psys, const TCHAR *filename, const ResourceType *prestype, void *data = nullptr);
+		ResourceImpl(System *psys, const TCHAR *filename, const ResourceType *prestype, const void *data = nullptr);
 
 		virtual ~ResourceImpl();
 

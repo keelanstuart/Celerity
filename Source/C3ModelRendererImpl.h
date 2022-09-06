@@ -20,10 +20,10 @@ namespace c3
 		Object *m_pOwner;
 		Positionable *m_pPos;
 
-		glm::fvec3 m_p;
-		glm::fquat m_o;
-		glm::fvec3 m_s;
-		glm::fmat4x4 m_m;
+		glm::fvec3 m_Pos;
+		glm::fquat m_Ori;
+		glm::fvec3 m_Scl;
+		glm::fmat4x4 m_Mat, m_MatN;
 
 		ShaderComponent *m_VS_defobj;
 		ShaderComponent *m_FS_defobj;
@@ -62,8 +62,6 @@ namespace c3
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
-		virtual bool HitTest(glm::fvec3 *ray_pos, glm::fvec3 *rayvec) const;
-
 		virtual void SetPos(float x, float y, float z);
 
 		virtual const glm::fvec3 *GetPosVec(glm::fvec3 *pos = nullptr);
@@ -75,6 +73,10 @@ namespace c3
 		virtual void SetScl(float x, float y, float z);
 
 		virtual const glm::fvec3 *GetScl(glm::fvec3 *scl = nullptr);
+
+		virtual const glm::fmat4x4 *GetMatrix(glm::fmat4x4 *mat = nullptr) const;
+
+		virtual const Model *GetModel() const;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
 

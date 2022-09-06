@@ -249,7 +249,7 @@ bool FactoryImpl::LoadPrototypes(genio::IInputStream *is)
 				if (namelen)
 				{
 					name.resize(namelen, _T('#'));
-					is->ReadString((TCHAR *)name.c_str());
+					is->Read(name.data(), sizeof(TCHAR) * namelen);
 				}
 				p->SetName(name.c_str());
 
@@ -259,7 +259,7 @@ bool FactoryImpl::LoadPrototypes(genio::IInputStream *is)
 				if (grouplen)
 				{
 					group.resize(grouplen, _T('#'));
-					is->ReadString((TCHAR *)group.c_str());
+					is->Read(group.data(), sizeof(TCHAR) * grouplen);
 				}
 				p->SetGroup(group.c_str());
 

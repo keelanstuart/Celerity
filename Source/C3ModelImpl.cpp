@@ -18,11 +18,17 @@
 
 using namespace c3;
 
+Model *Model::Create(Renderer *prend)
+{
+	return new ModelImpl((RendererImpl *)prend);
+}
+
 
 ModelImpl::ModelImpl(RendererImpl *prend)
 {
 	m_pRend = prend;
 	m_MatStack = MatrixStack::Create();
+	m_Bounds = BoundingBox::Create();
 }
 
 
@@ -316,9 +322,13 @@ const Material *ModelImpl::GetMaterial(MeshIndex midx) const
 }
 
 
-const BoundingBox *ModelImpl::GetBounds() const
+const BoundingBox *ModelImpl::GetBounds(BoundingBox *pbb) const
 {
-	return nullptr;
+	if (!pbb)
+		return m_Bounds;
+
+	*pbb = *m_Bounds;
+	return pbb;
 }
 
 
@@ -410,17 +420,19 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, si
 
 		// from this point, only draw top-level nodes
 		if (node->parent == NO_PARENT)
+		{
 			ret = IntersectNode(node, pRayPos, pRayDir, &d, pFaceIndex, pUV);
 
-		if (ret && (d < mindist))
-		{
-			if (pMeshIndex)
-				*pMeshIndex = ni;
+			if (ret && (d < mindist))
+			{
+				if (pMeshIndex)
+					*pMeshIndex = ni;
 
-			if (pDistance)
-				*pDistance = d;
+				if (pDistance)
+					*pDistance = d;
 
-			d = mindist;
+				d = mindist;
+			}
 		}
 	}
 
@@ -443,8 +455,9 @@ bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, 
 
 	glm::fmat4x4 m;
 	m_MatStack->Top(&m);
+	m = glm::inverse(m);
 
-	glm::vec4 rp(pRayPos->x, pRayPos->y, pRayPos->z, 0);
+	glm::vec4 rp(pRayPos->x, pRayPos->y, pRayPos->z, 1);
 	glm::vec3 rpt = m * rp;
 
 	glm::fmat4x4 mit = glm::inverseTranspose(m);
@@ -680,6 +693,8 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 
 		TMeshIndexMap mim;
 
+		glm::fvec3 vmin(FLT_MAX, FLT_MAX, FLT_MAX), vmax(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
 		for (size_t i = 0; i < scene->mNumMeshes; i++)
 		{
 			Mesh *pm = psys->GetRenderer()->CreateMesh();
@@ -784,6 +799,21 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 					{
 						case VertexBuffer::ComponentDescription::EUsage::VU_POSITION:
 							pmd_3f = scene->mMeshes[i]->mVertices;
+
+							if (pmd_3f->x < vmin.x)
+								vmin.x = pmd_3f->x;
+							if (pmd_3f->y < vmin.y)
+								vmin.y = pmd_3f->y;
+							if (pmd_3f->z < vmin.z)
+								vmin.z = pmd_3f->z;
+
+							if (pmd_3f->x > vmax.x)
+								vmax.x = pmd_3f->x;
+							if (pmd_3f->y > vmax.y)
+								vmax.y = pmd_3f->y;
+							if (pmd_3f->z > vmax.z)
+								vmax.z = pmd_3f->z;
+
 							break;
 
 						case VertexBuffer::ComponentDescription::EUsage::VU_NORMAL:

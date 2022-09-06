@@ -34,6 +34,8 @@
 
 //#define GLLIBGEN_LOGCALLS
 
+extern HMODULE g_C3Mod;
+
 #define C3_PI		3.14159f
 
 typedef std::basic_string<TCHAR, std::char_traits<TCHAR>, std::allocator<TCHAR> > tstring;

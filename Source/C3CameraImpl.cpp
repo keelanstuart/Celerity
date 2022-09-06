@@ -26,7 +26,7 @@ CameraImpl::CameraImpl()
 
 	m_dim = glm::vec2(2048.0f, 2048.0f);
 	m_fov = 60.0f;
-	m_eyepos = glm::vec3(0, -10.0f, 0);
+	m_eyepos = glm::vec3(0, 0, 0);
 	m_targpos = glm::vec3(0, 0, 0);
 	m_nearclip = 0.01f;
 	m_farclip = 1400.0f;
@@ -98,42 +98,62 @@ void CameraImpl::Update(Object *pobject, float elapsed_time)
 
 	if (m_Flags.IsSet(CAMFLAG_REBUILDMATRICES) || m_pcpos->Flags().IsSet(POSFLAG_MATRIXCHANGED))
 	{
-		m_pcpos->GetPosVec(&m_eyepos);
-		m_targpos = m_eyepos;
-
-		glm::vec3 adj;
-		m_pcpos->GetFacingVector(&adj);
-		adj *= m_orbitdist;
+		glm::vec3 facing;
+		m_pcpos->GetFacingVector(&facing);
 
 		switch (m_viewmode)
 		{
 			// In LOOKAT m_Mode, the eye position is actually located at camera position,
 			// and the lookat position is the position plus the orientation vector
 			case VM_LOOKAT:
-				m_targpos += adj;
+				m_pcpos->GetPosVec(&m_eyepos);
+				m_targpos = m_eyepos + facing;
 				break;
 
 			// In POLAR m_Mode, the lookat position is the camera position...
 			// the eye location is derived by multiplying the orientation by the distance
 			default:
 			case VM_POLAR:
-				m_eyepos -= adj;
+				m_pcpos->GetPosVec(&m_targpos);
+				m_eyepos = m_targpos - (facing * m_orbitdist);
 				break;
 		}
 
-		glm::fvec3 up;
+		glm::fvec3 up, right;
 		m_pcpos->GetLocalUpVector(&up);
-		m_view = glm::lookAtLH(m_eyepos, m_targpos, up);
+		m_pcpos->GetLocalRightVector(&right);
+
+		// glm's lookAt is busted. Using it results in incorrect placement of the eyepoint (opposite facing)
+#if 1
+		m_view = glm::lookAt(m_eyepos, m_targpos, up);
+#else
+		m_view[0][0] = right.x;
+		m_view[1][0] = right.y;
+		m_view[2][0] = right.z;
+		m_view[3][0] = -glm::dot(m_eyepos, right);
+		m_view[0][1] = up.x;
+		m_view[1][1] = up.y;
+		m_view[2][1] = up.z;
+		m_view[3][1] = -glm::dot(m_eyepos, up);
+		m_view[0][2] = facing.x;
+		m_view[1][2] = facing.y;
+		m_view[2][2] = facing.z;
+		m_view[3][2] = -glm::dot(m_eyepos, facing);
+		m_view[0][3] = 0.0f;
+		m_view[1][3] = 0.0f;
+		m_view[2][3] = 0.0f;
+		m_view[3][3] = 1.0f;
+#endif
 
 		switch (m_projmode)
 		{
 			default:
 			case PM_PERSPECTIVE:
-				m_proj = glm::perspectiveFovLH(m_fov, m_dim.x, m_dim.y, m_nearclip, m_farclip);
+				m_proj = glm::perspectiveFov(m_fov, m_dim.x, m_dim.y, m_nearclip, m_farclip);
 				break;
 
 			case PM_ORTHOGRAPHIC:
-				m_proj = glm::orthoLH(0.0f, 2048.0f, 0.0f, 2048.0f, m_nearclip, m_farclip);
+				m_proj = glm::ortho(0.0f, 2048.0f, 0.0f, 2048.0f, m_nearclip, m_farclip);
 				break;
 		}
 

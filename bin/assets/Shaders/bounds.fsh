@@ -1,16 +1,13 @@
-uniform sampler2D uSamplerDiffuse;
-uniform vec4 uColorDiffuse;
+uniform float uAlphaPass;
 
-in vec3 fNorm;
-in vec4 fColor;
-in vec2 fTex0;
+in vec4 fColor0;
 
 layout (location=0) out vec4 fragment;
 
 void main()
 {
-	fragment = texture(uSamplerDiffuse, fTex0) * uColorDiffuse;
-
-	if (fragment.a < 0.1)
+	if (fColor0.a <= uAlphaPass)
 		discard;
+
+	fragment = fColor0;
 }

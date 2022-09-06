@@ -24,9 +24,18 @@ protected:
 // Operations
 public:
 	void ClearSelection();
-	void AddToSelection(c3::Object *obj);
-	void RemoveFromSelection(c3::Object *obj);
+	bool IsSelected(const c3::Object *obj) const;
+	void AddToSelection(const c3::Object *obj);
+	void RemoveFromSelection(const c3::Object *obj);
 	size_t GetNumSelected();
+	c3::Object *GetSelection(size_t index) const;
+
+	void ComputePickRay(POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const;
+	c3::Object *Pick(POINT p) const;
+
+	void UpdateStatusMessage(c3::Object *pobj = nullptr);
+
+	void AdjustYawPitch(float yawadj, float pitchadj, bool redraw = true);
 
 // Overrides
 public:
@@ -64,6 +73,9 @@ protected:
 	static c3::ShaderComponent *m_VS_combine;
 	static c3::ShaderComponent *m_FS_combine;
 	static c3::ShaderProgram *m_SP_combine;
+	static c3::ShaderComponent *m_VS_bounds;
+	static c3::ShaderComponent *m_FS_bounds;
+	static c3::ShaderProgram *m_SP_bounds;
 
 	static int32_t m_ulSunDir;
 	static int32_t m_ulSunColor;
@@ -73,12 +85,19 @@ protected:
 	static glm::fvec3 m_AmbientColor;
 	static int32_t m_uBlurTex;
 	static int32_t m_uBlurScale;
+	static c3::MatrixStack *m_SelectionXforms;
 
 	static RENDERDOC_API_1_4_0 *m_pRenderDoc;
 	bool m_RenderDocCaptureFrame;
 
+	c3::Object *m_pHoverObj;
+
 	CPoint m_MousePos;
 	UINT_PTR m_DrawTimer;
+	UINT_PTR m_PickTimer;
+	glm::fvec3 m_BasePickPos;
+	glm::fvec3 m_BasePickVec;
+
 
 // Generated message map functions
 protected:
@@ -94,8 +113,8 @@ public:
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
-	afx_msg void OnUpdateEditTriggerrenderdoccapture(CCmdUI *pCmdUI);
-	afx_msg void OnEditTriggerrenderdoccapture();
+	afx_msg void OnUpdateEditTriggerRenderDocCapture(CCmdUI *pCmdUI);
+	afx_msg void OnEditTriggerRenderDocCapture();
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnSetFocus(CWnd *pOldWnd);

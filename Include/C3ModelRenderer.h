@@ -36,9 +36,6 @@ namespace c3
 
 		virtual void PropertyChanged(const props::IProperty *pprop) = NULL;
 
-		// Performs a raycast collision versus the model, returning the first hit
-		virtual bool HitTest(glm::fvec3 *ray_pos, glm::fvec3 *rayvec) const = NULL;
-
 		// Sets the origin position of the model (offsets any effects of Positionable); linked to 'MPOS' property
 		virtual void SetPos(float x, float y, float z) = NULL;
 
@@ -57,7 +54,13 @@ namespace c3
 		// Gets the origin scale of the model
 		virtual const glm::fvec3 *GetScl(glm::fvec3 *scl = nullptr) = NULL;
 
-		// Casts a ray against the model
+		// Gets the transform composed of the given pos, ori, scl values
+		virtual const glm::fmat4x4 *GetMatrix(glm::fmat4x4 *mat = nullptr) const = NULL;
+
+		// Returns the model that is being rendered
+		virtual const Model *GetModel() const = NULL;
+
+		// Performs a raycast collision versus the model, returning the first hit
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const = NULL;
 
 	};

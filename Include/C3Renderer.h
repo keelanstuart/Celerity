@@ -338,6 +338,7 @@ namespace c3
 
 		virtual Mesh *GetBoundsMesh() = NULL;
 		virtual Mesh *GetCubeMesh() = NULL;
+		virtual Mesh *GetRefCubeMesh() = NULL;
 
 		virtual Mesh *GetXYPlaneMesh() = NULL;
 		virtual Mesh *GetYZPlaneMesh() = NULL;
@@ -351,6 +352,8 @@ namespace c3
 		virtual Texture2D *GetBlueTexture() = NULL;
 		virtual Texture2D *GetGridTexture() = NULL;
 		virtual Texture2D *GetLinearGradientTexture() = NULL;
+		virtual Texture2D *GetOrthoRefTexture() = NULL;
+		virtual Texture2D *GetUtilityColorTexture() = NULL;
 
 		virtual MaterialManager *GetMaterialManager() = NULL;
 		virtual const Material *GetWhiteMaterial() = NULL;

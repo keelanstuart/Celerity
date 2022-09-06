@@ -118,18 +118,18 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 
 			m_NeedsConfig = true;
 		}
-	}
 
-	if (flags.IsSet(VBLOCKFLAG_CACHE))
-	{
-		if (m_Cache)
+		if (flags.IsSet(VBLOCKFLAG_CACHE))
 		{
-			size_t cache_sz = _msize(m_Cache);
-			if (cache_sz != (sz * numverts))
-				free(m_Cache);
-		}
+			if (m_Cache)
+			{
+				size_t cache_sz = _msize(m_Cache);
+				if (cache_sz != (sz * numverts))
+					free(m_Cache);
+			}
 
-		m_Cache = malloc(sz * numverts);
+			m_Cache = malloc(sz * numverts);
+		}
 	}
 
 	// if we want read-only access, then use the cache if one is available. this avoids a map/unmap
@@ -213,12 +213,12 @@ void VertexBufferImpl::Unlock()
 				memcpy(m_Cache, m_Buffer, m_VertSize * m_NumVerts);
 
 			m_Rend->gl.UnmapBuffer(GL_ARRAY_BUFFER);
+
+			ConfigureAttributes();
 		}
 
 		m_Buffer = NULL;
 	}
-
-	ConfigureAttributes();
 }
 
 

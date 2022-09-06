@@ -14,12 +14,14 @@ using namespace c3;
 DECLARE_COMPONENTTYPE(ModelRenderer, ModelRendererImpl);
 
 
-ModelRendererImpl::ModelRendererImpl() : m_p(0, 0, 0), m_o(0, 0, 0, 1), m_s(1, 1, 1)
+ModelRendererImpl::ModelRendererImpl() : m_Pos(0, 0, 0), m_Ori(0, 0, 0, 1), m_Scl(1, 1, 1)
 {
 	m_pPos = nullptr;
 	m_FS_defobj = m_VS_defobj = nullptr;
 	m_SP_defobj = nullptr;
 	m_Mod = TModOrRes(nullptr, nullptr);
+	m_Mat = glm::identity<glm::fmat4x4>();
+	m_MatN = glm::identity<glm::fmat4x4>();
 
 	m_Flags.SetAll(MRIF_REBUILDMATRIX);
 }
@@ -61,10 +63,10 @@ bool ModelRendererImpl::Initialize(Object *pobject)
 		return false;
 
 	props::IProperty *pp;
-	pp = props->CreateReferenceProperty(_T("ModelPosition"), 'MPOS', &m_p, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
-	pp = props->CreateReferenceProperty(_T("ModelOrientation"), 'MORI', &m_o, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4);
+	pp = props->CreateReferenceProperty(_T("ModelPosition"), 'MPOS', &m_Pos, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	pp = props->CreateReferenceProperty(_T("ModelOrientation"), 'MORI', &m_Ori, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4);
 	pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_QUATERNION);
-	pp = props->CreateReferenceProperty(_T("ModelScale"), 'MSCL', &m_s, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	pp = props->CreateReferenceProperty(_T("ModelScale"), 'MSCL', &m_Scl, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
 
 	return true;
 }
@@ -78,10 +80,12 @@ void ModelRendererImpl::Update(Object *pobject, float elapsed_time)
 	if (m_Flags.IsSet(MRIF_REBUILDMATRIX))
 	{
 		// Scale first, then rotate...
-		m_m = glm::scale(glm::identity<glm::fmat4x4>(), m_s) * (glm::fmat4x4)m_o;
+		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * (glm::fmat4x4)m_Ori;
 
 		// Then translate last... 
-		m_m = glm::translate(glm::identity<glm::fmat4x4>(), m_p) * m_m;
+		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * m_Mat;
+
+		m_MatN = glm::inverseTranspose(m_Mat);
 
 		m_Flags.Clear(MRIF_REBUILDMATRIX);
 	}
@@ -191,7 +195,7 @@ void ModelRendererImpl::Render(Object *pobject, props::TFlags64 rendflags)
 		prend->UseProgram(m_SP_shadowobj);
 	}
 
-	glm::fmat4x4 mat = *m_pPos->GetTransformMatrix() * m_m;
+	glm::fmat4x4 mat = *m_pPos->GetTransformMatrix() * m_Mat;
 	if (pmod)
 	{
 		pmod->Draw(&mat);
@@ -238,17 +242,11 @@ void ModelRendererImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool ModelRendererImpl::HitTest(glm::fvec3 *ray_pos, glm::fvec3 *rayvec) const
-{
-	return false;
-}
-
-
 void ModelRendererImpl::SetPos(float x, float y, float z)
 {
-	m_p.x = x;
-	m_p.y = y;
-	m_p.z = z;
+	m_Pos.x = x;
+	m_Pos.y = y;
+	m_Pos.z = z;
 	m_Flags.Set(MRIF_REBUILDMATRIX);
 }
 
@@ -256,9 +254,9 @@ void ModelRendererImpl::SetPos(float x, float y, float z)
 const glm::fvec3 *ModelRendererImpl::GetPosVec(glm::fvec3 *pos)
 {
 	if (!pos)
-		return &m_p;
+		return &m_Pos;
 	
-	*pos = m_p;
+	*pos = m_Pos;
 	return pos;
 }
 
@@ -268,7 +266,7 @@ void ModelRendererImpl::SetOriQuat(const glm::fquat *ori)
 	if (!ori)
 		return;
 
-	m_o = *ori;
+	m_Ori = *ori;
 	m_Flags.Set(MRIF_REBUILDMATRIX);
 }
 
@@ -276,18 +274,18 @@ void ModelRendererImpl::SetOriQuat(const glm::fquat *ori)
 const glm::fquat *ModelRendererImpl::GetOriQuat(glm::fquat *ori)
 {
 	if (!ori)
-		return &m_o;
+		return &m_Ori;
 
-	*ori = m_o;
+	*ori = m_Ori;
 	return ori;
 }
 
 
 void ModelRendererImpl::SetScl(float x, float y, float z)
 {
-	m_s.x = x;
-	m_s.y = y;
-	m_s.z = z;
+	m_Scl.x = x;
+	m_Scl.y = y;
+	m_Scl.z = z;
 	m_Flags.Set(MRIF_REBUILDMATRIX);
 }
 
@@ -295,14 +293,51 @@ void ModelRendererImpl::SetScl(float x, float y, float z)
 const glm::fvec3 *ModelRendererImpl::GetScl(glm::fvec3 *scl)
 {
 	if (!scl)
-		return &m_s;
+		return &m_Scl;
 
-	*scl = m_s;
+	*scl = m_Scl;
 	return scl;
+}
+
+const glm::fmat4x4 *ModelRendererImpl::GetMatrix(glm::fmat4x4 *mat) const
+{
+	if (!mat)
+		return &m_Mat;
+
+	*mat = m_Mat;
+	return mat;
+}
+
+const Model *ModelRendererImpl::GetModel() const
+{
+	Model *pmod = m_Mod.first;
+	if (!pmod && m_Mod.second && (m_Mod.second->GetStatus() == Resource::Status::RS_LOADED))
+	{
+		// if the resource is loaded and actually a model, use it
+		pmod = dynamic_cast<Model *>((Model *)(m_Mod.second->GetData()));
+	}
+
+	return pmod;
 }
 
 
 bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const
 {
-	return false;
+	bool ret = false;
+
+	const Model *pmod = GetModel();
+
+	if (pmod)
+	{
+		size_t meshidx;
+		float dist;
+		size_t faceidx;
+		glm::vec2 uv;
+
+		ret = pmod->Intersect(pRayPos, pRayDir, &meshidx, &dist, &faceidx, &uv);
+		if (ret && pDistance)
+			*pDistance = dist;
+	}
+
+	return ret;
 }

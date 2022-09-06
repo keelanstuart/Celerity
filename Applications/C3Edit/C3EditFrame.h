@@ -57,7 +57,7 @@ public:
 protected:
 	CMFCToolBarButton *GetToolButtonByID(CMFCToolBar *toolbar, DWORD butid);
 
-protected:  // control bar embedded members
+public:  // control bar embedded members
 	COutputWnd        m_wndOutput;
 	CMFCMenuBar       m_wndMenuBar;
 	CMFCToolBar       m_wndToolBar;

@@ -200,9 +200,9 @@ Component *ObjectImpl::AddComponent(const ComponentType *pctype, bool init)
 }
 
 
-void ObjectImpl::RemoveComponent(Component *pcomportmemt)
+void ObjectImpl::RemoveComponent(Component *pcomponent)
 {
-	TComponentArray::iterator it = std::find(m_Components.begin(), m_Components.end(), pcomportmemt);
+	TComponentArray::iterator it = std::find(m_Components.begin(), m_Components.end(), pcomponent);
 	if (it != m_Components.end())
 	{
 		(*it)->GetType()->Destroy((*it));
@@ -287,19 +287,13 @@ bool ObjectImpl::Load(genio::IInputStream *is)
 
 			uint16_t len;
 			is->ReadUINT16(len);
-			m_Name.resize(len);
-			is->ReadString((TCHAR *)(m_Name.c_str()));
+			if (len)
+			{
+				m_Name.resize(len, _T('#'));
+				is->Read(m_Name.data(), sizeof(TCHAR) * len);
+			}
 
 			is->Read(&m_Flags, sizeof(props::TFlags64));
-
-			size_t propssz, propsbr;
-			is->ReadUINT64(propssz);
-			if (propssz)
-			{
-				BYTE *propsbuf = (BYTE *)_alloca(propssz);
-				is->Read(propsbuf, propssz);
-				m_Props->Deserialize(propsbuf, propssz, &propsbr);
-			}
 
 			size_t ct;
 
@@ -310,6 +304,15 @@ bool ObjectImpl::Load(genio::IInputStream *is)
 				GUID g;
 				is->Read(&g, sizeof(GUID));
 				AddComponent(m_pSys->GetFactory()->FindComponentType(g));
+			}
+
+			size_t propssz, propsbr;
+			is->ReadUINT64(propssz);
+			if (propssz)
+			{
+				BYTE *propsbuf = (BYTE *)_alloca(propssz);
+				is->Read(propsbuf, propssz);
+				m_Props->Deserialize(propsbuf, propssz, &propsbr);
 			}
 
 			// read children
@@ -345,23 +348,26 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags)
 
 		uint16_t len = (uint16_t)m_Name.length();
 		os->WriteUINT16(len);
-		os->WriteString((TCHAR *)(m_Name.c_str()));
+		if (len)
+			os->Write(m_Name.c_str(), sizeof(TCHAR) * len);
 
 		os->Write(&m_Flags, sizeof(props::TFlags64));
-
-		size_t propssz = 0;
-		if (m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_TERSE, nullptr, 0, &propssz) && propssz)
-		{
-			BYTE *propsbuf = (BYTE *)_alloca(propssz);
-			m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_TERSE, propsbuf, propssz);
-			os->Write(propsbuf, propssz);
-		}
 
 		os->WriteUINT64(GetNumComponents());
 		for (auto comp : m_Components)
 		{
 			GUID g = comp->GetType()->GetGUID();
 			os->Write(&g, sizeof(GUID));
+		}
+
+		size_t propssz = 0;
+		m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_TERSE, nullptr, 0, &propssz);
+		os->WriteUINT64(propssz);
+		if (propssz)
+		{
+			BYTE *propsbuf = (BYTE *)_alloca(propssz);
+			m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_TERSE, propsbuf, propssz);
+			os->Write(propsbuf, propssz);
 		}
 
 		os->WriteUINT64(GetNumChildren());
@@ -379,13 +385,88 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags)
 
 void ObjectImpl::PostLoad()
 {
+	for (size_t i = 0, maxi = m_Props->GetPropertyCount(); i < maxi; i++)
+	{
+		for (auto comp : m_Components)
+		{
+			comp->PropertyChanged(m_Props->GetProperty(i));
+		}
+	}
+
 	Update();
 }
 
 
-bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const
+bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance, Object **ppHitObj, size_t child_depth) const
 {
-	return false;
+	if (!pRayPos || !pRayDir)
+		return false;
+
+	float tmpdist;
+	if (!pDistance)
+	{
+		pDistance = &tmpdist;
+		tmpdist = FLT_MAX;
+	}
+
+	bool ret = false;
+
+	glm::fmat4x4 t, tn;
+
+	Positionable *ppos = (Positionable *)((ObjectImpl *)this)->FindComponent(Positionable::Type());
+	if (ppos)
+	{
+		ppos->GetTransformMatrix(&t);
+		ppos->GetTransformMatrixNormal(&tn);
+	}
+	else
+	{
+		t = glm::identity<glm::fmat4x4>();
+		tn = glm::identity<glm::fmat4x4>();
+	}
+
+	glm::fmat4x4 invt = glm::inverse(t);
+	glm::fmat4x4 invtn = glm::inverse(tn);
+
+	glm::vec3 raypos = invt * glm::vec4(pRayPos->x, pRayPos->y, pRayPos->z, 1);
+	glm::vec3 raydir = glm::normalize(invtn * glm::vec4(pRayDir->x, pRayDir->y, pRayDir->z, 0));
+
+	float dist = FLT_MAX;
+	for (auto comp : m_Components)
+	{
+		if (comp->Intersect(&raypos, &raydir, &dist))
+		{
+			if (pDistance)
+			{
+				if (dist < *pDistance)
+				{
+					*pDistance = dist;
+					if (ppHitObj)
+						*ppHitObj = (Object *)this;
+				}
+			}
+			else if (ppHitObj)
+			{
+				*ppHitObj = (Object *)this;
+			}
+
+			ret = true;
+		}
+	}
+
+	if (child_depth > 0)
+	{
+		Object *hitobj = nullptr;
+		for (auto child : m_Children)
+		{
+			ret |= child->Intersect(&raypos, &raydir, pDistance, &hitobj, child_depth - 1);
+		}
+
+		if (ppHitObj)
+			*ppHitObj = hitobj;
+	}
+
+	return ret;
 }
 
 

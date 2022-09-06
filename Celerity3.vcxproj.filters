@@ -500,6 +500,9 @@
     <ClInclude Include="Include\C3QuadTerrain.h">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
+    <ClInclude Include="Source\resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Source\Celerity.rc">
@@ -511,6 +514,9 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="Source\c3splash.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="Source\ortho_ref.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

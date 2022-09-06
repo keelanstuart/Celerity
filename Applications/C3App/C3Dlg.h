@@ -49,11 +49,44 @@ protected:
 	std::deque<c3::Object *> m_Light;
 	std::deque<glm::fvec3> m_LightMove;
 
-	c3::Positionable *m_pControllablePos;
-	c3::Positionable *m_pCamPos;
+#define MAX_USERS	2
 
-	float m_CamYaw, m_CamPitch;
-	bool m_Run;
+	struct SControls
+	{
+		SControls() { memset(&move, 0, sizeof(SMove)); memset(&look, 0, sizeof(SLook)); }
+		struct SMove
+		{
+			float forward;
+			float backward;
+			float left;
+			float right;
+			float up;
+			float down;
+			float run;
+			float jump;
+		} move;
+
+		struct SLook
+		{
+			float up;
+			float down;
+			float left;
+			float right;
+		} look;
+
+	} m_Controls[MAX_USERS];
+
+	c3::Object *m_pControllable[MAX_USERS];
+
+	enum EViewMode
+	{
+		VM_FOLLOW_POSDIR = 0,
+		VM_FOLLOW_POS,
+		VM_FREE,
+
+		VM_NUMMODES
+	};
+	size_t m_ViewMode;
 
 	LARGE_INTEGER m_PerfFreq;
 	LARGE_INTEGER m_PerfTime;
@@ -76,12 +109,13 @@ public:
 	enum { IDD = IDD_C3APP_DIALOG };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 
 	void Cleanup();
 
 	void SetMouseEnabled(bool b);
+
 
 // Implementation
 protected:

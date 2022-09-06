@@ -33,9 +33,9 @@ MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend)
 	m_tex[ETextureComponentType::TCT_SURFACEDESC] = TTexOrRes(prend->GetGreyTexture(), nullptr);
 	m_tex[ETextureComponentType::TCT_POSITIONDEPTH] = TTexOrRes(prend->GetBlackTexture(), nullptr);
 
-	m_color[EColorComponentType::CCT_DIFFUSE] = Color::White;
-	m_color[EColorComponentType::CCT_EMISSIVE] = Color::Black;
-	m_color[EColorComponentType::CCT_SPECULAR] = Color::DarkGrey;
+	m_color[EColorComponentType::CCT_DIFFUSE] = Color::fWhite;
+	m_color[EColorComponentType::CCT_EMISSIVE] = Color::fBlack;
+	m_color[EColorComponentType::CCT_SPECULAR] = Color::fDarkGrey;
 
 	m_DepthTest = Renderer::Test::DT_LESSER;
 
@@ -64,7 +64,7 @@ void MaterialImpl::Release()
 
 void MaterialImpl::SetColor(ColorComponentType comptype, const glm::fvec4 *pcolor)
 {
-	m_color[comptype] = pcolor ? *pcolor : Color::Black;
+	m_color[comptype] = pcolor ? *pcolor : Color::fBlack;
 }
 
 

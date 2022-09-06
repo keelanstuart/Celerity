@@ -82,125 +82,6 @@ BOOL C3EditDoc::OnNewDocument()
 
 void C3EditDoc::Serialize(CArchive& ar)
 {
-	if (ar.IsStoring())
-	{
-		genio::IOutputStream *os = genio::IOutputStream::Create(ar.GetFile());
-		if (os->BeginBlock('CEL0'))
-		{
-			uint16_t len;
-
-			len = (uint16_t)m_Name.length();
-			os->WriteUINT16(len);
-			os->WriteString((TCHAR *)(m_Name.c_str()));
-
-			len = (uint16_t)m_Description.length();
-			os->WriteUINT16(len);
-			os->WriteString((TCHAR *)(m_Description.c_str()));
-
-			len = (uint16_t)m_Author.length();
-			os->WriteUINT16(len);
-			os->WriteString((TCHAR *)(m_Author.c_str()));
-
-			len = (uint16_t)m_Website.length();
-			os->WriteUINT16(len);
-			os->WriteString((TCHAR *)(m_Website.c_str()));
-
-			len = (uint16_t)m_Copyright.length();
-			os->WriteUINT16(len);
-			os->WriteString((TCHAR *)(m_Name.c_str()));
-
-			if (os->BeginBlock('CAM0'))
-			{
-				SPerViewInfo *pvi = &m_PerViewInfo.begin()->second;
-				c3::Object *cam = pvi->obj;
-				cam->Save(os, 0);
-
-				os->WriteFloat(pvi->pitch);
-				os->WriteFloat(pvi->yaw);
-
-				os->EndBlock();
-			}
-
-			if (os->BeginBlock('ENV0'))
-			{
-				os->Write(&m_ClearColor, sizeof(glm::fvec4), 1);
-
-				os->Write(&m_ShadowColor, sizeof(glm::fvec4), 1);
-
-				os->Write(&m_FogColor, sizeof(glm::fvec4), 1);
-				os->WriteFloat(m_FogDensity);
-
-				os->EndBlock();
-			}
-
-			m_RootObj->Save(os, 0);
-
-			os->EndBlock();
-		}
-	}
-	else
-	{
-		genio::IInputStream *is = genio::IInputStream::Create(ar.GetFile());
-		genio::FOURCHARCODE b = is->NextBlockId();
-		if (b == 'CEL0')
-		{
-			if (is->BeginBlock(b))
-			{
-				uint16_t len;
-
-				is->ReadUINT16(len);
-				m_Name.resize(len);
-				is->ReadString((TCHAR *)(m_Name.c_str()));
-
-				is->ReadUINT16(len);
-				m_Description.resize(len);
-				is->ReadString((TCHAR *)(m_Description.c_str()));
-
-				is->ReadUINT16(len);
-				m_Author.resize(len);
-				is->ReadString((TCHAR *)(m_Author.c_str()));
-
-				is->ReadUINT16(len);
-				m_Website.resize(len);
-				is->ReadString((TCHAR *)(m_Website.c_str()));
-
-				is->ReadUINT16(len);
-				m_Copyright.resize(len);
-				is->ReadString((TCHAR *)(m_Name.c_str()));
-
-				if (is->BeginBlock('CAM0'))
-				{
-					SPerViewInfo pvi;
-
-					pvi.obj = theApp.m_C3->GetFactory()->Build();
-					pvi.obj->Load(is);
-
-					is->ReadFloat(pvi.pitch);
-					is->ReadFloat(pvi.yaw);
-					m_PerViewInfo.insert(TWndMappedObject::value_type(0, pvi));
-
-
-					is->EndBlock();
-				}
-
-				if (is->BeginBlock('ENV0'))
-				{
-					is->Read(&m_ClearColor, sizeof(glm::fvec4), 1);
-
-					is->Read(&m_ShadowColor, sizeof(glm::fvec4), 1);
-
-					is->Read(&m_FogColor, sizeof(glm::fvec4), 1);
-					is->ReadFloat(m_FogDensity);
-
-					is->EndBlock();
-				}
-
-				m_RootObj->Load(is);
-
-				is->EndBlock();
-			}
-		}
-	}
 }
 
 C3EditDoc::SPerViewInfo *C3EditDoc::GetPerViewInfo(HWND h)
@@ -242,6 +123,11 @@ C3EditDoc::SPerViewInfo *C3EditDoc::GetPerViewInfo(HWND h)
 	{
 		ppos->SetYawPitchRoll(0, 0, 0);
 	}
+
+	props::IProperty *campitch_min = c->GetProperties()->CreateProperty(_T("PitchCameraAngleMin"), 'PCAN');
+	campitch_min->SetFloat(-88.0f);
+	props::IProperty *campitch_max = c->GetProperties()->CreateProperty(_T("PitchCameraAngleMax"), 'PCAX');
+	campitch_max->SetFloat(88.0f);
 
 	SPerViewInfo pvi;
 	pvi.obj = c;
@@ -301,3 +187,169 @@ void C3EditDoc::Dump(CDumpContext& dc) const
 
 
 // C3EditDoc commands
+
+
+BOOL C3EditDoc::OnSaveDocument(LPCTSTR lpszPathName)
+{
+	if (!CDocument::OnSaveDocument(lpszPathName))
+		return FALSE;
+
+	genio::IOutputStream *os = genio::IOutputStream::Create();
+	if (!os || !os->Assign(lpszPathName) || !os->Open() || !os->CanAccess())
+		return FALSE;
+
+	if (os->BeginBlock('CEL0'))
+	{
+		uint16_t len;
+
+		len = (uint16_t)m_Name.length();
+		os->WriteUINT16(len);
+		if (len)
+			os->WriteString((TCHAR *)(m_Name.c_str()));
+
+		len = (uint16_t)m_Description.length();
+		os->WriteUINT16(len);
+		if (len)
+			os->WriteString((TCHAR *)(m_Description.c_str()));
+
+		len = (uint16_t)m_Author.length();
+		os->WriteUINT16(len);
+		if (len)
+			os->WriteString((TCHAR *)(m_Author.c_str()));
+
+		len = (uint16_t)m_Website.length();
+		os->WriteUINT16(len);
+		if (len)
+			os->WriteString((TCHAR *)(m_Website.c_str()));
+
+		len = (uint16_t)m_Copyright.length();
+		os->WriteUINT16(len);
+		if (len)
+			os->WriteString((TCHAR *)(m_Copyright.c_str()));
+
+		if (os->BeginBlock('CAM0'))
+		{
+			SPerViewInfo *pvi = &m_PerViewInfo.begin()->second;
+			c3::Object *cam = pvi->obj;
+			cam->Save(os, 0);
+
+			os->WriteFloat(pvi->pitch);
+			os->WriteFloat(pvi->yaw);
+
+			os->EndBlock();
+		}
+
+		if (os->BeginBlock('ENV0'))
+		{
+			os->Write(&m_ClearColor, sizeof(glm::fvec4));
+
+			os->Write(&m_ShadowColor, sizeof(glm::fvec4));
+
+			os->Write(&m_FogColor, sizeof(glm::fvec4));
+			os->WriteFloat(m_FogDensity);
+
+			os->EndBlock();
+		}
+
+		m_RootObj->Save(os, 0);
+
+		os->EndBlock();
+	}
+
+	os->Close();
+
+	SetModifiedFlag(FALSE);
+
+	return TRUE;
+}
+
+
+BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
+{
+	if (!CDocument::OnOpenDocument(lpszPathName))
+		return FALSE;
+
+	c3::Factory *pf = theApp.m_C3->GetFactory();
+	if (!pf)
+		return FALSE;
+
+	m_RootObj = pf->Build();
+	if (m_RootObj)
+	{
+		m_RootObj->AddComponent(c3::Positionable::Type());
+		m_RootObj->Flags().Set(c3::Object::OBJFLAG(c3::Object::LIGHT) | c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
+	}
+
+	genio::IInputStream *is = genio::IInputStream::Create();
+	if (!is || !is->Assign(lpszPathName) || !is->Open() || !is->CanAccess())
+		return FALSE;
+
+	genio::FOURCHARCODE b = is->NextBlockId();
+	if (b == 'CEL0')
+	{
+		if (is->BeginBlock(b))
+		{
+			uint16_t len;
+
+			is->ReadUINT16(len);
+			m_Name.resize(len);
+			if (len)
+				is->ReadString((TCHAR *)(m_Name.c_str()));
+
+			is->ReadUINT16(len);
+			m_Description.resize(len);
+			if (len)
+				is->ReadString((TCHAR *)(m_Description.c_str()));
+
+			is->ReadUINT16(len);
+			m_Author.resize(len);
+			if (len)
+				is->ReadString((TCHAR *)(m_Author.c_str()));
+
+			is->ReadUINT16(len);
+			m_Website.resize(len);
+			if (len)
+				is->ReadString((TCHAR *)(m_Website.c_str()));
+
+			is->ReadUINT16(len);
+			m_Copyright.resize(len);
+			if (len)
+				is->ReadString((TCHAR *)(m_Copyright.c_str()));
+
+			if (is->BeginBlock('CAM0'))
+			{
+				SPerViewInfo pvi;
+
+				pvi.obj = theApp.m_C3->GetFactory()->Build();
+				pvi.obj->Load(is);
+
+				is->ReadFloat(pvi.pitch);
+				is->ReadFloat(pvi.yaw);
+				m_PerViewInfo.insert(TWndMappedObject::value_type(0, pvi));
+
+				is->EndBlock();
+			}
+
+			if (is->BeginBlock('ENV0'))
+			{
+				is->Read(&m_ClearColor, sizeof(glm::fvec4));
+	
+				is->Read(&m_ShadowColor, sizeof(glm::fvec4));
+	
+				is->Read(&m_FogColor, sizeof(glm::fvec4));
+				is->ReadFloat(m_FogDensity);
+	
+				is->EndBlock();
+			}
+
+			if (m_RootObj)
+				m_RootObj->Load(is);
+
+			is->EndBlock();
+		}
+	}
+
+	is->Close();
+
+	return TRUE;
+}

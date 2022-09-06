@@ -62,6 +62,8 @@ namespace c3
 		TMeshInfoArray m_Meshes;
 
 		BoundingBox *m_Bounds;
+		float m_BoundingCentroid;
+		float m_BoundingRadius;
 
 		MatrixStack *m_MatStack;
 
@@ -109,7 +111,7 @@ namespace c3
 
 		virtual const Material *GetMaterial(MeshIndex midx) const;
 
-		virtual const BoundingBox *GetBounds() const;
+		virtual const BoundingBox *GetBounds(BoundingBox *pbb = nullptr) const;
 
 		virtual void Draw(const glm::fmat4x4 *pmat) const;
 

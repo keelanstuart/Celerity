@@ -110,8 +110,10 @@ namespace c3
 		bool m_AlphaCoverageInv;
 
 		VertexBuffer *m_CubeVB;
+		VertexBuffer *m_RefCubeVB;
 		Mesh *m_BoundsMesh;
 		Mesh *m_CubeMesh;
+		Mesh *m_RefCubeMesh;
 
 		VertexBuffer *m_FSPlaneVB;
 		VertexBuffer *m_PlanesVB;
@@ -128,6 +130,8 @@ namespace c3
 		Texture2D *m_BlueTex;
 		Texture2D *m_GridTex;
 		Texture2D *m_LinearGradientTex;
+		Texture2D *m_OrthoRefTex;
+		Texture2D *m_UtilityColorTex;
 
 		MaterialManagerImpl *m_MatMan;
 		Material *m_mtlWhite;
@@ -279,8 +283,10 @@ namespace c3
 		virtual VertexBuffer *GetFullscreenPlaneVB();
 
 		VertexBuffer *GetCubeVB();
+		VertexBuffer *GetRefCubeVB();
 		virtual Mesh *GetBoundsMesh();
 		virtual Mesh *GetCubeMesh();
+		virtual Mesh *GetRefCubeMesh();
 
 		VertexBuffer *GetPlanesVB();
 		virtual Mesh *GetXYPlaneMesh();
@@ -296,6 +302,8 @@ namespace c3
 		virtual Texture2D *GetBlueTexture();
 		virtual Texture2D *GetGridTexture();
 		virtual Texture2D *GetLinearGradientTexture();
+		virtual Texture2D *GetOrthoRefTexture();
+		virtual Texture2D *GetUtilityColorTexture();
 
 		virtual MaterialManager *GetMaterialManager();
 		virtual const Material *GetWhiteMaterial();

@@ -17,6 +17,7 @@ DECLARE_COMPONENTTYPE(Positionable, PositionableImpl);
 PositionableImpl::PositionableImpl()
 {
 	m_Mat = glm::identity<glm::fmat4x4>();
+	m_MatN = glm::identity<glm::fmat4x4>();
 	m_Ori = glm::identity<glm::fquat>();
 	m_Flags = Object::OBJFLAG(Object::DRAWINEDITOR);
 }
@@ -83,22 +84,26 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 		tmp = (glm::fmat4x4)m_Ori;
 
 		// Recalculate our facing vector in between...
-		m_Facing = glm::normalize(glm::vec4(0, 1, 0, 0) * tmp);
+		m_Facing = glm::normalize(tmp * glm::vec4(0, 1, 0, 0));
 
 		// Recalculate our local up vector after that...
-		m_LocalUp = glm::normalize(glm::vec4(0, 0, 1, 0) * tmp);
+		m_LocalUp = glm::normalize(tmp * glm::vec4(0, 0, 1, 0));
 
-		// Recalculate the local left vector
-		m_LocalLeft = glm::normalize(glm::cross(m_Facing, m_LocalUp));
+		// Recalculate the local right vector
+#if 1
+		m_LocalRight = glm::normalize(glm::cross(m_Facing, m_LocalUp));
+#else
+		m_LocalRight = glm::normalize(tmp * glm::vec4(-1, 0, 0, 0));
+#endif
 
 		// Scale first, then rotate...
 		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * tmp;
 
-		// Next translate for the rotational center...
-		//m_Mat = m_Mat * glm::translate(glm::identity<glm::fmat4x4>(), m_RotCenter);
-
 		// Then translate last... 
 		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * m_Mat;
+
+		// Make a normal matrix
+		m_MatN = glm::inverseTranspose(m_Mat);
 
 		//m_Bounds.Align(&m_Mat);
 
@@ -331,7 +336,7 @@ void PositionableImpl::AdjustYaw(float dy)
 
 	glm::fquat qy = glm::angleAxis(dy, m_LocalUp);
 
-	m_Ori = m_Ori * qy;
+	m_Ori = qy * m_Ori;
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -344,7 +349,7 @@ void PositionableImpl::AdjustYawFlat(float dy)
 
 	glm::fquat qy = glm::angleAxis(dy, glm::vec3(0, 0, 1));
 
-	m_Ori = m_Ori * qy;
+	m_Ori = qy * m_Ori;
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -355,9 +360,9 @@ void PositionableImpl::AdjustPitch(float dp)
 	if (dp == 0)
 		return;
 
-	glm::fquat qp = glm::angleAxis(dp, m_LocalLeft);
+	glm::fquat qp = glm::angleAxis(dp, m_LocalRight);
 
-	m_Ori = m_Ori * qp;
+	m_Ori = qp * m_Ori;
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -370,7 +375,7 @@ void PositionableImpl::AdjustRoll(float dr)
 
 	glm::fquat qr = glm::angleAxis(dr, m_Facing);
 
-	m_Ori = m_Ori * qr;
+	m_Ori = qr * m_Ori;
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -400,15 +405,15 @@ const glm::fvec3 *PositionableImpl::GetLocalUpVector(glm::fvec3 *vec)
 }
 
 
-const glm::fvec3 *PositionableImpl::GetLocalLeftVector(glm::fvec3 *vec)
+const glm::fvec3 *PositionableImpl::GetLocalRightVector(glm::fvec3 *vec)
 {
 	if (vec)
 	{
-		*vec = m_LocalLeft;
+		*vec = m_LocalRight;
 		return vec;
 	}
 
-	return &m_LocalLeft;
+	return &m_LocalRight;
 }
 
 
@@ -521,6 +526,18 @@ const glm::fmat4x4 *PositionableImpl::GetTransformMatrix(glm::fmat4x4 *mat)
 	}
 
 	return &m_Mat;
+}
+
+
+const glm::fmat4x4 *PositionableImpl::GetTransformMatrixNormal(glm::fmat4x4 *matn)
+{
+	if (matn)
+	{
+		*matn = m_MatN;
+		return matn;
+	}
+
+	return &m_MatN;
 }
 
 

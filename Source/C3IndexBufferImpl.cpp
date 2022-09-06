@@ -61,10 +61,10 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, 
 	if (!buffer)
 		return RET_NULL_BUFFER;
 
-	if (!numindices)
+	if (flags.IsSet(IBLOCKFLAG_WRITE) && !numindices)
 		return RET_ZERO_ELEMENTS;
 
-	if (flags.IsSet(IBLOCKFLAG_CACHE))
+	if (flags.IsSet(IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE))
 	{
 		if (m_Cache)
 		{
@@ -85,10 +85,6 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, 
 			*buffer = m_Buffer;
 
 			return RET_OK;
-		}
-		else
-		{
-			assert(0 && "Cache never created; expect poor performance. Use IBLOCKFLAG_CACHE when calling Lock()!");
 		}
 	}
 

@@ -132,6 +132,7 @@ DWORD WINAPI SplashThreadProc(LPVOID lpParameter)
 	}
 	g_SplashImage->UnlockBits(&dst);
 	
+	free(pimg);
 	UnlockResource(hglob);
 	FreeResource(hglob);
 

@@ -21,9 +21,9 @@ namespace c3
 		glm::vec3 m_Scl;
 
 		props::TFlags64 m_Flags;
-		glm::fmat4x4 m_Mat;
+		glm::fmat4x4 m_Mat, m_MatN;
 
-		glm::fvec3 m_Facing, m_LocalUp, m_LocalLeft;
+		glm::fvec3 m_Facing, m_LocalUp, m_LocalRight;
 
 	public:
 
@@ -97,7 +97,7 @@ namespace c3
 
 		virtual const glm::fvec3 *GetFacingVector(glm::fvec3 *vec = nullptr);
 		virtual const glm::fvec3 *GetLocalUpVector(glm::fvec3 *vec = nullptr);
-		virtual const glm::fvec3 *GetLocalLeftVector(glm::fvec3 *vec = nullptr);
+		virtual const glm::fvec3 *GetLocalRightVector(glm::fvec3 *vec = nullptr);
 
 
 		// *** SCALE FUNCTIONS *******************************
@@ -119,6 +119,8 @@ namespace c3
 		// *** COMBINED TRANSFORM FUNCTIONS ******************
 
 		virtual const glm::fmat4x4 *GetTransformMatrix(glm::fmat4x4 *mat = nullptr);
+
+		virtual const glm::fmat4x4 *GetTransformMatrixNormal(glm::fmat4x4 *matn = nullptr);
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
 

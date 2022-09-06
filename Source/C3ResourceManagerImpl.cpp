@@ -40,7 +40,7 @@ pool::IThreadPool::TASK_RETURN ResourceManagerImpl::LoadingThreadProc(void *pres
 }
 
 
-Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype)
+Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype, const void *data)
 {
 	if (!filename || !*filename)
 		return NULL;
@@ -100,28 +100,31 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 				return nullptr;
 		}
 
-		pres = new ResourceImpl(m_pSys, only_create_entry ? key.c_str() : fullpath, restype);
-		if (pres && !only_create_entry)
+		pres = new ResourceImpl(m_pSys, only_create_entry ? key.c_str() : fullpath, restype, only_create_entry ? data : nullptr);
+		if (pres)
 		{
 			m_ResMap.insert(TResourceMap::value_type(key, pres));
 			m_ResByTypeMap.insert(TResourceByTypeMap::value_type(restype, pres));
 
-			if (flags.IsSet(RESFLAG(DEMANDLOAD)) || !restype->Flags().IsSet(RTFLAG_RUNBYRENDERER))
+			if (!only_create_entry)
 			{
-				if (flags.IsSet(RESFLAG(DEMANDLOAD)))
+				if (flags.IsSet(RESFLAG(DEMANDLOAD)) || !restype->Flags().IsSet(RTFLAG_RUNBYRENDERER))
 				{
-					// Just adding a reference should cause the resource to load... and in this thread.
-					pres->AddRef();
+					if (flags.IsSet(RESFLAG(DEMANDLOAD)))
+					{
+						// Just adding a reference should cause the resource to load... and in this thread.
+						pres->AddRef();
+					}
+					else
+					{
+						// Since we didn't demand that this get loaded right now, schedule it on the thread pool.
+						m_pSys->GetThreadPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
+					}
 				}
 				else
 				{
-					// Since we didn't demand that this get loaded right now, schedule it on the thread pool.
-					m_pSys->GetThreadPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
+					((RendererImpl *)(m_pSys->GetRenderer()))->GetTaskPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
 				}
-			}
-			else
-			{
-				((RendererImpl *)(m_pSys->GetRenderer()))->GetTaskPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
 			}
 		}
 	}

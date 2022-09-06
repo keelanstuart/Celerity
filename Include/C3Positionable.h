@@ -76,7 +76,7 @@ namespace c3
 
 		virtual const glm::fvec3 *GetFacingVector(glm::fvec3 *vec = nullptr) = NULL;
 		virtual const glm::fvec3 *GetLocalUpVector(glm::fvec3 *vec = nullptr) = NULL;
-		virtual const glm::fvec3 *GetLocalLeftVector(glm::fvec3 *vec = nullptr) = NULL;
+		virtual const glm::fvec3 *GetLocalRightVector(glm::fvec3 *vec = nullptr) = NULL;
 
 
 		// *** SCALE FUNCTIONS *******************************
@@ -99,6 +99,8 @@ namespace c3
 
 		virtual const glm::fmat4x4 *GetTransformMatrix(glm::fmat4x4 *mat = nullptr) = NULL;
 
+		// Returns the inverse transpose transform
+		virtual const glm::fmat4x4 *GetTransformMatrixNormal(glm::fmat4x4 *matn = nullptr) = NULL;
 
 		/// Casts a ray against the object
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const = NULL;

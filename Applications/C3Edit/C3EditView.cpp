@@ -32,8 +32,8 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_WM_TIMER()
 	ON_WM_MOUSEWHEEL()
 	ON_WM_SIZE()
-	ON_UPDATE_COMMAND_UI(ID_EDIT_TRIGGERRENDERDOCCAPTURE, &C3EditView::OnUpdateEditTriggerrenderdoccapture)
-	ON_COMMAND(ID_EDIT_TRIGGERRENDERDOCCAPTURE, &C3EditView::OnEditTriggerrenderdoccapture)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_TRIGGERRENDERDOCCAPTURE, &C3EditView::OnUpdateEditTriggerRenderDocCapture)
+	ON_COMMAND(ID_EDIT_TRIGGERRENDERDOCCAPTURE, &C3EditView::OnEditTriggerRenderDocCapture)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_SETFOCUS()
@@ -56,13 +56,18 @@ c3::ShaderProgram *C3EditView::m_SP_blur = nullptr;
 c3::ShaderComponent *C3EditView::m_VS_combine = nullptr;
 c3::ShaderComponent *C3EditView::m_FS_combine = nullptr;
 c3::ShaderProgram *C3EditView::m_SP_combine = nullptr;
+c3::ShaderComponent *C3EditView::m_VS_bounds = nullptr;
+c3::ShaderComponent *C3EditView::m_FS_bounds = nullptr;
+c3::ShaderProgram *C3EditView::m_SP_bounds = nullptr;
+
+c3::MatrixStack *C3EditView::m_SelectionXforms = nullptr;
 
 int32_t C3EditView::m_ulSunDir = -1;
 int32_t C3EditView::m_ulSunColor = -1;
 int32_t C3EditView::m_ulAmbientColor = -1;
-glm::fvec3 C3EditView::m_SunDir = { 0, 0, -1 };
-glm::fvec3 C3EditView::m_SunColor = { 1.0f, 1.0f, 1.0f };
-glm::fvec3 C3EditView::m_AmbientColor = { 0.1f, 0.1f, 0.1f };
+glm::fvec3 C3EditView::m_SunDir = glm::normalize(glm::fvec3(0.1f, 0.1f, -1.0f));
+glm::fvec3 C3EditView::m_SunColor = c3::Color::fWhite;
+glm::fvec3 C3EditView::m_AmbientColor = c3::Color::fDarkGrey;
 int32_t C3EditView::m_uBlurTex = -1;
 int32_t C3EditView::m_uBlurScale = -1;
 
@@ -98,6 +103,9 @@ C3EditView::~C3EditView()
 		C3_SAFERELEASE(m_SP_resolve);
 		C3_SAFERELEASE(m_SP_blur);
 		C3_SAFERELEASE(m_SP_combine);
+		C3_SAFERELEASE(m_SP_bounds);
+
+		C3_SAFERELEASE(m_SelectionXforms);
 
 		c3::Renderer *prend = theApp.m_C3->GetRenderer();
 		assert(prend);
@@ -141,6 +149,7 @@ void C3EditView::OnInitialUpdate()
 	}
 
 	SetTimer('DRAW', 17, nullptr);
+	SetTimer('PICK', 500, nullptr);
 }
 
 
@@ -187,13 +196,13 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
 
-//		if (GetFocus() == this)
+		if ((GetFocus() == this) && !theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::LCTRL))
 		{
 			glm::vec3 mv(0, 0, 0);
 
-			bool run = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::LSHIFT);
+			bool run = false;
 
-			float spd = theApp.m_Config->GetFloat(_T("environment.movement.speed"), 1.0f);
+			float spd = theApp.m_Config->GetFloat(_T("environment.movement.speed"), 1.0f) + (run * 2.0f);
 
 			float mdf = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_W) +
 						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSY)) / 2.0f;
@@ -209,7 +218,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			float mdr = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_D) +
 						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSX)) / 2.0f;
 
-			mv += *(pcampos->GetLocalLeftVector()) * (mdl - mdr) * spd;
+			mv += *(pcampos->GetLocalRightVector()) * (mdl - mdr) * spd;
 
 			float mdu = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Q) +
 						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSZ)) / 2.0f;
@@ -219,25 +228,29 @@ void C3EditView::OnDraw(CDC *pDC)
 						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_NEGZ)) / 2.0f;
 			mv.z -= mdd * spd;
 
-#if 0
-			float zoo = pcam->GetPolarDistance();
-			zoo += theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::BUTTON5) -
-				theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::BUTTON6);
-			zoo = std::max(zoo, 0.1f);
-			pcam->SetPolarDistance(zoo);
-#endif
+			float ldu = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGY, 1);
+			float ldd = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSY, 1);
+			float ldl = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGX, 1);
+			float ldr = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSX, 1);
+			if (ldu > 0 || ldd > 0 || ldl > 0 || ldr)
+				AdjustYawPitch((ldr - ldl) * 4, (ldu - ldd) * 4, false);
+
+			bool center = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::LETTER_C);
+			if (center && 
+				!m_Selected.empty())
+			{
+				glm::fvec3 cpos;
+				for (TObjectArray::const_iterator it = m_Selected.cbegin(); it != m_Selected.cend(); it++)
+				{
+					c3::Positionable *psopos = dynamic_cast<c3::Positionable *>((*it)->FindComponent(c3::Positionable::Type()));
+					if (psopos)
+						cpos += *(psopos->GetPosVec());
+				}
+				cpos /= (float)m_Selected.size();
+				pcampos->SetPosVec(&cpos);
+			}
 
 			pcampos->AdjustPos(mv.x, mv.y, mv.z);
-
-#if 0
-			float pau = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGY);
-			float pad = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSY);
-			float yal = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSX);
-			float yar = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGX);
-
-			pcampos->AdjustPitch((pad - pau) * 0.05f);
-			pcampos->AdjustYawFlat((yar - yal) * 0.05f);
-#endif
 		}
 
 		c3::Object *camobj = pvi->obj;
@@ -257,8 +270,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetViewMatrix(pcam->GetViewMatrix());
 			prend->SetProjectionMatrix(pcam->GetProjectionMatrix());
 			prend->SetEyePosition(pcam->GetEyePos());
-			glm::fvec3 eyedir = glm::normalize(*pcam->GetTargetPos() - *(pcam->GetEyePos()));
-			prend->SetEyeDirection(&eyedir);
+			prend->SetEyeDirection(pcampos->GetFacingVector());
 		}
 
 		float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
@@ -279,20 +291,13 @@ void C3EditView::OnDraw(CDC *pDC)
 			0.5, 0.5, 0.5, 1.0
 		);
 
-		float sunx = sinf((float)(prend->GetCurrentFrameNumber() / 8) * 3.14159f / 180.0f * 1.0f) * 0.4f;
-		float suny = cosf((float)(prend->GetCurrentFrameNumber() / 8) * 3.14159f / 180.0f * 1.0f) * 0.4f;
-		m_SunDir = glm::normalize(glm::fvec3(sunx, suny, -1.0f));
-		float sunDotUp = glm::dot(m_SunDir, glm::fvec3(0, 0, -1));
-		m_SunColor = glm::lerp(c3::Color::DarkYellow, c3::Color::White, sunDotUp * sunDotUp * sunDotUp * sunDotUp * sunDotUp);
-		m_AmbientColor = m_SunColor * 0.3f;
-
 		m_SP_combine->SetUniform3(m_ulAmbientColor, &m_AmbientColor);
 		m_SP_combine->SetUniform3(m_ulSunColor, &m_SunColor);
 		m_SP_combine->SetUniform3(m_ulSunDir, &m_SunDir);
 
 		pDoc->m_RootObj->Update(dt);
 
-		if (prend->BeginScene())
+		if (prend->BeginScene(0))
 		{
 			if (m_pRenderDoc && m_RenderDocCaptureFrame)
 			{
@@ -348,7 +353,51 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->UseProgram(m_SP_resolve);
 			m_SP_resolve->ApplyUniforms(true);
 			prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
-		
+
+			if (!m_Selected.empty())
+			{
+				prend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST);
+				prend->UseProgram(m_SP_bounds);
+
+				typedef std::vector<c3::Positionable *> TPositionableVec;
+				TPositionableVec selpos;
+				for (auto sel : m_Selected)
+				{
+					if (!sel->FindComponent(c3::Positionable::Type()))
+						continue;
+
+					c3::Object *o = sel;
+					do
+					{
+						c3::Positionable *pp = dynamic_cast<c3::Positionable *>(o->FindComponent(c3::Positionable::Type()));
+						selpos.push_back(pp);
+						o = o->GetOwner();
+					}
+					while (o);
+
+					for (TPositionableVec::reverse_iterator rit = selpos.rbegin(); rit != selpos.rend(); rit++)
+						m_SelectionXforms->Push((*rit)->GetTransformMatrix());
+
+					c3::ModelRenderer *pmr = dynamic_cast<c3::ModelRenderer *>(sel->FindComponent(c3::ModelRenderer::Type()));
+					if (pmr)
+						m_SelectionXforms->Push(pmr->GetMatrix());
+
+					prend->SetWorldMatrix(m_SelectionXforms->Top());
+
+					if (pmr)
+						m_SelectionXforms->Pop();
+
+					while (!selpos.empty())
+					{
+						selpos.pop_back();
+						m_SelectionXforms->Pop();
+					}
+
+					m_SP_bounds->ApplyUniforms(true);
+					prend->GetBoundsMesh()->Draw(c3::Renderer::EPrimType::LINELIST);
+				}
+			}
+
 			prend->EndScene();
 			prend->Present();
 
@@ -365,6 +414,8 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		if (prend->Initialize(GetSafeHwnd(), 0))
 		{
+			m_SelectionXforms = c3::MatrixStack::Create();
+
 			if (m_pRenderDoc)
 				m_pRenderDoc->StartFrameCapture(NULL, NULL);
 
@@ -509,8 +560,22 @@ void C3EditView::OnDraw(CDC *pDC)
 				}
 			}
 
+			m_VS_bounds = (c3::ShaderComponent *)((rm->GetResource(_T("bounds.vsh"), rf))->GetData());
+			m_FS_bounds = (c3::ShaderComponent *)((rm->GetResource(_T("bounds.fsh"), rf))->GetData());
+			m_SP_bounds = prend->CreateShaderProgram();
+			if (m_SP_bounds)
+			{
+				m_SP_bounds->AttachShader(m_VS_bounds);
+				m_SP_bounds->AttachShader(m_FS_bounds);
+				if (m_SP_bounds->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
+				{
+				}
+			}
+
 			if (m_pRenderDoc)
 				m_pRenderDoc->EndFrameCapture(NULL, NULL);
+
+			UpdateStatusMessage();
 		}
 	}
 }
@@ -558,6 +623,107 @@ void C3EditView::OnDestroy()
 }
 
 
+void C3EditView::ComputePickRay(POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const
+{
+	C3EditDoc *pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+
+	c3::Object *camobj = pvi->obj;
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
+
+	camobj->Update();
+
+	glm::fmat4x4 viewmat, projmat;
+
+	// Get the current projection and view matrices from d3d
+	pcam->GetViewMatrix(&viewmat);
+	pcam->GetProjectionMatrix(&projmat);
+
+	CRect r;
+	GetClientRect(&r);
+	ClientToScreen(&r);
+	float pctx = (float)screenpos.x / (float)r.Width();
+	float pcty = 1.0f - ((float)screenpos.y / (float)r.Height());
+
+	float rposx = pctx * m_DepthTarg->Width();
+	float rposy = pcty * m_DepthTarg->Height();
+
+	// Construct a viewport that desribes our view metric
+	glm::fvec4 viewport(0, 0, m_DepthTarg->Width(), m_DepthTarg->Height());
+
+	glm::fvec3 pos3d_near(rposx, rposy, 0.0f);
+	glm::fvec3 pos3d_far(rposx, rposy, 1.0f);
+
+	pickpos = glm::unProject(pos3d_near, viewmat, projmat, viewport);
+	pos3d_far = glm::unProject(pos3d_far, viewmat, projmat, viewport);
+
+	pickvec = glm::normalize(pos3d_far - pickpos);
+}
+
+
+c3::Object *C3EditView::Pick(POINT p) const
+{
+	c3::Object *ret = nullptr;
+
+	C3EditDoc *pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	glm::fvec3 pickpos, pickray;
+	ComputePickRay(p, pickpos, pickray);
+
+	pDoc->m_RootObj->Intersect(&pickpos, &pickray, nullptr, &ret, 1);
+
+	return ret;
+}
+
+
+void C3EditView::AdjustYawPitch(float yawadj, float pitchadj, bool redraw)
+{
+	C3EditDoc *pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
+	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+
+	pvi->pitch += pitchadj;
+	pvi->yaw -= yawadj;
+
+	c3::Object *camobj = pvi->obj;
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
+
+	if (theApp.m_Config->GetBool(_T("environment.camera.lockroll"), true))
+	{
+		c3::Object *camobj = pvi->obj;
+
+		props::IProperty *campitch_min = camobj->GetProperties()->GetPropertyById('PCAN');
+		props::IProperty *campitch_max = camobj->GetProperties()->GetPropertyById('PCAX');
+
+		float pitchmin = campitch_min ? campitch_min->AsFloat() : -FLT_MAX;
+		float pitchmax = campitch_max ? campitch_max->AsFloat() :  FLT_MAX;
+
+		pvi->pitch = std::min(std::max(pitchmin, pvi->pitch), pitchmax);
+
+		pcampos->SetYawPitchRoll(0, 0, 0);
+		pcampos->Update(0);
+		pcampos->AdjustYaw(glm::radians(pvi->yaw));
+		pcampos->Update(0);
+		pcampos->AdjustPitch(glm::radians(pvi->pitch));
+	}
+	else
+	{
+		pcampos->AdjustYaw(glm::radians(yawadj));
+		pcampos->Update(0);
+		pcampos->AdjustPitch(glm::radians(pitchadj));
+	}
+
+	if (redraw)
+		RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+}
+
+
 void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	C3EditDoc *pDoc = GetDocument();
@@ -587,12 +753,18 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	m_MousePos.x = point.x;
 	m_MousePos.y = point.y;
 
+	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+
 	CRect r;
 	GetClientRect(&r);
 	ClientToScreen(&r);
 
 	float scrpctx = (float)point.x / (float)r.Width();
 	float scrpcty = (float)point.y / (float)r.Height();
+
+	c3::Object *camobj = pvi->obj;
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 
 	// Wrap the cursor around to the other side if we've Captured the mouse and it's gone beyond the client rect...
 	if (this == GetCapture())
@@ -632,58 +804,12 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	if ((nFlags & (MK_SHIFT | MK_MBUTTON | MK_LBUTTON)) && (this != GetCapture()))
 		SetCapture();
 
-	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
-
-	c3::Object *camobj = pvi->obj;
-
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
-	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
-
 	c3::ModelRenderer *pbr = pDoc->m_Brush ? dynamic_cast<c3::ModelRenderer *>(pDoc->m_Brush->FindComponent(c3::ModelRenderer::Type())) : nullptr;
 	c3::Positionable *pbp = pDoc->m_Brush ? dynamic_cast<c3::Positionable *>(pDoc->m_Brush->FindComponent(c3::Positionable::Type())) : nullptr;
 
+#if 0
 	if ((active_tool == C3EditApp::ToolType::TT_WAND) && pcam && pbr && pbp)
 	{
-		camobj->Update();
-
-		glm::fvec3 pos3d_near((float)m_MousePos.x, (float)m_MousePos.y, 0.0f);
-		glm::fvec3 pos3d_far((float)m_MousePos.x, (float)m_MousePos.y, 1.0f);
-
-		glm::fmat4x4 viewmat, projmat;
-
-		// Get the current projection and view matrices from d3d
-		pcam->GetViewMatrix(&viewmat);
-		pcam->GetProjectionMatrix(&projmat);
-
-		c3::Renderer *pr = theApp.m_C3->GetRenderer();
-
-		// Construct a viewport that desribes our view metric
-		glm::fvec4 viewport(0.0f, 0.0f, (float)(r.right - r.left), (float)(r.bottom - r.top));
-
-		pos3d_near = glm::unProject(pos3d_near, viewmat, projmat, viewport);
-		pos3d_far = glm::unProject(pos3d_far, viewmat, projmat, viewport);
-
-		glm::fvec3 rayvec = pos3d_far;
-		rayvec -= pos3d_near;
-
-		float shortdist = FLT_MAX;
-
-#if 0
-		for (UINT32 i = 0; i < world->GetNumWalkables(); i++)
-		{
-			TObjectInstance *obj = world->GetWalkable(i);
-			if (!obj || !obj->IsFlagSet(OBJFLAG(DRAW)))
-				continue;
-
-			float tmp = FLT_MAX;
-			obj->CheckCollision(pos3d_near, rayvec, NULL, &tmp, true);
-			if (tmp < shortdist)
-			{
-				shortdist = tmp;
-			}
-		}
-#endif
-
 		rayvec = glm::normalize(rayvec);
 
 		rayvec *= shortdist;
@@ -691,9 +817,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 		pbp->SetPos(rayvec.x, rayvec.y, rayvec.z);
 	}
-
-	//	m_pCam
-	//	m_pCamPos
+#endif
 
 	if ((nFlags & MK_SHIFT) && (deltax || deltay))// && !camori_lock)
 	{
@@ -701,38 +825,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 		C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
 
-		pvi->pitch -= (float)deltay;
-		pvi->yaw += (float)deltax;
-
-		if (theApp.m_Config->GetBool(_T("environment.camera.lockroll"), true))
-		{
-
-			c3::Object *camobj = pvi->obj;
-
-			props::IProperty *campitch_min = camobj->GetProperties()->GetPropertyById('PCAN');
-			props::IProperty *campitch_max = camobj->GetProperties()->GetPropertyById('PCAX');
-
-			float pitchmin = campitch_min ? campitch_min->AsFloat() : -FLT_MAX;
-			float pitchmax = campitch_max ? campitch_max->AsFloat() :  FLT_MAX;
-
-			pvi->pitch = std::min(std::max(pitchmin, pvi->pitch), pitchmax);
-
-			pcampos->SetYawPitchRoll(0, 0, 0);
-			pcampos->Update(0);
-			pcampos->AdjustYaw(glm::radians(pvi->yaw));
-			pcampos->Update(0);
-			pcampos->AdjustPitch(glm::radians(pvi->pitch));
-		}
-		else
-		{
-			pcampos->AdjustYaw(glm::radians((float)deltax));
-			pcampos->Update(0);
-			pcampos->AdjustPitch(glm::radians((float)deltay));
-		}
-
-		pcam->SetPolarDistance(pcam->GetPolarDistance()); // HACK?!
-
-		RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+		AdjustYawPitch((float)deltax, (float)deltay);
 	}
 	else if (nFlags & MK_MBUTTON)
 	{
@@ -752,90 +845,121 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 		float rsens = theApp.m_Config->GetFloat(_T("environment.sensitivity.rotation"), 0.1f);
 		float ssens = theApp.m_Config->GetFloat(_T("environment.sensitivity.scale"), 0.1f);
 
-#if 0
-		for (size_t i = 0; i < pDoc->GetNumSelected(); i++)
+		glm::fvec3 pickpos, pickvec;
+		ComputePickRay(m_MousePos, pickpos, pickvec);
+
+		static glm::fvec3 xaxis(1, 0, 0), yaxis(0, 1, 0), zaxis(0, 0, 1);
+
+		for (size_t i = 0; i < GetNumSelected(); i++)
 		{
-			C2BaseObject *obj = pDoc->GetSelection(i);
+			c3::Object *obj = GetSelection(i);
+			if (!obj)
+				continue;
+
+			c3::Positionable *pos = dynamic_cast<c3::Positionable *>(obj->FindComponent(c3::Positionable::Type()));
+			if (!pos)
+				continue;
 
 			switch (active_tool)
 			{
 				// For movement, use the orientation of the camera!  World coordinates make it too confusing!
-			case TT_TRANSLATE:
-			{
-				if (active_axis & AT_X)
+				case C3EditApp::TT_TRANSLATE:
 				{
-					C2VEC3 fv(1, 0, 0);
-					if (active_axis & AT_SCREENREL)
+					glm::fvec3 fv, rv, uv;
+					pcampos->GetFacingVector(&fv);
+					pcampos->GetLocalRightVector(&rv);
+					pcampos->GetLocalUpVector(&uv);
+
+					glm::fvec3 mv;
+
+					if (active_axis & C3EditApp::AT_X)
 					{
-						cam->GetLocalLeftVector(&fv);
+						if (active_axis & C3EditApp::AT_SCREENREL)
+						{
+							mv += (rv * (float)(deltax));
+						}
+						else
+						{
+							mv += xaxis * ((glm::dot(fv, xaxis) * (float)deltay) + (glm::dot(rv, xaxis) * (float)deltax));
+						}
 					}
 
-					fv *= (float)(-deltax) * tsens;
-					obj->AdjustPos(fv.x, fv.y, fv.z);
-				}
-
-				if (active_axis & AT_Y)
-				{
-					C2VEC3 fv(0, 1, 0);
-					if (active_axis & AT_SCREENREL)
+					if (active_axis & C3EditApp::AT_Y)
 					{
-						cam->GetLocalUpVector(&fv);
+						if (active_axis & C3EditApp::AT_SCREENREL)
+						{
+							mv += (uv * (float)(deltay));
+						}
+						else
+						{
+							mv += yaxis * ((glm::dot(fv, yaxis) * (float)deltay) + (glm::dot(rv, yaxis) * (float)deltax));
+						}
 					}
 
-					fv *= (float)(-deltay) * tsens;
-					obj->AdjustPos(fv.x, fv.y, fv.z);
-				}
-
-				if (active_axis & AT_Z)
-				{
-					C2VEC3 fv(0, 0, 1);
-					if (active_axis & AT_SCREENREL)
+					if (active_axis & C3EditApp::AT_Z)
 					{
-						cam->GetFacingVector(&fv);
+						if (active_axis & C3EditApp::AT_SCREENREL)
+						{
+							mv += fv;
+						}
+						else
+						{
+							mv += zaxis * (float)deltay;
+						}
 					}
 
-					fv *= (float)(-deltay) * tsens;
-					obj->AdjustPos(fv.x, fv.y, fv.z);
+					mv *= tsens;
+
+					pos->AdjustPos(mv.x, mv.y, mv.z);
+
+					pDoc->SetModifiedFlag();
+
+					break;
 				}
 
-				break;
-			}
+				case C3EditApp::TT_ROTATE:
+				{
+					float pitchval = glm::radians((active_axis & C3EditApp::AT_X) ? (deltax * rsens) : 0);
+					float rollval = glm::radians((active_axis & C3EditApp::AT_Y) ? (deltay * rsens) : 0);
+					float yawval = glm::radians((active_axis & C3EditApp::AT_Z) ? (deltax * rsens) : 0);
 
-			case TT_ROTATE:
-			{
-				float pitchval = D3DXToRadian((active_axis & AT_X) ? (deltax * rsens) : 0);
-				float rollval = D3DXToRadian((active_axis & AT_Y) ? (deltay * rsens) : 0);
-				float yawval = D3DXToRadian((active_axis & AT_Z) ? (deltax * rsens) : 0);
+					pos->AdjustPitch(pitchval);
+					pos->AdjustRoll(rollval);
+					pos->AdjustYaw(yawval);
 
-				obj->AdjustPitch(pitchval);
-				obj->AdjustRoll(rollval);
-				obj->AdjustYaw(yawval);
+					pDoc->SetModifiedFlag();
 
-				break;
-			}
+					break;
+				}
 
-			case TT_UNISCALE:
-			{
-				float sclval = -deltay * ssens;
+				case C3EditApp::TT_UNISCALE:
+				{
+					float sclval = deltay * ssens;
 
-				obj->AdjustScl(sclval, sclval, sclval);
+					pos->AdjustScl(sclval, sclval, sclval);
 
-				break;
-			}
+					pDoc->SetModifiedFlag();
 
-			case TT_SCALE:
-			{
-				float xscl = (active_axis & AT_X) ? (deltax * ssens) : 0.0f;
-				float yscl = (active_axis & AT_Y) ? (-deltay * ssens) : 0.0f;
-				float zscl = (active_axis & AT_Z) ? (-deltay * ssens) : 0.0f;
+					break;
+				}
 
-				obj->AdjustScl(xscl, yscl, zscl);
+				case C3EditApp::TT_SCALE:
+				{
+					float xscl = (active_axis & C3EditApp::AT_X) ? (deltax * ssens) : 0.0f;
+					float yscl = (active_axis & C3EditApp::AT_Y) ? (deltay * ssens) : 0.0f;
+					float zscl = (active_axis & C3EditApp::AT_Z) ? (deltay * ssens) : 0.0f;
 
-				break;
-			}
+					pos->AdjustScl(xscl, yscl, zscl);
+
+					pDoc->SetModifiedFlag();
+
+					break;
+				}
 			}
 		}
-#endif
+
+		m_BasePickPos = pickpos;
+		m_BasePickVec = pickvec;
 	}
 }
 
@@ -848,11 +972,51 @@ void C3EditView::OnTimer(UINT_PTR nIDEvent)
 			RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 			break;
 
+		case 'PICK':
+			//m_pHoverObj = Pick(m_MousePos);
+			//UpdateStatusMessage(m_pHoverObj);
+			break;
+
 		default:
 			break;
 	}
 
 	CView::OnTimer(nIDEvent);
+}
+
+
+void C3EditView::UpdateStatusMessage(c3::Object *pobj)
+{
+	static TCHAR msgbuf[256];
+
+	size_t nums = GetNumSelected();
+	switch (nums)
+	{
+		case 0:
+			if (pobj)
+			{
+				GUID g = pobj->GetGuid();
+				const TCHAR *n = pobj->GetName();
+
+				_stprintf_s(msgbuf, _T("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X} \"%s\""), g.Data1, g.Data2, g.Data3,
+								   g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7], n ? n : _T(""));
+			}
+			else
+				_stprintf_s(msgbuf, _T(""));
+			break;
+
+		case 1:
+			_stprintf_s(msgbuf, _T("1 Object Selected"));
+			break;
+
+		default:
+			_stprintf_s(msgbuf, _T("%zu Objects Selected"), nums);
+			break;
+	}
+
+	C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
+	if (pef->GetSafeHwnd() && pef->m_wndStatusBar.GetSafeHwnd())
+		pef->m_wndStatusBar.SetPaneText(0, msgbuf);
 }
 
 
@@ -896,21 +1060,36 @@ void C3EditView::OnSize(UINT nType, int cx, int cy)
 void C3EditView::ClearSelection()
 {
 	m_Selected.clear();
+
+	UpdateStatusMessage();
 }
 
 
-void C3EditView::AddToSelection(c3::Object *obj)
+bool C3EditView::IsSelected(const c3::Object *obj) const
+{
+	return (std::find(m_Selected.cbegin(), m_Selected.cend(), obj) != m_Selected.cend());
+}
+
+
+void C3EditView::AddToSelection(const c3::Object *obj)
 {
 	if (std::find(m_Selected.cbegin(), m_Selected.cend(), obj) == m_Selected.cend())
-		m_Selected.push_back(obj);
+		m_Selected.push_back((c3::Object *)obj);
+
+	if (m_Selected.size() == 1)
+		theApp.SetActiveProperties(m_Selected[0]->GetProperties());
+
+	UpdateStatusMessage();
 }
 
 
-void C3EditView::RemoveFromSelection(c3::Object *obj)
+void C3EditView::RemoveFromSelection(const c3::Object *obj)
 {
 	TObjectArray::iterator it = std::find(m_Selected.begin(), m_Selected.end(), obj);
 	if (it != m_Selected.cend())
 		m_Selected.erase(it);
+
+	UpdateStatusMessage();
 }
 
 
@@ -920,13 +1099,22 @@ size_t C3EditView::GetNumSelected()
 }
 
 
-void C3EditView::OnUpdateEditTriggerrenderdoccapture(CCmdUI *pCmdUI)
+c3::Object *C3EditView::GetSelection(size_t index) const
+{
+	if (index >= m_Selected.size())
+		return nullptr;
+
+	return (c3::Object *)m_Selected.at(index);
+}
+
+
+void C3EditView::OnUpdateEditTriggerRenderDocCapture(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable((m_pRenderDoc != nullptr) ? TRUE : FALSE);
 }
 
 
-void C3EditView::OnEditTriggerrenderdoccapture()
+void C3EditView::OnEditTriggerRenderDocCapture()
 {
 	m_RenderDocCaptureFrame = true;
 }
@@ -934,9 +1122,36 @@ void C3EditView::OnEditTriggerrenderdoccapture()
 
 void C3EditView::OnLButtonDown(UINT nFlags, CPoint point)
 {
-	// TODO: Add your message handler code here and/or call default
-
 	CView::OnLButtonDown(nFlags, point);
+
+	// cache the pick ray so we can get a diff later
+	ComputePickRay(point, m_BasePickPos, m_BasePickVec);
+	c3::Object *pickobj = Pick(point);
+	
+	if (pickobj)
+	{
+		if (nFlags & MK_CONTROL)
+		{
+			if (pickobj && IsSelected(pickobj))
+				RemoveFromSelection(pickobj);
+			else
+				AddToSelection(pickobj);
+		}
+		else if (!IsSelected(pickobj))
+		{
+			ClearSelection();
+
+			if (pickobj)
+				AddToSelection(pickobj);
+		}
+	}
+	else
+	{
+		if (!(nFlags & MK_CONTROL))
+			ClearSelection();
+	}
+
+	UpdateStatusMessage(pickobj);
 }
 
 
@@ -944,50 +1159,6 @@ void C3EditView::OnLButtonUp(UINT nFlags, CPoint point)
 {
 	C3EditDoc *pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
-
-	CRect r;
-	GetClientRect(r);
-
-	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
-
-	c3::Object *camobj = pvi->obj;
-
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
-	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
-
-	c3::ModelRenderer *pbr = pDoc->m_Brush ? dynamic_cast<c3::ModelRenderer *>(pDoc->m_Brush->FindComponent(c3::ModelRenderer::Type())) : nullptr;
-	c3::Positionable *pbp = pDoc->m_Brush ? dynamic_cast<c3::Positionable *>(pDoc->m_Brush->FindComponent(c3::Positionable::Type())) : nullptr;
-
-	camobj->Update();
-
-	glm::fvec3 pos3d_near((float)m_MousePos.x, (float)m_MousePos.y, 0.0f);
-	glm::fvec3 pos3d_far((float)m_MousePos.x, (float)m_MousePos.y, 1.0f);
-
-	glm::fmat4x4 viewmat, projmat;
-
-	// Get the current projection and view matrices from d3d
-	pcam->GetViewMatrix(&viewmat);
-	pcam->GetProjectionMatrix(&projmat);
-
-	c3::Renderer *pr = theApp.m_C3->GetRenderer();
-
-	// Construct a viewport that desribes our view metric
-	glm::fvec4 viewport(0.0f, 0.0f, (float)(r.right - r.left), (float)(r.bottom - r.top));
-
-	pos3d_near = glm::unProject(pos3d_near, viewmat, projmat, viewport);
-	pos3d_far = glm::unProject(pos3d_far, viewmat, projmat, viewport);
-
-	glm::fvec3 rayvec = pos3d_far;
-	rayvec -= pos3d_near;
-
-	float shortdist = FLT_MAX;
-
-	//pDoc->m_RootObj->CheckCollision(pos3d_near, rayvec, NULL, &tmp, true);
-
-	rayvec = glm::normalize(rayvec);
-
-	rayvec *= shortdist;
-	rayvec += pos3d_near;
 
 	CView::OnLButtonUp(nFlags, point);
 }

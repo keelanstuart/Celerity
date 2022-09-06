@@ -106,7 +106,7 @@ namespace c3
 		virtual Component *AddComponent(const ComponentType *pctype, bool init = true) = NULL;
 
 		/// Removes the given Component
-		virtual void RemoveComponent(Component *pcomportmemt) = NULL;
+		virtual void RemoveComponent(Component *pcomponent) = NULL;
 
 		/// Updates the object by the given amount of elapsed time (in seconds)
 		virtual void Update(float elapsed_time = 0.0f) = NULL;
@@ -130,7 +130,7 @@ namespace c3
 		virtual void PostLoad() = NULL;
 
 		/// Casts a ray against the object
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const = NULL;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance = nullptr, Object **ppHitObj = nullptr, size_t child_depth = 0) const = NULL;
 
 	};
 

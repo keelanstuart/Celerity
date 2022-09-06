@@ -17,6 +17,8 @@ namespace c3
 
 	public: 
 
+		static C3_API Model *Create(Renderer *prend);
+
 		typedef size_t NodeIndex;
 		typedef size_t MeshIndex;
 		typedef size_t SubMeshIndex;
@@ -62,7 +64,7 @@ namespace c3
 
 		virtual const Material *GetMaterial(MeshIndex idx) const = NULL;
 
-		virtual const BoundingBox *GetBounds() const = NULL;
+		virtual const BoundingBox *GetBounds(BoundingBox *pbb = nullptr) const = NULL;
 
 		virtual void Draw(const glm::fmat4x4 *pmat = nullptr) const = NULL;
 
