@@ -8,6 +8,9 @@ Next, load the main Celerity solution in Visual Studio and build the "Bootstrap 
 ![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20220508.png)
 Sponza with 300 deferred lights
 
+![image](https://github.com/keelanstuart/Celerity/blob/master/screen_ed_20220906.png)
+TuneTown in the C3Edit
+
 ______________________________________________
 
 Some background...
