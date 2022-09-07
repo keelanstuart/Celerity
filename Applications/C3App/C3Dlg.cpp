@@ -38,8 +38,8 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
 	m_AmbientColor = c3::Color::fVeryDarkGrey;
-	m_SunColor = c3::Color::fDarkYellow;
-	m_SunDir = glm::normalize(glm::fvec3(0.1f, 0.2f, -1.0f));
+	m_SunColor = glm::fvec4(0.8f, 0.7f, 0.4f, 1.0f);
+	m_SunDir = glm::normalize(glm::fvec3(0.3f, 0.2f, -1.0f));
 	m_bFirstDraw = true;
 	memset(m_pControllable, 0, sizeof(c3::Object *) * MAX_USERS);
 	m_ViewMode = VM_FOLLOW_POSDIR;
@@ -258,7 +258,7 @@ BOOL C3Dlg::OnInitDialog()
 	size_t h = r.Height();
 
 	m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
-	m_ShadowTarg = m_Rend->CreateDepthBuffer(2048, 2048, c3::Renderer::DepthType::F32_SHADOW);
+	m_ShadowTarg = m_Rend->CreateDepthBuffer(4096, 4096, c3::Renderer::DepthType::F32_SHADOW);
 
 	bool gbok = false;
 
@@ -386,14 +386,10 @@ BOOL C3Dlg::OnInitDialog()
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
-		pcam->SetPolarDistance(10.0f);
-		pcam->SetFOV(glm::radians(88.0f));
+		pcam->SetPolarDistance(3.5f);
+		pcam->SetFOV(glm::radians(78.0f));
 	}
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
-	if (pcampos)
-	{
-		pcampos->AdjustPos(0, 0, 4.0f);
-	}
 
 	m_RootObj = m_Factory->Build((c3::Prototype *)nullptr);
 	m_RootObj->AddComponent(c3::Positionable::Type());
@@ -543,6 +539,12 @@ BOOL C3Dlg::OnInitDialog()
 		if (!_tcsicmp(pco->GetName(), _T("BasicCharacter")))
 		{
 			m_pControllable[1] = m_RootObj->GetChild(i);
+			c3::Positionable *pcp = (c3::Positionable *)m_pControllable[1]->FindComponent(c3::Positionable::Type());
+			if (pcp)
+			{
+				pcp->SetScl(0.6f, 0.6f, 0.6f);
+				pcp->SetPosZ(2.1f);
+			}
 			break;
 		}
 	}
@@ -643,27 +645,38 @@ void C3Dlg::OnPaint()
 
 		if (!m_bMouseCursorEnabled)
 		{
+			float mf = std::max<float>(m_Controls[0].move.forward, m_Controls[1].move.forward);
+			float mb = std::max<float>(m_Controls[0].move.backward, m_Controls[1].move.backward);
+			float mr = std::max<float>(m_Controls[0].move.right, m_Controls[1].move.right);
+			float ml = std::max<float>(m_Controls[0].move.left, m_Controls[1].move.left);
+			float lr = std::max<float>(m_Controls[0].look.right, m_Controls[1].look.right);
+			float ll = std::max<float>(m_Controls[0].look.left, m_Controls[1].look.left);
+			float ms = std::max<float>(m_Controls[0].move.run, m_Controls[1].move.run);
+
 			for (size_t user = 0; user < MAX_USERS; user++)
 			{
-				if (!user || (m_ViewMode == VM_FREE))
+				if (m_pControllable[user])
 				{
-					if (m_pControllable[user])
+					c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(m_pControllable[user]->FindComponent(c3::Positionable::Type()));
+					if (ppos)
 					{
-						c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(m_pControllable[user]->FindComponent(c3::Positionable::Type()));
-						if (ppos)
-						{
-							glm::vec3 mv(0, 0, 0);
+						float spd = (((m_ViewMode != VM_FREE) ? ms : m_Controls[user].move.run) * 0.02f) + 0.02f;
+						float utd = ((m_ViewMode == VM_FREE) ? m_Controls[user].move.forward : mf) - ((m_ViewMode == VM_FREE) ? m_Controls[user].move.backward : mb);
+						float urd = ((m_ViewMode == VM_FREE) ? m_Controls[user].look.right : std::max<float>(mr, lr)) - ((m_ViewMode == VM_FREE) ? m_Controls[user].look.left : std::max<float>(ml, ll));
 
-							float spd = (m_Controls[user].move.run * 3.0f) + 1.5f;
+						glm::vec3 mv(0, 0, 0);
+						mv += *(ppos->GetFacingVector()) * utd * spd;
+						if ((m_ViewMode == VM_FREE) && !user)
+							mv += *(ppos->GetLocalRightVector()) * urd * spd;
+						mv += *(ppos->GetLocalUpVector()) * (m_Controls[user].move.up - m_Controls[user].move.down) * spd;
 
-							mv += *(ppos->GetFacingVector()) * (m_Controls[user].move.forward - m_Controls[user].move.backward) * spd;
-							mv += *(ppos->GetLocalRightVector()) * (m_Controls[user].move.right - m_Controls[user].move.left) * spd;
-							mv += *(ppos->GetLocalUpVector()) * (m_Controls[user].move.up - m_Controls[user].move.down) * spd;
+						ppos->AdjustYawFlat(urd * 0.04f);
+						m_pControllable[user]->Update();
 
-							ppos->AdjustPos(mv.x, mv.y, mv.z);
-							ppos->AdjustPitch((m_Controls[user].look.up - m_Controls[user].look.down) * 0.05f);
-							ppos->AdjustYawFlat((m_Controls[user].look.right - m_Controls[user].look.left) * 0.05f);
-						}
+						ppos->AdjustPos(mv.x, mv.y, mv.z);
+						if ((m_ViewMode == VM_FREE) && !user)
+							ppos->AdjustPitch((m_Controls[user].look.up - m_Controls[user].look.down) * 0.01f);
+						m_pControllable[user]->Update();
 					}
 				}
 
@@ -687,13 +700,14 @@ void C3Dlg::OnPaint()
 			{
 				case VM_FOLLOW_POSDIR:
 				{
-					glm::fquat q = glm::slerp(*(pfollowerpos->GetOriQuat()), *(pleaderpos->GetOriQuat()), 0.8f);
+					glm::fquat q = glm::slerp(*(pfollowerpos->GetOriQuat()), *(pleaderpos->GetOriQuat()), 0.9f);
 					pfollowerpos->SetOriQuat(&q);
-					pfollowerpos->AdjustPitch(glm::radians(-30.0f));
+					pfollowerpos->AdjustPitch(glm::radians(-41.0f));
 				}
 				case VM_FOLLOW_POS:
 				{
-					glm::fvec3 lp = glm::lerp(*(pfollowerpos->GetPosVec()), *(pleaderpos->GetPosVec()), 0.5f);
+					glm::fvec3 adjlp = *(pleaderpos->GetPosVec()) + glm::fvec3(0, 0, 1);
+					glm::fvec3 lp = glm::lerp(*(pfollowerpos->GetPosVec()), adjlp, 0.6f);
 					pfollowerpos->SetPosVec(&lp);
 					break;
 				}
@@ -734,8 +748,8 @@ void C3Dlg::OnPaint()
 
 		float farclip = m_Camera->GetProperties()->GetPropertyById('C:FC')->AsFloat();
 		float nearclip = m_Camera->GetProperties()->GetPropertyById('C:NC')->AsFloat();
-		glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-200, 200, -200, 200, nearclip, farclip);
-		glm::fvec3 sunpos = m_SunDir * -500.0f;
+		glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-300, 300, -300, 300, nearclip, farclip);
+		glm::fvec3 sunpos = m_SunDir * -40.0f;
 		glm::fvec3 campos;
 		pcam->GetEyePos(&campos);
 //		sunpos += campos;
