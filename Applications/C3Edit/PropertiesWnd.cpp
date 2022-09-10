@@ -18,6 +18,10 @@ static char THIS_FILE[]=__FILE__;
 
 CPropertiesWnd::CPropertiesWnd() noexcept
 {
+	m_pProto = nullptr;
+	m_pObj = nullptr;
+	m_pProps = nullptr;
+	m_bExpanded = false;
 }
 
 CPropertiesWnd::~CPropertiesWnd()
@@ -44,19 +48,46 @@ END_MESSAGE_MAP()
 
 void CPropertiesWnd::AdjustLayout()
 {
+	RedrawWindow(nullptr, nullptr, RDW_ERASE | RDW_ERASENOW | RDW_INVALIDATE);
+
 	if (GetSafeHwnd () == nullptr || (AfxGetMainWnd() != nullptr && AfxGetMainWnd()->IsIconic()))
 	{
 		return;
 	}
 
-	CRect rectClient;
-	GetClientRect(rectClient);
+	CRect rc;
+	GetClientRect(rc);
+
+	int lh = rc.Height() / 6;
+	#define CONTROL_SPACING		0
+
+	m_wndNameEdit.ShowWindow((m_pProto || m_pObj) ? SW_NORMAL : SW_HIDE);
+	m_wndCompList.ShowWindow((m_pProto || m_pObj) ? SW_NORMAL : SW_HIDE);
+	m_wndFlagList.ShowWindow((m_pProto || m_pObj) ? SW_NORMAL : SW_HIDE);
+
+	if (m_pProto || m_pObj)
+	{
+		CRect rne(0, 0, 0, 21);
+		m_wndNameEdit.SetWindowPos(nullptr, rc.left, rc.top, rc.Width() - CONTROL_SPACING, rne.Height(), SWP_NOACTIVATE | SWP_NOZORDER);
+
+		rc.DeflateRect(0, rne.Height() + CONTROL_SPACING, 0,  0);
+		m_wndCompList.SetWindowPos(nullptr, rc.left, rc.top, rc.Width() - CONTROL_SPACING, lh, SWP_NOACTIVATE | SWP_NOZORDER);
+
+		rc.DeflateRect(0, lh + CONTROL_SPACING, 0,  0);
+		m_wndFlagList.SetWindowPos(nullptr, rc.left, rc.top, rc.Width() - CONTROL_SPACING, lh, SWP_NOACTIVATE | SWP_NOZORDER);
+
+		rc.DeflateRect(0, lh + CONTROL_SPACING, 0,  0);
+	}
 
 	int cyTlb = m_wndToolBar.CalcFixedLayout(FALSE, TRUE).cy;
-
-	m_wndToolBar.SetWindowPos(nullptr, rectClient.left, rectClient.top, rectClient.Width(), cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
-	m_wndPropList.SetWindowPos(nullptr, rectClient.left, rectClient.top + cyTlb, rectClient.Width(), rectClient.Height() -cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
+	m_wndToolBar.SetWindowPos(nullptr, rc.left, rc.top, rc.Width() - CONTROL_SPACING, cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
+	m_wndPropList.SetWindowPos(nullptr, rc.left, rc.top + cyTlb, rc.Width() - CONTROL_SPACING, rc.Height() - cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
 }
+
+#define PWID_EDITNAME		1
+#define PWID_COMPLIST		2
+#define PWID_FLAGLIST		3
+#define PWID_PROPLIST		4
 
 int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
@@ -66,14 +97,27 @@ int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	CRect rectDummy;
 	rectDummy.SetRectEmpty();
 
-	// Create combo:
-	const DWORD dwViewStyle = WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_BORDER | CBS_SORT | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
-
-	if (!m_wndPropList.Create(WS_VISIBLE | WS_CHILD, rectDummy, this, 2))
-	{
-		TRACE0("Failed to create Properties Grid \n");
+	if (!m_wndNameEdit.Create(WS_VISIBLE | WS_CHILD | WS_BORDER, rectDummy, this, PWID_EDITNAME))
 		return -1;      // fail to create
+
+	if (!m_wndCompList.Create(WS_VISIBLE | WS_CHILD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_BORDER | WS_VSCROLL, rectDummy, this, PWID_COMPLIST))
+		return -1;      // fail to create
+
+	if (!m_wndFlagList.Create(WS_VISIBLE | WS_CHILD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_BORDER | WS_VSCROLL, rectDummy, this, PWID_FLAGLIST))
+		return -1;      // fail to create
+
+	if (!m_wndPropList.Create(WS_VISIBLE | WS_CHILD | WS_BORDER, rectDummy, this, PWID_PROPLIST))
+		return -1;      // fail to create
+
+	for (auto f : FlagInfo)
+	{
+		int ic = m_wndFlagList.AddString(f.first);
+		m_wndFlagList.SetItemData(ic, f.second);
 	}
+
+	m_wndNameEdit.SetFont(m_wndPropList.GetFont());
+	m_wndFlagList.SetFont(m_wndPropList.GetFont());
+	m_wndCompList.SetFont(m_wndPropList.GetFont());
 
 	InitPropList();
 
@@ -101,7 +145,8 @@ void CPropertiesWnd::OnSize(UINT nType, int cx, int cy)
 
 void CPropertiesWnd::OnExpandAllProperties()
 {
-	m_wndPropList.ExpandAll();
+	m_bExpanded ^= true;
+	m_wndPropList.ExpandAll(m_bExpanded);
 }
 
 void CPropertiesWnd::OnUpdateExpandAllProperties(CCmdUI* /* pCmdUI */)
@@ -144,6 +189,7 @@ void CPropertiesWnd::InitPropList()
 	m_wndPropList.EnableDescriptionArea();
 	m_wndPropList.SetVSDotNetLook();
 	m_wndPropList.MarkModifiedProperties();
+	m_wndPropList.EnableDescriptionArea(FALSE);
 }
 
 void CPropertiesWnd::OnSetFocus(CWnd* pOldWnd)
@@ -157,19 +203,100 @@ void CPropertiesWnd::OnSettingChange(UINT uFlags, LPCTSTR lpszSection)
 	CDockablePane::OnSettingChange(uFlags, lpszSection);
 }
 
-void CPropertiesWnd::SetActiveProperties(props::IPropertySet* props, bool readonly, const TCHAR* title)
+void CPropertiesWnd::SetActivePrototype(c3::Prototype *pproto)
 {
-	m_pProps = props;
+	m_pObj = nullptr;
+	m_pProto = pproto;
+	m_pProps = nullptr;
 
-	/*
-	if (m_wndTitle.GetSafeHwnd())
-	{
-	m_wndTitle.SetWindowTextW(title ? title : _T(""));
-	}
-	*/
+	m_wndNameEdit.SetWindowText(m_pProto ? m_pProto->GetName() : _T(""));
 
 	if (m_wndPropList.GetSafeHwnd())
-		m_wndPropList.SetActiveProperties(props);
+	{
+		m_wndPropList.SetActiveProperties(m_pProto->GetProperties());
+		m_wndPropList.ExpandAll(m_bExpanded);
+	}
 
-	//m_wndToolBar.OnUpdateCmdUI(.UpdateButton(2);
+	FillOutFlags();
+	FillOutComponents();
+
+	AdjustLayout();
+}
+
+void CPropertiesWnd::SetActiveObject(c3::Object *pobj)
+{
+	m_pObj = pobj;
+	m_pProto = nullptr;
+	m_pProps = nullptr;
+
+	m_wndNameEdit.SetWindowText(m_pObj ? m_pObj->GetName() : _T(""));
+
+	if (m_wndPropList.GetSafeHwnd())
+	{
+		m_wndPropList.SetActiveProperties(m_pObj ? m_pObj->GetProperties() : nullptr);
+		m_wndPropList.ExpandAll(m_bExpanded);
+	}
+
+	FillOutFlags();
+	FillOutComponents();
+
+	AdjustLayout();
+}
+
+void CPropertiesWnd::SetActiveProperties(props::IPropertySet* props, bool readonly, const TCHAR* title)
+{
+	m_pObj = nullptr;
+	m_pProto = nullptr;
+	m_pProps = props;
+
+	if (m_wndPropList.GetSafeHwnd())
+	{
+		m_wndPropList.SetActiveProperties(props);
+		m_wndPropList.ExpandAll(m_bExpanded);
+	}
+
+	AdjustLayout();
+}
+
+
+void CPropertiesWnd::FillOutFlags()
+{
+	props::TFlags64 *f = nullptr;
+	if (m_pProto)
+		f = &(m_pProto->Flags());
+	else if (m_pObj)
+		f = &(m_pObj->Flags());
+
+	for (int i = 0, maxi = m_wndFlagList.GetCount(); i < maxi; i++)
+	{
+		m_wndFlagList.SetCheck(i, f ? (f->IsSet(1LL << m_wndFlagList.GetItemData(i))) : 0);
+	}
+}
+
+
+void CPropertiesWnd::FillOutComponents()
+{
+	m_wndCompList.ResetContent();
+	for (size_t j = 0, maxj = theApp.m_C3->GetFactory()->GetNumComponentTypes(); j < maxj; j++)
+	{
+		c3::ComponentType *pct = (c3::ComponentType *)theApp.m_C3->GetFactory()->GetComponentType(j);
+		if (!pct)
+			continue;
+
+		int ic = m_wndCompList.AddString(pct->GetName());
+		m_wndCompList.SetItemDataPtr(ic, (void *)pct);
+
+		if (m_pProto)
+		{
+			m_wndCompList.SetCheck(ic, m_pProto->HasComponent(pct));
+		}
+		else if (m_pObj)
+		{
+			m_wndCompList.SetCheck(ic, m_pObj->HasComponent(pct));
+		}
+		else
+		{
+			m_wndCompList.SetCheck(ic, FALSE);
+		}
+	}
 }

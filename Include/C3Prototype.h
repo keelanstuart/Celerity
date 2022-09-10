@@ -53,6 +53,9 @@ namespace c3
 		/// Removes the given Component from the Prototype
 		virtual bool RemoveComponent(const ComponentType *pcomp) = NULL;
 
+		// Returns true if the Prototype has the given Component
+		virtual bool HasComponent(const ComponentType *pcomp) = NULL;
+
 		/// Returns the number of Components that are part of the Prototype
 		virtual size_t GetNumComponents() = NULL;
 

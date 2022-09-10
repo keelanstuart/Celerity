@@ -665,3 +665,20 @@ void C3EditFrame::SetActiveProperties(props::IPropertySet *props, bool readonly,
 		m_wndProperties.SetActiveProperties(props, readonly, title);
 }
 
+void C3EditFrame::SetActivePrototype(c3::Prototype *pproto, bool readonly, const TCHAR *title)
+{
+	if (m_wndProperties.GetSafeHwnd())
+		m_wndProperties.SetActivePrototype(pproto);
+}
+
+void C3EditFrame::SetActiveObject(c3::Object *pobj, bool readonly, const TCHAR *title)
+{
+	if (m_wndProperties.GetSafeHwnd())
+		m_wndProperties.SetActiveObject(pobj);
+}
+
+void C3EditFrame::RefreshActiveProperties()
+{
+	if (m_wndProperties.GetSafeHwnd())
+		m_wndProperties.UpdateCurrentProperties();
+}

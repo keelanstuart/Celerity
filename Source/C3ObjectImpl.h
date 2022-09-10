@@ -72,6 +72,8 @@ namespace c3
 
 		virtual void RemoveComponent(Component *pcomponent);
 
+		virtual bool HasComponent(const ComponentType *pcomptype) const;
+
 		virtual void Update(float elapsed_time = 0.0f);
 
 		virtual bool Prerender(props::TFlags64 rendflags);

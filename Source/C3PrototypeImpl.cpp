@@ -105,6 +105,18 @@ bool PrototypeImpl::RemoveComponent(const ComponentType *pcomp)
 }
 
 
+bool PrototypeImpl::HasComponent(const ComponentType *pcomp)
+{
+	TComponentArray::iterator it = std::find(m_Components.begin(), m_Components.end(), pcomp);
+	if (it != m_Components.end())
+	{
+		return true;
+	}
+
+	return false;
+}
+
+
 size_t PrototypeImpl::GetNumComponents()
 {
 	return m_Components.size();

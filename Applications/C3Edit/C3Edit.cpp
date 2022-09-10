@@ -16,6 +16,20 @@
 #define new DEBUG_NEW
 #endif
 
+std::vector<std::pair<const TCHAR *, uint64_t>> FlagInfo =
+{
+	{ _T("Update"), c3::Object::EObjFlag::UPDATE },
+	{ _T("Draw"), c3::Object::EObjFlag::DRAW },
+	{ _T("Draw in Editor"), c3::Object::EObjFlag::DRAWINEDITOR },
+	{ _T("Check Collisions"), c3::Object::EObjFlag::CHECKCOLLISIONS },
+	{ _T("Track Camera X"), c3::Object::EObjFlag::TRACKCAMX },
+	{ _T("Track Camera Y"), c3::Object::EObjFlag::TRACKCAMY },
+	{ _T("Track Camera Z"), c3::Object::EObjFlag::TRACKCAMZ },
+	{ _T("Literal Camera Tracking"), c3::Object::EObjFlag::TRACKCAMLITERAL },
+	{ _T("Billboard"), c3::Object::EObjFlag::BILLBOARD },
+	{ _T("Light Source"), c3::Object::EObjFlag::LIGHT },
+	{ _T("Cast Shadow"), c3::Object::EObjFlag::CASTSHADOW },
+};
 
 // C3EditApp
 
@@ -76,6 +90,8 @@ C3EditApp theApp;
 
 BOOL C3EditApp::InitInstance()
 {
+	CoInitialize(NULL);
+
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
 	// visual styles.  Otherwise, any window creation will fail.
@@ -426,4 +442,22 @@ void C3EditApp::SetActiveProperties(props::IPropertySet *props, bool readonly, c
 {
 	if (m_pMainWnd && m_pMainWnd->GetSafeHwnd())
 		((C3EditFrame *)m_pMainWnd)->SetActiveProperties(props, readonly, title);
+}
+
+void C3EditApp::SetActivePrototype(c3::Prototype *pproto, bool readonly, const TCHAR *title)
+{
+	if (m_pMainWnd && m_pMainWnd->GetSafeHwnd())
+		((C3EditFrame *)m_pMainWnd)->SetActivePrototype(pproto, readonly, title);
+}
+
+void C3EditApp::SetActiveObject(c3::Object *pobj, bool readonly, const TCHAR *title)
+{
+	if (m_pMainWnd && m_pMainWnd->GetSafeHwnd())
+		((C3EditFrame *)m_pMainWnd)->SetActiveObject(pobj, readonly, title);
+}
+
+void C3EditApp::RefreshActiveProperties()
+{
+	if (m_pMainWnd && m_pMainWnd->GetSafeHwnd())
+		((C3EditFrame *)m_pMainWnd)->RefreshActiveProperties();
 }

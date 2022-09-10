@@ -108,6 +108,9 @@ namespace c3
 		/// Removes the given Component
 		virtual void RemoveComponent(Component *pcomponent) = NULL;
 
+		// Returns true if the Object has the given Component
+		virtual bool HasComponent(const ComponentType *pcomptype) const = NULL;
+
 		/// Updates the object by the given amount of elapsed time (in seconds)
 		virtual void Update(float elapsed_time = 0.0f) = NULL;
 

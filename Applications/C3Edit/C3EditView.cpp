@@ -150,6 +150,7 @@ void C3EditView::OnInitialUpdate()
 
 	SetTimer('DRAW', 17, nullptr);
 	SetTimer('PICK', 500, nullptr);
+	SetTimer('PROP', 1000, nullptr);
 }
 
 
@@ -618,6 +619,8 @@ C3EditDoc* C3EditView::GetDocument() const // non-debug version is inline
 void C3EditView::OnDestroy()
 {
 	KillTimer('DRAW');
+	KillTimer('PICK');
+	KillTimer('PROP');
 
 	CView::OnDestroy();
 }
@@ -742,7 +745,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	}
 	else
 	{
-		//SetAppropriateMouseCursor(nFlags);
+		SetAppropriateMouseCursor(nFlags);
 	}
 
 	CView::OnMouseMove(nFlags, point);
@@ -977,6 +980,10 @@ void C3EditView::OnTimer(UINT_PTR nIDEvent)
 			//UpdateStatusMessage(m_pHoverObj);
 			break;
 
+		case 'PROP':
+			theApp.RefreshActiveProperties();
+			break;
+
 		default:
 			break;
 	}
@@ -1061,6 +1068,8 @@ void C3EditView::ClearSelection()
 {
 	m_Selected.clear();
 
+	theApp.SetActiveObject(nullptr);
+
 	UpdateStatusMessage();
 }
 
@@ -1077,7 +1086,7 @@ void C3EditView::AddToSelection(const c3::Object *obj)
 		m_Selected.push_back((c3::Object *)obj);
 
 	if (m_Selected.size() == 1)
-		theApp.SetActiveProperties(m_Selected[0]->GetProperties());
+		theApp.SetActiveObject(m_Selected[0]);
 
 	UpdateStatusMessage();
 }
@@ -1088,6 +1097,11 @@ void C3EditView::RemoveFromSelection(const c3::Object *obj)
 	TObjectArray::iterator it = std::find(m_Selected.begin(), m_Selected.end(), obj);
 	if (it != m_Selected.cend())
 		m_Selected.erase(it);
+
+	if (m_Selected.size() == 1)
+		theApp.SetActiveObject(m_Selected[0]);
+	else
+		theApp.SetActiveObject(nullptr);
 
 	UpdateStatusMessage();
 }
@@ -1152,6 +1166,7 @@ void C3EditView::OnLButtonDown(UINT nFlags, CPoint point)
 	}
 
 	UpdateStatusMessage(pickobj);
+	SetAppropriateMouseCursor(nFlags);
 }
 
 
@@ -1161,6 +1176,11 @@ void C3EditView::OnLButtonUp(UINT nFlags, CPoint point)
 	ASSERT_VALID(pDoc);
 
 	CView::OnLButtonUp(nFlags, point);
+
+	if (GetCapture() == this)
+		ReleaseCapture();
+
+	SetAppropriateMouseCursor(nFlags);
 }
 
 
@@ -1169,4 +1189,43 @@ void C3EditView::OnSetFocus(CWnd *pOldWnd)
 	CView::OnSetFocus(pOldWnd);
 
 	theApp.m_C3->GetInputManager()->AcquireAll();
+}
+
+
+void C3EditView::SetAppropriateMouseCursor(UINT32 nFlags)
+{
+	int64_t active_tool = theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
+
+	HCURSOR hcur = NULL;
+
+	if (GetCapture() != this)
+	{
+		switch (active_tool)
+		{
+			case C3EditApp::TT_SELECT:
+				if (nFlags & MK_CONTROL)
+				{
+					hcur = theApp.LoadCursor(IDC_SELECT_PLUS);
+				}
+				else
+				{
+					hcur = theApp.LoadCursor(IDC_SELECT);
+				}
+				break;
+			case C3EditApp::TT_TRANSLATE:
+				hcur = theApp.LoadCursor(IDC_TRANSLATE);
+				break;
+			case C3EditApp::TT_ROTATE:
+				hcur = theApp.LoadCursor(IDC_ROTATE);
+				break;
+			case C3EditApp::TT_UNISCALE:
+				hcur = theApp.LoadCursor(IDC_UNISCALE);
+				break;
+			case C3EditApp::TT_SCALE:
+				hcur = theApp.LoadCursor(IDC_SCALE);
+				break;
+		}
+	}
+
+	SetCursor(hcur);
 }

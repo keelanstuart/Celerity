@@ -51,6 +51,8 @@ namespace c3
 
 		virtual bool RemoveComponent(const ComponentType *pcomp);
 
+		virtual bool HasComponent(const ComponentType *pcomp);
+
 		virtual size_t GetNumComponents();
 
 		virtual const ComponentType *GetComponent(size_t index);

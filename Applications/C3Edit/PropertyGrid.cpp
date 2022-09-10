@@ -135,9 +135,44 @@ protected:
 
 IMPLEMENT_DYNAMIC(CWTFPropertyGridTimeProperty, CWTFPropertyGridProperty)
 
+CWTFPropertyGridProperty *CPropertyGrid::FindItemByID(props::FOURCHARCODE id, CWTFPropertyGridProperty *top)
+{
+	CWTFPropertyGridProperty *ret = nullptr;
+
+	if (!top)
+	{
+		for (int i = 0, maxi = GetPropertyCount(); i < maxi; i++)
+		{
+			CWTFPropertyGridProperty *p = GetProperty(i);
+			if (p->GetData() == id)
+				return p;
+
+			if (p->GetSubItemsCount() && (nullptr != (ret = FindItemByID(id, p))))
+				break;
+		}
+	}
+	else
+	{
+		for (int i = 0, maxi = top->GetSubItemsCount(); i < maxi; i++)
+		{
+			CWTFPropertyGridProperty *p = top->GetSubItem(i);
+			if (p->GetData() == id)
+				return p;
+
+			if (p->GetSubItemsCount() && (nullptr != (ret = FindItemByID(id, p))))
+				break;
+		}
+	}
+
+	return ret;
+}
+
 
 void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DESCRIPTION_CB prop_desc, FILE_FILTER_CB file_filter, bool reset)
 {
+	if (!m_Props && !props)
+		return;
+
 	if (reset)
 	{
 		if (props == m_Props)
@@ -225,8 +260,14 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 				{
 					case props::IProperty::PROPERTY_ASPECT::PA_FILENAME:
 					{
-						pwp = new CWTFPropertyGridFileProperty(propname, TRUE, CString(p->AsString()), _T(""), 0, file_filter ? file_filter(p->GetID()) : _T("*.*"));
-						pwp->SetDescription(prop_desc ? prop_desc(p->GetID()) : _T("A File"));
+						if (reset)
+						{
+							pwp = new CWTFPropertyGridFileProperty(propname, TRUE, CString(p->AsString()), _T(""), 0, file_filter ? file_filter(p->GetID()) : _T("*.*"));
+							pwp->SetDescription(prop_desc ? prop_desc(p->GetID()) : _T("A File"));
+						}
+						else
+						{
+						}
 						break;
 					}
 
@@ -472,7 +513,7 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 			}
 		}
 
-		if (pwp)
+		if (reset && pwp)
 		{
 			pwp->SetData(p->GetID());
 			if (!parent_prop)
@@ -482,10 +523,12 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 		}
 	}
 
-	ExpandAll();
+	if (reset)
+	{
+		ExpandAll();
 
-	AdjustLayout();
-	//	RedrawWindow();
+		AdjustLayout();
+	}
 }
 
 void CPropertyGrid::OnClickButton(CPoint point)
@@ -504,6 +547,121 @@ END_MESSAGE_MAP()
 
 // CPropertyGrid message handlers
 
+void CPropertyGrid::UpdateCurrentProperties()
+{
+	if (m_bFocused)
+		return;
+
+	if (!m_Props)
+		return;
+
+	for (int i = 0, maxi = GetPropertyCount(); i < maxi; i++)
+	{
+		CWTFPropertyGridProperty *pgp = this->GetProperty(i);
+		uint32_t id = (uint32_t)pgp->GetData();
+
+		props::IProperty *p = m_Props->GetPropertyById(id);
+
+		if (p)
+		{
+			switch (p->GetType())
+			{
+				case props::IProperty::PROPERTY_TYPE::PT_STRING:
+				{
+					pgp->SetValue(p->AsString());
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_INT:
+				{
+					switch (p->GetAspect())
+					{
+						// add other cases if necessary
+
+						default:
+							pgp->SetValue(p->AsInt());
+							break;
+					}
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT:
+				{
+					pgp->SetValue(p->AsFloat());
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_GUID:
+				{
+					TCHAR guidstr[64];
+					p->AsString(guidstr);
+					pgp->SetValue(guidstr);
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:
+				{
+					pgp->SetValue((long)(p->AsBool()));
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_INT_V2:
+				{
+					pgp->GetSubItem(0)->SetValue(p->AsVec2I()->x);
+					pgp->GetSubItem(1)->SetValue(p->AsVec2I()->y);
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_INT_V3:
+				{
+					pgp->GetSubItem(0)->SetValue(p->AsVec3I()->x);
+					pgp->GetSubItem(1)->SetValue(p->AsVec3I()->y);
+					pgp->GetSubItem(2)->SetValue(p->AsVec3I()->z);
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_INT_V4:
+				{
+					pgp->GetSubItem(0)->SetValue(p->AsVec4I()->x);
+					pgp->GetSubItem(1)->SetValue(p->AsVec4I()->y);
+					pgp->GetSubItem(2)->SetValue(p->AsVec4I()->z);
+					pgp->GetSubItem(3)->SetValue(p->AsVec4I()->w);
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:
+				{
+					pgp->GetSubItem(0)->SetValue(p->AsVec2F()->x);
+					pgp->GetSubItem(1)->SetValue(p->AsVec2F()->y);
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
+				{
+					pgp->GetSubItem(0)->SetValue(p->AsVec3F()->x);
+					pgp->GetSubItem(1)->SetValue(p->AsVec3F()->y);
+					pgp->GetSubItem(2)->SetValue(p->AsVec3F()->z);
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
+				{
+					pgp->GetSubItem(0)->SetValue(p->AsVec4F()->x);
+					pgp->GetSubItem(1)->SetValue(p->AsVec4F()->y);
+					pgp->GetSubItem(2)->SetValue(p->AsVec4F()->z);
+					pgp->GetSubItem(3)->SetValue(p->AsVec4F()->w);
+					break;
+				}
+
+				case props::IProperty::PROPERTY_TYPE::PT_ENUM:
+				{
+					pgp->SetValue(p->GetEnumString(p->AsInt()));
+					break;
+				}
+			}
+		}
+	}
+}
 
 
 

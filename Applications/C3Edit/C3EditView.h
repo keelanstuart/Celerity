@@ -37,6 +37,8 @@ public:
 
 	void AdjustYawPitch(float yawadj, float pitchadj, bool redraw = true);
 
+	void SetAppropriateMouseCursor(UINT32 nFlags);
+
 // Overrides
 public:
 	virtual void OnDraw(CDC* pDC);  // overridden to draw this view

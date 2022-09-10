@@ -26,6 +26,7 @@
 #define ID_CLASS_DEFINITION             141
 #define ID_CLASS_PROPERTIES             142
 #define ID_NEW_FOLDER                   143
+#define ID_SEARCH                       143
 #define ID_SORT_MENU                    144
 #define ID_SORTING_GROUPBYTYPE          145
 #define ID_SORTING_SORTALPHABETIC       146
@@ -53,6 +54,7 @@
 #define IDR_EXPLORER                    169
 #define IDB_EXPLORER_24                 170
 #define IDR_SORT                        171
+#define IDR_PROTOTREE                   171
 #define IDB_SORT_24                     172
 #define IDR_POPUP_SORT                  173
 #define IDR_POPUP_EXPLORER              174
@@ -98,6 +100,7 @@
 #define IDC_TRANSLATE                   308
 #define IDC_ROTATE                      309
 #define IDC_SCALE                       310
+#define IDD_EDITPROTOTYPE               310
 #define IDC_SELECT                      311
 #define IDC_SELECT_MINUS                312
 #define IDC_SELECT_PLUS                 313
@@ -117,15 +120,19 @@
 #define ID_TOOL_UNISCALE                328
 #define ID_TOOL_SCALE                   329
 #define ID_TOOL_WAND                    330
+#define IDC_PROPERTIES                  1000
+#define IDC_COMPONENTS                  1001
+#define IDC_NAME                        1002
+#define IDC_FLAGS                       1003
 #define ID_EDIT_TRIGGERRENDERDOCCAPTURE 32771
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        310
+#define _APS_NEXT_RESOURCE_VALUE        313
 #define _APS_NEXT_COMMAND_VALUE         32772
-#define _APS_NEXT_CONTROL_VALUE         1000
-#define _APS_NEXT_SYMED_VALUE           310
+#define _APS_NEXT_CONTROL_VALUE         1005
+#define _APS_NEXT_SYMED_VALUE           332
 #endif
 #endif

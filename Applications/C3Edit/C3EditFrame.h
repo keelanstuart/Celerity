@@ -53,6 +53,10 @@ public:
 	BOOL AxisActive(props::TFlags64 axis);
 
 	void SetActiveProperties(props::IPropertySet *props, bool readonly = false, const TCHAR *title = nullptr);
+	void SetActivePrototype(c3::Prototype *pproto, bool readonly = false, const TCHAR *title = nullptr);
+	void SetActiveObject(c3::Object *pobj, bool readonly = false, const TCHAR *title = nullptr);
+	void RefreshActiveProperties();
+
 
 protected:
 	CMFCToolBarButton *GetToolButtonByID(CMFCToolBar *toolbar, DWORD butid);

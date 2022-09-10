@@ -211,6 +211,18 @@ void ObjectImpl::RemoveComponent(Component *pcomponent)
 }
 
 
+bool ObjectImpl::HasComponent(const ComponentType *pcomptype) const
+{
+	for (auto it : m_Components)
+	{
+		if (it->GetType() == pcomptype)
+			return true;
+	}
+
+	return false;
+}
+
+
 void ObjectImpl::Update(float elapsed_time)
 {
 	if (!m_Flags.IsSet(OBJFLAG(UPDATE)))

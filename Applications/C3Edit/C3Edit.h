@@ -14,6 +14,8 @@
 // See C3Edit.cpp for the implementation of this class
 //
 
+extern std::vector<std::pair<const TCHAR *, uint64_t>> FlagInfo;
+
 class C3EditApp : public CWinAppEx
 {
 public:
@@ -70,6 +72,9 @@ public:
 	c3::Configuration *m_Config;
 
 	void SetActiveProperties(props::IPropertySet *props, bool readonly = false, const TCHAR *title = nullptr);
+	void SetActivePrototype(c3::Prototype *pproto, bool readonly = false, const TCHAR *title = nullptr);
+	void SetActiveObject(c3::Object *pobj, bool readonly = false, const TCHAR *title = nullptr);
+	void RefreshActiveProperties();
 
 	virtual void PreLoadState();
 	virtual void LoadCustomState();

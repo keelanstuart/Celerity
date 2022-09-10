@@ -15,7 +15,7 @@
 #include "PrototypeView.h"
 #include "Resource.h"
 #include "C3Edit.h"
-//#include "PrototypeEditorDlg.h"
+#include "EditPrototypeDlg.h"
 
 class CPrototypeViewMenuButton : public CMFCToolBarMenuButton
 {
@@ -63,15 +63,9 @@ BEGIN_MESSAGE_MAP(CPrototypeView, CDockablePane)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
 	ON_WM_CONTEXTMENU()
-	ON_COMMAND(ID_CLASS_ADD_MEMBER_FUNCTION, OnPrototypeAddMemberFunction)
-	ON_COMMAND(ID_CLASS_ADD_MEMBER_VARIABLE, OnPrototypeAddMemberVariable)
-	ON_COMMAND(ID_CLASS_DEFINITION, OnPrototypeDefinition)
-	ON_COMMAND(ID_CLASS_PROPERTIES, OnPrototypeProperties)
-	ON_COMMAND(ID_NEW_FOLDER, OnNewFolder)
+	ON_COMMAND(ID_CLASS_PROPERTIES, OnPrototypeSearch)
 	ON_WM_PAINT()
 	ON_WM_SETFOCUS()
-	ON_COMMAND_RANGE(ID_SORTING_GROUPBYTYPE, ID_SORTING_SORTBYACCESS, OnSort)
-	ON_UPDATE_COMMAND_UI_RANGE(ID_SORTING_GROUPBYTYPE, ID_SORTING_SORTBYACCESS, OnUpdateSort)
 	ON_NOTIFY(TVN_SELCHANGED, PROTOTREE_ID, OnSelectionChanged)
 END_MESSAGE_MAP()
 
@@ -96,8 +90,8 @@ int CPrototypeView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 	// Load images:
-	m_wndToolBar.Create(this, AFX_DEFAULT_TOOLBAR_STYLE, IDR_SORT);
-	m_wndToolBar.LoadToolBar(IDR_SORT, 0, 0, TRUE /* Is locked */);
+	m_wndToolBar.Create(this, AFX_DEFAULT_TOOLBAR_STYLE, IDR_PROTOTREE);
+	m_wndToolBar.LoadToolBar(IDR_PROTOTREE, 0, 0, TRUE /* Is locked */);
 
 	OnChangeVisualStyle();
 
@@ -316,29 +310,37 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 					g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
 				pcp->SetName(protoname);
 
-				tstring groupname;
-				if (pproto)
+				CEditPrototypeDlg epd(pcp);
+				if (epd.DoModal() == IDOK)
 				{
-					pcp->SetGroup(pproto->GetGroup());
+					tstring groupname;
+					if (pproto)
+					{
+						pcp->SetGroup(pproto->GetGroup());
+					}
+					else
+					{
+						HTREEITEM hi = hpi;
+						while (hi && pWndTree->GetParentItem(hi))
+						{
+							if (!groupname.empty())
+								groupname.insert(_T('/'), 0);
+
+							groupname = tstring((LPCTSTR)(pWndTree->GetItemText(hi))) + groupname;
+							pWndTree->Expand(hi, TVE_EXPAND);
+
+							hi = pWndTree->GetParentItem(hi);
+						}
+					}
+
+					CString tmp = pcp->GetName();
+					HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, 1, 1, hpi);
+					m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)pcp);
 				}
 				else
 				{
-					HTREEITEM hi = hpi;
-					while (hi && pWndTree->GetParentItem(hi))
-					{
-						if (!groupname.empty())
-							groupname.insert(_T('/'), 0);
-
-						groupname = tstring((LPCTSTR)(pWndTree->GetItemText(hi))) + groupname;
-						pWndTree->Expand(hi, TVE_EXPAND);
-
-						hi = pWndTree->GetParentItem(hi);
-					}
+					pfac->RemovePrototype(pcp);
 				}
-
-				CString tmp = pcp->GetName();
-				HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, 1, 1, hpi);
-				m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)pcp);
 				break;
 			}
 
@@ -349,6 +351,14 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 
 			case PC_EDIT:
 			{
+				if (pproto)
+				{
+					CEditPrototypeDlg epd(pproto);
+					if (epd.DoModal() == IDOK)
+					{
+						pWndTree->SetItemText(hTreeItem, pproto->GetName());
+					}
+				}
 				break;
 			}
 
@@ -392,53 +402,10 @@ BOOL CPrototypeView::PreTranslateMessage(MSG* pMsg)
 	return CDockablePane::PreTranslateMessage(pMsg);
 }
 
-void CPrototypeView::OnSort(UINT id)
-{
-	if (m_nCurrSort == id)
-	{
-		return;
-	}
 
-	m_nCurrSort = id;
-
-	CPrototypeViewMenuButton* pButton =  DYNAMIC_DOWNCAST(CPrototypeViewMenuButton, m_wndToolBar.GetButton(0));
-
-	if (pButton != nullptr)
-	{
-		pButton->SetImage(GetCmdMgr()->GetCmdImage(id));
-		m_wndToolBar.Invalidate();
-		m_wndToolBar.UpdateWindow();
-	}
-}
-
-void CPrototypeView::OnUpdateSort(CCmdUI* pCmdUI)
-{
-	pCmdUI->SetCheck(pCmdUI->m_nID == m_nCurrSort);
-}
-
-void CPrototypeView::OnPrototypeAddMemberFunction()
-{
-	AfxMessageBox(_T("Add member function..."));
-}
-
-void CPrototypeView::OnPrototypeAddMemberVariable()
+void CPrototypeView::OnPrototypeSearch()
 {
 	// TODO: Add your command handler code here
-}
-
-void CPrototypeView::OnPrototypeDefinition()
-{
-	// TODO: Add your command handler code here
-}
-
-void CPrototypeView::OnPrototypeProperties()
-{
-	// TODO: Add your command handler code here
-}
-
-void CPrototypeView::OnNewFolder()
-{
-	AfxMessageBox(_T("New Folder..."));
 }
 
 void CPrototypeView::OnPaint()
@@ -501,7 +468,7 @@ void CPrototypeView::OnSelectionChanged(NMHDR *pNMHDR, LRESULT *pResult)
 	c3::Prototype *pproto = (c3::Prototype *)(m_wndPrototypeView.GetItemData(hti));
 	if (pproto)
 	{
-		theApp.SetActiveProperties(pproto->GetProperties());
+		theApp.SetActivePrototype(pproto);
 	}
 }
 

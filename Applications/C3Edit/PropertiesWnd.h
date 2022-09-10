@@ -30,17 +30,26 @@ public:
 		m_wndPropList.SetGroupNameFullWidth(bSet);
 	}
 
+	void SetActivePrototype(c3::Prototype *pproto);
+	void SetActiveObject(c3::Object *pobj);
 	void SetActiveProperties(props::IPropertySet* props, bool readonly, const TCHAR* title);
+	void UpdateCurrentProperties() { m_wndPropList.UpdateCurrentProperties(); }
+
+	void FillOutFlags();
+	void FillOutComponents();
 
 protected:
 	CFont m_fntPropList;
-	CComboBox m_wndObjectCombo;
 	CPropertiesToolBar m_wndToolBar;
-	CPropertyGrid m_wndPropList;
-	CListCtrl m_wndCompList;
+	CEdit m_wndNameEdit;
+	CCheckListBox m_wndCompList;
 	CCheckListBox m_wndFlagList;
+	CPropertyGrid m_wndPropList;
 
+	c3::Prototype *m_pProto;
+	c3::Object *m_pObj;
 	props::IPropertySet *m_pProps;
+	bool m_bExpanded;
 
 // Implementation
 public:
