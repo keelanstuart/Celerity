@@ -14,7 +14,7 @@ using namespace c3;
 DECLARE_COMPONENTTYPE(ModelRenderer, ModelRendererImpl);
 
 
-ModelRendererImpl::ModelRendererImpl() : m_Pos(0, 0, 0), m_Ori(0, 0, 0, 1), m_Scl(1, 1, 1)
+ModelRendererImpl::ModelRendererImpl() : m_Pos(0, 0, 0), m_Ori(1, 0, 0, 0), m_Scl(1, 1, 1)
 {
 	m_pPos = nullptr;
 	m_FS_defobj = m_VS_defobj = nullptr;

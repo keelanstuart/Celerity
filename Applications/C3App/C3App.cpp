@@ -58,6 +58,28 @@ bool __cdecl AltTextureName(const TCHAR *diffuse_texname, c3::Material::TextureC
 		}
 	}
 
+	ofs = s.find(tstring(_T("_diffuse.")), 0);
+	if (ofs != std::string::npos)
+	{
+		switch (typeneeded)
+		{
+			case c3::Material::TCT_NORMAL:
+				s.replace(ofs, 6, _T("_normal."));
+				_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+				return true;
+
+			case c3::Material::TCT_EMISSIVE:
+				s.replace(ofs, 6, _T("_emissive."));
+				_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+				return true;
+
+			case c3::Material::TCT_SURFACEDESC:
+				s.replace(ofs, 6, _T("_mtlpack."));
+				_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+				return true;
+		}
+	}
+
 	return false;
 }
 
@@ -91,24 +113,28 @@ BOOL C3App::InitInstance()
 	theApp.m_C3->GetLog()->Print(_T("Mapping file types... "));
 
 	c3::FileMapper *pfm = m_C3->GetFileMapper();
-	pfm->AddMapping(_T("tga"), _T("assets\\textures"));
-	pfm->AddMapping(_T("png"), _T("assets\\textures"));
-	pfm->AddMapping(_T("jpg"), _T("assets\\textures"));
 
-	pfm->AddMapping(_T("fbx"), _T("assets\\models"));
-	pfm->AddMapping(_T("gltf"), _T("assets\\models"));
-	pfm->AddMapping(_T("obj"), _T("assets\\models"));
-	pfm->AddMapping(_T("3ds"), _T("assets\\models"));
+	tstring respaths, resexts;
 
-	pfm->AddMapping(_T("vsh"), _T("assets\\shaders"));
-	pfm->AddMapping(_T("fsh"), _T("assets\\shaders"));
-	pfm->AddMapping(_T("gsh"), _T("assets\\shaders"));
+	respaths = m_Cfg->GetString(_T("resources.textures.paths"), _T("./;./assets;./assets/textures"));
+	resexts = m_Cfg->GetString(_T("resources.textures.extensions"), _T("tga;png;jpg;dds;bmp;tiff"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
-	pfm->AddMapping(_T("c3protoa"), _T("assets"));
+	respaths = m_Cfg->GetString(_T("resources.models.paths"), _T("./;./assets;./assets/models"));
+	resexts = m_Cfg->GetString(_T("resources.models.extensions"), _T("fbx;gltf;obj;3ds;dae"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
+	respaths = m_Cfg->GetString(_T("resources.shaders.paths"), _T("./;./assets;./assets/shaders"));
+	resexts = m_Cfg->GetString(_T("resources.shaders.extensions"), _T("vsh;fsh;gsh"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
+	respaths = m_Cfg->GetString(_T("resources.prototypes.paths"), _T("./;./assets"));
+	resexts = m_Cfg->GetString(_T("resources.prototypes.extensions"), _T("c3protoa"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	theApp.m_C3->GetLog()->Print(_T("done\n"));
 
-	theApp.m_C3->GetLog()->Print(_T("Loading prototypes... "));
+	theApp.m_C3->GetLog()->Print(_T("Loading prototypes..."));
 
 	for (size_t q = 0; q < pfm->GetNumPaths(_T("c3protoa")); q++)
 	{
@@ -135,7 +161,18 @@ BOOL C3App::InitInstance()
 		}
 	}
 
-	theApp.m_C3->GetLog()->Print(_T("done\n"));
+	theApp.m_C3->GetLog()->Print(_T(" done\n"));
+
+	theApp.m_C3->GetLog()->Print(_T("Loading Plugins..."));
+
+	c3::PluginManager *ppm = m_C3->GetPluginManager();
+	if (!ppm)
+		return FALSE;
+
+	ppm->DiscoverPlugins(m_Cfg->GetString(_T("resources.plugin.path"), _T("./")));	// scan in app data
+	ppm->DiscoverPlugins();															// scan locally
+
+	theApp.m_C3->GetLog()->Print(_T(" done\n"));
 
 	// Standard initialization
 

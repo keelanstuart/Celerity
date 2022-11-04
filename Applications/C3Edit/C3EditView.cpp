@@ -318,8 +318,6 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
 			pDoc->m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
 
-			prend->SetViewport();
-
 			// Lighting pass(es)
 			prend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);

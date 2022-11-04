@@ -127,57 +127,35 @@ BOOL C3EditApp::InitInstance()
 	cfgpath += _T("C3Edit.config");
 	m_Config = m_C3->CreateConfiguration(cfgpath.c_str());
 
-	theApp.m_C3->GetLog()->Print(_T("Mapping file types... "));
+	theApp.m_C3->GetLog()->Print(_T("Mapping file types..."));
 
 	c3::FileMapper *pfm = m_C3->GetFileMapper();
 
-	tstring resroot;
+	tstring respaths, resexts;
 
-	resroot = _T("assets/textures");
-	pfm->AddMapping(_T("tga"), resroot.c_str());
-	pfm->AddMapping(_T("png"), resroot.c_str());
-	pfm->AddMapping(_T("jpg"), resroot.c_str());
-	resroot.insert(0, m_AppDataRoot.c_str());
-	CreateDirectories(resroot.c_str());
-	pfm->AddMapping(_T("tga"), resroot.c_str());
-	pfm->AddMapping(_T("png"), resroot.c_str());
-	pfm->AddMapping(_T("jpg"), resroot.c_str());
+	respaths = m_Config->GetString(_T("resources.textures.paths"), _T("./;./assets;./assets/textures"));
+	resexts = m_Config->GetString(_T("resources.textures.extensions"), _T("tga;png;jpg;dds;bmp;tiff"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
-	resroot = _T("assets/models");
-	pfm->AddMapping(_T("fbx"), resroot.c_str());
-	pfm->AddMapping(_T("gltf"), resroot.c_str());
-	pfm->AddMapping(_T("obj"), resroot.c_str());
-	pfm->AddMapping(_T("3ds"), resroot.c_str());
-	resroot.insert(0, m_AppDataRoot.c_str());
-	CreateDirectories(resroot.c_str());
-	pfm->AddMapping(_T("fbx"), resroot.c_str());
-	pfm->AddMapping(_T("gltf"), resroot.c_str());
-	pfm->AddMapping(_T("obj"), resroot.c_str());
-	pfm->AddMapping(_T("3ds"), resroot.c_str());
+	respaths = m_Config->GetString(_T("resources.models.paths"), _T("./;./assets;./assets/models"));
+	resexts = m_Config->GetString(_T("resources.models.extensions"), _T("fbx;gltf;obj;3ds;dae"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
-	resroot = _T("assets/shaders");
-	pfm->AddMapping(_T("vsh"), resroot.c_str());
-	pfm->AddMapping(_T("fsh"), resroot.c_str());
-	pfm->AddMapping(_T("gsh"), resroot.c_str());
-	resroot.insert(0, m_AppDataRoot.c_str());
-	CreateDirectories(resroot.c_str());
-	pfm->AddMapping(_T("vsh"), resroot.c_str());
-	pfm->AddMapping(_T("fsh"), resroot.c_str());
-	pfm->AddMapping(_T("gsh"), resroot.c_str());
+	respaths = m_Config->GetString(_T("resources.shaders.paths"), _T("./;./assets;./assets/shaders"));
+	resexts = m_Config->GetString(_T("resources.shaders.extensions"), _T("vsh;fsh;gsh"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
-	theApp.m_C3->GetLog()->Print(_T("done\n"));
+	respaths = m_Config->GetString(_T("resources.prototypes.paths"), _T("./;./assets"));
+	resexts = m_Config->GetString(_T("resources.prototypes.extensions"), _T("c3protoa"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
+	theApp.m_C3->GetLog()->Print(_T(" done\n"));
+
+	theApp.m_C3->GetLog()->Print(_T("Loading Prototypes..."));
 
 	c3::Factory *pf = m_C3->GetFactory();
 	if (!pf)
 		return FALSE;
-
-	tstring protopaths = m_Config->GetString(_T("resources.prototypes.paths"), _T("./;./assets"));
-	protopaths += _T(";");
-	protopaths += m_AppDataRoot;
-	pfm->SetMappingsFromDelimitedStrings(
-		m_Config->GetString(_T("resources.prototypes.extensions"), _T("c3protoa")),
-		protopaths.c_str(),
-		_T(';'));
 
 	for (size_t q = 0; q < pfm->GetNumPaths(_T("c3protoa")); q++)
 	{
@@ -205,16 +183,18 @@ BOOL C3EditApp::InitInstance()
 		}
 	}
 
+	theApp.m_C3->GetLog()->Print(_T(" done\n"));
+
+	theApp.m_C3->GetLog()->Print(_T("Loading Plugins..."));
+
 	c3::PluginManager *ppm = m_C3->GetPluginManager();
 	if (!ppm)
 		return FALSE;
 
-	tstring plugpath = m_AppDataRoot;
-	plugpath += _T("plugins");
-	CreateDirectories(plugpath.c_str());
+	ppm->DiscoverPlugins(m_Config->GetString(_T("resources.plugin.path"), _T("./")));	// scan in app data
+	ppm->DiscoverPlugins();																// scan locally
 
-	ppm->DiscoverPlugins(plugpath.c_str());		// scan in app data
-	ppm->DiscoverPlugins();						// scan locally
+	theApp.m_C3->GetLog()->Print(_T(" done\n"));
 
 	EnableTaskbarInteraction(FALSE);
 

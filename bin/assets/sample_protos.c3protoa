@@ -1107,4 +1107,17 @@
             <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-terrain-shadow.vsh</powerprops:property>
         </powerprops:property_set>
     </prototype>
+    <prototype guid="{368D9570-8788-4385-BE0B-66747E5B2C36}" name="Boombox" group="" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-obj.fsh</powerprops:property>
+            <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">boombox/boombox.gltf</powerprops:property>
+            <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
+            <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
 </prototypes>

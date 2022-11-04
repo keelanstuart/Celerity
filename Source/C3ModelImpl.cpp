@@ -598,6 +598,8 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 			TCHAR difftexpath[MAX_PATH], texpathtemp[MAX_PATH];
 
 			_tcscpy_s(modbasepath, filename);
+			TCHAR *c = modbasepath;
+			while (*c) { if (*c == _T('/')) { *c = _T('\\'); } c++; }
 			PathRemoveFileSpec(modbasepath);
 
 			// HACK HACK HACK!!!
