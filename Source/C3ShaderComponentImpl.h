@@ -18,6 +18,7 @@ namespace c3
 	protected:
 		RendererImpl *m_Rend;
 		GLuint m_glID;
+		uint32_t m_CRC;
 		Renderer::ShaderComponentType m_Type;
 		GLuint m_glType;
 		bool m_Compiled;
@@ -33,9 +34,11 @@ namespace c3
 
 		virtual ShaderComponent::RETURNCODE CompileProgram(const TCHAR *program, const TCHAR *preamble);
 
-		virtual const TCHAR *GetProgramText();
+		virtual const TCHAR *GetProgramText() const;
 
-		virtual bool IsCompiled();
+		virtual uint32_t GetProgramCRC() const;
+
+		virtual bool IsCompiled() const;
 
 		operator GLuint() const { return m_glID; }
 

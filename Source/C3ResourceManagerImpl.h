@@ -26,6 +26,9 @@ namespace c3
 		typedef std::deque<const ResourceType *> TResourceTypeArray;
 		TResourceTypeArray m_ResTypes;
 
+		//typedef std::map<GUID, const ResourceType *> TResourceTypeMap;
+		//TResourceTypeMap m_ResTypesMap;
+
 		typedef std::multimap<tstring, const ResourceType *> TExtToResourceTypeMap;
 		TExtToResourceTypeMap m_ExtResTypeMap;
 

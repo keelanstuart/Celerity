@@ -13,6 +13,12 @@
 using namespace c3;
 
 
+GUID Texture2D::ResourceGUID()
+{
+	return (RESOURCETYPENAME(Texture2D)::self).GetGUID();
+}
+
+
 Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	assert(prend);
@@ -48,6 +54,7 @@ Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, R
 
 		m_Rend->gl.TexStorage2D(GL_TEXTURE_2D, (GLsizei)m_MipCount, m_Rend->GLInternalFormat(m_Type), (GLsizei)m_Width, (GLsizei)m_Height);
 
+		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		m_Rend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -289,6 +296,12 @@ void RESOURCETYPENAME(Texture2D)::Unload(void *data) const
 // *******************************************************************************
 
 
+GUID TextureCube::ResourceGUID()
+{
+	return (RESOURCETYPENAME(TextureCube)::self).GetGUID();
+}
+
+
 TextureCubeImpl::TextureCubeImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	assert(prend);
@@ -518,8 +531,47 @@ Texture::RETURNCODE TextureCubeImpl::Unlock()
 }
 
 
+DECLARE_RESOURCETYPE(TextureCube);
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(TextureCube)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
+{
+	if (returned_data)
+	{
+		*returned_data = nullptr; //psys->GetRenderer()->CreateTextureCubeFromFile(filename, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
+		if (!*returned_data)
+			return ResourceType::LoadResult::LR_ERROR;
+	}
+
+	return ResourceType::LoadResult::LR_SUCCESS;
+}
+
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(TextureCube)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
+{
+	return ResourceType::LoadResult::LR_ERROR;
+}
+
+
+bool RESOURCETYPENAME(TextureCube)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+{
+	return false;
+}
+
+
+void RESOURCETYPENAME(TextureCube)::Unload(void *data) const
+{
+	((TextureCube *)data)->Release();
+}
+
+
 // *******************************************************************************
 // *******************************************************************************
+
+
+GUID Texture3D::ResourceGUID()
+{
+	return (RESOURCETYPENAME(Texture3D)::self).GetGUID();
+}
 
 
 Texture3DImpl::Texture3DImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
@@ -749,4 +801,37 @@ Texture::RETURNCODE Texture3DImpl::Unlock()
 	}
 
 	return RET_OK;
+}
+
+
+DECLARE_RESOURCETYPE(Texture3D);
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(Texture3D)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
+{
+	if (returned_data)
+	{
+		*returned_data = nullptr; //psys->GetRenderer()->CreateTexture2DFromFile(filename, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
+		if (!*returned_data)
+			return ResourceType::LoadResult::LR_ERROR;
+	}
+
+	return ResourceType::LoadResult::LR_SUCCESS;
+}
+
+
+c3::ResourceType::LoadResult RESOURCETYPENAME(Texture3D)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
+{
+	return ResourceType::LoadResult::LR_ERROR;
+}
+
+
+bool RESOURCETYPENAME(Texture3D)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+{
+	return false;
+}
+
+
+void RESOURCETYPENAME(Texture3D)::Unload(void *data) const
+{
+	((Texture3D *)data)->Release();
 }

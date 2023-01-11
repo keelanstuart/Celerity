@@ -20,22 +20,6 @@ namespace c3
 
 		static const ComponentType *Type();
 
-		virtual void Release() = NULL;
-
-		virtual ComponentType *GetType() = NULL;
-
-		virtual props::TFlags64 Flags() = NULL;
-
-		virtual bool Initialize(Object *pobject) = NULL;
-
-		virtual void Update(Object *pobject, float elapsed_time = 0.0f) = NULL;
-
-		virtual bool Prerender(Object *pobject, props::TFlags64 rendflags) = NULL;
-
-		virtual void Render(Object *pobject, props::TFlags64 rendflags) = NULL;
-
-		virtual void PropertyChanged(const props::IProperty *pprop) = NULL;
-
 		// Sets the origin position of the model (offsets any effects of Positionable); linked to 'MPOS' property
 		virtual void SetPos(float x, float y, float z) = NULL;
 
@@ -59,9 +43,6 @@ namespace c3
 
 		// Returns the model that is being rendered
 		virtual const Model *GetModel() const = NULL;
-
-		// Performs a raycast collision versus the model, returning the first hit
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const = NULL;
 
 	};
 

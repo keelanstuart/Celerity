@@ -57,7 +57,7 @@ void CameraImpl::Release()
 }
 
 
-props::TFlags64 CameraImpl::Flags()
+props::TFlags64 CameraImpl::Flags() const
 {
 	return m_Flags;
 }
@@ -162,13 +162,13 @@ void CameraImpl::Update(Object *pobject, float elapsed_time)
 }
 
 
-bool CameraImpl::Prerender(Object *pobject, props::TFlags64 rendflags)
+bool CameraImpl::Prerender(Object *pobject, Object::RenderFlags flags)
 {
 	return false;
 }
 
 
-void CameraImpl::Render(Object *pobject, props::TFlags64 rendflags)
+void CameraImpl::Render(Object *pobject, Object::RenderFlags flags)
 {
 
 }

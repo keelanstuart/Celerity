@@ -113,6 +113,8 @@ namespace c3
 
 	};
 
+	DEFINE_RESOURCETYPE(TextureCube, RTFLAG_RUNBYRENDERER, GUID({0xf46f85a2, 0x45da, 0x4fc1, {0x81, 0x4a, 0xee, 0x9a, 0x67, 0xc4, 0x3e, 0x9f}}), "TextureCube", "Cube Textures", "dds", "dds");
+
 	class Texture3DImpl : public Texture3D
 	{
 
@@ -159,5 +161,7 @@ namespace c3
 		operator GLuint() const { return m_glID; }
 
 	};
+
+	DEFINE_RESOURCETYPE(Texture3D, RTFLAG_RUNBYRENDERER, GUID({0x93927dc6, 0xe335, 0x4728, {0x87, 0x55, 0x36, 0x7c, 0xc9, 0xc, 0x34, 0x3d}}), "Texture3D", "Volumetric Textures", "dds", "dds");
 
 };

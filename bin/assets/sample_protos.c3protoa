@@ -10,6 +10,8 @@
             <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-obj.fsh</powerprops:property>
             <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">sponza\sponza.gltf</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.707107,0.000000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.080000,0.080000,0.080000</powerprops:property>
             <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
             <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
         </powerprops:property_set>
@@ -1118,6 +1120,63 @@
             <powerprops:property id="MODF" name="Model" type="STRING">boombox/boombox.gltf</powerprops:property>
             <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
             <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{0413A21C-BEAC-471B-9047-3A0E8D9CE082}" name="Ship" group="Spaceships" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-obj.fsh</powerprops:property>
+            <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">ship.x</powerprops:property>
+            <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
+            <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.0,-1.0,0.0,0.0</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{B40195A1-64C4-45B1-907B-7A2232E5E948}" name="Ship1" group="Spaceships" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-obj.fsh</powerprops:property>
+            <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">ship1.x</powerprops:property>
+            <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
+            <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.0,-1.0,0.0,0.0</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{82513D62-3E55-4046-B40E-214D17F6E017}" name="Ship2" group="Spaceships" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-obj.fsh</powerprops:property>
+            <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">ship2.x</powerprops:property>
+            <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
+            <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.0,-1.0,0.0,0.0</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+	
+    <prototype guid="{4A2D0682-FBE0-4085-AA5F-0E7C2CCFDE38}" name="terrain_2417" group="terrain" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FSHF" name="FragmentShader" type="STRING">def-obj.fsh</powerprops:property>
+            <powerprops:property id="FSSF" name="ShadowFragmentShader" type="STRING">def-obj-shadow.fsh</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">2417.glb</powerprops:property>
+            <powerprops:property id="VSHF" name="VertexShader" type="STRING">def-obj.vsh</powerprops:property>
+            <powerprops:property id="VSSF" name="ShadowVertexShader" type="STRING">def-obj-shadow.vsh</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">664915.750,-3312785.75,-5402887.00</powerprops:property>
         </powerprops:property_set>
     </prototype>
 </prototypes>

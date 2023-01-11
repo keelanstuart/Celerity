@@ -30,32 +30,38 @@ namespace c3
 
 	public:
 
-		typedef enum
-		{
-			UPDATE = 0,					// Clearing this ensures the object won't update
-			DRAW,						// Clearing this ensures the object won't draw
-			DRAWINEDITOR,				// Setting this will make the object draw in the editor... note: it is up to a tool to handle this
-			POSCHANGED,					// WARNING: not recommended that you change this manually
-			ORICHANGED,					// WARNING: not recommended that you change this manually
-			SCLCHANGED,					// WARNING: not recommended that you change this manually
-			KILL,						// The object is marked for death
-			TEMPORARY,					// Temporary objects will not persist when parent objects are saved
-			CHECKCOLLISIONS,			// Indicates that the Object should respond to collisions
-			TRACKCAMX,					// Move with the active camera X
-			TRACKCAMY,					// " Y
-			TRACKCAMZ,					// " Z
-			TRACKCAMLITERAL,			// Distinguishes between eye or focus position when following the camera
-			BILLBOARD,					// Aligns the object to the view matrix of the renderer when drawn
-			CHILDRENDIRTY,				// Indicates that the children have changed since the last update
-			PARENTDIRTY,				// Indicates that the parent has changed since the last update
-			LIGHT,						// Indicates that the object emits light
-			CASTSHADOW,					// Indicates that the object casts a shadow
-		} EObjFlag;
+		typedef props::TFlags64		ObjectFlags;
 
-		// compile time helper for making bitwise flags out of EObjFlag enum values
-		// OBJFLAG(TRACKCAMX) | OBJFLAG(TRACKCAMY), for example, converts and conflates those flags at compile time
-		static constexpr uint64_t OBJFLAG(EObjFlag f) { return (1LL << (f)); }
-		
+		#define OF_UPDATE			0x00000001					// Clearing this ensures the object won't update
+		#define OF_DRAW				0x00000002					// Clearing this ensures the object won't draw
+		#define OF_DRAWINEDITOR		0x00000004					// Setting this will make the object draw in the editor... note: it is up to a tool to handle this
+		#define OF_POSCHANGED		0x00000008					// WARNING: not recommended that you change this manually
+		#define OF_ORICHANGED		0x00000010					// WARNING: not recommended that you change this manually
+		#define OF_SCLCHANGED		0x00000020					// WARNING: not recommended that you change this manually
+		#define OF_KILL				0x00000040					// The object is marked for death
+		#define OF_TEMPORARY		0x00000080					// Temporary objects will not persist when parent objects are saved
+		#define OF_CHECKCOLLISIONS	0x00000100					// Indicates that the Object should respond to collisions
+		#define OF_TRACKCAMX		0x00000200					// Move with the active camera X
+		#define OF_TRACKCAMY		0x00000400					// " Y
+		#define OF_TRACKCAMZ		0x00000800					// " Z
+		#define OF_TRACKCAMLITERAL	0x00001000					// Distinguishes between eye or focus position when following the camera
+		#define OF_BILLBOARD		0x00002000					// Aligns the object to the view matrix of the renderer when drawn
+		#define OF_CHILDRENDIRTY	0x00004000					// Indicates that the children have changed since the last update
+		#define OF_PARENTDIRTY		0x00008000					// Indicates that the parent has changed since the last update
+		#define OF_LIGHT			0x00010000					// Indicates that the object emits light
+		#define OF_CASTSHADOW		0x00020000					// Indicates that the object casts a shadow
+
+
+		typedef props::TFlags64		RenderFlags;
+
+		#define RF_EDITORDRAW		0x00000001					// Indicates this should be drawn as it would be in an editor
+		#define RF_LOCKSHADER		0x00000002					// Do not allow the shader to be changed
+		#define RF_LOCKMATERIAL		0x00000004					// Do not allow the material to be changed
+		#define RF_DRAWBOUNDS		0x00000008					// Draw the bounding box
+		#define RF_SHADOW			0x00000010					// Draw the shadow
+		#define RF_LIGHT			0x00000020					// Draw the light
+		#define RF_FORCE			0x00000040					// Force drawing
+
 
 		/// Returns the Celerity System in which the Object exists
 		virtual System *GetSystem() = NULL;
@@ -88,7 +94,7 @@ namespace c3
 		virtual void AddChild(Object *pchild) = NULL;
 
 		/// Allows access to the Object's flags
-		virtual props::TFlags64 &Flags() = NULL;
+		virtual ObjectFlags &Flags() = NULL;
 
 		/// Returns the IPropertySet owned by the Object
 		virtual props::IPropertySet *GetProperties() = NULL;
@@ -115,13 +121,13 @@ namespace c3
 		virtual void Update(float elapsed_time = 0.0f) = NULL;
 
 		/// Called prior to actually rendering the object; returns true if Render should be called, false if not
-		virtual bool Prerender(props::TFlags64 rendflags = OBJFLAG(DRAW)) = NULL;
+		virtual bool Prerender(RenderFlags flags = 0) = NULL;
 
 		/// Called to render the object; returns true if Postrender should be called, false if not
-		virtual bool Render(props::TFlags64 rendflags = OBJFLAG(DRAW)) = NULL;
+		virtual bool Render(RenderFlags flags = 0) = NULL;
 
 		/// Called after the object is rendered
-		virtual void Postrender(props::TFlags64 rendflags = OBJFLAG(DRAW)) = NULL;
+		virtual void Postrender(RenderFlags flags = 0) = NULL;
 
 		/// Loads the Object from a stream
 		virtual bool Load(genio::IInputStream *is) = NULL;

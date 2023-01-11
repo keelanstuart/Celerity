@@ -348,19 +348,29 @@ bool FactoryImpl::LoadPrototypes(const tinyxml2::XMLNode *proot)
 			const tinyxml2::XMLElement *pcomp = pcomps->FirstChildElement("component");
 			while (pcomp)
 			{
-				const tinyxml2::XMLAttribute *paguid = pcomp->FindAttribute("guid");
-				if (paguid)
+				const tinyxml2::XMLAttribute *pacompguid = pcomp->FindAttribute("guid");
+				const tinyxml2::XMLAttribute *pacompname = pcomp->FindAttribute("name");
+				const ComponentType *pct = nullptr;
+				if (pacompguid)
 				{
-					size_t len = strlen(paguid->Value());
-					sscanf_s(paguid->Value(), "{%8X-%4hX-%4hX-%2hhX%2hhX-%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX}", &guid.Data1, &guid.Data2, &guid.Data3,
+					size_t len = strlen(pacompguid->Value());
+					sscanf_s(pacompguid->Value(), "{%8X-%4hX-%4hX-%2hhX%2hhX-%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX}", &guid.Data1, &guid.Data2, &guid.Data3,
 							 &guid.Data4[0], &guid.Data4[1], &guid.Data4[2], &guid.Data4[3], &guid.Data4[4], &guid.Data4[5], &guid.Data4[6], &guid.Data4[7]);
 
-					const ComponentType *pct = FindComponentType(guid);
-					if (pct)
-						pproto->AddComponent(pct);
-
-					pcomp = pcomp->NextSiblingElement("component");
+					pct = FindComponentType(guid);
 				}
+				else if (pacompname)
+				{
+					TCHAR *compname;
+					CONVERT_MBCS2TCS(pacompname->Value(), compname);
+
+					pct = FindComponentType(compname, false);
+				}
+
+				if (pct)
+					pproto->AddComponent(pct);
+
+				pcomp = pcomp->NextSiblingElement("component");
 			}
 
 			const tinyxml2::XMLElement *proproot = pel->FirstChildElement("powerprops:property_set");

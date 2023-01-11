@@ -60,6 +60,7 @@ protected:
 
 	static c3::FrameBuffer *m_GBuf;
 	static c3::FrameBuffer *m_LCBuf;
+	static c3::FrameBuffer *m_AuxBuf;
 	static c3::FrameBuffer *m_SSBuf;
 	static std::vector<c3::Texture2D *> m_ColorTarg;
 	static c3::DepthBuffer *m_DepthTarg;

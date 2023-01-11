@@ -4,6 +4,7 @@ uniform sampler2D uSamplerPosDepth;
 uniform sampler2D uSamplerEmissionRoughness;
 uniform sampler2D uSamplerLights;
 uniform sampler2D uSamplerShadow;
+uniform sampler2D uSamplerAuxiliary;
 uniform vec3 uSunDirection;
 uniform vec3 uSunColor;
 uniform vec3 uAmbientColor;
@@ -35,6 +36,6 @@ void main()
 	float bias = max(0.007 * (1.0 - ndotl), 0.0007);  
 	float light = (scoords.z > (stex + bias)) ? 0.0 : 1.0;
 	
-	vec3 color = (diff.rgb * uAmbientColor) + (diff.rgb * lights) + emis + ((diff.rgb * uSunColor * light * clamp(ndotl, 0, 1)));
+	vec3 color = (diff.rgb * uAmbientColor) + (diff.rgb * lights) + emis + (diff.rgb * uSunColor * light * clamp(ndotl, 0, 1));
 	oColor = vec4(color, 1.0);
 }

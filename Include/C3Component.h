@@ -36,10 +36,10 @@ namespace c3
 
 		/// Returns the ComponentType that built this Component
 		/// IMPORTANT: YOU DO NOT NEED TO IMPLEMENT THIS METHOD YOURSELF IF YOU USE REGISTER_COMPONENTTYPE
-		virtual ComponentType *GetType() = NULL;
+		virtual const ComponentType *GetType() const = NULL;
 
 		/// Returns the flags that reveal what this Component should be used for, such as rendering or character-like behavior
-		virtual props::TFlags64 Flags() = NULL;
+		virtual props::TFlags64 Flags() const = NULL;
 
 		/// Called to initialize the Component on a given Object, allowing it to allocate any resources
 		virtual bool Initialize(Object *pobject) = NULL;
@@ -49,10 +49,10 @@ namespace c3
 
 		/// Called by the Object that owns the Component during it's own Prerender
 		/// If any Component Prerender succeeds, Object::Render is called
-		virtual bool Prerender(Object *pobject, props::TFlags64 rendflags) = NULL;
+		virtual bool Prerender(Object *pobject, Object::RenderFlags flags) = NULL;
 
 		/// Called by the Object that owns the Component during it's own Render
-		virtual void Render(Object *pobject, props::TFlags64 rendflags) = NULL;
+		virtual void Render(Object *pobject, Object::RenderFlags flags) = NULL;
 
 		/// Called when a property on the owning Object has changed
 		virtual void PropertyChanged(const props::IProperty *pprop) = NULL;
@@ -117,9 +117,9 @@ namespace c3
 		}
 
 /// THIS GOES IN YOUR SOURCE
-#define DECLARE_COMPONENTTYPE(component_class, componentimpl_class)												\
-		COMPONENTTYPE(component_class) COMPONENTTYPE(component_class)::self;									\
-		c3::ComponentType *componentimpl_class::GetType() { return &COMPONENTTYPE(component_class)::self; }		\
+#define DECLARE_COMPONENTTYPE(component_class, componentimpl_class)															\
+		COMPONENTTYPE(component_class) COMPONENTTYPE(component_class)::self;												\
+		const c3::ComponentType *componentimpl_class::GetType() const { return &COMPONENTTYPE(component_class)::self; }		\
 		const c3::ComponentType *component_class::Type() { return (const c3::ComponentType *)&COMPONENTTYPE(component_class)::self; }
 
 	/// DO THIS AFTER YOU CALL c3::System::Create OR WHEN YOUR PLUG-IN IS INITIALIZED

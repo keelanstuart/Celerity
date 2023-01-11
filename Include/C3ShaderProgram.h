@@ -52,6 +52,14 @@ namespace c3
 		/// Actually sets the uniform values in the program
 		virtual void ApplyUniforms(bool update_globals = true) = NULL;
 
+		// Builds a ResourceManager ID string from shader component filenames
+		static const TCHAR *ResourceIdentifier(TCHAR *ret, size_t retlc, const TCHAR *vs, const TCHAR *fs, const TCHAR *gs = nullptr, const TCHAR *es = nullptr, const TCHAR *cs = nullptr);
+
+		// Builds a ResourceManager ID string from shader component pointers
+		static const TCHAR *ResourceIdentifier(TCHAR *ret, size_t retlc,
+			const ShaderComponent *vs, const ShaderComponent *fs,
+			const ShaderComponent *gs, const ShaderComponent *es, const ShaderComponent *cs);
+
 	};
 
 };

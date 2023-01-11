@@ -41,6 +41,7 @@ END_MESSAGE_MAP()
 
 c3::FrameBuffer *C3EditView::m_GBuf = nullptr;
 c3::FrameBuffer *C3EditView::m_LCBuf = nullptr;
+c3::FrameBuffer *C3EditView::m_AuxBuf = nullptr;
 c3::FrameBuffer *C3EditView::m_SSBuf = nullptr;
 std::vector<c3::Texture2D *> C3EditView::m_ColorTarg = { };
 c3::DepthBuffer *C3EditView::m_DepthTarg = nullptr;
@@ -92,6 +93,7 @@ C3EditView::~C3EditView()
 		C3_SAFERELEASE(m_GBuf);
 		C3_SAFERELEASE(m_LCBuf);
 		C3_SAFERELEASE(m_SSBuf);
+		C3_SAFERELEASE(m_AuxBuf);
 		for (auto p : m_ColorTarg)
 			C3_SAFERELEASE(p);
 		C3_SAFERELEASE(m_DepthTarg);
@@ -312,18 +314,30 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetAlphaPassRange(3.0f / 255.0f);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
-			pDoc->m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::DRAW));
+			pDoc->m_RootObj->Render();
 
 			// Shadow pass
 			prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
-			pDoc->m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
+			pDoc->m_RootObj->Render(RF_SHADOW);
 
 			// Lighting pass(es)
 			prend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 			prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-			pDoc->m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::LIGHT));
+			pDoc->m_RootObj->Render(RF_LIGHT);
+
+			// Selection hilighting
+			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
+			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
+			prend->UseProgram(m_SP_bounds);
+
+			typedef std::vector<c3::Positionable *> TPositionableVec;
+			TPositionableVec selpos;
+			for (auto sel : m_Selected)
+			{
+				sel->Render(RF_LOCKSHADER | RF_LOCKMATERIAL);
+			}
 
 			// Resolve
 			prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
@@ -352,50 +366,6 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->UseProgram(m_SP_resolve);
 			m_SP_resolve->ApplyUniforms(true);
 			prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
-
-			if (!m_Selected.empty())
-			{
-				prend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST);
-				prend->UseProgram(m_SP_bounds);
-
-				typedef std::vector<c3::Positionable *> TPositionableVec;
-				TPositionableVec selpos;
-				for (auto sel : m_Selected)
-				{
-					if (!sel->FindComponent(c3::Positionable::Type()))
-						continue;
-
-					c3::Object *o = sel;
-					do
-					{
-						c3::Positionable *pp = dynamic_cast<c3::Positionable *>(o->FindComponent(c3::Positionable::Type()));
-						selpos.push_back(pp);
-						o = o->GetOwner();
-					}
-					while (o);
-
-					for (TPositionableVec::reverse_iterator rit = selpos.rbegin(); rit != selpos.rend(); rit++)
-						m_SelectionXforms->Push((*rit)->GetTransformMatrix());
-
-					c3::ModelRenderer *pmr = dynamic_cast<c3::ModelRenderer *>(sel->FindComponent(c3::ModelRenderer::Type()));
-					if (pmr)
-						m_SelectionXforms->Push(pmr->GetMatrix());
-
-					prend->SetWorldMatrix(m_SelectionXforms->Top());
-
-					if (pmr)
-						m_SelectionXforms->Pop();
-
-					while (!selpos.empty())
-					{
-						selpos.pop_back();
-						m_SelectionXforms->Pop();
-					}
-
-					m_SP_bounds->ApplyUniforms(true);
-					prend->GetBoundsMesh()->Draw(c3::Renderer::EPrimType::LINELIST);
-				}
-			}
 
 			prend->EndScene();
 			prend->Present();
@@ -455,7 +425,6 @@ void C3EditView::OnDraw(CDC *pDC)
 				h /= 2;
 			}
 
-
 			c3::FrameBuffer::TargetDesc LCBufTargData[] =
 			{
 				{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },
@@ -464,6 +433,20 @@ void C3EditView::OnDraw(CDC *pDC)
 			theApp.m_C3->GetLog()->Print(_T("Creating light combine buffer... "));
 			m_LCBuf = prend->CreateFrameBuffer();
 			gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+			theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+			CRect auxr = r;
+			//auxr.right /= 4;
+			//auxr.bottom /= 4;
+
+			c3::FrameBuffer::TargetDesc AuxBufTargData[] =
+			{
+				{ _T("uSamplerAuxiliary"), c3::Renderer::TextureType::U8_3CH, TEXCREATEFLAG_RENDERTARGET },
+			};
+
+			theApp.m_C3->GetLog()->Print(_T("Creating auxiliary buffer... "));
+			m_AuxBuf = prend->CreateFrameBuffer();
+			gbok = m_AuxBuf->Setup(_countof(AuxBufTargData), AuxBufTargData, m_DepthTarg, auxr) == c3::FrameBuffer::RETURNCODE::RET_OK;
 			theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 			theApp.m_C3->GetLog()->Print(_T("Creating shadow buffer... "));
@@ -525,7 +508,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			}
 
 			m_VS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.vsh"), rf))->GetData());
-			m_FS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.fsh"), rf))->GetData());
+			m_FS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine-editor.fsh"), rf))->GetData());
 			m_SP_combine = prend->CreateShaderProgram();
 			if (m_SP_combine)
 			{
@@ -553,14 +536,18 @@ void C3EditView::OnDraw(CDC *pDC)
 					if (ul >= 0)
 						m_SP_combine->SetUniformTexture((c3::Texture *)m_ShadowTarg, ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
+					ul = m_SP_combine->GetUniformLocation(_T("uSamplerAuxiliary"));
+					if (ul >= 0)
+						m_SP_combine->SetUniformTexture((c3::Texture *)m_AuxBuf->GetColorTarget(0), ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+
 					m_ulSunDir = m_SP_combine->GetUniformLocation(_T("uSunDirection"));
 					m_ulSunColor = m_SP_combine->GetUniformLocation(_T("uSunColor"));
 					m_ulAmbientColor = m_SP_combine->GetUniformLocation(_T("uAmbientColor"));
 				}
 			}
 
-			m_VS_bounds = (c3::ShaderComponent *)((rm->GetResource(_T("bounds.vsh"), rf))->GetData());
-			m_FS_bounds = (c3::ShaderComponent *)((rm->GetResource(_T("bounds.fsh"), rf))->GetData());
+			m_VS_bounds = (c3::ShaderComponent *)((rm->GetResource(_T("def-obj.vsh"), rf))->GetData());
+			m_FS_bounds = (c3::ShaderComponent *)((rm->GetResource(_T("editor-select.fsh"), rf))->GetData());
 			m_SP_bounds = prend->CreateShaderProgram();
 			if (m_SP_bounds)
 			{

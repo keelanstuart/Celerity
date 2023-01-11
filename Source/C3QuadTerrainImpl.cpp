@@ -52,7 +52,7 @@ void QuadTerrainImpl::Release()
 }
 
 
-props::TFlags64 QuadTerrainImpl::Flags()
+props::TFlags64 QuadTerrainImpl::Flags() const
 {
 	return m_Flags;
 }
@@ -82,16 +82,19 @@ void QuadTerrainImpl::Update(Object *pobject, float elapsed_time)
 }
 
 
-bool QuadTerrainImpl::Prerender(Object *pobject, props::TFlags64 rendflags)
+bool QuadTerrainImpl::Prerender(Object *pobject, Object::RenderFlags flags)
 {
-	if (rendflags.IsSet(Object::OBJFLAG(Object::DRAW)))
+	if (flags.IsSet(RF_FORCE))
 		return true;
 
-	return false;
+	if (!pobject->Flags().IsSet(OF_DRAW))
+		return false;
+
+	return true;
 }
 
 
-void QuadTerrainImpl::Render(Object *pobject, props::TFlags64 rendflags)
+void QuadTerrainImpl::Render(Object *pobject, Object::RenderFlags flags)
 {
 	assert(pobject);
 
@@ -288,7 +291,7 @@ void QuadTerrainImpl::Render(Object *pobject, props::TFlags64 rendflags)
 
 	prend->SetWorldMatrix(m_pPos->GetTransformMatrix());
 
-	if (!rendflags.IsSet(Object::OBJFLAG(Object::CASTSHADOW)))
+	if (!flags.IsSet(OF_CASTSHADOW))
 	{
 		prend->UseProgram(m_SP_terr);
 
@@ -346,7 +349,7 @@ void QuadTerrainImpl::Render(Object *pobject, props::TFlags64 rendflags)
 
 	Renderer::FillMode fillmode = prend->GetFillMode();
 	prend->SetFillMode(Renderer::FillMode::FM_WIRE);
-	RenderQuad(m_Root, rendflags);
+	RenderQuad(m_Root, flags);
 	prend->SetFillMode(fillmode);
 }
 

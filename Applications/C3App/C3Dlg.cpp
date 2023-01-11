@@ -42,7 +42,7 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_SunDir = glm::normalize(glm::fvec3(0.3f, 0.2f, -1.0f));
 	m_bFirstDraw = true;
 	memset(m_pControllable, 0, sizeof(c3::Object *) * MAX_USERS);
-	m_ViewMode = VM_FOLLOW_POSDIR;
+	m_ViewMode = VM_FREE;//FOLLOW_POSDIR;
 }
 
 void C3Dlg::DoDataExchange(CDataExchange* pDX)
@@ -393,8 +393,9 @@ BOOL C3Dlg::OnInitDialog()
 
 	m_RootObj = m_Factory->Build((c3::Prototype *)nullptr);
 	m_RootObj->AddComponent(c3::Positionable::Type());
-	m_RootObj->Flags().Set(c3::Object::OBJFLAG(c3::Object::LIGHT) | c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
+	m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
 
+#if 0
 	genio::IInputStream *is = genio::IInputStream::Create();
 	if (is)
 	{
@@ -454,16 +455,18 @@ BOOL C3Dlg::OnInitDialog()
 
 		is->Release();
 	}
+#endif
 
-	//c3::Prototype *pproto;
+	c3::Prototype *pproto;
 
-#if 0
+#if 1
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Sponza"))))
 	{
 		c3::Object *pobj = m_Factory->Build(pproto);
 		if (pobj)
 		{
 			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
+			ppos->AdjustPos(2.0f, 0, 0);
 			m_RootObj->AddChild(pobj);
 
 			theApp.m_C3->GetLog()->Print(_T("Sponza created\n"));
@@ -532,6 +535,7 @@ BOOL C3Dlg::OnInitDialog()
 	}
 #endif
 
+#if 0
 	for (size_t i = 0, maxi = m_RootObj->GetNumChildren(); i < maxi; i++)
 	{
 		c3::Object *pco = m_RootObj->GetChild(i);
@@ -548,9 +552,10 @@ BOOL C3Dlg::OnInitDialog()
 			break;
 		}
 	}
+#endif
 
-#if 0
-#define NUMLIGHTS		100
+#define NUMLIGHTS		20
+#if defined(NUMLIGHTS) && (NUMLIGHTS > 0)
 	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Light"))))
 	{
 		for (size_t i = 0; i < NUMLIGHTS; i++)
@@ -561,27 +566,15 @@ BOOL C3Dlg::OnInitDialog()
 			{
 				m_Light.push_back(temp);
 
-				glm::fvec3 mv(0.0f, 0.0f, 20.0f);
-
-				if (i > 0)
-				{
-					mv.x = (float)(RAND_MAX / 2 - rand());
-					mv.y = (float)(RAND_MAX / 2 - rand());
-					mv.z = (float)(RAND_MAX / 2 - rand());
-				}
-				m_LightMove.push_back(glm::normalize(mv) * (float)(rand() % 10));
+				glm::fvec3 mv((i & 1) ? 1.0f : -1.0f, 0.0f, (i & 1) ? 2.0f : -2.0f);
+				m_LightMove.push_back(glm::normalize(mv) * 0.025f);
 
 				c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(temp->FindComponent(c3::Positionable::Type()));
 				if (ppos)
 				{
-					float s = 150;
-					if (i > 0)
-					{
-						ppos->SetPos((float)(rand() % 1000) - 500.0f, (float)(rand() % 500) - 250.0f, (float)(rand() % 400) + 5.0f);
-						s = (float)(rand() % 100) + 50.0f;
-					}
-					else
-						ppos->AdjustPos(0, 0, 10.0f);
+					float s = 10.0f;//(float)(rand() % 100) / 100.0f + 0.5f;
+
+					ppos->AdjustPos(((i & 1) ? -2.0f : 2.0f) + (float)(i % 4), (float)i * 3.0f - ((float)NUMLIGHTS / 2.0f * 3.0f), 4.0f);
 
 					ppos->SetScl(s, s, s);
 					ppos->Update(0);
@@ -593,7 +586,7 @@ BOOL C3Dlg::OnInitDialog()
 
 				props::IPropertySet *pps = temp->GetProperties();
 				props::IProperty *pp = pps->CreateProperty(_T("uLightColor"), 'LCLR');
-				const props::TVec3F c((float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX, (float)rand() / (float)RAND_MAX);
+				const props::TVec3F c(((float)(i % 3) * 0.75f) + ((float)(i % 4) * 0.25f), ((float)((i + 1) % 3) * 0.75f) + ((float)((i - 1) % 4) * 0.25f), ((float)((i + 2) % 3) * 0.75f) + ((float)((i - 2) % 4) * 0.25f));
 				pp->SetVec3F(c);
 
 				m_RootObj->AddChild(temp);
@@ -660,14 +653,31 @@ void C3Dlg::OnPaint()
 					c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(m_pControllable[user]->FindComponent(c3::Positionable::Type()));
 					if (ppos)
 					{
-						float spd = (((m_ViewMode != VM_FREE) ? ms : m_Controls[user].move.run) * 0.02f) + 0.02f;
-						float utd = ((m_ViewMode == VM_FREE) ? m_Controls[user].move.forward : mf) - ((m_ViewMode == VM_FREE) ? m_Controls[user].move.backward : mb);
-						float urd = ((m_ViewMode == VM_FREE) ? m_Controls[user].look.right : std::max<float>(mr, lr)) - ((m_ViewMode == VM_FREE) ? m_Controls[user].look.left : std::max<float>(ml, ll));
+						float spd = 1, utd = 0, urd = 0, uod = 0;
+
+						if (m_ViewMode == VM_FREE)
+						{
+							spd += ms;
+							utd = m_Controls[user].move.forward - m_Controls[user].move.backward;
+							uod = m_Controls[user].move.left - m_Controls[user].move.right;
+							urd = m_Controls[user].look.right - m_Controls[user].look.left;
+						}
+						else
+						{
+							spd += m_Controls[user].move.run;
+							utd = mf - mb;
+							urd = std::max<float>(mr, lr) - std::max<float>(ml, ll);
+						}
+						spd *= 0.02f;
 
 						glm::vec3 mv(0, 0, 0);
 						mv += *(ppos->GetFacingVector()) * utd * spd;
 						if ((m_ViewMode == VM_FREE) && !user)
-							mv += *(ppos->GetLocalRightVector()) * urd * spd;
+						{
+							glm::vec3 ml = *(ppos->GetLocalRightVector());
+							ml *= uod * spd;
+							mv += ml;
+						}
 						mv += *(ppos->GetLocalUpVector()) * (m_Controls[user].move.up - m_Controls[user].move.down) * spd;
 
 						ppos->AdjustYawFlat(urd * 0.04f);
@@ -675,7 +685,7 @@ void C3Dlg::OnPaint()
 
 						ppos->AdjustPos(mv.x, mv.y, mv.z);
 						if ((m_ViewMode == VM_FREE) && !user)
-							ppos->AdjustPitch((m_Controls[user].look.up - m_Controls[user].look.down) * 0.01f);
+							ppos->AdjustPitch((m_Controls[user].look.up - m_Controls[user].look.down) * 0.04f);
 						m_pControllable[user]->Update();
 					}
 				}
@@ -693,23 +703,26 @@ void C3Dlg::OnPaint()
 			}
 #endif
 
-			c3::Positionable *pfollowerpos = dynamic_cast<c3::Positionable *>(m_pControllable[0]->FindComponent(c3::Positionable::Type()));
-			c3::Positionable *pleaderpos = dynamic_cast<c3::Positionable *>(m_pControllable[1]->FindComponent(c3::Positionable::Type()));
+			c3::Positionable *pfollowerpos = nullptr;//dynamic_cast<c3::Positionable *>(m_pControllable[0]->FindComponent(c3::Positionable::Type()));
+			c3::Positionable *pleaderpos = nullptr;//dynamic_cast<c3::Positionable *>(m_pControllable[1]->FindComponent(c3::Positionable::Type()));
 
-			switch (m_ViewMode)
+			if (pfollowerpos && pleaderpos)
 			{
-				case VM_FOLLOW_POSDIR:
+				switch (m_ViewMode)
 				{
-					glm::fquat q = glm::slerp(*(pfollowerpos->GetOriQuat()), *(pleaderpos->GetOriQuat()), 0.9f);
-					pfollowerpos->SetOriQuat(&q);
-					pfollowerpos->AdjustPitch(glm::radians(-41.0f));
-				}
-				case VM_FOLLOW_POS:
-				{
-					glm::fvec3 adjlp = *(pleaderpos->GetPosVec()) + glm::fvec3(0, 0, 1);
-					glm::fvec3 lp = glm::lerp(*(pfollowerpos->GetPosVec()), adjlp, 0.6f);
-					pfollowerpos->SetPosVec(&lp);
-					break;
+					case VM_FOLLOW_POSDIR:
+					{
+						glm::fquat q = glm::slerp(*(pfollowerpos->GetOriQuat()), *(pleaderpos->GetOriQuat()), 0.9f);
+						pfollowerpos->SetOriQuat(&q);
+						pfollowerpos->AdjustPitch(glm::radians(-41.0f));
+					}
+					case VM_FOLLOW_POS:
+					{
+						glm::fvec3 adjlp = *(pleaderpos->GetPosVec()) + glm::fvec3(0, 0, 1);
+						glm::fvec3 lp = glm::lerp(*(pfollowerpos->GetPosVec()), adjlp, 0.6f);
+						pfollowerpos->SetPosVec(&lp);
+						break;
+					}
 				}
 			}
 		}
@@ -732,7 +745,7 @@ void C3Dlg::OnPaint()
 		{
 			c3::Positionable *plpos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindComponent(c3::Positionable::Type()));
 			float s = sinf((float)(m_Rend->GetCurrentFrameNumber() + i) * 3.14159f / 180.0f * 1.0f) * 0.5f;
-			plpos->AdjustPos(m_LightMove[i].x * s, m_LightMove[i].x * s, m_LightMove[i].x * s);
+			plpos->AdjustPos(m_LightMove[i].x * s, m_LightMove[i].y * s, m_LightMove[i].z * s);
 			plpos->Update(m_Light[i]);
 		}
 #endif
@@ -772,11 +785,11 @@ void C3Dlg::OnPaint()
 			m_Rend->SetAlphaPassRange(3.0f / 255.0f);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
-			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::DRAW));
+			m_RootObj->Render();
 
 			// Shadow pass
 			m_Rend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
-			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
+			m_RootObj->Render(RF_SHADOW);
 
 			m_Rend->SetViewport();
 
@@ -785,7 +798,7 @@ void C3Dlg::OnPaint()
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 			m_Rend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-			m_RootObj->Render(c3::Object::OBJFLAG(c3::Object::LIGHT));
+			m_RootObj->Render(RF_LIGHT);
 
 			// Resolve
 			m_Rend->UseFrameBuffer(m_BBuf[0], UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);

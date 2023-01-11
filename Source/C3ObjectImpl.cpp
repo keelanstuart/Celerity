@@ -20,7 +20,7 @@ ObjectImpl::ObjectImpl(SystemImpl *psys, GUID guid)
 	m_GUID = guid;
 	m_Props = props::IPropertySet::CreatePropertySet();
 	m_Props->SetChangeListener(this);
-	m_Flags.SetAll(OBJFLAG(UPDATE) | OBJFLAG(DRAW));
+	m_Flags.SetAll(OF_UPDATE | OF_DRAW);
 	m_Owner = nullptr;
 }
 
@@ -225,7 +225,7 @@ bool ObjectImpl::HasComponent(const ComponentType *pcomptype) const
 
 void ObjectImpl::Update(float elapsed_time)
 {
-	if (!m_Flags.IsSet(OBJFLAG(UPDATE)))
+	if (!m_Flags.IsSet(OF_UPDATE))
 		return;
 
 	for (const auto &it : m_Components)
@@ -241,46 +241,46 @@ void ObjectImpl::Update(float elapsed_time)
 }
 
 
-bool ObjectImpl::Prerender(props::TFlags64 rendflags)
+bool ObjectImpl::Prerender(Object::RenderFlags flags)
 {
-	if (!rendflags.AnySet(m_Flags))
+	if (flags.IsSet(RF_FORCE))
+		return true;
+
+	if (!m_Flags.IsSet(OF_DRAW))
 		return false;
 
 	// TODO: port visibility culling
-	bool ret = false;
+	bool ret = true;
 
-	for (const auto it : m_Components)
-	{
-		if (it->Prerender(this, rendflags))
-			ret = true;
-	}
+//	for (const auto it : m_Components)
+//		ret &= it->Prerender(this, flags);
 
 	return ret;
 }
 
 
-bool ObjectImpl::Render(props::TFlags64 rendflags)
+bool ObjectImpl::Render(Object::RenderFlags flags)
 {
-	if (!Prerender(rendflags))
+	if (!Prerender(flags))
 		return false;
 
 	for (const auto &it : m_Components)
 	{
-		it->Render(this, rendflags);
+		it->Render(this, flags);
 	}
 
 	for (auto child : m_Children)
 	{
-		child->Render(rendflags);
+		child->Render(flags);
 	}
 
-	Postrender(rendflags);
+	Postrender(flags);
 
 	return true;
 }
 
 
-void ObjectImpl::Postrender(props::TFlags64 rendflags)
+void ObjectImpl::Postrender(Object::RenderFlags flags)
 {
 }
 

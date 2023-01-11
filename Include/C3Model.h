@@ -18,6 +18,7 @@ namespace c3
 	public: 
 
 		static C3_API Model *Create(Renderer *prend);
+		static C3_API GUID ResourceGUID();
 
 		typedef size_t NodeIndex;
 		typedef size_t MeshIndex;

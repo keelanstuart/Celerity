@@ -81,7 +81,7 @@ int CPrototypeView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	rectDummy.SetRectEmpty();
 
 	// Create views:
-	const DWORD dwViewStyle = WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | WS_CLIPSIBLINGS | WS_CLIPCHILDREN;
+	const DWORD dwViewStyle = WS_CHILD | WS_VISIBLE | TVS_HASLINES | TVS_LINESATROOT | TVS_HASBUTTONS | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | TVS_EDITLABELS;
 
 	if (!m_wndPrototypeView.Create(dwViewStyle, rectDummy, this, PROTOTREE_ID))
 	{
@@ -242,8 +242,10 @@ enum EPopupCommand
 	PC_DELETE = 1,
 	PC_CREATEPROTO,
 	PC_CREATEGROUP,
+	PC_IMPORT,
 	PC_EDIT,
-	PC_DUPLICATE
+	PC_DUPLICATE,
+	PC_RENAME
 };
 
 void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
@@ -265,7 +267,8 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 	MyAppendMenuItem(submenu, MFT_STRING, _T("Prototype"), true, 0, PC_CREATEPROTO);
 	MyAppendMenuItem(submenu, MFT_STRING, _T("Group"), true, 0, PC_CREATEGROUP);
 
-	MyAppendMenuItem(menu, MFT_STRING, _T("New"), TRUE, submenu);
+	MyAppendMenuItem(menu, MFT_STRING, _T("New"), true, submenu);
+	MyAppendMenuItem(menu, MFT_STRING, _T("Import From Model(s) ..."), true, 0, PC_IMPORT);
 	MyAppendMenuItem(menu, MFT_SEPARATOR);
 
 	if (point != CPoint(-1, -1))
@@ -289,6 +292,8 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 				MyAppendMenuItem(menu, MFT_STRING, _T("Edit"), true, 0, PC_EDIT);
 				MyAppendMenuItem(menu, MFT_STRING, _T("Duplicate"), true, 0, PC_DUPLICATE);
 			}
+
+			MyAppendMenuItem(menu, MFT_STRING, _T("Rename"), true, 0, PC_RENAME);
 		}
 
 		HTREEITEM hpi = hTreeItem;
@@ -346,6 +351,85 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 
 			case PC_CREATEGROUP:
 			{
+				if (pproto)
+					hpi = pWndTree->GetParentItem(hpi);
+
+				HTREEITEM hgroup = MakeProtoGroup(hpi, _T("New Group"));
+				pWndTree->EditLabel(hgroup);
+
+				break;
+			}
+
+			case PC_RENAME:
+			{
+				pWndTree->EditLabel(hpi);
+
+				break;
+			}
+
+			case PC_IMPORT:
+			{
+				const c3::ResourceType *pModResType = theApp.m_C3->GetResourceManager()->FindResourceType(c3::Model::ResourceGUID());
+				assert(pModResType);
+
+				tstring exts = pModResType->GetReadableExtensions();
+				tstring::iterator extsit = exts.begin();
+				while (extsit != exts.end())
+				{
+					size_t o = std::distance(exts.begin(), extsit);
+					exts.insert(o, _T("*."));
+					extsit = std::find(exts.begin() + o, exts.end(), _T(';'));
+					if (extsit != exts.end())
+						extsit++;
+				}
+
+				tstring filter = _T("Model Files|");
+				filter += exts;
+				filter += _T("|*.*|All Files (*.*)||");
+
+				CFileDialog fd(TRUE, nullptr, nullptr, OFN_ALLOWMULTISELECT | OFN_ENABLESIZING, filter.c_str(), nullptr, sizeof(OPENFILENAME));
+				if (fd.DoModal() == IDOK)
+				{
+					if (pproto)
+						hpi = pWndTree->GetParentItem(hpi);
+
+					tstring groupname;
+					HTREEITEM htmp = hpi;
+					while (htmp && (htmp != pWndTree->GetRootItem()))
+					{
+						CString s = pWndTree->GetItemText(htmp);
+						if (!groupname.empty())
+							groupname.insert(groupname.begin(), _T('/'));
+
+						groupname.insert(0, s);
+						htmp = pWndTree->GetParentItem(htmp);
+					}
+
+					POSITION fpos = fd.GetStartPosition();
+					while (fpos)
+					{
+						CPath fn = fd.GetNextPathName(fpos);
+
+						c3::Prototype *ptmp = theApp.m_C3->GetFactory()->CreatePrototype();
+						ptmp->SetGroup(groupname.c_str());
+
+						ptmp->AddComponent(c3::Positionable::Type());
+						ptmp->AddComponent(c3::ModelRenderer::Type());
+
+						ptmp->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-obj.vsh"));
+						ptmp->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-obj.fsh"));
+						ptmp->GetProperties()->CreateProperty(_T("ShadowVertexShader"), 'VSSF')->SetString(_T("def-obj-shadow.vsh"));
+						ptmp->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
+						ptmp->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(fn);
+						ptmp->Flags().Set(OF_CASTSHADOW | OF_DRAW);
+
+						fn.RemoveExtension();
+						ptmp->SetName((LPCTSTR)fn + fn.FindFileName());
+
+						HTREEITEM hitem = m_wndPrototypeView.InsertItem(ptmp->GetName(), 1, 1, hpi);
+						m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)ptmp);
+					}
+				}
 				break;
 			}
 

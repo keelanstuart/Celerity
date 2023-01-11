@@ -14,9 +14,18 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
+#include <stb_image.h>
+
 #include <Shlwapi.h>
 
 using namespace c3;
+
+
+GUID Model::ResourceGUID()
+{
+	return (RESOURCETYPENAME(Model)::self).GetGUID();
+}
+
 
 Model *Model::Create(Renderer *prend)
 {
@@ -553,8 +562,12 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 		Assimp::Importer import;
 		const aiScene *scene = import.ReadFile(fn,
 			aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs | aiProcess_ImproveCacheLocality
-				| aiProcess_JoinIdenticalVertices | aiProcess_OptimizeMeshes
-				| aiProcess_GenNormals
+				| aiProcess_OptimizeMeshes | aiProcess_GenBoundingBoxes | aiProcess_SortByPType
+				| aiProcess_GenSmoothNormals
+				//| aiProcess_ForceGenNormals
+				//| aiProcess_JoinIdenticalVertices
+				| aiProcess_GenUVCoords 
+				//| aiProcess_FixInfacingNormals
 		);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -582,18 +595,33 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 			Material *pmtl = pmm->CreateMaterial();
 			aiMaterial *paim = scene->mMaterials[j];
 
-			glm::vec4 diff(1, 1, 1, 1);
+			glm::vec4 diff(1, 1, 1, 1), emis(0, 0, 0, 0), spec(0, 0, 0, 0);
+			float shin = 0;
 			for (size_t pidx = 0, maxpidx = paim->mNumProperties; pidx < maxpidx; pidx++)
 			{
 				aiMaterialProperty *pmp = paim->mProperties[pidx];
 				aiString key = pmp->mKey;
 
-				if (!_stricmp(key.C_Str(), "$clr.diffuse"))
+				if (!_stricmp(key.C_Str(), "$clr.diffuse") || !_stricmp(key.C_Str(), "$clr.base"))
 				{
 					memcpy(&diff, pmp->mData, sizeof(aiColor3D));
 				}
+				else if (!_stricmp(key.C_Str(), "$clr.emissive"))
+				{
+					memcpy(&emis, pmp->mData, sizeof(aiColor3D));
+				}
+				else if (!_stricmp(key.C_Str(), "$clr.specular"))
+				{
+					memcpy(&spec, pmp->mData, sizeof(aiColor3D));
+				}
+				else if (!_stricmp(key.C_Str(), "$clr.shininess"))
+				{
+					memcpy(&shin, pmp->mData, sizeof(float));
+				}
 			}
 			pmtl->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &diff);
+			pmtl->SetColor(Material::ColorComponentType::CCT_EMISSIVE, &emis);
+			pmtl->SetColor(Material::ColorComponentType::CCT_SPECULAR, &spec);
 
 			TCHAR difftexpath[MAX_PATH], texpathtemp[MAX_PATH];
 
@@ -614,14 +642,73 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 			else if (!has_difftex && (true == (has_difftex = (paim->GetTextureCount(aiTextureType_BASE_COLOR) > 0))))
 				paim->GetTexture(aiTextureType_BASE_COLOR, 0, &aipath);
 
+			//scene->HasTextures()
+			//scene->mTextures[0]->mWidth, scene->mTextures[ti]->mHeight, scene->mTextures[ti]->pcData);
+
+
+			// locally-defined function to set texture filenames for specific types of textures
+			auto SetTextureFileName = [&](Material::TextureComponentType t, const char *s)
+			{
+				CONVERT_MBCS2TCS(s, textmp);
+				if (textmp && (*textmp != '*'))
+				{
+					PathCombine(texpath, modbasepath, textmp);
+					bool loctex = psys->GetFileMapper()->FindFile(texpath);
+					if (!loctex)
+					{
+						TCHAR *fnstart = PathFindFileName(textmp);
+						PathCombine(texpath, modbasepath, fnstart);
+						loctex = psys->GetFileMapper()->FindFile(texpath);
+					}
+					texfilename = loctex ? texpath : PathFindFileName(texpath);
+					if (t == Material::TextureComponentType::TCT_DIFFUSE)
+						_tcsncpy_s(difftexpath, textmp, MAX_PATH - 1);
+					pmtl->SetTexture(t, psys->GetResourceManager()->GetResource(texfilename, rf));
+				}
+				else
+				{
+					textmp++;
+					size_t texidx = _ttoi(textmp);
+					if (scene->HasTextures() && texidx < scene->mNumTextures)
+					{
+						int w, h, c;
+						stbi_uc *data = stbi_load_from_memory((const stbi_uc *)(scene->mTextures[texidx]->pcData),
+							scene->mTextures[texidx]->mWidth, &w, &h, &c, 0);
+						if (data)
+						{
+							c3::Texture2D *pt = psys->GetRenderer()->CreateTexture2D(w, h, (c3::Renderer::TextureType)(c3::Renderer::TextureType::U8_1CH + c - 1));
+							if (pt)
+							{
+								void *buf;
+								Texture2D::SLockInfo li;
+								if ((pt->Lock(&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+								{
+									memcpy(buf, data, w * h * c);
+
+									pt->Unlock();
+								}
+
+								tstring texname = filename;
+								texname += _T(":texture[");
+								texname += textmp;
+								texname += _T("]");
+								pt->SetName(texname.c_str());
+								pmtl->SetTexture(t, pt);
+								psys->GetResourceManager()->GetResource(texname.c_str(),
+									c3::ResourceManager::EResFlag::CREATEENTRYONLY,
+									psys->GetResourceManager()->FindResourceType(Texture2D::ResourceGUID()),
+									pt);
+							}
+
+							free(data);
+						}
+					}
+				}
+			};
+
 			if (has_difftex)
 			{
-				CONVERT_MBCS2TCS(aipath.C_Str(), textmp);
-				PathCombine(texpath, modbasepath, textmp);
-				bool loctex = psys->GetFileMapper()->FindFile(texpath);
-				texfilename = loctex ? texpath : PathFindFileName(texpath);
-				_tcsncpy_s(difftexpath, textmp, MAX_PATH - 1);
-				pmtl->SetTexture(Material::TextureComponentType::TCT_DIFFUSE, psys->GetResourceManager()->GetResource(texfilename, rf));
+				SetTextureFileName(Material::TextureComponentType::TCT_DIFFUSE, aipath.C_Str());
 			}
 
 			bool has_normtex = false;
@@ -638,11 +725,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 
 			if (has_normtex)
 			{
-				CONVERT_MBCS2TCS(aipath.C_Str(), textmp);
-				PathCombine(texpath, modbasepath, textmp);
-				bool loctex = psys->GetFileMapper()->FindFile(texpath);
-				texfilename = loctex ? texpath : PathFindFileName(texpath);
-				pmtl->SetTexture(Material::TextureComponentType::TCT_NORMAL, psys->GetResourceManager()->GetResource(texfilename, rf));
+				SetTextureFileName(Material::TextureComponentType::TCT_NORMAL, aipath.C_Str());
 			}
 
 			bool has_emistex = false;
@@ -659,22 +742,30 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 
 			if (has_emistex)
 			{
-				CONVERT_MBCS2TCS(aipath.C_Str(), textmp);
-				PathCombine(texpath, modbasepath, textmp);
-				bool loctex = psys->GetFileMapper()->FindFile(texpath);
-				texfilename = loctex ? texpath : PathFindFileName(texpath);
-				pmtl->SetTexture(Material::TextureComponentType::TCT_EMISSIVE, psys->GetResourceManager()->GetResource(texfilename, rf));
+				SetTextureFileName(Material::TextureComponentType::TCT_EMISSIVE, aipath.C_Str());
 			}
 
 			// metalness / roughness / ao -- all together
-			bool has_surftex = false;
-			unsigned int tidx_metalness = paim->GetTextureCount(aiTextureType_METALNESS);
-			unsigned int tidx_roughness = paim->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS);
-			unsigned int tidx_ambocc = paim->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION);
-			has_surftex = (tidx_metalness > 0) && (tidx_roughness == tidx_metalness) && (tidx_ambocc == tidx_metalness);
-			if (has_surftex)
-				paim->GetTexture(aiTextureType_METALNESS, 0, &aipath);
-			else if (has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_surftex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_SURFACEDESC, texpathtemp, MAX_PATH - 1)) == true))
+			unsigned int tidx_pbrmtl = paim->GetTextureCount(aiTextureType_PBR_MTL);
+			bool has_surftex = (tidx_pbrmtl != 0);
+			unsigned int tidx_metalness, tidx_roughness, tidx_ambocc;
+			if (!has_surftex)
+			{
+				tidx_metalness = paim->GetTextureCount(aiTextureType_METALNESS);
+				tidx_roughness = paim->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS);
+				tidx_ambocc = paim->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION);
+				has_surftex = (tidx_metalness > 0) && (tidx_roughness == tidx_metalness) && (tidx_ambocc == tidx_metalness);
+				if (has_surftex)
+					paim->GetTexture(aiTextureType_METALNESS, 0, &aipath);
+			}
+			else
+			{
+				tidx_metalness = tidx_roughness = tidx_ambocc = tidx_pbrmtl;
+				if (has_surftex)
+					paim->GetTexture(aiTextureType_PBR_MTL, 0, &aipath);
+			}
+
+			if (!has_surftex && has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_surftex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_SURFACEDESC, texpathtemp, MAX_PATH - 1)) == true))
 			{
 				char *c;
 				CONVERT_TCS2MBCS(texpathtemp, c);
@@ -683,11 +774,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 
 			if (has_surftex)
 			{
-				CONVERT_MBCS2TCS(aipath.C_Str(), textmp);
-				PathCombine(texpath, modbasepath, textmp);
-				bool loctex = psys->GetFileMapper()->FindFile(texpath);
-				texfilename = loctex ? texpath : PathFindFileName(texpath);
-				pmtl->SetTexture(Material::TextureComponentType::TCT_SURFACEDESC, psys->GetResourceManager()->GetResource(texfilename, rf));
+				SetTextureFileName(Material::TextureComponentType::TCT_SURFACEDESC, aipath.C_Str());
 			}
 
 			mtlvec.push_back(pmtl);

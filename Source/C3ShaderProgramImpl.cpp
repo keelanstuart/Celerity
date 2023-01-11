@@ -9,6 +9,7 @@
 #include <C3ShaderProgramImpl.h>
 #include <C3ShaderComponentImpl.h>
 #include <C3TextureImpl.h>
+#include <C3CRC.h>
 
 
 using namespace c3;
@@ -373,6 +374,8 @@ void ShaderProgramImpl::CaptureUniforms()
 
 				if (!_tcscmp(n, _T("uAlphaPass")))
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ALPHAPASS);
+				else if (!_tcscmp(n, _T("uElapsedTime")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS);
 				break;
 
 			case GL_INT:
@@ -406,6 +409,11 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 						glm::fvec2 alphapass;
 						m_Rend->GetAlphaPassRange(alphapass.x, alphapass.y);
 						SetUniform1(p->GetID(), alphapass.x);
+						break;
+					}
+					case props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS:
+					{
+						SetUniform1(p->GetID(), m_Rend->GetSystem()->GetElapsedTime());
 						break;
 					}
 				}
@@ -721,4 +729,27 @@ bool RESOURCETYPENAME(ShaderProgram)::WriteToFile(c3::System *psys, const TCHAR 
 void RESOURCETYPENAME(ShaderProgram)::Unload(void *data) const
 {
 	((ShaderProgram *)data)->Release();
+}
+
+
+const TCHAR *ShaderProgram::ResourceIdentifier(TCHAR *ret, size_t retlc,
+	const ShaderComponent *vs, const ShaderComponent *fs,
+	const ShaderComponent *gs, const ShaderComponent *es, const ShaderComponent *cs)
+{
+	uint32_t crcs[5];
+	crcs[0] = vs ? vs->GetProgramCRC() : 0;
+	crcs[1] = vs ? fs->GetProgramCRC() : 0;
+	crcs[2] = vs ? gs->GetProgramCRC() : 0;
+	crcs[3] = vs ? es->GetProgramCRC() : 0;
+	crcs[4] = vs ? cs->GetProgramCRC() : 0;
+
+	uint32_t crc = Crc32::Calculate((const uint8_t *)crcs, sizeof(crcs));
+
+	TCHAR _ret[64];
+	int lc = _stprintf_s(_ret, _T("%08x.SHADER_PROGRAM"), crc);
+	if (retlc < (lc + 1))
+		return nullptr;
+
+	_tcscpy_s(ret, retlc, _ret);
+	return ret;
 }

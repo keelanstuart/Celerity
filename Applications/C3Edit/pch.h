@@ -14,6 +14,7 @@
 
 #include <afxwin.h>
 #include <afxcontrolbarimpl.h>
+#include <atlpath.h>
 
 #include <map>
 #include <deque>

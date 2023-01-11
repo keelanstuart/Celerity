@@ -17,6 +17,8 @@ namespace c3
 
 	public:
 
+		static C3_API GUID ResourceGUID();
+
 		enum RETURNCODE
 		{
 			RET_OK = 0,
@@ -59,9 +61,12 @@ namespace c3
 		///   
 		virtual RETURNCODE CompileProgram(const TCHAR *program, const TCHAR *preamble = nullptr) = NULL;
 
-		virtual const TCHAR *GetProgramText() = NULL;
+		// 
+		virtual const TCHAR *GetProgramText() const = NULL;
 
-		virtual bool IsCompiled() = NULL;
+		virtual uint32_t GetProgramCRC() const = NULL;
+
+		virtual bool IsCompiled() const = NULL;
 
 	};
 

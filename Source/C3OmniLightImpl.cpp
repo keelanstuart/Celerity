@@ -40,7 +40,7 @@ void OmniLightImpl::Release()
 }
 
 
-props::TFlags64 OmniLightImpl::Flags()
+props::TFlags64 OmniLightImpl::Flags() const
 {
 	return m_Flags;
 }
@@ -70,16 +70,19 @@ void OmniLightImpl::Update(Object *pobject, float elapsed_time)
 }
 
 
-bool OmniLightImpl::Prerender(Object *pobject, props::TFlags64 rendflags)
+bool OmniLightImpl::Prerender(Object *pobject, Object::RenderFlags flags)
 {
-	if (rendflags.AnySet(Object::OBJFLAG(Object::LIGHT) || Object::OBJFLAG(Object::DRAWINEDITOR)))
+	if (flags.IsSet(RF_FORCE))
 		return true;
 
-	return false;
+	if (!pobject->Flags().IsSet(OF_DRAW))
+		return false;
+
+	return true;
 }
 
 
-void OmniLightImpl::Render(Object *pobject, props::TFlags64 rendflags)
+void OmniLightImpl::Render(Object *pobject, Object::RenderFlags flags)
 {
 	assert(pobject);
 
@@ -124,7 +127,7 @@ void OmniLightImpl::Render(Object *pobject, props::TFlags64 rendflags)
 	props::IProperty *pscl = pobject->GetProperties()->GetPropertyById('SCL');
 	float scl = pscl->AsVec3F()->x;
 
-	if (m_SP_deflight)
+	if (m_SP_deflight && m_SourceFB)
 	{
 		prend->UseProgram(m_SP_deflight);
 		glm::vec2 ss;

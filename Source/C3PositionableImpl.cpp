@@ -19,7 +19,7 @@ PositionableImpl::PositionableImpl()
 	m_Mat = glm::identity<glm::fmat4x4>();
 	m_MatN = glm::identity<glm::fmat4x4>();
 	m_Ori = glm::identity<glm::fquat>();
-	m_Flags = Object::OBJFLAG(Object::DRAWINEDITOR);
+	m_Flags = OF_DRAWINEDITOR;
 }
 
 
@@ -34,7 +34,7 @@ void PositionableImpl::Release()
 }
 
 
-props::TFlags64 PositionableImpl::Flags()
+props::TFlags64 PositionableImpl::Flags() const
 {
 	return m_Flags;
 }
@@ -90,11 +90,7 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 		m_LocalUp = glm::normalize(tmp * glm::vec4(0, 0, 1, 0));
 
 		// Recalculate the local right vector
-#if 1
 		m_LocalRight = glm::normalize(glm::cross(m_Facing, m_LocalUp));
-#else
-		m_LocalRight = glm::normalize(tmp * glm::vec4(-1, 0, 0, 0));
-#endif
 
 		// Scale first, then rotate...
 		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * tmp;
@@ -115,23 +111,24 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 }
 
 
-bool PositionableImpl::Prerender(Object *pobject, props::TFlags64 rendflags)
+bool PositionableImpl::Prerender(Object *pobject, Object::RenderFlags flags)
 {
 	Renderer *pr = pobject->GetSystem()->GetRenderer();
 	pr->SetWorldMatrix(&m_Mat);
 
-//	if (!rendflags.AnySet(m_Flags))
-		//return false;
+	if (flags.IsSet(RF_FORCE))
+		return true;
+
+	if (!m_Flags.IsSet(OF_DRAW))
+		return false;
 
 	return true;
 }
 
 
-void PositionableImpl::Render(Object *pobject, props::TFlags64 rendflags)
+void PositionableImpl::Render(Object *pobject, Object::RenderFlags flags)
 {
-	if (!rendflags.AnySet(m_Flags))
-		return;
-
+#if 0
 	Renderer *pr = pobject->GetSystem()->GetRenderer();
 
 	ShaderProgram *sp = pr->GetBoundsShader();
@@ -140,6 +137,7 @@ void PositionableImpl::Render(Object *pobject, props::TFlags64 rendflags)
 	sp->ApplyUniforms();
 
 	//pr->GetBoundsMesh()->Draw(c3::Renderer::PrimType::LINELIST);
+#endif
 }
 
 

@@ -70,7 +70,7 @@ BOOL C3EditDoc::OnNewDocument()
 
 	m_RootObj = pf->Build();
 	m_RootObj->AddComponent(c3::Positionable::Type());
-	m_RootObj->Flags().Set(c3::Object::OBJFLAG(c3::Object::LIGHT) | c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
+	m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
 
 	return TRUE;
 }
@@ -277,7 +277,7 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	if (m_RootObj)
 	{
 		m_RootObj->AddComponent(c3::Positionable::Type());
-		m_RootObj->Flags().Set(c3::Object::OBJFLAG(c3::Object::LIGHT) | c3::Object::OBJFLAG(c3::Object::CASTSHADOW));
+		m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
 	}
 
 	genio::IInputStream *is = genio::IInputStream::Create();

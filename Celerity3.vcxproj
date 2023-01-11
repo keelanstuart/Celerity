@@ -50,6 +50,7 @@
     <ClCompile Include="Source\C3ModelImpl.cpp" />
     <ClCompile Include="Source\C3ObjectImpl.cpp" />
     <ClCompile Include="Source\C3OmniLightImpl.cpp" />
+    <ClCompile Include="source\C3ParticleEmitterImpl.cpp" />
     <ClCompile Include="Source\C3PluginImpl.cpp" />
     <ClCompile Include="Source\C3PluginManagerImpl.cpp" />
     <ClCompile Include="Source\C3PositionableImpl.cpp" />
@@ -151,6 +152,7 @@
     <ClInclude Include="Include\C3Model.h" />
     <ClInclude Include="Include\C3Object.h" />
     <ClInclude Include="Include\C3OmniLight.h" />
+    <ClInclude Include="include\C3ParticleEmitter.h" />
     <ClInclude Include="Include\C3Plugin.h" />
     <ClInclude Include="Include\C3PluginManager.h" />
     <ClInclude Include="Include\C3Positionable.h" />
@@ -191,6 +193,7 @@
     <ClInclude Include="Source\C3ModelImpl.h" />
     <ClInclude Include="Source\C3ObjectImpl.h" />
     <ClInclude Include="Source\C3OmniLightImpl.h" />
+    <ClInclude Include="source\C3ParticleEmitterImpl.h" />
     <ClInclude Include="Source\C3PluginImpl.h" />
     <ClInclude Include="Source\C3PluginManagerImpl.h" />
     <ClInclude Include="Source\C3PositionableImpl.h" />

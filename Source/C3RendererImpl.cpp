@@ -1588,7 +1588,7 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 			else if (texflags.IsSet(TEXFLAG_MIRROR_V))
 				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_MIRROR_CLAMP_TO_EDGE);
 			else
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 			if (texflags.IsSet(TEXFLAG_MIRROR_W | TEXFLAG_WRAP_W))
 				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);

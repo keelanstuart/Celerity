@@ -17,6 +17,8 @@
 #include <C3CameraImpl.h>
 #include <C3ModelRendererImpl.h>
 #include <C3QuadTerrainImpl.h>
+#include <C3OmniLightImpl.h>
+#include <C3ParticleEmitterImpl.h>
 
 
 
@@ -241,6 +243,8 @@ Factory *SystemImpl::GetFactory()
 		REGISTER_COMPONENTTYPE(Camera, m_Factory);
 		REGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);
 		REGISTER_COMPONENTTYPE(QuadTerrain, m_Factory);
+		REGISTER_COMPONENTTYPE(OmniLight, m_Factory);
+		REGISTER_COMPONENTTYPE(ParticleEmitter, m_Factory);
 		// *************************************************
 	}
 

@@ -18,17 +18,17 @@
 
 std::vector<std::pair<const TCHAR *, uint64_t>> FlagInfo =
 {
-	{ _T("Update"), c3::Object::EObjFlag::UPDATE },
-	{ _T("Draw"), c3::Object::EObjFlag::DRAW },
-	{ _T("Draw in Editor"), c3::Object::EObjFlag::DRAWINEDITOR },
-	{ _T("Check Collisions"), c3::Object::EObjFlag::CHECKCOLLISIONS },
-	{ _T("Track Camera X"), c3::Object::EObjFlag::TRACKCAMX },
-	{ _T("Track Camera Y"), c3::Object::EObjFlag::TRACKCAMY },
-	{ _T("Track Camera Z"), c3::Object::EObjFlag::TRACKCAMZ },
-	{ _T("Literal Camera Tracking"), c3::Object::EObjFlag::TRACKCAMLITERAL },
-	{ _T("Billboard"), c3::Object::EObjFlag::BILLBOARD },
-	{ _T("Light Source"), c3::Object::EObjFlag::LIGHT },
-	{ _T("Cast Shadow"), c3::Object::EObjFlag::CASTSHADOW },
+	{ _T("Update"), OF_UPDATE },
+	{ _T("Draw"), OF_DRAW },
+	{ _T("Draw in Editor"), OF_DRAWINEDITOR },
+	{ _T("Check Collisions"), OF_CHECKCOLLISIONS },
+	{ _T("Track Camera X"), OF_TRACKCAMX },
+	{ _T("Track Camera Y"), OF_TRACKCAMY },
+	{ _T("Track Camera Z"), OF_TRACKCAMZ },
+	{ _T("Literal Camera Tracking"), OF_TRACKCAMLITERAL },
+	{ _T("Billboard"), OF_BILLBOARD },
+	{ _T("Light Source"), OF_LIGHT },
+	{ _T("Cast Shadow"), OF_CASTSHADOW },
 };
 
 // C3EditApp
@@ -70,6 +70,85 @@ bool CreateDirectories(const TCHAR *dir)
 
 	return ret;
 }
+
+bool __cdecl AltTextureName(const TCHAR *diffuse_texname, c3::Material::TextureComponentType typeneeded, TCHAR *needed_texnamebuf, size_t texnamebuf_len)
+{
+	tstring s = diffuse_texname;
+	std::transform(s.begin(), s.end(), s.begin(), std::tolower);
+	size_t ofs = s.find(tstring(_T("_diff.")), 0);
+	if (ofs != std::string::npos)
+	{
+		switch (typeneeded)
+		{
+			case c3::Material::TCT_NORMAL:
+				s.replace(ofs, 6, _T("_norm."));
+				_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+				return true;
+
+			case c3::Material::TCT_EMISSIVE:
+				s.replace(ofs, 6, _T("_emis."));
+				_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+				return true;
+
+			case c3::Material::TCT_SURFACEDESC:
+				s.replace(ofs, 6, _T("_ref."));
+				_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+				return true;
+		}
+	}
+
+	ofs = s.find(tstring(_T("_diffuse.")), 0);
+	if (ofs != std::string::npos)
+	{
+		switch (typeneeded)
+		{
+			case c3::Material::TCT_NORMAL:
+				s.replace(ofs, 6, _T("_normal."));
+				_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+				return true;
+
+			case c3::Material::TCT_EMISSIVE:
+				s.replace(ofs, 6, _T("_emissive."));
+				_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+				return true;
+
+			case c3::Material::TCT_SURFACEDESC:
+				s.replace(ofs, 6, _T("_mtlpack."));
+				_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+				return true;
+		}
+	}
+
+	// if we aren't look for a diffuse texture and we didn't find a diffuse-identifying name, then just
+	// insert a special name before the dot
+	if (typeneeded != c3::Material::TCT_DIFFUSE)
+	{
+		ofs = s.find(tstring(_T(".")), 0);
+		if (ofs != std::string::npos)
+		{
+			switch (typeneeded)
+			{
+				case c3::Material::TCT_NORMAL:
+					s.replace(ofs, 1, _T("_norm."));
+					_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+					return true;
+
+				case c3::Material::TCT_EMISSIVE:
+					s.replace(ofs, 1, _T("_emis."));
+					_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+					return true;
+
+				case c3::Material::TCT_SURFACEDESC:
+					s.replace(ofs, 1, _T("_ref."));
+					_tcsncpy_s(needed_texnamebuf, texnamebuf_len, s.c_str(), texnamebuf_len);
+					return true;
+			}
+		}
+	}
+
+	return false;
+}
+
 
 // C3EditApp construction
 
@@ -138,7 +217,7 @@ BOOL C3EditApp::InitInstance()
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.models.paths"), _T("./;./assets;./assets/models"));
-	resexts = m_Config->GetString(_T("resources.models.extensions"), _T("fbx;gltf;obj;3ds;dae"));
+	resexts = m_Config->GetString(_T("resources.models.extensions"), _T("fbx;gltf;glb;obj;3ds;dae;x"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.shaders.paths"), _T("./;./assets;./assets/shaders"));
@@ -156,6 +235,8 @@ BOOL C3EditApp::InitInstance()
 	c3::Factory *pf = m_C3->GetFactory();
 	if (!pf)
 		return FALSE;
+
+	c3::Material::SetAlternateTextureFilenameFunc(AltTextureName);
 
 	for (size_t q = 0; q < pfm->GetNumPaths(_T("c3protoa")); q++)
 	{

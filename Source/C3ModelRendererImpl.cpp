@@ -43,7 +43,7 @@ void ModelRendererImpl::Release()
 }
 
 
-props::TFlags64 ModelRendererImpl::Flags()
+props::TFlags64 ModelRendererImpl::Flags() const
 {
 	return m_Flags;
 }
@@ -92,16 +92,19 @@ void ModelRendererImpl::Update(Object *pobject, float elapsed_time)
 }
 
 
-bool ModelRendererImpl::Prerender(Object *pobject, props::TFlags64 rendflags)
+bool ModelRendererImpl::Prerender(Object *pobject, Object::RenderFlags flags)
 {
-	if (rendflags.AnySet(Object::OBJFLAG(Object::DRAW) || Object::OBJFLAG(Object::DRAWINEDITOR)))
+	if (flags.IsSet(RF_FORCE))
 		return true;
 
-	return false;
+	if (!pobject->Flags().IsSet(OF_DRAW))
+		return false;
+
+	return true;
 }
 
 
-void ModelRendererImpl::Render(Object *pobject, props::TFlags64 rendflags)
+void ModelRendererImpl::Render(Object *pobject, Object::RenderFlags flags)
 {
 	assert(pobject);
 
@@ -118,81 +121,84 @@ void ModelRendererImpl::Render(Object *pobject, props::TFlags64 rendflags)
 
 	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
-	if (!rendflags.IsSet(Object::OBJFLAG(Object::CASTSHADOW)))
+	if (!flags.IsSet(RF_LOCKSHADER))
 	{
-		if (!m_SP_defobj)
+		if (!flags.IsSet(RF_SHADOW) && pobject->Flags().IsSet(OF_CASTSHADOW))
 		{
-			props::IProperty *pvsh = pobject->GetProperties()->GetPropertyById('VSHF');
-			props::IProperty *pfsh = pobject->GetProperties()->GetPropertyById('FSHF');
-			if (!m_VS_defobj)
+			if (!m_SP_defobj)
 			{
-				c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-obj.vsh"), rf);
-				if (pres)
-					m_VS_defobj = (c3::ShaderComponent *)(pres->GetData());
-			}
-
-			if (!m_FS_defobj)
-			{
-				c3::Resource *pres = prm->GetResource(pfsh ? pfsh->AsString() : _T("def-obj.fsh"), rf);
-				if (pres)
-					m_FS_defobj = (c3::ShaderComponent *)(pres->GetData());
-			}
-
-			m_SP_defobj = pobject->GetSystem()->GetRenderer()->CreateShaderProgram();
-
-			if (m_SP_defobj && m_VS_defobj && m_FS_defobj)
-			{
-				m_SP_defobj->AttachShader(m_VS_defobj);
-				m_SP_defobj->AttachShader(m_FS_defobj);
-				if (m_SP_defobj->Link() == ShaderProgram::RETURNCODE::RET_OK)
+				props::IProperty *pvsh = pobject->GetProperties()->GetPropertyById('VSHF');
+				props::IProperty *pfsh = pobject->GetProperties()->GetPropertyById('FSHF');
+				if (!m_VS_defobj)
 				{
-					// anything special to do when the shader links correctly
+					c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-obj.vsh"), rf);
+					if (pres)
+						m_VS_defobj = (c3::ShaderComponent *)(pres->GetData());
+				}
+
+				if (!m_FS_defobj)
+				{
+					c3::Resource *pres = prm->GetResource(pfsh ? pfsh->AsString() : _T("def-obj.fsh"), rf);
+					if (pres)
+						m_FS_defobj = (c3::ShaderComponent *)(pres->GetData());
+				}
+
+				m_SP_defobj = pobject->GetSystem()->GetRenderer()->CreateShaderProgram();
+
+				if (m_SP_defobj && m_VS_defobj && m_FS_defobj)
+				{
+					m_SP_defobj->AttachShader(m_VS_defobj);
+					m_SP_defobj->AttachShader(m_FS_defobj);
+					if (m_SP_defobj->Link() == ShaderProgram::RETURNCODE::RET_OK)
+					{
+						// anything special to do when the shader links correctly
+					}
 				}
 			}
+
+			prend->UseProgram(m_SP_defobj);
 		}
-
-		prend->UseProgram(m_SP_defobj);
-	}
-	else
-	{
-		if (!m_SP_shadowobj)
+		else
 		{
-			props::IProperty *pvsh = pobject->GetProperties()->GetPropertyById('VSSF');
-			props::IProperty *pfsh = pobject->GetProperties()->GetPropertyById('FSSF');
-			if (!m_VS_shadowobj)
+			if (!m_SP_shadowobj)
 			{
-				c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-obj-shadow.vsh"), rf);
-				if (pres)
-					m_VS_shadowobj = (c3::ShaderComponent *)(pres->GetData());
-			}
-
-			if (!m_FS_shadowobj)
-			{
-				c3::Resource *pres = prm->GetResource(pfsh ? pfsh->AsString() : _T("def-obj-shadow.fsh"), rf);
-				if (pres)
-					m_FS_shadowobj = (c3::ShaderComponent *)(pres->GetData());
-			}
-
-			m_SP_shadowobj = pobject->GetSystem()->GetRenderer()->CreateShaderProgram();
-
-			if (m_SP_shadowobj && m_VS_shadowobj && m_FS_shadowobj)
-			{
-				m_SP_shadowobj->AttachShader(m_VS_shadowobj);
-				m_SP_shadowobj->AttachShader(m_FS_shadowobj);
-				if (m_SP_shadowobj->Link() == ShaderProgram::RETURNCODE::RET_OK)
+				props::IProperty *pvsh = pobject->GetProperties()->GetPropertyById('VSSF');
+				props::IProperty *pfsh = pobject->GetProperties()->GetPropertyById('FSSF');
+				if (!m_VS_shadowobj)
 				{
-					m_Flags.Clear(Object::OBJFLAG(Object::CASTSHADOW));
+					c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-obj-shadow.vsh"), rf);
+					if (pres)
+						m_VS_shadowobj = (c3::ShaderComponent *)(pres->GetData());
+				}
+
+				if (!m_FS_shadowobj)
+				{
+					c3::Resource *pres = prm->GetResource(pfsh ? pfsh->AsString() : _T("def-obj-shadow.fsh"), rf);
+					if (pres)
+						m_FS_shadowobj = (c3::ShaderComponent *)(pres->GetData());
+				}
+
+				m_SP_shadowobj = pobject->GetSystem()->GetRenderer()->CreateShaderProgram();
+
+				if (m_SP_shadowobj && m_VS_shadowobj && m_FS_shadowobj)
+				{
+					m_SP_shadowobj->AttachShader(m_VS_shadowobj);
+					m_SP_shadowobj->AttachShader(m_FS_shadowobj);
+					if (m_SP_shadowobj->Link() == ShaderProgram::RETURNCODE::RET_OK)
+					{
+						m_Flags.Clear(OF_CASTSHADOW);
+						return;
+					}
+				}
+				else
+				{
+					m_Flags.Clear(OF_CASTSHADOW);
 					return;
 				}
 			}
-			else
-			{
-				m_Flags.Clear(Object::OBJFLAG(Object::CASTSHADOW));
-				return;
-			}
-		}
 
-		prend->UseProgram(m_SP_shadowobj);
+			prend->UseProgram(m_SP_shadowobj);
+		}
 	}
 
 	glm::fmat4x4 mat = *m_pPos->GetTransformMatrix() * m_Mat;
@@ -200,7 +206,7 @@ void ModelRendererImpl::Render(Object *pobject, props::TFlags64 rendflags)
 	{
 		pmod->Draw(&mat);
 	}
-	else if (!rendflags.IsSet(Object::OBJFLAG(Object::CASTSHADOW)))
+	else if (!flags.IsSet(RF_SHADOW))
 	{
 		prend->GetWhiteMaterial()->Apply(m_SP_defobj);
 		if (m_SP_defobj)

@@ -31,7 +31,7 @@ void EnvironmentModifierImpl::Release()
 }
 
 
-props::TFlags64 EnvironmentModifierImpl::Flags()
+props::TFlags64 EnvironmentModifierImpl::Flags() const
 {
 	return m_Flags;
 }
@@ -61,16 +61,19 @@ void EnvironmentModifierImpl::Update(Object *pobject, float elapsed_time)
 }
 
 
-bool EnvironmentModifierImpl::Prerender(Object *pobject, props::TFlags64 rendflags)
+bool EnvironmentModifierImpl::Prerender(Object *pobject, Object::RenderFlags flags)
 {
-	if (rendflags.AnySet(Object::OBJFLAG(Object::DRAW) || Object::OBJFLAG(Object::DRAWINEDITOR)))
+	if (flags.IsSet(RF_FORCE))
 		return true;
 
-	return false;
+	if (!pobject->Flags().IsSet(OF_DRAW))
+		return false;
+
+	return true;
 }
 
 
-void EnvironmentModifierImpl::Render(Object *pobject, props::TFlags64 rendflags)
+void EnvironmentModifierImpl::Render(Object *pobject, Object::RenderFlags flags)
 {
 	assert(pobject);
 

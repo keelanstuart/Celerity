@@ -6,12 +6,19 @@
 
 #include "pch.h"
 
+#include <C3Resource.h>
 #include <C3ShaderComponentImpl.h>
 #include <shlwapi.h>
+#include <C3CRC.h>
 
 
 using namespace c3;
 
+
+GUID ShaderComponent::ResourceGUID()
+{
+	return (RESOURCETYPENAME(ShaderComponent)::self).GetGUID();
+}
 
 ShaderComponentImpl::ShaderComponentImpl(RendererImpl *prend, Renderer::ShaderComponentType type)
 {
@@ -81,6 +88,10 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 
 	m_ProgramText = program;
 
+	m_CRC = Crc32::CalculateString(program);
+	if (preamble)
+		m_CRC = Crc32::CalculateString(preamble, m_CRC);
+
 	size_t progidx = preamble ? 2 : 1;
 	char *ps[3] = {"#version 410\n", nullptr, nullptr};
 	CONVERT_TCS2MBCS(program, ps[progidx]);
@@ -128,13 +139,19 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 }
 
 
-const TCHAR *ShaderComponentImpl::GetProgramText()
+const TCHAR *ShaderComponentImpl::GetProgramText() const
 {
 	return m_ProgramText.c_str();
 }
 
 
-bool ShaderComponentImpl::IsCompiled()
+uint32_t ShaderComponentImpl::GetProgramCRC() const
+{
+	return m_CRC;
+}
+
+
+bool ShaderComponentImpl::IsCompiled() const
 {
 	return m_Compiled;
 }

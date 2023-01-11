@@ -190,6 +190,9 @@ void ResourceManagerImpl::RegisterResourceType(const ResourceType *restype)
 		std::transform(ext.begin(), ext.end(), ext.begin(), tolower);
 		m_ExtResTypeMap.insert(TExtToResourceTypeMap::value_type(ext, restype));
 
+		if (std::find(m_ResTypes.begin(), m_ResTypes.end(), restype) == m_ResTypes.end())
+			m_ResTypes.push_back(restype);
+
 		h++;
 		t = h;
 	}

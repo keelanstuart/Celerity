@@ -17,7 +17,7 @@ PrototypeImpl::PrototypeImpl(System *psys, GUID guid)
 {
 	m_pSys = psys;
 	m_GUID = guid;
-	m_Flags.SetAll(c3::Object::OBJFLAG(c3::Object::UPDATE) | c3::Object::OBJFLAG(c3::Object::DRAW));
+	m_Flags.SetAll(OF_UPDATE | OF_DRAW);
 
 	m_Props = props::IPropertySet::CreatePropertySet();
 }

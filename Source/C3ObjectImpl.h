@@ -76,11 +76,11 @@ namespace c3
 
 		virtual void Update(float elapsed_time = 0.0f);
 
-		virtual bool Prerender(props::TFlags64 rendflags);
+		virtual bool Prerender(Object::RenderFlags flags);
 
-		virtual bool Render(props::TFlags64 rendflags);
+		virtual bool Render(Object::RenderFlags flags);
 
-		virtual void Postrender(props::TFlags64 rendflags);
+		virtual void Postrender(Object::RenderFlags flags);
 
 		virtual bool Load(genio::IInputStream *is);
 

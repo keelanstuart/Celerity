@@ -33,17 +33,17 @@ namespace c3
 
 		virtual void Release();
 
-		virtual ComponentType *GetType();
+		virtual const ComponentType *GetType() const;
 
-		virtual props::TFlags64 Flags();
+		virtual props::TFlags64 Flags() const;
 
 		virtual bool Initialize(Object *pobject);
 
 		virtual void Update(Object *pobject, float elapsed_time = 0.0f);
 
-		virtual bool Prerender(Object *pobject, props::TFlags64 rendflags);
+		virtual bool Prerender(Object *pobject, Object::RenderFlags flags);
 
-		virtual void Render(Object *pobject, props::TFlags64 rendflags);
+		virtual void Render(Object *pobject, Object::RenderFlags flags);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
