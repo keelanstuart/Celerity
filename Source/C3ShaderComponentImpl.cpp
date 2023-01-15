@@ -15,11 +15,6 @@
 using namespace c3;
 
 
-GUID ShaderComponent::ResourceGUID()
-{
-	return (RESOURCETYPENAME(ShaderComponent)::self).GetGUID();
-}
-
 ShaderComponentImpl::ShaderComponentImpl(RendererImpl *prend, Renderer::ShaderComponentType type)
 {
 	m_Rend = prend;

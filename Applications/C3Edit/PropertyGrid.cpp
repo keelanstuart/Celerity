@@ -578,6 +578,14 @@ void CPropertyGrid::UpdateCurrentProperties()
 					{
 						// add other cases if necessary
 
+						case props::IProperty::PA_COLOR_RGB:
+						case props::IProperty::PA_COLOR_RGBA:
+						case props::IProperty::PA_COLOR_DIFFUSE:
+						case props::IProperty::PA_COLOR_EMISSIVE:
+						case props::IProperty::PA_COLOR_SPECULAR:
+						case props::IProperty::PA_AMBIENT_COLOR:
+						case props::IProperty::PA_SUN_COLOR:
+
 						default:
 							pgp->SetValue(p->AsInt());
 							break;

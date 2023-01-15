@@ -113,14 +113,14 @@ namespace c3
 
 		virtual const BoundingBox *GetBounds(BoundingBox *pbb = nullptr) const;
 
-		virtual void Draw(const glm::fmat4x4 *pmat) const;
+		virtual void Draw(const glm::fmat4x4 *pmat, bool allow_material_changes) const;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, size_t *pMeshIndex,
 							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
 							   const glm::fmat4x4 *pmat = nullptr) const;
 
 	protected:
-		bool DrawNode(const SNodeInfo *pnode) const;
+		bool DrawNode(const SNodeInfo *pnode, bool allow_material_changes) const;
 
 		bool IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
 						   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;

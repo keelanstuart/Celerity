@@ -20,11 +20,10 @@ namespace c3
 	protected:
 		Object *m_pOwner;
 		Positionable *m_pPos;
-		ShaderComponent *m_VS_deflight;
-		ShaderComponent *m_FS_deflight;
-		ShaderProgram *m_SP_deflight;
-		props::IProperty *m_propColor;
+		RenderMethod *m_pMethod;
+		size_t m_TechIdx_L;
 		FrameBuffer *m_SourceFB;
+		props::IProperty *m_propColor;
 		int32_t m_uniPos;
 		int32_t m_uniRadius;
 		int32_t m_uniColor;

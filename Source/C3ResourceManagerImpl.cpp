@@ -144,7 +144,7 @@ void ResourceManagerImpl::ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const R
 	if (it == m_ResByTypeMap.end())
 		return;
 
-	while (it != last_it)
+	for (; it != last_it; it++)
 	{
 		if (flagmode != ResTypeFlagMode::RTFM_IGNORE)
 		{
@@ -160,7 +160,6 @@ void ResourceManagerImpl::ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const R
 
 		Resource *pres = it->second;
 		func(pres);
-		it++;
 	}
 }
 
@@ -253,7 +252,7 @@ const ResourceType *ResourceManagerImpl::GetResourceType(size_t index) const
 }
 
 
-const ResourceType *ResourceManagerImpl::FindResourceType(const TCHAR *ext) const
+const ResourceType *ResourceManagerImpl::FindResourceTypeByExt(const TCHAR *ext) const
 {
 	if (ext)
 	{
@@ -263,6 +262,21 @@ const ResourceType *ResourceManagerImpl::FindResourceType(const TCHAR *ext) cons
 		TExtToResourceTypeMap::const_iterator it = m_ExtResTypeMap.find(ext);
 		if (it != m_ExtResTypeMap.end())
 			return it->second;
+	}
+
+	return nullptr;
+}
+
+
+const ResourceType *ResourceManagerImpl::FindResourceTypeByName(const TCHAR *name) const
+{
+	if (name)
+	{
+		for (auto rt : m_ResTypes)
+		{
+			if (!_tcsicmp(rt->GetName(), name))
+				return rt;
+		}
 	}
 
 	return nullptr;
@@ -286,7 +300,7 @@ void ResourceManagerImpl::Reset()
 	for (auto &it : m_ResMap)
 	{
 		Resource *pres = it.second;
-		while (pres->GetStatus() == Resource::Status::RS_LOADED);
+		while (pres->GetStatus() == Resource::Status::RS_LOADED)
 			pres->DelRef();
 	}
 }

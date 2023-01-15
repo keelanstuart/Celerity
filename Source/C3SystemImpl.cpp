@@ -12,6 +12,7 @@
 #include <C3TextureImpl.h>
 #include <C3ModelImpl.h>
 #include <C3ShaderComponentImpl.h>
+#include <C3RenderMethodImpl.h>
 
 #include <C3PositionableImpl.h>
 #include <C3CameraImpl.h>
@@ -116,8 +117,11 @@ void SystemImpl::Release()
 		/// UNREGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES
 		// *************************************************
 		UNREGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(TextureCube, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(Texture3D, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(Model, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(RenderMethod, m_ResourceManager);
 		// *************************************************
 
 		delete m_ResourceManager;
@@ -187,8 +191,11 @@ ResourceManager *SystemImpl::GetResourceManager()
 		/// REGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES
 		// *************************************************
 		REGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
+		REGISTER_RESOURCETYPE(TextureCube, m_ResourceManager);
+		REGISTER_RESOURCETYPE(Texture3D, m_ResourceManager);
 		REGISTER_RESOURCETYPE(Model, m_ResourceManager);
 		REGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
+		REGISTER_RESOURCETYPE(RenderMethod, m_ResourceManager);
 		// *************************************************
 	}
 

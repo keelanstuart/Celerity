@@ -59,6 +59,7 @@
     <ClCompile Include="Source\C3ModelRendererImpl.cpp" />
     <ClCompile Include="Source\C3QuadTerrainImpl.cpp" />
     <ClCompile Include="Source\C3RendererImpl.cpp" />
+    <ClCompile Include="source\C3RenderMethodImpl.cpp" />
     <ClCompile Include="Source\C3ResourceManagerImpl.cpp" />
     <ClCompile Include="Source\C3ShaderBuilderImpl.cpp" />
     <ClCompile Include="Source\C3ShaderComponentImpl.cpp" />
@@ -161,6 +162,7 @@
     <ClInclude Include="Include\C3ModelRenderer.h" />
     <ClInclude Include="Include\C3QuadTerrain.h" />
     <ClInclude Include="Include\C3Renderer.h" />
+    <ClInclude Include="include\C3RenderMethod.h" />
     <ClInclude Include="Include\C3Resource.h" />
     <ClInclude Include="Include\C3ResourceManager.h" />
     <ClInclude Include="Include\C3ShaderComponent.h" />
@@ -202,6 +204,7 @@
     <ClInclude Include="Source\C3ModelRendererImpl.h" />
     <ClInclude Include="Source\C3QuadTerrainImpl.h" />
     <ClInclude Include="Source\C3RendererImpl.h" />
+    <ClInclude Include="source\C3RenderMethodImpl.h" />
     <ClInclude Include="Source\C3ResourceImpl.h" />
     <ClInclude Include="Source\C3ResourceManagerImpl.h" />
     <ClInclude Include="Source\C3ShaderBuilderImpl.h" />

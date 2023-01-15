@@ -45,6 +45,7 @@
 #include <C3ShaderProgram.h>
 #include <C3Material.h>
 #include <C3MaterialManager.h>
+#include <C3RenderMethod.h>
 #include <C3Model.h>
 #include <C3Renderer.h>
 #include <C3Log.h>

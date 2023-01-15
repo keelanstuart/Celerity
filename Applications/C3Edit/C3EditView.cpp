@@ -312,8 +312,8 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL);
 			prend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
 			prend->SetAlphaPassRange(3.0f / 255.0f);
-			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-			prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
+			//prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+			//prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
 			pDoc->m_RootObj->Render();
 
 			// Shadow pass
@@ -326,6 +326,10 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			pDoc->m_RootObj->Render(RF_LIGHT);
+
+			// clear the render method and material
+			prend->UseRenderMethod();
+			prend->UseMaterial();
 
 			// Selection hilighting
 			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
@@ -345,7 +349,6 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			prend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
 			prend->UseProgram(m_SP_combine);
-			m_SP_combine->ApplyUniforms(true);
 			prend->UseVertexBuffer(prend->GetFullscreenPlaneVB());
 			prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
@@ -410,7 +413,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			};
 
 			theApp.m_C3->GetLog()->Print(_T("Creating G-buffer... "));
-			m_GBuf = prend->CreateFrameBuffer();
+			m_GBuf = prend->CreateFrameBuffer(0, _T("GBuffer"));
 			gbok = m_GBuf->Setup(_countof(GBufTargData), GBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
 			theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
@@ -431,7 +434,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			};
 
 			theApp.m_C3->GetLog()->Print(_T("Creating light combine buffer... "));
-			m_LCBuf = prend->CreateFrameBuffer();
+			m_LCBuf = prend->CreateFrameBuffer(0, _T("LightCombine"));
 			gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
 			theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
@@ -445,12 +448,12 @@ void C3EditView::OnDraw(CDC *pDC)
 			};
 
 			theApp.m_C3->GetLog()->Print(_T("Creating auxiliary buffer... "));
-			m_AuxBuf = prend->CreateFrameBuffer();
+			m_AuxBuf = prend->CreateFrameBuffer(0, _T("Aux"));
 			gbok = m_AuxBuf->Setup(_countof(AuxBufTargData), AuxBufTargData, m_DepthTarg, auxr) == c3::FrameBuffer::RETURNCODE::RET_OK;
 			theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 			theApp.m_C3->GetLog()->Print(_T("Creating shadow buffer... "));
-			m_SSBuf = prend->CreateFrameBuffer();
+			m_SSBuf = prend->CreateFrameBuffer(0, _T("Shadow"));
 			m_SSBuf->AttachDepthTarget(m_ShadowTarg);
 			gbok = m_SSBuf->Seal() == c3::FrameBuffer::RETURNCODE::RET_OK;
 			theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));

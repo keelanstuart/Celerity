@@ -134,7 +134,6 @@ void PositionableImpl::Render(Object *pobject, Object::RenderFlags flags)
 	ShaderProgram *sp = pr->GetBoundsShader();
 	pr->UseProgram(sp);
 	pr->GetWhiteMaterial()->Apply(sp);
-	sp->ApplyUniforms();
 
 	//pr->GetBoundsMesh()->Draw(c3::Renderer::PrimType::LINELIST);
 #endif

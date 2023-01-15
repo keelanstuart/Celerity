@@ -263,7 +263,7 @@ BOOL C3Dlg::OnInitDialog()
 	bool gbok = false;
 
 	theApp.m_C3->GetLog()->Print(_T("Creating G-buffer... "));
-	m_GBuf = m_Rend->CreateFrameBuffer();
+	m_GBuf = m_Rend->CreateFrameBuffer(0, _T("GBuffer"));
 	gbok = m_GBuf->Setup(_countof(GBufTargData), GBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
@@ -279,12 +279,12 @@ BOOL C3Dlg::OnInitDialog()
 	}
 
 	theApp.m_C3->GetLog()->Print(_T("Creating light combine buffer... "));
-	m_LCBuf = m_Rend->CreateFrameBuffer();
+	m_LCBuf = m_Rend->CreateFrameBuffer(0, _T("LightCombine"));
 	gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	theApp.m_C3->GetLog()->Print(_T("Creating shadow buffer... "));
-	m_SSBuf = m_Rend->CreateFrameBuffer();
+	m_SSBuf = m_Rend->CreateFrameBuffer(0, _T("Shadow"));
 	m_SSBuf->AttachDepthTarget(m_ShadowTarg);
 	gbok = m_SSBuf->Seal() == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
@@ -800,13 +800,15 @@ void C3Dlg::OnPaint()
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			m_RootObj->Render(RF_LIGHT);
 
+			m_Rend->UseRenderMethod();
+			m_Rend->UseMaterial();
+
 			// Resolve
 			m_Rend->UseFrameBuffer(m_BBuf[0], UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
 			m_Rend->UseProgram(m_SP_combine);
-			m_SP_combine->ApplyUniforms(true);
 			m_Rend->UseVertexBuffer(m_Rend->GetFullscreenPlaneVB());
 			m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
@@ -818,14 +820,12 @@ void C3Dlg::OnPaint()
 				m_Rend->UseProgram(m_SP_blur);
 				m_SP_blur->SetUniformTexture(m_BTex[b], m_uBlurTex);
 				m_SP_blur->SetUniform1(m_uBlurScale, bs);
-				m_SP_blur->ApplyUniforms(true);
 				m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 				bs *= 2.0f;
 			}
 
 			m_Rend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST);
 			m_Rend->UseProgram(m_SP_resolve);
-			m_SP_resolve->ApplyUniforms(true);
 			m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
 			m_Rend->EndScene();

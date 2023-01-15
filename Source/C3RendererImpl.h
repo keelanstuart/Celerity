@@ -54,7 +54,10 @@ namespace c3
 		bool m_needsFinish;
 
 		// There's no extra thread here... the "pool" just contains a list of tasks that we're going to execute on this thread when we can
-		pool::IThreadPool *m_TaskPool;
+		// NOTE: there are two pools for double-bufferring so that if there are resource dependencies (e.g., textures loaded by models)
+		// they can keep render blocking to a minimum
+		pool::IThreadPool *m_TaskPool[2];
+		size_t m_ActiveTaskPool;
 
 		glm::fmat4x4 m_ident;
 
@@ -140,6 +143,14 @@ namespace c3
 
 		typedef std::map<uint32_t, GLuint> TTexFlagsToSamplerMap;
 		TTexFlagsToSamplerMap m_TexFlagsToSampler;
+
+		typedef std::map<tstring, FrameBuffer *> TNameToFrameBufferMap;
+		TNameToFrameBufferMap m_NameToFB;
+
+		RenderMethod *m_ActiveRenderMethod;
+		RenderMethod *m_DefaultRenderMethod;
+
+		Material *m_ActiveMaterial;
 
 	public:
 
@@ -237,7 +248,8 @@ namespace c3
 
 		virtual DepthBuffer *CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 flags);
 
-		virtual FrameBuffer *CreateFrameBuffer(props::TFlags64 flags);
+		virtual FrameBuffer *CreateFrameBuffer(props::TFlags64 flags, const TCHAR *name);
+		virtual FrameBuffer *FindFrameBuffer(const TCHAR *name) const;
 
 		virtual VertexBuffer *CreateVertexBuffer(props::TFlags64 flags);
 		virtual IndexBuffer *CreateIndexBuffer(props::TFlags64 flags);
@@ -245,6 +257,13 @@ namespace c3
 
 		virtual ShaderProgram *CreateShaderProgram();
 		virtual ShaderComponent *CreateShaderComponent(ShaderComponentType type);
+
+		virtual RenderMethod *CreateRenderMethod();
+		virtual void UseRenderMethod(const RenderMethod *method);
+		virtual RenderMethod *GetActiveRenderMethod() const;
+
+		virtual void UseMaterial(const Material *material);
+		virtual Material *GetActiveMaterial() const;
 
 		virtual void UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags = UFBFLAG_FINISHLAST);
 		virtual FrameBuffer *GetActiveFrameBuffer();

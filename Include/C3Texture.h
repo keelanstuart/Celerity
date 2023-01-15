@@ -84,8 +84,6 @@ namespace c3
 
 	public:
 
-		static C3_API GUID ResourceGUID();
-
 		typedef struct sLockInfo
 		{
 			size_t width;
@@ -104,8 +102,6 @@ namespace c3
 	{
 
 	public:
-
-		static C3_API GUID ResourceGUID();
 
 		typedef struct sLockInfo
 		{
@@ -141,8 +137,6 @@ namespace c3
 	{
 
 	public:
-
-		static C3_API GUID ResourceGUID();
 
 		typedef struct sLockInfo
 		{

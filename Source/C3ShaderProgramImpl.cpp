@@ -524,14 +524,7 @@ void ShaderProgramImpl::ApplyUniforms(bool update_globals)
 				break;
 
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
-#if 0
 				m_Rend->gl.ProgramUniform3fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec3F());
-#else
-				{
-					const GLfloat *f = (const GLfloat *)p->AsVec3F();
-					m_Rend->gl.ProgramUniform3f(m_glID, (GLint)(GLint)p->GetID(), f[0], f[1], f[2]);
-				}
-#endif
 				break;
 
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:

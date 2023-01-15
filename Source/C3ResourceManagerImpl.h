@@ -53,7 +53,9 @@ namespace c3
 
 		virtual const ResourceType *GetResourceType(size_t index) const;
 
-		virtual const ResourceType *FindResourceType(const TCHAR *ext) const;
+		virtual const ResourceType *FindResourceTypeByExt(const TCHAR *ext) const;
+
+		virtual const ResourceType *FindResourceTypeByName(const TCHAR *name) const;
 
 		virtual const ResourceType *FindResourceType(GUID guid) const;
 

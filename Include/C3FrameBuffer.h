@@ -47,6 +47,9 @@ namespace c3
 		/// Releases the resources owned by the framebuffer (note: does not release any attached surfaces)
 		virtual void Release() = NULL;
 
+		/// Returns the name that the FrameBuffer was given when it was created
+		virtual const TCHAR *GetName() const = NULL;
+
 		/// Fills out a complete FrameBuffer based on the descriptions of a target
 		virtual RETURNCODE Setup(size_t numtargs, const TargetDesc *ptargdescs, DepthBuffer *pdb, RECT &r) = NULL;
 

@@ -154,7 +154,11 @@ BOOL C3App::InitInstance()
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Cfg->GetString(_T("resources.shaders.paths"), _T("./;./assets;./assets/shaders"));
-	resexts = m_Cfg->GetString(_T("resources.shaders.extensions"), _T("vsh;fsh;gsh"));
+	resexts = m_Cfg->GetString(_T("resources.shaders.extensions"), _T("vsh;fsh;gsh;esh;tsh"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
+	respaths = m_Cfg->GetString(_T("resources.rendermethods.paths"), _T("./;./assets;./assets/shaders"));
+	resexts = m_Cfg->GetString(_T("resources.rendermethods.extensions"), _T("c3rm"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Cfg->GetString(_T("resources.prototypes.paths"), _T("./;./assets"));

@@ -9,6 +9,7 @@
 #include <C3.h>
 #include <C3ModelRenderer.h>
 #include <C3PositionableImpl.h>
+#include <C3RenderMethod.h>
 
 namespace c3
 {
@@ -25,13 +26,8 @@ namespace c3
 		glm::fvec3 m_Scl;
 		glm::fmat4x4 m_Mat, m_MatN;
 
-		ShaderComponent *m_VS_defobj;
-		ShaderComponent *m_FS_defobj;
-		ShaderProgram *m_SP_defobj;
-
-		ShaderComponent *m_VS_shadowobj;
-		ShaderComponent *m_FS_shadowobj;
-		ShaderProgram *m_SP_shadowobj;
+		RenderMethod *m_pMethod;
+		size_t m_TechIdx_G, m_TechIdx_GS, m_TechIdx_S;
 
 		typedef std::pair<Model *, Resource *> TModOrRes;
 		TModOrRes m_Mod;

@@ -21,12 +21,6 @@
 using namespace c3;
 
 
-GUID Model::ResourceGUID()
-{
-	return (RESOURCETYPENAME(Model)::self).GetGUID();
-}
-
-
 Model *Model::Create(Renderer *prend)
 {
 	return new ModelImpl((RendererImpl *)prend);
@@ -341,7 +335,7 @@ const BoundingBox *ModelImpl::GetBounds(BoundingBox *pbb) const
 }
 
 
-void ModelImpl::Draw(const glm::fmat4x4 *pmat) const
+void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes) const
 {
 	if (pmat)
 		m_MatStack->Push(pmat);
@@ -354,7 +348,7 @@ void ModelImpl::Draw(const glm::fmat4x4 *pmat) const
 
 		// from this point, only draw top-level nodes
 		if (node->parent == NO_PARENT)
-			DrawNode(cit);
+			DrawNode(cit, allow_material_changes);
 	}
 
 	if (pmat)
@@ -362,7 +356,7 @@ void ModelImpl::Draw(const glm::fmat4x4 *pmat) const
 }
 
 
-bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
+bool ModelImpl::DrawNode(const SNodeInfo *pnode, bool allow_material_changes) const
 {
 	if (!pnode)
 		return false;
@@ -375,8 +369,6 @@ bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
 	// set up the world matrix to draw meshes at this node level
 	m_pRend->SetWorldMatrix(m_MatStack->Top(&m));
 
-	ShaderProgram *pprog = m_pRend->GetActiveProgram();
-
 	for (const auto &mit : pnode->meshes)
 	{
 		// render each of the meshes on this node
@@ -384,10 +376,8 @@ bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
 		if (!mesh)
 			continue;
 
-		if (mesh->pmtl)
-			mesh->pmtl->Apply(pprog);
-		if (pprog)
-			pprog->ApplyUniforms();
+		if (allow_material_changes)
+			m_pRend->UseMaterial(mesh->pmtl);
 
 		mesh->pmesh->Draw();
 	}
@@ -399,7 +389,7 @@ bool ModelImpl::DrawNode(const SNodeInfo *pnode) const
 		if (!child)
 			continue;
 
-		DrawNode(child);
+		DrawNode(child, allow_material_changes);
 	}
 
 	// pop the node's transform
@@ -630,21 +620,13 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 			while (*c) { if (*c == _T('/')) { *c = _T('\\'); } c++; }
 			PathRemoveFileSpec(modbasepath);
 
-			// HACK HACK HACK!!!
-			// Obviously DEMANDLOAD works, but defeats the purpose of all the asych mechanisms built in
-			// this is because in this case, the renderer's task list is locked when this function
-			// executes... so come up with a double-buffer system.
-			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
+			props::TFlags64 rf = 0; //c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
 			bool has_difftex = false;
 			if (true == (has_difftex = (paim->GetTextureCount(aiTextureType_DIFFUSE) > 0)))
 				paim->GetTexture(aiTextureType_DIFFUSE, 0, &aipath);
 			else if (!has_difftex && (true == (has_difftex = (paim->GetTextureCount(aiTextureType_BASE_COLOR) > 0))))
 				paim->GetTexture(aiTextureType_BASE_COLOR, 0, &aipath);
-
-			//scene->HasTextures()
-			//scene->mTextures[0]->mWidth, scene->mTextures[ti]->mHeight, scene->mTextures[ti]->pcData);
-
 
 			// locally-defined function to set texture filenames for specific types of textures
 			auto SetTextureFileName = [&](Material::TextureComponentType t, const char *s)
@@ -696,7 +678,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 								pmtl->SetTexture(t, pt);
 								psys->GetResourceManager()->GetResource(texname.c_str(),
 									c3::ResourceManager::EResFlag::CREATEENTRYONLY,
-									psys->GetResourceManager()->FindResourceType(Texture2D::ResourceGUID()),
+									psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D")),
 									pt);
 							}
 

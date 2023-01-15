@@ -269,7 +269,7 @@ void CPropertiesWnd::FillOutFlags()
 
 	for (int i = 0, maxi = m_wndFlagList.GetCount(); i < maxi; i++)
 	{
-		m_wndFlagList.SetCheck(i, f ? (f->IsSet(1LL << m_wndFlagList.GetItemData(i))) : 0);
+		m_wndFlagList.SetCheck(i, f ? (f->IsSet(m_wndFlagList.GetItemData(i))) : 0);
 	}
 }
 

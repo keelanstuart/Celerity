@@ -192,6 +192,9 @@
     <ClCompile Include="source\C3ParticleEmitterImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\C3RenderMethodImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -510,6 +513,12 @@
       <Filter>Header Files\Public</Filter>
     </ClInclude>
     <ClInclude Include="source\C3ParticleEmitterImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="include\C3RenderMethod.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="source\C3RenderMethodImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>

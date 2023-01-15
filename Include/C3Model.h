@@ -18,7 +18,6 @@ namespace c3
 	public: 
 
 		static C3_API Model *Create(Renderer *prend);
-		static C3_API GUID ResourceGUID();
 
 		typedef size_t NodeIndex;
 		typedef size_t MeshIndex;
@@ -67,7 +66,7 @@ namespace c3
 
 		virtual const BoundingBox *GetBounds(BoundingBox *pbb = nullptr) const = NULL;
 
-		virtual void Draw(const glm::fmat4x4 *pmat = nullptr) const = NULL;
+		virtual void Draw(const glm::fmat4x4 *pmat = nullptr, bool allow_material_changes = true) const = NULL;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, size_t *pMeshIndex,
 							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,

@@ -18,6 +18,7 @@ namespace c3
 	{
 
 	protected:
+		tstring m_Name;
 		RendererImpl *m_Rend;
 		GLuint m_glID;
 
@@ -74,10 +75,12 @@ namespace c3
 
 	public:
 
-		FrameBufferImpl(RendererImpl *prend);
+		FrameBufferImpl(RendererImpl *prend, const TCHAR *name);
 		virtual ~FrameBufferImpl();
 
 		virtual void Release();
+
+		virtual const TCHAR *GetName() const;
 
 		virtual RETURNCODE Setup(size_t numtargs, const TargetDesc *ptargdescs, DepthBuffer *pdb, RECT &r);
 

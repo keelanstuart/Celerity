@@ -17,8 +17,6 @@ namespace c3
 
 	public:
 
-		static C3_API GUID ResourceGUID();
-
 		enum RETURNCODE
 		{
 			RET_OK = 0,

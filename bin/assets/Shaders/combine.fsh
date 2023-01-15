@@ -4,7 +4,6 @@ uniform sampler2D uSamplerPosDepth;
 uniform sampler2D uSamplerEmissionRoughness;
 uniform sampler2D uSamplerLights;
 uniform sampler2D uSamplerShadow;
-uniform sampler2D uSamplerAuxiliary;
 uniform vec3 uSunDirection;
 uniform vec3 uSunColor;
 uniform vec3 uAmbientColor;

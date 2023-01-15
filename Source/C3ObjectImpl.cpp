@@ -243,10 +243,13 @@ void ObjectImpl::Update(float elapsed_time)
 
 bool ObjectImpl::Prerender(Object::RenderFlags flags)
 {
-	if (flags.IsSet(RF_FORCE))
+	if (flags.IsSet(RF_FORCE) || (flags.IsSet(RF_EDITORDRAW) && m_Flags.IsSet(OF_DRAWINEDITOR)))
 		return true;
 
 	if (!m_Flags.IsSet(OF_DRAW))
+		return false;
+
+	if (flags.IsSet(RF_LIGHT) && !m_Flags.IsSet(OF_LIGHT))
 		return false;
 
 	// TODO: port visibility culling

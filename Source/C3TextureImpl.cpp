@@ -13,12 +13,6 @@
 using namespace c3;
 
 
-GUID Texture2D::ResourceGUID()
-{
-	return (RESOURCETYPENAME(Texture2D)::self).GetGUID();
-}
-
-
 Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	assert(prend);
@@ -296,12 +290,6 @@ void RESOURCETYPENAME(Texture2D)::Unload(void *data) const
 // *******************************************************************************
 
 
-GUID TextureCube::ResourceGUID()
-{
-	return (RESOURCETYPENAME(TextureCube)::self).GetGUID();
-}
-
-
 TextureCubeImpl::TextureCubeImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
 	assert(prend);
@@ -566,12 +554,6 @@ void RESOURCETYPENAME(TextureCube)::Unload(void *data) const
 
 // *******************************************************************************
 // *******************************************************************************
-
-
-GUID Texture3D::ResourceGUID()
-{
-	return (RESOURCETYPENAME(Texture3D)::self).GetGUID();
-}
 
 
 Texture3DImpl::Texture3DImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)

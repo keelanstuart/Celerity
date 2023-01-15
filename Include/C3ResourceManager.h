@@ -60,7 +60,9 @@ namespace c3
 
 		// Finds a resource type that has been previously registered, based on file extension
 		// if the same file extension could be used for multiple data types, then 
-		virtual const ResourceType *FindResourceType(const TCHAR *ext) const = NULL;
+		virtual const ResourceType *FindResourceTypeByExt(const TCHAR *ext) const = NULL;
+
+		virtual const ResourceType *FindResourceTypeByName(const TCHAR *name) const = NULL;
 
 		virtual const ResourceType *FindResourceType(GUID guid) const = NULL;
 

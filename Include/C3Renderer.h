@@ -26,6 +26,7 @@ namespace c3
 	class Gui;
 	class MaterialManager;
 	class Material;
+	class RenderMethod;
 
 	class Renderer
 	{
@@ -170,12 +171,12 @@ namespace c3
 
 		typedef enum EBlendMode
 		{
-			BM_DISABLED = 0,	// blend(zero, zero)
-			BM_REPLACE,			// blend(one, zero)
-			BM_ALPHA,			// blend(src_alpha, inv_src_alpha)
-			BM_ADD,				// blend(one, one)
-			BM_ADDALPHA,		// blend(src_alpha, one)
-			BM_ALPHATOCOVERAGE,	// replace, but with atoc enabled
+			BM_DISABLED = 0,			// blend(zero, zero)
+			BM_REPLACE,					// blend(one, zero)
+			BM_ALPHA,					// blend(src_alpha, inv_src_alpha)
+			BM_ADD,						// blend(one, one)
+			BM_ADDALPHA,				// blend(src_alpha, one)
+			BM_ALPHATOCOVERAGE,			// replace, but with alpha-to-coverage enabled
 
 			BM_NUMMODES
 
@@ -183,11 +184,11 @@ namespace c3
 
 		typedef enum EBlendEquation
 		{
-			BE_ADD = 0,
-			BE_SUBTRACT,
-			BE_REVERSE_SUBTRACT,
-			BE_MIN,
-			BE_MAX,
+			BE_ADD = 0,					// result = source + destination
+			BE_SUBTRACT,				// result = source - destination
+			BE_REVERSE_SUBTRACT,		// result = destination - source
+			BE_MIN,						// result = min(source, destination)
+			BE_MAX,						// result = max(source, destination)
 
 			BE_NUMMODES
 
@@ -274,10 +275,13 @@ namespace c3
 		virtual void SetBlendMode(BlendMode mode) = NULL;
 		virtual BlendMode GetBlendMode() const = NULL;
 
-		// Sets the range in which pixels will no be discarded
+		// Sets the alpha range in which pixels will not be discarded
 		virtual void SetAlphaPassRange(float minalpha = 0, float maxalpha = FLT_MAX) = NULL;
+
+		// Gets the alpha range in which pixels will not be discarded
 		virtual void GetAlphaPassRange(float &minalpha, float &maxalpha) = NULL;
 
+		// Sets alpha coverage value
 		virtual void SetAlphaCoverage(float coverage = 1.0f, bool invert = false) = NULL;
 		virtual void GetAlphaCoverage(float &coverage, bool &invert) = NULL;
 
@@ -288,12 +292,17 @@ namespace c3
 		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 createflags = 0) = NULL;
 		virtual Texture3D *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 createflags = 0) = NULL;
 
+		// Loads a Texture2D from a file on disk (the dimensions may not be known beforehand)
 		virtual Texture2D *CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 createflags = 0) = NULL;
 
+		// Creates a depth surface
 		virtual DepthBuffer *CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 createflags = 0) = NULL;
 
 		/// Creates a frame buffer that facilitates rendering to textures
-		virtual FrameBuffer *CreateFrameBuffer(props::TFlags64 createflags = 0) = NULL;
+		virtual FrameBuffer *CreateFrameBuffer(props::TFlags64 createflags = 0, const TCHAR *name = nullptr) = NULL;
+
+		// Finds a frame buffer by name
+		virtual FrameBuffer *FindFrameBuffer(const TCHAR *name) const = NULL;
 
 		virtual VertexBuffer *CreateVertexBuffer(props::TFlags64 createflags = 0) = NULL;
 		virtual IndexBuffer *CreateIndexBuffer(props::TFlags64 createflags = 0) = NULL;
@@ -301,6 +310,13 @@ namespace c3
 
 		virtual ShaderProgram *CreateShaderProgram() = NULL;
 		virtual ShaderComponent *CreateShaderComponent(ShaderComponentType type) = NULL;
+
+		virtual RenderMethod *CreateRenderMethod() = NULL;
+		virtual void UseRenderMethod(const RenderMethod *method = nullptr) = NULL;
+		virtual RenderMethod *GetActiveRenderMethod() const = NULL;
+
+		virtual void UseMaterial(const Material *material = nullptr) = NULL;
+		virtual Material *GetActiveMaterial() const = NULL;
 
 		virtual void UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags = UFBFLAG_FINISHLAST) = NULL;
 		virtual FrameBuffer *GetActiveFrameBuffer() = NULL;

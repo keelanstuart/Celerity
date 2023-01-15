@@ -150,7 +150,6 @@ void GuiImpl::SetupRenderState(ImDrawData *draw_data, int fb_width, int fb_heigh
 	m_pRend->UseProgram(m_Prog);
 	m_pRend->SetProjectionMatrix(&ortho_projection);
 	m_Prog->SetUniformTexture(m_FontTex);
-	m_Prog->ApplyUniforms();
 
 	// Bind vertex/index buffers and setup attributes for ImDrawVert
 	m_pRend->UseVertexBuffer(m_VB);

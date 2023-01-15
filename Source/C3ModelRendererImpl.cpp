@@ -17,8 +17,7 @@ DECLARE_COMPONENTTYPE(ModelRenderer, ModelRendererImpl);
 ModelRendererImpl::ModelRendererImpl() : m_Pos(0, 0, 0), m_Ori(1, 0, 0, 0), m_Scl(1, 1, 1)
 {
 	m_pPos = nullptr;
-	m_FS_defobj = m_VS_defobj = nullptr;
-	m_SP_defobj = nullptr;
+	m_pMethod = nullptr;
 	m_Mod = TModOrRes(nullptr, nullptr);
 	m_Mat = glm::identity<glm::fmat4x4>();
 	m_MatN = glm::identity<glm::fmat4x4>();
@@ -29,11 +28,6 @@ ModelRendererImpl::ModelRendererImpl() : m_Pos(0, 0, 0), m_Ori(1, 0, 0, 0), m_Sc
 
 ModelRendererImpl::~ModelRendererImpl()
 {
-	if (m_SP_defobj)
-	{
-		m_SP_defobj->Release();
-		m_SP_defobj = nullptr;
-	}
 }
 
 
@@ -119,100 +113,35 @@ void ModelRendererImpl::Render(Object *pobject, Object::RenderFlags flags)
 
 	ResourceManager *prm = pobject->GetSystem()->GetResourceManager();
 
-	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
-
 	if (!flags.IsSet(RF_LOCKSHADER))
 	{
-		if (!flags.IsSet(RF_SHADOW) && pobject->Flags().IsSet(OF_CASTSHADOW))
+		if (!m_pMethod)
 		{
-			if (!m_SP_defobj)
+			props::IProperty *pmethod = pobject->GetProperties()->GetPropertyById('C3RM');
+			if (prm)
 			{
-				props::IProperty *pvsh = pobject->GetProperties()->GetPropertyById('VSHF');
-				props::IProperty *pfsh = pobject->GetProperties()->GetPropertyById('FSHF');
-				if (!m_VS_defobj)
+				c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("std.c3rm"));
+				if (pres && (pres->GetStatus() == Resource::RS_LOADED))
 				{
-					c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-obj.vsh"), rf);
-					if (pres)
-						m_VS_defobj = (c3::ShaderComponent *)(pres->GetData());
-				}
+					m_pMethod = (RenderMethod *)(pres->GetData());
 
-				if (!m_FS_defobj)
-				{
-					c3::Resource *pres = prm->GetResource(pfsh ? pfsh->AsString() : _T("def-obj.fsh"), rf);
-					if (pres)
-						m_FS_defobj = (c3::ShaderComponent *)(pres->GetData());
-				}
-
-				m_SP_defobj = pobject->GetSystem()->GetRenderer()->CreateShaderProgram();
-
-				if (m_SP_defobj && m_VS_defobj && m_FS_defobj)
-				{
-					m_SP_defobj->AttachShader(m_VS_defobj);
-					m_SP_defobj->AttachShader(m_FS_defobj);
-					if (m_SP_defobj->Link() == ShaderProgram::RETURNCODE::RET_OK)
-					{
-						// anything special to do when the shader links correctly
-					}
+					m_pMethod->FindTechnique(_T("g"), m_TechIdx_G);
+					m_pMethod->FindTechnique(_T("s"), m_TechIdx_S);
+					m_pMethod->FindTechnique(_T("g+s"), m_TechIdx_GS);
 				}
 			}
-
-			prend->UseProgram(m_SP_defobj);
 		}
 		else
 		{
-			if (!m_SP_shadowobj)
-			{
-				props::IProperty *pvsh = pobject->GetProperties()->GetPropertyById('VSSF');
-				props::IProperty *pfsh = pobject->GetProperties()->GetPropertyById('FSSF');
-				if (!m_VS_shadowobj)
-				{
-					c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-obj-shadow.vsh"), rf);
-					if (pres)
-						m_VS_shadowobj = (c3::ShaderComponent *)(pres->GetData());
-				}
-
-				if (!m_FS_shadowobj)
-				{
-					c3::Resource *pres = prm->GetResource(pfsh ? pfsh->AsString() : _T("def-obj-shadow.fsh"), rf);
-					if (pres)
-						m_FS_shadowobj = (c3::ShaderComponent *)(pres->GetData());
-				}
-
-				m_SP_shadowobj = pobject->GetSystem()->GetRenderer()->CreateShaderProgram();
-
-				if (m_SP_shadowobj && m_VS_shadowobj && m_FS_shadowobj)
-				{
-					m_SP_shadowobj->AttachShader(m_VS_shadowobj);
-					m_SP_shadowobj->AttachShader(m_FS_shadowobj);
-					if (m_SP_shadowobj->Link() == ShaderProgram::RETURNCODE::RET_OK)
-					{
-						m_Flags.Clear(OF_CASTSHADOW);
-						return;
-					}
-				}
-				else
-				{
-					m_Flags.Clear(OF_CASTSHADOW);
-					return;
-				}
-			}
-
-			prend->UseProgram(m_SP_shadowobj);
+			m_pMethod->SetActiveTechnique((flags.IsSet(RF_SHADOW) && pobject->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G);
+			prend->UseRenderMethod(m_pMethod);
 		}
 	}
 
-	glm::fmat4x4 mat = *m_pPos->GetTransformMatrix() * m_Mat;
 	if (pmod)
 	{
-		pmod->Draw(&mat);
-	}
-	else if (!flags.IsSet(RF_SHADOW))
-	{
-		prend->GetWhiteMaterial()->Apply(m_SP_defobj);
-		if (m_SP_defobj)
-			m_SP_defobj->ApplyUniforms();
-		prend->SetWorldMatrix(&mat);
-		prend->GetCubeMesh()->Draw();
+		glm::fmat4x4 mat = *m_pPos->GetTransformMatrix() * m_Mat;
+		pmod->Draw(&mat, !flags.IsSet(RF_LOCKMATERIAL));
 	}
 }
 
@@ -227,12 +156,8 @@ void ModelRendererImpl::PropertyChanged(const props::IProperty *pprop)
 
 	switch (pprop->GetID())
 	{
-		case 'VSHF':
-			m_VS_defobj = (c3::ShaderComponent *)((prm->GetResource(pprop->AsString()))->GetData());
-			break;
-
-		case 'FSHF':
-			m_FS_defobj = (c3::ShaderComponent *)((prm->GetResource(pprop->AsString()))->GetData());
+		case 'C3RM':
+			m_pMethod = nullptr;
 			break;
 
 		case 'MODF':

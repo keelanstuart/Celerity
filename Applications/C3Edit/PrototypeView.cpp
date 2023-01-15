@@ -369,7 +369,7 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 
 			case PC_IMPORT:
 			{
-				const c3::ResourceType *pModResType = theApp.m_C3->GetResourceManager()->FindResourceType(c3::Model::ResourceGUID());
+				const c3::ResourceType *pModResType = theApp.m_C3->GetResourceManager()->FindResourceTypeByName(_T("Model"));
 				assert(pModResType);
 
 				tstring exts = pModResType->GetReadableExtensions();

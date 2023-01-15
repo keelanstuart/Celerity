@@ -27,9 +27,10 @@ const GLuint FrameBufferImpl::targenum[MAX_COLORTARGETS] =
 };
 
 
-FrameBufferImpl::FrameBufferImpl(RendererImpl* prend)
+FrameBufferImpl::FrameBufferImpl(RendererImpl* prend, const TCHAR *name)
 {
 	m_Rend = prend;
+	m_Name = name;
 	m_glID = NULL;
 	m_DepthTarget = nullptr;
 	m_BlendMode = Renderer::BlendMode::BM_NUMMODES;
@@ -63,6 +64,12 @@ FrameBufferImpl::~FrameBufferImpl()
 void FrameBufferImpl::Release()
 {
 	delete this;
+}
+
+
+const TCHAR *FrameBufferImpl::GetName() const
+{
+	return m_Name.c_str();
 }
 
 

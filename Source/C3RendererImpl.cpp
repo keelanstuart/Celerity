@@ -17,6 +17,7 @@
 #include <C3FrameBufferImpl.h>
 #include <C3SystemImpl.h>
 #include <C3CommonVertexDefs.h>
+#include <C3RenderMethodImpl.h>
 
 #include "resource.h"
 
@@ -46,7 +47,9 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_event_shutdown = CreateEvent(nullptr, TRUE, TRUE, nullptr);
 
 	// No extra threads, just run everything in this thread
-	m_TaskPool = pool::IThreadPool::Create(0);
+	m_TaskPool[0] = pool::IThreadPool::Create(0);
+	m_TaskPool[1] = pool::IThreadPool::Create(0);
+	m_ActiveTaskPool = 0;
 
 	m_needsFinish = false;
 
@@ -112,6 +115,9 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_MatMan = nullptr;
 	m_mtlWhite = nullptr;
 
+	m_ActiveRenderMethod = nullptr;
+	m_ActiveMaterial = nullptr;
+
 	memset(&m_glARBWndClass, 0, sizeof(WNDCLASS));
 
 	m_ident = glm::identity<glm::fmat4x4>();
@@ -127,12 +133,20 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_TrisPerFrame = 0;
 	m_LinesPerFrame = 0;
 	m_PointsPerFrame = 0;
+
+	// The default RenderMethod is a passthru to make the Draw calls a little more elegant looking - it doesn't actually set any states itself
+	m_DefaultRenderMethod = CreateRenderMethod();
+	assert(m_DefaultRenderMethod);
+	RenderMethod::Technique *pt = m_DefaultRenderMethod->AddTechnique();
+	m_DefaultRenderMethod->SetActiveTechnique(0);
+	pt->AddPass();
 }
 
 
 RendererImpl::~RendererImpl()
 {
-	m_TaskPool->Release();
+	m_TaskPool[0]->Release();
+	m_TaskPool[1]->Release();
 
 	Shutdown();
 
@@ -378,7 +392,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::EResFlag::CREATEENTRYONLY);
 
 	// Initizlie utility textures and register them with the resource manager
-	rt = rm->FindResourceType(_T("png"));
+	rt = rm->FindResourceTypeByName(_T("Texture2D"));
 	rm->GetResource(_T("[black.tex]"), rf, rt, GetBlackTexture());
 	rm->GetResource(_T("[grey.tex]"), rf, rt, GetGreyTexture());
 	rm->GetResource(_T("[white.tex]"), rf, rt, GetWhiteTexture());
@@ -389,7 +403,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	rm->GetResource(_T("[orthoref.tex]"), rf, rt, GetOrthoRefTexture());
 
 	// Initialize the reference cube model and register it with the resource manager
-	rt = rm->FindResourceType(_T("fbx"));
+	rt = rm->FindResourceTypeByName(_T("Model"));
 	c3::Material *refmtl = GetMaterialManager()->CreateMaterial();
 	refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetOrthoRefTexture());
 	refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
@@ -587,7 +601,7 @@ const TCHAR *RendererImpl::GetDeviceName() const
 
 pool::IThreadPool *RendererImpl::GetTaskPool()
 {
-	return m_TaskPool;
+	return m_TaskPool[m_ActiveTaskPool ^ 1];
 }
 
 
@@ -659,7 +673,8 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 	m_LinesPerFrame = 0;
 	m_PointsPerFrame = 0;
 
-	m_TaskPool->Flush();
+	m_ActiveTaskPool ^= 1;
+	m_TaskPool[m_ActiveTaskPool]->Flush();
 
 	m_BeginSceneFlags = flags;
 
@@ -713,7 +728,9 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 #endif
 	}
 
+#if defined(NEEDS_GLFINISH)
 	gl.Finish();
+#endif
 
 	return true;
 }
@@ -1385,9 +1402,36 @@ DepthBuffer* RendererImpl::CreateDepthBuffer(size_t width, size_t height, DepthT
 }
 
 
-FrameBuffer *RendererImpl::CreateFrameBuffer(props::TFlags64 createflags)
+FrameBuffer *RendererImpl::CreateFrameBuffer(props::TFlags64 createflags, const TCHAR *name)
 {
-	return new FrameBufferImpl(this);
+	static uint32_t fbidx = 0;
+	static TCHAR fbname[16];
+	if (!name)
+	{
+		_sctprintf(fbname, _T("fb%d"), fbidx);
+		fbidx++;
+		name = fbname;
+	}
+
+	FrameBuffer *ret = new FrameBufferImpl(this, name);
+
+	std::pair<TNameToFrameBufferMap::iterator, bool> insret = m_NameToFB.insert(TNameToFrameBufferMap::value_type(name, ret));
+	if (!insret.second)
+	{
+		m_pSys->GetLog()->Print(_T("Did you mean to create a FrameBuffer with an existing name? (\"%s\")\n"), name);
+	}
+
+	return ret;
+}
+
+
+FrameBuffer *RendererImpl::FindFrameBuffer(const TCHAR *name) const
+{
+	TNameToFrameBufferMap::const_iterator it = m_NameToFB.find(name);
+	if (it != m_NameToFB.cend())
+		return it->second;
+
+	return nullptr;
 }
 
 
@@ -1421,6 +1465,36 @@ ShaderComponent *RendererImpl::CreateShaderComponent(ShaderComponentType type)
 }
 
 
+RenderMethod *RendererImpl::CreateRenderMethod()
+{
+	return new RenderMethodImpl(this);
+}
+
+
+void RendererImpl::UseRenderMethod(const RenderMethod *method)
+{
+	m_ActiveRenderMethod = method ? (RenderMethod *)method : m_DefaultRenderMethod;
+}
+
+
+RenderMethod *RendererImpl::GetActiveRenderMethod() const
+{
+	return m_ActiveRenderMethod;
+}
+
+
+void RendererImpl::UseMaterial(const Material *material)
+{
+	m_ActiveMaterial = (Material *)material;
+}
+
+
+Material *RendererImpl::GetActiveMaterial() const
+{
+	return m_ActiveMaterial;
+}
+
+
 void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 {
 	if (pfb == m_CurFB)
@@ -1432,7 +1506,9 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 
 	if (flags.IsSet(UFBFLAG_FINISHLAST))
 	{
+#if defined(NEEDS_GLFINISH)
 		gl.Finish();
+#endif
 
 		for (uint64_t s = 0; s < 32; s++)
 			UseTexture(s, nullptr);
@@ -1692,7 +1768,29 @@ bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
 		if (count == -1)
 			count = m_CurVB->Count();
 
-		gl.DrawArrays(typelu[type], 0, (GLsizei)count);
+		RenderMethod::Technique *tech = m_ActiveRenderMethod ? m_ActiveRenderMethod->GetActiveTechnique() : nullptr;
+		if (tech)
+		{
+			size_t passct;
+			if (tech->Begin(passct))
+			{
+				for (size_t passidx = 0; passidx < passct; passidx++)
+				{
+					tech->ApplyPass(passidx);
+
+					if (m_CurProg)
+					{
+						if (m_ActiveMaterial)
+							m_ActiveMaterial->Apply(m_CurProg);
+
+						m_CurProg->ApplyUniforms();
+					}
+
+					gl.DrawArrays(typelu[type], 0, (GLsizei)count);
+				}
+				tech->End();
+			}
+		}
 
 		m_VertsPerFrame += m_CurVB->Count();
 
@@ -1753,7 +1851,29 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 		case IndexBuffer::IndexSize::IS_32BIT: glidxs = GL_UNSIGNED_INT; break;
 	}
 
-	gl.DrawElements(typelu[type], (GLsizei)count, glidxs, NULL);
+	RenderMethod::Technique *tech = m_ActiveRenderMethod ? m_ActiveRenderMethod->GetActiveTechnique() : nullptr;
+	if (tech)
+	{
+		size_t passct;
+		if (tech->Begin(passct))
+		{
+			for (size_t passidx = 0; passidx < passct; passidx++)
+			{
+				tech->ApplyPass(passidx);
+
+				if (m_CurProg)
+				{
+					if (m_ActiveMaterial)
+						m_ActiveMaterial->Apply(m_CurProg);
+
+					m_CurProg->ApplyUniforms();
+				}
+
+				gl.DrawElements(typelu[type], (GLsizei)count, glidxs, NULL);
+			}
+			tech->End();
+		}
+	}
 
 	m_VertsPerFrame += m_CurVB->Count();
 	m_IndicesPerFrame += m_CurIB->Count();

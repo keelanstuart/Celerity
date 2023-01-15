@@ -300,8 +300,6 @@ void QuadTerrainImpl::Render(Object *pobject, Object::RenderFlags flags)
 		m_SP_terr->SetUniformTexture(m_HeightTex, m_uSamplerHeight, -1, 0);
 
 		prend->GetWhiteMaterial()->Apply(m_SP_terr);
-		if (m_SP_terr)
-			m_SP_terr->ApplyUniforms(true);
 	}
 	else
 	{
@@ -379,7 +377,6 @@ void QuadTerrainImpl::RenderQuad(CTerrainQuadNode *node, props::TFlags64 rendfla
 				TerrainQuad *ptq = node->GetData();
 
 				ptq->m_Mtl->Apply(prend->GetActiveProgram());
-				prend->GetActiveProgram()->ApplyUniforms();
 
 				prend->UseVertexBuffer(m_VB);
 				prend->UseIndexBuffer(ptq->m_IB);
