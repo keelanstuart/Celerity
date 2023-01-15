@@ -26,7 +26,6 @@ namespace c3
 		GLuint m_VBglID;
 		GLuint m_VAOglID;
 		size_t m_VertSize;
-		bool m_NeedsConfig;
 
 		void *m_Cache;
 

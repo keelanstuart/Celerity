@@ -680,9 +680,7 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 
 	if (m_Gui && flags.IsSet(BSFLAG_SHOWGUI))
 	{
-#if 1
 		m_Gui->BeginFrame();
-#endif
 
 		int32_t mx, my;
 		m_pSys->GetInputManager()->GetMousePos(mx, my);
@@ -713,7 +711,6 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 
 	if (m_Gui && m_BeginSceneFlags.IsSet(BSFLAG_SHOWGUI))
 	{
-#if 1
 		static bool show_metrics = true;
 		if (show_metrics)
 		{
@@ -725,7 +722,6 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 
 		m_Gui->EndFrame();
 		m_Gui->Render();
-#endif
 	}
 
 #if defined(NEEDS_GLFINISH)

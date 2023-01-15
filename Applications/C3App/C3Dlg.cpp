@@ -761,8 +761,8 @@ void C3Dlg::OnPaint()
 
 		float farclip = m_Camera->GetProperties()->GetPropertyById('C:FC')->AsFloat();
 		float nearclip = m_Camera->GetProperties()->GetPropertyById('C:NC')->AsFloat();
-		glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-300, 300, -300, 300, nearclip, farclip);
-		glm::fvec3 sunpos = m_SunDir * -40.0f;
+		glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-55, 50, -71, 71, nearclip, farclip);
+		glm::fvec3 sunpos = m_SunDir * -61.5f;
 		glm::fvec3 campos;
 		pcam->GetEyePos(&campos);
 //		sunpos += campos;
@@ -776,7 +776,7 @@ void C3Dlg::OnPaint()
 
 		m_RootObj->Update(dt);
 
-		if (m_Rend->BeginScene(0))
+		if (m_Rend->BeginScene(BSFLAG_SHOWGUI))
 		{
 			// Solid color pass
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
@@ -944,7 +944,7 @@ void C3Dlg::OnSize(UINT nType, int cx, int cy)
 	r.top = 0;
 	r.bottom = cy;
 
-	theApp.m_Cfg->GetRect(_T("window.rect"), r);
+	theApp.m_Cfg->SetRect(_T("window.rect"), r);
 
 	CDialog::OnSize(nType, r.right, r.bottom);
 

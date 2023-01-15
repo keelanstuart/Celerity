@@ -22,7 +22,6 @@ VertexBufferImpl::VertexBufferImpl(RendererImpl *prend)
 	m_VBglID = NULL;
 	m_Components.reserve(5);
 	m_Cache = nullptr;
-	m_NeedsConfig = true;
 }
 
 
@@ -115,8 +114,6 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 
 			if (!sz)
 				return RET_BAD_VERTEX_DESCRIPTION;
-
-			m_NeedsConfig = true;
 		}
 
 		if (flags.IsSet(VBLOCKFLAG_CACHE))
@@ -188,7 +185,11 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 		// make sure that it is allocated
 		m_Rend->gl.BufferData(GL_ARRAY_BUFFER, sz * numverts, user_buffer ? *buffer : nullptr, flags.IsSet(VBLOCKFLAG_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 		if (update_now)
+		{
+			ConfigureAttributes();
+
 			return RET_OK;
+		}
 	}
 
 	m_Buffer = m_Rend->gl.MapBuffer(GL_ARRAY_BUFFER, mode);
@@ -271,6 +272,4 @@ void VertexBufferImpl::ConfigureAttributes()
 
 		vo += pcd->size();
 	}
-
-	m_NeedsConfig = false;
 }
