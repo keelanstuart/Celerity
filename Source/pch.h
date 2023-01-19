@@ -31,6 +31,8 @@
 #include <unordered_map>
 #include <locale>
 #include <codecvt>
+#include <functional>
+
 
 //#define GLLIBGEN_LOGCALLS
 

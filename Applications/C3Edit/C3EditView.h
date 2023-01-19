@@ -121,6 +121,10 @@ public:
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnSetFocus(CWnd *pOldWnd);
+	afx_msg void OnUpdateEditDelete(CCmdUI *pCmdUI);
+	afx_msg void OnEditDelete();
+	afx_msg void OnUpdateEditDuplicate(CCmdUI *pCmdUI);
+	afx_msg void OnEditDuplicate();
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

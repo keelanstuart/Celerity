@@ -123,7 +123,7 @@ void ObjectImpl::RemoveChild(Object *pchild, bool release)
 		return;
 
 	TObjectArray::const_iterator it = std::find(m_Children.cbegin(), m_Children.cend(), pchild);
-	if (it == m_Children.cend())
+	if (it != m_Children.cend())
 	{
 		(*it)->SetOwner(nullptr);
 		if (release)

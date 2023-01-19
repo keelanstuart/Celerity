@@ -260,12 +260,18 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 
 	if (pmod)
 	{
+		glm::fmat4x4 invt = glm::inverse(m_Mat);
+		glm::fmat4x4 invtn = glm::inverse(glm::inverseTranspose(m_Mat));
+
+		glm::vec3 raypos = invt * glm::vec4(pRayPos->x, pRayPos->y, pRayPos->z, 1);
+		glm::vec3 raydir = glm::normalize(invtn * glm::vec4(pRayDir->x, pRayDir->y, pRayDir->z, 0));
+
 		size_t meshidx;
 		float dist;
 		size_t faceidx;
 		glm::vec2 uv;
 
-		ret = pmod->Intersect(pRayPos, pRayDir, &meshidx, &dist, &faceidx, &uv);
+		ret = pmod->Intersect(&raypos, &raydir, &meshidx, &dist, &faceidx, &uv);
 		if (ret && pDistance)
 			*pDistance = dist;
 	}

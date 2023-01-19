@@ -105,7 +105,8 @@ void OmniLightImpl::Render(Object *pobject, Object::RenderFlags flags)
 						RenderMethod::Technique *pt = m_pMethod->GetTechnique(m_TechIdx_L);
 						RenderMethod::Pass *pp = pt ? pt->GetPass(0) : nullptr;
 
-						pt->ApplyPass(0);
+						if (pt)
+							pt->ApplyPass(0);
 
 						ShaderProgram *ps = pp ? pp->GetShader() : nullptr;
 						if (ps)

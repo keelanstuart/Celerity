@@ -81,7 +81,7 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Setup(size_t numtargs, const TargetDesc
 	if (!pdb)
 		pdb = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS, 0);
 
-	RETURNCODE ret;
+	RETURNCODE ret = RETURNCODE::RET_UNKNOWN;
 
 	if (pdb)
 		ret = AttachDepthTarget(pdb);

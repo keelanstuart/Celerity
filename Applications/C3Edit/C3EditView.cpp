@@ -37,6 +37,10 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_SETFOCUS()
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, &C3EditView::OnUpdateEditDelete)
+	ON_COMMAND(ID_EDIT_DELETE, &C3EditView::OnEditDelete)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DUPLICATE, &C3EditView::OnUpdateEditDuplicate)
+	ON_COMMAND(ID_EDIT_DUPLICATE, &C3EditView::OnEditDuplicate)
 END_MESSAGE_MAP()
 
 c3::FrameBuffer *C3EditView::m_GBuf = nullptr;
@@ -1216,4 +1220,36 @@ void C3EditView::SetAppropriateMouseCursor(UINT32 nFlags)
 	}
 
 	SetCursor(hcur);
+}
+
+
+void C3EditView::OnUpdateEditDelete(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!m_Selected.empty() ? TRUE : FALSE);
+}
+
+
+void C3EditView::OnEditDelete()
+{
+	for (auto o : m_Selected)
+	{
+		c3::Object *po = o->GetOwner();
+		if (po)
+			po->RemoveChild(o, true);
+		else
+			o->Release();
+	}
+
+	ClearSelection();
+}
+
+
+void C3EditView::OnUpdateEditDuplicate(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!m_Selected.empty() ? TRUE : FALSE);
+}
+
+
+void C3EditView::OnEditDuplicate()
+{
 }

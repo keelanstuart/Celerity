@@ -527,11 +527,11 @@ void ConfigurationImpl::SetString(const TCHAR *path, const TCHAR *val)
 				TXmlEl2StrMap::iterator it = m_StringMap.find(pel);
 				if (it == m_StringMap.end())
 				{
-					m_StringMap.insert(TXmlEl2StrPair(pel, tstring(val)));
+					m_StringMap.insert(TXmlEl2StrPair(pel, tstring(val ? val : _T(""))));
 				}
 				else
 				{
-					it->second = val;
+					it->second = val ? val : _T("");
 				}
 			}
 		}

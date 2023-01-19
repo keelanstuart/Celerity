@@ -125,13 +125,15 @@
 #define IDC_NAME                        1002
 #define IDC_FLAGS                       1003
 #define ID_EDIT_TRIGGERRENDERDOCCAPTURE 32771
+#define ID_EDIT_DELETE                  32772
+#define ID_EDIT_DUPLICATE               32773
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        313
-#define _APS_NEXT_COMMAND_VALUE         32772
+#define _APS_NEXT_COMMAND_VALUE         32776
 #define _APS_NEXT_CONTROL_VALUE         1005
 #define _APS_NEXT_SYMED_VALUE           332
 #endif

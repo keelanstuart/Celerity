@@ -93,6 +93,9 @@ namespace c3
 		/// Adds a child Object
 		virtual void AddChild(Object *pchild) = NULL;
 
+		/// Removes a child Object
+		virtual void RemoveChild(Object *pchild, bool release = false) = NULL;
+
 		/// Allows access to the Object's flags
 		virtual ObjectFlags &Flags() = NULL;
 

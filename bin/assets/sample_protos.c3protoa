@@ -892,7 +892,7 @@
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
-    <prototype guid="{884D72DE-73A5-4E3B-8B6F-D6CA2BFFF12C}" name="Terrain" group="" flags="131075">
+    <prototype guid="{884D72DE-73A5-4E3B-8B6F-D6CA2BFFF12C}" name="QuadTerrain" group="terrain" flags="131075">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{EC67985C-B770-4BAE-AAA7-1BB63E0165A8}" name="QuadTerrain"/>
