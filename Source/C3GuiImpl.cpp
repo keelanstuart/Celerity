@@ -38,15 +38,14 @@ GuiImpl::GuiImpl(Renderer *prend)
 	io.BackendRendererName = "imgui_impl_celerity";
 
 	c3::ResourceManager *rm = prend->GetSystem()->GetResourceManager();
-	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
-	c3::Resource *pvsres = rm->GetResource(_T("ui.vsh"), rf);
+	c3::Resource *pvsres = rm->GetResource(_T("ui.vsh"), RESF_DEMANDLOAD);
 	if (!pvsres)
 	{
 		prend->GetSystem()->GetLog()->Print(_T("GUI Missing VSH\n"));
 	}
 
-	c3::Resource *pfsres = rm->GetResource(_T("ui.fsh"), rf);
+	c3::Resource *pfsres = rm->GetResource(_T("ui.fsh"), RESF_DEMANDLOAD);
 	if (!pfsres)
 	{
 		prend->GetSystem()->GetLog()->Print(_T("GUI Missing FSH\n"));

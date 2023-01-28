@@ -630,7 +630,7 @@ void ShaderProgramImpl::CaptureExpectedInputs()
 
 DECLARE_RESOURCETYPE(ShaderProgram);
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
@@ -707,7 +707,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromFile(c3::S
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	return ResourceType::LoadResult::LR_ERROR;
 }

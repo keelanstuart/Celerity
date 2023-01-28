@@ -20,6 +20,7 @@
 #include <C3QuadTerrainImpl.h>
 #include <C3OmniLightImpl.h>
 #include <C3ParticleEmitterImpl.h>
+#include <C3ScriptableImpl.h>
 
 
 
@@ -122,6 +123,7 @@ void SystemImpl::Release()
 		UNREGISTER_RESOURCETYPE(Model, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(RenderMethod, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(Script, m_ResourceManager);
 		// *************************************************
 
 		delete m_ResourceManager;
@@ -147,7 +149,10 @@ void SystemImpl::Release()
 		UNREGISTER_COMPONENTTYPE(Positionable, m_Factory);
 		UNREGISTER_COMPONENTTYPE(Camera, m_Factory);
 		UNREGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);
+		UNREGISTER_COMPONENTTYPE(OmniLight, m_Factory);
 		UNREGISTER_COMPONENTTYPE(QuadTerrain, m_Factory);
+		UNREGISTER_COMPONENTTYPE(ParticleEmitter, m_Factory);
+		UNREGISTER_COMPONENTTYPE(Scriptable, m_Factory);
 		// *************************************************
 
 		delete m_Factory;
@@ -196,6 +201,7 @@ ResourceManager *SystemImpl::GetResourceManager()
 		REGISTER_RESOURCETYPE(Model, m_ResourceManager);
 		REGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
 		REGISTER_RESOURCETYPE(RenderMethod, m_ResourceManager);
+		REGISTER_RESOURCETYPE(Script, m_ResourceManager);
 		// *************************************************
 	}
 
@@ -249,9 +255,10 @@ Factory *SystemImpl::GetFactory()
 		REGISTER_COMPONENTTYPE(Positionable, m_Factory);
 		REGISTER_COMPONENTTYPE(Camera, m_Factory);
 		REGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);
-		REGISTER_COMPONENTTYPE(QuadTerrain, m_Factory);
 		REGISTER_COMPONENTTYPE(OmniLight, m_Factory);
+		REGISTER_COMPONENTTYPE(QuadTerrain, m_Factory);
 		REGISTER_COMPONENTTYPE(ParticleEmitter, m_Factory);
+		REGISTER_COMPONENTTYPE(Scriptable, m_Factory);
 		// *************************************************
 	}
 
@@ -314,7 +321,7 @@ void SystemImpl::UpdateTime()
 	m_PerfDelta.QuadPart = c.QuadPart - m_PerfCount.QuadPart;
 	m_PerfCount = c;
 
-	m_ElapsedTime = (float)m_PerfDelta.QuadPart * 100.0f / (float)m_PerfFreq.QuadPart;
+	m_ElapsedTime = (float)m_PerfDelta.QuadPart / (float)m_PerfFreq.QuadPart;
 	m_LastTime = m_CurrentTime;
 	m_CurrentTime += m_ElapsedTime;
 

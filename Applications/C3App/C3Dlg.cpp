@@ -37,9 +37,9 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_DepthTarg = nullptr;
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
-	m_AmbientColor = c3::Color::fVeryDarkGrey;
-	m_SunColor = glm::fvec4(0.8f, 0.7f, 0.4f, 1.0f);
-	m_SunDir = glm::normalize(glm::fvec3(0.3f, 0.2f, -1.0f));
+	m_AmbientColor = c3::Color::fEveningSunlight;
+	m_SunColor = c3::Color::fNaturalSunlight;
+	m_SunDir = glm::normalize(glm::fvec3(0.1f, -0.1f, -1.0f));
 	m_bFirstDraw = true;
 	memset(m_pControllable, 0, sizeof(c3::Object *) * MAX_USERS);
 	m_ViewMode = VM_FREE;//FOLLOW_POSDIR;
@@ -250,7 +250,6 @@ BOOL C3Dlg::OnInitDialog()
 		m_pRDoc->StartFrameCapture(NULL, NULL);
 
 	c3::ResourceManager *rm = theApp.m_C3->GetResourceManager();
-	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
 	m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 
@@ -289,8 +288,8 @@ BOOL C3Dlg::OnInitDialog()
 	gbok = m_SSBuf->Seal() == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
-	m_VS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.vsh"), rf))->GetData());
-	m_FS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.fsh"), rf))->GetData());
+	m_VS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.vsh"), RESF_DEMANDLOAD))->GetData());
+	m_FS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.fsh"), RESF_DEMANDLOAD))->GetData());
 	m_SP_blur = m_Rend->CreateShaderProgram();
 	if (m_SP_blur)
 	{
@@ -303,8 +302,8 @@ BOOL C3Dlg::OnInitDialog()
 		}
 	}
 
-	m_VS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.vsh"), rf))->GetData());
-	m_FS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.fsh"), rf))->GetData());
+	m_VS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.vsh"), RESF_DEMANDLOAD))->GetData());
+	m_FS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.fsh"), RESF_DEMANDLOAD))->GetData());
 	m_SP_resolve = m_Rend->CreateShaderProgram();
 	if (m_SP_resolve)
 	{
@@ -341,8 +340,8 @@ BOOL C3Dlg::OnInitDialog()
 		}
 	}
 
-	m_VS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.vsh"), rf))->GetData());
-	m_FS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.fsh"), rf))->GetData());
+	m_VS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.vsh"), RESF_DEMANDLOAD))->GetData());
+	m_FS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.fsh"), RESF_DEMANDLOAD))->GetData());
 	m_SP_combine = m_Rend->CreateShaderProgram();
 	if (m_SP_combine)
 	{

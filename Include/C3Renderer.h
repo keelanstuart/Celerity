@@ -364,6 +364,8 @@ namespace c3
 
 		virtual Texture2D *GetBlackTexture() = NULL;
 		virtual Texture2D *GetGreyTexture() = NULL;
+		virtual Texture2D *GetDefaultDescTexture() = NULL;
+		virtual Texture2D *GetDefaultNormalTexture() = NULL;
 		virtual Texture2D *GetWhiteTexture() = NULL;
 		virtual Texture2D *GetBlueTexture() = NULL;
 		virtual Texture2D *GetGridTexture() = NULL;

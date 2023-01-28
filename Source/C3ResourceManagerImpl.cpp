@@ -60,16 +60,25 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 			return pres;
 	}
 
+	tstring filename_only = key;
+	tstring opts;
+	size_t opts_ofs = key.find(_T('|'));
+	if (opts_ofs != tstring::npos)
+	{
+		opts = key.c_str() + opts_ofs + 1;
+		filename_only.erase(opts_ofs, opts.length() + 1);
+	}
+
 	if (!pres)
 	{
-		bool only_create_entry = flags.IsSet(RESFLAG(CREATEENTRYONLY));
+		bool only_create_entry = flags.IsSet(RESF_CREATEENTRYONLY);
 
 		const TCHAR *ext = NULL;
 
 		if (!only_create_entry)
 		{
 			// find the file extension and advance past the '.' if possible
-			ext = PathFindExtension(key.c_str());
+			ext = PathFindExtension(filename_only.c_str());
 		}
 
 		if (ext)
@@ -96,11 +105,11 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 
 		if (!only_create_entry)
 		{
-			if (!m_pSys->GetFileMapper()->FindFile(key.c_str(), fullpath, MAX_PATH))
+			if (!m_pSys->GetFileMapper()->FindFile(filename_only.c_str(), fullpath, MAX_PATH))
 				return nullptr;
 		}
 
-		pres = new ResourceImpl(m_pSys, only_create_entry ? key.c_str() : fullpath, restype, only_create_entry ? data : nullptr);
+		pres = new ResourceImpl(m_pSys, only_create_entry ? filename_only.c_str() : fullpath, opts.c_str(), restype, only_create_entry ? data : nullptr);
 		if (pres)
 		{
 			m_ResMap.insert(TResourceMap::value_type(key, pres));
@@ -108,9 +117,9 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 
 			if (!only_create_entry)
 			{
-				if (flags.IsSet(RESFLAG(DEMANDLOAD)) || !restype->Flags().IsSet(RTFLAG_RUNBYRENDERER))
+				if (flags.IsSet(RESF_DEMANDLOAD) || !restype->Flags().IsSet(RTFLAG_RUNBYRENDERER))
 				{
-					if (flags.IsSet(RESFLAG(DEMANDLOAD)))
+					if (flags.IsSet(RESF_DEMANDLOAD))
 					{
 						// Just adding a reference should cause the resource to load... and in this thread.
 						pres->AddRef();

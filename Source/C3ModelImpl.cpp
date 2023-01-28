@@ -539,7 +539,7 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, TNode
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
@@ -549,16 +549,34 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 		CONVERT_TCS2MBCS(filename, s);
 		std::string fn = s;
 
+		unsigned int impflags = 0
+			//| aiProcess_FlipUVs
+			| aiProcess_Triangulate
+			| aiProcess_CalcTangentSpace
+			| aiProcess_ImproveCacheLocality
+			| aiProcess_OptimizeMeshes
+			| aiProcess_GenBoundingBoxes
+			| aiProcess_SortByPType
+			| aiProcess_JoinIdenticalVertices
+			| aiProcess_GenUVCoords
+			| aiProcess_FixInfacingNormals
+			;
+
+		if (_tcsstr(options, _T("force_smooth_normals")))
+		{
+			impflags |= aiProcess_GenSmoothNormals | aiProcess_ForceGenNormals;
+		}
+		else if (_tcsstr(options, _T("force_flat_normals")))
+		{
+			impflags |= aiProcess_GenNormals | aiProcess_ForceGenNormals;
+		}
+		else
+		{
+			impflags |= aiProcess_GenNormals;
+		}
+
 		Assimp::Importer import;
-		const aiScene *scene = import.ReadFile(fn,
-			aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs | aiProcess_ImproveCacheLocality
-				| aiProcess_OptimizeMeshes | aiProcess_GenBoundingBoxes | aiProcess_SortByPType
-				| aiProcess_GenSmoothNormals
-				//| aiProcess_ForceGenNormals
-				//| aiProcess_JoinIdenticalVertices
-				| aiProcess_GenUVCoords 
-				//| aiProcess_FixInfacingNormals
-		);
+		const aiScene *scene = import.ReadFile(fn, impflags);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
@@ -677,7 +695,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 								pt->SetName(texname.c_str());
 								pmtl->SetTexture(t, pt);
 								psys->GetResourceManager()->GetResource(texname.c_str(),
-									c3::ResourceManager::EResFlag::CREATEENTRYONLY,
+									RESF_CREATEENTRYONLY,
 									psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D")),
 									pt);
 							}
@@ -1002,7 +1020,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	return ResourceType::LoadResult::LR_ERROR;
 }

@@ -154,7 +154,7 @@ bool ShaderComponentImpl::IsCompiled() const
 
 DECLARE_RESOURCETYPE(ShaderComponent);
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (!filename || !*filename)
 		return ResourceType::LoadResult::LR_ERROR;
@@ -242,7 +242,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromFile(c3:
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	return ResourceType::LoadResult::LR_ERROR;
 }

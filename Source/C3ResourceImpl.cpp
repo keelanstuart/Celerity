@@ -12,10 +12,11 @@
 using namespace c3;
 
 
-ResourceImpl::ResourceImpl(System *psys, const TCHAR *filename, const ResourceType *prestype, const void *data)
+ResourceImpl::ResourceImpl(System *psys, const TCHAR *filename, const TCHAR *options, const ResourceType *prestype, const void *data)
 {
 	m_pSys = psys;
 	m_Filename = filename;
+	m_Options = options;
 	m_pResType = prestype;
 	m_Data = (void *)data;
 	if (!m_Data)
@@ -66,6 +67,12 @@ const TCHAR *ResourceImpl::GetFilename() const
 }
 
 
+const TCHAR *ResourceImpl::GetOptions() const
+{
+	return m_Options.c_str();
+}
+
+
 void *ResourceImpl::GetData() const
 {
 	return m_Data;
@@ -85,7 +92,7 @@ void ResourceImpl::AddRef()
 			m_pSys->GetLog()->Print(_T("Loading \"%s\" ..."), m_Filename.c_str());
 
 			m_Status = Resource::Status::RS_LOADING;
-			ResourceType::LoadResult r = m_pResType->ReadFromFile(m_pSys, m_Filename.c_str(), &m_Data);
+			ResourceType::LoadResult r = m_pResType->ReadFromFile(m_pSys, m_Filename.c_str(), m_Options.c_str(), &m_Data);
 			switch (r)
 			{
 				case ResourceType::LoadResult::LR_NOTFOUND:

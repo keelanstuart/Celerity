@@ -155,9 +155,15 @@ using namespace std;
 #define _strdup strdup
 #endif
 
+#define TINYJS_CALL_STACK
+
 // ----------------------------------------------------------------------------------- Memory Debug
 
+#if defined(_DEBUG)
+#define DEBUG_MEMORY 1
+#else
 #define DEBUG_MEMORY 0
+#endif
 
 #if DEBUG_MEMORY
 
@@ -202,13 +208,13 @@ void show_allocated()
 {
 	for (size_t i = 0; i < allocatedVars.size(); i++)
 	{
-		_tprintf(_T("ALLOCATED, %d refs\n"), allocatedVars[i]->getRefs());
+		_tprintf(_T("ALLOCATED, %lld refs\n"), allocatedVars[i]->getRefs());
 		allocatedVars[i]->trace(_T("  "));
 	}
 
 	for (size_t i = 0; i < allocatedLinks.size(); i++)
 	{
-		_tprintf(_T("ALLOCATED LINK %s, allocated[%d] to \n"), allocatedLinks[i]->name.c_str(), allocatedLinks[i]->var->getRefs());
+		_tprintf(_T("ALLOCATED LINK %s, allocated[%lld] to \n"), allocatedLinks[i]->name.c_str(), allocatedLinks[i]->var->getRefs());
 		allocatedLinks[i]->var->trace(_T("  "));
 	}
 
@@ -661,7 +667,7 @@ void CScriptLex::getNextToken()
 						getNextCh();
 						buf[1] = currCh;
 
-						tkStr += (TCHAR)_tcstol(buf, 0, 16);
+						tkStr += (TCHAR)_tcstoll(buf, 0, 16);
 						break;
 					}
 
@@ -679,7 +685,7 @@ void CScriptLex::getNextToken()
 							getNextCh();
 							buf[2] = currCh;
 
-							tkStr += (TCHAR)_tcstol(buf, 0, 8);
+							tkStr += (TCHAR)_tcstoll(buf, 0, 8);
 						}
 						else
 							tkStr += currCh;
@@ -979,7 +985,7 @@ CScriptVar::CScriptVar(const tstring &varData, int64_t varFlags)
 
 	if (varFlags & SCRIPTVAR_INTEGER)
 	{
-		intData = _tcstol(varData.c_str(), 0, 0);
+		intData = _tcstoll(varData.c_str(), 0, 0);
 	}
 	else if (varFlags & SCRIPTVAR_DOUBLE)
 	{
@@ -3000,7 +3006,7 @@ bool CTinyJS::setVariable(const tstring &path, const tstring &varData)
 	{
 		if (var->isInt())
 		{
-			var->setInt((int64_t)_tcstol(varData.c_str(), 0, 0));
+			var->setInt((int64_t)_tcstoll(varData.c_str(), 0, 0));
 		}
 		else if (var->isDouble())
 		{

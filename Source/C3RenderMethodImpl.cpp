@@ -73,12 +73,10 @@ void RenderMethodImpl::PassImpl::Apply(Renderer *prend)
 	{
 		if (!m_ShaderProg)
 		{
-			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
-
 			Resource *scres[Renderer::ShaderComponentType::ST_NUMTYPES] = {0};
 			for (size_t i = 0; i < Renderer::ShaderComponentType::ST_NUMTYPES; i++)
 				if (m_ShaderCompFilename[i].has_value())
-					scres[i] = prend->GetSystem()->GetResourceManager()->GetResource((m_ShaderCompFilename[i])->c_str(), rf);
+					scres[i] = prend->GetSystem()->GetResourceManager()->GetResource((m_ShaderCompFilename[i])->c_str(), RESF_DEMANDLOAD);
 
 			bool has_all_comps = true;
 			for (size_t i = 0; i < Renderer::ShaderComponentType::ST_NUMTYPES; i++)
@@ -620,7 +618,7 @@ void RenderMethodImpl::LoadPass(TechniqueImpl *ptech, const tinyxml2::XMLElement
 
 DECLARE_RESOURCETYPE(RenderMethod);
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromFile(c3::System *psys, const TCHAR *filename, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
@@ -643,7 +641,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromFile(c3::Sy
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	return ResourceType::LoadResult::LR_ERROR;
 }

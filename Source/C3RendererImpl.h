@@ -129,6 +129,8 @@ namespace c3
 
 		Texture2D *m_BlackTex;
 		Texture2D *m_GreyTex;
+		Texture2D *m_DefaultDescTex;
+		Texture2D *m_DefaultNormalTex;
 		Texture2D *m_WhiteTex;
 		Texture2D *m_BlueTex;
 		Texture2D *m_GridTex;
@@ -317,6 +319,8 @@ namespace c3
 
 		virtual Texture2D *GetBlackTexture();
 		virtual Texture2D *GetGreyTexture();
+		virtual Texture2D *GetDefaultDescTexture();
+		virtual Texture2D *GetDefaultNormalTexture();
 		virtual Texture2D *GetWhiteTexture();
 		virtual Texture2D *GetBlueTexture();
 		virtual Texture2D *GetGridTexture();

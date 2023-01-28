@@ -42,6 +42,8 @@ namespace c3
 		constexpr glm::fvec4 fDarkYellow(0.5f, 0.5f, 0.0f, 1.0f);
 		constexpr glm::fvec4 fCyan(0.0f, 1.0f, 1.0f, 1.0f);
 		constexpr glm::fvec4 fDarkCyan(0.0f, 0.5f, 0.5f, 1.0f);
+		constexpr glm::fvec4 fNaturalSunlight(1.0f, 0.95f, 0.85f, 1.0f);
+		constexpr glm::fvec4 fEveningSunlight(0.6f, 0.4f, 0.3f, 1.0f);
 
 #pragma pack(push, 1)
 		struct SRGBColor

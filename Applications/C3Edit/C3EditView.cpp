@@ -70,9 +70,9 @@ c3::MatrixStack *C3EditView::m_SelectionXforms = nullptr;
 int32_t C3EditView::m_ulSunDir = -1;
 int32_t C3EditView::m_ulSunColor = -1;
 int32_t C3EditView::m_ulAmbientColor = -1;
-glm::fvec3 C3EditView::m_SunDir = glm::normalize(glm::fvec3(0.1f, 0.1f, -1.0f));
-glm::fvec3 C3EditView::m_SunColor = c3::Color::fWhite;
-glm::fvec3 C3EditView::m_AmbientColor = c3::Color::fDarkGrey;
+glm::fvec3 C3EditView::m_SunDir = glm::normalize(glm::fvec3(-0.1f, -0.1f, -1.0f));
+glm::fvec3 C3EditView::m_SunColor = c3::Color::fNaturalSunlight;
+glm::fvec3 C3EditView::m_AmbientColor = c3::Color::fVeryDarkGrey;
 int32_t C3EditView::m_uBlurTex = -1;
 int32_t C3EditView::m_uBlurScale = -1;
 
@@ -300,6 +300,7 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		m_SP_combine->SetUniform3(m_ulAmbientColor, &m_AmbientColor);
 		m_SP_combine->SetUniform3(m_ulSunColor, &m_SunColor);
+		//m_SunDir = glm::normalize(glm::fvec3(sinf(theApp.m_C3->GetCurrentTime() / 4.0f) / 5.0f, cosf(theApp.m_C3->GetCurrentTime() / 3.0f) / 8.0f, -2.0f));
 		m_SP_combine->SetUniform3(m_ulSunDir, &m_SunDir);
 
 		pDoc->m_RootObj->Update(dt);
@@ -396,7 +397,6 @@ void C3EditView::OnDraw(CDC *pDC)
 				m_pRenderDoc->StartFrameCapture(NULL, NULL);
 
 			c3::ResourceManager *rm = theApp.m_C3->GetResourceManager();
-			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
 			prend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
 
@@ -462,8 +462,8 @@ void C3EditView::OnDraw(CDC *pDC)
 			gbok = m_SSBuf->Seal() == c3::FrameBuffer::RETURNCODE::RET_OK;
 			theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
-			m_VS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.vsh"), rf))->GetData());
-			m_FS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.fsh"), rf))->GetData());
+			m_VS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.vsh"), RESF_DEMANDLOAD))->GetData());
+			m_FS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.fsh"), RESF_DEMANDLOAD))->GetData());
 			m_SP_blur = prend->CreateShaderProgram();
 			if (m_SP_blur)
 			{
@@ -476,8 +476,8 @@ void C3EditView::OnDraw(CDC *pDC)
 				}
 			}
 
-			m_VS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.vsh"), rf))->GetData());
-			m_FS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.fsh"), rf))->GetData());
+			m_VS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.vsh"), RESF_DEMANDLOAD))->GetData());
+			m_FS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.fsh"), RESF_DEMANDLOAD))->GetData());
 			m_SP_resolve = prend->CreateShaderProgram();
 			if (m_SP_resolve)
 			{
@@ -514,8 +514,8 @@ void C3EditView::OnDraw(CDC *pDC)
 				}
 			}
 
-			m_VS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.vsh"), rf))->GetData());
-			m_FS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine-editor.fsh"), rf))->GetData());
+			m_VS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.vsh"), RESF_DEMANDLOAD))->GetData());
+			m_FS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine-editor.fsh"), RESF_DEMANDLOAD))->GetData());
 			m_SP_combine = prend->CreateShaderProgram();
 			if (m_SP_combine)
 			{
@@ -553,8 +553,8 @@ void C3EditView::OnDraw(CDC *pDC)
 				}
 			}
 
-			m_VS_bounds = (c3::ShaderComponent *)((rm->GetResource(_T("def-obj.vsh"), rf))->GetData());
-			m_FS_bounds = (c3::ShaderComponent *)((rm->GetResource(_T("editor-select.fsh"), rf))->GetData());
+			m_VS_bounds = (c3::ShaderComponent *)((rm->GetResource(_T("def-obj.vsh"), RESF_DEMANDLOAD))->GetData());
+			m_FS_bounds = (c3::ShaderComponent *)((rm->GetResource(_T("editor-select.fsh"), RESF_DEMANDLOAD))->GetData());
 			m_SP_bounds = prend->CreateShaderProgram();
 			if (m_SP_bounds)
 			{
@@ -713,9 +713,6 @@ void C3EditView::AdjustYawPitch(float yawadj, float pitchadj, bool redraw)
 		pcampos->Update(0);
 		pcampos->AdjustPitch(glm::radians(pitchadj));
 	}
-
-	if (redraw)
-		RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 }
 
 
@@ -831,8 +828,6 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 		d = std::max(d, 0.1f);
 
 		pcam->SetPolarDistance(d);
-
-		RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 	}
 	else if (nFlags & MK_LBUTTON)
 	{
@@ -1037,8 +1032,6 @@ BOOL C3EditView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 		d = std::max(d, 0.1f);
 
 		pcam->SetPolarDistance(d);
-
-		RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
 	}
 
 	return CView::OnMouseWheel(nFlags, zDelta, pt);

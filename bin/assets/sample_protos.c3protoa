@@ -23,6 +23,32 @@
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
+    <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD6}" name="SCRIPT1_REFCUBE" group="" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">test.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0167</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD6}" name="SCRIPT2_REFCUBE" group="" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">test2.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0167</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
     <prototype guid="{3BCDDA41-5BEB-42C7-B041-1266DBC39A88}" name="AH64e" group="" flags="131075">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
@@ -921,7 +947,7 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">ship.x</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">ship.x|force_smooth_normals</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.0,-1.0,0.0,0.0</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>

@@ -17,13 +17,11 @@ namespace c3
 
 	public:
 
-		typedef enum
-		{
-			DEMANDLOAD = 0,			// Loads the Resource immediately in the current thread
-			CREATEENTRYONLY,		// Creates an empty Resource in the table
-		} EResFlag;
+		typedef props::TFlags64		ResourceFlags;
 
-		static constexpr uint64_t RESFLAG(EResFlag f) { return (1LL << (uint64_t)f); }
+		// Flag values for use in GetResource
+		#define RESF_DEMANDLOAD		0x00000001			// Loads the Resource immediately in the current thread
+		#define RESF_CREATEENTRYONLY	0x00000002			// Creates an empty Resource in the table
 
 
 		/// ResTypeFlagMode is used in ForAllResourceDo calls
@@ -45,7 +43,7 @@ namespace c3
 		// queue (non-blocking; returns "instantly") and brought in by a worker thread.
 		// In either case, the resource status should be checked prior to accessing it's
 		// data.
-		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags = 0, const ResourceType *restype = nullptr, const void *data = nullptr) = NULL;
+		virtual Resource *GetResource(const TCHAR *filename, ResourceFlags flags = 0, const ResourceType *restype = nullptr, const void *data = nullptr) = NULL;
 
 		// For all the resources currently managed by the system, call back into this function. Optionally filter by ResourceType.
 		virtual void ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype = nullptr, props::TFlags64 restypeflags = 0, ResTypeFlagMode flagmode = RTFM_IGNORE) = NULL;

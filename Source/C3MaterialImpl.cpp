@@ -28,9 +28,9 @@ MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend)
 	m_flags = RENDERMODEFLAG(RMF_RENDERFRONT) | RENDERMODEFLAG(RMF_WRITEDEPTH) | RENDERMODEFLAG(RMF_READDEPTH);
 
 	m_tex[ETextureComponentType::TCT_DIFFUSE] = TTexOrRes(prend->GetWhiteTexture(), nullptr);
-	m_tex[ETextureComponentType::TCT_NORMAL] = TTexOrRes(prend->GetBlueTexture(), nullptr);
+	m_tex[ETextureComponentType::TCT_NORMAL] = TTexOrRes(prend->GetDefaultNormalTexture(), nullptr);
 	m_tex[ETextureComponentType::TCT_EMISSIVE] = TTexOrRes(prend->GetBlackTexture(), nullptr);
-	m_tex[ETextureComponentType::TCT_SURFACEDESC] = TTexOrRes(prend->GetGreyTexture(), nullptr);
+	m_tex[ETextureComponentType::TCT_SURFACEDESC] = TTexOrRes(prend->GetDefaultDescTexture(), nullptr);
 	m_tex[ETextureComponentType::TCT_POSITIONDEPTH] = TTexOrRes(prend->GetBlackTexture(), nullptr);
 
 	m_color[EColorComponentType::CCT_DIFFUSE] = Color::fWhite;

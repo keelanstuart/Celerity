@@ -18,12 +18,13 @@ namespace c3
 		const ResourceType *m_pResType;
 		size_t m_RefCt;
 		tstring m_Filename;
+		tstring m_Options;
 		void *m_Data;
 		Status m_Status;
 
 	public:
 
-		ResourceImpl(System *psys, const TCHAR *filename, const ResourceType *prestype, const void *data = nullptr);
+		ResourceImpl(System *psys, const TCHAR *filename, const TCHAR *options, const ResourceType *prestype, const void *data = nullptr);
 
 		virtual ~ResourceImpl();
 
@@ -33,6 +34,8 @@ namespace c3
 		virtual const ResourceType *GetType() const;
 
 		virtual const TCHAR *GetFilename() const;
+
+		virtual const TCHAR *GetOptions() const;
 
 		virtual void *GetData() const;
 		//virtual void SetData(void *data);

@@ -20,11 +20,13 @@ void main()
 	vec4 zpos = uMatrixMVP * wpos;
 	gl_Position = zpos;
 	fPosDepth = vec4(vec4(uMatrixM * wpos).xyz, zpos.w);
-
-	fN = normalize(uMatrixN * vec4(vNorm, 0)).xyz;
-	fT = normalize(uMatrixN * vec4(vTan, 0)).xyz;
-	fB = normalize(uMatrixN * vec4(vBinorm, 0)).xyz;
-
-	fTex0 = vTex0;
 	fColor0 = uColorDiffuse;
+
+	fN = (uMatrixN * normalize(vec4(vNorm, 0))).xyz;
+	fT = (uMatrixN * normalize(vec4(vTan, 0))).xyz;
+	fB = (uMatrixN * normalize(vec4(vBinorm, 0))).xyz;
+	if (dot(cross(fN, fT), fB) < 0)
+		fT *= -1;
+
+	fTex0 = vec2(vTex0.x, vTex0.y);
 }

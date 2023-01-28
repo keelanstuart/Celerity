@@ -229,20 +229,18 @@ void QuadTerrainImpl::Render(Object *pobject, Object::RenderFlags flags)
 		{
 			ResourceManager *prm = pobject->GetSystem()->GetResourceManager();
 
-			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
-
 			props::IProperty *pvsh = pobject->GetProperties()->GetPropertyById('VSHF');
 			props::IProperty *pfsh = pobject->GetProperties()->GetPropertyById('FSHF');
 			if (!m_VS_terr)
 			{
-				c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-terrain.vsh"), rf);
+				c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-terrain.vsh"), RESF_DEMANDLOAD);
 				if (pres)
 					m_VS_terr = (c3::ShaderComponent *)(pres->GetData());
 			}
 
 			if (!m_FS_terr)
 			{
-				c3::Resource *pres = prm->GetResource(pfsh ? pfsh->AsString() : _T("def-terrain.fsh"), rf);
+				c3::Resource *pres = prm->GetResource(pfsh ? pfsh->AsString() : _T("def-terrain.fsh"), RESF_DEMANDLOAD);
 				if (pres)
 					m_FS_terr = (c3::ShaderComponent *)(pres->GetData());
 			}
@@ -459,8 +457,7 @@ QuadTerrainImpl::CTerrainQuadNode *QuadTerrainImpl::GenerateGeometryQuadSet(size
 	if (ptq->m_Mtl)
 	{
 		ptq->m_Mtl->SetWindingOrder(Renderer::WindingOrder::WO_CCW);
-		props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
-		Resource *pnt = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("[blue.tex]" /*"terrain-normal.jpg"*/), rf);
+		Resource *pnt = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("[blue.tex]" /*"terrain-normal.jpg"*/), RESF_DEMANDLOAD);
 		ptq->m_Mtl->SetTexture(Material::TextureComponentType::TCT_NORMAL, pnt);
 
 		glm::fvec4 tc(0.25f, 0.68f, 0.12f, 1.0f);

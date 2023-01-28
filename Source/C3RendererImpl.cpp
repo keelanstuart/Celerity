@@ -105,6 +105,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 
 	m_BlackTex = nullptr;
 	m_GreyTex = nullptr;
+	m_DefaultDescTex = nullptr;
 	m_WhiteTex = nullptr;
 	m_BlueTex = nullptr;
 	m_GridTex = nullptr;
@@ -389,18 +390,17 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 	c3::ResourceManager *rm = m_pSys->GetResourceManager();
 	const c3::ResourceType *rt;
-	props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::EResFlag::CREATEENTRYONLY);
 
 	// Initizlie utility textures and register them with the resource manager
 	rt = rm->FindResourceTypeByName(_T("Texture2D"));
-	rm->GetResource(_T("[black.tex]"), rf, rt, GetBlackTexture());
-	rm->GetResource(_T("[grey.tex]"), rf, rt, GetGreyTexture());
-	rm->GetResource(_T("[white.tex]"), rf, rt, GetWhiteTexture());
-	rm->GetResource(_T("[blue.tex]"), rf, rt, GetBlueTexture());
-	rm->GetResource(_T("[grid.tex]"), rf, rt, GetGridTexture());
-	rm->GetResource(_T("[lineargradient.tex]"), rf, rt, GetLinearGradientTexture());
-	rm->GetResource(_T("[utilitycolor.tex]"), rf, rt, GetUtilityColorTexture());
-	rm->GetResource(_T("[orthoref.tex]"), rf, rt, GetOrthoRefTexture());
+	rm->GetResource(_T("[black.tex]"), RESF_CREATEENTRYONLY, rt, GetBlackTexture());
+	rm->GetResource(_T("[grey.tex]"), RESF_CREATEENTRYONLY, rt, GetGreyTexture());
+	rm->GetResource(_T("[white.tex]"), RESF_CREATEENTRYONLY, rt, GetWhiteTexture());
+	rm->GetResource(_T("[blue.tex]"), RESF_CREATEENTRYONLY, rt, GetBlueTexture());
+	rm->GetResource(_T("[grid.tex]"), RESF_CREATEENTRYONLY, rt, GetGridTexture());
+	rm->GetResource(_T("[lineargradient.tex]"), RESF_CREATEENTRYONLY, rt, GetLinearGradientTexture());
+	rm->GetResource(_T("[utilitycolor.tex]"), RESF_CREATEENTRYONLY, rt, GetUtilityColorTexture());
+	rm->GetResource(_T("[orthoref.tex]"), RESF_CREATEENTRYONLY, rt, GetOrthoRefTexture());
 
 	// Initialize the reference cube model and register it with the resource manager
 	rt = rm->FindResourceTypeByName(_T("Model"));
@@ -412,7 +412,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	c3::Model::NodeIndex ni = refcube->AddNode();
 	refcube->AssignMeshToNode(ni, mi);
 	refcube->SetMaterial(mi, refmtl);
-	rm->GetResource(_T("[refcube.model]"), rf, rt, refcube);
+	rm->GetResource(_T("[refcube.model]"), RESF_CREATEENTRYONLY, rt, refcube);
 
 	m_Gui = new GuiImpl(this);
 
@@ -1373,11 +1373,19 @@ Texture2D *RendererImpl::CreateTexture2DFromFile(const TCHAR *filename, props::T
 		
 		if (ret)
 		{
-			void *buf;
+			unsigned char *buf;
 			Texture2D::SLockInfo li;
-			if ((ret->Lock(&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+			if ((ret->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
 			{
-				memcpy(buf, data, width * height * numchannels);
+				int src_ofs = width * numchannels;
+				unsigned char *src = data + (width * height * numchannels) - src_ofs;
+
+				for (size_t y = 0; y < height; y++)
+				{
+					memcpy(buf, src, width * numchannels);
+					src -= src_ofs;
+					buf += src_ofs;
+				}
 
 				ret->Unlock();
 			}
@@ -2298,39 +2306,39 @@ VertexBuffer *RendererImpl::GetRefCubeVB()
 		{
 			// RIGHT +X 0
 			{ {  1,  1,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu0, xpv0 } },
-			{ {  1,  1, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0, -1 }, { xpu0, xpv1 } },
-			{ {  1, -1, -1 }, {  1,  0,  0 }, {  0, -1,  0 }, {  0,  0, -1 }, { xpu1, xpv1 } },
-			{ {  1, -1,  1 }, {  1,  0,  0 }, {  0, -1,  0 }, {  0,  0,  1 }, { xpu1, xpv0 } },
+			{ {  1,  1, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu0, xpv1 } },
+			{ {  1, -1, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu1, xpv1 } },
+			{ {  1, -1,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu1, xpv0 } },
 
 			// FRONT +Y 4
 			{ {  1,  1,  1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu1, ypv0 } },
-			{ {  1,  1, -1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0, -1 }, { ypu1, ypv1 } },
-			{ { -1,  1, -1 }, {  0,  1,  0 }, { -1,  0,  0 }, {  0,  0, -1 }, { ypu0, ypv1 } },
-			{ { -1,  1,  1 }, {  0,  1,  0 }, { -1,  0,  0 }, {  0,  0,  1 }, { ypu0, ypv0 } },
+			{ {  1,  1, -1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu1, ypv1 } },
+			{ { -1,  1, -1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu0, ypv1 } },
+			{ { -1,  1,  1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu0, ypv0 } },
 
 			// TOP +Z 8
 			{ {  1,  1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu1, zpv1 } },
-			{ {  1, -1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0, -1,  0 }, { zpu1, zpv0 } },
-			{ { -1, -1,  1 }, {  0,  0,  1 }, { -1,  0,  0 }, {  0, -1,  0 }, { zpu0, zpv0 } },
-			{ { -1,  1,  1 }, {  0,  0,  1 }, { -1,  0,  0 }, {  0,  1,  0 }, { zpu0, zpv1 } },
+			{ {  1, -1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu1, zpv0 } },
+			{ { -1, -1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu0, zpv0 } },
+			{ { -1,  1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu0, zpv1 } },
 
 			// LEFT -X 12
 			{ { -1,  1,  1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu1, xnv0 } },
-			{ { -1,  1, -1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0, -1 }, { xnu1, xnv1 } },
-			{ { -1, -1, -1 }, { -1,  0,  0 }, {  0, -1,  0 }, {  0,  0, -1 }, { xnu0, xnv1 } },
-			{ { -1, -1,  1 }, { -1,  0,  0 }, {  0, -1,  0 }, {  0,  0,  1 }, { xnu0, xnv0 } },
+			{ { -1,  1, -1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu1, xnv1 } },
+			{ { -1, -1, -1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu0, xnv1 } },
+			{ { -1, -1,  1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu0, xnv0 } },
 
 			// FRONT -Y 16
 			{ {  1, -1,  1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu0, ynv0 } },
-			{ {  1, -1, -1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0, -1 }, { ynu0, ynv1 } },
-			{ { -1, -1, -1 }, {  0, -1,  0 }, { -1,  0,  0 }, {  0,  0, -1 }, { ynu1, ynv1 } },
-			{ { -1, -1,  1 }, {  0, -1,  0 }, { -1,  0,  0 }, {  0,  0,  1 }, { ynu1, ynv0 } },
+			{ {  1, -1, -1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu0, ynv1 } },
+			{ { -1, -1, -1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu1, ynv1 } },
+			{ { -1, -1,  1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu1, ynv0 } },
 
 			// BOTTOM -Z 20
 			{ {  1,  1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu0, znv1 } },
-			{ {  1, -1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0, -1,  0 }, { znu0, znv0 } },
-			{ { -1, -1, -1 }, {  0,  0, -1 }, { -1,  0,  0 }, {  0, -1,  0 }, { znu1, znv0 } },
-			{ { -1,  1, -1 }, {  0,  0, -1 }, { -1,  0,  0 }, {  0,  1,  0 }, { znu1, znv1 } },
+			{ {  1, -1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu0, znv0 } },
+			{ { -1, -1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu1, znv0 } },
+			{ { -1,  1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu1, znv1 } },
 		};
 
 		void *buf;
@@ -2732,6 +2740,66 @@ Texture2D *RendererImpl::GetGreyTexture()
 }
 
 
+Texture2D *RendererImpl::GetDefaultDescTexture()
+{
+	if (!m_DefaultDescTex)
+	{
+		m_DefaultDescTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
+		if (m_DefaultDescTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_DefaultDescTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				for (size_t y = 0, maxy = li.height; y < maxy; y++)
+				{
+					for (size_t x = 0, maxx = li.width; x < maxx; x++)
+					{
+						buf[x] = 0x0020A0FF;
+					}
+
+					buf = (uint32_t *)((BYTE *)buf + li.stride);
+				}
+
+				m_DefaultDescTex->Unlock();
+			}
+		}
+	}
+
+	return m_DefaultDescTex;
+}
+
+
+Texture2D *RendererImpl::GetDefaultNormalTexture()
+{
+	if (!m_DefaultNormalTex)
+	{
+		m_DefaultNormalTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
+		if (m_DefaultNormalTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_DefaultNormalTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				for (size_t y = 0, maxy = li.height; y < maxy; y++)
+				{
+					for (size_t x = 0, maxx = li.width; x < maxx; x++)
+					{
+						buf[x] = 0xFFFF8080;
+					}
+
+					buf = (uint32_t *)((BYTE *)buf + li.stride);
+				}
+
+				m_DefaultNormalTex->Unlock();
+			}
+		}
+	}
+
+	return m_DefaultNormalTex;
+}
+
+
 Texture2D *RendererImpl::GetWhiteTexture()
 {
 	if (!m_WhiteTex)
@@ -2777,7 +2845,7 @@ Texture2D *RendererImpl::GetBlueTexture()
 				{
 					for (size_t x = 0, maxx = li.width; x < maxx; x++)
 					{
-						buf[x] = 0xFFFF7F7F;
+						buf[x] = 0xFFFF0000;
 					}
 
 					buf = (uint32_t *)((BYTE *)buf + li.stride);
@@ -2990,9 +3058,8 @@ ShaderProgram *RendererImpl::GetBoundsShader()
 
 		if (m_spBounds)
 		{
-			props::TFlags64 rf = c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
-			m_vsBounds = (c3::ShaderComponent *)((m_pSys->GetResourceManager()->GetResource(_T("bounds.vsh"), rf))->GetData());
-			m_fsBounds = (c3::ShaderComponent *)((m_pSys->GetResourceManager()->GetResource(_T("bounds.fsh"), rf))->GetData());
+			m_vsBounds = (c3::ShaderComponent *)((m_pSys->GetResourceManager()->GetResource(_T("bounds.vsh"), RESF_DEMANDLOAD))->GetData());
+			m_fsBounds = (c3::ShaderComponent *)((m_pSys->GetResourceManager()->GetResource(_T("bounds.fsh"), RESF_DEMANDLOAD))->GetData());
 
 			m_spBounds->AttachShader(m_vsBounds);
 			m_spBounds->AttachShader(m_fsBounds);
