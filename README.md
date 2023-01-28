@@ -1,17 +1,18 @@
 # Celerity
 Celerity - a game / visualization engine for Windows, written in C++, currently in it's third-ish iteration
 
-Broken into two parts, a generic host application and a scene editor, with full support for developer-supplied content and entity component plug-ins, Celerity is an able platform to build visualizations, games, and simulations. The rendering system is currently fitted for deferred lighting and PBR materials (with metalness / roughness and emissive textures) and efficiently manages states.
+Broken into two parts, a generic host application and a scene editor, with full support for developer-supplied content and entity component plug-ins, Celerity is an able platform to build visualizations, games, and simulations. The rendering system is currently fitted for deferred lighting, PBR materials, and efficiently manages states.
 
 To start developing, load the main Celerity solution in Visual Studio and build the "Bootstrap (Debug)" target. Be prepared: it will be building the OpenGL wrapper code, which involves downloading and parsing header files and documentation (yes, the resulting code includes comments detailing the version of OpenGL the function comes from and what it does). Even if you leave it in the Bootstrap configuration, a CRC is generated based on the .h files and the parameters used to create it which, together, prevent re-processing of all the OpenGL headers. Even so, the initial download is slow enough that you'll want to switch to a Debug / Release config.
 
 Pull requests are welcome.
 
-![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20230115.png)
+![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20230128.png)
 Sponza with 300 deferred lights
 
-![image](https://github.com/keelanstuart/Celerity/blob/master/screen_ed_20230115.png)
-TuneTown in the C3Edit
+![image](https://github.com/keelanstuart/Celerity/blob/master/screen_ed_20230128a.png)
+
+![image](https://github.com/keelanstuart/Celerity/blob/master/screen_ed_20230128b.png)
 
 ______________________________________________
 
