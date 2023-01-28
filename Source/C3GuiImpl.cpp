@@ -240,7 +240,7 @@ void GuiImpl::Render()
 void GuiImpl::BeginFrame()
 {
 	ImGuiIO &io = ImGui::GetIO();
-	io.DeltaTime = m_pRend->GetSystem()->GetElapsedTime() / 100.0f;
+	io.DeltaTime = m_pRend->GetSystem()->GetElapsedTime();
 
 	ImGui::NewFrame();
 }
