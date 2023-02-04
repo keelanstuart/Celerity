@@ -191,12 +191,14 @@ int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndProperties.EnableDocking(CBRS_ALIGN_ANY);
 	DockPane(&m_wndProperties);
 
-
 	// set the visual manager used to draw all user interface elements
-	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
+	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerOffice2007));
+
+	// set the visual style to be used the by the visual manager
+	CMFCVisualManagerOffice2007::SetStyle(CMFCVisualManagerOffice2007::Office2007_ObsidianBlack);
 
 	// enable quick (Alt+drag) toolbar customization
-	CMFCToolBar::EnableQuickCustomization();
+	//CMFCToolBar::EnableQuickCustomization();
 
 	return 0;
 }
@@ -502,13 +504,40 @@ void C3EditFrame::SetAxes(props::TFlags64 axes)
 		i++;
 	}
 
-	theApp.m_Config->SetInt(_T("environment.active.axis"), axes);
+	C3EditApp::ToolType tt = (C3EditApp::ToolType)theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
+	switch (tt)
+	{
+		case C3EditApp::TT_TRANSLATE:
+			theApp.m_Config->SetInt(_T("environment.active.axis.translation"), axes);
+			break;
+
+		case C3EditApp::TT_ROTATE:
+			theApp.m_Config->SetInt(_T("environment.active.axis.rotation"), axes);
+			break;
+
+		case C3EditApp::TT_SCALE:
+			theApp.m_Config->SetInt(_T("environment.active.axis.scale"), axes);
+			break;
+	}
 }
 
 
 props::TFlags64 C3EditFrame::GetAxes()
 {
-	return theApp.m_Config->GetInt(_T("environment.active.axis"), C3EditApp::AT_X | C3EditApp::AT_Y | C3EditApp::AT_SCREENREL);
+	C3EditApp::ToolType tt = (C3EditApp::ToolType)theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
+	switch (tt)
+	{
+		case C3EditApp::TT_TRANSLATE:
+			return theApp.m_Config->GetInt(_T("environment.active.axis.translation"), C3EditApp::AT_X | C3EditApp::AT_Y);
+
+		case C3EditApp::TT_ROTATE:
+			return theApp.m_Config->GetInt(_T("environment.active.axis.rotation"), C3EditApp::AT_Z);
+
+		case C3EditApp::TT_SCALE:
+			return theApp.m_Config->GetInt(_T("environment.active.axis.scale"), C3EditApp::AT_X | C3EditApp::AT_Y);
+	}
+
+	return 0;
 }
 
 
@@ -598,29 +627,126 @@ void C3EditFrame::OnToolWand()
 
 void C3EditFrame::OnUpdateAxisScreenrel(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetRadio(theApp.m_Config->GetInt(_T("environment.active.axis"), C3EditApp::AT_X | C3EditApp::AT_Y | C3EditApp::AT_SCREENREL) & C3EditApp::AT_SCREENREL);
+	int64_t on = 0;
+	pCmdUI->Enable(0);
+
+	C3EditApp::ToolType tt = (C3EditApp::ToolType)theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
+	switch (tt)
+	{
+		case C3EditApp::TT_TRANSLATE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.translation"), C3EditApp::AT_X | C3EditApp::AT_Y);
+			pCmdUI->Enable();
+			break;
+
+		case C3EditApp::TT_ROTATE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.rotation"), C3EditApp::AT_Z);
+			pCmdUI->Enable();
+			break;
+	}
+
+	pCmdUI->SetRadio(on & C3EditApp::AT_SCREENREL);
 }
 
 void C3EditFrame::OnUpdateAxisX(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetRadio(theApp.m_Config->GetInt(_T("environment.active.axis"), C3EditApp::AT_X | C3EditApp::AT_Y | C3EditApp::AT_SCREENREL) & C3EditApp::AT_X);
+	int64_t on = 0;
+	pCmdUI->Enable(0);
+
+	C3EditApp::ToolType tt = (C3EditApp::ToolType)theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
+	switch (tt)
+	{
+		case C3EditApp::TT_TRANSLATE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.translation"), C3EditApp::AT_X | C3EditApp::AT_Y);
+			pCmdUI->Enable();
+			break;
+
+		case C3EditApp::TT_ROTATE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.rotation"), C3EditApp::AT_Z);
+			pCmdUI->Enable();
+			break;
+
+		case C3EditApp::TT_SCALE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.scale"), C3EditApp::AT_X | C3EditApp::AT_Y);
+			pCmdUI->Enable();
+			break;
+	}
+
+	pCmdUI->SetRadio(on & C3EditApp::AT_X);
 }
 
 void C3EditFrame::OnUpdateAxisY(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetRadio(theApp.m_Config->GetInt(_T("environment.active.axis"), C3EditApp::AT_X | C3EditApp::AT_Y | C3EditApp::AT_SCREENREL) & C3EditApp::AT_Y);
+	int64_t on = 0;
+	pCmdUI->Enable(0);
+
+	C3EditApp::ToolType tt = (C3EditApp::ToolType)theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
+	switch (tt)
+	{
+		case C3EditApp::TT_TRANSLATE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.translation"), C3EditApp::AT_X | C3EditApp::AT_Y);
+			pCmdUI->Enable();
+			break;
+
+		case C3EditApp::TT_ROTATE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.rotation"), C3EditApp::AT_Z);
+			pCmdUI->Enable();
+			break;
+
+		case C3EditApp::TT_SCALE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.scale"), C3EditApp::AT_X | C3EditApp::AT_Y);
+			pCmdUI->Enable();
+			break;
+	}
+
+	pCmdUI->SetRadio(on & C3EditApp::AT_Y);
 }
 
 void C3EditFrame::OnUpdateAxisZ(CCmdUI *pCmdUI)
 {
-	pCmdUI->SetRadio(theApp.m_Config->GetInt(_T("environment.active.axis"), C3EditApp::AT_X | C3EditApp::AT_Y | C3EditApp::AT_SCREENREL) & C3EditApp::AT_Z);
+	int64_t on = 0;
+	pCmdUI->Enable(0);
+
+	C3EditApp::ToolType tt = (C3EditApp::ToolType)theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
+	switch (tt)
+	{
+		case C3EditApp::TT_TRANSLATE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.translation"), C3EditApp::AT_X | C3EditApp::AT_Y);
+			pCmdUI->Enable();
+			break;
+
+		case C3EditApp::TT_ROTATE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.rotation"), C3EditApp::AT_Z);
+			pCmdUI->Enable();
+			break;
+
+		case C3EditApp::TT_SCALE:
+			on = theApp.m_Config->GetInt(_T("environment.active.axis.scale"), C3EditApp::AT_X | C3EditApp::AT_Y);
+			pCmdUI->Enable();
+			break;
+	}
+
+	pCmdUI->SetRadio(on & C3EditApp::AT_Z);
 }
 
 void C3EditFrame::OnAxisScreenrel()
 {
-	props::TFlags64 tmp = theApp.m_Config->GetInt(_T("environment.active.axis"), C3EditApp::AT_X | C3EditApp::AT_Y | C3EditApp::AT_SCREENREL);
-	tmp.Toggle(C3EditApp::AT_SCREENREL);
-	theApp.m_Config->SetInt(_T("environment.active.axis"), tmp);
+	props::TFlags64 tmp = 0;
+
+	C3EditApp::ToolType tt = (C3EditApp::ToolType)theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
+	switch (tt)
+	{
+		case C3EditApp::TT_TRANSLATE:
+			tmp = theApp.m_Config->GetInt(_T("environment.active.axis.translation"), C3EditApp::AT_X | C3EditApp::AT_Y);
+			tmp.Toggle(C3EditApp::AT_SCREENREL);
+			theApp.m_Config->SetInt(_T("environment.active.axis.translation"), tmp);
+			break;
+
+		case C3EditApp::TT_ROTATE:
+			tmp = theApp.m_Config->GetInt(_T("environment.active.axis.rotation"), C3EditApp::AT_Z);
+			tmp.Toggle(C3EditApp::AT_SCREENREL);
+			theApp.m_Config->SetInt(_T("environment.active.axis.rotation"), tmp);
+			break;
+	}
 }
 
 void C3EditFrame::OnAxisX()

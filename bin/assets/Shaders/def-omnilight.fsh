@@ -36,7 +36,7 @@ void main()
 	vec3 view = normalize(ppos - uEyePosition);
 	vec3 refl = normalize(-reflect(tolight, pnorm));
 	float spec = pow(max(dot(view, refl), 0.0), roughness * 16.0);
-    vec3 specular = spec * mix(uLightColor, texDiffuseMetalness.rgb, metalness) * 0.4;
+    vec3 specular = spec * mix(uLightColor, texDiffuseMetalness.rgb, 1 - metalness);
 
 	oColor = (vec3(uLightColor * ndl) + specular) * lightstrength;
 }

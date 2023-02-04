@@ -48,7 +48,14 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromFile(c3::System *
 
 c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	return ResourceType::LoadResult::LR_ERROR;
+	if (returned_data && buffer && buffer_length)
+	{
+		Script *ps = new Script;
+		ps->m_Code = (const TCHAR *)buffer;
+		*returned_data = ps;
+	}
+
+	return ResourceType::LoadResult::LR_SUCCESS;
 }
 
 

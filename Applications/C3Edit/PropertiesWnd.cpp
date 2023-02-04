@@ -13,6 +13,9 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CResourceViewBar
 
@@ -41,6 +44,9 @@ BEGIN_MESSAGE_MAP(CPropertiesWnd, CDockablePane)
 	ON_UPDATE_COMMAND_UI(ID_PROPERTIES2, OnUpdateProperties2)
 	ON_WM_SETFOCUS()
 	ON_WM_SETTINGCHANGE()
+	ON_WM_CTLCOLOR()
+	ON_WM_ERASEBKGND()
+	ON_MESSAGE(WM_CTLCOLORLISTBOX, &CPropertiesWnd::OnCtlcolorlistbox)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -116,8 +122,6 @@ int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 
 	m_wndNameEdit.SetFont(m_wndPropList.GetFont());
-	m_wndFlagList.SetFont(m_wndPropList.GetFont());
-	m_wndCompList.SetFont(m_wndPropList.GetFont());
 
 	InitPropList();
 
@@ -129,6 +133,8 @@ int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndToolBar.SetPaneStyle(m_wndToolBar.GetPaneStyle() | CBRS_TOOLTIPS | CBRS_FLYBY);
 	m_wndToolBar.SetPaneStyle(m_wndToolBar.GetPaneStyle() & ~(CBRS_GRIPPER | CBRS_SIZE_DYNAMIC | CBRS_BORDER_TOP | CBRS_BORDER_BOTTOM | CBRS_BORDER_LEFT | CBRS_BORDER_RIGHT));
 	m_wndToolBar.SetOwner(this);
+
+	m_wndPropList.SetCustomColors(RGB(64, 64, 64), RGB(255, 255, 255), RGB(64, 64, 64), RGB(255, 255, 255), RGB(0, 0, 0), RGB(200, 200, 200), RGB(128, 128, 128));
 
 	// All commands will be routed via this control , not via the parent frame:
 	m_wndToolBar.SetRouteCommandsViaFrame(FALSE);
@@ -271,6 +277,9 @@ void CPropertiesWnd::FillOutFlags()
 	{
 		m_wndFlagList.SetCheck(i, f ? (f->IsSet(m_wndFlagList.GetItemData(i))) : 0);
 	}
+
+	m_wndFlagList.SetFont(m_wndPropList.GetFont());
+	//m_wndFlagList.RedrawWindow(0, 0, RDW_ALLCHILDREN | RDW_ERASENOW | RDW_INTERNALPAINT | RDW_VALIDATE | RDW_UPDATENOW);
 }
 
 
@@ -299,4 +308,35 @@ void CPropertiesWnd::FillOutComponents()
 			m_wndCompList.SetCheck(ic, FALSE);
 		}
 	}
+
+	m_wndCompList.SetFont(m_wndPropList.GetFont());
 }
+
+
+HBRUSH CPropertiesWnd::OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDockablePane::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	return hbr;
+}
+
+
+BOOL CPropertiesWnd::OnEraseBkgnd(CDC *pDC)
+{
+	CRect r;
+	GetClientRect(r);
+	pDC->FillSolidRect(r, RGB(64, 64, 64));
+
+	return false;//CDockablePane::OnEraseBkgnd(pDC);
+}
+
+afx_msg LRESULT CPropertiesWnd::OnCtlcolorlistbox(WPARAM wParam, LPARAM lParam)
+{
+	HDC hdc = ::GetDC((HWND)lParam);
+	CDC dc;
+	dc.Attach(hdc);
+	COLORREF bkColor = RGB(64, 64, 64);
+	dc.SetBkColor(bkColor);
+	return (LRESULT)CreateSolidBrush(bkColor);
+}
+

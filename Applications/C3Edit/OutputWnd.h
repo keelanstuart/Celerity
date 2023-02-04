@@ -1,25 +1,10 @@
 
 #pragma once
 
-/////////////////////////////////////////////////////////////////////////////
-// COutputList window
-
-class COutputList : public CListBox
+class CDebugOutputEdit : public CEdit
 {
-// Construction
-public:
-	COutputList() noexcept;
-
-// Implementation
-public:
-	virtual ~COutputList();
-
 protected:
-	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
-	afx_msg void OnEditCopy();
-	afx_msg void OnEditClear();
-	afx_msg void OnViewOutput();
-
+	HBRUSH CtlColor(CDC *pDC, UINT);
 	DECLARE_MESSAGE_MAP()
 };
 
@@ -35,16 +20,10 @@ public:
 protected:
 	CMFCTabCtrl	m_wndTabs;
 
-	COutputList m_wndOutputBuild;
-	CEdit m_wndOutputDebug;
-	COutputList m_wndOutputFind;
+	CDebugOutputEdit m_wndOutputDebug;
 
 protected:
-	void FillBuildWindow();
 	void FillDebugWindow();
-	void FillFindWindow();
-
-	void AdjustHorzScroll(CListBox& wndListBox);
 
 // Implementation
 public:

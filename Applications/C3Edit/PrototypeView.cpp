@@ -17,32 +17,9 @@
 #include "C3Edit.h"
 #include "EditPrototypeDlg.h"
 
-class CPrototypeViewMenuButton : public CMFCToolBarMenuButton
-{
-	friend class CPrototypeView;
 
-	DECLARE_SERIAL(CPrototypeViewMenuButton)
-
-public:
-	CPrototypeViewMenuButton(HMENU hMenu = nullptr) noexcept : CMFCToolBarMenuButton((UINT)-1, hMenu, -1)
-	{
-	}
-
-	virtual void OnDraw(CDC* pDC, const CRect& rect, CMFCToolBarImages* pImages, BOOL bHorz = TRUE,
-		BOOL bCustomizeMode = FALSE, BOOL bHighlight = FALSE, BOOL bDrawBorder = TRUE, BOOL bGrayDisabledButtons = TRUE)
-	{
-		pImages = CMFCToolBar::GetImages();
-
-		CAfxDrawState ds;
-		pImages->PrepareDrawImage(ds);
-
-		CMFCToolBarMenuButton::OnDraw(pDC, rect, pImages, bHorz, bCustomizeMode, bHighlight, bDrawBorder, bGrayDisabledButtons);
-
-		pImages->EndDrawImage(ds);
-	}
-};
-
-IMPLEMENT_SERIAL(CPrototypeViewMenuButton, CMFCToolBarMenuButton, 1)
+#define IMGIDX_GROUP			2
+#define IMGIDX_PROTOTYPE		5
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -50,12 +27,15 @@ IMPLEMENT_SERIAL(CPrototypeViewMenuButton, CMFCToolBarMenuButton, 1)
 
 CPrototypeView::CPrototypeView() noexcept
 {
-	m_nCurrSort = ID_SORTING_GROUPBYTYPE;
+	m_hEditItem = 0;
+	m_DragImage = nullptr;
 }
+
 
 CPrototypeView::~CPrototypeView()
 {
 }
+
 
 #define PROTOTREE_ID		2
 
@@ -67,7 +47,10 @@ BEGIN_MESSAGE_MAP(CPrototypeView, CDockablePane)
 	ON_WM_PAINT()
 	ON_WM_SETFOCUS()
 	ON_NOTIFY(TVN_SELCHANGED, PROTOTREE_ID, OnSelectionChanged)
+	ON_WM_LBUTTONUP()
+	ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CPrototypeView message handlers
@@ -89,46 +72,22 @@ int CPrototypeView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;      // fail to create
 	}
 
-	// Load images:
-	m_wndToolBar.Create(this, AFX_DEFAULT_TOOLBAR_STYLE, IDR_PROTOTREE);
-	m_wndToolBar.LoadToolBar(IDR_PROTOTREE, 0, 0, TRUE /* Is locked */);
-
 	OnChangeVisualStyle();
+	m_wndPrototypeView.SetBkColor(RGB(64, 64, 64));
+	m_wndPrototypeView.SetTextColor(RGB(255, 255, 255));
 
-	m_wndToolBar.SetPaneStyle(m_wndToolBar.GetPaneStyle() | CBRS_TOOLTIPS | CBRS_FLYBY);
-	m_wndToolBar.SetPaneStyle(m_wndToolBar.GetPaneStyle() & ~(CBRS_GRIPPER | CBRS_SIZE_DYNAMIC | CBRS_BORDER_TOP | CBRS_BORDER_BOTTOM | CBRS_BORDER_LEFT | CBRS_BORDER_RIGHT));
-
-	m_wndToolBar.SetOwner(this);
-
-	// All commands will be routed via this control , not via the parent frame:
-	m_wndToolBar.SetRouteCommandsViaFrame(FALSE);
-
-	CMenu menuSort;
-	menuSort.LoadMenu(IDR_POPUP_SORT);
-
-	m_wndToolBar.ReplaceButton(ID_SORT_MENU, CPrototypeViewMenuButton(menuSort.GetSubMenu(0)->GetSafeHmenu()));
-
-	CPrototypeViewMenuButton* pButton =  DYNAMIC_DOWNCAST(CPrototypeViewMenuButton, m_wndToolBar.GetButton(0));
-
-	if (pButton != nullptr)
-	{
-		pButton->m_bText = FALSE;
-		pButton->m_bImage = TRUE;
-		pButton->SetImage(GetCmdMgr()->GetCmdImage(m_nCurrSort));
-		pButton->SetMessageWnd(this);
-	}
-
-	// Fill in some static tree view data (dummy code, nothing magic here)
 	FillPrototypeView();
 
 	return 0;
 }
+
 
 void CPrototypeView::OnSize(UINT nType, int cx, int cy)
 {
 	CDockablePane::OnSize(nType, cx, cy);
 	AdjustLayout();
 }
+
 
 HTREEITEM CPrototypeView::FindChildItem(HTREEITEM hroot, const TCHAR *itemname)
 {
@@ -143,6 +102,7 @@ HTREEITEM CPrototypeView::FindChildItem(HTREEITEM hroot, const TCHAR *itemname)
 
 	return hret;
 }
+
 
 HTREEITEM CPrototypeView::MakeProtoGroup(HTREEITEM hroot, const TCHAR *group)
 {
@@ -167,7 +127,7 @@ HTREEITEM CPrototypeView::MakeProtoGroup(HTREEITEM hroot, const TCHAR *group)
 			group++;
 
 		HTREEITEM hexisting = FindChildItem(hcurr, gname);
-		hcurr = hexisting ? hexisting : m_wndPrototypeView.InsertItem(gname, 0, 0, hcurr);
+		hcurr = hexisting ? hexisting : m_wndPrototypeView.InsertItem(gname, IMGIDX_GROUP, IMGIDX_GROUP, hcurr);
 
 		HTREEITEM hnext = MakeProtoGroup(hcurr, group);
 
@@ -178,9 +138,11 @@ HTREEITEM CPrototypeView::MakeProtoGroup(HTREEITEM hroot, const TCHAR *group)
 
 	return hcurr;
 }
+
+
 void CPrototypeView::FillPrototypeView()
 {
-	HTREEITEM hRoot = m_wndPrototypeView.InsertItem(_T("All Prototypes"), 0, 0);
+	HTREEITEM hRoot = m_wndPrototypeView.InsertItem(_T("All Prototypes"), IMGIDX_GROUP, IMGIDX_GROUP);
 	m_wndPrototypeView.SetItemState(hRoot, TVIS_BOLD, TVIS_BOLD);
 
 	c3::Factory *pfac = theApp.m_C3->GetFactory();
@@ -192,12 +154,13 @@ void CPrototypeView::FillPrototypeView()
 		HTREEITEM hgroup = MakeProtoGroup(hRoot, pproto->GetGroup());
 
 		CString tmp = pproto->GetName();
-		HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, 1, 1, hgroup);
+		HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, IMGIDX_PROTOTYPE, IMGIDX_PROTOTYPE, hgroup);
 		m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)pproto);
 	}
 
 	m_wndPrototypeView.Expand(hRoot, TVE_EXPAND);
 }
+
 
 void MyAppendMenuItem(HMENU menu, UINT32 type, const TCHAR *text = NULL, BOOL enabled = true, HMENU submenu = NULL, UINT id = -1, DWORD_PTR data = NULL);
 
@@ -237,6 +200,7 @@ void MyAppendMenuItem(HMENU menu, UINT32 type, const TCHAR *text, BOOL enabled, 
 	InsertMenuItem(menu, GetMenuItemCount(menu), true, &mii);
 }
 
+
 enum EPopupCommand
 {
 	PC_DELETE = 1,
@@ -247,6 +211,7 @@ enum EPopupCommand
 	PC_DUPLICATE,
 	PC_RENAME
 };
+
 
 void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 {
@@ -339,7 +304,7 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 					}
 
 					CString tmp = pcp->GetName();
-					HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, 1, 1, hpi);
+					HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, IMGIDX_PROTOTYPE, IMGIDX_PROTOTYPE, hpi);
 					m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)pcp);
 				}
 				else
@@ -355,6 +320,8 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 					hpi = pWndTree->GetParentItem(hpi);
 
 				HTREEITEM hgroup = MakeProtoGroup(hpi, _T("New Group"));
+				m_hEditItem = hgroup;
+				pWndTree->EnsureVisible(hgroup);
 				pWndTree->EditLabel(hgroup);
 
 				break;
@@ -362,6 +329,8 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 
 			case PC_RENAME:
 			{
+				m_hEditItem = hpi;
+				pWndTree->EnsureVisible(hpi);
 				pWndTree->EditLabel(hpi);
 
 				break;
@@ -416,17 +385,14 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 						ptmp->AddComponent(c3::Positionable::Type());
 						ptmp->AddComponent(c3::ModelRenderer::Type());
 
-						ptmp->GetProperties()->CreateProperty(_T("VertexShader"), 'VSHF')->SetString(_T("def-obj.vsh"));
-						ptmp->GetProperties()->CreateProperty(_T("FragmentShader"), 'FSHF')->SetString(_T("def-obj.fsh"));
-						ptmp->GetProperties()->CreateProperty(_T("ShadowVertexShader"), 'VSSF')->SetString(_T("def-obj-shadow.vsh"));
-						ptmp->GetProperties()->CreateProperty(_T("ShadowFragmentShader"), 'FSSF')->SetString(_T("def-obj-shadow.fsh"));
+						ptmp->GetProperties()->CreateProperty(_T("RenderMethod"), 'C3RM')->SetString(_T("std.c3rm"));
 						ptmp->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(fn);
 						ptmp->Flags().Set(OF_CASTSHADOW | OF_DRAW);
 
 						fn.RemoveExtension();
 						ptmp->SetName((LPCTSTR)fn + fn.FindFileName());
 
-						HTREEITEM hitem = m_wndPrototypeView.InsertItem(ptmp->GetName(), 1, 1, hpi);
+						HTREEITEM hitem = m_wndPrototypeView.InsertItem(ptmp->GetName(), IMGIDX_PROTOTYPE, IMGIDX_PROTOTYPE, hpi);
 						m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)ptmp);
 					}
 				}
@@ -465,6 +431,7 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 	::DestroyMenu(menu);
 }
 
+
 void CPrototypeView::AdjustLayout()
 {
 	if (GetSafeHwnd() == nullptr)
@@ -475,11 +442,9 @@ void CPrototypeView::AdjustLayout()
 	CRect rectClient;
 	GetClientRect(rectClient);
 
-	int cyTlb = m_wndToolBar.CalcFixedLayout(FALSE, TRUE).cy;
-
-	m_wndToolBar.SetWindowPos(nullptr, rectClient.left, rectClient.top, rectClient.Width(), cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
-	m_wndPrototypeView.SetWindowPos(nullptr, rectClient.left + 1, rectClient.top + cyTlb + 1, rectClient.Width() - 2, rectClient.Height() - cyTlb - 2, SWP_NOACTIVATE | SWP_NOZORDER);
+	m_wndPrototypeView.SetWindowPos(nullptr, rectClient.left, rectClient.top, rectClient.Width(), rectClient.Height(), SWP_NOACTIVATE | SWP_NOZORDER);
 }
+
 
 BOOL CPrototypeView::PreTranslateMessage(MSG* pMsg)
 {
@@ -491,6 +456,7 @@ void CPrototypeView::OnPrototypeSearch()
 {
 	// TODO: Add your command handler code here
 }
+
 
 void CPrototypeView::OnPaint()
 {
@@ -504,12 +470,14 @@ void CPrototypeView::OnPaint()
 	dc.Draw3dRect(rectTree, ::GetSysColor(COLOR_3DSHADOW), ::GetSysColor(COLOR_3DSHADOW));
 }
 
+
 void CPrototypeView::OnSetFocus(CWnd* pOldWnd)
 {
 	CDockablePane::OnSetFocus(pOldWnd);
 
 	m_wndPrototypeView.SetFocus();
 }
+
 
 void CPrototypeView::OnChangeVisualStyle()
 {
@@ -536,10 +504,8 @@ void CPrototypeView::OnChangeVisualStyle()
 	m_PrototypeViewImages.Add(&bmp, RGB(255, 0, 0));
 
 	m_wndPrototypeView.SetImageList(&m_PrototypeViewImages, TVSIL_NORMAL);
-
-	m_wndToolBar.CleanUpLockedImages();
-	m_wndToolBar.LoadBitmap(IDB_SORT_24, 0, 0, TRUE /* Locked */);
 }
+
 
 void CPrototypeView::OnSelectionChanged(NMHDR *pNMHDR, LRESULT *pResult)
 {
@@ -556,28 +522,155 @@ void CPrototypeView::OnSelectionChanged(NMHDR *pNMHDR, LRESULT *pResult)
 	}
 }
 
+
 BOOL CPrototypeView::OnCmdMsg(UINT nID, int nCode, void *pExtra, AFX_CMDHANDLERINFO *pHandlerInfo)
 {
-	if (nID == PROTOTREE_ID)
+	return CDockablePane::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
+}
+
+
+BOOL CPrototypeView::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT *pResult)
+{
+	CTreeCtrl* pWndTree = (CTreeCtrl*)&m_wndPrototypeView;
+	NMTREEVIEW *pntv = (NMTREEVIEW *)lParam;
+
+	switch (pntv->hdr.code)
 	{
-		switch (nCode)
+		case TVN_BEGINDRAG:
 		{
-			case NM_DBLCLK:
-			{
-				break;
-			}
+			m_DragItem = std::make_optional<TVITEM>(pntv->itemNew);
+			m_DragItem->pszText = _tcsdup(pWndTree->GetItemText(pntv->itemNew.hItem));
+			m_DragItem->state = pWndTree->GetItemState(pntv->itemNew.hItem, -1);
 
-			case TVN_ENDLABELEDIT:
-			{
-				break;
-			}
+			// Tell the tree-view control to create an image to use for dragging
+			m_DragImage = pWndTree->CreateDragImage(pntv->itemNew.hItem); 
 
-			case TVN_BEGINLABELEDIT:
+			// Get the bounding rectangle of the item being dragged. 
+			RECT rcItem;
+			pWndTree->GetItemRect(pntv->itemNew.hItem, &rcItem, TRUE); 
+
+			// Start the drag operation. 
+			m_DragImage->BeginDrag(0, pntv->ptDrag);
+			m_DragImage->DragEnter(this, pntv->ptDrag); 
+
+			// Hide the mouse pointer, and direct mouse input to the 
+			// parent window. 
+			ShowCursor(FALSE); 
+			SetCapture(); 
+
+			break;
+		}
+
+		case TVN_ENDLABELEDIT:
+		{
+			LPNMTVDISPINFO pdi = (LPNMTVDISPINFO)lParam;
+
+			CString name;
+			pWndTree->GetEditControl()->GetWindowText(name);
+			if (!name.IsEmpty())
 			{
-				break;
+				c3::Prototype *pp = (c3::Prototype *)pWndTree->GetItemData(pdi->item.hItem);
+				if (pp)
+				{
+					pp->SetName(name);
+					theApp.SetActivePrototype(nullptr);
+					theApp.SetActivePrototype(pp);
+				}
+
+				pWndTree->SetItem(pdi->item.hItem, TVIF_TEXT, name, 0, 0, 0, 0, 0);
 			}
+			m_hEditItem = 0;
+			break;
+		}
+
+		case TVN_BEGINLABELEDIT:
+		{
+			LPNMTVDISPINFO pdi = (LPNMTVDISPINFO)lParam;
+			m_hEditItem = pdi->item.hItem;
+		}
+
+		default:
+		{
+			//return true;
+			break;
 		}
 	}
 
-	return CDockablePane::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
+	return CDockablePane::OnNotify(wParam, lParam, pResult);
+}
+
+
+void CPrototypeView::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	CTreeCtrl* pWndTree = (CTreeCtrl*)&m_wndPrototypeView;
+
+	if (m_DragItem.has_value())
+	{
+		HTREEITEM hti = pWndTree->GetDropHilightItem();
+		if (hti != NULL)
+		{
+			if (!pWndTree->GetItemData(hti))
+			{
+				pWndTree->InsertItem(TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE, m_DragItem->pszText, m_DragItem->iImage,
+									 m_DragItem->iSelectedImage, m_DragItem->state, -1,
+									 m_DragItem->lParam, hti, pWndTree->GetChildItem(hti));
+			}
+			else
+			{
+				pWndTree->InsertItem(TVIF_TEXT | TVIF_PARAM | TVIF_IMAGE, m_DragItem->pszText, m_DragItem->iImage,
+									 m_DragItem->iSelectedImage, m_DragItem->state, -1,
+									 m_DragItem->lParam, pWndTree->GetParentItem(hti), hti);
+			}
+
+			pWndTree->DeleteItem(m_DragItem->hItem);
+		}
+		m_DragImage->EndDrag(); 
+		pWndTree->SelectDropTarget(NULL);
+		ReleaseCapture(); 
+		ShowCursor(TRUE); 
+
+		delete m_DragImage;
+
+		free(m_DragItem->pszText);
+		m_DragItem.reset();
+	}
+
+	CDockablePane::OnLButtonUp(nFlags, point);
+}
+
+
+void CPrototypeView::OnMouseMove(UINT nFlags, CPoint point)
+{
+	CTreeCtrl* pWndTree = (CTreeCtrl*)&m_wndPrototypeView;
+
+	if (m_DragItem.has_value())
+	{ 
+		HTREEITEM hti;			// Handle to target item. 
+		TVHITTESTINFO tvht;		// Hit test information. 
+
+		// Turn off the dragged image so the background can be refreshed.
+		m_DragImage->DragShowNolock(FALSE);
+
+		CPoint sp = point;
+
+		// Find out if the pointer is on the item. If it is,
+		// highlight the item as a drop target
+		ClientToScreen(&sp);
+		pWndTree->ScreenToClient(&sp);
+		m_DragImage->DragMove(sp);
+
+		tvht.pt.x = sp.x;
+		tvht.pt.y = sp.y;
+		if ((hti = pWndTree->HitTest(&tvht)) != NULL)
+		{
+			//if (!pWndTree->GetItemData(hti) || pWndTree->GetParentItem(hti))
+			{
+				pWndTree->SelectDropTarget(hti);
+			}
+		}
+
+		m_DragImage->DragShowNolock(TRUE);
+	} 
+
+	CDockablePane::OnMouseMove(nFlags, point);
 }

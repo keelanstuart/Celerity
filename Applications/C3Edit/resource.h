@@ -105,6 +105,8 @@
 #define IDC_SELECT_MINUS                312
 #define IDC_SELECT_PLUS                 313
 #define IDC_UNISCALE                    314
+#define IDB_BITMAP1                     314
+#define IDB_CHECKBOX                    314
 #define IDC_WAND                        315
 #define IDC_CURSOR9                     316
 #define IDC_ZOOM                        317
@@ -132,7 +134,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        313
+#define _APS_NEXT_RESOURCE_VALUE        315
 #define _APS_NEXT_COMMAND_VALUE         32776
 #define _APS_NEXT_CONTROL_VALUE         1005
 #define _APS_NEXT_SYMED_VALUE           332

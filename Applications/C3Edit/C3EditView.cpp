@@ -41,6 +41,7 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_COMMAND(ID_EDIT_DELETE, &C3EditView::OnEditDelete)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DUPLICATE, &C3EditView::OnUpdateEditDuplicate)
 	ON_COMMAND(ID_EDIT_DUPLICATE, &C3EditView::OnEditDuplicate)
+	ON_WM_KEYUP()
 END_MESSAGE_MAP()
 
 c3::FrameBuffer *C3EditView::m_GBuf = nullptr;
@@ -722,7 +723,9 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	ASSERT_VALID(pDoc);
 
 	int64_t active_tool = theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
-	int64_t active_axis = theApp.m_Config->GetInt(_T("environment.active.axis"), C3EditApp::AT_X | C3EditApp::AT_Y | C3EditApp::AT_SCREENREL);
+	int64_t active_axis_t = theApp.m_Config->GetInt(_T("environment.active.axis.translation"), C3EditApp::AT_X | C3EditApp::AT_Y);
+	int64_t active_axis_r = theApp.m_Config->GetInt(_T("environment.active.axis.rotation"), C3EditApp::AT_Z);
+	int64_t active_axis_s = theApp.m_Config->GetInt(_T("environment.active.axis.scale"), C3EditApp::AT_X | C3EditApp::AT_Y);
 
 	if (nFlags & MK_SHIFT)
 	{
@@ -862,9 +865,9 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 					glm::fvec3 mv;
 
-					if (active_axis & C3EditApp::AT_X)
+					if (active_axis_t & C3EditApp::AT_X)
 					{
-						if (active_axis & C3EditApp::AT_SCREENREL)
+						if (active_axis_t & C3EditApp::AT_SCREENREL)
 						{
 							mv += (rv * (float)(deltax));
 						}
@@ -874,9 +877,9 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 						}
 					}
 
-					if (active_axis & C3EditApp::AT_Y)
+					if (active_axis_t & C3EditApp::AT_Y)
 					{
-						if (active_axis & C3EditApp::AT_SCREENREL)
+						if (active_axis_t & C3EditApp::AT_SCREENREL)
 						{
 							mv += (uv * (float)(deltay));
 						}
@@ -886,9 +889,9 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 						}
 					}
 
-					if (active_axis & C3EditApp::AT_Z)
+					if (active_axis_t & C3EditApp::AT_Z)
 					{
-						if (active_axis & C3EditApp::AT_SCREENREL)
+						if (active_axis_t & C3EditApp::AT_SCREENREL)
 						{
 							mv += fv;
 						}
@@ -909,9 +912,9 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 				case C3EditApp::TT_ROTATE:
 				{
-					float pitchval = glm::radians((active_axis & C3EditApp::AT_X) ? (deltax * rsens) : 0);
-					float rollval = glm::radians((active_axis & C3EditApp::AT_Y) ? (deltay * rsens) : 0);
-					float yawval = glm::radians((active_axis & C3EditApp::AT_Z) ? (deltax * rsens) : 0);
+					float pitchval = glm::radians((active_axis_r & C3EditApp::AT_X) ? (deltax * rsens) : 0);
+					float rollval = glm::radians((active_axis_r & C3EditApp::AT_Y) ? (deltay * rsens) : 0);
+					float yawval = glm::radians((active_axis_r & C3EditApp::AT_Z) ? (deltax * rsens) : 0);
 
 					pos->AdjustPitch(pitchval);
 					pos->AdjustRoll(rollval);
@@ -935,9 +938,9 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 				case C3EditApp::TT_SCALE:
 				{
-					float xscl = (active_axis & C3EditApp::AT_X) ? (deltax * ssens) : 0.0f;
-					float yscl = (active_axis & C3EditApp::AT_Y) ? (deltay * ssens) : 0.0f;
-					float zscl = (active_axis & C3EditApp::AT_Z) ? (deltay * ssens) : 0.0f;
+					float xscl = (active_axis_s & C3EditApp::AT_X) ? (deltax * ssens) : 0.0f;
+					float yscl = (active_axis_s & C3EditApp::AT_Y) ? (deltay * ssens) : 0.0f;
+					float zscl = (active_axis_s & C3EditApp::AT_Z) ? (deltay * ssens) : 0.0f;
 
 					pos->AdjustScl(xscl, yscl, zscl);
 
@@ -1245,4 +1248,44 @@ void C3EditView::OnUpdateEditDuplicate(CCmdUI *pCmdUI)
 
 void C3EditView::OnEditDuplicate()
 {
+}
+
+
+void C3EditView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	C3EditFrame *pmf = (C3EditFrame *)theApp.GetMainWnd();
+	switch (nChar)
+	{
+		case VK_OEM_3:	// '~'
+		{
+			props::TFlags64 a = pmf->GetAxes();
+			a.Toggle(C3EditApp::AT_X);
+			a.Toggle(C3EditApp::AT_Y);
+			a.Toggle(C3EditApp::AT_Z);
+			pmf->SetAxes(a);
+			break;
+		}
+
+		case _T('1'):
+			pmf->SetActiveTool(C3EditApp::TT_SELECT);
+			break;
+
+		case _T('2'):
+			pmf->SetActiveTool(C3EditApp::TT_TRANSLATE);
+			break;
+
+		case _T('3'):
+			pmf->SetActiveTool(C3EditApp::TT_ROTATE);
+			break;
+
+		case _T('4'):
+			pmf->SetActiveTool(C3EditApp::TT_UNISCALE);
+			break;
+
+		case _T('5'):
+			pmf->SetActiveTool(C3EditApp::TT_SCALE);
+			break;
+	}
+
+	CView::OnKeyUp(nChar, nRepCnt, nFlags);
 }

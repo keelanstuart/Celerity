@@ -1,0 +1,11 @@
+<render_method name="standard">
+
+	<technique name="g">
+		<pass>
+			<setting name="depthmode"			value="disabled" />
+			<setting name="shader.vertex"		value="skybox.vsh" />
+			<setting name="shader.fragment"		value="skybox.fsh" />
+		</pass>
+	</technique>
+
+</render_method>

@@ -43,7 +43,7 @@ void main()
 	vec3 view = normalize(texPositionDepth - uEyePosition);
 	vec3 refl = normalize(-reflect(-sunlight, norm));
 	float spec = pow(max(dot(view, refl), 0.0), roughness * 16.0);
-	vec3 specular = spec * mix(uSunColor, texDiffuseMetalness.rgb, metalness) * 0.4;
+	vec3 specular = spec * mix(uSunColor, texDiffuseMetalness.rgb, 1 - metalness);
 	
 	vec4 shadow_pos = uMatrixS * vec4(texPositionDepth.xyz, 1.0);
 	vec3 shadow_coords = (shadow_pos.xyz / shadow_pos.w) * 0.5 + 0.5;

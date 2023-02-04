@@ -2,6 +2,7 @@
 #pragma once
 
 #include "PropertyGrid.h"
+#include "wtfchecklistbox.h"
 
 class CPropertiesToolBar : public CMFCToolBar
 {
@@ -12,6 +13,15 @@ public:
 	}
 
 	virtual BOOL AllowShowOnList() const { return FALSE; }
+};
+
+class CPropertiesCheckListBox : public CCheckListBox
+{
+protected:
+	DECLARE_MESSAGE_MAP()
+public:
+	virtual void DrawItem(LPDRAWITEMSTRUCT pdi);
+	virtual void PreDrawItem(LPDRAWITEMSTRUCT pdi);
 };
 
 class CPropertiesWnd : public CDockablePane
@@ -42,8 +52,8 @@ protected:
 	CFont m_fntPropList;
 	CPropertiesToolBar m_wndToolBar;
 	CEdit m_wndNameEdit;
-	CCheckListBox m_wndCompList;
-	CCheckListBox m_wndFlagList;
+	CWtfCheckListBox m_wndCompList;
+	CWtfCheckListBox m_wndFlagList;
 	CPropertyGrid m_wndPropList;
 
 	c3::Prototype *m_pProto;
@@ -68,11 +78,15 @@ protected:
 	afx_msg void OnUpdateProperties2(CCmdUI* pCmdUI);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
+	afx_msg LRESULT OnCtlcolorlistbox(WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()
 
 	void InitPropList();
 
 	int m_nComboHeight;
+public:
+	afx_msg HBRUSH OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor);
+	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
 };
 

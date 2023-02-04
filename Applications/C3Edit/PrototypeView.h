@@ -12,6 +12,7 @@
 #pragma once
 
 #include "ViewTree.h"
+#include <optional>
 
 class CPrototypeToolBar : public CMFCToolBar
 {
@@ -33,10 +34,11 @@ public:
 	void OnChangeVisualStyle();
 
 protected:
-	CPrototypeToolBar m_wndToolBar;
 	CViewTree m_wndPrototypeView;
 	CImageList m_PrototypeViewImages;
-	UINT m_nCurrSort;
+	std::optional<TVITEM> m_DragItem;
+	CImageList *m_DragImage;
+	HTREEITEM m_hEditItem;
 
 	HTREEITEM FindChildItem(HTREEITEM hroot, const TCHAR *itemname);
 	HTREEITEM MakeProtoGroup(HTREEITEM hroot, const TCHAR *group);
@@ -59,5 +61,8 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	virtual BOOL OnCmdMsg(UINT nID, int nCode, void *pExtra, AFX_CMDHANDLERINFO *pHandlerInfo);
+	virtual BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT *pResult);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 };
 

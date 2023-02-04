@@ -1,0 +1,13 @@
+var hpos;
+var runtime = 0.0;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+	var pos = GetPropertyValue(hpos);
+	pos.x = Math.sin(runtime) * 10.0;
+	pos.y = Math.cos(runtime) * 10.0;
+	SetPropertyValue(hpos, pos);
+}
+
+hpos = FindProperty(self, "Position");

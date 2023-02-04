@@ -42,15 +42,21 @@ void main()
 		glow += aux[i].r;
 	glow /= 9;
 	
-	if ((texNormalAmbOcc.rgb == vec3(0, 0, 0)) && (glow == 0))
+	if ((texNormalAmbOcc.rgb == vec3(0, 0, 0)) && (texNormalAmbOcc.rgb != vec3(1, 1, 1)) && (glow == 0))
 		discard;
+
+	vec4 texDiffuseMetalness = texture(uSamplerDiffuseMetalness, fTex0);
+	if (texNormalAmbOcc.rgb == vec3(1, 1, 1))
+	{
+		oColor = vec4(texDiffuseMetalness.rgb, 1);
+		return;
+	}
 	
 	vec3 norm = normalize((normalize(texNormalAmbOcc.rgb) - 0.5) * 2.0);
 	
 	vec3 sunlight = normalize(-uSunDirection);
 	float NdotL = max(dot(norm, sunlight), 0.0);
 	
-	vec4 texDiffuseMetalness = texture(uSamplerDiffuseMetalness, fTex0);
 	vec4 texEmissiveRoughness = texture(uSamplerEmissionRoughness, fTex0);
 	vec3 texPositionDepth = texture(uSamplerPosDepth, fTex0).rgb;
 	
