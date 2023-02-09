@@ -21,7 +21,7 @@ void main()
 
 	oDefDiffuseMetalness = vec4(0, 0, 0, 1);
 
-	oDefNormalAmbOcc = vec4(normalize(fPosDepth.xyz), 0);
+	oDefNormalAmbOcc = vec4(1, 1, 1, 0);
 
 	oDefPosDepth = fPosDepth;
 
