@@ -2,16 +2,15 @@ var runtime = 0.0;
 var hcam = 0;
 var hcampos = 0;
 
-/*
+
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 }
-*/
 
 function init()
 {
-	LoadObject(self, "SpaceScene.c3o");
+	LoadObject(self, "SimpleScene.c3o");
 	Log("Demo scene loaded!\n");
 	
 	hcam = GetRegisteredObject("camera");

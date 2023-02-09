@@ -2042,6 +2042,8 @@ CScriptVarLink *CTinyJS::functionCall(bool &execute, CScriptVarLink *function, C
 			}
 
 			delete newLex;
+			newLex = nullptr;
+
 			l = oldLex;
 
 			if (exception)
