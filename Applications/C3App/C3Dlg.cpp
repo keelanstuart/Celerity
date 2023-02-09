@@ -380,6 +380,7 @@ BOOL C3Dlg::OnInitDialog()
 	m_Camera->AddComponent(c3::Camera::Type());
 	m_Camera->SetName(_T("Camera"));
 	theApp.m_C3->GetLog()->Print(_T("Camera created\n"));
+	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, m_Camera);
 	m_pControllable[0] = m_Camera;
 
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
@@ -390,211 +391,14 @@ BOOL C3Dlg::OnInitDialog()
 	}
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
 
-	m_RootObj = m_Factory->Build((c3::Prototype *)nullptr);
+	m_RootObj = m_Factory->Build();
 	m_RootObj->AddComponent(c3::Positionable::Type());
+	m_RootObj->AddComponent(c3::Scriptable::Type());
 	m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
 
-#if 0
-	genio::IInputStream *is = genio::IInputStream::Create();
-	if (is)
-	{
-		if (is->Assign(_T("TuneTown.c3o")) && is->Open())
-		{
-			genio::FOURCHARCODE b = is->NextBlockId();
-			if (b == 'CEL0')
-			{
-				if (is->BeginBlock(b))
-				{
-					uint16_t len;
-
-					tstring name, description, author, website, copyright;
-
-					is->ReadUINT16(len);
-					name.resize(len);
-					if (len)
-						is->ReadString((TCHAR *)(name.c_str()));
-
-					is->ReadUINT16(len);
-					description.resize(len);
-					if (len)
-						is->ReadString((TCHAR *)(description.c_str()));
-
-					is->ReadUINT16(len);
-					author.resize(len);
-					if (len)
-						is->ReadString((TCHAR *)(author.c_str()));
-
-					is->ReadUINT16(len);
-					website.resize(len);
-					if (len)
-						is->ReadString((TCHAR *)(website.c_str()));
-
-					is->ReadUINT16(len);
-					copyright.resize(len);
-					if (len)
-						is->ReadString((TCHAR *)(copyright.c_str()));
-
-					if (is->BeginBlock('CAM0'))
-					{
-						is->EndBlock();
-					}
-
-					if (is->BeginBlock('ENV0'))
-					{
-						is->EndBlock();
-					}
-
-					if (m_RootObj)
-						m_RootObj->Load(is);
-
-					is->EndBlock();
-				}
-			}
-		}
-
-		is->Release();
-	}
-#endif
-
-	c3::Prototype *pproto;
-
-#if 1
-	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Sponza"))))
-	{
-		c3::Object *pobj = m_Factory->Build(pproto);
-		if (pobj)
-		{
-			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
-			ppos->AdjustPos(2.0f, 0, 0);
-			m_RootObj->AddChild(pobj);
-
-			theApp.m_C3->GetLog()->Print(_T("Sponza created\n"));
-		}
-	}
-#endif
-
-#if 0
-	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Terrain"))))
-	{
-		c3::Object *pobj = m_Factory->Build(pproto);
-		if (pobj)
-		{
-			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
-			if (ppos)
-			{
-				ppos->Update(0);
-			}
-			m_RootObj->AddChild(pobj);
-
-			theApp.m_C3->GetLog()->Print(_T("Terrain created\n"));
-		}
-	}
-#endif
-
-#if 0
-	if (nullptr != (pproto = m_Factory->FindPrototype(_T("AH64e"))))
-	{
-		c3::Object *pobj = m_Factory->Build(pproto);
-		if (pobj)
-		{
-			m_pControllable[1] = pobj;
-
-			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
-			if (ppos)
-			{
-				ppos->AdjustPos(0, 0, 40.0f);
-				ppos->SetScl(0.1f, 0.1f, 0.1f);
-				ppos->Update(0);
-			}
-
-			m_RootObj->AddChild(pobj);
-
-			theApp.m_C3->GetLog()->Print(_T("Chopper created\n"));
-		}
-	}
-#endif
-
-#if 0
-	if (nullptr != (pproto = m_Factory->FindPrototype(_T("REFCUBE"))))
-	{
-		c3::Object *pobj = m_Factory->Build(pproto);
-		if (pobj)
-		{
-			m_pControllable[1] = pobj;
-			c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pobj->FindComponent(c3::Positionable::Type()));
-			if (ppos)
-			{
-				ppos->AdjustPos(0, 0, 80.0f);
-				ppos->Update(0);
-			}
-			m_RootObj->AddChild(pobj);
-
-			theApp.m_C3->GetLog()->Print(_T("Reference Cube created\n"));
-		}
-	}
-#endif
-
-#if 0
-	for (size_t i = 0, maxi = m_RootObj->GetNumChildren(); i < maxi; i++)
-	{
-		c3::Object *pco = m_RootObj->GetChild(i);
-
-		if (!_tcsicmp(pco->GetName(), _T("BasicCharacter")))
-		{
-			m_pControllable[1] = m_RootObj->GetChild(i);
-			c3::Positionable *pcp = (c3::Positionable *)m_pControllable[1]->FindComponent(c3::Positionable::Type());
-			if (pcp)
-			{
-				pcp->SetScl(0.6f, 0.6f, 0.6f);
-				pcp->SetPosZ(2.1f);
-			}
-			break;
-		}
-	}
-#endif
-
-#define NUMLIGHTS		20
-#if defined(NUMLIGHTS) && (NUMLIGHTS > 0)
-	if (nullptr != (pproto = m_Factory->FindPrototype(_T("Light"))))
-	{
-		for (size_t i = 0; i < NUMLIGHTS; i++)
-		{
-			float f = float(i);
-			c3::Object *temp  = m_Factory->Build(pproto);
-			if (temp)
-			{
-				m_Light.push_back(temp);
-
-				glm::fvec3 mv((i & 1) ? 1.0f : -1.0f, 0.0f, (i & 1) ? 2.0f : -2.0f);
-				m_LightMove.push_back(glm::normalize(mv) * 0.025f);
-
-				c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(temp->FindComponent(c3::Positionable::Type()));
-				if (ppos)
-				{
-					float s = 10.0f;//(float)(rand() % 100) / 100.0f + 0.5f;
-
-					ppos->AdjustPos(((i & 1) ? -2.0f : 2.0f) + (float)(i % 4), (float)i * 3.0f - ((float)NUMLIGHTS / 2.0f * 3.0f), 4.0f);
-
-					ppos->SetScl(s, s, s);
-					ppos->Update(0);
-				}
-
-				c3::OmniLight *plight = dynamic_cast<c3::OmniLight *>(temp->FindComponent(c3::OmniLight::Type()));
-				if (plight)
-					plight->SetSourceFrameBuffer(m_GBuf);
-
-				props::IPropertySet *pps = temp->GetProperties();
-				props::IProperty *pp = pps->CreateProperty(_T("uLightColor"), 'LCLR');
-				const props::TVec3F c(((float)(i % 3) * 0.75f) + ((float)(i % 4) * 0.25f), ((float)((i + 1) % 3) * 0.75f) + ((float)((i - 1) % 4) * 0.25f), ((float)((i + 2) % 3) * 0.75f) + ((float)((i - 2) % 4) * 0.25f));
-				pp->SetVec3F(c);
-
-				m_RootObj->AddChild(temp);
-
-				//theApp.m_C3->GetLog()->Print(_T("Light %d created\n"), i);
-			}
-		}
-	}
-#endif
+	props::IProperty *psp = m_RootObj->GetProperties()->GetPropertyById('SRCF');
+	if (psp)
+		psp->SetString(_T("c3demo.c3js"));
 
 	m_DrawTimerId = SetTimer('DRAW', 33, nullptr);
 
@@ -739,16 +543,6 @@ void C3Dlg::OnPaint()
 			m_Rend->SetEyeDirection(&eyedir);
 		}
 
-#if 1
-		for (size_t i = 0; i < m_Light.size(); i++)
-		{
-			c3::Positionable *plpos = dynamic_cast<c3::Positionable *>(m_Light[i]->FindComponent(c3::Positionable::Type()));
-			float s = sinf((float)(m_Rend->GetCurrentFrameNumber() + i) * 3.14159f / 180.0f * 1.0f) * 0.5f;
-			plpos->AdjustPos(m_LightMove[i].x * s, m_LightMove[i].y * s, m_LightMove[i].z * s);
-			plpos->Update(m_Light[i]);
-		}
-#endif
-
 		glm::mat4 biasmat(
 			0.5, 0.0, 0.0, 0.0,
 			0.0, 0.5, 0.0, 0.0,
@@ -779,14 +573,15 @@ void C3Dlg::OnPaint()
 		{
 			// Solid color pass
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
-			m_Rend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL);
+			m_Rend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL | UFBFLAG_UPDATEVIEWPORT);
 			m_Rend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
-			m_Rend->SetAlphaPassRange(3.0f / 255.0f);
+			m_Rend->SetAlphaPassRange(254.9f / 255.0f);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
 			m_RootObj->Render();
 
 			// Shadow pass
+			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 			m_Rend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
 			m_RootObj->Render(RF_SHADOW);
 
@@ -943,7 +738,7 @@ void C3Dlg::OnSize(UINT nType, int cx, int cy)
 	r.top = 0;
 	r.bottom = cy;
 
-	theApp.m_Cfg->SetRect(_T("window.rect"), r);
+	theApp.m_Config->SetRect(_T("window.rect"), r);
 
 	CDialog::OnSize(nType, r.right, r.bottom);
 

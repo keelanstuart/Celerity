@@ -589,11 +589,13 @@ void CWTFPropertyGridProperty::SetValue(const COleVariant& varValue)
 {
 	ASSERT_VALID(this);
 
+#if 0
 	if (m_varValue.vt != VT_EMPTY && m_varValue.vt != varValue.vt)
 	{
 		ASSERT(FALSE);
 		return;
 	}
+#endif
 
 	BOOL bInPlaceEdit = m_bInPlaceEdit;
 	if (bInPlaceEdit)

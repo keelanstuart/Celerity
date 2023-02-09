@@ -20,7 +20,8 @@ class C3App : public CWinApp
 {
 public:
 	c3::System *m_C3;
-	c3::Configuration *m_Cfg;
+	c3::Configuration *m_Config;
+	tstring m_AppDataRoot;
 
 public:
 	C3App();

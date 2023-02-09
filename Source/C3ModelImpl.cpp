@@ -626,6 +626,11 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 				{
 					memcpy(&shin, pmp->mData, sizeof(float));
 				}
+				else if (!_stricmp(key.C_Str(), "$mat.twosided"))
+				{
+					if (*((uint8_t *)pmp->mData) == 1)
+						pmtl->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERBACK));
+				}
 			}
 			pmtl->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &diff);
 			pmtl->SetColor(Material::ColorComponentType::CCT_EMISSIVE, &emis);

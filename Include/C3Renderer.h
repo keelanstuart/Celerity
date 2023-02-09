@@ -276,7 +276,7 @@ namespace c3
 		virtual BlendMode GetBlendMode() const = NULL;
 
 		// Sets the alpha range in which pixels will not be discarded
-		virtual void SetAlphaPassRange(float minalpha = 0, float maxalpha = FLT_MAX) = NULL;
+		virtual void SetAlphaPassRange(float minalpha = 0.0f, float maxalpha = 1.0f) = NULL;
 
 		// Gets the alpha range in which pixels will not be discarded
 		virtual void GetAlphaPassRange(float &minalpha, float &maxalpha) = NULL;

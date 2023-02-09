@@ -17,6 +17,7 @@
 #include <C3ResourceManagerImpl.h>
 #include <C3InputManagerImpl.h>
 #include <C3ActionMapperImpl.h>
+#include <C3GlobalObjectRegistryImpl.h>
 
 
 namespace c3
@@ -37,6 +38,7 @@ namespace c3
 		pool::IThreadPool *m_Pool;
 		LogImpl *m_Log;
 		FileMapperImpl *m_FileMapper;
+		GlobalObjectRegistryImpl m_GlobalObjectRegistry;
 
 		LARGE_INTEGER m_PerfFreq, m_PerfCount, m_PerfDelta;
 		float m_CurrentTime;
@@ -75,6 +77,8 @@ namespace c3
 		virtual Configuration *CreateConfiguration(const TCHAR *filename);
 
 		virtual Log *GetLog();
+
+		virtual GlobalObjectRegistry *GetGlobalObjectRegistry();
 
 		virtual float GetCurrentTime();
 

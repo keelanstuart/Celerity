@@ -29,6 +29,7 @@ std::vector<std::pair<const TCHAR *, uint64_t>> FlagInfo =
 	{ _T("Billboard"), OF_BILLBOARD },
 	{ _T("Light Source"), OF_LIGHT },
 	{ _T("Cast Shadow"), OF_CASTSHADOW },
+	{ _T("No Model Scaling"), OF_NOMODELSCALE },
 };
 
 // C3EditApp

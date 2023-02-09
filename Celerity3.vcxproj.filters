@@ -198,6 +198,12 @@
     <ClCompile Include="source\C3ScriptableImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3PhysicalImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3GlobalObjectRegistryImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -528,6 +534,18 @@
       <Filter>Header Files\Public</Filter>
     </ClInclude>
     <ClInclude Include="source\C3ScriptableImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Physical.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3PhysicalImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3GlobalObjectRegistry.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3GlobalObjectRegistryImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>

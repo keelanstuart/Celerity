@@ -50,6 +50,8 @@ namespace c3
 
 		virtual Log *GetLog() = NULL;
 
+		virtual GlobalObjectRegistry *GetGlobalObjectRegistry() = NULL;
+
 		virtual float GetCurrentTime() = NULL;
 
 		virtual float GetElapsedTime() = NULL;

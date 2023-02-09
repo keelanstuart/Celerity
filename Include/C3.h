@@ -56,6 +56,8 @@
 #include <C3ModelRenderer.h>
 #include <C3OmniLight.h>
 #include <C3QuadTerrain.h>
+#include <C3Scriptable.h>
+#include <C3Physical.h>
 
 #include <C3Object.h>
 #include <C3Prototype.h>
@@ -67,6 +69,7 @@
 #include <C3ResourceManager.h>
 #include <C3InputManager.h>
 #include <C3ActionMapper.h>
+#include <C3GlobalObjectRegistry.h>
 #include <C3System.h>
 #include <C3ColorDefs.h>
 

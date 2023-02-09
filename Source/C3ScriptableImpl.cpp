@@ -10,6 +10,7 @@
 #include <PowerProps.h>
 #include <TinyJS_MathFunctions.h>
 #include <TinyJS_Functions.h>
+#include <C3GlobalObjectRegistry.h>
 
 using namespace c3;
 
@@ -106,11 +107,21 @@ void jcLog(CScriptVar *c, void *userdata);
 void jcFindProperty(CScriptVar *c, void *userdata);
 void jcGetPropertyValue(CScriptVar *c, void *userdata);
 void jcSetPropertyValue(CScriptVar *c, void *userdata);
+void jcCreateObject(CScriptVar *c, void *userdata);
+void jcDeleteObject(CScriptVar *c, void *userdata);
+void jcGetParent(CScriptVar *c, void *userdata);
+void jcSetParent(CScriptVar *c, void *userdata);
+void jcSetObjectName(CScriptVar *c, void *userdata);
+void jcLoadObject(CScriptVar *c, void *userdata);
+void jcGetRegisteredObject(CScriptVar *c, void *userdata);
+void jcRegisterObject(CScriptVar *c, void *userdata);
 
 bool ScriptableImpl::Initialize(Object *pobject)
 {
 	if (!pobject)
 		return false;
+
+	m_pSys = pobject->GetSystem();
 
 	registerFunctions(&m_JS);
 	registerMathFunctions(&m_JS);
@@ -123,12 +134,18 @@ bool ScriptableImpl::Initialize(Object *pobject)
 	m_JS.addNative(_T("function FindProperty(hobj, name)"),							jcFindProperty, m_pSys);
 	m_JS.addNative(_T("function GetPropertyValue(hprop)"),							jcGetPropertyValue, m_pSys);
 	m_JS.addNative(_T("function SetPropertyValue(hprop, val)"),						jcSetPropertyValue, m_pSys);
+	m_JS.addNative(_T("function CreateObject(protoname, hparentobj)"),				jcCreateObject, m_pSys);
+	m_JS.addNative(_T("function DeleteObject(hobj)"),								jcDeleteObject, m_pSys);
+	m_JS.addNative(_T("function GetParent(hobj)"),									jcGetParent, m_pSys);
+	m_JS.addNative(_T("function SetParent(hobj, hnewparentobj)"),					jcSetParent, m_pSys);
+	m_JS.addNative(_T("function SetObjectName(hobj, newname)"),						jcSetObjectName, m_pSys);
+	m_JS.addNative(_T("function LoadObject(hobj, filename)"),						jcLoadObject, m_pSys);
+	m_JS.addNative(_T("function GetRegisteredObject(designation)"),					jcGetRegisteredObject, m_pSys);
+	m_JS.addNative(_T("function RegisterObject(designation, hobj)"),				jcRegisterObject, m_pSys);
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)pobject);
 	m_JS.execute(make_self_cmd);
-
-	m_pSys = pobject->GetSystem();
 
 	props::IPropertySet *propset = pobject->GetProperties();
 	if (!propset)
@@ -144,6 +161,7 @@ bool ScriptableImpl::Initialize(Object *pobject)
 		psrc = propset->CreateProperty(_T("SourceFile"), 'SRCF');
 		psrc->SetString(_T("my_script.c3js"));
 		psrc->SetAspect(props::IProperty::PA_FILENAME);
+		psrc->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
 
 	return true;
@@ -190,8 +208,11 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 			Resource *pres = m_pSys->GetResourceManager()->GetResource(pprop->AsString(), RESF_DEMANDLOAD);
 			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
 			{
-				m_Code = ((Script *)(pres->GetData()))->m_Code;
-				m_JS.execute(m_Code);
+				if (m_Code != ((Script *)(pres->GetData()))->m_Code)
+				{
+					m_Code = ((Script *)(pres->GetData()))->m_Code;
+					m_JS.execute(m_Code);
+				}
 			}
 			break;
 		}
@@ -568,3 +589,249 @@ void jcSetPropertyValue(CScriptVar *c, void *userdata)
 		}
 	}
 }
+
+
+//m_JS.addNative(_T("function CreateObject(protoname, hparentobj)"),				jcCreateObject, m_pSys);
+void jcCreateObject(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->getReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	ret->setInt(0);
+
+	tstring protoname = c->getParameter(_T("protoname"))->getString();
+	int64_t hparentobj = c->getParameter(_T("hparentobj"))->getInt();
+
+	Object *pretobj = nullptr;
+
+	Prototype *pproto = psys->GetFactory()->FindPrototype(protoname.c_str(), false);
+	if (pproto)
+		pretobj = psys->GetFactory()->Build(pproto);
+
+	if (pretobj)
+	{
+		Object *pparentobj = dynamic_cast<Object *>((Object *)hparentobj);
+		if (pparentobj)
+		{
+			if (pretobj)
+				pparentobj->AddChild(pretobj);
+		}
+	}
+
+	ret->setInt((int64_t)pretobj);
+}
+
+
+//m_JS.addNative(_T("function DeleteObject(hobj)"),								jcDeleteObject, m_pSys);
+void jcDeleteObject(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		pobj->Release();
+	}
+}
+
+
+//m_JS.addNative(_T("function GetParent(hobj)"),									jcGetParent, m_pSys);
+void jcGetParent(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->getReturnVar();
+	if (!ret)
+		return;
+
+	ret->setInt(0);
+
+	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
+
+	Object *pretobj = nullptr;
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		pretobj = pobj->GetOwner();
+	}
+
+	ret->setInt((int64_t)pretobj);
+}
+
+
+//m_JS.addNative(_T("function SetParent(hobj, hnewparentobj)"),					jcSetParent, m_pSys);
+void jcSetParent(CScriptVar *c, void *userdata)
+{
+	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
+	int64_t hnewparentobj = c->getParameter(_T("hnewparentobj"))->getInt();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	Object *pnewparentobj = dynamic_cast<Object *>((Object *)hnewparentobj);
+	if (pnewparentobj && pobj)
+	{
+		pobj->SetOwner(pnewparentobj);
+	}
+}
+
+
+//m_JS.addNative(_T("function SetObjectName(hobj, newname)"),						jcSetObjectName, m_pSys);
+void jcSetObjectName(CScriptVar *c, void *userdata)
+{
+	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
+	tstring newname = c->getParameter(_T("newname"))->getString();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		pobj->SetName(newname.c_str());
+	}
+}
+
+
+//m_JS.addNative(_T("function LoadObject(hobj, filename)"),				jcLoadObject, m_pSys);
+void jcLoadObject(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->getReturnVar();
+
+	if (ret)
+		ret->setInt(0);
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
+	tstring filename = c->getParameter(_T("filename"))->getString();
+	TCHAR fullpath[MAX_PATH];
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+
+	if (pobj && psys->GetFileMapper()->FindFile(filename.c_str(), fullpath, MAX_PATH))
+	{
+		genio::IInputStream *is = genio::IInputStream::Create();
+		if (is)
+		{
+			if (is->Assign(fullpath) && is->Open())
+			{
+				genio::FOURCHARCODE b = is->NextBlockId();
+				if (b == 'CEL0')
+				{
+					if (is->BeginBlock(b))
+					{
+						uint16_t len;
+
+						tstring name, description, author, website, copyright;
+
+						is->ReadUINT16(len);
+						name.resize(len);
+						if (len)
+							is->ReadString(name.data());
+
+						is->ReadUINT16(len);
+						description.resize(len);
+						if (len)
+							is->ReadString(description.data());
+
+						is->ReadUINT16(len);
+						author.resize(len);
+						if (len)
+							is->ReadString(author.data());
+
+						is->ReadUINT16(len);
+						website.resize(len);
+						if (len)
+							is->ReadString(website.data());
+
+						is->ReadUINT16(len);
+						copyright.resize(len);
+						if (len)
+							is->ReadString(copyright.data());
+
+						if (is->BeginBlock('CAM0'))
+						{
+							is->EndBlock();
+						}
+
+						if (is->BeginBlock('ENV0'))
+						{
+							is->EndBlock();
+						}
+
+						if (pobj)
+						{
+							bool r = pobj->Load(is);
+							if (ret)
+								ret->setInt(r ? 1 : 0);
+						}
+
+						is->EndBlock();
+					}
+				}
+			}
+
+			is->Release();
+		}
+	}
+}
+
+
+const TCHAR *gGlobalDesignations[GlobalObjectRegistry::OD_NUMDESIGNATIONS] =
+{
+	_T("worldroot"),
+	_T("skyboxroot"),
+	_T("guiroot"),
+	_T("camera"),
+	_T("player"),
+};
+
+//m_JS.addNative(_T("function jcGetRegisteredObject(designation)"),					jcGetRegisteredObject, m_pSys);
+void jcGetRegisteredObject(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->getReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring designation = c->getParameter(_T("designation"))->getString();
+
+	Object *pretobj = nullptr;
+
+	for (size_t i = 0; i < GlobalObjectRegistry::OD_NUMDESIGNATIONS; i++)
+	{
+		if (!_tcsicmp(designation.c_str(), gGlobalDesignations[i]))
+		{
+			pretobj = psys->GetGlobalObjectRegistry()->GetRegisteredObject((GlobalObjectRegistry::ObjectDesignation)i);
+			break;
+		}
+	}
+
+	ret->setInt((int64_t)pretobj);
+}
+
+
+//m_JS.addNative(_T("function jcRegisterObject(designation, hobj)"),			jcRegisterObject, m_pSys);
+void jcRegisterObject(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring designation = c->getParameter(_T("designation"))->getString();
+	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
+
+	for (size_t i = 0; i < GlobalObjectRegistry::OD_NUMDESIGNATIONS; i++)
+	{
+		if (!_tcsicmp(designation.c_str(), gGlobalDesignations[i]))
+		{
+			psys->GetGlobalObjectRegistry()->RegisterObject((GlobalObjectRegistry::ObjectDesignation)i, (Object *)hobj);
+			return;
+		}
+	}
+}
+

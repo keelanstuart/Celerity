@@ -23,7 +23,7 @@ namespace c3
 		RenderMethod *m_pMethod;
 		size_t m_TechIdx_L;
 		FrameBuffer *m_SourceFB;
-		props::IProperty *m_propColor;
+		glm::fvec3 m_Color;
 		int32_t m_uniPos;
 		int32_t m_uniRadius;
 		int32_t m_uniColor;
@@ -35,6 +35,7 @@ namespace c3
 		int32_t m_uniTexAtten;
 		BoundingBoxImpl m_Bounds;
 		Resource *m_TexAttenRes;
+		Material *m_Material;
 
 		props::TFlags64 m_Flags;
 

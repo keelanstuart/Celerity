@@ -416,6 +416,13 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 				const TCHAR *xname = _T("x"), *yname = _T("y"), *zname = _T("z"), *wname = _T("w");
 				switch (p->GetAspect())
 				{
+					case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG:
+					case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD:
+						xname = _T("Pitch");
+						yname = _T("Roll");
+						zname = _T("Yaw");
+						break;
+
 					case props::IProperty::PROPERTY_ASPECT::PA_LATLON:
 						xname = _T("Longitude");
 						yname = _T("Lattitude");
@@ -481,22 +488,60 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 
 					pwp->SetDescription(prop_desc ? prop_desc(p->GetID()) : _T("RGBA Color"));
 				}
+				else if ((props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4 == p->GetType()) && (props::IProperty::PROPERTY_ASPECT::PA_QUATERNION == p->GetAspect()))
+				{
+					const TCHAR *xname = _T("Pitch"), *yname = _T("Roll"), *zname = _T("Yaw");
+					glm::fquat q = *((glm::fquat *)p->AsVec4F());
+
+					float _x = glm::degrees(glm::pitch(q));
+					if (_x == -0.0f)
+						_x = 0.0f;
+
+					float _y = glm::degrees(glm::yaw(q));
+					if (_y == -0.0f)
+						_y = 0.0f;
+
+					float _z = glm::degrees(glm::pitch(q));
+					if (_z == -0.0f)
+						_z = 0.0f;
+
+					pwp = new CWTFPropertyGridProperty(propname, 0, TRUE);
+
+					pwp->AddSubItem(new CWTFPropertyGridProperty(xname, _x, NULL, NULL, NULL, NULL, _T("0123456789.-")));
+					pwp->AddSubItem(new CWTFPropertyGridProperty(yname, _y, NULL, NULL, NULL, NULL, _T("0123456789.-")));
+					pwp->AddSubItem(new CWTFPropertyGridProperty(zname, _z, NULL, NULL, NULL, NULL, _T("0123456789.-")));
+
+					pwp->SetDescription(prop_desc ? prop_desc(p->GetID()) : _T(""));
+				}
 				else
 				{
 					pwp = new CWTFPropertyGridProperty(propname, 0, TRUE);
 
 					const TCHAR *xname = _T("x"), *yname = _T("y"), *zname = _T("z"), *wname = _T("w");
-					if (p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_LATLON)
+					switch (p->GetAspect())
 					{
-						xname = _T("Longitude"); yname = _T("Lattitude"); zname = _T("Altitude");
-					}
-					else if (p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_ELEVAZIM)
-					{
-						xname = _T("Azimuth"); yname = _T("Elevation");
-					}
-					else if (p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_RASCDEC)
-					{
-						xname = _T("Right Asecnsion"); yname = _T("Declination");
+						case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG:
+						case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD:
+							xname = _T("Pitch");
+							yname = _T("Roll");
+							zname = _T("Yaw");
+							break;
+
+						case props::IProperty::PROPERTY_ASPECT::PA_LATLON:
+							xname = _T("Longitude");
+							yname = _T("Lattitude");
+							zname = _T("Altitude");
+							break;
+
+						case props::IProperty::PROPERTY_ASPECT::PA_ELEVAZIM:
+							xname = _T("Azimuth");
+							yname = _T("Elevation");
+							break;
+
+						case props::IProperty::PROPERTY_ASPECT::PA_RASCDEC:
+							xname = _T("Right Asecnsion");
+							yname = _T("Declination");
+							break;
 					}
 
 					pwp->AddSubItem(new CWTFPropertyGridProperty(xname, p->AsVec2F()->x, NULL, NULL, NULL, NULL, _T("0123456789.-")));
@@ -646,18 +691,75 @@ void CPropertyGrid::UpdateCurrentProperties()
 
 				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
 				{
-					pgp->GetSubItem(0)->SetValue(p->AsVec3F()->x);
-					pgp->GetSubItem(1)->SetValue(p->AsVec3F()->y);
-					pgp->GetSubItem(2)->SetValue(p->AsVec3F()->z);
+					switch (p->GetAspect())
+					{
+						case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG:
+							pgp->GetSubItem(0)->SetValue(glm::degrees(p->AsVec3F()->x));
+							pgp->GetSubItem(1)->SetValue(glm::degrees(p->AsVec3F()->y));
+							pgp->GetSubItem(2)->SetValue(glm::degrees(p->AsVec3F()->z));
+							break;
+
+						case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+						{
+							UINT r = UINT(std::clamp<float>(p->AsVec3F()->x, 0.0f, 1.0f)) * 255;
+							UINT g = UINT(std::clamp<float>(p->AsVec3F()->y, 0.0f, 1.0f)) * 255;
+							UINT b = UINT(std::clamp<float>(p->AsVec3F()->z, 0.0f, 1.0f)) * 255;
+							((CWTFPropertyGridColorProperty *)pgp)->SetColor(RGB(r, g, b));
+							break;
+						}
+
+						default:
+							pgp->GetSubItem(0)->SetValue(p->AsVec3F()->x);
+							pgp->GetSubItem(1)->SetValue(p->AsVec3F()->y);
+							pgp->GetSubItem(2)->SetValue(p->AsVec3F()->z);
+							break;
+					}
 					break;
 				}
 
 				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
 				{
-					pgp->GetSubItem(0)->SetValue(p->AsVec4F()->x);
-					pgp->GetSubItem(1)->SetValue(p->AsVec4F()->y);
-					pgp->GetSubItem(2)->SetValue(p->AsVec4F()->z);
-					pgp->GetSubItem(3)->SetValue(p->AsVec4F()->w);
+					switch (p->GetAspect())
+					{
+						case props::IProperty::PROPERTY_ASPECT::PA_QUATERNION:
+						{
+							glm::fquat q = *((glm::fquat *)p->AsVec4F());
+							float _x = glm::degrees(glm::pitch(q));
+							if (_x == -0.0f)
+								_x = 0.0f;
+
+							float _y = glm::degrees(glm::yaw(q));
+							if (_y == -0.0f)
+								_y = 0.0f;
+
+							float _z = glm::degrees(glm::roll(q));
+							if (_z == -0.0f)
+								_z = 0.0f;
+
+							pgp->GetSubItem(0)->SetValue(_x);
+							pgp->GetSubItem(1)->SetValue(_y);
+							pgp->GetSubItem(2)->SetValue(_z);
+							break;
+						}
+
+						case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+							pgp->SetValue(p->AsInt());
+							break;
+
+						default:
+							pgp->GetSubItem(0)->SetValue(p->AsVec4F()->x);
+							pgp->GetSubItem(1)->SetValue(p->AsVec4F()->y);
+							pgp->GetSubItem(2)->SetValue(p->AsVec4F()->z);
+							pgp->GetSubItem(3)->SetValue(p->AsVec4F()->w);
+							break;
+					}
 					break;
 				}
 
@@ -803,9 +905,18 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 			{
 				if (p->GetAspect() != props::IProperty::PA_COLOR_RGBA)
 				{
+					COLORREF c = ((CWTFPropertyGridColorProperty *)pProp)->GetColor();
+					props::TVec3F v3;
+					v3.x = (float)(c & 0xFF) / 255.0f;
+					v3.y = (float)((c >> 8) & 0xFF) / 255.0f;
+					v3.z = (float)((c >> 16) & 0xFF) / 255.0f;
+					p->SetVec3F(v3);
+				}
+				else if (p->GetAspect() != props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG)
+				{
 					props::TVec3F v3;
 					for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
-						v3.v[i] = pProp->GetSubItem(i)->GetValue().fltVal;
+						v3.v[i] = glm::radians(pProp->GetSubItem(i)->GetValue().fltVal);
 					p->SetVec3F(v3);
 				}
 				else
@@ -816,7 +927,18 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
 			{
-				if (p->GetAspect() != props::IProperty::PA_COLOR_RGBA)
+				if (p->GetAspect() == props::IProperty::PA_QUATERNION)
+				{
+					float _p = glm::radians(pProp->GetSubItem(0)->GetValue().fltVal);
+					float _y = glm::radians(pProp->GetSubItem(1)->GetValue().fltVal);
+					float _r = glm::radians(pProp->GetSubItem(2)->GetValue().fltVal);
+
+					glm::fquat q(glm::fvec3(_p, _y, _r));
+					q = glm::normalize(q);
+
+					p->SetVec4F(props::TVec4F(q.x, q.y, q.z, q.w));
+				}
+				else if (p->GetAspect() != props::IProperty::PA_COLOR_RGBA)
 				{
 					props::TVec4F v4;
 					for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)

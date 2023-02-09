@@ -50,6 +50,7 @@ namespace c3
 		#define OF_PARENTDIRTY		0x00008000					// Indicates that the parent has changed since the last update
 		#define OF_LIGHT			0x00010000					// Indicates that the object emits light
 		#define OF_CASTSHADOW		0x00020000					// Indicates that the object casts a shadow
+		#define OF_NOMODELSCALE		0x00040000					// Affects only ModelRenderer; does not scale the model
 
 
 		typedef props::TFlags64		RenderFlags;

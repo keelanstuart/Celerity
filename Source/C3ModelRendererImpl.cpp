@@ -58,9 +58,23 @@ bool ModelRendererImpl::Initialize(Object *pobject)
 
 	props::IProperty *pp;
 	pp = props->CreateReferenceProperty(_T("ModelPosition"), 'MPOS', &m_Pos, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	if (pp)
+	{
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::HIDDEN));
+	}
+
 	pp = props->CreateReferenceProperty(_T("ModelOrientation"), 'MORI', &m_Ori, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4);
-	pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_QUATERNION);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_QUATERNION);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::HIDDEN) | props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
+
 	pp = props->CreateReferenceProperty(_T("ModelScale"), 'MSCL', &m_Scl, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	if (pp)
+	{
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::HIDDEN));
+	}
 
 	return true;
 }
@@ -91,6 +105,9 @@ bool ModelRendererImpl::Prerender(Object *pobject, Object::RenderFlags flags)
 	if (flags.IsSet(RF_FORCE))
 		return true;
 
+	if (flags.IsSet(RF_EDITORDRAW) && pobject->Flags().IsSet(OF_DRAWINEDITOR))
+		return true;
+
 	if (!pobject->Flags().IsSet(OF_DRAW))
 		return false;
 
@@ -101,6 +118,8 @@ bool ModelRendererImpl::Prerender(Object *pobject, Object::RenderFlags flags)
 void ModelRendererImpl::Render(Object *pobject, Object::RenderFlags flags)
 {
 	assert(pobject);
+	if (!Prerender(pobject, flags))
+		return;
 
 	c3::Renderer *prend = pobject->GetSystem()->GetRenderer();
 
@@ -140,7 +159,21 @@ void ModelRendererImpl::Render(Object *pobject, Object::RenderFlags flags)
 
 	if (pmod)
 	{
-		glm::fmat4x4 mat = *m_pPos->GetTransformMatrix() * m_Mat;
+		glm::fmat4x4 mat;
+
+		// Handle the case where we don't want models scaling... like lights...
+		// they stay the same size in the user-interactable view
+		if (!(pobject->Flags().IsSet(OF_NOMODELSCALE)))
+		{
+			mat = *m_pPos->GetTransformMatrix() * m_Mat;
+		}
+		else
+		{
+			glm::fvec3 invscl = 1.0f / *(m_pPos->GetScl());
+			
+			mat = *m_pPos->GetTransformMatrix() * m_Mat * glm::scale(glm::identity<glm::fmat4x4>(), invscl);
+		}
+
 		pmod->Draw(&mat, !flags.IsSet(RF_LOCKMATERIAL));
 	}
 }
@@ -260,8 +293,23 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 
 	if (pmod)
 	{
-		glm::fmat4x4 invt = glm::inverse(m_Mat);
-		glm::fmat4x4 invtn = glm::inverse(glm::inverseTranspose(m_Mat));
+		glm::fmat4x4 mat;
+
+		// Handle the case where we don't want models scaling... like lights...
+		// they stay the same size in the user-interactable view
+		if (!(m_pOwner->Flags().IsSet(OF_NOMODELSCALE)))
+		{
+			mat = m_Mat;
+		}
+		else
+		{
+			glm::fvec3 invscl = 1.0f / *(m_pPos->GetScl());
+
+			mat = m_Mat * glm::scale(glm::identity<glm::fmat4x4>(), invscl);
+		}
+
+		glm::fmat4x4 invt = glm::inverse(mat);
+		glm::fmat4x4 invtn = glm::inverse(glm::inverseTranspose(mat));
 
 		glm::vec3 raypos = invt * glm::vec4(pRayPos->x, pRayPos->y, pRayPos->z, 1);
 		glm::vec3 raydir = glm::normalize(invtn * glm::vec4(pRayDir->x, pRayDir->y, pRayDir->z, 0));
@@ -272,6 +320,7 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 		glm::vec2 uv;
 
 		ret = pmod->Intersect(&raypos, &raydir, &meshidx, &dist, &faceidx, &uv);
+		dist = fabs(dist);
 		if (ret && pDistance)
 			*pDistance = dist;
 	}

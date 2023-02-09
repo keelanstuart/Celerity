@@ -79,6 +79,8 @@ protected:
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
 	afx_msg LRESULT OnCtlcolorlistbox(WPARAM wParam, LPARAM lParam);
+	afx_msg void OnCheckChangeFlags();
+	afx_msg void OnCheckChangeComponents();
 
 	DECLARE_MESSAGE_MAP()
 

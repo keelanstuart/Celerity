@@ -31,6 +31,11 @@ CPropertiesWnd::~CPropertiesWnd()
 {
 }
 
+#define PWID_EDITNAME		1
+#define PWID_COMPLIST		2
+#define PWID_FLAGLIST		3
+#define PWID_PROPLIST		4
+
 BEGIN_MESSAGE_MAP(CPropertiesWnd, CDockablePane)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
@@ -47,6 +52,8 @@ BEGIN_MESSAGE_MAP(CPropertiesWnd, CDockablePane)
 	ON_WM_CTLCOLOR()
 	ON_WM_ERASEBKGND()
 	ON_MESSAGE(WM_CTLCOLORLISTBOX, &CPropertiesWnd::OnCtlcolorlistbox)
+	ON_CLBN_CHKCHANGE(PWID_FLAGLIST, OnCheckChangeFlags)
+	ON_CLBN_CHKCHANGE(PWID_COMPLIST, OnCheckChangeComponents)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -90,11 +97,6 @@ void CPropertiesWnd::AdjustLayout()
 	m_wndPropList.SetWindowPos(nullptr, rc.left, rc.top + cyTlb, rc.Width() - CONTROL_SPACING, rc.Height() - cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
 }
 
-#define PWID_EDITNAME		1
-#define PWID_COMPLIST		2
-#define PWID_FLAGLIST		3
-#define PWID_PROPLIST		4
-
 int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CDockablePane::OnCreate(lpCreateStruct) == -1)
@@ -120,6 +122,7 @@ int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		int ic = m_wndFlagList.AddString(f.first);
 		m_wndFlagList.SetItemData(ic, f.second);
 	}
+	m_wndFlagList.SetFont(m_wndPropList.GetFont());
 
 	m_wndNameEdit.SetFont(m_wndPropList.GetFont());
 
@@ -217,7 +220,7 @@ void CPropertiesWnd::SetActivePrototype(c3::Prototype *pproto)
 
 	m_wndNameEdit.SetWindowText(m_pProto ? m_pProto->GetName() : _T(""));
 
-	if (m_wndPropList.GetSafeHwnd())
+	if (m_pProto && m_wndPropList.GetSafeHwnd())
 	{
 		m_wndPropList.SetActiveProperties(m_pProto->GetProperties());
 		m_wndPropList.ExpandAll(m_bExpanded);
@@ -278,8 +281,7 @@ void CPropertiesWnd::FillOutFlags()
 		m_wndFlagList.SetCheck(i, f ? (f->IsSet(m_wndFlagList.GetItemData(i))) : 0);
 	}
 
-	m_wndFlagList.SetFont(m_wndPropList.GetFont());
-	//m_wndFlagList.RedrawWindow(0, 0, RDW_ALLCHILDREN | RDW_ERASENOW | RDW_INTERNALPAINT | RDW_VALIDATE | RDW_UPDATENOW);
+	m_wndFlagList.RedrawWindow(0, 0, RDW_ALLCHILDREN | RDW_ERASENOW | RDW_INTERNALPAINT | RDW_VALIDATE | RDW_UPDATENOW);
 }
 
 
@@ -340,3 +342,50 @@ afx_msg LRESULT CPropertiesWnd::OnCtlcolorlistbox(WPARAM wParam, LPARAM lParam)
 	return (LRESULT)CreateSolidBrush(bkColor);
 }
 
+
+afx_msg void CPropertiesWnd::OnCheckChangeFlags()
+{
+	props::TFlags64 f = 0;
+
+	for (int i = 0, maxi = m_wndFlagList.GetCount(); i < maxi; i++)
+	{
+		if (m_wndFlagList.GetCheck(i) == BST_CHECKED)
+			f.Set(m_wndFlagList.GetItemData(i));
+	}
+
+	if (m_pProto)
+		m_pProto->Flags().SetAll(f);
+	else if (m_pObj)
+	{
+		m_pObj->Flags().SetAll(f);
+		m_pObj->Flags().Set(OF_SCLCHANGED);
+	}
+}
+
+
+afx_msg void CPropertiesWnd::OnCheckChangeComponents()
+{
+	for (int i = 0, maxi = m_wndCompList.GetCount(); i < maxi; i++)
+	{
+		c3::ComponentType *pct = (c3::ComponentType *)(m_wndCompList.GetItemDataPtr(i));
+
+		if (m_wndCompList.GetCheck(i) == BST_CHECKED)
+		{
+			if (m_pProto && !m_pProto->HasComponent(pct))
+				m_pProto->AddComponent(pct);
+			else if (m_pObj && !m_pObj->HasComponent(pct))
+				m_pObj->AddComponent(pct);
+		}
+		else
+		{
+			if (m_pProto && m_pProto->HasComponent(pct))
+				m_pProto->RemoveComponent(pct);
+			else if (m_pObj && m_pObj->HasComponent(pct))
+			{
+				c3::Component *pc = m_pObj->FindComponent(pct);
+				if (pc)
+					m_pObj->RemoveComponent(pc);
+			}
+		}
+	}
+}

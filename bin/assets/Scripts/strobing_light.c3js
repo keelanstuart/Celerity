@@ -1,0 +1,26 @@
+var hscl;
+var basescl;
+var scl;
+var runtime = 0.0;
+var s;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	s = Math.sin(runtime) / 2.0 + 0.5;
+	if (s > 0.5)
+		s = 1.0;
+	else
+		s = 0.0;
+
+	scl.x = basescl.x * s;
+	scl.y = basescl.y * s;
+	scl.z = basescl.z * s;
+
+	SetPropertyValue(hscl, scl);
+}
+
+hscl = FindProperty(self, "Scale");
+basescl = GetPropertyValue(hscl);
+scl = basescl;

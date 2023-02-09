@@ -37,6 +37,7 @@
     <ClCompile Include="Source\C3FactoryImpl.cpp" />
     <ClCompile Include="Source\C3FileMapperImpl.cpp" />
     <ClCompile Include="Source\C3FrameBufferImpl.cpp" />
+    <ClCompile Include="Source\C3GlobalObjectRegistryImpl.cpp" />
     <ClCompile Include="Source\C3GuiImpl.cpp" />
     <ClCompile Include="Source\C3IndexBufferImpl.cpp" />
     <ClCompile Include="Source\C3InputDeviceImpl.cpp" />
@@ -51,6 +52,7 @@
     <ClCompile Include="Source\C3ObjectImpl.cpp" />
     <ClCompile Include="Source\C3OmniLightImpl.cpp" />
     <ClCompile Include="source\C3ParticleEmitterImpl.cpp" />
+    <ClCompile Include="Source\C3PhysicalImpl.cpp" />
     <ClCompile Include="Source\C3PluginImpl.cpp" />
     <ClCompile Include="Source\C3PluginManagerImpl.cpp" />
     <ClCompile Include="Source\C3PositionableImpl.cpp" />
@@ -141,6 +143,7 @@
     <ClInclude Include="Include\C3FileMapper.h" />
     <ClInclude Include="Include\C3FlowNode.h" />
     <ClInclude Include="Include\C3FrameBuffer.h" />
+    <ClInclude Include="Include\C3GlobalObjectRegistry.h" />
     <ClInclude Include="Include\C3Gui.h" />
     <ClInclude Include="Include\C3IndexBuffer.h" />
     <ClInclude Include="Include\C3InputDevice.h" />
@@ -155,6 +158,7 @@
     <ClInclude Include="Include\C3Object.h" />
     <ClInclude Include="Include\C3OmniLight.h" />
     <ClInclude Include="include\C3ParticleEmitter.h" />
+    <ClInclude Include="Include\C3Physical.h" />
     <ClInclude Include="Include\C3Plugin.h" />
     <ClInclude Include="Include\C3PluginManager.h" />
     <ClInclude Include="Include\C3Positionable.h" />
@@ -184,6 +188,7 @@
     <ClInclude Include="Source\C3FactoryImpl.h" />
     <ClInclude Include="Source\C3FileMapperImpl.h" />
     <ClInclude Include="Source\C3FrameBufferImpl.h" />
+    <ClInclude Include="Source\C3GlobalObjectRegistryImpl.h" />
     <ClInclude Include="Source\C3GuiImpl.h" />
     <ClInclude Include="Source\C3ImGuiConfig.h" />
     <ClInclude Include="Source\C3IndexBufferImpl.h" />
@@ -198,6 +203,7 @@
     <ClInclude Include="Source\C3ObjectImpl.h" />
     <ClInclude Include="Source\C3OmniLightImpl.h" />
     <ClInclude Include="source\C3ParticleEmitterImpl.h" />
+    <ClInclude Include="Source\C3PhysicalImpl.h" />
     <ClInclude Include="Source\C3PluginImpl.h" />
     <ClInclude Include="Source\C3PluginManagerImpl.h" />
     <ClInclude Include="Source\C3PositionableImpl.h" />

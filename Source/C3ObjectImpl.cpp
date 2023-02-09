@@ -84,7 +84,16 @@ Object *ObjectImpl::GetOwner()
 
 void ObjectImpl::SetOwner(Object *powner)
 {
+	if (powner == m_Owner)
+		return;
+
+	if (m_Owner)
+		m_Owner->RemoveChild(this);
+
 	m_Owner = powner;
+
+	if (m_Owner)
+		m_Owner->AddChild(this);
 }
 
 
@@ -125,11 +134,12 @@ void ObjectImpl::RemoveChild(Object *pchild, bool release)
 	TObjectArray::const_iterator it = std::find(m_Children.cbegin(), m_Children.cend(), pchild);
 	if (it != m_Children.cend())
 	{
-		(*it)->SetOwner(nullptr);
-		if (release)
-			(*it)->Release();
-
+		Object *pco = *it;
 		m_Children.erase(it);
+
+		pco->SetOwner(nullptr);
+		if (release)
+			pco->Release();
 	}
 }
 
@@ -243,6 +253,8 @@ void ObjectImpl::Update(float elapsed_time)
 
 bool ObjectImpl::Prerender(Object::RenderFlags flags)
 {
+#if 0
+/*
 	if (flags.IsSet(RF_FORCE) || (flags.IsSet(RF_EDITORDRAW) && m_Flags.IsSet(OF_DRAWINEDITOR)))
 		return true;
 
@@ -251,14 +263,17 @@ bool ObjectImpl::Prerender(Object::RenderFlags flags)
 
 	if (flags.IsSet(RF_LIGHT) && !m_Flags.IsSet(OF_LIGHT))
 		return false;
-
+*/
 	// TODO: port visibility culling
-	bool ret = true;
 
-//	for (const auto it : m_Components)
-//		ret &= it->Prerender(this, flags);
+	for (const auto it : m_Components)
+		if (it->Prerender(this, flags))
+			return true;
 
-	return ret;
+	return false;
+#else
+	return true;
+#endif
 }
 
 
@@ -376,12 +391,12 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags)
 		}
 
 		size_t propssz = 0;
-		m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_TERSE, nullptr, 0, &propssz);
+		m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_VERBOSE, nullptr, 0, &propssz);
 		os->WriteUINT64(propssz);
 		if (propssz)
 		{
 			BYTE *propsbuf = (BYTE *)_alloca(propssz);
-			m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_TERSE, propsbuf, propssz);
+			m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_VERBOSE, propsbuf, propssz);
 			os->Write(propsbuf, propssz);
 		}
 

@@ -255,6 +255,7 @@ bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_
 
 	// Vec3I = (uniform index, texunit, texture, texflags)
 	p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D);
+	p->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	p->SetVec4I(props::TVec4I(p->AsVec4I()->x, texunit >= 0 ? texunit : p->AsVec4I()->y, (int64_t)tex, texflags));
 
 #ifdef IMMEDIATE_UNIFORMS

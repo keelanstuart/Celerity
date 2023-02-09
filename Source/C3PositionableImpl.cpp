@@ -60,6 +60,7 @@ bool PositionableImpl::Initialize(Object *pobject)
 	{
 		pori->SetVec4F(props::TVec4F(m_Ori.x, m_Ori.y, m_Ori.z, m_Ori.w));
 		pori->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_QUATERNION);
+		pori->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
 
 	props::IProperty *pscl = propset->CreateReferenceProperty(_T("Scale"), 'SCL', &m_Scl, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
@@ -76,6 +77,36 @@ bool PositionableImpl::Initialize(Object *pobject)
 
 void PositionableImpl::Update(Object *pobject, float elapsed_time)
 {
+	// if this object should track the camera, then move it here
+	if (pobject && pobject->Flags().AnySet(OF_TRACKCAMX | OF_TRACKCAMY | OF_TRACKCAMZ))
+	{
+		Object *pcamobj = pobject->GetSystem()->GetGlobalObjectRegistry()->GetRegisteredObject(GlobalObjectRegistry::OD_CAMERA);
+		if (pcamobj)
+		{
+			Camera *pcamcomp = dynamic_cast<Camera *>(pcamobj->FindComponent(Camera::Type()));
+			if (pcamcomp)
+			{
+				glm::fvec3 pos;
+				// literal tracking uses the eye point itself, whereas non-literal tracking uses the focus point
+				if (pobject->Flags().AnySet(OF_TRACKCAMLITERAL))
+					pcamcomp->GetEyePos(&pos);
+				else
+					pcamcomp->GetTargetPos(&pos);
+
+				if (pobject->Flags().AnySet(OF_TRACKCAMX))
+					m_Pos.x = pos.x;
+
+				if (pobject->Flags().AnySet(OF_TRACKCAMY))
+					m_Pos.y = pos.y;
+
+				if (pobject->Flags().AnySet(OF_TRACKCAMZ))
+					m_Pos.z = pos.z;
+
+				m_Flags.Set(POSFLAG_POSCHANGED);
+			}
+		}
+	}
+
 	if (m_Flags.AnySet(POSFLAG_REBUILDMATRIX))
 	{
 		glm::fmat4x4 tmp;

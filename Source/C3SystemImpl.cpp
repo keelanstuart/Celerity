@@ -302,6 +302,12 @@ Log *SystemImpl::GetLog()
 }
 
 
+GlobalObjectRegistry *SystemImpl::GetGlobalObjectRegistry()
+{
+	return &m_GlobalObjectRegistry;
+}
+
+
 float SystemImpl::GetCurrentTime()
 {
 	return m_CurrentTime;

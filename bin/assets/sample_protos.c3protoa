@@ -931,14 +931,69 @@
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
-    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3C}" name="Light" group="Lights" flags="65543">
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3C}" name="Light" group="Lights" flags="335879">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
             <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.0100,0.0100,0.0100</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,1.0,1.0</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3D}" name="FadingLight" group="Lights" flags="335879">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.0100,0.0100,0.0100</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,1.0,1.0</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">fading_light.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0667</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3E}" name="FlickeringLight" group="Lights" flags="335879">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.0100,0.0100,0.0100</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,1.0,1.0</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">flickering_light.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0667</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3F}" name="StrobingLight" group="Lights" flags="335879">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.0100,0.0100,0.0100</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,1.0,1.0</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">strobing_light.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0667</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{884D72DE-73A5-4E3B-8B6F-D6CA2BFFF12C}" name="QuadTerrain" group="Terrain" flags="131075">
@@ -1006,6 +1061,29 @@
         <powerprops:property_set>
             <powerprops:property id="MODF" name="Model" type="STRING">SkyDome.X</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">-1.0,0.0,0.0,0.0</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0,0,-10</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">skybox.c3rm</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{4A2D0682-FBE0-4085-AA5F-0E7C2CCFDE3A}" name="spacesphere" group="Skybox" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="MODF" name="Model" type="STRING">SpaceSphere.FBX</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">-6,-6,-6</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">skybox.c3rm</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{4A2D0682-FBE0-4085-AA5F-0E7C2CCFDE3A}" name="CartoonSky" group="Skybox" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="MODF" name="Model" type="STRING">CartoonSky.FBX</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">-6,-6,-6</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">skybox.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>

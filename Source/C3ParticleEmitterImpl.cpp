@@ -86,11 +86,19 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 
 	m_ParticleLifeMin = 1.5f;
 	pp = propset->CreateReferenceProperty(_T("ParticleLifeMin"), 'PEln', &m_ParticleLifeMin, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-	if (pp) pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
 	m_ParticleLifeMax = 2.0f;
 	pp = propset->CreateReferenceProperty(_T("ParticleLifeMax"), 'PElx', &m_ParticleLifeMax, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-	if (pp) pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
 	m_AccelerationMin = -0.1f;
 	propset->CreateReferenceProperty(_T("AccelerationMin"), 'PEan', &m_AccelerationMin, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
@@ -100,11 +108,19 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 
 	m_RollMin = -0.1f;
 	pp = propset->CreateReferenceProperty(_T("RollMin"), 'PErn', &m_RollMin, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-	if (pp) pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
 	m_RollMax = 0.1f;
 	pp = propset->CreateReferenceProperty(_T("RollMax"), 'PErx', &m_RollMax, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-	if (pp) pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
 	m_StartScale = 1.0f;
 	propset->CreateReferenceProperty(_T("StartScale"), 'PEss', &m_StartScale, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
@@ -117,15 +133,27 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 
 	m_StartColor = c3::Color::iDarkOrangeFT;
 	pp = propset->CreateReferenceProperty(_T("StartColor"), 'PEsc', &m_StartColor, props::IProperty::PROPERTY_TYPE::PT_INT_V4);
-	if (pp) pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
 	m_PeakColor = c3::Color::iYellowTT;
 	pp = propset->CreateReferenceProperty(_T("PeakColor"), 'PEpc', &m_PeakColor, props::IProperty::PROPERTY_TYPE::PT_INT_V4);
-	if (pp) pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
 	m_EndColor = c3::Color::iWhiteFT;
 	pp = propset->CreateReferenceProperty(_T("EndColor"), 'PEec', &m_EndColor, props::IProperty::PROPERTY_TYPE::PT_INT_V4);
-	if (pp) pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
 	m_InnerRadius = 2.0f;
 	propset->CreateReferenceProperty(_T("InnerRadius"), 'PEir', &m_InnerRadius, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
@@ -135,14 +163,22 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 
 	m_ConeAngle = 1.571f;
 	pp = propset->CreateReferenceProperty(_T("ConeAngle"), 'PEca', &m_ConeAngle, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-	pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
 	pp = propset->CreateProperty(_T("Texture"), 'PEtx');
 	pp->SetString(_T("softparticle.tga"));
 
 	m_Peak = 0.25f;
 	pp = propset->CreateReferenceProperty(_T("Peak"), 'PEpp', &m_Peak, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-	if (pp) pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_PERCENTAGE);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_PERCENTAGE);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
 //	m_Billboard = true;
 //	pp = propset->CreateReferenceProperty(_T("Billboard"), 'PEbb', &m_Billboard, props::IProperty::PROPERTY_TYPE::PT_BOOLEAN);

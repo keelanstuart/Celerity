@@ -294,6 +294,104 @@ void scMathSqrt(CScriptVar *c, void *userdata)
 	scReturnDouble(sqrt(scGetDouble(_T("a"))));
 }
 
+//Math.random(lo, hi) - returns a random value between lo and hi
+void scRandom(CScriptVar *c, void *userdata)
+{
+	CScriptVar *plo = c->getParameter(_T("lo"));
+	CScriptVar *phi = c->getParameter(_T("hi"));
+
+	uint16_t r = rand();
+	if (plo->isDouble() || phi->isDouble())
+	{
+		float pct = (float)r / (float)USHRT_MAX;
+		scReturnDouble((pct * (phi->getDouble() - plo->getDouble())) + plo->getDouble());
+	}
+	else
+	{
+		scReturnInt((r % (phi->getInt() - plo->getInt())) + plo->getInt());
+	}
+}
+
+static const TCHAR *elnames[4] = {_T("x"), _T("y"), _T("z"), _T("w")};
+
+//Math.lerp(a, b, t) - linearly interpolates between two values. result is (b - a) * t + a
+void scMathLerp(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->getParameter(_T("a"));
+	CScriptVar *pb = c->getParameter(_T("b"));
+	CScriptVar *pr = c->getReturnVar();
+	int64_t elct = pa->getChildren();
+
+	if (elct != pb->getChildren() || !pr || (elct > 4))
+		return;
+
+	CScriptVar *pt = c->getParameter(_T("t"));
+
+	int64_t i;
+	while ((i = pr->getChildren()) < elct)
+	{
+		pr->addChild(elnames[i]);
+	}
+
+	CScriptVarLink *pac = pa->firstChild;
+	CScriptVarLink *pbc = pb->firstChild;
+	CScriptVarLink *pcc = pr->firstChild;
+	for (i = 0; i < elct; i++)
+	{
+		double va = pac->var->getDouble();
+		pcc->var->setDouble((pbc->var->getDouble() - va) * pt->getDouble() + va);
+
+		pac = pac->nextSibling;
+		pbc = pbc->nextSibling;
+		pcc = pcc->nextSibling;
+	}
+}
+
+
+//Math.slerp(a, b, t) - spherical linear interpolation for quaternions
+void scMathSlerp(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->getParameter(_T("a"));
+	CScriptVar *pb = c->getParameter(_T("b"));
+	CScriptVar *pr = c->getReturnVar();
+	int64_t elct = pa->getChildren();
+
+	if ((elct != 4) || elct != pb->getChildren() || !pr)
+		return;
+
+	CScriptVar *pt = c->getParameter(_T("t"));
+
+	glm::fquat qa, qb;
+	CScriptVarLink *pac = pa->firstChild;
+	CScriptVarLink *pbc = pb->firstChild;
+	glm::fquat::length_type i;
+	for (i = 0; i < 4; i++)
+	{
+		qa[i] = (float)pac->var->getDouble();
+		qb[i] = (float)pbc->var->getDouble();
+
+		pac = pac->nextSibling;
+		pbc = pbc->nextSibling;
+	}
+
+	glm::fquat qr = glm::slerp(qa, qb, (float)pt->getDouble());
+
+	i = (glm::fquat::length_type)pr->getChildren();
+	for (; i < 4; i++)
+	{
+		pr->addChild(elnames[i]);
+	}
+
+	CScriptVarLink *prc = pr->firstChild;
+	for (i = 0; i < 4; i++)
+	{
+		prc->var->setDouble(qr[i]);
+
+		prc = prc->nextSibling;
+	}
+}
+
+
 // ----------------------------------------------- Register Functions
 void registerMathFunctions(CTinyJS *tinyJS)
 {
@@ -305,6 +403,7 @@ void registerMathFunctions(CTinyJS *tinyJS)
 	tinyJS->addNative(_T("function Math.max(a,b)"), scMathMax, 0);
 	tinyJS->addNative(_T("function Math.range(x,a,b)"), scMathRange, 0);
 	tinyJS->addNative(_T("function Math.sign(a)"), scMathSign, 0);
+	tinyJS->addNative(_T("function Math.random(lo, hi)"), scRandom, 0);
 
 	tinyJS->addNative(_T("function Math.PI()"), scMathPI, 0);
 	tinyJS->addNative(_T("function Math.toDegrees(a)"), scMathToDegrees, 0);
@@ -331,4 +430,6 @@ void registerMathFunctions(CTinyJS *tinyJS)
 	tinyJS->addNative(_T("function Math.sqr(a)"), scMathSqr, 0);
 	tinyJS->addNative(_T("function Math.sqrt(a)"), scMathSqrt, 0);
 
+	tinyJS->addNative(_T("function Math.lerp(a, b, t)"), scMathLerp, 0);
+	tinyJS->addNative(_T("function Math.slerp(a, b, t)"), scMathSlerp, 0);
 }

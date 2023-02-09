@@ -171,6 +171,9 @@ void C3EditView::OnDraw(CDC *pDC)
 	if (!pDoc->m_RootObj)
 		return;
 
+	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_WORLDROOT, pDoc->m_RootObj);
+
+
 	C3EditFrame *pmf = (C3EditFrame *)theApp.GetMainWnd();
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
@@ -178,6 +181,7 @@ void C3EditView::OnDraw(CDC *pDC)
 	c3::Object *camobj = pvi->obj;
 	c3::Positionable *pcampos = camobj ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
 	c3::Camera *pcam = camobj ? dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type())) : nullptr;
+	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, camobj);
 
 	CRect r;
 	GetClientRect(r);
@@ -315,14 +319,15 @@ void C3EditView::OnDraw(CDC *pDC)
 
 			// Solid color pass
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
-			prend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL);
+			prend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL | UFBFLAG_UPDATEVIEWPORT);
 			prend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
-			prend->SetAlphaPassRange(3.0f / 255.0f);
-			//prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-			//prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
-			pDoc->m_RootObj->Render();
+			prend->SetAlphaPassRange(254.9f / 255.0f);
+			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+			prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
+			pDoc->m_RootObj->Render(RF_EDITORDRAW);
 
 			// Shadow pass
+			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 			prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
 			pDoc->m_RootObj->Render(RF_SHADOW);
 
@@ -331,14 +336,14 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 			prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-			pDoc->m_RootObj->Render(RF_LIGHT);
+			pDoc->m_RootObj->Render(RF_LIGHT | RF_EDITORDRAW);
 
 			// clear the render method and material
 			prend->UseRenderMethod();
 			prend->UseMaterial();
 
 			// Selection hilighting
-			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
+			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 			prend->UseProgram(m_SP_bounds);
 
@@ -346,7 +351,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			TPositionableVec selpos;
 			for (auto sel : m_Selected)
 			{
-				sel->Render(RF_LOCKSHADER | RF_LOCKMATERIAL);
+				sel->Render(RF_FORCE | RF_LOCKSHADER | RF_LOCKMATERIAL);
 			}
 
 			// Resolve

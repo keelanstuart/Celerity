@@ -22,7 +22,7 @@ END_MESSAGE_MAP()
 C3App::C3App()
 {
 	m_C3 = nullptr;
-	m_Cfg = nullptr;
+	m_Config = nullptr;
 }
 
 
@@ -30,6 +30,35 @@ C3App::C3App()
 
 C3App theApp;
 
+
+bool CreateDirectories(const TCHAR *dir)
+{
+	if (!dir || !*dir)
+		return false;
+
+	if (PathFileExists(dir))
+		return true;
+
+	if (PathIsRoot(dir))
+		return false;
+
+	bool ret = true;
+
+	TCHAR _dir[MAX_PATH], *d = _dir;
+	_tcscpy_s(_dir, dir);
+	while (d && *(d++)) { if (*d == _T('/')) *d = _T('\\'); }
+	PathRemoveFileSpec(_dir);
+
+	// it's a network path and this is the network device... don't try to create it and don't try to go any further
+	if (!_tcscmp(_dir, _T("\\\\")) || !_tcscmp(_dir, _T("//")))
+		return true;
+
+	ret &= CreateDirectories(_dir);
+
+	ret &= (CreateDirectory(dir, NULL) ? true : false);
+
+	return ret;
+}
 
 // use this as a callback for loading surface descriptor textures when you only know the diffuse map filename
 bool __cdecl AltTextureName(const TCHAR *diffuse_texname, c3::Material::TextureComponentType typeneeded, TCHAR *needed_texnamebuf, size_t texnamebuf_len)
@@ -129,8 +158,25 @@ BOOL C3App::InitInstance()
 	CString appname;
 	appname.LoadStringW(IDS_APPNAME);
 
-	CString cfgname = appname + _T(".cfg");
-	m_Cfg = m_C3->CreateConfiguration(cfgname);
+	PWSTR appdata = nullptr;
+	if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appdata) == S_OK)
+	{
+		TCHAR *appdatat;
+		CONVERT_WCS2TCS(appdata, appdatat);
+		CoTaskMemFree(appdata);
+
+		m_AppDataRoot = appdatat;
+		std::replace(m_AppDataRoot.begin(), m_AppDataRoot.end(), _T('\\'), _T('/'));
+		std::transform(m_AppDataRoot.begin(), m_AppDataRoot.end(), m_AppDataRoot.begin(), tolower);
+		m_AppDataRoot += _T("/Celerity/C3App/");
+
+		CreateDirectories(m_AppDataRoot.c_str());
+	}
+
+	tstring cfgpath = m_AppDataRoot;
+	cfgpath += appname;
+	cfgpath += _T(".config");
+	m_Config = m_C3->CreateConfiguration(cfgpath.c_str());
 
 	m_C3->GetLog()->SetLogFile(_T("C3App.log"));
 	theApp.m_C3->GetLog()->Print(_T("Celerity3 system created\nC3App starting up...\n"));
@@ -145,24 +191,32 @@ BOOL C3App::InitInstance()
 
 	tstring respaths, resexts;
 
-	respaths = m_Cfg->GetString(_T("resources.textures.paths"), _T("./;./assets;./assets/textures"));
-	resexts = m_Cfg->GetString(_T("resources.textures.extensions"), _T("tga;png;jpg;dds;bmp;tiff"));
+	respaths = m_Config->GetString(_T("resources.textures.paths"), _T("./;./assets;./assets/textures"));
+	resexts = m_Config->GetString(_T("resources.textures.extensions"), _T("tga;png;jpg;dds;bmp;tiff"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
-	respaths = m_Cfg->GetString(_T("resources.models.paths"), _T("./;./assets;./assets/models"));
-	resexts = m_Cfg->GetString(_T("resources.models.extensions"), _T("fbx;gltf;glb;obj;3ds;dae"));
+	respaths = m_Config->GetString(_T("resources.models.paths"), _T("./;./assets;./assets/models"));
+	resexts = m_Config->GetString(_T("resources.models.extensions"), _T("fbx;gltf;glb;obj;3ds;dae;x"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
-	respaths = m_Cfg->GetString(_T("resources.shaders.paths"), _T("./;./assets;./assets/shaders"));
-	resexts = m_Cfg->GetString(_T("resources.shaders.extensions"), _T("vsh;fsh;gsh;esh;tsh"));
+	respaths = m_Config->GetString(_T("resources.shaders.paths"), _T("./;./assets;./assets/shaders"));
+	resexts = m_Config->GetString(_T("resources.shaders.extensions"), _T("vsh;fsh;gsh;esh;tsh"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
-	respaths = m_Cfg->GetString(_T("resources.rendermethods.paths"), _T("./;./assets;./assets/shaders"));
-	resexts = m_Cfg->GetString(_T("resources.rendermethods.extensions"), _T("c3rm"));
+	respaths = m_Config->GetString(_T("resources.rendermethods.paths"), _T("./;./assets;./assets/shaders"));
+	resexts = m_Config->GetString(_T("resources.rendermethods.extensions"), _T("c3rm"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
-	respaths = m_Cfg->GetString(_T("resources.prototypes.paths"), _T("./;./assets"));
-	resexts = m_Cfg->GetString(_T("resources.prototypes.extensions"), _T("c3protoa"));
+	respaths = m_Config->GetString(_T("resources.prototypes.paths"), _T("./;./assets"));
+	resexts = m_Config->GetString(_T("resources.prototypes.extensions"), _T("c3protoa"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
+	respaths = m_Config->GetString(_T("resources.scripts.paths"), _T("./;./assets;./assets/scripts"));
+	resexts = m_Config->GetString(_T("resources.scripts.extensions"), _T("c3js"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
+	respaths = m_Config->GetString(_T("resources.levels.paths"), _T("./;./assets;./assets/levels"));
+	resexts = m_Config->GetString(_T("resources.levels.extensions"), _T("c3o"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	theApp.m_C3->GetLog()->Print(_T("done\n"));
@@ -202,7 +256,7 @@ BOOL C3App::InitInstance()
 	if (!ppm)
 		return FALSE;
 
-	ppm->DiscoverPlugins(m_Cfg->GetString(_T("resources.plugin.path"), _T("./")));	// scan in app data
+	ppm->DiscoverPlugins(m_Config->GetString(_T("resources.plugin.path"), _T("./")));	// scan in app data
 	ppm->DiscoverPlugins();															// scan locally
 
 	theApp.m_C3->GetLog()->Print(_T(" done\n"));
@@ -224,10 +278,10 @@ BOOL C3App::InitInstance()
 
 int C3App::ExitInstance()
 {
-	if (m_Cfg)
+	if (m_Config)
 	{
-		m_Cfg->Release();
-		m_Cfg = nullptr;
+		m_Config->Release();
+		m_Config = nullptr;
 	}
 
 	if (m_C3)

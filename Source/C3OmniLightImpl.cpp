@@ -20,6 +20,8 @@ OmniLightImpl::OmniLightImpl()
 	m_SourceFB = nullptr;
 	m_TexAttenRes = nullptr;
 	m_pMethod = nullptr;
+	m_Color = Color::fWhite;
+	m_Material = nullptr;
 }
 
 
@@ -53,6 +55,14 @@ bool OmniLightImpl::Initialize(Object *pobject)
 	if (!props)
 		return false;
 
+	props::IProperty *pp;
+	pp = props->CreateReferenceProperty(_T("LightColor"), 'LCLR', &m_Color, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	if (pp)
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
+
 	return true;
 }
 
@@ -66,16 +76,10 @@ void OmniLightImpl::Update(Object *pobject, float elapsed_time)
 
 bool OmniLightImpl::Prerender(Object *pobject, Object::RenderFlags flags)
 {
-	if (flags.IsSet(RF_FORCE) || flags.IsSet(RF_EDITORDRAW))
+	if (pobject->Flags().IsSet(OF_LIGHT) && flags.IsSet(RF_LIGHT))
 		return true;
 
-	if (!pobject->Flags().IsSet(OF_DRAW))
-		return false;
-
-	if (!flags.IsSet(RF_LIGHT))
-		return false;
-
-	return true;
+	return false;
 }
 
 
@@ -88,8 +92,19 @@ void OmniLightImpl::Render(Object *pobject, Object::RenderFlags flags)
 	ResourceManager *prm = pobject->GetSystem()->GetResourceManager();
 	c3::Renderer *prend = pobject->GetSystem()->GetRenderer();
 
+	if (!m_SourceFB)
+		m_SourceFB = prend->FindFrameBuffer(_T("GBuffer"));
+
+	if (!m_SourceFB)
+		return;
+
 	if (!flags.IsSet(RF_LOCKSHADER))
 	{
+		if (!m_Material)
+		{
+			//m_Material = prend->GetMaterialManager()->CreateMaterial();
+		}
+
 		if (!m_pMethod)
 		{
 			props::IProperty *pmethod = pobject->GetProperties()->GetPropertyById('C3RM');
@@ -127,7 +142,7 @@ void OmniLightImpl::Render(Object *pobject, Object::RenderFlags flags)
 		}
 		else
 		{
-			prend->UseMaterial();
+			prend->UseMaterial(m_Material);
 			prend->UseRenderMethod(m_pMethod);
 			m_pMethod->SetActiveTechnique(m_TechIdx_L);
 
@@ -142,7 +157,8 @@ void OmniLightImpl::Render(Object *pobject, Object::RenderFlags flags)
 			ShaderProgram *ps = m_pMethod->GetTechnique(m_TechIdx_L)->GetPass(0)->GetShader();
 			if (ps)
 			{
-				ps->SetUniform3(m_uniColor, (const glm::fvec3 *)(m_propColor->AsVec3F()));
+				ps->SetUniform3(m_uniColor, &m_Color);
+
 				ps->SetUniform3(m_uniPos, (const glm::fvec3 *)ppos->AsVec3F());
 				ps->SetUniform1(m_uniRadius, scl);
 				ps->SetUniform2(m_uniScreenSize, &ss);
@@ -170,16 +186,31 @@ void OmniLightImpl::Render(Object *pobject, Object::RenderFlags flags)
 
 	if (isinside)
 	{
+#if 1
 		prend->SetCullMode(c3::Renderer::CullMode::CM_FRONT);
-		prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
+		prend->SetDepthTest(Renderer::Test::DT_ALWAYS);
+#else
+		m_Material->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERFRONT));
+		m_Material->SetDepthTest(Renderer::Test::DT_ALWAYS);
+#endif
 	}
 	else
 	{
+#if 1
 		prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
 		prend->SetDepthTest(c3::Renderer::Test::DT_LESSEREQUAL);
+#else
+		m_Material->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERBACK));
+		m_Material->SetDepthTest(c3::Renderer::Test::DT_LESSEREQUAL);
+#endif
 	}
 
 	prend->GetCubeMesh()->Draw();
+
+	if (flags.IsSet(RF_EDITORDRAW))
+	{
+		// TODO: draw indicator for light volume
+	}
 }
 
 
@@ -205,7 +236,7 @@ void OmniLightImpl::PropertyChanged(const props::IProperty *pprop)
 			break;
 
 		case 'LCLR':
-			m_propColor = (props::IProperty *)pprop;
+			//pprop->AsVec3F((props::TVec3F *)&m_Color);
 			break;
 
 		case 'GRAD':

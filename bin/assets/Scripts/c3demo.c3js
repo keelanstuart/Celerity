@@ -1,0 +1,24 @@
+var runtime = 0.0;
+var hcam = 0;
+var hcampos = 0;
+
+/*
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+}
+*/
+
+function init()
+{
+	LoadObject(self, "SpaceScene.c3o");
+	Log("Demo scene loaded!\n");
+	
+	hcam = GetRegisteredObject("camera");
+	hcampos = FindProperty(hcam, "Position");
+	var pos = GetPropertyValue(hcampos);
+	pos.z = pos.z + 5.0;
+	SetPropertyValue(hcampos, pos);
+}
+
+init();

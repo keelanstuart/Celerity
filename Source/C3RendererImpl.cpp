@@ -62,7 +62,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_BlendEq = BlendEquation::BE_NUMMODES;
 	m_FillMode = FillMode::FM_FILL;
 
-	m_AlphaPassMin = 0.0f;
+	m_AlphaPassMin = 0.2f;
 	m_AlphaPassMax = 1.0f;
 
 	m_AlphaCoverage = 1.0f;
@@ -383,10 +383,10 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	GetBoundsMesh();
 #if 0
 	GetHemisphereMesh();
+#endif
 	GetXYPlaneMesh();
 	GetXZPlaneMesh();
 	GetYZPlaneMesh();
-#endif
 
 	c3::ResourceManager *rm = m_pSys->GetResourceManager();
 	const c3::ResourceType *rt;
@@ -404,15 +404,26 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 	// Initialize the reference cube model and register it with the resource manager
 	rt = rm->FindResourceTypeByName(_T("Model"));
-	c3::Material *refmtl = GetMaterialManager()->CreateMaterial();
-	refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetOrthoRefTexture());
-	refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
-	c3::Model *refcube = c3::Model::Create(this);
-	c3::Model::MeshIndex mi = refcube->AddMesh(GetRefCubeMesh());
-	c3::Model::NodeIndex ni = refcube->AddNode();
-	refcube->AssignMeshToNode(ni, mi);
-	refcube->SetMaterial(mi, refmtl);
-	rm->GetResource(_T("[refcube.model]"), RESF_CREATEENTRYONLY, rt, refcube);
+
+	{
+		c3::Material *refmtl = GetMaterialManager()->CreateMaterial();
+		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetOrthoRefTexture());
+		refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
+		c3::Model *refcube = c3::Model::Create(this);
+		c3::Model::MeshIndex mi = refcube->AddMesh(GetRefCubeMesh());
+		c3::Model::NodeIndex ni = refcube->AddNode();
+		refcube->AssignMeshToNode(ni, mi);
+		refcube->SetMaterial(mi, refmtl);
+		rm->GetResource(_T("[refcube.model]"), RESF_CREATEENTRYONLY, rt, refcube);
+	}
+
+	{
+		c3::Model *boundscube = c3::Model::Create(this);
+		c3::Model::MeshIndex mi = boundscube->AddMesh(GetBoundsMesh());
+		c3::Model::NodeIndex ni = boundscube->AddNode();
+		boundscube->AssignMeshToNode(ni, mi);
+		rm->GetResource(_T("[bounds.model]"), RESF_CREATEENTRYONLY, rt, boundscube);
+	}
 
 	m_Gui = new GuiImpl(this);
 
@@ -1865,13 +1876,11 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 			{
 				tech->ApplyPass(passidx);
 
-				if (m_CurProg)
-				{
-					if (m_ActiveMaterial)
-						m_ActiveMaterial->Apply(m_CurProg);
+				if (m_ActiveMaterial)
+					m_ActiveMaterial->Apply(m_CurProg);
 
+				if (m_CurProg)
 					m_CurProg->ApplyUniforms();
-				}
 
 				gl.DrawElements(typelu[type], (GLsizei)count, glidxs, NULL);
 			}
