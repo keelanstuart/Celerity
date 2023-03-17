@@ -112,6 +112,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_LinearGradientTex = nullptr;
 	m_OrthoRefTex = nullptr;
 	m_UtilityColorTex = nullptr;
+	m_SphereSpriteTex = nullptr;
+	m_SphereSpriteNormalTex = nullptr;
 
 	m_MatMan = nullptr;
 	m_mtlWhite = nullptr;
@@ -423,6 +425,33 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		c3::Model::NodeIndex ni = boundscube->AddNode();
 		boundscube->AssignMeshToNode(ni, mi);
 		rm->GetResource(_T("[bounds.model]"), RESF_CREATEENTRYONLY, rt, boundscube);
+	}
+
+	{
+		c3::Model *plane_model = c3::Model::Create(this);
+		c3::Model::MeshIndex mi = plane_model->AddMesh(GetXYPlaneMesh());
+		c3::Model::NodeIndex ni = plane_model->AddNode();
+		plane_model->AssignMeshToNode(ni, mi);
+		plane_model->SetMaterial(mi, GetWhiteMaterial());
+		rm->GetResource(_T("[xyplane.model]"), RESF_CREATEENTRYONLY, rt, plane_model);
+	}
+
+	{
+		c3::Model *plane_model = c3::Model::Create(this);
+		c3::Model::MeshIndex mi = plane_model->AddMesh(GetYZPlaneMesh());
+		c3::Model::NodeIndex ni = plane_model->AddNode();
+		plane_model->AssignMeshToNode(ni, mi);
+		plane_model->SetMaterial(mi, GetWhiteMaterial());
+		rm->GetResource(_T("[yzplane.model]"), RESF_CREATEENTRYONLY, rt, plane_model);
+	}
+
+	{
+		c3::Model *plane_model = c3::Model::Create(this);
+		c3::Model::MeshIndex mi = plane_model->AddMesh(GetXZPlaneMesh());
+		c3::Model::NodeIndex ni = plane_model->AddNode();
+		plane_model->AssignMeshToNode(ni, mi);
+		plane_model->SetMaterial(mi, GetWhiteMaterial());
+		rm->GetResource(_T("[xzplane.model]"), RESF_CREATEENTRYONLY, rt, plane_model);
 	}
 
 	m_Gui = new GuiImpl(this);
@@ -2432,7 +2461,7 @@ VertexBuffer *RendererImpl::GetPlanesVB()
 		};
 
 		void *buf;
-		if (m_PlanesVB->Lock(&buf, 3 * 4, Vertex::PNT1::d, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
+		if (m_PlanesVB->Lock(&buf, 3 * 4, Vertex::PNT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
 		{
 			memcpy(buf, v, sizeof(Vertex::PNT1::s) * 3 * 4);
 
@@ -2462,9 +2491,9 @@ Mesh *RendererImpl::GetXYPlaneMesh()
 				};
 
 				void *buf;
-				if (pib->Lock(&buf, 2 * 3 * 6, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				if (pib->Lock(&buf, 2 * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 				{
-					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3 * 6);
+					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3);
 
 					pib->Unlock();
 				}
@@ -2497,9 +2526,9 @@ Mesh *RendererImpl::GetYZPlaneMesh()
 				};
 
 				void *buf;
-				if (pib->Lock(&buf, 2 * 3 * 6, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				if (pib->Lock(&buf, 2 * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 				{
-					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3 * 6);
+					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3);
 
 					pib->Unlock();
 				}
@@ -2532,9 +2561,9 @@ Mesh *RendererImpl::GetXZPlaneMesh()
 				};
 
 				void *buf;
-				if (pib->Lock(&buf, 2 * 3 * 6, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				if (pib->Lock(&buf, 2 * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 				{
-					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3 * 6);
+					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3);
 
 					pib->Unlock();
 				}
@@ -2563,7 +2592,7 @@ VertexBuffer *RendererImpl::GetFullscreenPlaneVB()
 		};
 
 		void *buf;
-		if (m_FSPlaneVB->Lock(&buf, 4, Vertex::WT1::d, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK)
+		if (m_FSPlaneVB->Lock(&buf, 4, Vertex::WT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
 		{
 			memcpy(buf, v, sizeof(Vertex::WT1::s) * 4);
 
@@ -2618,7 +2647,7 @@ VertexBuffer *RendererImpl::GetHemisphereVB()
 	if (m_HemisphereVB)
 	{
 		void *buf;
-		if ((m_HemisphereVB->Lock(&buf, verts.size(), Vertex::PNYT1::d, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
+		if ((m_HemisphereVB->Lock(&buf, verts.size(), Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
 		{
 			memcpy(buf, &(verts.at(0)), sizeof(Vertex::PNYT1::s) * verts.size());
 
@@ -2647,7 +2676,7 @@ Mesh *RendererImpl::GetHemisphereMesh()
 
 				size_t ic_top = 3 * (hemisphereSectorCount + 1), ic = ic_top + ((ic_top * 2) * (hemisphereStackCount - 1));
 
-				if (pib->Lock((void **)&buf, ic, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+				if (pib->Lock((void **)&buf, ic, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 				{
 					// Do the top slice first because it has only one triangle per sector
 					for (uint16_t i = 0, maxi = (uint16_t)(hemisphereSectorCount + 1); i < maxi; i++)
@@ -2696,6 +2725,8 @@ Texture2D *RendererImpl::GetBlackTexture()
 		m_BlackTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
 		if (m_BlackTex)
 		{
+			m_BlackTex->SetName(_T("black"));
+
 			uint32_t *buf;
 			Texture2D::SLockInfo li;
 			if ((m_BlackTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
@@ -2726,6 +2757,8 @@ Texture2D *RendererImpl::GetGreyTexture()
 		m_GreyTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
 		if (m_GreyTex)
 		{
+			m_GreyTex->SetName(_T("grey"));
+
 			uint32_t *buf;
 			Texture2D::SLockInfo li;
 			if ((m_GreyTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
@@ -2756,6 +2789,8 @@ Texture2D *RendererImpl::GetDefaultDescTexture()
 		m_DefaultDescTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
 		if (m_DefaultDescTex)
 		{
+			m_DefaultDescTex->SetName(_T("default_desc"));
+
 			uint32_t *buf;
 			Texture2D::SLockInfo li;
 			if ((m_DefaultDescTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
@@ -2786,6 +2821,8 @@ Texture2D *RendererImpl::GetDefaultNormalTexture()
 		m_DefaultNormalTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
 		if (m_DefaultNormalTex)
 		{
+			m_DefaultNormalTex->SetName(_T("default_norm"));
+
 			uint32_t *buf;
 			Texture2D::SLockInfo li;
 			if ((m_DefaultNormalTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
@@ -2816,6 +2853,8 @@ Texture2D *RendererImpl::GetWhiteTexture()
 		m_WhiteTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
 		if (m_WhiteTex)
 		{
+			m_WhiteTex->SetName(_T("white"));
+
 			uint32_t *buf;
 			Texture2D::SLockInfo li;
 			if ((m_WhiteTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
@@ -2846,6 +2885,8 @@ Texture2D *RendererImpl::GetBlueTexture()
 		m_BlueTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 1, 0);
 		if (m_BlueTex)
 		{
+			m_BlueTex->SetName(_T("blue"));
+
 			uint32_t *buf;
 			Texture2D::SLockInfo li;
 			if ((m_BlueTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
@@ -2876,6 +2917,8 @@ Texture2D *RendererImpl::GetGridTexture()
 		m_GridTex = CreateTexture2D(16, 16, TextureType::U8_4CH, 0, 0);
 		if (m_GridTex)
 		{
+			m_GridTex->SetName(_T("grid"));
+
 			uint32_t *buf;
 			Texture2D::SLockInfo li;
 			if ((m_GridTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
@@ -2906,6 +2949,8 @@ Texture2D *RendererImpl::GetLinearGradientTexture()
 		m_LinearGradientTex = CreateTexture2D(256, 1, TextureType::U8_4CH, 1, 0);
 		if (m_LinearGradientTex)
 		{
+			m_LinearGradientTex->SetName(_T("linear_gradient"));
+
 			uint32_t *buf;
 			Texture2D::SLockInfo li;
 			if ((m_LinearGradientTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && buf)
@@ -3032,6 +3077,94 @@ Texture2D *RendererImpl::GetUtilityColorTexture()
 }
 
 
+#define SPRITE_SPHERE_DIM		64
+
+Texture2D *RendererImpl::GetSphereSpriteTexture()
+{
+	if (!m_SphereSpriteTex)
+	{
+		m_SphereSpriteTex = CreateTexture2D(64, 64, TextureType::U8_4CH, 0, 0);
+		if (m_SphereSpriteTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_SphereSpriteTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				float a = glm::pi<float>() / (float)SPRITE_SPHERE_DIM;
+
+				float ry = 0.0f;
+				for (size_t y = 0, maxy = li.height; y < maxy; y++)
+				{
+					float rx = 0.0f;
+					for (size_t x = 0, maxx = li.width; x < maxx; x++)
+					{
+						float sx = sin(rx);
+						float sy = sin(ry);
+						uint8_t tmp = (uint8_t)(sx * sy * 255.0f);
+
+						buf[x] = tmp | (tmp << 8) | (tmp << 16);
+						if (fabs(cos(rx) * cos(sy)) > 0.707)
+							buf[x] |= 0xFF000000;
+
+						rx += a;
+					}
+
+					buf = (uint32_t *)((BYTE *)buf + li.stride);
+					ry += a;
+				}
+
+				m_SphereSpriteTex->Unlock();
+			}
+		}
+	}
+
+	return m_SphereSpriteTex;
+}
+
+
+Texture2D *RendererImpl::GetSphereSpriteNormalTexture()
+{
+	if (!m_SphereSpriteNormalTex)
+	{
+		m_SphereSpriteNormalTex = CreateTexture2D(SPRITE_SPHERE_DIM, SPRITE_SPHERE_DIM, TextureType::U8_4CH, 0, 0);
+		if (m_SphereSpriteNormalTex)
+		{
+			uint32_t *buf;
+			Texture2D::SLockInfo li;
+			if ((m_SphereSpriteNormalTex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+			{
+				float a = glm::pi<float>() / (float)SPRITE_SPHERE_DIM;
+
+				float ry = glm::pi<float>() / -2.0f;
+				for (size_t y = 0, maxy = li.height; y < maxy; y++)
+				{
+					float rx = glm::pi<float>() / -2.0f;
+					for (size_t x = 0, maxx = li.width; x < maxx; x++)
+					{
+						float sx = sin(rx);
+						float sy = sin(ry);
+						glm::fvec3 r = glm::normalize(glm::fvec3(sx, sy, 1.0));
+						if (fabs(sx * sy) > 0.707f)
+							buf[x] = ((uint8_t)(r.x * 127.0f) + 128) | (((uint8_t)(r.y * 127.0f) + 128) << 8) | (((uint8_t)(r.y * 127.0f) + 128) << 16);
+						else
+							buf[x] = 0;
+
+						rx += a;
+					}
+
+					buf = (uint32_t *)((BYTE *)buf + li.stride);
+					ry += a;
+				}
+
+				m_SphereSpriteNormalTex->Unlock();
+			}
+		}
+	}
+
+	return m_SphereSpriteNormalTex;
+}
+
+
 MaterialManager *RendererImpl::GetMaterialManager()
 {
 	if (!m_MatMan)
@@ -3056,6 +3189,24 @@ const Material *RendererImpl::GetWhiteMaterial()
 	}
 
 	return m_mtlWhite;
+}
+
+
+const Material *RendererImpl::GetBlackMaterial()
+{
+	if (!m_mtlBlack)
+	{
+		m_mtlBlack = GetMaterialManager()->CreateMaterial();
+
+		if (m_mtlBlack)
+		{
+			m_mtlBlack->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &Color::fBlack);
+			m_mtlBlack->SetWindingOrder(Renderer::WindingOrder::WO_CCW);
+			m_mtlBlack->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERFRONT));
+		}
+	}
+
+	return m_mtlBlack;
 }
 
 

@@ -1,5 +1,5 @@
+var runtime;
 var hscl;
-var runtime = 0.0;
 
 function update(elapsed_seconds)
 {
@@ -11,4 +11,9 @@ function update(elapsed_seconds)
 	SetPropertyValue(hscl, scl);
 }
 
-hscl = FindProperty(self, "Scale");
+function init()
+{
+	runtime = 0.0;
+
+	hscl = FindProperty(self, "Scale");
+}

@@ -1,0 +1,12 @@
+<render_method name="light">
+
+	<technique name="g">
+		<pass>
+			<setting name="depthmode"			value="readonly" />
+			<setting name="blendmode"			value="addalpha" />
+			<setting name="shader.vertex"		value="def-obj.vsh" />
+			<setting name="shader.fragment"		value="def-obj-light.fsh" />
+		</pass>
+	</technique>
+
+</render_method>

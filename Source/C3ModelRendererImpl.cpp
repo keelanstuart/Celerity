@@ -49,10 +49,10 @@ bool ModelRendererImpl::Initialize(Object *pobject)
 		return false;
 
 	// get a positionable feature from the object -- and if we can't, don't proceed
-	if (nullptr == (m_pPos = dynamic_cast<PositionableImpl *>(pobject->FindComponent(Positionable::Type()))))
+	if (nullptr == (m_pPos = dynamic_cast<PositionableImpl *>(m_pOwner->FindComponent(Positionable::Type()))))
 		return false;
 
-	props::IPropertySet *props = pobject->GetProperties();
+	props::IPropertySet *props = m_pOwner->GetProperties();
 	if (!props)
 		return false;
 
@@ -80,7 +80,7 @@ bool ModelRendererImpl::Initialize(Object *pobject)
 }
 
 
-void ModelRendererImpl::Update(Object *pobject, float elapsed_time)
+void ModelRendererImpl::Update(float elapsed_time)
 {
 	if (!m_pPos)
 		return;
@@ -100,28 +100,30 @@ void ModelRendererImpl::Update(Object *pobject, float elapsed_time)
 }
 
 
-bool ModelRendererImpl::Prerender(Object *pobject, Object::RenderFlags flags)
+bool ModelRendererImpl::Prerender(Object::RenderFlags flags)
 {
 	if (flags.IsSet(RF_FORCE))
 		return true;
 
-	if (flags.IsSet(RF_EDITORDRAW) && pobject->Flags().IsSet(OF_DRAWINEDITOR))
-		return true;
-
-	if (!pobject->Flags().IsSet(OF_DRAW))
+	if (flags.IsSet(RF_LIGHT))
 		return false;
 
-	return true;
+	if (flags.IsSet(RF_EDITORDRAW) && m_pOwner->Flags().IsSet(OF_DRAWINEDITOR))
+		return true;
+
+	if (m_pOwner->Flags().IsSet(OF_DRAW))
+		return true;
+
+	return false;
 }
 
 
-void ModelRendererImpl::Render(Object *pobject, Object::RenderFlags flags)
+void ModelRendererImpl::Render(Object::RenderFlags flags)
 {
-	assert(pobject);
-	if (!Prerender(pobject, flags))
+	if (!Prerender(flags))
 		return;
 
-	c3::Renderer *prend = pobject->GetSystem()->GetRenderer();
+	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 
 	Model *pmod = nullptr;
 	if (m_Mod.second && (m_Mod.second->GetStatus() == Resource::Status::RS_LOADED))
@@ -130,16 +132,16 @@ void ModelRendererImpl::Render(Object *pobject, Object::RenderFlags flags)
 		pmod = dynamic_cast<Model *>((Model *)(m_Mod.second->GetData()));
 	}
 
-	ResourceManager *prm = pobject->GetSystem()->GetResourceManager();
+	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
 
 	if (!flags.IsSet(RF_LOCKSHADER))
 	{
 		if (!m_pMethod)
 		{
-			props::IProperty *pmethod = pobject->GetProperties()->GetPropertyById('C3RM');
+			props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('C3RM');
 			if (prm)
 			{
-				c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("std.c3rm"));
+				c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("std.c3rm"), RESF_DEMANDLOAD);
 				if (pres && (pres->GetStatus() == Resource::RS_LOADED))
 				{
 					m_pMethod = (RenderMethod *)(pres->GetData());
@@ -152,7 +154,7 @@ void ModelRendererImpl::Render(Object *pobject, Object::RenderFlags flags)
 		}
 		else
 		{
-			m_pMethod->SetActiveTechnique((flags.IsSet(RF_SHADOW) && pobject->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G);
+			m_pMethod->SetActiveTechnique((flags.IsSet(RF_SHADOW) && m_pOwner->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G);
 			prend->UseRenderMethod(m_pMethod);
 		}
 	}
@@ -163,7 +165,7 @@ void ModelRendererImpl::Render(Object *pobject, Object::RenderFlags flags)
 
 		// Handle the case where we don't want models scaling... like lights...
 		// they stay the same size in the user-interactable view
-		if (!(pobject->Flags().IsSet(OF_NOMODELSCALE)))
+		if (!(m_pOwner->Flags().IsSet(OF_NOMODELSCALE)))
 		{
 			mat = *m_pPos->GetTransformMatrix() * m_Mat;
 		}
@@ -293,26 +295,16 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 
 	if (pmod)
 	{
-		glm::fmat4x4 mat;
+		glm::fmat4x4 mat, matit;
 
-		// Handle the case where we don't want models scaling... like lights...
-		// they stay the same size in the user-interactable view
-		if (!(m_pOwner->Flags().IsSet(OF_NOMODELSCALE)))
-		{
-			mat = m_Mat;
-		}
-		else
-		{
-			glm::fvec3 invscl = 1.0f / *(m_pPos->GetScl());
-
-			mat = m_Mat * glm::scale(glm::identity<glm::fmat4x4>(), invscl);
-		}
+		mat = m_Mat;
+		matit = glm::inverseTranspose(mat);
 
 		glm::fmat4x4 invt = glm::inverse(mat);
-		glm::fmat4x4 invtn = glm::inverse(glm::inverseTranspose(mat));
+		glm::fmat4x4 invtn = glm::inverse(matit);
 
-		glm::vec3 raypos = invt * glm::vec4(pRayPos->x, pRayPos->y, pRayPos->z, 1);
-		glm::vec3 raydir = glm::normalize(invtn * glm::vec4(pRayDir->x, pRayDir->y, pRayDir->z, 0));
+		glm::vec3 raypos = invt * glm::vec4(*pRayPos, 1);
+		glm::vec3 raydir = glm::normalize(invtn * glm::vec4(*pRayDir, 0));
 
 		size_t meshidx;
 		float dist;
@@ -322,7 +314,11 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 		ret = pmod->Intersect(&raypos, &raydir, &meshidx, &dist, &faceidx, &uv);
 		dist = fabs(dist);
 		if (ret && pDistance)
-			*pDistance = dist;
+		{
+			raydir = invtn * glm::vec4(raydir, 0);
+			raydir *= dist;
+			*pDistance = glm::length(raydir);
+		}
 	}
 
 	return ret;

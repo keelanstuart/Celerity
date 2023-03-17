@@ -1,0 +1,18 @@
+<render_method name="light">
+
+	<technique name="g">
+		<pass>
+			<setting name="depthmode"			value="readwrite" />
+			<setting name="shader.vertex"		value="def-obj.vsh" />
+			<setting name="shader.fragment"		value="def-obj-light.fsh" />
+		</pass>
+	</technique>
+
+	<technique name="l">
+		<pass>
+			<setting name="shader.vertex"		value="def-omnilight.vsh" />
+			<setting name="shader.fragment"		value="def-omnilight.fsh" />
+		</pass>
+	</technique>
+
+</render_method>

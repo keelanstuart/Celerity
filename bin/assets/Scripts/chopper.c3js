@@ -1,0 +1,40 @@
+var runtime;
+var hbullet[100];
+var bullet_idx = 0;
+var hpos;
+var hfacing;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+}
+
+function fire_cannon()
+{
+	var hbpos = FindProperty(hbullet[bullet_idx], "Position");
+	var hbfacing = FindProperty(hbullet[bullet_idx], "Facing");
+	var hblacc = FindProperty(hbullet[bullet_idx], "LinearAcceleration");
+
+	var facing = GetPropertyValue(hfacing);
+
+	SetPropertyValue(hbpos, GetPropertyValue(hpos));
+	SetPropertyValue(hbfacing, facing);
+
+	facing.x *= 10.0;
+	facing.y *= 10.0;
+	facing.z *= 10.0;
+	SetPropertyValue(hblacc, facing);
+
+	bullet_idx = (bullet_idx + 1) % 100;
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	for (int i = 0; i < 100; i++)
+		hbullet[i] = CreateObject("Pellet", GetParent(self));
+		
+	hpos = FindProperty(self, "Position");
+	hfacing = FindProperty(self, "Facing");
+}

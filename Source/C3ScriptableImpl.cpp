@@ -77,7 +77,7 @@ DECLARE_COMPONENTTYPE(Scriptable, ScriptableImpl);
 
 ScriptableImpl::ScriptableImpl()
 {
-
+	m_JS = nullptr;
 }
 
 
@@ -115,51 +115,65 @@ void jcSetObjectName(CScriptVar *c, void *userdata);
 void jcLoadObject(CScriptVar *c, void *userdata);
 void jcGetRegisteredObject(CScriptVar *c, void *userdata);
 void jcRegisterObject(CScriptVar *c, void *userdata);
+void jcAdjustQuaternion(CScriptVar *c, void *userdata);
+
+void ScriptableImpl::ResetJS()
+{
+	if (m_JS)
+		delete m_JS;
+	m_JS = new CTinyJS();
+
+	System *psys = m_pOwner->GetSystem();
+	m_JS->m_pSys = psys;
+	m_JS->m_pObj = m_pOwner;
+
+	registerFunctions(m_JS);
+	registerMathFunctions(m_JS);
+
+	m_JS->AddNative(_T("function GetNumChildren(hrootobj)"),						jcGetNumChildren, psys);
+	m_JS->AddNative(_T("function GetChild(hrootobj, idx)"),							jcGetChild, psys);
+	m_JS->AddNative(_T("function FindObjByGUID(hrootobj, guid, recursive)"),		jcFindObjByGUID, psys);
+	m_JS->AddNative(_T("function FindFirstObjByName(hrootobj, name, recursive)"),	jcFindFirstObjByName, psys);
+	m_JS->AddNative(_T("function Log(text)"),										jcLog, psys);
+	m_JS->AddNative(_T("function FindProperty(hobj, name)"),						jcFindProperty, psys);
+	m_JS->AddNative(_T("function GetPropertyValue(hprop)"),							jcGetPropertyValue, psys);
+	m_JS->AddNative(_T("function SetPropertyValue(hprop, val)"),					jcSetPropertyValue, psys);
+	m_JS->AddNative(_T("function CreateObject(protoname, hparentobj)"),				jcCreateObject, psys);
+	m_JS->AddNative(_T("function DeleteObject(hobj)"),								jcDeleteObject, psys);
+	m_JS->AddNative(_T("function GetParent(hobj)"),									jcGetParent, psys);
+	m_JS->AddNative(_T("function SetParent(hobj, hnewparentobj)"),					jcSetParent, psys);
+	m_JS->AddNative(_T("function SetObjectName(hobj, newname)"),					jcSetObjectName, psys);
+	m_JS->AddNative(_T("function LoadObject(hobj, filename)"),						jcLoadObject, psys);
+	m_JS->AddNative(_T("function GetRegisteredObject(designation)"),				jcGetRegisteredObject, psys);
+	m_JS->AddNative(_T("function RegisterObject(designation, hobj)"),				jcRegisterObject, psys);
+	m_JS->AddNative(_T("function AdjustQuaternion(quat, axis, angle)"),				jcAdjustQuaternion, psys);
+
+	TCHAR make_self_cmd[64];
+	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
+	m_JS->Execute(make_self_cmd);
+}
 
 bool ScriptableImpl::Initialize(Object *pobject)
 {
 	if (!pobject)
 		return false;
 
-	m_pSys = pobject->GetSystem();
+	m_pOwner = pobject;
 
-	registerFunctions(&m_JS);
-	registerMathFunctions(&m_JS);
+	ResetJS();
 
-	m_JS.addNative(_T("function GetNumChildren(hrootobj)"),							jcGetNumChildren, m_pSys);
-	m_JS.addNative(_T("function GetChild(hrootobj, idx)"),							jcGetChild, m_pSys);
-	m_JS.addNative(_T("function FindObjByGUID(hrootobj, guid, recursive)"),			jcFindObjByGUID, m_pSys);
-	m_JS.addNative(_T("function FindFirstObjByName(hrootobj, name, recursive)"),	jcFindFirstObjByName, m_pSys);
-	m_JS.addNative(_T("function Log(text)"),										jcLog, m_pSys);
-	m_JS.addNative(_T("function FindProperty(hobj, name)"),							jcFindProperty, m_pSys);
-	m_JS.addNative(_T("function GetPropertyValue(hprop)"),							jcGetPropertyValue, m_pSys);
-	m_JS.addNative(_T("function SetPropertyValue(hprop, val)"),						jcSetPropertyValue, m_pSys);
-	m_JS.addNative(_T("function CreateObject(protoname, hparentobj)"),				jcCreateObject, m_pSys);
-	m_JS.addNative(_T("function DeleteObject(hobj)"),								jcDeleteObject, m_pSys);
-	m_JS.addNative(_T("function GetParent(hobj)"),									jcGetParent, m_pSys);
-	m_JS.addNative(_T("function SetParent(hobj, hnewparentobj)"),					jcSetParent, m_pSys);
-	m_JS.addNative(_T("function SetObjectName(hobj, newname)"),						jcSetObjectName, m_pSys);
-	m_JS.addNative(_T("function LoadObject(hobj, filename)"),						jcLoadObject, m_pSys);
-	m_JS.addNative(_T("function GetRegisteredObject(designation)"),					jcGetRegisteredObject, m_pSys);
-	m_JS.addNative(_T("function RegisterObject(designation, hobj)"),				jcRegisterObject, m_pSys);
-
-	TCHAR make_self_cmd[64];
-	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)pobject);
-	m_JS.execute(make_self_cmd);
-
-	props::IPropertySet *propset = pobject->GetProperties();
+	props::IPropertySet *propset = m_pOwner->GetProperties();
 	if (!propset)
 		return false;
 
 	props::IProperty *pscl = propset->CreateReferenceProperty(_T("ScriptUpdateRate"), 'SUDR', &m_UpdateRate, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
 	if (pscl)
-		pscl->SetFloat(1.0f);
+		pscl->SetFloat(0.033f);
 
 	props::IProperty *psrc = propset->GetPropertyById('SRCF');
 	if (!psrc)
 	{
 		psrc = propset->CreateProperty(_T("SourceFile"), 'SRCF');
-		psrc->SetString(_T("my_script.c3js"));
 		psrc->SetAspect(props::IProperty::PA_FILENAME);
 		psrc->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
@@ -168,8 +182,11 @@ bool ScriptableImpl::Initialize(Object *pobject)
 }
 
 
-void ScriptableImpl::Update(Object *pobject, float elapsed_time)
+void ScriptableImpl::Update(float elapsed_time)
 {
+	if (!m_Continue)
+		return;
+
 	m_UpdateTime -= elapsed_time;
 	if (m_UpdateTime <= 0)
 	{
@@ -177,20 +194,18 @@ void ScriptableImpl::Update(Object *pobject, float elapsed_time)
 		if (m_UpdateTime < 0)
 			m_UpdateTime = m_UpdateRate;
 
-		TCHAR update_cmd[64];
-		_stprintf_s(update_cmd, _T("update(%0.3f);"), elapsed_time);
-		m_JS.execute(update_cmd);
+		Execute(_T("update(%0.3f);"), elapsed_time);
 	}
 }
 
 
-bool ScriptableImpl::Prerender(Object *pobject, Object::RenderFlags flags)
+bool ScriptableImpl::Prerender(Object::RenderFlags flags)
 {
 	return true;
 }
 
 
-void ScriptableImpl::Render(Object *pobject, Object::RenderFlags flags)
+void ScriptableImpl::Render(Object::RenderFlags flags)
 {
 
 }
@@ -205,20 +220,30 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 	{
 		case 'SRCF':
 		{
-			Resource *pres = m_pSys->GetResourceManager()->GetResource(pprop->AsString(), RESF_DEMANDLOAD);
+			Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(pprop->AsString(), RESF_DEMANDLOAD);
 			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
 			{
 				if (m_Code != ((Script *)(pres->GetData()))->m_Code)
 				{
+					ResetJS();
+
 					m_Code = ((Script *)(pres->GetData()))->m_Code;
-					m_JS.execute(m_Code);
+					m_Continue = m_JS->Execute(m_Code.c_str());
+					Execute(_T("init();"));
 				}
 			}
 			break;
 		}
 
 		case 'SRC':
-			m_Code = pprop->AsString();
+			if (m_Code != pprop->AsString())
+			{
+				ResetJS();
+
+				m_Code = pprop->AsString();
+				m_Continue = m_JS->Execute(m_Code.c_str());
+				Execute(_T("init();"));
+			}
 			break;
 
 		case 'SUDR':
@@ -235,50 +260,67 @@ bool ScriptableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDi
 }
 
 
+#define CMD_BUFSIZE	1024
+
+void ScriptableImpl::Execute(const TCHAR *pcmd, ...)
+{
+	va_list marker;
+	va_start(marker, pcmd);
+
+	if (!m_Continue)
+		return;
+
+	TCHAR buf[CMD_BUFSIZE];	// Temporary buffer for output
+	_vsntprintf_s(buf, CMD_BUFSIZE - 1, pcmd, marker);
+
+	m_Continue = m_JS->Execute(buf);
+}
+
+
 void jcGetNumChildren(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
-	ret->setInt(0);
+	ret->SetInt(0);
 
-	int64_t hrootobj = c->getParameter(_T("hrootobj"))->getInt();
+	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
 
 	Object *rootobj = dynamic_cast<Object *>((Object *)hrootobj);
 	if (rootobj)
-		ret->setInt(rootobj->GetNumChildren());
+		ret->SetInt(rootobj->GetNumChildren());
 }
 
 
 void jcGetChild(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
-	ret->setInt(0);
+	ret->SetInt(0);
 
-	int64_t hrootobj = c->getParameter(_T("hrootobj"))->getInt();
-	int64_t idx = c->getParameter(_T("idx"))->getInt();
+	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
+	int64_t idx = c->GetParameter(_T("idx"))->GetInt();
 
 	Object *rootobj = dynamic_cast<Object *>((Object *)hrootobj);
 	if (rootobj)
-		ret->setInt((int64_t)(rootobj->GetChild(idx)));
+		ret->SetInt((int64_t)(rootobj->GetChild(idx)));
 }
 
 
 void jcFindObjByGUID(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
-	ret->setInt(0);
+	ret->SetInt(0);
 
-	int64_t hrootobj = c->getParameter(_T("hrootobj"))->getInt();
-	tstring guids = c->getParameter(_T("guid"))->getString();
-	bool recurse = c->getParameter(_T("recursive"))->getBool();
+	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
+	tstring guids = c->GetParameter(_T("guid"))->GetString();
+	bool recurse = c->GetParameter(_T("recursive"))->GetBool();
 
 	std::function<Object *(Object *, GUID, bool)> findObjByGuid = [&findObjByGuid] (Object *proot, GUID &sg, bool r) -> Object *
 	{
@@ -320,22 +362,22 @@ void jcFindObjByGUID(CScriptVar *c, void *userdata)
 		g.Data4[7] = d[10];
 
 		Object *pretobj = findObjByGuid(rootobj, g, recurse);
-		ret->setInt((int64_t)pretobj);
+		ret->SetInt((int64_t)pretobj);
 	}
 }
 
 
 void jcFindFirstObjByName(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
-	ret->setInt(0);
+	ret->SetInt(0);
 
-	int64_t hrootobj = c->getParameter(_T("hrootobj"))->getInt();
-	tstring names = c->getParameter(_T("name"))->getString();
-	bool recurse = c->getParameter(_T("recursive"))->getBool();
+	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
+	tstring names = c->GetParameter(_T("name"))->GetString();
+	bool recurse = c->GetParameter(_T("recursive"))->GetBool();
 
 	std::function<Object *(Object *, const TCHAR *, bool)> findObjByName = [&findObjByName] (Object *proot, const TCHAR *n, bool r) -> Object *
 	{
@@ -360,18 +402,18 @@ void jcFindFirstObjByName(CScriptVar *c, void *userdata)
 	if (rootobj)
 	{
 		Object *pretobj = findObjByName(rootobj, names.c_str(), recurse);
-		ret->setInt((int64_t)pretobj);
+		ret->SetInt((int64_t)pretobj);
 	}
 }
 
 
 void jcLog(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
-	tstring text = c->getParameter(_T("text"))->getString();
+	tstring text = c->GetParameter(_T("text"))->GetString();
 	System *psys = (System *)userdata;
 	assert(psys);
 
@@ -381,73 +423,101 @@ void jcLog(CScriptVar *c, void *userdata)
 
 void jcFindProperty(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
-	Object *pobj = (Object *)(c->getParameter(_T("hobj"))->getInt());
-	tstring name = c->getParameter(_T("name"))->getString();
+	ret->SetInt(0);
 
-	ret->setInt((int64_t)(pobj->GetProperties()->GetPropertyByName(name.c_str())));
+	Object *pobj = (Object *)(c->GetParameter(_T("hobj"))->GetInt());
+	if (!pobj)
+		return;
+
+	tstring name = c->GetParameter(_T("name"))->GetString();
+
+	ret->SetInt((int64_t)(pobj->GetProperties()->GetPropertyByName(name.c_str())));
 }
 
 
 void jcGetPropertyValue(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
-	ret->removeAllChildren();
-	ret->setUndefined();
+	//ret->removeAllChildren();
+	//ret->setUndefined();
 
-	props::IProperty *pprop = dynamic_cast<props::IProperty *>((props::IProperty *)(c->getParameter(_T("hprop"))->getInt()));
+	props::IProperty *pprop = dynamic_cast<props::IProperty *>((props::IProperty *)(c->GetParameter(_T("hprop"))->GetInt()));
 	if (!pprop)
 		return;
 
 	CScriptVar *px = nullptr, *py = nullptr, *pz = nullptr, *pw = nullptr;
+	CScriptVarLink *psvl;
 
 	switch (pprop->GetType())
 	{
 		case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:
 		case props::IProperty::PROPERTY_TYPE::PT_INT:
 		case props::IProperty::PROPERTY_TYPE::PT_ENUM:
-			ret->setInt(pprop->AsInt());
+			ret->SetInt(pprop->AsInt());
 			break;
 
 		case props::IProperty::PROPERTY_TYPE::PT_FLOAT:
-			ret->setDouble(pprop->AsFloat());
+			ret->SetFloat(pprop->AsFloat());
 			break;
 
 		case props::IProperty::PROPERTY_TYPE::PT_STRING:
 		case props::IProperty::PROPERTY_TYPE::PT_GUID:
-			ret->setString(pprop->AsString());
+			ret->SetString(pprop->AsString());
 			break;
 
 		case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
-			pw = (ret->findChildOrCreate(_T("w")))->var;
-			pw->setDouble(pprop->AsVec4F()->w);
+			psvl = ret->FindChildOrCreate(_T("w"));
+			psvl->m_Owned = true;
+			pw = psvl->m_Var;
+			pw->SetFloat(pprop->AsVec4F()->w);
+
 		case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
-			pz = (ret->findChildOrCreate(_T("z")))->var;
-			pz->setDouble(pprop->AsVec3F()->z);
+			psvl = ret->FindChildOrCreate(_T("z"));
+			psvl->m_Owned = true;
+			pz = psvl->m_Var;
+			pz->SetFloat(pprop->AsVec3F()->z);
+
 		case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:
-			py = (ret->findChildOrCreate(_T("y")))->var;
-			py->setDouble(pprop->AsVec2F()->y);
-			px = (ret->findChildOrCreate(_T("x")))->var;
-			px->setDouble(pprop->AsVec2F()->x);
+			psvl = ret->FindChildOrCreate(_T("y"));
+			psvl->m_Owned = true;
+			py = psvl->m_Var;
+			py->SetFloat(pprop->AsVec2F()->y);
+
+			psvl = ret->FindChildOrCreate(_T("x"));
+			psvl->m_Owned = true;
+			px = psvl->m_Var;
+			px->SetFloat(pprop->AsVec2F()->x);
 			break;
 
 		case props::IProperty::PROPERTY_TYPE::PT_INT_V4:
-			pw = (ret->findChildOrCreate(_T("w")))->var;
-			pw->setInt(pprop->AsVec4I()->w);
+			psvl = ret->FindChildOrCreate(_T("w"));
+			psvl->m_Owned = true;
+			pw = psvl->m_Var;
+			pw->SetInt(pprop->AsVec4I()->w);
+
 		case props::IProperty::PROPERTY_TYPE::PT_INT_V3:
-			pz = (ret->findChildOrCreate(_T("z")))->var;
-			pz->setInt(pprop->AsVec3I()->z);
+			psvl = ret->FindChildOrCreate(_T("z"));
+			psvl->m_Owned = true;
+			pz = psvl->m_Var;
+			pz->SetInt(pprop->AsVec3I()->z);
+
 		case props::IProperty::PROPERTY_TYPE::PT_INT_V2:
-			py = (ret->findChildOrCreate(_T("y")))->var;
-			py->setInt(pprop->AsVec2I()->y);
-			px = (ret->findChildOrCreate(_T("x")))->var;
-			px->setInt(pprop->AsVec2I()->x);
+			psvl = ret->FindChildOrCreate(_T("y"));
+			psvl->m_Owned = true;
+			py = psvl->m_Var;
+			py->SetInt(pprop->AsVec2I()->y);
+
+			psvl = ret->FindChildOrCreate(_T("x"));
+			psvl->m_Owned = true;
+			px = psvl->m_Var;
+			px->SetInt(pprop->AsVec2I()->x);
 			break;
 	}
 }
@@ -455,57 +525,53 @@ void jcGetPropertyValue(CScriptVar *c, void *userdata)
 
 void jcSetPropertyValue(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
-	props::IProperty *pprop = (props::IProperty *)(c->getParameter(_T("hprop"))->getInt());
+	props::IProperty *pprop = (props::IProperty *)(c->GetParameter(_T("hprop"))->GetInt());
 	if (!pprop)
 		return;
 
-	CScriptVar *pval = c->getParameter(_T("val"));
+	CScriptVar *pval = c->GetParameter(_T("val"));
 	if (!pprop)
 		return;
 
-	if (pval->isDouble())
-	{
-		pprop->SetFloat((float)pval->getDouble());
-	}
-	else if (pval->isInt())
+	if (pval->IsInt())
 	{
 		switch (pprop->GetType())
 		{
 			case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:
-				pprop->SetBool(pval->getInt() ? true : false);
+				pprop->SetBool(pval->GetInt() ? true : false);
 				break;
 
 			case props::IProperty::PROPERTY_TYPE::PT_ENUM:
-				pprop->SetEnumVal(pval->getInt());
+				pprop->SetEnumVal(pval->GetInt());
 				break;
 
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT:
-				pprop->SetFloat((float)pval->getInt());
+				pprop->SetFloat((float)pval->GetInt());
 				break;
 
 			default:
-				pprop->SetInt(pval->getInt());
+				pprop->SetInt(pval->GetInt());
 				break;
 		}
 	}
-	else if (pval->isDouble())
+	else if (pval->IsFloat())
 	{
-		pprop->SetFloat((float)pval->getDouble());
+		pprop->SetFloat((float)pval->GetFloat());
 	}
-	else if (pval->isString())
+	else if (pval->IsString())
 	{
-		pprop->SetString(pval->getString().c_str());
+		pprop->SetString(pval->GetString());
 	}
-	else if (pval->getChildren())
+	else if (pval->GetChildren())
 	{
-		CScriptVarLink *px = pval->findChild(_T("x")),
-			*py = pval->findChild(_T("y")),
-			*pz = pval->findChild(_T("z")),
-			*pw = pval->findChild(_T("w"));
+		CScriptVarLink *px = pval->FindChild(_T("x")),
+			*py = pval->FindChild(_T("y")),
+			*pz = pval->FindChild(_T("z")),
+			*pw = pval->FindChild(_T("w"));
 
 		size_t ct = 0;
 		if (px) ct++;
@@ -526,25 +592,25 @@ void jcSetPropertyValue(CScriptVar *c, void *userdata)
 					case 2:
 					{
 						pprop->SetVec2F(props::SVec2<float>(
-							px ? (float)px->var->getDouble() : 0,
-							py ? (float)py->var->getDouble() : 0));
+							px ? px->m_Var->GetFloat() : 0,
+							py ? py->m_Var->GetFloat() : 0));
 						break;
 					}
 					case 3:
 					{
 						pprop->SetVec3F(props::SVec3<float>(
-							px ? (float)px->var->getDouble() : 0,
-							py ? (float)py->var->getDouble() : 0,
-							pz ? (float)pz->var->getDouble() : 0));
+							px ? px->m_Var->GetFloat() : 0,
+							py ? py->m_Var->GetFloat() : 0,
+							pz ? pz->m_Var->GetFloat() : 0));
 						break;
 					}
 					case 4:
 					{
 						pprop->SetVec4F(props::SVec4<float>(
-							px ? (float)px->var->getDouble() : 0,
-							py ? (float)py->var->getDouble() : 0,
-							pz ? (float)pz->var->getDouble() : 0,
-							pw ? (float)pw->var->getDouble() : 0));
+							px ? px->m_Var->GetFloat() : 0,
+							py ? py->m_Var->GetFloat() : 0,
+							pz ? pz->m_Var->GetFloat() : 0,
+							pw ? pw->m_Var->GetFloat() : 0));
 						break;
 					}
 				}
@@ -562,25 +628,25 @@ void jcSetPropertyValue(CScriptVar *c, void *userdata)
 					case 2:
 					{
 						pprop->SetVec2I(props::SVec2<int64_t>(
-							px ? px->var->getInt() : 0,
-							py ? py->var->getInt() : 0));
+							px ? px->m_Var->GetInt() : 0,
+							py ? py->m_Var->GetInt() : 0));
 						break;
 					}
 					case 3:
 					{
 						pprop->SetVec3I(props::SVec3<int64_t>(
-							px ? px->var->getInt() : 0,
-							py ? py->var->getInt() : 0,
-							pz ? pz->var->getInt() : 0));
+							px ? px->m_Var->GetInt() : 0,
+							py ? py->m_Var->GetInt() : 0,
+							pz ? pz->m_Var->GetInt() : 0));
 						break;
 					}
 					case 4:
 					{
 						pprop->SetVec4I(props::SVec4<int64_t>(
-							px ? px->var->getInt() : 0,
-							py ? py->var->getInt() : 0,
-							pz ? pz->var->getInt() : 0,
-							pw ? pw->var->getInt() : 0));
+							px ? px->m_Var->GetInt() : 0,
+							py ? py->m_Var->GetInt() : 0,
+							pz ? pz->m_Var->GetInt() : 0,
+							pw ? pw->m_Var->GetInt() : 0));
 						break;
 					}
 				}
@@ -591,48 +657,39 @@ void jcSetPropertyValue(CScriptVar *c, void *userdata)
 }
 
 
-//m_JS.addNative(_T("function CreateObject(protoname, hparentobj)"),				jcCreateObject, m_pSys);
+//m_JS->AddNative(_T("function CreateObject(protoname, hparentobj)"),				jcCreateObject, psys);
 void jcCreateObject(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
 	System *psys = (System *)userdata;
 	assert(psys);
 
-	ret->setInt(0);
+	ret->SetInt(0);
 
-	tstring protoname = c->getParameter(_T("protoname"))->getString();
-	int64_t hparentobj = c->getParameter(_T("hparentobj"))->getInt();
+	tstring protoname = c->GetParameter(_T("protoname"))->GetString();
+	int64_t hparentobj = c->GetParameter(_T("hparentobj"))->GetInt();
 
 	Object *pretobj = nullptr;
 
 	Prototype *pproto = psys->GetFactory()->FindPrototype(protoname.c_str(), false);
+	Object *pparentobj = dynamic_cast<Object *>((Object *)hparentobj);
 	if (pproto)
-		pretobj = psys->GetFactory()->Build(pproto);
+		pretobj = psys->GetFactory()->Build(pproto, nullptr, pparentobj);
 
-	if (pretobj)
-	{
-		Object *pparentobj = dynamic_cast<Object *>((Object *)hparentobj);
-		if (pparentobj)
-		{
-			if (pretobj)
-				pparentobj->AddChild(pretobj);
-		}
-	}
-
-	ret->setInt((int64_t)pretobj);
+	ret->SetInt((int64_t)pretobj);
 }
 
 
-//m_JS.addNative(_T("function DeleteObject(hobj)"),								jcDeleteObject, m_pSys);
+//m_JS->AddNative(_T("function DeleteObject(hobj)"),								jcDeleteObject, psys);
 void jcDeleteObject(CScriptVar *c, void *userdata)
 {
 	System *psys = (System *)userdata;
 	assert(psys);
 
-	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
 
 	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
 	if (pobj)
@@ -642,16 +699,16 @@ void jcDeleteObject(CScriptVar *c, void *userdata)
 }
 
 
-//m_JS.addNative(_T("function GetParent(hobj)"),									jcGetParent, m_pSys);
+//m_JS->AddNative(_T("function GetParent(hobj)"),									jcGetParent, psys);
 void jcGetParent(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
-	ret->setInt(0);
+	ret->SetInt(0);
 
-	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
 
 	Object *pretobj = nullptr;
 
@@ -661,15 +718,15 @@ void jcGetParent(CScriptVar *c, void *userdata)
 		pretobj = pobj->GetOwner();
 	}
 
-	ret->setInt((int64_t)pretobj);
+	ret->SetInt((int64_t)pretobj);
 }
 
 
-//m_JS.addNative(_T("function SetParent(hobj, hnewparentobj)"),					jcSetParent, m_pSys);
+//m_JS->AddNative(_T("function SetParent(hobj, hnewparentobj)"),					jcSetParent, psys);
 void jcSetParent(CScriptVar *c, void *userdata)
 {
-	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
-	int64_t hnewparentobj = c->getParameter(_T("hnewparentobj"))->getInt();
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	int64_t hnewparentobj = c->GetParameter(_T("hnewparentobj"))->GetInt();
 
 	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
 	Object *pnewparentobj = dynamic_cast<Object *>((Object *)hnewparentobj);
@@ -680,11 +737,11 @@ void jcSetParent(CScriptVar *c, void *userdata)
 }
 
 
-//m_JS.addNative(_T("function SetObjectName(hobj, newname)"),						jcSetObjectName, m_pSys);
+//m_JS->AddNative(_T("function SetObjectName(hobj, newname)"),						jcSetObjectName, psys);
 void jcSetObjectName(CScriptVar *c, void *userdata)
 {
-	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
-	tstring newname = c->getParameter(_T("newname"))->getString();
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	tstring newname = c->GetParameter(_T("newname"))->GetString();
 
 	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
 	if (pobj)
@@ -694,19 +751,19 @@ void jcSetObjectName(CScriptVar *c, void *userdata)
 }
 
 
-//m_JS.addNative(_T("function LoadObject(hobj, filename)"),				jcLoadObject, m_pSys);
+//m_JS->AddNative(_T("function LoadObject(hobj, filename)"),				jcLoadObject, psys);
 void jcLoadObject(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 
 	if (ret)
-		ret->setInt(0);
+		ret->SetInt(0);
 
 	System *psys = (System *)userdata;
 	assert(psys);
 
-	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
-	tstring filename = c->getParameter(_T("filename"))->getString();
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	tstring filename = c->GetParameter(_T("filename"))->GetString();
 	TCHAR fullpath[MAX_PATH];
 
 	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
@@ -766,7 +823,7 @@ void jcLoadObject(CScriptVar *c, void *userdata)
 						{
 							bool r = pobj->Load(is);
 							if (ret)
-								ret->setInt(r ? 1 : 0);
+								ret->SetInt(r ? 1 : 0);
 						}
 
 						is->EndBlock();
@@ -785,21 +842,23 @@ const TCHAR *gGlobalDesignations[GlobalObjectRegistry::OD_NUMDESIGNATIONS] =
 	_T("worldroot"),
 	_T("skyboxroot"),
 	_T("guiroot"),
+	_T("camera.root"),
+	_T("camera.arm"),
 	_T("camera"),
 	_T("player"),
 };
 
-//m_JS.addNative(_T("function jcGetRegisteredObject(designation)"),					jcGetRegisteredObject, m_pSys);
+//m_JS->AddNative(_T("function jcGetRegisteredObject(designation)"),					jcGetRegisteredObject, psys);
 void jcGetRegisteredObject(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->getReturnVar();
+	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
 		return;
 
 	System *psys = (System *)userdata;
 	assert(psys);
 
-	tstring designation = c->getParameter(_T("designation"))->getString();
+	tstring designation = c->GetParameter(_T("designation"))->GetString();
 
 	Object *pretobj = nullptr;
 
@@ -812,18 +871,18 @@ void jcGetRegisteredObject(CScriptVar *c, void *userdata)
 		}
 	}
 
-	ret->setInt((int64_t)pretobj);
+	ret->SetInt((int64_t)pretobj);
 }
 
 
-//m_JS.addNative(_T("function jcRegisterObject(designation, hobj)"),			jcRegisterObject, m_pSys);
+//m_JS->AddNative(_T("function jcRegisterObject(designation, hobj)"),			jcRegisterObject, psys);
 void jcRegisterObject(CScriptVar *c, void *userdata)
 {
 	System *psys = (System *)userdata;
 	assert(psys);
 
-	tstring designation = c->getParameter(_T("designation"))->getString();
-	int64_t hobj = c->getParameter(_T("hobj"))->getInt();
+	tstring designation = c->GetParameter(_T("designation"))->GetString();
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
 
 	for (size_t i = 0; i < GlobalObjectRegistry::OD_NUMDESIGNATIONS; i++)
 	{
@@ -835,3 +894,71 @@ void jcRegisterObject(CScriptVar *c, void *userdata)
 	}
 }
 
+
+//m_JS->AddNative(_T("function AdjustQuaternion(quat, axis, angle)"),			jcAdjustQuaternion, psys);
+void jcAdjustQuaternion(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	CScriptVar *paxis = c->GetParameter(_T("axis"));
+	CScriptVar *pquat = c->GetParameter(_T("quat"));
+	CScriptVar *pangle = c->GetParameter(_T("angle"));
+	if (!paxis || !pquat || !pangle)
+		return;
+
+	CScriptVarLink *pax = paxis->FindChild(_T("x"));
+	CScriptVarLink *pay = paxis->FindChild(_T("y"));
+	CScriptVarLink *paz = paxis->FindChild(_T("z"));
+	if (!(pax && pay && paz) || (paxis->GetArrayLength() != 3))
+		return;
+
+	glm::fvec3 axis;
+	axis.x = (float)(pax ? pax->m_Var->GetFloat() : paxis->GetArrayIndex(0)->GetFloat());
+	axis.y = (float)(pay ? pay->m_Var->GetFloat() : paxis->GetArrayIndex(1)->GetFloat());
+	axis.z = (float)(paz ? paz->m_Var->GetFloat() : paxis->GetArrayIndex(2)->GetFloat());
+
+
+	CScriptVarLink *pqx = pquat->FindChild(_T("x"));
+	CScriptVarLink *pqy = pquat->FindChild(_T("y"));
+	CScriptVarLink *pqz = pquat->FindChild(_T("z"));
+	CScriptVarLink *pqw = pquat->FindChild(_T("w"));
+	if (!(pqx && pqy && pqz && pqw) || (pquat->GetArrayLength() != 4))
+		return;
+
+	glm::fquat q;
+	q.x = (float)(pqx ? pqx->m_Var->GetFloat() : pquat->GetArrayIndex(0)->GetFloat());
+	q.y = (float)(pqy ? pqy->m_Var->GetFloat() : pquat->GetArrayIndex(1)->GetFloat());
+	q.z = (float)(pqz ? pqz->m_Var->GetFloat() : pquat->GetArrayIndex(2)->GetFloat());
+	q.w = (float)(pqw ? pqw->m_Var->GetFloat() : pquat->GetArrayIndex(3)->GetFloat());
+
+	glm::fquat r;
+	float angle = (float)pangle->GetFloat();
+	r = glm::angleAxis(angle, axis);
+
+	q = r * q;
+
+	CScriptVarLink *psvl;
+
+	psvl = ret->FindChildOrCreate(_T("x"));
+	psvl->m_Owned = true;
+	CScriptVar *prx = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("y"));
+	psvl->m_Owned = true;
+	CScriptVar *pry = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("z"));
+	psvl->m_Owned = true;
+	CScriptVar *prz = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("w"));
+	psvl->m_Owned = true;
+	CScriptVar *prw = psvl->m_Var;
+
+	prx->SetFloat(q.x);
+	pry->SetFloat(q.y);
+	prz->SetFloat(q.z);
+	prw->SetFloat(q.w);
+}

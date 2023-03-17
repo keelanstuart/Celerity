@@ -39,136 +39,136 @@ using namespace std;
 void scTrace(CScriptVar *c, void *userdata)
 {
 	CTinyJS *js = (CTinyJS *)userdata;
-	js->root->trace();
+	js->m_Root->Trace();
 }
 
 void scObjectDump(CScriptVar *c, void *)
 {
-	c->getParameter(_T("this"))->trace(_T("> "));
+	c->GetParameter(_T("this"))->Trace(_T("> "));
 }
 
 void scObjectClone(CScriptVar *c, void *)
 {
-	CScriptVar *obj = c->getParameter(_T("this"));
+	CScriptVar *obj = c->GetParameter(_T("this"));
 
-	c->getReturnVar()->copyValue(obj);
+	c->GetReturnVar()->CopyValue(obj);
 }
 
 void scMathRand(CScriptVar *c, void *)
 {
-	c->getReturnVar()->setDouble((double)rand() / RAND_MAX);
+	c->GetReturnVar()->SetFloat((float)rand() / RAND_MAX);
 }
 
 void scMathRandInt(CScriptVar *c, void *)
 {
-	int64_t min = c->getParameter(_T("min"))->getInt();
-	int64_t max = c->getParameter(_T("max"))->getInt();
+	int64_t min = c->GetParameter(_T("min"))->GetInt();
+	int64_t max = c->GetParameter(_T("max"))->GetInt();
 	int64_t val = min + (int)(rand() % (1 + max - min));
 
-	c->getReturnVar()->setInt(val);
+	c->GetReturnVar()->SetInt(val);
 }
 
 void scCharToInt(CScriptVar *c, void *)
 {
-	tstring str = c->getParameter(_T("ch"))->getString();;
+	tstring str = c->GetParameter(_T("ch"))->GetString();;
 	int64_t val = 0;
 
 	if (str.length() > 0)
 		val = (int)str.c_str()[0];
 
-	c->getReturnVar()->setInt(val);
+	c->GetReturnVar()->SetInt(val);
 }
 
 void scStringIndexOf(CScriptVar *c, void *)
 {
-	tstring str = c->getParameter(_T("this"))->getString();
-	tstring search = c->getParameter(_T("search"))->getString();
+	tstring str = c->GetParameter(_T("this"))->GetString();
+	tstring search = c->GetParameter(_T("search"))->GetString();
 	size_t p = str.find(search);
 
 	int64_t val = (p == tstring::npos) ? -1 : p;
 
-	c->getReturnVar()->setInt(val);
+	c->GetReturnVar()->SetInt(val);
 }
 
 void scStringSubstring(CScriptVar *c, void *)
 {
-	tstring str = c->getParameter(_T("this"))->getString();
-	int64_t lo = c->getParameter(_T("lo"))->getInt();
-	int64_t hi = c->getParameter(_T("hi"))->getInt();
+	tstring str = c->GetParameter(_T("this"))->GetString();
+	int64_t lo = c->GetParameter(_T("lo"))->GetInt();
+	int64_t hi = c->GetParameter(_T("hi"))->GetInt();
 
 	int64_t l = hi - lo;
 	if ((l > 0) && (lo >= 0) && (lo + l <= (int)str.length()))
-		c->getReturnVar()->setString(str.substr(lo, l));
+		c->GetReturnVar()->SetString(str.substr(lo, l).c_str());
 	else
-		c->getReturnVar()->setString(_T(""));
+		c->GetReturnVar()->SetString(_T(""));
 }
 
 void scStringCharAt(CScriptVar *c, void *)
 {
-	tstring str = c->getParameter(_T("this"))->getString();
+	tstring str = c->GetParameter(_T("this"))->GetString();
 
-	int64_t p = c->getParameter(_T("pos"))->getInt();
+	int64_t p = c->GetParameter(_T("pos"))->GetInt();
 
 	if (p >= 0 && p < (int)str.length())
-		c->getReturnVar()->setString(str.substr(p, 1));
+		c->GetReturnVar()->SetString(str.substr(p, 1).c_str());
 	else
-		c->getReturnVar()->setString(_T(""));
+		c->GetReturnVar()->SetString(_T(""));
 }
 
 void scStringCharCodeAt(CScriptVar *c, void *)
 {
-	tstring str = c->getParameter(_T("this"))->getString();
-	int64_t p = c->getParameter(_T("pos"))->getInt();
+	tstring str = c->GetParameter(_T("this"))->GetString();
+	int64_t p = c->GetParameter(_T("pos"))->GetInt();
 
 	if (p >= 0 && p < (int)str.length())
-		c->getReturnVar()->setInt(str.at(p));
+		c->GetReturnVar()->SetInt(str.at(p));
 	else
-		c->getReturnVar()->setInt(0);
+		c->GetReturnVar()->SetInt(0);
 }
 
 void scStringSplit(CScriptVar *c, void *)
 {
-	tstring str = c->getParameter(_T("this"))->getString();
-	tstring sep = c->getParameter(_T("separator"))->getString();
+	tstring str = c->GetParameter(_T("this"))->GetString();
+	tstring sep = c->GetParameter(_T("separator"))->GetString();
 
-	CScriptVar *result = c->getReturnVar();
-	result->setArray();
+	CScriptVar *result = c->GetReturnVar();
+	result->SetArray();
 	int64_t length = 0;
 
 	size_t pos = str.find(sep);
 	while (pos != tstring::npos)
 	{
-		result->setArrayIndex(length++, new CScriptVar(str.substr(0, pos)));
+		result->SetArrayIndex(length++, new CScriptVar(str.substr(0, pos).c_str()));
 
 		str = str.substr(pos + 1);
 		pos = str.find(sep);
 	}
 
 	if (str.size() > 0)
-		result->setArrayIndex(length++, new CScriptVar(str));
+		result->SetArrayIndex(length++, new CScriptVar(str.c_str()));
 }
 
 void scStringFromCharCode(CScriptVar *c, void *)
 {
 	TCHAR str[2];
 
-	str[0] = (TCHAR)(c->getParameter(_T("char"))->getInt());
+	str[0] = (TCHAR)(c->GetParameter(_T("char"))->GetInt());
 	str[1] = 0;
 
-	c->getReturnVar()->setString(str);
+	c->GetReturnVar()->SetString(str);
 }
 
 void scStringIncludes(CScriptVar *c, void *)
 {
-	tstring t = c->getParameter(_T("this"))->getString();
-	tstring s = c->getParameter(_T("str"))->getString();
+	tstring t = c->GetParameter(_T("this"))->GetString();
+	tstring s = c->GetParameter(_T("str"))->GetString();
 
 	// optionally check 
 	bool case_sensitive = true;
-	CScriptVar *csv = c->getParameter(_T("sensitive"));
+	CScriptVar *csv = c->GetParameter(_T("sensitive"));
 	if (csv)
 	{
-		case_sensitive = csv->getBool();
+		case_sensitive = csv->GetBool();
 	}
 
 	if (!case_sensitive)
@@ -182,95 +182,79 @@ void scStringIncludes(CScriptVar *c, void *)
 	if (t.find(s) < t.length())
 		ret = true;
 
-	c->getReturnVar()->setInt(ret ? 1 : 0);
+	c->GetReturnVar()->SetInt(ret ? 1 : 0);
 }
 
 void scIntegerParseInt(CScriptVar *c, void *)
 {
-	tstring str = c->getParameter(_T("str"))->getString();
+	tstring str = c->GetParameter(_T("str"))->GetString();
 	int64_t val = _tcstol(str.c_str(), 0, 0);
-	c->getReturnVar()->setInt(val);
+	c->GetReturnVar()->SetInt(val);
 }
 
 void scIntegerValueOf(CScriptVar *c, void *)
 {
-	tstring str = c->getParameter(_T("str"))->getString();
+	tstring str = c->GetParameter(_T("str"))->GetString();
 
 	int64_t val = 0;
 	if (str.length() == 1)
 		val = str[0];
 
-	c->getReturnVar()->setInt(val);
-}
-
-void scJSONStringify(CScriptVar *c, void *)
-{
-	tostringstream result;
-
-	c->getParameter(_T("obj"))->getJSON(result);
-	c->getReturnVar()->setString(result.str());
+	c->GetReturnVar()->SetInt(val);
 }
 
 void scExec(CScriptVar *c, void *data)
 {
 	CTinyJS *tinyJS = (CTinyJS *)data;
-	tstring str = c->getParameter(_T("jsCode"))->getString();
+	tstring str = c->GetParameter(_T("jsCode"))->GetString();
 
-	tinyJS->execute(str);
-}
-
-void scEval(CScriptVar *c, void *data)
-{
-	CTinyJS *tinyJS = (CTinyJS *)data;
-	tstring str = c->getParameter(_T("jsCode"))->getString();
-
-	c->setReturnVar(tinyJS->evaluateComplex(str).var);
+	tinyJS->Execute(str.c_str());
 }
 
 void scArrayContains(CScriptVar *c, void *data)
 {
-	CScriptVar *obj = c->getParameter(_T("obj"));
-	CScriptVarLink *v = c->getParameter(_T("this"))->firstChild;
+	CScriptVar *obj = c->GetParameter(_T("obj"));
+	CScriptVarLink *v = c->GetParameter(_T("this"))->m_Child.first;
 
 	bool contains = false;
 	while (v)
 	{
-		if (v->var->equals(obj))
+		if (v->m_Var->Equals(obj))
 		{
 			contains = true;
 			break;
 		}
 
-		v = v->nextSibling;
+		v = v->m_Sibling.next;
 	}
 
-	c->getReturnVar()->setInt(contains ? 1 : 0);
+	c->GetReturnVar()->SetInt(contains ? 1 : 0);
 }
 
 void scArrayRemove(CScriptVar *c, void *data)
 {
-	CScriptVar *obj = c->getParameter(_T("obj"));
+	CScriptVar *obj = c->GetParameter(_T("obj"));
 	vector<int64_t> removedIndices;
 
 	CScriptVarLink *v;
 
 	// remove
-	v = c->getParameter(_T("this"))->firstChild;
+	v = c->GetParameter(_T("this"))->m_Child.first;
 	while (v)
 	{
-		if (v->var->equals(obj))
+		if (v->m_Var->Equals(obj))
 		{
-			removedIndices.push_back(v->getIntName());
+			removedIndices.push_back(v->GetIntName());
 		}
 
-		v = v->nextSibling;
+		v = v->m_Sibling.next;
 	}
 
 	// renumber
-	v = c->getParameter(_T("this"))->firstChild;
+	v = c->GetParameter(_T("this"))->m_Child.first;
 	while (v)
 	{
-		int64_t n = v->getIntName();
+		int64_t n = v->GetIntName();
 		int64_t newn = n;
 
 		for (size_t i = 0; i < removedIndices.size(); i++)
@@ -281,56 +265,53 @@ void scArrayRemove(CScriptVar *c, void *data)
 
 		if (newn != n)
 		{
-			v->setIntName(newn);
+			v->SetIntName(newn);
 		}
 
-		v = v->nextSibling;
+		v = v->m_Sibling.next;
 	}
 }
 
 void scArrayJoin(CScriptVar *c, void *data)
 {
-	tstring sep = c->getParameter(_T("separator"))->getString();
-	CScriptVar *arr = c->getParameter(_T("this"));
+	tstring sep = c->GetParameter(_T("separator"))->GetString();
+	CScriptVar *arr = c->GetParameter(_T("this"));
 
 	tostringstream sstr;
 
-	int64_t l = arr->getArrayLength();
+	int64_t l = arr->GetArrayLength();
 	for (int64_t i = 0; i < l; i++)
 	{
 		if (i > 0)
 			sstr << sep;
 
-		sstr << arr->getArrayIndex(i)->getString();
+		sstr << arr->GetArrayIndex(i)->GetString();
 	}
 
-	c->getReturnVar()->setString(sstr.str());
+	c->GetReturnVar()->SetString(sstr.str().c_str());
 }
 
 // ----------------------------------------------- Register Functions
 void registerFunctions(CTinyJS *tinyJS)
 {
-	tinyJS->addNative(_T("function exec(jsCode)"), scExec, tinyJS); // execute the given code
-	tinyJS->addNative(_T("function eval(jsCode)"), scEval, tinyJS); // execute the given string (an expression) and return the result
-	tinyJS->addNative(_T("function trace()"), scTrace, tinyJS);
-	tinyJS->addNative(_T("function Object.dump()"), scObjectDump, 0);
-	tinyJS->addNative(_T("function Object.clone()"), scObjectClone, 0);
-	tinyJS->addNative(_T("function Math.rand()"), scMathRand, 0);
-	tinyJS->addNative(_T("function Math.randInt(min, max)"), scMathRandInt, 0);
-	tinyJS->addNative(_T("function charToInt(ch)"), scCharToInt, 0); //  convert a character to an int - get its value
-	tinyJS->addNative(_T("function String.indexOf(search)"), scStringIndexOf, 0); // find the position of a string in a string, -1 if not
-	tinyJS->addNative(_T("function String.substring(lo,hi)"), scStringSubstring, 0);
-	tinyJS->addNative(_T("function String.charAt(pos)"), scStringCharAt, 0);
-	tinyJS->addNative(_T("function String.charCodeAt(pos)"), scStringCharCodeAt, 0);
-	tinyJS->addNative(_T("function String.fromCharCode(char)"), scStringFromCharCode, 0);
-	tinyJS->addNative(_T("function String.split(separator)"), scStringSplit, 0);
-	tinyJS->addNative(_T("function String.includes(str, sensitive)"), scStringIncludes, 0);
-	tinyJS->addNative(_T("function Integer.parseInt(str)"), scIntegerParseInt, 0); // string to int
-	tinyJS->addNative(_T("function Integer.valueOf(str)"), scIntegerValueOf, 0); // value of a single character
-	tinyJS->addNative(_T("function JSON.stringify(obj, replacer)"), scJSONStringify, 0); // convert to JSON. replacer is ignored at the moment
-	// JSON.parse is left out as you can (unsafely!) use eval instead
-	tinyJS->addNative(_T("function Array.contains(obj)"), scArrayContains, 0);
-	tinyJS->addNative(_T("function Array.remove(obj)"), scArrayRemove, 0);
-	tinyJS->addNative(_T("function Array.join(separator)"), scArrayJoin, 0);
+	tinyJS->AddNative(_T("function exec(jsCode)"), scExec, tinyJS); // execute the given code
+	tinyJS->AddNative(_T("function trace()"), scTrace, tinyJS);
+	tinyJS->AddNative(_T("function Object.dump()"), scObjectDump, 0);
+	tinyJS->AddNative(_T("function Object.clone()"), scObjectClone, 0);
+	tinyJS->AddNative(_T("function Math.rand()"), scMathRand, 0);
+	tinyJS->AddNative(_T("function Math.randInt(min, max)"), scMathRandInt, 0);
+	tinyJS->AddNative(_T("function charToInt(ch)"), scCharToInt, 0); //  convert a character to an int - get its value
+	tinyJS->AddNative(_T("function String.indexOf(search)"), scStringIndexOf, 0); // find the position of a string in a string, -1 if not
+	tinyJS->AddNative(_T("function String.substring(lo,hi)"), scStringSubstring, 0);
+	tinyJS->AddNative(_T("function String.charAt(pos)"), scStringCharAt, 0);
+	tinyJS->AddNative(_T("function String.charCodeAt(pos)"), scStringCharCodeAt, 0);
+	tinyJS->AddNative(_T("function String.fromCharCode(char)"), scStringFromCharCode, 0);
+	tinyJS->AddNative(_T("function String.split(separator)"), scStringSplit, 0);
+	tinyJS->AddNative(_T("function String.includes(str, sensitive)"), scStringIncludes, 0);
+	tinyJS->AddNative(_T("function Integer.parseInt(str)"), scIntegerParseInt, 0); // string to int
+	tinyJS->AddNative(_T("function Integer.valueOf(str)"), scIntegerValueOf, 0); // value of a single character
+	tinyJS->AddNative(_T("function Array.contains(obj)"), scArrayContains, 0);
+	tinyJS->AddNative(_T("function Array.remove(obj)"), scArrayRemove, 0);
+	tinyJS->AddNative(_T("function Array.join(separator)"), scArrayJoin, 0);
 }
 

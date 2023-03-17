@@ -22,6 +22,7 @@ OmniLightImpl::OmniLightImpl()
 	m_pMethod = nullptr;
 	m_Color = Color::fWhite;
 	m_Material = nullptr;
+	m_pOwner = nullptr;
 }
 
 
@@ -67,30 +68,29 @@ bool OmniLightImpl::Initialize(Object *pobject)
 }
 
 
-void OmniLightImpl::Update(Object *pobject, float elapsed_time)
+void OmniLightImpl::Update(float elapsed_time)
 {
 	if (!m_pPos)
 		return;
 }
 
 
-bool OmniLightImpl::Prerender(Object *pobject, Object::RenderFlags flags)
+bool OmniLightImpl::Prerender(Object::RenderFlags flags)
 {
-	if (pobject->Flags().IsSet(OF_LIGHT) && flags.IsSet(RF_LIGHT))
+	if (m_pOwner->Flags().IsSet(OF_LIGHT) && flags.IsSet(RF_LIGHT))
 		return true;
 
 	return false;
 }
 
 
-void OmniLightImpl::Render(Object *pobject, Object::RenderFlags flags)
+void OmniLightImpl::Render(Object::RenderFlags flags)
 {
-	assert(pobject);
-	if (!Prerender(pobject, flags))
+	if (!Prerender(flags))
 		return;
 
-	ResourceManager *prm = pobject->GetSystem()->GetResourceManager();
-	c3::Renderer *prend = pobject->GetSystem()->GetRenderer();
+	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
+	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 
 	if (!m_SourceFB)
 		m_SourceFB = prend->FindFrameBuffer(_T("GBuffer"));
@@ -107,7 +107,7 @@ void OmniLightImpl::Render(Object *pobject, Object::RenderFlags flags)
 
 		if (!m_pMethod)
 		{
-			props::IProperty *pmethod = pobject->GetProperties()->GetPropertyById('C3RM');
+			props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('C3RM');
 			if (prm)
 			{
 				c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("std.c3rm"));
@@ -150,8 +150,8 @@ void OmniLightImpl::Render(Object *pobject, Object::RenderFlags flags)
 			ss.x = (float)m_SourceFB->GetDepthTarget()->Width();
 			ss.y = (float)m_SourceFB->GetDepthTarget()->Height();
 
-			props::IProperty *ppos = pobject->GetProperties()->GetPropertyById('POS');
-			props::IProperty *pscl = pobject->GetProperties()->GetPropertyById('SCL');
+			props::IProperty *ppos = m_pOwner->GetProperties()->GetPropertyById('POS');
+			props::IProperty *pscl = m_pOwner->GetProperties()->GetPropertyById('SCL');
 			float scl = pscl->AsVec3F()->x;
 
 			ShaderProgram *ps = m_pMethod->GetTechnique(m_TechIdx_L)->GetPass(0)->GetShader();

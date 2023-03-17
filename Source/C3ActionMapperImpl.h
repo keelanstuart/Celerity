@@ -23,7 +23,7 @@ namespace c3
 
 		virtual ~ActionMapperImpl();
 
-		virtual size_t RegisterAction(const TCHAR *name, TriggerType trigger, ACTION_CALLBACK_FUNC func, void *userdata);
+		virtual size_t RegisterAction(const TCHAR *name, TriggerType trigger, float delay, ACTION_CALLBACK_FUNC func, void *userdata);
 
 		virtual bool UnregisterAction(size_t index);
 
@@ -51,6 +51,8 @@ namespace c3
 		{
 			tstring name;
 			TriggerType trigger;
+			float delay;
+			float timeout;
 			typedef std::multimap<uint32_t, InputDevice::VirtualButton> TDevToTrigger;
 			TDevToTrigger trigmap;
 			ACTION_CALLBACK_FUNC func;

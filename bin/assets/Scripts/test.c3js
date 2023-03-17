@@ -1,5 +1,5 @@
+var runtime;
 var hpos;
-var runtime = 0.0;
 
 function update(elapsed_seconds)
 {
@@ -10,4 +10,9 @@ function update(elapsed_seconds)
 	SetPropertyValue(hpos, pos);
 }
 
-hpos = FindProperty(self, "Position");
+function init()
+{
+	runtime = 0.0;
+
+	hpos = FindProperty(self, "Position");
+}

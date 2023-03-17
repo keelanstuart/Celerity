@@ -1,0 +1,190 @@
+var runtime;
+
+var Facing = { forward: -1, right: -1, up: -1 };
+
+var hfacing = new Facing();
+var hpos;
+var hori;
+
+var speed = 1.0;
+
+var dir = { x: 0.0, y: 0.0, z: 0.0 };
+dir.x = 0.0;
+dir.y = 0.0;
+dir.z = 0.0;
+
+var rot = { x: 0.0, y: 0.0, z: 0.0 };
+rot.x = 0.0;
+rot.y = 0.0;
+rot.z = 0.0;
+
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+var tmpv4 = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+
+var hlacc;
+var hrvel;
+
+var hbullet;
+var bullet_idx;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+/*
+	dir.x = dir.x * speed;
+	dir.y = dir.y * speed;
+	dir.z = dir.z * speed;
+	//SetPropertyValue(hlacc, dir);
+
+	dir.x = 0.0;
+	dir.y = 0.0;
+	dir.z = 0.0;
+
+	SetPropertyValue(hrvel, rot);
+
+	rot.x = 0.0;
+	rot.y = 0.0;
+	rot.z = 0.0;
+
+	speed = 1.0;
+*/
+}
+
+function fire_cannon()
+{
+	var hbpos = FindProperty(hbullet[bullet_idx], "Position");
+	var hbfacing = FindProperty(hbullet[bullet_idx], "Facing.Forward");
+	var hblacc = FindProperty(hbullet[bullet_idx], "LinearAcceleration");
+
+	var facing = GetPropertyValue(hfacing.forward);
+
+	SetPropertyValue(hbpos, GetPropertyValue(hpos));
+	SetPropertyValue(hbfacing, facing);
+
+	facing.x = facing.x * 10.0;
+	facing.y = facing.y * 10.0;
+	facing.z = facing.z * 10.0;
+	SetPropertyValue(hblacc, facing);
+
+	bullet_idx = (bullet_idx + 1) % 100;
+}
+
+function handle_input(action, value)
+{
+	//Log("input: " + action + ": " + value + "\n");
+
+	if (action == "Move Forward")
+	{
+		dir = GetPropertyValue(hlacc);
+		tmpv3 = GetPropertyValue(hfacing.forward);
+		dir.x += (tmpv3.x * value);
+		dir.y += (tmpv3.y * value);
+		dir.z += (tmpv3.z * value);
+		SetPropertyValue(hlacc, dir);
+	}
+	else if (action == "Move Backward")
+	{
+		dir = GetPropertyValue(hlacc);
+		tmpv3 = GetPropertyValue(hfacing.forward);
+		dir.x -= (tmpv3.x * value);
+		dir.y -= (tmpv3.y * value);
+		dir.z -= (tmpv3.z * value);
+		SetPropertyValue(hlacc, dir);
+	}
+	else if (action == "Strafe Left")
+	{
+		dir = GetPropertyValue(hlacc);
+		tmpv3 = GetPropertyValue(hfacing.right);
+		dir.x -= (tmpv3.x * value);
+		dir.y -= (tmpv3.y * value);
+		dir.z -= (tmpv3.z * value);
+		SetPropertyValue(hlacc, dir);
+	}
+	else if (action == "Strafe Right")
+	{
+		dir = GetPropertyValue(hlacc);
+		tmpv3 = GetPropertyValue(hfacing.right);
+		dir.x += (tmpv3.x * value);
+		dir.y += (tmpv3.y * value);
+		dir.z += (tmpv3.z * value);
+		SetPropertyValue(hlacc, dir);
+	}
+	else if (action == "Look Up")
+	{
+		rot = GetPropertyValue(hrvel);
+		rot.x += (value * 0.0001);
+		SetPropertyValue(hrvel, rot);
+	}
+	else if (action == "Look Down")
+	{
+		rot = GetPropertyValue(hrvel);
+		rot.x -= (value * 0.0001);
+		SetPropertyValue(hrvel, rot);
+	}
+	else if (action == "Look Left")
+	{
+		rot = GetPropertyValue(hrvel);
+		rot.z -= (value * 0.0001);
+		SetPropertyValue(hrvel, rot);
+	}
+	else if (action == "Look Right")
+	{
+		rot = GetPropertyValue(hrvel);
+		rot.z += (value * 0.0001);
+		SetPropertyValue(hrvel, rot);
+	}
+	else if (action == "Ascend")
+	{
+		dir = GetPropertyValue(hlacc);
+		tmpv3 = GetPropertyValue(hfacing.up);
+		dir.x += (tmpv3.x * value);
+		dir.y += (tmpv3.y * value);
+		dir.z += (tmpv3.z * value);
+		SetPropertyValue(hlacc, dir);
+	}
+	else if (action == "Descend")
+	{
+		dir = GetPropertyValue(hlacc);
+		tmpv3 = GetPropertyValue(hfacing.up);
+		dir.x -= (tmpv3.x * value);
+		dir.y -= (tmpv3.y * value);
+		dir.z -= (tmpv3.z * value);
+		SetPropertyValue(hlacc, dir);
+	}
+	else if (action == "Run")
+	{
+		speed = 2.0;
+	}
+	else if (action == "Jump")
+	{
+	}
+	else if (action == "Fire 1")
+	{
+		fire_cannon();
+	}
+	else if (action == "Fire 2")
+	{
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	// cache property handles now so value access is cheaper later
+	hpos = FindProperty(self, "Position");
+	hori = FindProperty(self, "Orientation");
+	hfacing.forward = FindProperty(self, "Facing.Forward");
+	hfacing.right = FindProperty(self, "Facing.Right");
+	hfacing.up = FindProperty(self, "Facing.Up");
+	hlacc = FindProperty(self, "LinearAcceleration");
+	hrvel = FindProperty(self, "RotationalVelocity");
+
+	// create projectiles up front to avoid run-time hitches
+	bullet_idx = 0;
+	hbullet = new Array();
+	var i;
+	for (i=0;i<100;i++)
+		hbullet[i] = CreateObject("Pellet", GetParent(self));
+}

@@ -51,7 +51,7 @@ namespace c3
 
 		virtual size_t GetNumButtons() const;
 
-		virtual int ButtonPressed(InputDevice::VirtualButton button, float time = 0.0f) const;
+		virtual bool ButtonPressed(InputDevice::VirtualButton button, float time = 0.0f);
 
 		virtual float ButtonPressedProportional(InputDevice::VirtualButton button) const;
 

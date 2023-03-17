@@ -79,21 +79,29 @@ uint32_t InputDeviceImpl::GetUID() const
 }
 
 
-int InputDeviceImpl::ButtonPressed(InputDevice::VirtualButton button, float time) const
+bool InputDeviceImpl::ButtonPressed(InputDevice::VirtualButton button, float time)
 {
 	if (button == ANY)
 	{
 		for (uint32_t i = 0; i < NUMBUTTONS; i++)
+		{
 			if (m_ButtonState[i] && (m_ButtonTime[i] >= time))
-				return TRUE;
+			{
+				m_ButtonTime[i] = 0.0f;
+				return true;
+			}
+		}
 
-		return FALSE;
+		return false;
 	}
 
 	if (m_ButtonState[button] && (m_ButtonTime[button] >= time))
-		return m_ButtonState[button];
+	{
+		m_ButtonTime[button] = 0.0f;
+		return true;
+	}
 
-	return FALSE;
+	return false;
 }
 
 float InputDeviceImpl::ButtonPressedProportional(InputDevice::VirtualButton button) const

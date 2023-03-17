@@ -68,7 +68,9 @@ bool CameraImpl::Initialize(Object *pobject)
 	if (!pobject)
 		return false;
 
-	props::IPropertySet *props = pobject->GetProperties();
+	m_pOwner = pobject;
+
+	props::IPropertySet *props = m_pOwner->GetProperties();
 	if (!props)
 		return false;
 
@@ -84,14 +86,11 @@ bool CameraImpl::Initialize(Object *pobject)
 }
 
 
-void CameraImpl::Update(Object *pobject, float elapsed_time)
+void CameraImpl::Update(float elapsed_time)
 {
-	if (!pobject)
-		return;
-
 	// get a positionable feature from the object -- and if we can't, don't proceed
 	if (!m_pcpos)
-		m_pcpos = dynamic_cast<PositionableImpl *>(pobject->FindComponent(Positionable::Type()));
+		m_pcpos = dynamic_cast<PositionableImpl *>(m_pOwner->FindComponent(Positionable::Type()));
 
 	if (!m_pcpos)
 		return;
@@ -124,26 +123,7 @@ void CameraImpl::Update(Object *pobject, float elapsed_time)
 		m_pcpos->GetLocalRightVector(&right);
 
 		// glm's lookAt is busted. Using it results in incorrect placement of the eyepoint (opposite facing)
-#if 1
 		m_view = glm::lookAt(m_eyepos, m_targpos, up);
-#else
-		m_view[0][0] = right.x;
-		m_view[1][0] = right.y;
-		m_view[2][0] = right.z;
-		m_view[3][0] = -glm::dot(m_eyepos, right);
-		m_view[0][1] = up.x;
-		m_view[1][1] = up.y;
-		m_view[2][1] = up.z;
-		m_view[3][1] = -glm::dot(m_eyepos, up);
-		m_view[0][2] = facing.x;
-		m_view[1][2] = facing.y;
-		m_view[2][2] = facing.z;
-		m_view[3][2] = -glm::dot(m_eyepos, facing);
-		m_view[0][3] = 0.0f;
-		m_view[1][3] = 0.0f;
-		m_view[2][3] = 0.0f;
-		m_view[3][3] = 1.0f;
-#endif
 
 		switch (m_projmode)
 		{
@@ -162,13 +142,13 @@ void CameraImpl::Update(Object *pobject, float elapsed_time)
 }
 
 
-bool CameraImpl::Prerender(Object *pobject, Object::RenderFlags flags)
+bool CameraImpl::Prerender(Object::RenderFlags flags)
 {
 	return false;
 }
 
 
-void CameraImpl::Render(Object *pobject, Object::RenderFlags flags)
+void CameraImpl::Render(Object::RenderFlags flags)
 {
 
 }

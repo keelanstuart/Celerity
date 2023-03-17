@@ -1,21 +1,25 @@
 var hscl;
 var basescl;
 var scl;
-var runtime = 0.0;
+var runtime;
 var s;
 
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 
-	s = Math.random(0.9, 1.1);
-	scl.x = basescl.x * s;
-	scl.y = basescl.y * s;
-	scl.z = basescl.z * s;
+	s = Math.random(-0.2, 0.2);
+	scl.x = basescl.x + s;
+	scl.y = basescl.y + s;
+	scl.z = basescl.z + s;
 
 	SetPropertyValue(hscl, scl);
 }
 
-hscl = FindProperty(self, "Scale");
-basescl = GetPropertyValue(hscl);
-scl = basescl;
+function init()
+{
+	runtime = 0.0;
+	hscl = FindProperty(self, "Scale");
+	basescl = GetPropertyValue(hscl);
+	scl = basescl;
+}

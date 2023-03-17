@@ -42,10 +42,10 @@ props::TFlags64 PositionableImpl::Flags() const
 
 bool PositionableImpl::Initialize(Object *pobject)
 {
-	if (!pobject)
+	if (nullptr == (m_pOwner = pobject))
 		return false;
 
-	props::IPropertySet *propset = pobject->GetProperties();
+	props::IPropertySet *propset = m_pOwner->GetProperties();
 	if (!propset)
 		return false;
 
@@ -69,18 +69,36 @@ bool PositionableImpl::Initialize(Object *pobject)
 		pscl->SetVec3F(props::TVec3F(1, 1, 1));
 	}
 
+	props::IProperty *pfacing = propset->CreateReferenceProperty(_T("Facing.Forward"), 'FFWD', &m_Facing, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	if (pfacing)
+	{
+		pfacing->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::HIDDEN));
+	}
+
+	props::IProperty *pright = propset->CreateReferenceProperty(_T("Facing.Right"), 'FRGT', &m_LocalRight, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	if (pright)
+	{
+		pright->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::HIDDEN));
+	}
+
+	props::IProperty *pup = propset->CreateReferenceProperty(_T("Facing.Up"), 'FUP', &m_LocalUp, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	if (pup)
+	{
+		pup->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::HIDDEN));
+	}
+
 	m_Flags.SetAll(POSFLAG_REBUILDMATRIX);
 
 	return true;
 }
 
 
-void PositionableImpl::Update(Object *pobject, float elapsed_time)
+void PositionableImpl::Update(float elapsed_time)
 {
 	// if this object should track the camera, then move it here
-	if (pobject && pobject->Flags().AnySet(OF_TRACKCAMX | OF_TRACKCAMY | OF_TRACKCAMZ))
+	if (m_pOwner && m_pOwner->Flags().AnySet(OF_TRACKCAMX | OF_TRACKCAMY | OF_TRACKCAMZ))
 	{
-		Object *pcamobj = pobject->GetSystem()->GetGlobalObjectRegistry()->GetRegisteredObject(GlobalObjectRegistry::OD_CAMERA);
+		Object *pcamobj = m_pOwner->GetSystem()->GetGlobalObjectRegistry()->GetRegisteredObject(GlobalObjectRegistry::OD_CAMERA);
 		if (pcamobj)
 		{
 			Camera *pcamcomp = dynamic_cast<Camera *>(pcamobj->FindComponent(Camera::Type()));
@@ -88,18 +106,18 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 			{
 				glm::fvec3 pos;
 				// literal tracking uses the eye point itself, whereas non-literal tracking uses the focus point
-				if (pobject->Flags().AnySet(OF_TRACKCAMLITERAL))
+				if (m_pOwner->Flags().AnySet(OF_TRACKCAMLITERAL))
 					pcamcomp->GetEyePos(&pos);
 				else
 					pcamcomp->GetTargetPos(&pos);
 
-				if (pobject->Flags().AnySet(OF_TRACKCAMX))
+				if (m_pOwner->Flags().AnySet(OF_TRACKCAMX))
 					m_Pos.x = pos.x;
 
-				if (pobject->Flags().AnySet(OF_TRACKCAMY))
+				if (m_pOwner->Flags().AnySet(OF_TRACKCAMY))
 					m_Pos.y = pos.y;
 
-				if (pobject->Flags().AnySet(OF_TRACKCAMZ))
+				if (m_pOwner->Flags().AnySet(OF_TRACKCAMZ))
 					m_Pos.z = pos.z;
 
 				m_Flags.Set(POSFLAG_POSCHANGED);
@@ -109,6 +127,7 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 
 	if (m_Flags.AnySet(POSFLAG_REBUILDMATRIX))
 	{
+#if 1
 		glm::fmat4x4 tmp;
 
 		// Next rotate...
@@ -132,6 +151,56 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 		// Make a normal matrix
 		m_MatN = glm::inverseTranspose(m_Mat);
 
+#else
+		Object *powner = m_pOwner->GetOwner();
+		Positionable *pownerpos = nullptr;
+		while (powner)
+		{
+			if ((pownerpos = dynamic_cast<Positionable *>(powner->FindComponent(Positionable::Type()))) != nullptr)
+				break;
+
+			powner = powner->GetOwner();
+		}
+
+		// First rotate...
+		glm::fmat4x4 tmp = (glm::fmat4x4)m_Ori;
+
+		// Recalculate our facing vector in between...
+		glm::fvec4 f, u;
+		if (pownerpos)
+		{
+			pownerpos->GetFacingVector((glm::fvec3 *)&f);
+			pownerpos->GetLocalUpVector((glm::fvec3 *)&u);
+		}
+		else
+		{
+			f = glm::fvec4(0, 1, 0, 0);
+			u = glm::fvec4(0, 0, 1, 0);
+		}
+
+		m_Facing = glm::normalize(tmp * f);
+
+		// Recalculate our local up vector after that...
+		m_LocalUp = glm::normalize(tmp * u);
+
+		// Recalculate the local right vector
+		m_LocalRight = glm::normalize(glm::cross(m_Facing, m_LocalUp));
+
+		// Then Scale...
+		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * tmp;
+
+		// Last, translate... 
+		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * m_Mat;
+
+		// Make a normal matrix
+		m_MatN = glm::inverseTranspose(m_Mat);
+
+		if (pownerpos)
+		{
+			m_Mat = *pownerpos->GetTransformMatrix() * m_Mat;
+			m_MatN = *pownerpos->GetTransformMatrixNormal() * m_MatN;
+		}
+#endif
 		//m_Bounds.Align(&m_Mat);
 
 		m_Flags.Clear(POSFLAG_REBUILDMATRIX);
@@ -142,9 +211,9 @@ void PositionableImpl::Update(Object *pobject, float elapsed_time)
 }
 
 
-bool PositionableImpl::Prerender(Object *pobject, Object::RenderFlags flags)
+bool PositionableImpl::Prerender(Object::RenderFlags flags)
 {
-	Renderer *pr = pobject->GetSystem()->GetRenderer();
+	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 	pr->SetWorldMatrix(&m_Mat);
 
 	if (flags.IsSet(RF_FORCE))
@@ -157,10 +226,10 @@ bool PositionableImpl::Prerender(Object *pobject, Object::RenderFlags flags)
 }
 
 
-void PositionableImpl::Render(Object *pobject, Object::RenderFlags flags)
+void PositionableImpl::Render(Object::RenderFlags flags)
 {
 #if 0
-	Renderer *pr = pobject->GetSystem()->GetRenderer();
+	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 
 	ShaderProgram *sp = pr->GetBoundsShader();
 	pr->UseProgram(sp);

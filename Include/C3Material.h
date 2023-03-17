@@ -79,6 +79,12 @@ namespace c3
 		/// Get whether a triangle's front face is clockwise or counter-clockwise
 		virtual Renderer::WindingOrder GetWindingOrder() = NULL;
 
+		/// Determines the culling mode
+		virtual void SetCullMode(Renderer::CullMode mode) = NULL;
+
+		/// Gets the culling mode
+		virtual Renderer::CullMode GetCullMode() = NULL;
+
 		/// Sets the depth test type
 		virtual void SetDepthTest(Renderer::Test test) = NULL;
 

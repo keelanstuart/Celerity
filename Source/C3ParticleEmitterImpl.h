@@ -17,6 +17,9 @@ namespace c3
 	{
 
 	protected:
+
+		Object *m_pOwner;
+
 		struct SParticle
 		{
 			glm::fvec3 pos;
@@ -95,11 +98,11 @@ namespace c3
 
 		virtual bool Initialize(Object *pobject);
 
-		virtual void Update(Object *pobject, float elapsed_time = 0.0f);
+		virtual void Update(float elapsed_time = 0.0f);
 
-		virtual bool Prerender(Object *pobject, Object::RenderFlags flags);
+		virtual bool Prerender(Object::RenderFlags flags);
 
-		virtual void Render(Object *pobject, Object::RenderFlags flags);
+		virtual void Render(Object::RenderFlags flags);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
@@ -107,6 +110,6 @@ namespace c3
 
 	};
 
-	DEFINE_COMPONENTTYPE(ParticleEmitter, ParticleEmitterImpl, GUID({0xbe81dc6a, 0x962, 0x4b77, {0xa6, 0xdf, 0xa9, 0x85, 0x2b, 0x5f, 0x8a, 0x82}}), "ParticleEmitter", "Emits particles (requires Positionable)");
+	DEFINE_COMPONENTTYPE(ParticleEmitter, ParticleEmitterImpl, GUID({0xbe81dc6a, 0x962, 0x4b77, {0xa6, 0xdf, 0xa9, 0x85, 0x2b, 0x5f, 0x8a, 0x82}}), "ParticleEmitter", "Emits particles (requires Positionable)", 0);
 
 };

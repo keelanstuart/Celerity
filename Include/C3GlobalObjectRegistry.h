@@ -22,6 +22,8 @@ namespace c3
 			OD_WORLDROOT = 0,
 			OD_SKYBOXROOT,
 			OD_GUIROOT,
+			OD_CAMERA_ROOT,
+			OD_CAMERA_ARM,
 			OD_CAMERA,
 			OD_PLAYER,
 

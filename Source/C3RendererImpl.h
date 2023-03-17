@@ -137,9 +137,12 @@ namespace c3
 		Texture2D *m_LinearGradientTex;
 		Texture2D *m_OrthoRefTex;
 		Texture2D *m_UtilityColorTex;
+		Texture2D *m_SphereSpriteTex;
+		Texture2D *m_SphereSpriteNormalTex;
 
 		MaterialManagerImpl *m_MatMan;
 		Material *m_mtlWhite;
+		Material *m_mtlBlack;
 
 		size_t m_VertsPerFrame, m_IndicesPerFrame, m_TrisPerFrame, m_LinesPerFrame, m_PointsPerFrame;
 
@@ -327,9 +330,12 @@ namespace c3
 		virtual Texture2D *GetLinearGradientTexture();
 		virtual Texture2D *GetOrthoRefTexture();
 		virtual Texture2D *GetUtilityColorTexture();
+		virtual Texture2D *GetSphereSpriteTexture();
+		virtual Texture2D *GetSphereSpriteNormalTexture();
 
 		virtual MaterialManager *GetMaterialManager();
 		virtual const Material *GetWhiteMaterial();
+		virtual const Material *GetBlackMaterial();
 
 		virtual ShaderProgram *GetBoundsShader();
 

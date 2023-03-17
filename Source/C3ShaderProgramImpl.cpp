@@ -253,10 +253,13 @@ bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_
 	if (!p)
 		return false;
 
+	if (texunit < 0)
+		texunit = (int32_t)p->AsVec4I()->y;
+
 	// Vec3I = (uniform index, texunit, texture, texflags)
 	p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D);
 	p->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
-	p->SetVec4I(props::TVec4I(p->AsVec4I()->x, texunit >= 0 ? texunit : p->AsVec4I()->y, (int64_t)tex, texflags));
+	p->SetVec4I(props::TVec4I(p->AsVec4I()->x, texunit, (int64_t)tex, texflags));
 
 #ifdef IMMEDIATE_UNIFORMS
 	m_Rend->UseTexture(texunit, tex);
@@ -445,15 +448,15 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 						break;
 
 					case props::IProperty::PROPERTY_ASPECT::PA_SUN_DIRECTION:
-						//SetUniform3(p->GetID(), m_Rend->GetSunDirection());
+						SetUniform3(p->GetID(), m_Rend->GetSystem()->GetEnvironment()->GetSunDirection());
 						break;
 
 					case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
-						//SetUniform3(p->GetID(), m_Rend->GetSunColor());
+						SetUniform3(p->GetID(), m_Rend->GetSystem()->GetEnvironment()->GetSunColor());
 						break;
 
 					case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
-						//SetUniform3(p->GetID(), m_Rend->GetAmbientColor());
+						SetUniform3(p->GetID(), m_Rend->GetSystem()->GetEnvironment()->GetAmbientColor());
 						break;
 				}	
 				break;

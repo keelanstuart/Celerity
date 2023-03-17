@@ -20,6 +20,8 @@ namespace c3
 
 		static const ComponentType *Type();
 
+		virtual void Execute(const TCHAR *pcmd, ...) = NULL;
+
 	};
 
 };

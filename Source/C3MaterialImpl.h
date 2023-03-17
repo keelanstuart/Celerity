@@ -25,6 +25,7 @@ namespace c3
 		TTexOrRes m_tex[TextureComponentType::NUM_TEXTURETYPES];
 		glm::fvec4 m_color[ColorComponentType::NUM_COLORTYPES];
 
+		Renderer::CullMode m_CullMode;
 		Renderer::WindingOrder m_WindingOrder;
 
 		Renderer::Test m_DepthTest;
@@ -56,6 +57,10 @@ namespace c3
 		virtual Texture *GetTexture(TextureComponentType comptype) const;
 
 		virtual props::TFlags64 &RenderModeFlags();
+
+		virtual void SetCullMode(Renderer::CullMode mode);
+
+		virtual Renderer::CullMode GetCullMode();
 
 		virtual void SetWindingOrder(Renderer::WindingOrder mode);
 

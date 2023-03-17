@@ -132,11 +132,11 @@ namespace c3
 
 		virtual bool Initialize(Object *pobject);
 
-		virtual void Update(Object *pobject, float elapsed_time = 0.0f);
+		virtual void Update(float elapsed_time = 0.0f);
 
-		virtual bool Prerender(Object *pobject, Object::RenderFlags flags);
+		virtual bool Prerender(Object::RenderFlags flags);
 
-		virtual void Render(Object *pobject, Object::RenderFlags flags);
+		virtual void Render(Object::RenderFlags flags);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
@@ -153,6 +153,6 @@ namespace c3
 
 	};
 
-	DEFINE_COMPONENTTYPE(QuadTerrain, QuadTerrainImpl, GUID({ 0xec67985c, 0xb770, 0x4bae, { 0xaa, 0xa7, 0x1b, 0xb6, 0x3e, 0x1, 0x65, 0xa8 } }), "QuadTerrain", "Generates and renders a patch of terrain (requires Positionable)");
+	DEFINE_COMPONENTTYPE(QuadTerrain, QuadTerrainImpl, GUID({ 0xec67985c, 0xb770, 0x4bae, { 0xaa, 0xa7, 0x1b, 0xb6, 0x3e, 0x1, 0x65, 0xa8 } }), "QuadTerrain", "Generates and renders a patch of terrain (requires Positionable)", 0);
 
 };

@@ -39,7 +39,7 @@ props::TFlags64 EnvironmentModifierImpl::Flags() const
 
 bool EnvironmentModifierImpl::Initialize(Object *pobject)
 {
-	if (nullptr == pobject)
+	if (nullptr == (m_pOwner = pobject))
 		return false;
 
 	// get a positionable feature from the object -- and if we can't, don't proceed
@@ -54,30 +54,28 @@ bool EnvironmentModifierImpl::Initialize(Object *pobject)
 }
 
 
-void EnvironmentModifierImpl::Update(Object *pobject, float elapsed_time)
+void EnvironmentModifierImpl::Update(float elapsed_time)
 {
 	if (!m_pPos)
 		return;
 }
 
 
-bool EnvironmentModifierImpl::Prerender(Object *pobject, Object::RenderFlags flags)
+bool EnvironmentModifierImpl::Prerender(Object::RenderFlags flags)
 {
 	if (flags.IsSet(RF_FORCE))
 		return true;
 
-	if (!pobject->Flags().IsSet(OF_DRAW))
+	if (!m_pOwner->Flags().IsSet(OF_DRAW))
 		return false;
 
 	return true;
 }
 
 
-void EnvironmentModifierImpl::Render(Object *pobject, Object::RenderFlags flags)
+void EnvironmentModifierImpl::Render(Object::RenderFlags flags)
 {
-	assert(pobject);
-
-	c3::Renderer *prend = pobject->GetSystem()->GetRenderer();
+	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 }
 
 

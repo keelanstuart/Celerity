@@ -59,6 +59,7 @@
 #include <C3Scriptable.h>
 #include <C3Physical.h>
 
+#include <C3Environment.h>
 #include <C3Object.h>
 #include <C3Prototype.h>
 #include <C3Factory.h>

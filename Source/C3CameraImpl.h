@@ -17,6 +17,7 @@ namespace c3
 	{
 
 	protected:
+		Object *m_pOwner;
 
 		glm::fmat4x4 m_proj, m_view;
 
@@ -60,11 +61,11 @@ namespace c3
 
 		virtual bool Initialize(Object *pobject);
 
-		virtual void Update(Object *pobject, float elapsed_time = 0.0f);
+		virtual void Update(float elapsed_time = 0.0f);
 
-		virtual bool Prerender(Object *pobject, Object::RenderFlags flags);
+		virtual bool Prerender(Object::RenderFlags flags);
 
-		virtual void Render(Object *pobject, Object::RenderFlags flags);
+		virtual void Render(Object::RenderFlags flags);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
@@ -95,6 +96,6 @@ namespace c3
 
 	};
 
-	DEFINE_COMPONENTTYPE(Camera, CameraImpl, GUID({0xfcc880c3, 0x54a2, 0x4168, { 0xbd, 0x4, 0xe9, 0x91, 0xfe, 0xee, 0x29, 0xef }}), "Camera", "Camera generates view and projection matrices for scene rendering (requires Positionable)");
+	DEFINE_COMPONENTTYPE(Camera, CameraImpl, GUID({0xfcc880c3, 0x54a2, 0x4168, { 0xbd, 0x4, 0xe9, 0x91, 0xfe, 0xee, 0x29, 0xef }}), "Camera", "Camera generates view and projection matrices for scene rendering (requires Positionable)", 0);
 
 };

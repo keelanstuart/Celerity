@@ -16,12 +16,17 @@ namespace c3
 	{
 
 	protected:
+
+		Object *m_pOwner;
+
 		glm::vec3 m_LinVel;
 		glm::vec3 m_LinAcc;
+		float m_LinSpeedFalloff;
 		float m_maxLinSpeed;
 
 		glm::vec3 m_RotVel;
 		glm::vec3 m_RotAcc;
+		glm::vec3 m_RotVelFalloff;
 		glm::vec3 m_maxRotSpeed;
 
 		props::TFlags64 m_Flags;
@@ -42,15 +47,16 @@ namespace c3
 
 		virtual bool Initialize(Object *pobject);
 
-		virtual void Update(Object *pobject, float elapsed_time = 0.0f);
+		virtual void Update(float elapsed_time = 0.0f);
 
-		virtual bool Prerender(Object *pobject, Object::RenderFlags flags);
+		virtual bool Prerender(Object::RenderFlags flags);
 
-		virtual void Render(Object *pobject, Object::RenderFlags flags);
+		virtual void Render(Object::RenderFlags flags);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
-#if 0
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
+
 		// *** LINEAR VELOCITY FUNCTIONS *******************************
 
 		virtual void SetLinVel(float x, float y, float z);
@@ -65,6 +71,11 @@ namespace c3
 		virtual float GetLinVelZ();
 
 		virtual void AdjustLinVel(float xadj = 0.0f, float yadj = 0.0f, float zadj = 0.0f);
+
+		virtual void SetMaxLinSpeed(float speed = FLT_MAX);
+		virtual float GetMaxLinSpeed();
+
+		virtual void SetLinSpeedFalloffFactor(float factor = 0.0f);
 
 
 		// *** LINEAR ACCELERATION FUNCTIONS *******************************
@@ -92,11 +103,17 @@ namespace c3
 		virtual void SetRotVelR(float r);
 
 		virtual const glm::fvec3 *GetRotVel(glm::fvec3 *rvel = nullptr);
-		virtual float GetRoitVelY();
-		virtual float GetRoitVelP();
-		virtual float GetRoitVelR();
+		virtual float GetRotVelY();
+		virtual float GetRotVelP();
+		virtual float GetRotVelR();
 
 		virtual void AdjustRotVel(float yadj = 0.0f, float padj = 0.0f, float radj = 0.0f);
+
+		virtual void SetMaxRotSpeed(glm::fvec3 *speed = nullptr);
+		virtual glm::fvec3 *GetMaxRotSpeed(glm::fvec3 *speed = nullptr);
+
+		virtual void SetRotVelFalloffFactor(glm::fvec3 *factor = nullptr);
+		virtual glm::fvec3 *GetRotVelFalloffFactor(glm::fvec3 *factor = nullptr);
 
 
 		// *** ROTATIONAL ACCELERATION FUNCTIONS *******************************
@@ -113,13 +130,9 @@ namespace c3
 		virtual float GetRotAccR();
 
 		virtual void AdjustRotAcc(float yadj = 0.0f, float padj = 0.0f, float radj = 0.0f);
-#endif
-
-
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
 
 	};
 
-	DEFINE_COMPONENTTYPE(Physical, PhysicalImpl, GUID({0x26d446ca, 0xda21, 0x4272, {0xb6, 0x66, 0x16, 0xc2, 0xcb, 0xf3, 0x5f, 0x69}}), "Physical", "Allows the Object to move through space, requires Positional");
+	DEFINE_COMPONENTTYPE(Physical, PhysicalImpl, GUID({0xf8641b51, 0xa0fc, 0x4d93, {0x89, 0x2f, 0x48, 0xb, 0x7, 0xba, 0x28, 0x61}}), "Physical", "Allows the Object to move through space, requires Positional", 0);
 
 };

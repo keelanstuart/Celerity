@@ -30,7 +30,7 @@
 #define TINYJS_H
 
 // If defined, this keeps a note of all calls and where from in memory. This is slower, but good for debugging
-#define TINYJS_CALL_STACK
+#define TINYJS_CALL_STACK	FALSE
 
 #ifdef _WIN32
 #ifdef _DEBUG
@@ -51,128 +51,126 @@ const int64_t TINYJS_LOOP_MAX_ITERATIONS = 8192;
 
 enum LEX_TYPES
 {
-    LEX_EOF = 0,
-    LEX_ID = 256,
-    LEX_INT,
-    LEX_FLOAT,
-    LEX_STR,
+	LEX_EOF = 0,
+	LEX_ID = 256,
+	LEX_INT,
+	LEX_FLOAT,
+	LEX_STR,
 
-    LEX_EQUAL,
-    LEX_TYPEEQUAL,
-    LEX_NEQUAL,
-    LEX_NTYPEEQUAL,
-    LEX_LEQUAL,
-    LEX_LSHIFT,
-    LEX_LSHIFTEQUAL,
-    LEX_GEQUAL,
-    LEX_RSHIFT,
-    LEX_RSHIFTUNSIGNED,
-    LEX_RSHIFTEQUAL,
-    LEX_PLUSEQUAL,
-    LEX_MINUSEQUAL,
-    LEX_PLUSPLUS,
-    LEX_MINUSMINUS,
-    LEX_ANDEQUAL,
-    LEX_ANDAND,
-    LEX_OREQUAL,
-    LEX_OROR,
-    LEX_XOREQUAL,
-    // reserved words
+	LEX_EQUAL,
+	LEX_TYPEEQUAL,
+	LEX_NEQUAL,
+	LEX_NTYPEEQUAL,
+	LEX_LEQUAL,
+	LEX_LSHIFT,
+	LEX_LSHIFTEQUAL,
+	LEX_GEQUAL,
+	LEX_RSHIFT,
+	LEX_RSHIFTUNSIGNED,
+	LEX_RSHIFTEQUAL,
+	LEX_PLUSEQUAL,
+	LEX_MINUSEQUAL,
+	LEX_PLUSPLUS,
+	LEX_MINUSMINUS,
+	LEX_ANDEQUAL,
+	LEX_ANDAND,
+	LEX_OREQUAL,
+	LEX_OROR,
+	LEX_XOREQUAL,
+	// reserved words
 #define LEX_R_LIST_START LEX_R_IF
-    LEX_R_IF,
-    LEX_R_ELSE,
-    LEX_R_DO,
-    LEX_R_WHILE,
-    LEX_R_FOR,
-    LEX_R_BREAK,
-    LEX_R_CONTINUE,
-    LEX_R_FUNCTION,
-    LEX_R_RETURN,
-    LEX_R_VAR,
-    LEX_R_TRUE,
-    LEX_R_FALSE,
-    LEX_R_NULL,
-    LEX_R_UNDEFINED,
-    LEX_R_NEW,
+	LEX_R_IF,
+	LEX_R_ELSE,
+	LEX_R_DO,
+	LEX_R_WHILE,
+	LEX_R_FOR,
+	LEX_R_BREAK,
+	LEX_R_CONTINUE,
+	LEX_R_FUNCTION,
+	LEX_R_RETURN,
+	LEX_R_VAR,
+	LEX_R_TRUE,
+	LEX_R_FALSE,
+	LEX_R_NULL,
+	LEX_R_UNDEFINED,
+	LEX_R_NEW,
 
 	LEX_R_LIST_END /* always the last entry */
 };
 
-enum SCRIPTVAR_FLAGS
-{
-    SCRIPTVAR_UNDEFINED   = 0,
-    SCRIPTVAR_FUNCTION    = 1,
-    SCRIPTVAR_OBJECT      = 2,
-    SCRIPTVAR_ARRAY       = 4,
-    SCRIPTVAR_DOUBLE      = 8,  // floating point double
-    SCRIPTVAR_INTEGER     = 16, // integer number
-    SCRIPTVAR_STRING      = 32, // string
-    SCRIPTVAR_NULL        = 64, // it seems null is its own data type
+#define SVF_FUNCTION					0x0001
+#define SVF_OBJECT						0x0002
+#define SVF_ARRAY						0x0004
+#define SVF_FLOAT						0x0008      // floating point number
+#define SVF_INTEGER						0x0010      // integer number
+#define SVF_STRING						0x0020      // string
+#define SVF_NULL						0x0040      // a legitimate, null value
+#define SVF_NATIVE						0x0080      // to specify this is a native function
+#define SVF_VALUE_STRING_CACHED			0x0100
 
-    SCRIPTVAR_NATIVE      = 128, // to specify this is a native function
-    SCRIPTVAR_NUMERICMASK = SCRIPTVAR_NULL |
-                            SCRIPTVAR_DOUBLE |
-                            SCRIPTVAR_INTEGER,
-    SCRIPTVAR_VARTYPEMASK = SCRIPTVAR_DOUBLE |
-                            SCRIPTVAR_INTEGER |
-                            SCRIPTVAR_STRING |
-                            SCRIPTVAR_FUNCTION |
-                            SCRIPTVAR_OBJECT |
-                            SCRIPTVAR_ARRAY |
-                            SCRIPTVAR_NULL,
-
-};
+#define SVF_NUMERIC_MASK				(SVF_NULL | SVF_FLOAT | SVF_INTEGER)
+#define SVF_VARTYPE_MASK				(SVF_NULL | SVF_FLOAT | SVF_INTEGER | SVF_STRING | SVF_FUNCTION | SVF_OBJECT | SVF_ARRAY)
 
 #define TINYJS_RETURN_VAR			_T("return")
 #define TINYJS_PROTOTYPE_CLASS		_T("prototype")
 #define TINYJS_TEMP_NAME			_T("")
 #define TINYJS_BLANK_DATA			_T("")
 
-/// convert the given string into a quoted string suitable for javascript
-tstring getJSString(const tstring &str);
+#define TINYJS_RESERVED_STRING_SIZE		64
+
+#define TINYJS_GETALL				-1
 
 class CScriptException
 {
 public:
-    tstring text;
-    CScriptException(const tstring &exceptionText);
+	tstring text;
+	CScriptException(const tstring &exceptionText);
 };
+
+typedef int64_t		JSTokenType;
+typedef uint32_t	JSFlagsType;
 
 class CScriptLex
 {
+protected:
+	typedef std::vector<CScriptLex> TScriptLexStore;
+	static CScriptLex::TScriptLexStore CScriptLex::s_Store;
+
 public:
-    CScriptLex(const tstring &input);
-    CScriptLex(CScriptLex *owner, int64_t startChar, int64_t endChar);
-    ~CScriptLex(void);
+	CScriptLex();
+	~CScriptLex();
+	static CScriptLex *GetNew(const TCHAR *text, bool copy_text = true, size_t start_idx = 0, size_t end_idx = TINYJS_GETALL);
+	void Release();
 
-    TCHAR currCh, nextCh;
-    int64_t tk; ///< The type of the token that we have
-    int64_t tokenStart; ///< Position in the data at the beginning of the token we have here
-    int64_t tokenEnd; ///< Position in the data at the last character of the token we have here
-    int64_t tokenLastEnd; ///< Position in the data at the last character of the last token
-    tstring tkStr; ///< Data contained in the token we have here
+	TCHAR currCh, nextCh;
+	int64_t tk; ///< The type of the token that we have
+	int64_t tokenStart; ///< Position in the data at the beginning of the token we have here
+	int64_t tokenEnd; ///< Position in the data at the last character of the token we have here
+	int64_t tokenLastEnd; ///< Position in the data at the last character of the last token
+	tstring tkStr; ///< Data contained in the token we have here
 
-    void match(int64_t expected_tk); ///< Lexical match wotsit
-    static tstring getTokenStr(int64_t token); ///< Get the string representation of the given token
-    void reset(); ///< Reset this lex so we can start again
+	void match(int64_t expected_tk); ///< Lexical match wotsit
+	static tstring getTokenStr(int64_t token); ///< Get the string representation of the given token
+	void reset(); ///< Reset this lex so we can start again
 
-    tstring getSubString(int64_t pos); ///< Return a sub-string from the given position up until right now
-    CScriptLex *getSubLex(int64_t lastPosition); ///< Return a sub-lexer from the given position up until right now
+	tstring getSubString(int64_t pos); ///< Return a sub-string from the given position up until right now
+	CScriptLex *getSubLex(int64_t lastPosition); ///< Return a sub-lexer from the given position up until right now
 
-    tstring getPosition(int64_t pos=-1); ///< Return a string representing the position in lines and columns of the character pos given
+	tstring getPosition(int64_t pos = TINYJS_GETALL); ///< Return a string representing the position in lines and columns of the character pos given
 
 protected:
-    /* When we go into a loop, we use getSubLex to get a lexer for just the sub-part of the
-       relevant string. This doesn't re-allocate and copy the string, but instead copies
-       the data pointer and sets dataOwned to false, and dataStart/dataEnd to the relevant things. */
-    TCHAR *data; ///< Data string to get tokens from
-    int64_t dataStart, dataEnd; ///< Start and end position in data string
-    bool dataOwned; ///< Do we own this data string?
+	/* When we go into a loop, we use getSubLex to get a lexer for just the sub-part of the
+	   relevant string. This doesn't re-allocate and copy the string, but instead copies
+	   the data pointer and sets dataOwned to false, and dataStart/dataEnd to the relevant things. */
+	TCHAR *data; ///< Data string to get tokens from
+	int64_t dataStart, dataEnd; ///< Start and end position in data string
+	bool dataOwned; ///< Do we own this data string?
 
-    int64_t dataPos; ///< Position in data (we CAN go past the end of the string here)
+	int64_t dataPos; ///< Position in data (we CAN go past the end of the string here)
+	bool m_bInUse;
 
-    void getNextCh();
-    void getNextToken(); ///< Get the text token from our text string
+	void getNextCh();
+	void getNextToken(); ///< Get the text token from our text string
 };
 
 class CScriptVar;
@@ -182,184 +180,185 @@ typedef void (*JSCallback)(CScriptVar *var, void *userdata);
 class CScriptVarLink
 {
 public:
-  tstring name;
-  CScriptVarLink *nextSibling;
-  CScriptVarLink *prevSibling;
-  CScriptVar *var;
-  bool owned;
+	tstring m_Name;
+	struct
+	{
+		CScriptVarLink *next;
+		CScriptVarLink *prev;
+	} m_Sibling;
 
-  CScriptVarLink(CScriptVar *var, const tstring &name = TINYJS_TEMP_NAME);
-  CScriptVarLink(const CScriptVarLink &link); ///< Copy constructor
-  ~CScriptVarLink();
-  void replaceWith(CScriptVar *newVar); ///< Replace the Variable pointed to
-  void replaceWith(CScriptVarLink *newVar); ///< Replace the Variable pointed to (just dereferences)
-  int64_t getIntName(); ///< Get the name as an integer (for arrays)
-  void setIntName(int64_t n); ///< Set the name as an integer (for arrays)
+	CScriptVar *m_Var;
+	bool m_Owned;
+
+	CScriptVarLink(CScriptVar *var, const TCHAR *name = TINYJS_TEMP_NAME);
+	CScriptVarLink(const CScriptVarLink &link); ///< Copy constructor
+	~CScriptVarLink();
+	void ReplaceWith(CScriptVar *newVar); ///< Replace the Variable pointed to
+	void ReplaceWith(CScriptVarLink *newVar); ///< Replace the Variable pointed to (just dereferences)
+	int64_t GetIntName(); ///< Get the name as an integer (for arrays)
+	void SetIntName(int64_t n); ///< Set the name as an integer (for arrays)
 };
 
 /// Variable class (containing a doubly-linked list of children)
 class CScriptVar
 {
 public:
-    CScriptVar(); ///< Create undefined
-    CScriptVar(const tstring &varData, int64_t varFlags); ///< User defined
-    CScriptVar(const tstring &str); ///< Create a string
-    CScriptVar(double varData);
-    CScriptVar(int64_t val);
-    ~CScriptVar(void);
+	CScriptVar(); ///< Create undefined
+	CScriptVar(const TCHAR *val, JSFlagsType flags); ///< User defined
+	CScriptVar(const TCHAR *val); ///< Create a string
+	CScriptVar(float val);
+	CScriptVar(int64_t val);
+	~CScriptVar();
 
-    CScriptVar *getReturnVar(); ///< If this is a function, get the result value (for use by native functions)
-    void setReturnVar(CScriptVar *var); ///< Set the result value. Use this when setting complex return data as it avoids a deepCopy()
-    CScriptVar *getParameter(const tstring &name); ///< If this is a function, get the parameter with the given name (for use by native functions)
+	CScriptVar *GetReturnVar(); ///< If this is a function, get the result value (for use by native functions)
+	void SetReturnVar(CScriptVar *var); ///< Set the result value. Use this when setting complex return data as it avoids a deepCopy()
+	CScriptVar *GetParameter(const TCHAR *name); ///< If this is a function, get the parameter with the given name (for use by native functions)
 
-    CScriptVarLink *findChild(const tstring &childName); ///< Tries to find a child with the given name, may return 0
-    CScriptVarLink *findChildOrCreate(const tstring &childName, int64_t varFlags = SCRIPTVAR_UNDEFINED); ///< Tries to find a child with the given name, or will create it with the given flags
-    CScriptVarLink *findChildOrCreateByPath(const tstring &path); ///< Tries to find a child with the given path (separated by dots)
-    CScriptVarLink *addChild(const tstring &childName, CScriptVar *child = nullptr);
-    CScriptVarLink *addChildNoDup(const tstring &childName, CScriptVar *child = nullptr); ///< add a child overwriting any with the same name
-    void removeChild(CScriptVar *child);
-    void removeLink(CScriptVarLink *link); ///< Remove a specific link (this is faster than finding via a child)
-    void removeAllChildren();
-    CScriptVar *getArrayIndex(int64_t idx); ///< The the value at an array index
-    void setArrayIndex(int64_t idx, CScriptVar *value); ///< Set the value at an array index
-    int64_t getArrayLength(); ///< If this is an array, return the number of items in it (else 0)
-    int64_t getChildren(); ///< Get the number of children
+	CScriptVarLink *FindChild(const TCHAR *child_name); ///< Tries to Find a child with the given name, may return 0
+	CScriptVarLink *FindChildOrCreate(const TCHAR *child_name, JSFlagsType varFlags = 0); ///< Tries to Find a child with the given name, or will create it with the given flags
+	CScriptVarLink *FindChildOrCreateByPath(const TCHAR *path); ///< Tries to Find a child with the given path (separated by dots)
+	CScriptVarLink *AddChild(const TCHAR *child_name, CScriptVar *child = nullptr, bool overwrite = false);
+	void RemoveChild(CScriptVar *child);
+	void RemoveLink(CScriptVarLink *link); ///< Remove a specific link (this is faster than Finding via a child)
+	void RemoveAllChildren();
+	CScriptVar *GetArrayIndex(int64_t idx); ///< The the value at an array index
+	void SetArrayIndex(int64_t idx, CScriptVar *value); ///< Set the value at an array index
+	int64_t GetArrayLength(); ///< If this is an array, return the number of items in it (else 0)
+	int64_t GetChildren(); ///< Get the number of children
 
-    int64_t getInt();
-    bool getBool() { return getInt() != 0; }
-    double getDouble();
-    const tstring &getString();
-    tstring getParsableString(); ///< get Data as a parsable javascript string
-    void setInt(int64_t num);
-    void setDouble(double val);
-    void setString(const tstring &str);
-    void setUndefined();
-    void setArray();
-    bool equals(CScriptVar *v);
+	int64_t GetInt();
+	bool GetBool() { return GetInt() != 0; }
+	float GetFloat();
+	const TCHAR *GetString();
+	void SetInt(int64_t val);
+	void SetFloat(float val);
+	void SetString(const TCHAR *val);
+	void SetUndefined();
+	void SetArray();
+	bool Equals(CScriptVar *v);
 
-    bool isInt() { return (flags & SCRIPTVAR_INTEGER) != 0; }
-    bool isDouble() { return (flags & SCRIPTVAR_DOUBLE) != 0; }
-    bool isString() { return (flags & SCRIPTVAR_STRING) != 0; }
-    bool isNumeric() { return (flags & SCRIPTVAR_NUMERICMASK) != 0; }
-    bool isFunction() { return (flags & SCRIPTVAR_FUNCTION) != 0; }
-    bool isObject() { return (flags & SCRIPTVAR_OBJECT) != 0; }
-    bool isArray() { return (flags & SCRIPTVAR_ARRAY) != 0; }
-    bool isNative() { return (flags & SCRIPTVAR_NATIVE) != 0; }
-    bool isUndefined() { return (flags & SCRIPTVAR_VARTYPEMASK) == SCRIPTVAR_UNDEFINED; }
-    bool isNull() { return (flags & SCRIPTVAR_NULL) != 0; }
-    bool isBasic() { return firstChild == 0; } ///< Is this *not* an array/object/etc
+	bool IsInt() { return (flags & SVF_INTEGER) != 0; }
+	bool IsFloat() { return (flags & SVF_FLOAT) != 0; }
+	bool IsString() { return (flags & SVF_STRING) != 0; }
+	bool IsNumeric() { return (flags & SVF_NUMERIC_MASK) != 0; }
+	bool IsFunction() { return (flags & SVF_FUNCTION) != 0; }
+	bool IsObject() { return (flags & SVF_OBJECT) != 0; }
+	bool IsArray() { return (flags & SVF_ARRAY) != 0; }
+	bool IsNative() { return (flags & SVF_NATIVE) != 0; }
+	bool IsUndefined() { return (flags & SVF_VARTYPE_MASK) == 0; }
+	bool IsNull() { return (flags & SVF_NULL) != 0; }
+	bool IsBasic() { return m_Child.first == 0; } ///< Is this *not* an array/object/etc
 
-    CScriptVar *mathsOp(CScriptVar *b, int64_t op); ///< do a maths op with another script variable
-    void copyValue(CScriptVar *val); ///< copy the value from the value given
-    CScriptVar *deepCopy(); ///< deep copy this node and return the result
+	CScriptVar *MathsOp(CScriptVar *b, int64_t op); ///< do a maths op with another script variable
+	void CopyValue(CScriptVar *val); ///< copy the value from the value given
+	CScriptVar *DeepCopy(); ///< deep copy this node and return the result
 
-    void trace(tstring indentStr = _T(""), const tstring &name = _T("")); ///< Dump out the contents of this using trace
-    tstring getFlagsAsString(); ///< For debugging - just dump a string version of the flags
-    void getJSON(tostringstream &destination, const tstring linePrefix = _T("")); ///< Write out all the JS code needed to recreate this script variable to the stream (as JSON)
-    void setCallback(JSCallback callback, void *userdata); ///< Set the callback for native functions
+	void Trace(tstring indentStr = _T(""), const tstring &name = _T("")); ///< Dump out the contents of this using trace
+	void SetCallback(JSCallback callback, void *userdata); ///< Set the callback for native functions
 
-    CScriptVarLink *firstChild;
-    CScriptVarLink *lastChild;
+	struct
+	{
+		CScriptVarLink *first;
+		CScriptVarLink *last;
+	} m_Child;
 
-    /// For memory management/garbage collection
-    CScriptVar *ref(); ///< Add reference to this variable
-    void unref(); ///< Remove a reference, and delete this variable if required
-    int64_t getRefs(); ///< Get the number of references to this script variable
+	/// For memory management/garbage collection
+	CScriptVar *ref(); ///< Add reference to this variable
+	void unref(); ///< Remove a reference, and delete this variable if required
+	int64_t getRefs(); ///< Get the number of references to this script variable
 protected:
-    int64_t refs; ///< The number of references held to this - used for garbage collection
+	int64_t m_RefCt; ///< The number of references held to this - used for garbage collection
 
-    tstring data; ///< The contents of this variable if it is a string
-    int64_t intData; ///< The contents of this variable if it is an int64_t
-    double doubleData; ///< The contents of this variable if it is a double
-    int64_t flags; ///< the flags determine the type of the variable - int64_t/double/string/etc
-    JSCallback jsCallback; ///< Callback for native functions
-    void *jsCallbackUserData; ///< user data passed as second argument to native functions
+	tstring strData; ///< The contents of this variable if it is a string
+	int64_t intData; ///< The contents of this variable if it is an int64_t
+	float floatData; ///< The contents of this variable if it is a float
+	int64_t flags; ///< the flags determine the type of the variable - int64_t/float/string/etc
+	JSCallback jsCallback; ///< Callback for native functions
+	void *jsCallbackUserData; ///< user data passed as second argument to native functions
 
-    void init(); ///< initialisation of data members
+	void init(); ///< initialisation of data members
 
-    /** Copy the basic data and flags from the variable given, with no
-      * children. Should be used internally only - by copyValue and deepCopy */
-    void copySimpleData(CScriptVar *val);
+	/** Copy the basic data and flags from the variable given, with no
+	  * children. Should be used internally only - by copyValue and deepCopy */
+	void CopySimpleData(CScriptVar *val);
 
-    friend class CTinyJS;
+	friend class CTinyJS;
 };
 
 class CTinyJS
 {
 public:
-    CTinyJS();
-    ~CTinyJS();
+	CTinyJS();
+	~CTinyJS();
 
-    void execute(const tstring &code);
-    /** Evaluate the given code and return a link to a javascript object,
-     * useful for (dangerous) JSON parsing. If nothing to return, will return
-     * 'undefined' variable type. CScriptVarLink is returned as this will
-     * automatically unref the result as it goes out of scope. If you want to
-     * keep it, you must use ref() and unref() */
-    CScriptVarLink evaluateComplex(const tstring &code);
-    /** Evaluate the given code and return a string. If nothing to return, will return
-     * 'undefined' */
-    tstring evaluate(const tstring &code);
+	bool Execute(const TCHAR *code);
 
-    /// add a native function to be called from TinyJS
-    /** example:
-       \code
-           void scRandInt(CScriptVar *c, void *userdata) { ... }
-           tinyJS->addNative("function randInt(min, max)", scRandInt, 0);
-       \endcode
+	/// add a native function to be called from TinyJS
+	/** example:
+	   \code
+		   void scRandInt(CScriptVar *c, void *userdata) { ... }
+		   tinyJS->addNative("function randInt(min, max)", scRandInt, 0);
+	   \endcode
 
-       or
+	   or
 
-       \code
-           void scSubstring(CScriptVar *c, void *userdata) { ... }
-           tinyJS->addNative("function String.substring(lo, hi)", scSubstring, 0);
-       \endcode
-    */
-    void addNative(const tstring &funcDesc, JSCallback ptr, void *userdata);
+	   \code
+		   void scSubstring(CScriptVar *c, void *userdata) { ... }
+		   tinyJS->addNative("function String.substring(lo, hi)", scSubstring, 0);
+	   \endcode
+	*/
+	void AddNative(const TCHAR *funcDesc, JSCallback ptr, void *userdata);
 
-    /// Get the given variable specified by a path (var1.var2.etc), or return 0
-    CScriptVar *getScriptVariable(const tstring &path);
-    /// Get the value of the given variable, or return 0
-    const tstring *getVariable(const tstring &path);
-    /// set the value of the given variable, return trur if it exists and gets set
-    bool setVariable(const tstring &path, const tstring &varData);
+	/// Get the given variable specified by a path (var1.var2.etc), or return 0
+	CScriptVar *GetScriptVariable(const TCHAR *path);
 
-    /// Send all variables to stdout
-    void trace();
+	/// Get the value of the given variable, or return 0
+	const TCHAR *GetVariable(const TCHAR *path);
 
-    CScriptVar *root;   /// root of symbol table
+	/// set the value of the given variable, return trur if it exists and gets set
+	bool SetVariable(const TCHAR *path, const TCHAR *vardata);
+
+	/// Send all variables to stdout
+	void Trace();
+
+	CScriptVar *m_Root;   /// m_Root of symbol table
+	c3::System *m_pSys;
+	c3::Object *m_pObj;
 private:
-    CScriptLex *l;             /// current lexer
-    std::vector<CScriptVar*> scopes; /// stack of scopes when parsing
+
+	CScriptLex *l;             /// current lexer
+	std::vector<CScriptVar *> scopes; /// stack of scopes when parsing
 #ifdef TINYJS_CALL_STACK
-    std::vector<tstring> call_stack; /// Names of places called so we can show when erroring
+	std::vector<tstring> call_stack; /// Names of places called so we can show when erroring
 #endif
 	tstring last_error;
 
-    CScriptVar *stringClass; /// Built in string class
-    CScriptVar *objectClass; /// Built in object class
-    CScriptVar *arrayClass; /// Built in array class
+	CScriptVar *stringClass; /// Built in string class
+	CScriptVar *objectClass; /// Built in object class
+	CScriptVar *arrayClass; /// Built in array class
 
-    // parsing - in order of precedence
-    CScriptVarLink *functionCall(bool &execute, CScriptVarLink *function, CScriptVar *parent);
-    CScriptVarLink *factor(bool &execute);
-    CScriptVarLink *unary(bool &execute);
-    CScriptVarLink *term(bool &execute);
-    CScriptVarLink *expression(bool &execute);
-    CScriptVarLink *shift(bool &execute);
-    CScriptVarLink *condition(bool &execute);
-    CScriptVarLink *logic(bool &execute);
-    CScriptVarLink *ternary(bool &execute);
-    CScriptVarLink *base(bool &execute);
-    void block(bool &execute);
-    void statement(bool &execute);
-    // parsing utility functions
-    CScriptVarLink *parseFunctionDefinition();
-    void parseFunctionArguments(CScriptVar *funcVar);
+	// parsing - in order of precedence
+	CScriptVarLink *functionCall(bool &execute, CScriptVarLink *function, CScriptVar *parent);
+	CScriptVarLink *factor(bool &execute);
+	CScriptVarLink *unary(bool &execute);
+	CScriptVarLink *term(bool &execute);
+	CScriptVarLink *expression(bool &execute);
+	CScriptVarLink *shift(bool &execute);
+	CScriptVarLink *condition(bool &execute);
+	CScriptVarLink *logic(bool &execute);
+	CScriptVarLink *ternary(bool &execute);
+	CScriptVarLink *base(bool &execute);
+	void block(bool &execute);
+	void statement(bool &execute);
 
-    CScriptVarLink *findInScopes(const tstring &childName); ///< Finds a child, looking recursively up the scopes
-    /// Look up in any parent classes of the given object
-    CScriptVarLink *findInParentClasses(CScriptVar *object, const tstring &name);
+	// parsing utility functions
+	CScriptVarLink *parseFunctionDefinition();
+	void parseFunctionArguments(CScriptVar *funcVar);
+
+	CScriptVarLink *FindInScopes(const TCHAR *childName); ///< Finds a child, looking recursively up the scopes
+
+	/// Look up in any parent classes of the given object
+	CScriptVarLink *FindInParentClasses(CScriptVar *object, const TCHAR *name);
 };
 
 #endif

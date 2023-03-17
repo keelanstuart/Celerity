@@ -38,7 +38,7 @@ props::TFlags64 ParticleEmitterImpl::Flags() const
 
 bool ParticleEmitterImpl::Initialize(Object *pobject)
 {
-	if (!pobject)
+	if (nullptr == (m_pOwner = pobject))
 		return false;
 
 	props::IPropertySet *propset = pobject->GetProperties();
@@ -187,29 +187,26 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 }
 
 
-void ParticleEmitterImpl::Update(Object *pobject, float elapsed_time)
+void ParticleEmitterImpl::Update(float elapsed_time)
 {
 }
 
 
-bool ParticleEmitterImpl::Prerender(Object *pobject, Object::RenderFlags flags)
+bool ParticleEmitterImpl::Prerender(Object::RenderFlags flags)
 {
-	Renderer *pr = pobject->GetSystem()->GetRenderer();
-	//pr->SetWorldMatrix(&m_Mat);
-
 	if (flags.IsSet(RF_FORCE))
 		return true;
 
-	if (!pobject->Flags().IsSet(OF_DRAW))
+	if (!m_pOwner->Flags().IsSet(OF_DRAW))
 		return false;
 
 	return true;
 }
 
 
-void ParticleEmitterImpl::Render(Object *pobject, Object::RenderFlags flags)
+void ParticleEmitterImpl::Render(Object::RenderFlags flags)
 {
-	Renderer *pr = pobject->GetSystem()->GetRenderer();
+	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 
 	ShaderProgram *sp = pr->GetBoundsShader();
 	pr->UseProgram(sp);

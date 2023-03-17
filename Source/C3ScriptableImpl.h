@@ -17,11 +17,16 @@ namespace c3
 	{
 
 	protected:
-		CTinyJS m_JS;
+		Object *m_pOwner;
+
+		CTinyJS *m_JS;
 		tstring m_Code;
 		float m_UpdateRate;
 		float m_UpdateTime;
-		System *m_pSys;
+
+		bool m_Continue;
+
+		void ResetJS();
 
 	public:
 
@@ -37,20 +42,22 @@ namespace c3
 
 		virtual bool Initialize(Object *pobject);
 
-		virtual void Update(Object *pobject, float elapsed_time = 0.0f);
+		virtual void Update(float elapsed_time = 0.0f);
 
-		virtual bool Prerender(Object *pobject, Object::RenderFlags flags);
+		virtual bool Prerender(Object::RenderFlags flags);
 
-		virtual void Render(Object *pobject, Object::RenderFlags flags);
+		virtual void Render(Object::RenderFlags flags);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
 
+		virtual void Execute(const TCHAR *pcmd, ...);
+
 	};
 
 	// Scriptable Component GUID {1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}
-	DEFINE_COMPONENTTYPE(Scriptable, ScriptableImpl, GUID({0x1f1d4b43, 0x8b2a, 0x44de, {0xba, 0xb5, 0xd2, 0x4d, 0x8a, 0xc3, 0x2b, 0xec}}), "Scriptable", "Allows the Object to be controlled by scripts");
+	DEFINE_COMPONENTTYPE(Scriptable, ScriptableImpl, GUID({0x1f1d4b43, 0x8b2a, 0x44de, {0xba, 0xb5, 0xd2, 0x4d, 0x8a, 0xc3, 0x2b, 0xec}}), "Scriptable", "Allows the Object to be controlled by scripts", CF_PUSHFRONT);
 
 
 	class Script

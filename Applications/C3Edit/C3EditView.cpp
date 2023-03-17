@@ -336,7 +336,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 			prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-			pDoc->m_RootObj->Render(RF_LIGHT | RF_EDITORDRAW);
+			pDoc->m_RootObj->Render(RF_LIGHT);
 
 			// clear the render method and material
 			prend->UseRenderMethod();

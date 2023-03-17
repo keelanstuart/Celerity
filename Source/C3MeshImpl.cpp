@@ -287,7 +287,7 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 				glm::fvec3 na = glm::normalize(*v[1] - *v[0]);
 				glm::fvec3 nb = glm::normalize(*v[2] - *v[0]);
 				glm::fvec3 n = glm::normalize(glm::cross(na, nb));
-				if (glm::dot(n, *pRayDir) >= 0)
+				if (glm::dot(n, *pRayDir) < 0)
 					continue;
 
 				// check for a collision

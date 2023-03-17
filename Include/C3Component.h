@@ -24,14 +24,6 @@ namespace c3
 
 	public:
 
-		typedef enum
-		{
-			ALLOW_MULTIPLE = 0,		// Indicates that multiple Component instances of this type can be added to a single Object instance
-
-		} EComponentFlag;
-
-		static constexpr uint64_t COMPFLAG(EComponentFlag f) { return (1LL << (f)); }
-
 		virtual void Release() = NULL;
 
 		/// Returns the ComponentType that built this Component
@@ -45,14 +37,14 @@ namespace c3
 		virtual bool Initialize(Object *pobject) = NULL;
 
 		/// Called by the Object that owns the Component during it's own Update
-		virtual void Update(Object *pobject, float elapsed_time = 0.0f) = NULL;
+		virtual void Update(float elapsed_time = 0.0f) = NULL;
 
 		/// Called by the Object that owns the Component during it's own Prerender
 		/// If any Component Prerender succeeds, Object::Render is called
-		virtual bool Prerender(Object *pobject, Object::RenderFlags flags) = NULL;
+		virtual bool Prerender(Object::RenderFlags flags) = NULL;
 
 		/// Called by the Object that owns the Component during it's own Render
-		virtual void Render(Object *pobject, Object::RenderFlags flags) = NULL;
+		virtual void Render(Object::RenderFlags flags) = NULL;
 
 		/// Called when a property on the owning Object has changed
 		virtual void PropertyChanged(const props::IProperty *pprop) = NULL;
@@ -72,6 +64,10 @@ namespace c3
 
 	public:
 
+		#define CF_ALLOWMULTIPLE		0x0001		// Indicates that multiple Component instances of this type can be added to a single Object instance
+		#define CF_PUSHFRONT			0x0002		// Indicates that the Component should be added before other existing Components.
+													//		if not specified, the component will be added at the end
+
 		/// Constructs a new instance of it's associated Component and assigns it to the given Object.
 		/// Optionally copies the properties of a given Component instance
 		virtual Component *Build() const = NULL;
@@ -88,6 +84,8 @@ namespace c3
 		/// Returns a string that describes the associated Component class
 		virtual const TCHAR *GetDescription() const = NULL;
 
+		virtual const props::TFlags64 GetFlags() const = NULL;
+
 	};
 
 
@@ -97,7 +95,7 @@ namespace c3
 #define COMPONENTTYPE(component_class) component_class##Type
 
 /// THIS GOES IN YOUR HEADER
-#define DEFINE_COMPONENTTYPE(component_class, componentimpl_class, guid, name, description)						\
+#define DEFINE_COMPONENTTYPE(component_class, componentimpl_class, guid, name, description, flags)				\
 		class COMPONENTTYPE(component_class) : public c3::ComponentType											\
 		{																										\
 			friend class component_class;																		\
@@ -114,6 +112,7 @@ namespace c3
 			virtual GUID GetGUID() const { return GUID(guid); }													\
 			virtual const TCHAR *GetName() const { return _T(name); }											\
 			virtual const TCHAR *GetDescription() const { return _T(description); }								\
+			virtual const props::TFlags64 GetFlags() const { return flags; }									\
 		}
 
 /// THIS GOES IN YOUR SOURCE

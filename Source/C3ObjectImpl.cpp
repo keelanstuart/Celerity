@@ -201,7 +201,10 @@ Component *ObjectImpl::AddComponent(const ComponentType *pctype, bool init)
 	if (!pc)
 		return nullptr;
 
-	m_Components.push_back(pc);
+	if (pctype->GetFlags().IsSet(CF_PUSHFRONT))
+		m_Components.push_front(pc);
+	else
+		m_Components.push_back(pc);
 
 	if (init)
 		pc->Initialize(this);
@@ -240,7 +243,7 @@ void ObjectImpl::Update(float elapsed_time)
 
 	for (const auto &it : m_Components)
 	{
-		it->Update(this, elapsed_time);
+		it->Update(elapsed_time);
 	}
 
 	for (auto child : m_Children)
@@ -284,7 +287,7 @@ bool ObjectImpl::Render(Object::RenderFlags flags)
 
 	for (const auto &it : m_Components)
 	{
-		it->Render(this, flags);
+		it->Render(flags);
 	}
 
 	for (auto child : m_Children)
@@ -444,10 +447,18 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, f
 	glm::fmat4x4 t, tn;
 
 	Positionable *ppos = (Positionable *)((ObjectImpl *)this)->FindComponent(Positionable::Type());
+	OmniLight *plight = (OmniLight *)((ObjectImpl *)this)->FindComponent(OmniLight::Type());
+
 	if (ppos)
 	{
 		ppos->GetTransformMatrix(&t);
 		ppos->GetTransformMatrixNormal(&tn);
+
+		if (plight)
+		{
+			glm::fvec3 invscl = 1.0f / *(ppos->GetScl());
+			t = t * glm::scale(glm::identity<glm::fmat4x4>(), invscl);
+		}
 	}
 	else
 	{

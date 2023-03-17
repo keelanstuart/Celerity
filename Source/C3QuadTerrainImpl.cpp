@@ -64,10 +64,10 @@ bool QuadTerrainImpl::Initialize(Object *pobject)
 		return false;
 
 	// get a positionable feature from the object -- and if we can't, don't proceed
-	if (nullptr == (m_pPos = dynamic_cast<PositionableImpl *>(pobject->FindComponent(Positionable::Type()))))
+	if (nullptr == (m_pPos = dynamic_cast<PositionableImpl *>(m_pOwner->FindComponent(Positionable::Type()))))
 		return false;
 
-	props::IPropertySet *props = pobject->GetProperties();
+	props::IPropertySet *props = m_pOwner->GetProperties();
 	if (!props)
 		return false;
 
@@ -75,30 +75,28 @@ bool QuadTerrainImpl::Initialize(Object *pobject)
 }
 
 
-void QuadTerrainImpl::Update(Object *pobject, float elapsed_time)
+void QuadTerrainImpl::Update(float elapsed_time)
 {
 	if (!m_pPos)
 		return;
 }
 
 
-bool QuadTerrainImpl::Prerender(Object *pobject, Object::RenderFlags flags)
+bool QuadTerrainImpl::Prerender(Object::RenderFlags flags)
 {
 	if (flags.IsSet(RF_FORCE))
 		return true;
 
-	if (!pobject->Flags().IsSet(OF_DRAW))
+	if (!m_pOwner->Flags().IsSet(OF_DRAW))
 		return false;
 
 	return true;
 }
 
 
-void QuadTerrainImpl::Render(Object *pobject, Object::RenderFlags flags)
+void QuadTerrainImpl::Render(Object::RenderFlags flags)
 {
-	assert(pobject);
-
-	c3::Renderer *prend = pobject->GetSystem()->GetRenderer();
+	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 
 	if (m_Flags.IsSet(QTFLAG_DIRTY))
 	{
@@ -227,10 +225,10 @@ void QuadTerrainImpl::Render(Object *pobject, Object::RenderFlags flags)
 
 		if (!m_SP_terr)
 		{
-			ResourceManager *prm = pobject->GetSystem()->GetResourceManager();
+			ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
 
-			props::IProperty *pvsh = pobject->GetProperties()->GetPropertyById('VSHF');
-			props::IProperty *pfsh = pobject->GetProperties()->GetPropertyById('FSHF');
+			props::IProperty *pvsh = m_pOwner->GetProperties()->GetPropertyById('VSHF');
+			props::IProperty *pfsh = m_pOwner->GetProperties()->GetPropertyById('FSHF');
 			if (!m_VS_terr)
 			{
 				c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-terrain.vsh"), RESF_DEMANDLOAD);
@@ -245,7 +243,7 @@ void QuadTerrainImpl::Render(Object *pobject, Object::RenderFlags flags)
 					m_FS_terr = (c3::ShaderComponent *)(pres->GetData());
 			}
 
-			m_SP_terr = pobject->GetSystem()->GetRenderer()->CreateShaderProgram();
+			m_SP_terr = m_pOwner->GetSystem()->GetRenderer()->CreateShaderProgram();
 
 			if (m_SP_terr && m_VS_terr && m_FS_terr)
 			{
@@ -304,8 +302,8 @@ void QuadTerrainImpl::Render(Object *pobject, Object::RenderFlags flags)
 #if 0
 		if (!m_SP_obj)
 		{
-			props::IProperty *pvsh = pobject->GetProperties()->GetPropertyById('VSSF');
-			props::IProperty *pfsh = pobject->GetProperties()->GetPropertyById('FSSF');
+			props::IProperty *pvsh = m_pOwner->GetProperties()->GetPropertyById('VSSF');
+			props::IProperty *pfsh = m_pOwner->GetProperties()->GetPropertyById('FSSF');
 			if (!m_VS_shadowobj)
 			{
 				c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-obj-shadow.vsh"), rf);
@@ -320,7 +318,7 @@ void QuadTerrainImpl::Render(Object *pobject, Object::RenderFlags flags)
 					m_FS_shadowobj = (c3::ShaderComponent *)(pres->GetData());
 			}
 
-			m_SP_shadowobj = pobject->GetSystem()->GetRenderer()->CreateShaderProgram();
+			m_SP_shadowobj = m_pOwner->GetSystem()->GetRenderer()->CreateShaderProgram();
 
 			if (m_SP_shadowobj && m_VS_shadowobj && m_FS_shadowobj)
 			{

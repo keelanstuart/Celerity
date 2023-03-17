@@ -204,6 +204,9 @@
     <ClCompile Include="Source\C3GlobalObjectRegistryImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3EnvironmentImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -546,6 +549,12 @@
       <Filter>Header Files\Public</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3GlobalObjectRegistryImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Environment.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3EnvironmentImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>

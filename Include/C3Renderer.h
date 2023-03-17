@@ -372,9 +372,12 @@ namespace c3
 		virtual Texture2D *GetLinearGradientTexture() = NULL;
 		virtual Texture2D *GetOrthoRefTexture() = NULL;
 		virtual Texture2D *GetUtilityColorTexture() = NULL;
+		virtual Texture2D *GetSphereSpriteTexture() = NULL;
+		virtual Texture2D *GetSphereSpriteNormalTexture() = NULL;
 
 		virtual MaterialManager *GetMaterialManager() = NULL;
 		virtual const Material *GetWhiteMaterial() = NULL;
+		virtual const Material *GetBlackMaterial() = NULL;
 
 		virtual ShaderProgram *GetBoundsShader() = NULL;
 

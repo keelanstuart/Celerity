@@ -8,6 +8,7 @@
 
 #include <C3.h>
 
+
 namespace c3
 {
 
@@ -37,6 +38,8 @@ namespace c3
 		virtual ResourceManager *GetResourceManager() = NULL;
 
 		virtual Renderer *GetRenderer() = NULL;
+
+		virtual Environment *GetEnvironment() = NULL;
 
 		virtual InputManager *GetInputManager() = NULL;
 

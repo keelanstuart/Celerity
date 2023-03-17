@@ -20,16 +20,16 @@ namespace c3
 	{
 
 	protected:
-		RendererImpl *m_Rend;
-		GLuint m_glID;
-		size_t m_Width, m_Height;
-		size_t m_MipCount;
+		tstring m_Name;
 		Renderer::ETextureType m_Type;
+		size_t m_Width, m_Height;
+		props::TFlags64 m_Flags;
+		size_t m_MipCount;
+		int64_t m_SamplerID;
+		GLuint m_glID;
 		void *m_Buffer;
 		size_t m_LockMip;
-		props::TFlags64 m_Flags;
-		int64_t m_SamplerID;
-		tstring m_Name;
+		RendererImpl *m_Rend;
 
 	public:
 		Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);
@@ -67,19 +67,19 @@ namespace c3
 	{
 
 	protected:
-		RendererImpl *m_Rend;
-		GLuint m_glID;
-		size_t m_Width, m_Height, m_Depth;
-		size_t m_MipCount;
+		tstring m_Name;
 		Renderer::ETextureType m_Type;
+		size_t m_Width, m_Height, m_Depth;
+		props::TFlags64 m_Flags;
+		size_t m_MipCount;
+		GLuint m_glID;
+		int64_t m_SamplerID;
 		void *m_Buffer;
 		size_t m_LockMip;
 		TextureCube::CubeFace m_LockFace;
 		size_t m_LockWidth;
 		size_t m_LockHeight;
-		props::TFlags64 m_Flags;
-		int64_t m_SamplerID;
-		tstring m_Name;
+		RendererImpl *m_Rend;
 
 	public:
 		TextureCubeImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);
@@ -119,16 +119,16 @@ namespace c3
 	{
 
 	protected:
-		RendererImpl *m_Rend;
-		GLuint m_glID;
-		size_t m_Width, m_Height, m_Depth;
-		size_t m_MipCount;
+		tstring m_Name;
 		Renderer::ETextureType m_Type;
+		size_t m_Width, m_Height, m_Depth;
+		props::TFlags64 m_Flags;
+		size_t m_MipCount;
+		int64_t m_SamplerID;
+		GLuint m_glID;
 		void *m_Buffer;
 		size_t m_LockMip;
-		props::TFlags64 m_Flags;
-		int64_t m_SamplerID;
-		tstring m_Name;
+		RendererImpl *m_Rend;
 
 	public:
 		Texture3DImpl(RendererImpl *prend, size_t width, size_t height, size_t depth, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags);

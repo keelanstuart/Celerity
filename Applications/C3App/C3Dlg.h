@@ -39,13 +39,11 @@ protected:
 
 	UINT_PTR m_DrawTimerId;
 
-	int32_t m_ulSunDir, m_ulSunColor, m_ulAmbientColor;
-	glm::fvec3 m_SunDir, m_SunColor, m_AmbientColor;
 	int32_t m_uBlurTex, m_uBlurScale;
 
 	c3::Factory *m_Factory;
 	c3::Object *m_RootObj;
-	c3::Object *m_Camera;
+	c3::Object *m_CameraRoot, *m_CameraArm, *m_Camera;
 	std::deque<c3::Object *> m_Light;
 	std::deque<glm::fvec3> m_LightMove;
 
@@ -115,6 +113,8 @@ protected:
 	void Cleanup();
 
 	void SetMouseEnabled(bool b);
+
+	void RegisterAction(const TCHAR *name, c3::ActionMapper::ETriggerType tt, float delay);
 
 
 // Implementation

@@ -37,9 +37,6 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_DepthTarg = nullptr;
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
-	m_AmbientColor = c3::Color::fEveningSunlight;
-	m_SunColor = c3::Color::fNaturalSunlight;
-	m_SunDir = glm::normalize(glm::fvec3(0.1f, -0.1f, -1.0f));
 	m_bFirstDraw = true;
 	memset(m_pControllable, 0, sizeof(c3::Object *) * MAX_USERS);
 	m_ViewMode = VM_FREE;//FOLLOW_POSDIR;
@@ -80,6 +77,30 @@ c3::FrameBuffer::TargetDesc LCBufTargData[] =
 };
 
 
+void C3Dlg::RegisterAction(const TCHAR *name, c3::ActionMapper::ETriggerType tt, float delay)
+{
+	c3::ActionMapper *pam = theApp.m_C3->GetActionMapper();
+
+	pam->RegisterAction(name, tt, delay, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
+	{
+		const TCHAR *name = (const TCHAR *)userdata;
+
+		c3::Object *pplayer = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_PLAYER);
+		if (pplayer)
+		{
+			c3::Scriptable *pscr = dynamic_cast<c3::Scriptable *>(pplayer->FindComponent(c3::Scriptable::Type()));
+			if (pscr)
+			{
+				value *= theApp.m_C3->GetElapsedTime();
+				pscr->Execute(_T("handle_input(\"%s\", %0.4f);"), name, value);
+				return true;
+			}
+		}
+		return false;
+	}, (void *)name);
+};
+
+
 // C3Dlg message handlers
 
 BOOL C3Dlg::OnInitDialog()
@@ -113,93 +134,21 @@ BOOL C3Dlg::OnInitDialog()
 	theApp.m_C3->GetLog()->Print(_T("Setting up actions... "));
 	c3::ActionMapper *pam = theApp.m_C3->GetActionMapper();
 
-	pam->RegisterAction(_T("Move Forward"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].move.forward = value;
-		return true;
-	}, this);
-
-	pam->RegisterAction(_T("Move Backward"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].move.backward = value;
-		return true;
-	}, this);
-
-	pam->RegisterAction(_T("Strafe Left"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].move.left = value;
-		return true;
-	}, this);
-
-	pam->RegisterAction(_T("Strafe Right"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].move.right = value;
-		return true;
-	}, this);
-
-	pam->RegisterAction(_T("Look Up"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].look.up = value;
-		return true;
-	}, this);
-
-	pam->RegisterAction(_T("Look Down"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].look.down = value;
-		return true;
-	}, this);
-
-	pam->RegisterAction(_T("Look Left"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].look.left = value;
-		return true;
-	}, this);
-
-	pam->RegisterAction(_T("Look Right"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].look.right = value;
-		return true;
-	}, this);
-
-	pam->RegisterAction(_T("Ascend"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].move.up = value;
-		return true;
-	}, this);
-
-	pam->RegisterAction(_T("Descend"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].move.down = value;
-		return true;
-	}, this);
-	theApp.m_C3->GetLog()->Print(_T("ok\n"));
-
-	pam->RegisterAction(_T("Run"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].move.run = value;
-		return true;
-	}, this);
-	theApp.m_C3->GetLog()->Print(_T("ok\n"));
-
-	pam->RegisterAction(_T("Jump"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (user < MAX_USERS)
-			((C3Dlg *)userdata)->m_Controls[user].move.jump = value;
-		return true;
-	}, this);
-
-	pam->RegisterAction(_T("Cycle View Mode"), c3::ActionMapper::ETriggerType::UP_DELTA, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
+	RegisterAction(_T("Move Forward"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Move Backward"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Strafe Left"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Strafe Right"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Look Up"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Look Down"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Look Left"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Look Right"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Ascend"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Descend"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Run"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Jump"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0.5f);
+	RegisterAction(_T("Fire 1"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Fire 2"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	pam->RegisterAction(_T("Cycle View Mode"), c3::ActionMapper::ETriggerType::UP_DELTA, 0, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
 	{
 		((C3Dlg *)userdata)->m_ViewMode++;
 		if (((C3Dlg *)userdata)->m_ViewMode >= VM_NUMMODES)
@@ -368,28 +317,46 @@ BOOL C3Dlg::OnInitDialog()
 			ul = m_SP_combine->GetUniformLocation(_T("uSamplerShadow"));
 			if (ul >= 0)
 				m_SP_combine->SetUniformTexture((c3::Texture *)m_ShadowTarg, ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
-
-			m_ulSunDir = m_SP_combine->GetUniformLocation(_T("uSunDirection"));
-			m_ulSunColor = m_SP_combine->GetUniformLocation(_T("uSunColor"));
-			m_ulAmbientColor = m_SP_combine->GetUniformLocation(_T("uAmbientColor"));
 		}
 	}
 
+	m_CameraRoot = m_Factory->Build();
+	m_CameraRoot->AddComponent(c3::Physical::Type());
+	m_CameraRoot->AddComponent(c3::Positionable::Type());
+
+	m_CameraArm = m_Factory->Build();
+	m_CameraRoot->AddChild(m_CameraArm);
+	m_CameraArm->AddComponent(c3::Positionable::Type());
+	c3::Positionable *parmpos = dynamic_cast<c3::Positionable *>(m_CameraArm->FindComponent(c3::Positionable::Type()));
+	if (parmpos)
+	{
+		parmpos->AdjustPitch(glm::radians(-30.0f));
+	}
+
 	m_Camera = m_Factory->Build();
+	m_CameraArm->AddChild(m_Camera);
 	m_Camera->AddComponent(c3::Positionable::Type());
 	m_Camera->AddComponent(c3::Camera::Type());
 	m_Camera->SetName(_T("Camera"));
-	theApp.m_C3->GetLog()->Print(_T("Camera created\n"));
-	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, m_Camera);
 	m_pControllable[0] = m_Camera;
 
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
-		pcam->SetPolarDistance(3.5f);
 		pcam->SetFOV(glm::radians(78.0f));
 	}
+
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
+	if (pcampos)
+	{
+		pcampos->AdjustPos(0, 5.0f, 0);
+		pcampos->AdjustPitch(glm::radians(30.0f));
+	}
+
+	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA_ROOT, m_CameraRoot);
+	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA_ARM, m_CameraArm);
+	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, m_Camera);
+	theApp.m_C3->GetLog()->Print(_T("Camera created\n"));
 
 	m_RootObj = m_Factory->Build();
 	m_RootObj->AddComponent(c3::Positionable::Type());
@@ -439,98 +406,7 @@ void C3Dlg::OnPaint()
 		theApp.m_C3->UpdateTime();
 		float dt = theApp.m_C3->GetElapsedTime();
 
-		if (!m_bMouseCursorEnabled)
-		{
-			float mf = std::max<float>(m_Controls[0].move.forward, m_Controls[1].move.forward);
-			float mb = std::max<float>(m_Controls[0].move.backward, m_Controls[1].move.backward);
-			float mr = std::max<float>(m_Controls[0].move.right, m_Controls[1].move.right);
-			float ml = std::max<float>(m_Controls[0].move.left, m_Controls[1].move.left);
-			float lr = std::max<float>(m_Controls[0].look.right, m_Controls[1].look.right);
-			float ll = std::max<float>(m_Controls[0].look.left, m_Controls[1].look.left);
-			float ms = std::max<float>(m_Controls[0].move.run, m_Controls[1].move.run);
-
-			for (size_t user = 0; user < MAX_USERS; user++)
-			{
-				if (m_pControllable[user])
-				{
-					c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(m_pControllable[user]->FindComponent(c3::Positionable::Type()));
-					if (ppos)
-					{
-						float spd = 1, utd = 0, urd = 0, uod = 0;
-
-						if (m_ViewMode == VM_FREE)
-						{
-							spd += ms;
-							utd = m_Controls[user].move.forward - m_Controls[user].move.backward;
-							uod = m_Controls[user].move.left - m_Controls[user].move.right;
-							urd = m_Controls[user].look.right - m_Controls[user].look.left;
-						}
-						else
-						{
-							spd += m_Controls[user].move.run;
-							utd = mf - mb;
-							urd = std::max<float>(mr, lr) - std::max<float>(ml, ll);
-						}
-						spd *= 0.02f;
-
-						glm::vec3 mv(0, 0, 0);
-						mv += *(ppos->GetFacingVector()) * utd * spd;
-						if ((m_ViewMode == VM_FREE) && !user)
-						{
-							glm::vec3 ml = *(ppos->GetLocalRightVector());
-							ml *= uod * spd;
-							mv += ml;
-						}
-						mv += *(ppos->GetLocalUpVector()) * (m_Controls[user].move.up - m_Controls[user].move.down) * spd;
-
-						ppos->AdjustYawFlat(urd * 0.04f);
-						m_pControllable[user]->Update();
-
-						ppos->AdjustPos(mv.x, mv.y, mv.z);
-						if ((m_ViewMode == VM_FREE) && !user)
-							ppos->AdjustPitch((m_Controls[user].look.up - m_Controls[user].look.down) * 0.04f);
-						m_pControllable[user]->Update();
-					}
-				}
-
-				memset(&m_Controls[user], 0, sizeof(SControls));
-			}
-#if 0
-			if (pcam)
-			{
-				float zoo = pcam->GetPolarDistance();
-				zoo += theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::BUTTON5) -
-					theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::BUTTON6);
-				zoo = std::max(zoo, 0.1f);
-				pcam->SetPolarDistance(zoo);
-			}
-#endif
-
-			c3::Positionable *pfollowerpos = nullptr;//dynamic_cast<c3::Positionable *>(m_pControllable[0]->FindComponent(c3::Positionable::Type()));
-			c3::Positionable *pleaderpos = nullptr;//dynamic_cast<c3::Positionable *>(m_pControllable[1]->FindComponent(c3::Positionable::Type()));
-
-			if (pfollowerpos && pleaderpos)
-			{
-				switch (m_ViewMode)
-				{
-					case VM_FOLLOW_POSDIR:
-					{
-						glm::fquat q = glm::slerp(*(pfollowerpos->GetOriQuat()), *(pleaderpos->GetOriQuat()), 0.9f);
-						pfollowerpos->SetOriQuat(&q);
-						pfollowerpos->AdjustPitch(glm::radians(-41.0f));
-					}
-					case VM_FOLLOW_POS:
-					{
-						glm::fvec3 adjlp = *(pleaderpos->GetPosVec()) + glm::fvec3(0, 0, 1);
-						glm::fvec3 lp = glm::lerp(*(pfollowerpos->GetPosVec()), adjlp, 0.6f);
-						pfollowerpos->SetPosVec(&lp);
-						break;
-					}
-				}
-			}
-		}
-
-		m_Camera->Update(dt);
+		m_CameraRoot->Update(dt);
 
 		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
 		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
@@ -550,22 +426,16 @@ void C3Dlg::OnPaint()
 			0.5, 0.5, 0.5, 1.0
 		);
 
-		m_AmbientColor = c3::Color::fDarkGrey;
-
 		float farclip = m_Camera->GetProperties()->GetPropertyById('C:FC')->AsFloat();
 		float nearclip = m_Camera->GetProperties()->GetPropertyById('C:NC')->AsFloat();
 		glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-55, 50, -71, 71, nearclip, farclip);
-		glm::fvec3 sunpos = m_SunDir * -61.5f;
+		glm::fvec3 sunpos = *(theApp.m_C3->GetEnvironment()->GetSunDirection()) * -61.5f;
 		glm::fvec3 campos;
 		pcam->GetEyePos(&campos);
 //		sunpos += campos;
 		glm::fmat4x4 depthViewMatrix = glm::lookAt(sunpos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
 		glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
 		m_Rend->SetSunShadowMatrix(&depthMVP);
-
-		m_SP_combine->SetUniform3(m_ulAmbientColor, &m_AmbientColor);
-		m_SP_combine->SetUniform3(m_ulSunColor, &m_SunColor);
-		m_SP_combine->SetUniform3(m_ulSunDir, &m_SunDir);
 
 		m_RootObj->Update(dt);
 
@@ -890,6 +760,8 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 	size_t ai_r = pam->FindActionIndex(_T("Run"));
 	size_t ai_j = pam->FindActionIndex(_T("Jump"));
 	size_t ai_cvm = pam->FindActionIndex(_T("Cycle View Mode"));
+	size_t ai_f1 = pam->FindActionIndex(_T("Fire 1"));
+	size_t ai_f2 = pam->FindActionIndex(_T("Fire 2"));
 
 	switch (device->GetType())
 	{
@@ -916,7 +788,8 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 			pam->MakeAssociation(ai_d, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_Z);
 
 			pam->MakeAssociation(ai_r, device->GetUID(), c3::InputDevice::VirtualButton::LSHIFT);
-			pam->MakeAssociation(ai_j, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON1);
+			pam->MakeAssociation(ai_f1, device->GetUID(), c3::InputDevice::VirtualButton::SELECT);
+			pam->MakeAssociation(ai_f2, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_X);
 
 			pam->MakeAssociation(ai_cvm, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_C);
 
@@ -927,8 +800,8 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 		{
 			theApp.m_C3->GetInputManager()->AssignUser(device, 0);
 
-			//pam->MakeAssociation(ai_mf, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON1);
-			//pam->MakeAssociation(ai_mb, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON2);
+			pam->MakeAssociation(ai_f1, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON1);
+			pam->MakeAssociation(ai_f2, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON2);
 
 			pam->MakeAssociation(ai_lu, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGY);
 			pam->MakeAssociation(ai_ld, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSY);

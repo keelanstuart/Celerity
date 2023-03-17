@@ -13,6 +13,16 @@
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
+    <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD4}" name="XY Plane" group="Tests" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="MODF" name="Model" type="STRING">[xyplane.model]</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
     <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD5}" name="REFCUBE" group="Tests" flags="131075">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
@@ -63,6 +73,8 @@
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+			<component guid="{f8641b51-a0fc-4d93-892f-480b07ba2861}" name="Physical"/>
         </components>
         <powerprops:property_set>
             <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
@@ -70,6 +82,8 @@
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.000000,0.000000,0.707107,-0.707107</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.080000,0.080000,0.080000</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">chopper.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0167</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{02DC7861-B1BC-495C-9C30-BFDEA742904A}" name="Racecar A" group="Vehicles" flags="131075">
@@ -931,7 +945,21 @@
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
-    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3C}" name="Light" group="Lights" flags="335879">
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3B}" name="Pellet" group="Projectiles" flags="335877">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.001,0.001,0.001</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,0.9,0.8</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3C}" name="Light" group="Lights" flags="335877">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
@@ -945,7 +973,7 @@
             <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,1.0,1.0</powerprops:property>
         </powerprops:property_set>
     </prototype>
-    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3D}" name="FadingLight" group="Lights" flags="335879">
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3D}" name="FadingLight" group="Lights" flags="335877">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
@@ -962,7 +990,7 @@
             <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0667</powerprops:property>
         </powerprops:property_set>
     </prototype>
-    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3E}" name="FlickeringLight" group="Lights" flags="335879">
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3E}" name="FlickeringLight" group="Lights" flags="335877">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
@@ -979,7 +1007,7 @@
             <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0667</powerprops:property>
         </powerprops:property_set>
     </prototype>
-    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3F}" name="StrobingLight" group="Lights" flags="335879">
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3F}" name="StrobingLight" group="Lights" flags="335877">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
@@ -1011,6 +1039,8 @@
     </prototype>
     <prototype guid="{0413A21C-BEAC-471B-9047-3A0E8D9CE082}" name="Ship" group="Spaceships" flags="131075">
         <components>
+            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+			<component guid="{f8641b51-a0fc-4d93-892f-480b07ba2861}" name="Physical"/>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
@@ -1018,6 +1048,8 @@
             <powerprops:property id="MODF" name="Model" type="STRING">ship.x|force_smooth_normals</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.0,-1.0,0.0,0.0</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">PlayerShip.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.033</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{B40195A1-64C4-45B1-907B-7A2232E5E948}" name="Ship1" group="Spaceships" flags="131075">

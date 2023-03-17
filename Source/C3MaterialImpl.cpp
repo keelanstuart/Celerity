@@ -110,6 +110,18 @@ props::TFlags64 &MaterialImpl::RenderModeFlags()
 }
 
 
+void MaterialImpl::SetCullMode(Renderer::CullMode mode)
+{
+	m_CullMode = mode;
+}
+
+
+Renderer::CullMode MaterialImpl::GetCullMode()
+{
+	return m_CullMode;
+}
+
+
 void MaterialImpl::SetWindingOrder(Renderer::WindingOrder mode)
 {
 	m_WindingOrder = mode;
@@ -188,7 +200,7 @@ bool MaterialImpl::Apply(ShaderProgram *shader) const
 		m_pRend->SetDepthMode(Renderer::DepthMode::DM_READWRITE);
 	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_WRITEDEPTH)))
 		m_pRend->SetDepthMode(Renderer::DepthMode::DM_WRITEONLY);
-	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_WRITEDEPTH)))
+	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_READDEPTH)))
 		m_pRend->SetDepthMode(Renderer::DepthMode::DM_READONLY);
 	else
 		m_pRend->SetDepthMode(Renderer::DepthMode::DM_DISABLED);

@@ -29,7 +29,7 @@ namespace c3
 		typedef bool (__cdecl *ACTION_CALLBACK_FUNC)(InputDevice *from_device, size_t user, InputDevice::VirtualButton button, float value, void *userdata);
 
 		// registers an action with a name and your callback
-		virtual size_t RegisterAction(const TCHAR *name, TriggerType trigger, ACTION_CALLBACK_FUNC func, void *userdata) = NULL;
+		virtual size_t RegisterAction(const TCHAR *name, TriggerType trigger, float delay, ACTION_CALLBACK_FUNC func, void *userdata) = NULL;
 
 		// unregisters a previously registered action
 		virtual bool UnregisterAction(size_t index) = NULL;

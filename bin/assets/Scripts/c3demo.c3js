@@ -1,23 +1,58 @@
-var runtime = 0.0;
-var hcam = 0;
-var hcampos = 0;
+var runtime;
+
+var hcam;
+var hcam_pos;
+var hcam_ori;
+
+var hplayer;
+var hplayer_pos;
+var hplayer_ori;
+var player_pos;
+var player_ori;
+var cam_idx;
+var player_idx;
 
 
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
+
+	player_pos[player_idx] = GetPropertyValue(hplayer_pos);
+	SetPropertyValue(hcam_pos, player_pos[cam_idx]);
+
+	player_ori[player_idx] = GetPropertyValue(hplayer_ori);
+	SetPropertyValue(hcam_ori, player_ori[cam_idx]);
+
+	cam_idx = (cam_idx + 1) % 20;
+	player_idx = (player_idx + 1) % 20;
 }
 
 function init()
 {
-	LoadObject(self, "SimpleScene.c3o");
-	Log("Demo scene loaded!\n");
-	
-	hcam = GetRegisteredObject("camera");
-	hcampos = FindProperty(hcam, "Position");
-	var pos = GetPropertyValue(hcampos);
-	pos.z = pos.z + 5.0;
-	SetPropertyValue(hcampos, pos);
-}
+	runtime = 0.0;
+	hcam = 0;
+	hcampos = 0;
+	cam_idx = 0;
+	player_idx = 0;
 
-init();
+	//LoadObject(self, "SimpleScene.c3o");
+	//Log("Demo scene loaded!\n");
+
+	var hplayer = CreateObject("Ship", self);
+	RegisterObject("player", hplayer);
+
+	hplayer_pos = FindProperty(hplayer, "Position");
+	hplayer_ori = FindProperty(hplayer, "Orientation");
+	player_pos = new Array();
+	player_ori = new Array();
+	while (player_idx < 19)
+	{
+		player_pos[player_idx] = GetPropertyValue(hplayer_pos);
+		player_ori[player_idx] = GetPropertyValue(hplayer_ori);
+		player_idx++;
+	}
+
+	hcam = GetRegisteredObject("camera.root");
+	hcam_pos = FindProperty(hcam, "Position");
+	hcam_ori = FindProperty(hcam, "Orientation");
+}

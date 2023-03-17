@@ -166,8 +166,8 @@ namespace c3
 		// gets the number of buttons on the device
 		virtual size_t GetNumButtons() const = NULL;
 
-		// Has the button been pressed?  A non-zero value is TRUE...
-		virtual int ButtonPressed(InputDevice::VirtualButton button, float time = 0.0f) const = NULL;
+		// Has the button been pressed?
+		virtual bool ButtonPressed(InputDevice::VirtualButton button, float time = 0.0f) = NULL;
 
 		// Has the button been pressed?  A non-zero value is TRUE...
 		virtual float ButtonPressedProportional(InputDevice::VirtualButton button) const = NULL;

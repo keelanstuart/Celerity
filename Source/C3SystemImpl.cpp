@@ -21,6 +21,7 @@
 #include <C3OmniLightImpl.h>
 #include <C3ParticleEmitterImpl.h>
 #include <C3ScriptableImpl.h>
+#include <C3PhysicalImpl.h>
 
 
 
@@ -153,6 +154,7 @@ void SystemImpl::Release()
 		UNREGISTER_COMPONENTTYPE(QuadTerrain, m_Factory);
 		UNREGISTER_COMPONENTTYPE(ParticleEmitter, m_Factory);
 		UNREGISTER_COMPONENTTYPE(Scriptable, m_Factory);
+		UNREGISTER_COMPONENTTYPE(Physical, m_Factory);
 		// *************************************************
 
 		delete m_Factory;
@@ -220,6 +222,12 @@ Renderer *SystemImpl::GetRenderer()
 }
 
 
+Environment *SystemImpl::GetEnvironment()
+{
+	return &m_Environment;
+}
+
+
 InputManager *SystemImpl::GetInputManager()
 {
 	if (!m_InputManager)
@@ -259,6 +267,7 @@ Factory *SystemImpl::GetFactory()
 		REGISTER_COMPONENTTYPE(QuadTerrain, m_Factory);
 		REGISTER_COMPONENTTYPE(ParticleEmitter, m_Factory);
 		REGISTER_COMPONENTTYPE(Scriptable, m_Factory);
+		REGISTER_COMPONENTTYPE(Physical, m_Factory);
 		// *************************************************
 	}
 

@@ -16,6 +16,9 @@ namespace c3
 	{
 
 	protected:
+
+		Object *m_pOwner;
+
 		glm::vec3 m_Pos;
 		glm::fquat m_Ori;
 		glm::vec3 m_Scl;
@@ -39,11 +42,11 @@ namespace c3
 
 		virtual bool Initialize(Object *pobject);
 
-		virtual void Update(Object *pobject, float elapsed_time = 0.0f);
+		virtual void Update(float elapsed_time = 0.0f);
 
-		virtual bool Prerender(Object *pobject, Object::RenderFlags flags);
+		virtual bool Prerender(Object::RenderFlags flags);
 
-		virtual void Render(Object *pobject, Object::RenderFlags flags);
+		virtual void Render(Object::RenderFlags flags);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
@@ -126,6 +129,6 @@ namespace c3
 
 	};
 
-	DEFINE_COMPONENTTYPE(Positionable, PositionableImpl, GUID({0x26d446ca, 0xda21, 0x4272, {0xb6, 0x66, 0x16, 0xc2, 0xcb, 0xf3, 0x5f, 0x69}}), "Positionable", "Allows the Object to be positioned and oriented in space");
+	DEFINE_COMPONENTTYPE(Positionable, PositionableImpl, GUID({0x26d446ca, 0xda21, 0x4272, {0xb6, 0x66, 0x16, 0xc2, 0xcb, 0xf3, 0x5f, 0x69}}), "Positionable", "Allows the Object to be positioned and oriented in space", 0);
 
 };

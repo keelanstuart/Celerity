@@ -20,7 +20,7 @@ namespace c3
 
 		static const ComponentType *Type();
 
-#if 0
+
 		// *** LINEAR VELOCITY FUNCTIONS *******************************
 
 		virtual void SetLinVel(float x, float y, float z) = NULL;
@@ -35,6 +35,11 @@ namespace c3
 		virtual float GetLinVelZ() = NULL;
 
 		virtual void AdjustLinVel(float xadj = 0.0f, float yadj = 0.0f, float zadj = 0.0f) = NULL;
+
+		virtual void SetMaxLinSpeed(float speed = FLT_MAX) = NULL;
+		virtual float GetMaxLinSpeed() = NULL;
+
+		virtual void SetLinSpeedFalloffFactor(float factor = 0.0f) = NULL;
 
 
 		// *** LINEAR ACCELERATION FUNCTIONS *******************************
@@ -62,11 +67,17 @@ namespace c3
 		virtual void SetRotVelR(float r) = NULL;
 
 		virtual const glm::fvec3 *GetRotVel(glm::fvec3 *rvel = nullptr) = NULL;
-		virtual float GetRoitVelY() = NULL;
-		virtual float GetRoitVelP() = NULL;
-		virtual float GetRoitVelR() = NULL;
+		virtual float GetRotVelY() = NULL;
+		virtual float GetRotVelP() = NULL;
+		virtual float GetRotVelR() = NULL;
 
 		virtual void AdjustRotVel(float yadj = 0.0f, float padj = 0.0f, float radj = 0.0f) = NULL;
+
+		virtual void SetMaxRotSpeed(glm::fvec3 *speed = nullptr) = NULL;
+		virtual glm::fvec3 *GetMaxRotSpeed(glm::fvec3 *speed = nullptr) = NULL;
+
+		virtual void SetRotVelFalloffFactor(glm::fvec3 *factor = nullptr) = NULL;
+		virtual glm::fvec3 *GetRotVelFalloffFactor(glm::fvec3 *factor = nullptr) = NULL;
 
 
 		// *** ROTATIONAL ACCELERATION FUNCTIONS *******************************
@@ -83,11 +94,7 @@ namespace c3
 		virtual float GetRotAccR() = NULL;
 
 		virtual void AdjustRotAcc(float yadj = 0.0f, float padj = 0.0f, float radj = 0.0f) = NULL;
-#endif
 
-
-		/// Casts a ray against the object
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const = NULL;
 
 	};
 

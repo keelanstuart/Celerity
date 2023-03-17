@@ -18,6 +18,7 @@
 #include <C3InputManagerImpl.h>
 #include <C3ActionMapperImpl.h>
 #include <C3GlobalObjectRegistryImpl.h>
+#include <C3EnvironmentImpl.h>
 
 
 namespace c3
@@ -39,6 +40,7 @@ namespace c3
 		LogImpl *m_Log;
 		FileMapperImpl *m_FileMapper;
 		GlobalObjectRegistryImpl m_GlobalObjectRegistry;
+		EnvironmentImpl m_Environment;
 
 		LARGE_INTEGER m_PerfFreq, m_PerfCount, m_PerfDelta;
 		float m_CurrentTime;
@@ -61,6 +63,8 @@ namespace c3
 		virtual ResourceManager *GetResourceManager();
 
 		virtual Renderer *GetRenderer();
+
+		virtual Environment *GetEnvironment();
 
 		virtual InputManager *GetInputManager();
 

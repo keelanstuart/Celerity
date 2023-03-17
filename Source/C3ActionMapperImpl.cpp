@@ -13,7 +13,7 @@ ActionMapperImpl::~ActionMapperImpl()
 
 }
 
-size_t ActionMapperImpl::RegisterAction(const TCHAR *name, TriggerType trigger, ACTION_CALLBACK_FUNC func, void *userdata)
+size_t ActionMapperImpl::RegisterAction(const TCHAR *name, TriggerType trigger, float delay, ACTION_CALLBACK_FUNC func, void *userdata)
 {
 	size_t idx = FindActionIndex(name);
 	if (idx < m_Actions.size())
@@ -26,6 +26,7 @@ size_t ActionMapperImpl::RegisterAction(const TCHAR *name, TriggerType trigger, 
 	auto &a = m_Actions.back();
 	a.name = name;
 	a.trigger = trigger;
+	a.delay = delay;
 	a.func = func;
 	a.userdata = userdata;
 
@@ -81,6 +82,12 @@ void ActionMapperImpl::Update()
 
 	for (auto a : m_Actions)
 	{
+		if (a.timeout > 0)
+		{
+			a.timeout = std::max<float>(0, a.timeout - m_pSys->GetElapsedTime());
+			continue;
+		}
+
 		for (size_t id = 0, maxid = pim->GetNumDevices(); id < maxid; id++)
 		{
 			InputDevice *pid = pim->GetDevice(id);
@@ -96,7 +103,7 @@ void ActionMapperImpl::Update()
 					switch (a.trigger)
 					{
 						case TriggerType::DOWN_CONTINUOUS:
-							triggered = pid->ButtonPressed(it->second);
+							triggered = pid->ButtonPressed(it->second, a.delay);
 							break;
 
 						case TriggerType::DOWN_DELTA:
@@ -113,6 +120,7 @@ void ActionMapperImpl::Update()
 						size_t user;
 						pim->GetAssignedUser(pid, user);
 						a.func(pid, user, it->second, pid->ButtonPressedProportional(it->second), a.userdata);
+						a.timeout = a.delay;
 						break;
 					}
 				}
