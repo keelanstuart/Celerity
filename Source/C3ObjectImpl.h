@@ -25,7 +25,7 @@ namespace c3
 		typedef std::deque<Component *> TComponentArray;
 		TComponentArray m_Components;
 
-		Object *m_Owner;
+		Object *m_pParent;
 
 		typedef std::deque<Object *> TObjectArray;
 		TObjectArray m_Children;
@@ -46,9 +46,9 @@ namespace c3
 
 		virtual GUID GetGuid();
 
-		virtual Object *GetOwner();
+		virtual Object *GetParent();
 
-		virtual void SetOwner(Object *powner);
+		virtual void SetParent(Object *pparent);
 
 		virtual size_t GetNumChildren();
 

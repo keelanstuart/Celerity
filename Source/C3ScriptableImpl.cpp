@@ -566,7 +566,7 @@ void jcSetPropertyValue(CScriptVar *c, void *userdata)
 	{
 		pprop->SetString(pval->GetString());
 	}
-	else if (pval->GetChildren())
+	else if (pval->GetNumChildren())
 	{
 		CScriptVarLink *px = pval->FindChild(_T("x")),
 			*py = pval->FindChild(_T("y")),
@@ -715,7 +715,7 @@ void jcGetParent(CScriptVar *c, void *userdata)
 	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
 	if (pobj)
 	{
-		pretobj = pobj->GetOwner();
+		pretobj = pobj->GetParent();
 	}
 
 	ret->SetInt((int64_t)pretobj);
@@ -732,7 +732,7 @@ void jcSetParent(CScriptVar *c, void *userdata)
 	Object *pnewparentobj = dynamic_cast<Object *>((Object *)hnewparentobj);
 	if (pnewparentobj && pobj)
 	{
-		pobj->SetOwner(pnewparentobj);
+		pobj->SetParent(pnewparentobj);
 	}
 }
 

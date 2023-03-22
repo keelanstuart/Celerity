@@ -105,7 +105,7 @@ void CameraImpl::Update(float elapsed_time)
 			// In LOOKAT m_Mode, the eye position is actually located at camera position,
 			// and the lookat position is the position plus the orientation vector
 			case VM_LOOKAT:
-				m_pcpos->GetPosVec(&m_eyepos);
+				m_eyepos = *m_pcpos->GetTransformMatrix() * glm::fvec4(0, 0, 0, 1);
 				m_targpos = m_eyepos + facing;
 				break;
 
@@ -113,7 +113,7 @@ void CameraImpl::Update(float elapsed_time)
 			// the eye location is derived by multiplying the orientation by the distance
 			default:
 			case VM_POLAR:
-				m_pcpos->GetPosVec(&m_targpos);
+				m_targpos = *m_pcpos->GetTransformMatrix() * glm::fvec4(0, 0, 0, 1);
 				m_eyepos = m_targpos - (facing * m_orbitdist);
 				break;
 		}

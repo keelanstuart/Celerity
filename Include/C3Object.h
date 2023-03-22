@@ -79,11 +79,11 @@ namespace c3
 		/// Returns the Object's GUID
 		virtual GUID GetGuid() = NULL;
 
-		/// Returns the owner of this Object
-		virtual Object *GetOwner() = NULL;
+		/// Returns the parent of this Object
+		virtual Object *GetParent() = NULL;
 
 		/// Sets the Object's owner
-		virtual void SetOwner(Object *powner) = NULL;
+		virtual void SetParent(Object *pparent) = NULL;
 
 		/// Returns the number of direct decendents from the Object
 		virtual size_t GetNumChildren() = NULL;

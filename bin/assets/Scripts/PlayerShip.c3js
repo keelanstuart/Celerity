@@ -31,11 +31,10 @@ function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 
-/*
 	dir.x = dir.x * speed;
 	dir.y = dir.y * speed;
 	dir.z = dir.z * speed;
-	//SetPropertyValue(hlacc, dir);
+	SetPropertyValue(hlacc, dir);
 
 	dir.x = 0.0;
 	dir.y = 0.0;
@@ -48,7 +47,6 @@ function update(elapsed_seconds)
 	rot.z = 0.0;
 
 	speed = 1.0;
-*/
 }
 
 function fire_cannon()
@@ -78,60 +76,60 @@ function handle_input(action, value)
 	{
 		dir = GetPropertyValue(hlacc);
 		tmpv3 = GetPropertyValue(hfacing.forward);
-		dir.x += (tmpv3.x * value);
-		dir.y += (tmpv3.y * value);
-		dir.z += (tmpv3.z * value);
+		dir.x += (tmpv3.x * 2.0 * value);
+		dir.y += (tmpv3.y * 2.0 * value);
+		dir.z += (tmpv3.z * 2.0 * value);
 		SetPropertyValue(hlacc, dir);
 	}
 	else if (action == "Move Backward")
 	{
 		dir = GetPropertyValue(hlacc);
 		tmpv3 = GetPropertyValue(hfacing.forward);
-		dir.x -= (tmpv3.x * value);
-		dir.y -= (tmpv3.y * value);
-		dir.z -= (tmpv3.z * value);
+		dir.x -= (tmpv3.x * 2.0 * value);
+		dir.y -= (tmpv3.y * 2.0 * value);
+		dir.z -= (tmpv3.z * 2.0 * value);
 		SetPropertyValue(hlacc, dir);
 	}
 	else if (action == "Strafe Left")
 	{
 		dir = GetPropertyValue(hlacc);
 		tmpv3 = GetPropertyValue(hfacing.right);
-		dir.x -= (tmpv3.x * value);
-		dir.y -= (tmpv3.y * value);
-		dir.z -= (tmpv3.z * value);
+		dir.x -= (tmpv3.x * 2.0 * value);
+		dir.y -= (tmpv3.y * 2.0 * value);
+		dir.z -= (tmpv3.z * 2.0 * value);
 		SetPropertyValue(hlacc, dir);
 	}
 	else if (action == "Strafe Right")
 	{
 		dir = GetPropertyValue(hlacc);
 		tmpv3 = GetPropertyValue(hfacing.right);
-		dir.x += (tmpv3.x * value);
-		dir.y += (tmpv3.y * value);
-		dir.z += (tmpv3.z * value);
+		dir.x += (tmpv3.x * 2.0 * value);
+		dir.y += (tmpv3.y * 2.0 * value);
+		dir.z += (tmpv3.z * 2.0 * value);
 		SetPropertyValue(hlacc, dir);
-	}
-	else if (action == "Look Up")
-	{
-		rot = GetPropertyValue(hrvel);
-		rot.x += (value * 0.0001);
-		SetPropertyValue(hrvel, rot);
 	}
 	else if (action == "Look Down")
 	{
 		rot = GetPropertyValue(hrvel);
-		rot.x -= (value * 0.0001);
+		rot.x += (value * 0.005);
+		SetPropertyValue(hrvel, rot);
+	}
+	else if (action == "Look Up")
+	{
+		rot = GetPropertyValue(hrvel);
+		rot.x -= (value * 0.005);
 		SetPropertyValue(hrvel, rot);
 	}
 	else if (action == "Look Left")
 	{
 		rot = GetPropertyValue(hrvel);
-		rot.z -= (value * 0.0001);
+		rot.z -= (value * 0.005);
 		SetPropertyValue(hrvel, rot);
 	}
 	else if (action == "Look Right")
 	{
 		rot = GetPropertyValue(hrvel);
-		rot.z += (value * 0.0001);
+		rot.z += (value * 0.005);
 		SetPropertyValue(hrvel, rot);
 	}
 	else if (action == "Ascend")
@@ -185,6 +183,6 @@ function init()
 	bullet_idx = 0;
 	hbullet = new Array();
 	var i;
-	for (i=0;i<100;i++)
+	for (i = 0; i < 3; i++)
 		hbullet[i] = CreateObject("Pellet", GetParent(self));
 }

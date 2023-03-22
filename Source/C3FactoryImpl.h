@@ -34,9 +34,9 @@ namespace c3
 
 		virtual ~FactoryImpl();
 
-		virtual Object *Build(Prototype *pproto, GUID *override_guid = nullptr, Object *powner = nullptr);
+		virtual Object *Build(Prototype *pproto, GUID *override_guid = nullptr, Object *pparent = nullptr);
 
-		virtual Object *Build(Object *pobject, GUID *override_guid = nullptr, Object *powner = nullptr);
+		virtual Object *Build(Object *pobject, GUID *override_guid = nullptr, Object *pparent = nullptr);
 
 		virtual Prototype *CreatePrototype(Prototype *pproto = nullptr);
 

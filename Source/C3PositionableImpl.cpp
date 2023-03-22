@@ -20,6 +20,9 @@ PositionableImpl::PositionableImpl()
 	m_MatN = glm::identity<glm::fmat4x4>();
 	m_Ori = glm::identity<glm::fquat>();
 	m_Flags = OF_DRAWINEDITOR;
+	m_Facing = glm::fvec3(0, 1, 0);
+	m_LocalRight = glm::fvec3(1, 0, 0);
+	m_LocalUp = glm::fvec3(0, 0, 1);
 }
 
 
@@ -125,13 +128,39 @@ void PositionableImpl::Update(float elapsed_time)
 		}
 	}
 
+	Object *pparent = m_pOwner->GetParent();
+	Positionable *pparentpos = nullptr;
+	while (pparent)
+	{
+		if ((pparentpos = dynamic_cast<Positionable *>(pparent->FindComponent(Positionable::Type()))) != nullptr)
+			break;
+
+		pparent = pparent->GetParent();
+	}
+
+	// if any parent matrix changed, then update ours as well
+	if (pparentpos && pparentpos->Flags().AnySet(POSFLAG_MATRIXCHANGED))
+		m_Flags.Set(POSFLAG_REBUILDMATRIX);
+
 	if (m_Flags.AnySet(POSFLAG_REBUILDMATRIX))
 	{
-#if 1
-		glm::fmat4x4 tmp;
+		// Start with rotation, then apply scaling
+		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * (glm::fmat4x4)m_Ori;
 
-		// Next rotate...
-		tmp = (glm::fmat4x4)m_Ori;
+		// Then translate
+		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * m_Mat;
+
+		// Make a normal matrix
+		m_MatN = glm::inverseTranspose(m_Mat);
+
+		glm::fmat4x4 tmp = (glm::fmat4x4)m_Ori;
+
+		if (pparentpos)
+		{
+			m_Mat = *(pparentpos->GetTransformMatrix()) * m_Mat;
+			m_MatN = *(pparentpos->GetTransformMatrixNormal()) * m_MatN;
+			tmp = *(pparentpos->GetTransformMatrixNormal()) * tmp;
+		}
 
 		// Recalculate our facing vector in between...
 		m_Facing = glm::normalize(tmp * glm::vec4(0, 1, 0, 0));
@@ -140,67 +169,8 @@ void PositionableImpl::Update(float elapsed_time)
 		m_LocalUp = glm::normalize(tmp * glm::vec4(0, 0, 1, 0));
 
 		// Recalculate the local right vector
-		m_LocalRight = glm::normalize(glm::cross(m_Facing, m_LocalUp));
+		m_LocalRight = glm::normalize(tmp * glm::vec4(1, 0, 0, 0));
 
-		// Scale first, then rotate...
-		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * tmp;
-
-		// Then translate last... 
-		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * m_Mat;
-
-		// Make a normal matrix
-		m_MatN = glm::inverseTranspose(m_Mat);
-
-#else
-		Object *powner = m_pOwner->GetOwner();
-		Positionable *pownerpos = nullptr;
-		while (powner)
-		{
-			if ((pownerpos = dynamic_cast<Positionable *>(powner->FindComponent(Positionable::Type()))) != nullptr)
-				break;
-
-			powner = powner->GetOwner();
-		}
-
-		// First rotate...
-		glm::fmat4x4 tmp = (glm::fmat4x4)m_Ori;
-
-		// Recalculate our facing vector in between...
-		glm::fvec4 f, u;
-		if (pownerpos)
-		{
-			pownerpos->GetFacingVector((glm::fvec3 *)&f);
-			pownerpos->GetLocalUpVector((glm::fvec3 *)&u);
-		}
-		else
-		{
-			f = glm::fvec4(0, 1, 0, 0);
-			u = glm::fvec4(0, 0, 1, 0);
-		}
-
-		m_Facing = glm::normalize(tmp * f);
-
-		// Recalculate our local up vector after that...
-		m_LocalUp = glm::normalize(tmp * u);
-
-		// Recalculate the local right vector
-		m_LocalRight = glm::normalize(glm::cross(m_Facing, m_LocalUp));
-
-		// Then Scale...
-		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * tmp;
-
-		// Last, translate... 
-		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * m_Mat;
-
-		// Make a normal matrix
-		m_MatN = glm::inverseTranspose(m_Mat);
-
-		if (pownerpos)
-		{
-			m_Mat = *pownerpos->GetTransformMatrix() * m_Mat;
-			m_MatN = *pownerpos->GetTransformMatrixNormal() * m_MatN;
-		}
-#endif
 		//m_Bounds.Align(&m_Mat);
 
 		m_Flags.Clear(POSFLAG_REBUILDMATRIX);

@@ -312,7 +312,7 @@ void scRandom(CScriptVar *c, void *userdata)
 	}
 }
 
-static const TCHAR *elnames[4] = {_T("x"), _T("y"), _T("z"), _T("w")};
+static const TCHAR *elnames[4] ={ _T("x"), _T("y"), _T("z"), _T("w") };
 
 //Math.lerp(a, b, t) - linearly interpolates between two values. result is (b - a) * t + a
 void scMathLerp(CScriptVar *c, void *userdata)
@@ -320,30 +320,24 @@ void scMathLerp(CScriptVar *c, void *userdata)
 	CScriptVar *pa = c->GetParameter(_T("a"));
 	CScriptVar *pb = c->GetParameter(_T("b"));
 	CScriptVar *pr = c->GetReturnVar();
-	int64_t elct = pa->GetChildren();
+	int64_t elct = pa->GetNumChildren();
 
-	if (elct != pb->GetChildren() || !pr || (elct > 4))
+	if (elct != pb->GetNumChildren() || !pr || (elct > 4))
 		return;
 
 	CScriptVar *pt = c->GetParameter(_T("t"));
+	float t = pt->GetFloat();
 
-	int64_t i;
-	while ((i = pr->GetChildren()) < elct)
+	for (int64_t i = 0; i < elct; i++)
 	{
-		pr->AddChild(elnames[i]);
-	}
+		CScriptVarLink *pacomp = pa->FindChild(elnames[i]);
+		CScriptVarLink *pbcomp = pb->FindChild(elnames[i]);
+		CScriptVarLink *prcomp = pr->FindChildOrCreate(elnames[i]);
 
-	CScriptVarLink *pac = pa->m_Child.first;
-	CScriptVarLink *pbc = pb->m_Child.first;
-	CScriptVarLink *pcc = pr->m_Child.first;
-	for (i = 0; i < elct; i++)
-	{
-		float va = pac->m_Var->GetFloat();
-		pcc->m_Var->SetFloat((pbc->m_Var->GetFloat() - va) * pt->GetFloat() + va);
+		float va = pacomp->m_Var->GetFloat();
+		float vb = pbcomp->m_Var->GetFloat();
 
-		pac = pac->m_Sibling.next;
-		pbc = pbc->m_Sibling.next;
-		pcc = pcc->m_Sibling.next;
+		prcomp->m_Var->SetFloat((vb - va) * t + va);
 	}
 }
 
@@ -354,40 +348,34 @@ void scMathSlerp(CScriptVar *c, void *userdata)
 	CScriptVar *pa = c->GetParameter(_T("a"));
 	CScriptVar *pb = c->GetParameter(_T("b"));
 	CScriptVar *pr = c->GetReturnVar();
-	int64_t elct = pa->GetChildren();
+	int64_t elct = pa->GetNumChildren();
 
-	if ((elct != 4) || elct != pb->GetChildren() || !pr)
+	if (elct != pb->GetNumChildren() || !pr || (elct != 4))
 		return;
 
 	CScriptVar *pt = c->GetParameter(_T("t"));
+	float t = pt->GetFloat();
+
+	CScriptVarLink *prcomp[4];
 
 	glm::fquat qa, qb;
-	CScriptVarLink *pac = pa->m_Child.first;
-	CScriptVarLink *pbc = pb->m_Child.first;
-	glm::fquat::length_type i;
-	for (i = 0; i < 4; i++)
-	{
-		qa[i] = pac->m_Var->GetFloat();
-		qb[i] = pbc->m_Var->GetFloat();
 
-		pac = pac->m_Sibling.next;
-		pbc = pbc->m_Sibling.next;
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->FindChild(elnames[i]);
+		qa[i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->FindChild(elnames[i]);
+		qb[i] = pbcomp->m_Var->GetFloat();
+
+		prcomp[i] = pr->FindChildOrCreate(elnames[i]);
 	}
 
-	glm::fquat qr = glm::slerp(qa, qb, pt->GetFloat());
+	glm::fquat qr = glm::slerp(qa, qb, t);
 
-	i = (glm::fquat::length_type)pr->GetChildren();
-	for (; i < 4; i++)
+	for (int64_t i = 0; i < elct; i++)
 	{
-		pr->AddChild(elnames[i]);
-	}
-
-	CScriptVarLink *prc = pr->m_Child.first;
-	for (i = 0; i < 4; i++)
-	{
-		prc->m_Var->SetFloat(qr[i]);
-
-		prc = prc->m_Sibling.next;
+		prcomp[i]->m_Var->SetFloat(qr[i]);
 	}
 }
 

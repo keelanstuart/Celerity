@@ -38,14 +38,14 @@ FactoryImpl::~FactoryImpl()
 }
 
 
-Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid, Object *powner)
+Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid, Object *pparent)
 {
 	GUID guid;
 	if (!override_guid)
 		CoCreateGuid(&guid);
 
 	Object *o = new ObjectImpl(m_pSys, override_guid ? *override_guid : guid);
-	o->SetOwner(powner);
+	o->SetParent(pparent);
 
 	if (pproto)
 	{
@@ -77,14 +77,14 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid, Object *powne
 }
 
 
-Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *powner)
+Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *pparent)
 {
 	GUID guid;
 	if (!override_guid)
 		CoCreateGuid(&guid);
 
 	Object *o = new ObjectImpl(m_pSys, override_guid ? *override_guid : guid);
-	o->SetOwner(powner);
+	o->SetParent(pparent);
 
 	if (pobject)
 	{

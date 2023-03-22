@@ -21,7 +21,7 @@ ObjectImpl::ObjectImpl(SystemImpl *psys, GUID guid)
 	m_Props = props::IPropertySet::CreatePropertySet();
 	m_Props->SetChangeListener(this);
 	m_Flags.SetAll(OF_UPDATE | OF_DRAW);
-	m_Owner = nullptr;
+	m_pParent = nullptr;
 }
 
 
@@ -76,24 +76,24 @@ GUID ObjectImpl::GetGuid()
 }
 
 
-Object *ObjectImpl::GetOwner()
+Object *ObjectImpl::GetParent()
 {
-	return m_Owner;
+	return m_pParent;
 }
 
 
-void ObjectImpl::SetOwner(Object *powner)
+void ObjectImpl::SetParent(Object *pparent)
 {
-	if (powner == m_Owner)
+	if (pparent == m_pParent)
 		return;
 
-	if (m_Owner)
-		m_Owner->RemoveChild(this);
+	if (m_pParent)
+		m_pParent->RemoveChild(this);
 
-	m_Owner = powner;
+	m_pParent = pparent;
 
-	if (m_Owner)
-		m_Owner->AddChild(this);
+	if (m_pParent)
+		m_pParent->AddChild(this);
 }
 
 
@@ -121,7 +121,7 @@ void ObjectImpl::AddChild(Object *pchild)
 	{
 		m_Children.push_back(pchild);
 
-		pchild->SetOwner(this);
+		pchild->SetParent(this);
 	}
 }
 
@@ -137,7 +137,7 @@ void ObjectImpl::RemoveChild(Object *pchild, bool release)
 		Object *pco = *it;
 		m_Children.erase(it);
 
-		pco->SetOwner(nullptr);
+		pco->SetParent(nullptr);
 		if (release)
 			pco->Release();
 	}

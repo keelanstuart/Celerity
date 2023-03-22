@@ -224,7 +224,7 @@ public:
 	CScriptVar *GetArrayIndex(int64_t idx); ///< The the value at an array index
 	void SetArrayIndex(int64_t idx, CScriptVar *value); ///< Set the value at an array index
 	int64_t GetArrayLength(); ///< If this is an array, return the number of items in it (else 0)
-	int64_t GetChildren(); ///< Get the number of children
+	int64_t GetNumChildren(); ///< Get the number of children
 
 	int64_t GetInt();
 	bool GetBool() { return GetInt() != 0; }

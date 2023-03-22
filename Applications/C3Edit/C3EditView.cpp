@@ -1234,7 +1234,7 @@ void C3EditView::OnEditDelete()
 {
 	for (auto o : m_Selected)
 	{
-		c3::Object *po = o->GetOwner();
+		c3::Object *po = o->GetParent();
 		if (po)
 			po->RemoveChild(o, true);
 		else

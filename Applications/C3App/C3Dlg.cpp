@@ -321,19 +321,22 @@ BOOL C3Dlg::OnInitDialog()
 	}
 
 	m_CameraRoot = m_Factory->Build();
+	m_CameraRoot->SetName(_T("CameraRoot"));
 	m_CameraRoot->AddComponent(c3::Physical::Type());
 	m_CameraRoot->AddComponent(c3::Positionable::Type());
 
 	m_CameraArm = m_Factory->Build();
+	m_CameraArm->SetName(_T("CameraArm"));
 	m_CameraRoot->AddChild(m_CameraArm);
 	m_CameraArm->AddComponent(c3::Positionable::Type());
 	c3::Positionable *parmpos = dynamic_cast<c3::Positionable *>(m_CameraArm->FindComponent(c3::Positionable::Type()));
 	if (parmpos)
 	{
-		parmpos->AdjustPitch(glm::radians(-30.0f));
+		parmpos->AdjustPitch(glm::radians(-14.0f));
 	}
 
 	m_Camera = m_Factory->Build();
+	m_Camera->SetName(_T("Camera"));
 	m_CameraArm->AddChild(m_Camera);
 	m_Camera->AddComponent(c3::Positionable::Type());
 	m_Camera->AddComponent(c3::Camera::Type());
@@ -344,13 +347,14 @@ BOOL C3Dlg::OnInitDialog()
 	if (pcam)
 	{
 		pcam->SetFOV(glm::radians(78.0f));
+		pcam->SetPolarDistance(0.01f);
 	}
 
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
 	if (pcampos)
 	{
-		pcampos->AdjustPos(0, 5.0f, 0);
-		pcampos->AdjustPitch(glm::radians(30.0f));
+		pcampos->AdjustPos(0, -10.0f, 0);
+		pcampos->AdjustPitch(glm::radians(14.0f));
 	}
 
 	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA_ROOT, m_CameraRoot);

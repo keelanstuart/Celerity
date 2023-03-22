@@ -27,10 +27,10 @@ namespace c3
 	public:
 
 		/// Builds a new Object, optionally applying the attributes of a Prototype
-		virtual Object *Build(Prototype *pproto = nullptr, GUID *override_guid = nullptr, Object *powner = nullptr) = NULL;
+		virtual Object *Build(Prototype *pproto = nullptr, GUID *override_guid = nullptr, Object *pparent = nullptr) = NULL;
 
 		/// Builds a new Object, optionally applying the attributes of an existing Object
-		virtual Object *Build(Object *pobject, GUID *override_guid = nullptr, Object *powner = nullptr) = NULL;
+		virtual Object *Build(Object *pobject, GUID *override_guid = nullptr, Object *pparent = nullptr) = NULL;
 
 		/// Creates a new Prototype, optionally copying the attributes from an existing Prototype
 		virtual Prototype *CreatePrototype(Prototype *pproto = nullptr) = NULL;
