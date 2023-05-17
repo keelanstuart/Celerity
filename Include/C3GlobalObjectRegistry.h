@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2021, Keelan Stuart
+// Copyright © 2001-2023, Keelan Stuart
 
 
 #pragma once
@@ -21,10 +21,11 @@ namespace c3
 		{
 			OD_WORLDROOT = 0,
 			OD_SKYBOXROOT,
-			OD_GUIROOT,
 			OD_CAMERA_ROOT,
 			OD_CAMERA_ARM,
 			OD_CAMERA,
+			OD_GUI_ROOT,
+			OD_GUI_CAMERA,
 			OD_PLAYER,
 
 			OD_NUMDESIGNATIONS

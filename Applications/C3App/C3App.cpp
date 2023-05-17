@@ -1,8 +1,11 @@
-
-// C3App.cpp : Defines the class behaviors for the application.
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
 //
+// Copyright © 2001-2023, Keelan Stuart
+
 
 #include "pch.h"
+
 #include "framework.h"
 #include "C3App.h"
 #include "C3Dlg.h"

@@ -57,6 +57,12 @@ namespace c3
 			AXIS2_NEGZ,
 			AXIS2_POSZ,
 
+			// point of view hat
+			POV_POSY,
+			POV_NEGY,
+			POV_POSX,
+			POV_NEGX,
+
 			// Twelve buttons currently supported
 			BUTTON1,
 			BUTTON2,

@@ -38,8 +38,9 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
 	m_bFirstDraw = true;
-	memset(m_pControllable, 0, sizeof(c3::Object *) * MAX_USERS);
-	m_ViewMode = VM_FREE;//FOLLOW_POSDIR;
+	m_DebugEnabled = false;
+	m_Camera = m_CameraRoot = m_CameraArm = m_GUICamera = nullptr;
+	m_WorldRoot = m_GUIRoot = nullptr;
 }
 
 void C3Dlg::DoDataExchange(CDataExchange* pDX)
@@ -83,6 +84,9 @@ void C3Dlg::RegisterAction(const TCHAR *name, c3::ActionMapper::ETriggerType tt,
 
 	pam->RegisterAction(name, tt, delay, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
 	{
+		if (theApp.GetMainWnd() != GetCapture())
+			return false;
+
 		const TCHAR *name = (const TCHAR *)userdata;
 
 		c3::Object *pplayer = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_PLAYER);
@@ -92,7 +96,7 @@ void C3Dlg::RegisterAction(const TCHAR *name, c3::ActionMapper::ETriggerType tt,
 			if (pscr)
 			{
 				value *= theApp.m_C3->GetElapsedTime();
-				pscr->Execute(_T("handle_input(\"%s\", %0.4f);"), name, value);
+				pscr->Execute(_T("handle_input(\"%s\", %0.5f);"), name, value);
 				return true;
 			}
 		}
@@ -132,7 +136,6 @@ BOOL C3Dlg::OnInitDialog()
 	m_Factory = theApp.m_C3->GetFactory();
 
 	theApp.m_C3->GetLog()->Print(_T("Setting up actions... "));
-	c3::ActionMapper *pam = theApp.m_C3->GetActionMapper();
 
 	RegisterAction(_T("Move Forward"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Move Backward"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
@@ -145,17 +148,17 @@ BOOL C3Dlg::OnInitDialog()
 	RegisterAction(_T("Ascend"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Descend"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Run"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Jump"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0.5f);
+	RegisterAction(_T("Jump"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0.1f);
 	RegisterAction(_T("Fire 1"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Fire 2"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	pam->RegisterAction(_T("Cycle View Mode"), c3::ActionMapper::ETriggerType::UP_DELTA, 0, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
+	RegisterAction(_T("Increase Velocity"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Decrease Velocity"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Cycle View Mode"), c3::ActionMapper::ETriggerType::UP_DELTA, 0);
+	theApp.m_C3->GetActionMapper()->RegisterAction(_T("Toggle Debug"), c3::ActionMapper::ETriggerType::UP_DELTA, 0, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
 	{
-		((C3Dlg *)userdata)->m_ViewMode++;
-		if (((C3Dlg *)userdata)->m_ViewMode >= VM_NUMMODES)
-			((C3Dlg *)userdata)->m_ViewMode = VM_FOLLOW_POSDIR;
-
+		*((bool *)userdata) ^= true;
 		return true;
-	}, this);
+	}, &m_DebugEnabled);
 
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
@@ -231,7 +234,7 @@ BOOL C3Dlg::OnInitDialog()
 	gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
-	theApp.m_C3->GetLog()->Print(_T("Creating shadow buffer... "));
+	theApp.m_C3->GetLog()->Print(_T("Creating shadow buffer(s)... "));
 	m_SSBuf = m_Rend->CreateFrameBuffer(0, _T("Shadow"));
 	m_SSBuf->AttachDepthTarget(m_ShadowTarg);
 	gbok = m_SSBuf->Seal() == c3::FrameBuffer::RETURNCODE::RET_OK;
@@ -320,10 +323,24 @@ BOOL C3Dlg::OnInitDialog()
 		}
 	}
 
+	m_WorldRoot = m_Factory->Build();
+	m_WorldRoot->AddComponent(c3::Positionable::Type());
+	m_WorldRoot->AddComponent(c3::Scriptable::Type());
+	m_WorldRoot->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
+	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_WORLDROOT, m_WorldRoot);
+	theApp.m_C3->GetLog()->Print(_T("World root created and registered\n"));
+
+	m_GUIRoot = m_Factory->Build();
+	m_GUIRoot->AddComponent(c3::Positionable::Type());
+	m_GUIRoot->AddComponent(c3::Scriptable::Type());
+	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_GUI_ROOT, m_GUIRoot);
+	theApp.m_C3->GetLog()->Print(_T("World root created and registered\n"));
+
 	m_CameraRoot = m_Factory->Build();
 	m_CameraRoot->SetName(_T("CameraRoot"));
-	m_CameraRoot->AddComponent(c3::Physical::Type());
+	m_CameraRoot->AddComponent(c3::Scriptable::Type());
 	m_CameraRoot->AddComponent(c3::Positionable::Type());
+	m_CameraRoot->GetProperties()->GetPropertyById('SUDR')->SetFloat(0.0f);
 
 	m_CameraArm = m_Factory->Build();
 	m_CameraArm->SetName(_T("CameraArm"));
@@ -332,44 +349,88 @@ BOOL C3Dlg::OnInitDialog()
 	c3::Positionable *parmpos = dynamic_cast<c3::Positionable *>(m_CameraArm->FindComponent(c3::Positionable::Type()));
 	if (parmpos)
 	{
-		parmpos->AdjustPitch(glm::radians(-14.0f));
+		parmpos->AdjustPitch(glm::radians(-24.0f));
 	}
 
 	m_Camera = m_Factory->Build();
 	m_Camera->SetName(_T("Camera"));
 	m_CameraArm->AddChild(m_Camera);
-	m_Camera->AddComponent(c3::Positionable::Type());
-	m_Camera->AddComponent(c3::Camera::Type());
-	m_Camera->SetName(_T("Camera"));
-	m_pControllable[0] = m_Camera;
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->AddComponent(c3::Positionable::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->AddComponent(c3::Camera::Type()));
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
 		pcam->SetFOV(glm::radians(78.0f));
 		pcam->SetPolarDistance(0.01f);
 	}
 
-	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
 	if (pcampos)
 	{
 		pcampos->AdjustPos(0, -10.0f, 0);
-		pcampos->AdjustPitch(glm::radians(14.0f));
+		pcampos->AdjustPitch(glm::radians(24.0f));
+	}
+
+	m_GUICamera = m_Factory->Build();
+	m_GUICamera->SetName(_T("GUI Camera"));
+	c3::Positionable *puicampos = dynamic_cast<c3::Positionable *>(m_GUICamera->AddComponent(c3::Positionable::Type()));
+	c3::Camera *puicam = dynamic_cast<c3::Camera *>(m_GUICamera->AddComponent(c3::Camera::Type()));
+
+	if (puicam)
+	{
+		puicam->SetProjectionMode(c3::Camera::EProjectionMode::PM_ORTHOGRAPHIC);
+		puicam->SetPolarDistance(10.0f);
+		puicam->SetOrthoDimensions((float)w, (float)h);
+	}
+
+	if (puicampos)
+	{
+		puicampos->AdjustPos(0, 0, 10.0f);
+		puicampos->SetYawPitchRoll(0, glm::radians(-90.0f), 0);
 	}
 
 	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA_ROOT, m_CameraRoot);
 	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA_ARM, m_CameraArm);
 	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, m_Camera);
-	theApp.m_C3->GetLog()->Print(_T("Camera created\n"));
+	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_GUI_CAMERA, m_GUICamera);
+	theApp.m_C3->GetLog()->Print(_T("Camera hierarchy created and registered\n"));
 
-	m_RootObj = m_Factory->Build();
-	m_RootObj->AddComponent(c3::Positionable::Type());
-	m_RootObj->AddComponent(c3::Scriptable::Type());
-	m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
+	{
+		c3::Material *refmtl = m_Rend->GetMaterialManager()->CreateMaterial();
+		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, m_Rend->GetBlackTexture());
+		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_EMISSIVE, (c3::Texture *)rm->GetResource(_T("space1.jpg"), RESF_DEMANDLOAD)->GetData());
+		refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
+		c3::Model *sphere = c3::Model::Create(m_Rend);
+		c3::Model::MeshIndex mi = sphere->AddMesh(m_Rend->GetSphereMesh());
+		c3::Model::NodeIndex ni = sphere->AddNode();
+		sphere->AssignMeshToNode(ni, mi);
+		sphere->SetMaterial(mi, refmtl);
+		const c3::ResourceType *rt = rm->FindResourceTypeByName(_T("Model"));
+		rm->GetResource(_T("[spacesphere.model]"), RESF_CREATEENTRYONLY, rt, sphere);
+	}
 
-	props::IProperty *psp = m_RootObj->GetProperties()->GetPropertyById('SRCF');
+	m_SkyboxRoot = m_Factory->Build();
+	m_SkyboxRoot->SetName(_T("Skybox"));
+	m_SkyboxRoot->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("[spacesphere.model]"));
+	m_SkyboxRoot->GetProperties()->CreateProperty(_T("RenderMethod"), 'C3RM')->SetString(_T("std.c3rm"));
+	m_SkyboxRoot->AddComponent(c3::Scriptable::Type());
+	c3::Positionable *ppos = (c3::Positionable *)m_SkyboxRoot->AddComponent(c3::Positionable::Type());
+	ppos->SetScl(-1000.0f, -1000.0f, -1000.0f);
+	m_SkyboxRoot->AddComponent(c3::ModelRenderer::Type());
+	m_SkyboxRoot->Flags().SetAll(OF_UPDATE | OF_DRAW | OF_DRAWINEDITOR | OF_TRACKCAMX | OF_TRACKCAMY | OF_TRACKCAMZ | OF_TRACKCAMLITERAL);
+	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_SKYBOXROOT, m_SkyboxRoot);
+	theApp.m_C3->GetLog()->Print(_T("Skybox created and registered\n"));
+
+	props::IProperty *psp = m_WorldRoot->GetProperties()->GetPropertyById('SRCF');
 	if (psp)
 		psp->SetString(_T("c3demo.c3js"));
+
+	psp = m_CameraRoot->GetProperties()->GetPropertyById('SRCF');
+	if (psp)
+		psp->SetString(_T("Camera.c3js"));
+
+	psp = m_SkyboxRoot->GetProperties()->GetPropertyById('SRCF');
+	if (psp)
+		psp->SetString(_T("Skybox.c3js"));
 
 	m_DrawTimerId = SetTimer('DRAW', 33, nullptr);
 
@@ -411,6 +472,7 @@ void C3Dlg::OnPaint()
 		float dt = theApp.m_C3->GetElapsedTime();
 
 		m_CameraRoot->Update(dt);
+		m_GUICamera->Update(dt);
 
 		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->FindComponent(c3::Positionable::Type()));
 		c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
@@ -441,9 +503,11 @@ void C3Dlg::OnPaint()
 		glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
 		m_Rend->SetSunShadowMatrix(&depthMVP);
 
-		m_RootObj->Update(dt);
+		m_SkyboxRoot->Update(dt);
+		m_WorldRoot->Update(dt);
+		m_GUIRoot->Update(dt);
 
-		if (m_Rend->BeginScene(BSFLAG_SHOWGUI))
+		if (m_Rend->BeginScene(m_DebugEnabled ? BSFLAG_SHOWGUI : 0))
 		{
 			// Solid color pass
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
@@ -452,12 +516,13 @@ void C3Dlg::OnPaint()
 			m_Rend->SetAlphaPassRange(254.9f / 255.0f);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
-			m_RootObj->Render();
+			m_SkyboxRoot->Render();
+			m_WorldRoot->Render();
 
 			// Shadow pass
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 			m_Rend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
-			m_RootObj->Render(RF_SHADOW);
+			m_WorldRoot->Render(RF_SHADOW);
 
 			m_Rend->SetViewport();
 
@@ -466,7 +531,7 @@ void C3Dlg::OnPaint()
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 			m_Rend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-			m_RootObj->Render(RF_LIGHT);
+			m_WorldRoot->Render(RF_LIGHT);
 
 			m_Rend->UseRenderMethod();
 			m_Rend->UseMaterial();
@@ -495,6 +560,18 @@ void C3Dlg::OnPaint()
 			m_Rend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST);
 			m_Rend->UseProgram(m_SP_resolve);
 			m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
+
+			c3::Positionable *puicampos = dynamic_cast<c3::Positionable *>(m_GUICamera->FindComponent(c3::Positionable::Type()));
+			c3::Camera *puicam = dynamic_cast<c3::Camera *>(m_GUICamera->FindComponent(c3::Camera::Type()));
+			if (puicam)
+			{
+				m_Rend->SetViewMatrix(puicam->GetViewMatrix());
+				m_Rend->SetProjectionMatrix(puicam->GetProjectionMatrix());
+				m_Rend->SetEyePosition(puicam->GetEyePos());
+				glm::fvec3 eyedir = glm::normalize(*puicam->GetTargetPos() - *(puicam->GetEyePos()));
+				m_Rend->SetEyeDirection(&eyedir);
+			}
+			m_GUIRoot->Render();
 
 			m_Rend->EndScene();
 			m_Rend->Present();
@@ -546,10 +623,22 @@ void C3Dlg::Cleanup()
 		m_Rend = nullptr;
 	}
 
-	if (m_RootObj)
+	if (m_WorldRoot)
 	{
-		m_RootObj->Release();
-		m_RootObj = nullptr;
+		m_WorldRoot->Release();
+		m_WorldRoot = nullptr;
+	}
+
+	if (m_CameraRoot)
+	{
+		m_CameraRoot->Release();
+	}
+	m_CameraRoot = m_CameraArm = m_Camera = nullptr;
+
+	if (m_SkyboxRoot)
+	{
+		m_SkyboxRoot->Release();
+		m_SkyboxRoot = nullptr;
 	}
 
 	if (m_SP_combine)
@@ -589,16 +678,18 @@ BOOL C3Dlg::DestroyWindow()
 
 BOOL C3Dlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
+#if 0
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
-		float m = (m_Controls[0].move.run * 3.5f) + 1.0f;
+		float m = 1.0f;//(m_Controls[0].move.run * 3.5f) + 1.0f;
 		float d = pcam->GetPolarDistance();
 		d += ((zDelta < 0) ? m : -m);
 		d = std::max(d, 0.1f);
 
 		pcam->SetPolarDistance(d);
 	}
+#endif
 
 	return CDialog::OnMouseWheel(nFlags, zDelta, pt);
 }
@@ -621,10 +712,7 @@ void C3Dlg::OnSize(UINT nType, int cx, int cy)
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
-		glm::fvec2 dim;
-		dim.x = (float)r.right;
-		dim.y = (float)r.bottom;
-		pcam->SetOrthoDimensions(&dim);
+		pcam->SetOrthoDimensions((float)r.right, (float)r.bottom);
 		m_Camera->Update();
 		m_Rend->SetProjectionMatrix(pcam->GetProjectionMatrix());
 	}
@@ -766,6 +854,9 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 	size_t ai_cvm = pam->FindActionIndex(_T("Cycle View Mode"));
 	size_t ai_f1 = pam->FindActionIndex(_T("Fire 1"));
 	size_t ai_f2 = pam->FindActionIndex(_T("Fire 2"));
+	size_t ai_td = pam->FindActionIndex(_T("Toggle Debug"));
+	size_t ai_iv = pam->FindActionIndex(_T("Increase Velocity"));
+	size_t ai_dv = pam->FindActionIndex(_T("Decrease Velocity"));
 
 	switch (device->GetType())
 	{
@@ -778,8 +869,8 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 			pam->MakeAssociation(ai_sl, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGX);
 			pam->MakeAssociation(ai_sr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSX);
 
-			pam->MakeAssociation(ai_mf, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_W);
-			pam->MakeAssociation(ai_mb, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_S);
+			pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_W);
+			pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_S);
 			pam->MakeAssociation(ai_sl, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_A);
 			pam->MakeAssociation(ai_sr, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_D);
 
@@ -797,6 +888,8 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 
 			pam->MakeAssociation(ai_cvm, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_C);
 
+			pam->MakeAssociation(ai_td, device->GetUID(), c3::InputDevice::VirtualButton::DEBUGBUTTON);
+
 			break;
 		}
 
@@ -806,6 +899,11 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 
 			pam->MakeAssociation(ai_f1, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON1);
 			pam->MakeAssociation(ai_f2, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON2);
+
+			pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::THROTTLE1);
+			pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::THROTTLE2);
+			pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSZ);
+			pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGZ);
 
 			pam->MakeAssociation(ai_lu, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGY);
 			pam->MakeAssociation(ai_ld, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSY);
@@ -831,9 +929,16 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 				pam->MakeAssociation(ai_ll, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGX);
 				pam->MakeAssociation(ai_lr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSX);
 
+				pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::THROTTLE1);
+				pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::THROTTLE2);
+				pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSZ);
+				pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGZ);
+
 				pam->MakeAssociation(ai_r, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON2);
 				pam->MakeAssociation(ai_j, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON1);
-			
+				pam->MakeAssociation(ai_f1, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON3);
+				pam->MakeAssociation(ai_f2, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON4);
+
 				pam->MakeAssociation(ai_a, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON6);
 				pam->MakeAssociation(ai_d, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON5);
 

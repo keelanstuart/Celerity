@@ -16,6 +16,7 @@
 #include "Resource.h"
 #include "C3Edit.h"
 #include "EditPrototypeDlg.h"
+#include <tinyxml2.h>
 
 
 #define IMGIDX_GROUP			2
@@ -207,7 +208,7 @@ enum EPopupCommand
 	PC_CREATEPROTO,
 	PC_CREATEGROUP,
 	PC_IMPORT,
-	PC_EDIT,
+	PC_SAVEAS,
 	PC_DUPLICATE,
 	PC_RENAME
 };
@@ -234,6 +235,8 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 
 	MyAppendMenuItem(menu, MFT_STRING, _T("New"), true, submenu);
 	MyAppendMenuItem(menu, MFT_STRING, _T("Import From Model(s) ..."), true, 0, PC_IMPORT);
+	MyAppendMenuItem(menu, MFT_STRING, _T("Save Prototypes As ..."), true, 0, PC_SAVEAS);
+
 	MyAppendMenuItem(menu, MFT_SEPARATOR);
 
 	if (point != CPoint(-1, -1))
@@ -254,7 +257,6 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 			pproto = (c3::Prototype *)pWndTree->GetItemData(hTreeItem);
 			if (pproto)
 			{
-				MyAppendMenuItem(menu, MFT_STRING, _T("Edit"), true, 0, PC_EDIT);
 				MyAppendMenuItem(menu, MFT_STRING, _T("Duplicate"), true, 0, PC_DUPLICATE);
 			}
 
@@ -280,37 +282,30 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 					g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
 				pcp->SetName(protoname);
 
-				CEditPrototypeDlg epd(pcp);
-				if (epd.DoModal() == IDOK)
+				tstring groupname;
+				if (pproto)
 				{
-					tstring groupname;
-					if (pproto)
-					{
-						pcp->SetGroup(pproto->GetGroup());
-					}
-					else
-					{
-						HTREEITEM hi = hpi;
-						while (hi && pWndTree->GetParentItem(hi))
-						{
-							if (!groupname.empty())
-								groupname.insert(_T('/'), 0);
-
-							groupname = tstring((LPCTSTR)(pWndTree->GetItemText(hi))) + groupname;
-							pWndTree->Expand(hi, TVE_EXPAND);
-
-							hi = pWndTree->GetParentItem(hi);
-						}
-					}
-
-					CString tmp = pcp->GetName();
-					HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, IMGIDX_PROTOTYPE, IMGIDX_PROTOTYPE, hpi);
-					m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)pcp);
+					pcp->SetGroup(pproto->GetGroup());
 				}
 				else
 				{
-					pfac->RemovePrototype(pcp);
+					HTREEITEM hi = hpi;
+					while (hi && pWndTree->GetParentItem(hi))
+					{
+						if (!groupname.empty())
+							groupname.insert(_T('/'), 0);
+
+						groupname = tstring((LPCTSTR)(pWndTree->GetItemText(hi))) + groupname;
+						pWndTree->Expand(hi, TVE_EXPAND);
+
+						hi = pWndTree->GetParentItem(hi);
+					}
 				}
+
+				CString tmp = pcp->GetName();
+				HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, IMGIDX_PROTOTYPE, IMGIDX_PROTOTYPE, hpi);
+				m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)pcp);
+
 				break;
 			}
 
@@ -332,6 +327,58 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 				m_hEditItem = hpi;
 				pWndTree->EnsureVisible(hpi);
 				pWndTree->EditLabel(hpi);
+
+				break;
+			}
+
+			case PC_SAVEAS:
+			{
+				tstring filter = _T("Celerity Prototypes (ASCII)|*.c3protoa");
+				filter += _T("|Celerity Prototypes (Binary)|*.c3protob");
+				filter += _T("|*.*|All Files (*.*)||");
+
+				CFileDialog fd(FALSE, nullptr, nullptr, OFN_ENABLESIZING, filter.c_str(), nullptr, sizeof(OPENFILENAME));
+				if (fd.DoModal() == IDOK)
+				{
+					if (!PathFileExists(fd.GetPathName()) || (MessageBox(_T("Selected file exists already; overwrite?"), _T("Confirm Overwrite"), MB_YESNO) == IDYES))
+					{
+						switch (fd.GetOFN().nFilterIndex - 1)
+						{
+							default:
+							case 0:
+							{
+								tinyxml2::XMLDocument protodoc;
+								tinyxml2::XMLElement *protoroot = protodoc.NewElement("prototypes");
+								protodoc.InsertEndChild(protoroot);
+								theApp.m_C3->GetFactory()->SavePrototypes(protoroot);
+
+								char *fn;
+								CONVERT_TCS2MBCS(fd.GetPathName(), fn);
+								protodoc.SaveFile(fn);
+
+								break;
+							}
+
+							case 1:
+							{
+								genio::IOutputStream *pos = genio::IOutputStream::Create();
+								if (pos)
+								{
+									pos->Assign(fd.GetPathName());
+									if (pos->Open())
+									{
+										theApp.m_C3->GetFactory()->SavePrototypes(pos);
+										pos->Close();
+									}
+
+									pos->Release();
+								}
+
+								break;
+							}
+						}
+					}
+				}
 
 				break;
 			}
@@ -394,19 +441,6 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 
 						HTREEITEM hitem = m_wndPrototypeView.InsertItem(ptmp->GetName(), IMGIDX_PROTOTYPE, IMGIDX_PROTOTYPE, hpi);
 						m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)ptmp);
-					}
-				}
-				break;
-			}
-
-			case PC_EDIT:
-			{
-				if (pproto)
-				{
-					CEditPrototypeDlg epd(pproto);
-					if (epd.DoModal() == IDOK)
-					{
-						pWndTree->SetItemText(hTreeItem, pproto->GetName());
 					}
 				}
 				break;

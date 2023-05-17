@@ -417,7 +417,7 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 					}
 					case props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS:
 					{
-						SetUniform1(p->GetID(), m_Rend->GetSystem()->GetElapsedTime());
+						SetUniform1(p->GetID(), m_Rend->GetSystem()->GetCurrentRunTime());
 						break;
 					}
 				}

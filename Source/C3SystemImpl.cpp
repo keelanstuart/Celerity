@@ -317,7 +317,7 @@ GlobalObjectRegistry *SystemImpl::GetGlobalObjectRegistry()
 }
 
 
-float SystemImpl::GetCurrentTime()
+float SystemImpl::GetCurrentRunTime()
 {
 	return m_CurrentTime;
 }

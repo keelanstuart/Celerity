@@ -1,3 +1,8 @@
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
+//
+// Copyright © 2001-2023, Keelan Stuart
+
 
 #include "pch.h"
 #include "framework.h"
@@ -54,6 +59,7 @@ BEGIN_MESSAGE_MAP(CPropertiesWnd, CDockablePane)
 	ON_MESSAGE(WM_CTLCOLORLISTBOX, &CPropertiesWnd::OnCtlcolorlistbox)
 	ON_CLBN_CHKCHANGE(PWID_FLAGLIST, OnCheckChangeFlags)
 	ON_CLBN_CHKCHANGE(PWID_COMPLIST, OnCheckChangeComponents)
+	ON_EN_CHANGE(PWID_EDITNAME, OnChangeName)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -295,7 +301,8 @@ void CPropertiesWnd::FillOutComponents()
 			continue;
 
 		int ic = m_wndCompList.AddString(pct->GetName());
-		m_wndCompList.SetItemDataPtr(ic, (void *)pct);
+		m_wndCompList.SetItemData(ic, (DWORD_PTR)pct);
+		//assert((DWORD_PTR)pct == m_wndCompList.GetItemData(ic));
 
 		if (m_pProto)
 		{
@@ -367,7 +374,10 @@ afx_msg void CPropertiesWnd::OnCheckChangeComponents()
 {
 	for (int i = 0, maxi = m_wndCompList.GetCount(); i < maxi; i++)
 	{
-		c3::ComponentType *pct = (c3::ComponentType *)(m_wndCompList.GetItemDataPtr(i));
+		// this is awful... for whatever reason, WtfCheckListBox is using item data (?) so for now, look up components by name
+		CString name;
+		m_wndCompList.GetText(i, name);
+		const c3::ComponentType *pct = theApp.m_C3->GetFactory()->FindComponentType(name);
 
 		if (m_wndCompList.GetCheck(i) == BST_CHECKED)
 		{
@@ -387,5 +397,20 @@ afx_msg void CPropertiesWnd::OnCheckChangeComponents()
 					m_pObj->RemoveComponent(pc);
 			}
 		}
+	}
+}
+
+afx_msg void CPropertiesWnd::OnChangeName()
+{
+	CString name;
+	m_wndNameEdit.GetWindowText(name);
+
+	if (m_pProto)
+	{
+		m_pProto->SetName(name);
+	}
+	else if (m_pObj)
+	{
+		m_pObj->SetName(name);
 	}
 }

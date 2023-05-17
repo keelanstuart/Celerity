@@ -1,6 +1,8 @@
-
-// C3Dlg.h : header file
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
 //
+// Copyright © 2001-2023, Keelan Stuart
+
 
 #pragma once
 
@@ -36,55 +38,18 @@ protected:
 	c3::ShaderComponent *m_FS_combine;
 	c3::ShaderProgram *m_SP_combine;
 	bool m_bFirstDraw;
+	bool m_DebugEnabled;
 
 	UINT_PTR m_DrawTimerId;
 
 	int32_t m_uBlurTex, m_uBlurScale;
 
 	c3::Factory *m_Factory;
-	c3::Object *m_RootObj;
+	c3::Object *m_WorldRoot;
+	c3::Object *m_SkyboxRoot;
+	c3::Object *m_GUIRoot;
 	c3::Object *m_CameraRoot, *m_CameraArm, *m_Camera;
-	std::deque<c3::Object *> m_Light;
-	std::deque<glm::fvec3> m_LightMove;
-
-#define MAX_USERS	2
-
-	struct SControls
-	{
-		SControls() { memset(&move, 0, sizeof(SMove)); memset(&look, 0, sizeof(SLook)); }
-		struct SMove
-		{
-			float forward;
-			float backward;
-			float left;
-			float right;
-			float up;
-			float down;
-			float run;
-			float jump;
-		} move;
-
-		struct SLook
-		{
-			float up;
-			float down;
-			float left;
-			float right;
-		} look;
-
-	} m_Controls[MAX_USERS];
-
-	c3::Object *m_pControllable[MAX_USERS];
-
-	enum EViewMode
-	{
-		VM_FOLLOW_POSDIR = 0,
-		VM_FOLLOW_POS,
-		VM_FREE,
-
-		VM_NUMMODES
-	};
-	size_t m_ViewMode;
+	c3::Object *m_GUICamera;
 
 	LARGE_INTEGER m_PerfFreq;
 	LARGE_INTEGER m_PerfTime;

@@ -1,6 +1,7 @@
-
-// C3EditDoc.h : interface of the C3EditDoc class
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
 //
+// Copyright © 2001-2023, Keelan Stuart
 
 
 #pragma once
@@ -17,11 +18,14 @@ public:
 
 	typedef struct sPerViewInfo
 	{
-		c3::Object *obj;
+		c3::Object *m_Camera;
 		float yaw, pitch;
+		c3::Object *m_GUICamera;
 	} SPerViewInfo;
 
 	c3::Object *m_RootObj;
+	c3::Object *m_GUIRootObj;
+
 	typedef std::map<HWND, SPerViewInfo> TWndMappedObject;
 	TWndMappedObject m_PerViewInfo;
 	c3::Object *m_Brush;

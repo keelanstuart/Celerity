@@ -11,6 +11,7 @@
 #include <C3MaterialImpl.h>
 
 #include <assimp/Importer.hpp>
+#include <assimp/Exporter.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
@@ -133,7 +134,7 @@ const glm::fmat4x4 *ModelImpl::GetTransform(NodeIndex nidx, glm::fmat4x4 *pmat) 
 }
 
 
-void ModelImpl::SetParent(NodeIndex nidx, NodeIndex parent_nidx)
+void ModelImpl::SetParentNode(NodeIndex nidx, NodeIndex parent_nidx)
 {
 	if (nidx < m_Nodes.size())
 	{
@@ -167,7 +168,7 @@ void ModelImpl::SetParent(NodeIndex nidx, NodeIndex parent_nidx)
 }
 
 
-Model::NodeIndex ModelImpl::GetParent(Model::NodeIndex nidx) const
+Model::NodeIndex ModelImpl::GetParentNode(Model::NodeIndex nidx) const
 {
 	if (nidx < m_Nodes.size())
 	{
@@ -506,7 +507,7 @@ DECLARE_RESOURCETYPE(Model);
 typedef std::map<const aiNode *, Model::NodeIndex> TNodeIndexMap;
 typedef std::map<size_t, Model::MeshIndex> TMeshIndexMap;
 
-void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, TNodeIndexMap &nidxmap, TMeshIndexMap &midxmap)
+void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMatrix4x4 *pnxform, TNodeIndexMap &nidxmap, TMeshIndexMap &midxmap)
 {
 	if (!pn || !pm)
 		return;
@@ -518,17 +519,24 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, TNode
 	CONVERT_MBCS2TCS(pn->mName.C_Str(), name);
 
 	pm->SetNodeName(nidx, name);
-	pm->SetParent(nidx, parent_nidx);
+	pm->SetParentNode(nidx, parent_nidx);
 
 	glm::fmat4x4 t;
-	for (unsigned int j = 0; j < 4; j++)
-		for (unsigned int k = 0; k < 4; k++)
-			t[j][k] = (float)(pn->mTransformation[k][j]);
+	if (pnxform)
+	{
+		for (unsigned int j = 0; j < 4; j++)
+			for (unsigned int k = 0; k < 4; k++)
+				t[j][k] = (float)((*pnxform)[k][j]);
+	}
+	else
+	{
+		t = glm::identity<glm::fmat4x4>();
+	}
 
 	pm->SetTransform(nidx, &t);
 
 	for (size_t i = 0; i < pn->mNumChildren; i++)
-		AddModelNode(pm, nidx, pn->mChildren[i], nidxmap, midxmap);
+		AddModelNode(pm, nidx, pn->mChildren[i], &pn->mChildren[i]->mTransformation, nidxmap, midxmap);
 
 	for (size_t j = 0; j < pn->mNumMeshes; j++)
 	{
@@ -538,6 +546,509 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, TNode
 	}
 }
 
+inline unsigned int MakeImportFlags(const TCHAR *options)
+{
+	unsigned int impflags = 0
+		//| aiProcess_FlipUVs
+		| aiProcess_Triangulate
+		| aiProcess_CalcTangentSpace
+		| aiProcess_ImproveCacheLocality
+		| aiProcess_OptimizeMeshes
+		| aiProcess_GenBoundingBoxes
+		| aiProcess_SortByPType
+		| aiProcess_JoinIdenticalVertices
+		| aiProcess_GenUVCoords
+		| aiProcess_FixInfacingNormals
+		;
+
+	if (_tcsstr(options, _T("force_smooth_normals")))
+	{
+		impflags |= aiProcess_GenSmoothNormals | aiProcess_ForceGenNormals;
+	}
+	else if (_tcsstr(options, _T("force_flat_normals")))
+	{
+		impflags |= aiProcess_GenNormals | aiProcess_ForceGenNormals;
+	}
+	else
+	{
+		impflags |= aiProcess_GenNormals;
+	}
+
+	return impflags;
+}
+
+inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *rootpath, const TCHAR *sourcename)
+{
+	if (!rootpath)
+		rootpath = _T("");
+
+	if (!sourcename)
+		sourcename = _T("");
+
+	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+		return nullptr;
+
+	RendererImpl *pr = (RendererImpl *)(psys->GetRenderer());
+	ModelImpl *pmi = new ModelImpl(pr);
+
+	if (!pmi)
+		return nullptr;
+
+	std::vector<Material *> mtlvec;
+	mtlvec.reserve(scene->mNumMaterials);
+	MaterialManager *pmm = pr->GetMaterialManager();
+
+	aiString aipath;
+	TCHAR *textmp, *texfilename;
+	TCHAR texpath[MAX_PATH];
+
+	for (size_t j = 0; j < scene->mNumMaterials; j++)
+	{
+		Material *pmtl = pmm->CreateMaterial();
+		aiMaterial *paim = scene->mMaterials[j];
+
+		glm::vec4 diff(1, 1, 1, 1), emis(0, 0, 0, 0), spec(0, 0, 0, 0);
+		float shin = 0;
+		for (size_t pidx = 0, maxpidx = paim->mNumProperties; pidx < maxpidx; pidx++)
+		{
+			aiMaterialProperty *pmp = paim->mProperties[pidx];
+			aiString key = pmp->mKey;
+
+			if (!_stricmp(key.C_Str(), "$clr.diffuse") || !_stricmp(key.C_Str(), "$clr.base"))
+			{
+				memcpy(&diff, pmp->mData, sizeof(aiColor3D));
+			}
+			else if (!_stricmp(key.C_Str(), "$clr.emissive"))
+			{
+				memcpy(&emis, pmp->mData, sizeof(aiColor3D));
+			}
+			else if (!_stricmp(key.C_Str(), "$clr.specular"))
+			{
+				memcpy(&spec, pmp->mData, sizeof(aiColor3D));
+			}
+			else if (!_stricmp(key.C_Str(), "$clr.shininess"))
+			{
+				memcpy(&shin, pmp->mData, sizeof(float));
+			}
+			else if (!_stricmp(key.C_Str(), "$mat.twosided"))
+			{
+				if (*((uint8_t *)pmp->mData) == 1)
+					pmtl->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERBACK));
+			}
+		}
+		pmtl->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &diff);
+		pmtl->SetColor(Material::ColorComponentType::CCT_EMISSIVE, &emis);
+		pmtl->SetColor(Material::ColorComponentType::CCT_SPECULAR, &spec);
+
+		TCHAR difftexpath[MAX_PATH], texpathtemp[MAX_PATH];
+
+		props::TFlags64 rf = 0; //c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
+
+		bool has_difftex = false;
+		if (true == (has_difftex = (paim->GetTextureCount(aiTextureType_DIFFUSE) > 0)))
+			paim->GetTexture(aiTextureType_DIFFUSE, 0, &aipath);
+		else if (!has_difftex && (true == (has_difftex = (paim->GetTextureCount(aiTextureType_BASE_COLOR) > 0))))
+			paim->GetTexture(aiTextureType_BASE_COLOR, 0, &aipath);
+
+		// locally-defined function to set texture filenames for specific types of textures
+		auto SetTextureFileName = [&](Material::TextureComponentType t, const char *s)
+		{
+			CONVERT_MBCS2TCS(s, textmp);
+			if (textmp && (*textmp != '*'))
+			{
+				PathCombine(texpath, rootpath, textmp);
+				bool loctex = psys->GetFileMapper()->FindFile(texpath);
+				if (!loctex)
+				{
+					TCHAR *fnstart = PathFindFileName(textmp);
+					PathCombine(texpath, rootpath, fnstart);
+					loctex = psys->GetFileMapper()->FindFile(texpath);
+				}
+				texfilename = loctex ? texpath : PathFindFileName(texpath);
+				if (t == Material::TextureComponentType::TCT_DIFFUSE)
+					_tcsncpy_s(difftexpath, textmp, MAX_PATH - 1);
+				pmtl->SetTexture(t, psys->GetResourceManager()->GetResource(texfilename, rf));
+			}
+			else
+			{
+				textmp++;
+				size_t texidx = _ttoi(textmp);
+				if (scene->HasTextures() && texidx < scene->mNumTextures)
+				{
+					int w, h, c;
+					stbi_uc *data = stbi_load_from_memory((const stbi_uc *)(scene->mTextures[texidx]->pcData),
+														  scene->mTextures[texidx]->mWidth, &w, &h, &c, 0);
+					if (data)
+					{
+						c3::Texture2D *pt = psys->GetRenderer()->CreateTexture2D(w, h, (c3::Renderer::TextureType)(c3::Renderer::TextureType::U8_1CH + c - 1));
+						if (pt)
+						{
+							void *buf;
+							Texture2D::SLockInfo li;
+							if ((pt->Lock(&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+							{
+								memcpy(buf, data, w * h * c);
+
+								pt->Unlock();
+							}
+
+							GUID guid;
+							CoCreateGuid(&guid);
+
+							tstring texname = sourcename;
+							texname += _T(":texture[");
+							texname += textmp;
+							texname += _T("]");
+							pt->SetName(texname.c_str());
+							pmtl->SetTexture(t, pt);
+							psys->GetResourceManager()->GetResource(texname.c_str(),
+																	RESF_CREATEENTRYONLY,
+																	psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D")),
+																	pt);
+						}
+
+						free(data);
+					}
+				}
+			}
+		};
+
+		if (has_difftex)
+		{
+			SetTextureFileName(Material::TextureComponentType::TCT_DIFFUSE, aipath.C_Str());
+		}
+
+		bool has_normtex = false;
+		if (true == (has_normtex = (paim->GetTextureCount(aiTextureType_NORMALS) > 0)))
+			paim->GetTexture(aiTextureType_NORMALS, 0, &aipath);
+		else if (!has_normtex && (true == (has_normtex = (paim->GetTextureCount(aiTextureType_NORMAL_CAMERA) > 0))))
+			paim->GetTexture(aiTextureType_NORMAL_CAMERA, 0, &aipath);
+		else if (has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_normtex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_NORMAL, texpathtemp, MAX_PATH - 1)) == true))
+		{
+			char *c;
+			CONVERT_TCS2MBCS(texpathtemp, c);
+			aipath = c;
+		}
+
+		if (has_normtex)
+		{
+			SetTextureFileName(Material::TextureComponentType::TCT_NORMAL, aipath.C_Str());
+		}
+
+		bool has_emistex = false;
+		if (true == (has_emistex = (paim->GetTextureCount(aiTextureType_EMISSIVE) > 0)))
+			paim->GetTexture(aiTextureType_EMISSIVE, 0, &aipath);
+		else if (!has_emistex && (true == (has_emistex = (paim->GetTextureCount(aiTextureType_EMISSION_COLOR) > 0))))
+			paim->GetTexture(aiTextureType_EMISSION_COLOR, 0, &aipath);
+		else if (has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_emistex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_EMISSIVE, texpathtemp, MAX_PATH - 1)) == true))
+		{
+			char *c;
+			CONVERT_TCS2MBCS(texpathtemp, c);
+			aipath = c;
+		}
+
+		if (has_emistex)
+		{
+			SetTextureFileName(Material::TextureComponentType::TCT_EMISSIVE, aipath.C_Str());
+		}
+
+		// metalness / roughness / ao -- all together
+		unsigned int tidx_pbrmtl = paim->GetTextureCount(aiTextureType_PBR_MTL);
+		bool has_surftex = (tidx_pbrmtl != 0);
+		unsigned int tidx_metalness, tidx_roughness, tidx_ambocc;
+		if (!has_surftex)
+		{
+			tidx_metalness = paim->GetTextureCount(aiTextureType_METALNESS);
+			tidx_roughness = paim->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS);
+			tidx_ambocc = paim->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION);
+			has_surftex = (tidx_metalness > 0) && (tidx_roughness == tidx_metalness) && (tidx_ambocc == tidx_metalness);
+			if (has_surftex)
+				paim->GetTexture(aiTextureType_METALNESS, 0, &aipath);
+		}
+		else
+		{
+			tidx_metalness = tidx_roughness = tidx_ambocc = tidx_pbrmtl;
+			if (has_surftex)
+				paim->GetTexture(aiTextureType_PBR_MTL, 0, &aipath);
+		}
+
+		if (!has_surftex && has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_surftex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_SURFACEDESC, texpathtemp, MAX_PATH - 1)) == true))
+		{
+			char *c;
+			CONVERT_TCS2MBCS(texpathtemp, c);
+			aipath = c;
+		}
+
+		if (has_surftex)
+		{
+			SetTextureFileName(Material::TextureComponentType::TCT_SURFACEDESC, aipath.C_Str());
+		}
+
+		mtlvec.push_back(pmtl);
+	}
+
+	TMeshIndexMap mim;
+
+	glm::fvec3 vmin(FLT_MAX, FLT_MAX, FLT_MAX), vmax(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+
+	for (size_t i = 0; i < scene->mNumMeshes; i++)
+	{
+		Mesh *pm = psys->GetRenderer()->CreateMesh();
+
+		VertexBuffer *pvb = psys->GetRenderer()->CreateVertexBuffer();
+		IndexBuffer *pib = psys->GetRenderer()->CreateIndexBuffer();
+
+		Model::MeshIndex midx = pmi->AddMesh(pm);
+		if (midx == Model::INVALID_INDEX)
+			continue;
+
+		unsigned int mtlidx = scene->mMeshes[i]->mMaterialIndex;
+		pmi->SetMaterial(midx, (mtlidx < mtlvec.size()) ? mtlvec[mtlidx] : pr->GetWhiteMaterial());
+
+		// associate the aiMesh with a MeshIndex so we can attach it to the appropriate ModelIndex
+		mim.insert(TMeshIndexMap::value_type(i, midx));
+
+		VertexBuffer::ComponentDescription vcd[VertexBuffer::ComponentDescription::EUsage::VU_NUM_USAGES + 1];
+		memset(vcd, 0, sizeof(VertexBuffer::ComponentDescription) * (VertexBuffer::ComponentDescription::EUsage::VU_NUM_USAGES + 1));
+
+		size_t ci = 0;
+
+		if (scene->mMeshes[i]->HasPositions())
+		{
+			vcd[ci].m_Count = 3;
+			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
+			vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_POSITION;
+			ci++;
+		}
+
+		if (scene->mMeshes[i]->HasNormals())
+		{
+			vcd[ci].m_Count = 3;
+			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
+			vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_NORMAL;
+			ci++;
+		}
+
+		if (scene->mMeshes[i]->HasTangentsAndBitangents())
+		{
+			vcd[ci].m_Count = 3;
+			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
+			vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_TANGENT;
+			ci++;
+
+			vcd[ci].m_Count = 3;
+			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
+			vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_BINORMAL;
+			ci++;
+		}
+
+		for (unsigned int t = 0; t < 4; t++)
+		{
+			if (scene->mMeshes[i]->HasTextureCoords(t))
+			{
+				vcd[ci].m_Count = scene->mMeshes[i]->mNumUVComponents[t];
+				vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
+				vcd[ci].m_Usage = (VertexBuffer::ComponentDescription::EUsage)(VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD0 + t);
+				ci++;
+			}
+			else
+				break;	// can't have uv set #2 without #1, right?
+		}
+
+		for (unsigned int c = 0; c < 4; c++)
+		{
+			if (scene->mMeshes[i]->HasVertexColors(c))
+			{
+				vcd[ci].m_Count = 4;
+				vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_U8;
+				vcd[ci].m_Usage = (VertexBuffer::ComponentDescription::EUsage)(VertexBuffer::ComponentDescription::EUsage::VU_COLOR0 + c);
+				ci++;
+			}
+			else
+				break;	// can't have vertex color set #2 without #1, right?
+		}
+
+		vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_NONE;
+
+		ci = 0;
+		size_t vsz = 0;
+		while (vcd[ci].m_Count)
+		{
+			vsz += vcd[ci++].size();
+		}
+
+		size_t vct = scene->mMeshes[i]->mNumVertices;
+
+		BYTE *vbuf;
+		if (pvb->Lock((void **)&vbuf, vct, vcd, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
+		{
+			ci = 0;
+			size_t ofs = 0;
+			while (vcd[ci].m_Count)
+			{
+				BYTE *pv = vbuf + ofs;
+
+				aiVector3D *pmd_3f = nullptr;
+				aiColor4D *pmd_c = nullptr;
+
+				switch (vcd[ci].m_Usage)
+				{
+					case VertexBuffer::ComponentDescription::EUsage::VU_POSITION:
+						pmd_3f = scene->mMeshes[i]->mVertices;
+
+						if (pmd_3f->x < vmin.x)
+							vmin.x = pmd_3f->x;
+						if (pmd_3f->y < vmin.y)
+							vmin.y = pmd_3f->y;
+						if (pmd_3f->z < vmin.z)
+							vmin.z = pmd_3f->z;
+
+						if (pmd_3f->x > vmax.x)
+							vmax.x = pmd_3f->x;
+						if (pmd_3f->y > vmax.y)
+							vmax.y = pmd_3f->y;
+						if (pmd_3f->z > vmax.z)
+							vmax.z = pmd_3f->z;
+
+						break;
+
+					case VertexBuffer::ComponentDescription::EUsage::VU_NORMAL:
+						pmd_3f = scene->mMeshes[i]->mNormals;
+						break;
+
+					case VertexBuffer::ComponentDescription::EUsage::VU_BINORMAL:
+						pmd_3f = scene->mMeshes[i]->mBitangents;
+						break;
+
+					case VertexBuffer::ComponentDescription::EUsage::VU_TANGENT:
+						pmd_3f = scene->mMeshes[i]->mTangents;
+						break;
+
+					case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD0:
+					case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD1:
+					case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD2:
+					case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD3:
+						pmd_3f = scene->mMeshes[i]->mTextureCoords[(size_t)(vcd[ci].m_Usage - VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD0)];
+						break;
+
+					case VertexBuffer::ComponentDescription::EUsage::VU_COLOR0:
+					case VertexBuffer::ComponentDescription::EUsage::VU_COLOR1:
+					case VertexBuffer::ComponentDescription::EUsage::VU_COLOR2:
+					case VertexBuffer::ComponentDescription::EUsage::VU_COLOR3:
+						pmd_c = scene->mMeshes[i]->mColors[(size_t)(vcd[ci].m_Usage - VertexBuffer::ComponentDescription::EUsage::VU_COLOR0)];
+						break;
+				}
+
+				if (pmd_3f)
+				{
+					for (size_t j = 0; j < vct; j++)
+					{
+						// this may seem wrong because you could have texture coordinates with 2 components...
+						// but only the relevant ones are copied, based on the count defined by the vertex component
+						memcpy(pv, &pmd_3f[j], sizeof(float) * vcd[ci].m_Count);
+
+						pv += vsz;
+					}
+				}
+				else if (pmd_c)
+				{
+					for (size_t j = 0; j < vct; j++)
+					{
+						BYTE r = BYTE(std::min(std::max(0.0f, pmd_c[j].r), 1.0f) * 255.0f);
+						BYTE g = BYTE(std::min(std::max(0.0f, pmd_c[j].g), 1.0f) * 255.0f);
+						BYTE b = BYTE(std::min(std::max(0.0f, pmd_c[j].b), 1.0f) * 255.0f);
+						BYTE a = BYTE(std::min(std::max(0.0f, pmd_c[j].a), 1.0f) * 255.0f);
+						uint32_t c = r | (g << 8) | (b << 16) | (a << 24);
+
+						*((uint32_t *)pv) = c;
+
+						pv += vsz;
+					}
+				}
+
+				ofs += vcd[ci].size();
+				ci++;
+			}
+
+			pvb->Unlock();
+			pm->AttachVertexBuffer(pvb);
+		}
+
+		size_t numfaces = 0;
+		for (size_t k = 0; k < scene->mMeshes[i]->mNumFaces; k++)
+		{
+			aiFace pf = scene->mMeshes[i]->mFaces[k];
+			if (pf.mNumIndices == 3)
+				numfaces++;
+		}
+
+		BYTE *ibuf;
+		bool large_indices = (scene->mMeshes[i]->mNumVertices >= SHRT_MAX);
+		if (pib->Lock((void **)&ibuf, numfaces * 3, large_indices ? IndexBuffer::EIndexSize::IS_32BIT : IndexBuffer::EIndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
+		{
+			size_t ii = 0;
+
+			if (large_indices)
+			{
+				for (size_t k = 0; k < numfaces; k++)
+				{
+					aiFace pf = scene->mMeshes[i]->mFaces[k];
+					if (pf.mNumIndices != 3)
+						continue;
+
+					memcpy(&ibuf[ii], &pf.mIndices[0], sizeof(uint32_t) * 3);
+					ii += sizeof(uint32_t) * 3;
+				}
+			}
+			else
+			{
+				for (size_t k = 0; k < numfaces; k++)
+				{
+					aiFace pf = scene->mMeshes[i]->mFaces[k];
+					if (pf.mNumIndices != 3)
+						continue;
+
+					((uint16_t *)ibuf)[ii++] = (uint16_t)pf.mIndices[0];
+					((uint16_t *)ibuf)[ii++] = (uint16_t)pf.mIndices[1];
+					((uint16_t *)ibuf)[ii++] = (uint16_t)pf.mIndices[2];
+				}
+			}
+
+			pib->Unlock();
+			pm->AttachIndexBuffer(pib);
+		}
+	}
+
+#if 0
+	int upAxis = 0;
+	bool hasUpAxis = scene->mMetaData->Get<int>("UpAxis", upAxis);
+	int upAxisSign = 1;
+	scene->mMetaData->Get<int>("UpAxisSign", upAxisSign);
+
+	int frontAxis = 0;
+	bool hasFrontAxis = scene->mMetaData->Get<int>("FrontAxis", frontAxis);
+	int frontAxisSign = 1;
+	scene->mMetaData->Get<int>("FrontAxisSign", frontAxisSign);
+
+	int rightAxis = 0;
+	bool hasRightAxis = scene->mMetaData->Get<int>("RightAxis", rightAxis);
+	int rightAxisSign = 1;
+	scene->mMetaData->Get<int>("RightAxisSign", rightAxisSign);
+
+	aiVector3D upVec = upAxis == 0 ? aiVector3D(upAxisSign,0,0) : upAxis == 1 ? aiVector3D(0, upAxisSign,0) : aiVector3D(0, 0, upAxisSign);
+	aiVector3D forwardVec = frontAxis == 0 ? aiVector3D(frontAxisSign, 0, 0) : frontAxis == 1 ? aiVector3D(0, frontAxisSign, 0) : aiVector3D(0, 0, frontAxisSign);
+	aiVector3D rightVec = rightAxis == 0 ? aiVector3D(rightAxisSign, 0, 0) : rightAxis == 1 ? aiVector3D(0, rightAxisSign, 0) : aiVector3D(0, 0, rightAxisSign);
+	aiMatrix4x4 mat(rightVec.x, rightVec.y, rightVec.z, 0.0f,
+					upVec.x, upVec.y, upVec.z, 0.0f,
+					forwardVec.x, forwardVec.y, forwardVec.z, 0.0f,
+					0.0f, 0.0f, 0.0f, 1.0f);
+#endif
+
+	TNodeIndexMap nim;
+	AddModelNode(pmi, Model::NO_PARENT, scene->mRootNode, nullptr, nim, mim);
+
+	return pmi;
+}
 
 c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
@@ -549,476 +1060,24 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 		CONVERT_TCS2MBCS(filename, s);
 		std::string fn = s;
 
-		unsigned int impflags = 0
-			//| aiProcess_FlipUVs
-			| aiProcess_Triangulate
-			| aiProcess_CalcTangentSpace
-			| aiProcess_ImproveCacheLocality
-			| aiProcess_OptimizeMeshes
-			| aiProcess_GenBoundingBoxes
-			| aiProcess_SortByPType
-			| aiProcess_JoinIdenticalVertices
-			| aiProcess_GenUVCoords
-			| aiProcess_FixInfacingNormals
-			;
-
-		if (_tcsstr(options, _T("force_smooth_normals")))
-		{
-			impflags |= aiProcess_GenSmoothNormals | aiProcess_ForceGenNormals;
-		}
-		else if (_tcsstr(options, _T("force_flat_normals")))
-		{
-			impflags |= aiProcess_GenNormals | aiProcess_ForceGenNormals;
-		}
-		else
-		{
-			impflags |= aiProcess_GenNormals;
-		}
-
 		Assimp::Importer import;
-		const aiScene *scene = import.ReadFile(fn, impflags);
+		const aiScene *scene = import.ReadFile(fn, MakeImportFlags(options));
 
-		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+		TCHAR modbasepath[MAX_PATH];
+		_tcscpy_s(modbasepath, filename);
+		TCHAR *c = modbasepath;
+		while (*c) { if (*c == _T('/')) { *c = _T('\\'); } c++; }
+		c = _tcsrchr(modbasepath, _T('\\'));
+		if (c)
 		{
-			return ResourceType::LoadResult::LR_ERROR;
+			*c = _T('\0');
+			c++;
 		}
 
-		RendererImpl *pr = (RendererImpl *)(psys->GetRenderer());
-		ModelImpl *pmi = new ModelImpl(pr);
+		*returned_data = ImportModel(psys, scene, modbasepath, c);
 
-		*returned_data = pmi;
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;
-
-		std::vector<Material *> mtlvec;
-		mtlvec.reserve(scene->mNumMaterials);
-		MaterialManager *pmm = pr->GetMaterialManager();
-
-		aiString aipath;
-		TCHAR *textmp, *texfilename;
-		TCHAR modbasepath[MAX_PATH], texpath[MAX_PATH];
-
-		for (size_t j = 0; j < scene->mNumMaterials; j++)
-		{
-			Material *pmtl = pmm->CreateMaterial();
-			aiMaterial *paim = scene->mMaterials[j];
-
-			glm::vec4 diff(1, 1, 1, 1), emis(0, 0, 0, 0), spec(0, 0, 0, 0);
-			float shin = 0;
-			for (size_t pidx = 0, maxpidx = paim->mNumProperties; pidx < maxpidx; pidx++)
-			{
-				aiMaterialProperty *pmp = paim->mProperties[pidx];
-				aiString key = pmp->mKey;
-
-				if (!_stricmp(key.C_Str(), "$clr.diffuse") || !_stricmp(key.C_Str(), "$clr.base"))
-				{
-					memcpy(&diff, pmp->mData, sizeof(aiColor3D));
-				}
-				else if (!_stricmp(key.C_Str(), "$clr.emissive"))
-				{
-					memcpy(&emis, pmp->mData, sizeof(aiColor3D));
-				}
-				else if (!_stricmp(key.C_Str(), "$clr.specular"))
-				{
-					memcpy(&spec, pmp->mData, sizeof(aiColor3D));
-				}
-				else if (!_stricmp(key.C_Str(), "$clr.shininess"))
-				{
-					memcpy(&shin, pmp->mData, sizeof(float));
-				}
-				else if (!_stricmp(key.C_Str(), "$mat.twosided"))
-				{
-					if (*((uint8_t *)pmp->mData) == 1)
-						pmtl->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERBACK));
-				}
-			}
-			pmtl->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &diff);
-			pmtl->SetColor(Material::ColorComponentType::CCT_EMISSIVE, &emis);
-			pmtl->SetColor(Material::ColorComponentType::CCT_SPECULAR, &spec);
-
-			TCHAR difftexpath[MAX_PATH], texpathtemp[MAX_PATH];
-
-			_tcscpy_s(modbasepath, filename);
-			TCHAR *c = modbasepath;
-			while (*c) { if (*c == _T('/')) { *c = _T('\\'); } c++; }
-			PathRemoveFileSpec(modbasepath);
-
-			props::TFlags64 rf = 0; //c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
-
-			bool has_difftex = false;
-			if (true == (has_difftex = (paim->GetTextureCount(aiTextureType_DIFFUSE) > 0)))
-				paim->GetTexture(aiTextureType_DIFFUSE, 0, &aipath);
-			else if (!has_difftex && (true == (has_difftex = (paim->GetTextureCount(aiTextureType_BASE_COLOR) > 0))))
-				paim->GetTexture(aiTextureType_BASE_COLOR, 0, &aipath);
-
-			// locally-defined function to set texture filenames for specific types of textures
-			auto SetTextureFileName = [&](Material::TextureComponentType t, const char *s)
-			{
-				CONVERT_MBCS2TCS(s, textmp);
-				if (textmp && (*textmp != '*'))
-				{
-					PathCombine(texpath, modbasepath, textmp);
-					bool loctex = psys->GetFileMapper()->FindFile(texpath);
-					if (!loctex)
-					{
-						TCHAR *fnstart = PathFindFileName(textmp);
-						PathCombine(texpath, modbasepath, fnstart);
-						loctex = psys->GetFileMapper()->FindFile(texpath);
-					}
-					texfilename = loctex ? texpath : PathFindFileName(texpath);
-					if (t == Material::TextureComponentType::TCT_DIFFUSE)
-						_tcsncpy_s(difftexpath, textmp, MAX_PATH - 1);
-					pmtl->SetTexture(t, psys->GetResourceManager()->GetResource(texfilename, rf));
-				}
-				else
-				{
-					textmp++;
-					size_t texidx = _ttoi(textmp);
-					if (scene->HasTextures() && texidx < scene->mNumTextures)
-					{
-						int w, h, c;
-						stbi_uc *data = stbi_load_from_memory((const stbi_uc *)(scene->mTextures[texidx]->pcData),
-							scene->mTextures[texidx]->mWidth, &w, &h, &c, 0);
-						if (data)
-						{
-							c3::Texture2D *pt = psys->GetRenderer()->CreateTexture2D(w, h, (c3::Renderer::TextureType)(c3::Renderer::TextureType::U8_1CH + c - 1));
-							if (pt)
-							{
-								void *buf;
-								Texture2D::SLockInfo li;
-								if ((pt->Lock(&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
-								{
-									memcpy(buf, data, w * h * c);
-
-									pt->Unlock();
-								}
-
-								tstring texname = filename;
-								texname += _T(":texture[");
-								texname += textmp;
-								texname += _T("]");
-								pt->SetName(texname.c_str());
-								pmtl->SetTexture(t, pt);
-								psys->GetResourceManager()->GetResource(texname.c_str(),
-									RESF_CREATEENTRYONLY,
-									psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D")),
-									pt);
-							}
-
-							free(data);
-						}
-					}
-				}
-			};
-
-			if (has_difftex)
-			{
-				SetTextureFileName(Material::TextureComponentType::TCT_DIFFUSE, aipath.C_Str());
-			}
-
-			bool has_normtex = false;
-			if (true == (has_normtex = (paim->GetTextureCount(aiTextureType_NORMALS) > 0)))
-				paim->GetTexture(aiTextureType_NORMALS, 0, &aipath);
-			else if (!has_normtex && (true == (has_normtex = (paim->GetTextureCount(aiTextureType_NORMAL_CAMERA) > 0))))
-				paim->GetTexture(aiTextureType_NORMAL_CAMERA, 0, &aipath);
-			else if (has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_normtex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_NORMAL, texpathtemp, MAX_PATH - 1)) == true))
-			{
-				char *c;
-				CONVERT_TCS2MBCS(texpathtemp, c);
-				aipath = c;
-			}
-
-			if (has_normtex)
-			{
-				SetTextureFileName(Material::TextureComponentType::TCT_NORMAL, aipath.C_Str());
-			}
-
-			bool has_emistex = false;
-			if (true == (has_emistex = (paim->GetTextureCount(aiTextureType_EMISSIVE) > 0)))
-				paim->GetTexture(aiTextureType_EMISSIVE, 0, &aipath);
-			else if (!has_emistex && (true == (has_emistex = (paim->GetTextureCount(aiTextureType_EMISSION_COLOR) > 0))))
-				paim->GetTexture(aiTextureType_EMISSION_COLOR, 0, &aipath);
-			else if (has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_emistex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_EMISSIVE, texpathtemp, MAX_PATH - 1)) == true))
-			{
-				char *c;
-				CONVERT_TCS2MBCS(texpathtemp, c);
-				aipath = c;
-			}
-
-			if (has_emistex)
-			{
-				SetTextureFileName(Material::TextureComponentType::TCT_EMISSIVE, aipath.C_Str());
-			}
-
-			// metalness / roughness / ao -- all together
-			unsigned int tidx_pbrmtl = paim->GetTextureCount(aiTextureType_PBR_MTL);
-			bool has_surftex = (tidx_pbrmtl != 0);
-			unsigned int tidx_metalness, tidx_roughness, tidx_ambocc;
-			if (!has_surftex)
-			{
-				tidx_metalness = paim->GetTextureCount(aiTextureType_METALNESS);
-				tidx_roughness = paim->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS);
-				tidx_ambocc = paim->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION);
-				has_surftex = (tidx_metalness > 0) && (tidx_roughness == tidx_metalness) && (tidx_ambocc == tidx_metalness);
-				if (has_surftex)
-					paim->GetTexture(aiTextureType_METALNESS, 0, &aipath);
-			}
-			else
-			{
-				tidx_metalness = tidx_roughness = tidx_ambocc = tidx_pbrmtl;
-				if (has_surftex)
-					paim->GetTexture(aiTextureType_PBR_MTL, 0, &aipath);
-			}
-
-			if (!has_surftex && has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_surftex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_SURFACEDESC, texpathtemp, MAX_PATH - 1)) == true))
-			{
-				char *c;
-				CONVERT_TCS2MBCS(texpathtemp, c);
-				aipath = c;
-			}
-
-			if (has_surftex)
-			{
-				SetTextureFileName(Material::TextureComponentType::TCT_SURFACEDESC, aipath.C_Str());
-			}
-
-			mtlvec.push_back(pmtl);
-		}
-
-		TMeshIndexMap mim;
-
-		glm::fvec3 vmin(FLT_MAX, FLT_MAX, FLT_MAX), vmax(-FLT_MAX, -FLT_MAX, -FLT_MAX);
-
-		for (size_t i = 0; i < scene->mNumMeshes; i++)
-		{
-			Mesh *pm = psys->GetRenderer()->CreateMesh();
-
-			VertexBuffer *pvb = psys->GetRenderer()->CreateVertexBuffer();
-			IndexBuffer *pib = psys->GetRenderer()->CreateIndexBuffer();
-
-			Model::MeshIndex midx = pmi->AddMesh(pm);
-			if (midx == Model::INVALID_INDEX)
-				continue;
-
-			unsigned int mtlidx = scene->mMeshes[i]->mMaterialIndex;
-			pmi->SetMaterial(midx, (mtlidx < mtlvec.size()) ? mtlvec[mtlidx] : pr->GetWhiteMaterial());
-
-			// associate the aiMesh with a MeshIndex so we can attach it to the appropriate ModelIndex
-			mim.insert(TMeshIndexMap::value_type(i, midx));
-
-			VertexBuffer::ComponentDescription vcd[VertexBuffer::ComponentDescription::EUsage::VU_NUM_USAGES + 1];
-			memset(vcd, 0, sizeof(VertexBuffer::ComponentDescription) * (VertexBuffer::ComponentDescription::EUsage::VU_NUM_USAGES + 1));
-
-			size_t ci = 0;
-
-			if (scene->mMeshes[i]->HasPositions())
-			{
-				vcd[ci].m_Count = 3;
-				vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
-				vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_POSITION;
-				ci++;
-			}
-
-			if (scene->mMeshes[i]->HasNormals())
-			{
-				vcd[ci].m_Count = 3;
-				vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
-				vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_NORMAL;
-				ci++;
-			}
-
-			if (scene->mMeshes[i]->HasTangentsAndBitangents())
-			{
-				vcd[ci].m_Count = 3;
-				vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
-				vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_TANGENT;
-				ci++;
-
-				vcd[ci].m_Count = 3;
-				vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
-				vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_BINORMAL;
-				ci++;
-			}
-
-			for (unsigned int t = 0; t < 4; t++)
-			{
-				if (scene->mMeshes[i]->HasTextureCoords(t))
-				{
-					vcd[ci].m_Count = scene->mMeshes[i]->mNumUVComponents[t];
-					vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
-					vcd[ci].m_Usage = (VertexBuffer::ComponentDescription::EUsage)(VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD0 + t);
-					ci++;
-				}
-				else
-					break;	// can't have uv set #2 without #1, right?
-			}
-
-			for (unsigned int c = 0; c < 4; c++)
-			{
-				if (scene->mMeshes[i]->HasVertexColors(c))
-				{
-					vcd[ci].m_Count = 4;
-					vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_U8;
-					vcd[ci].m_Usage = (VertexBuffer::ComponentDescription::EUsage)(VertexBuffer::ComponentDescription::EUsage::VU_COLOR0 + c);
-					ci++;
-				}
-				else
-					break;	// can't have vertex color set #2 without #1, right?
-			}
-
-			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_NONE;
-
-			ci = 0;
-			size_t vsz = 0;
-			while (vcd[ci].m_Count)
-			{
-				vsz += vcd[ci++].size();
-			}
-
-			size_t vct = scene->mMeshes[i]->mNumVertices;
-
-			BYTE *vbuf;
-			if (pvb->Lock((void **)&vbuf, vct, vcd, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
-			{
-				ci = 0;
-				size_t ofs = 0;
-				while (vcd[ci].m_Count)
-				{
-					BYTE *pv = vbuf + ofs;
-
-					aiVector3D *pmd_3f = nullptr;
-					aiColor4D *pmd_c = nullptr;
-
-					switch (vcd[ci].m_Usage)
-					{
-						case VertexBuffer::ComponentDescription::EUsage::VU_POSITION:
-							pmd_3f = scene->mMeshes[i]->mVertices;
-
-							if (pmd_3f->x < vmin.x)
-								vmin.x = pmd_3f->x;
-							if (pmd_3f->y < vmin.y)
-								vmin.y = pmd_3f->y;
-							if (pmd_3f->z < vmin.z)
-								vmin.z = pmd_3f->z;
-
-							if (pmd_3f->x > vmax.x)
-								vmax.x = pmd_3f->x;
-							if (pmd_3f->y > vmax.y)
-								vmax.y = pmd_3f->y;
-							if (pmd_3f->z > vmax.z)
-								vmax.z = pmd_3f->z;
-
-							break;
-
-						case VertexBuffer::ComponentDescription::EUsage::VU_NORMAL:
-							pmd_3f = scene->mMeshes[i]->mNormals;
-							break;
-
-						case VertexBuffer::ComponentDescription::EUsage::VU_BINORMAL:
-							pmd_3f = scene->mMeshes[i]->mBitangents;
-							break;
-
-						case VertexBuffer::ComponentDescription::EUsage::VU_TANGENT:
-							pmd_3f = scene->mMeshes[i]->mTangents;
-							break;
-
-						case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD0:
-						case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD1:
-						case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD2:
-						case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD3:
-							pmd_3f = scene->mMeshes[i]->mTextureCoords[(size_t)(vcd[ci].m_Usage - VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD0)];
-							break;
-
-						case VertexBuffer::ComponentDescription::EUsage::VU_COLOR0:
-						case VertexBuffer::ComponentDescription::EUsage::VU_COLOR1:
-						case VertexBuffer::ComponentDescription::EUsage::VU_COLOR2:
-						case VertexBuffer::ComponentDescription::EUsage::VU_COLOR3:
-							pmd_c = scene->mMeshes[i]->mColors[(size_t)(vcd[ci].m_Usage - VertexBuffer::ComponentDescription::EUsage::VU_COLOR0)];
-							break;
-					}
-
-					if (pmd_3f)
-					{
-						for (size_t j = 0; j < vct; j++)
-						{
-							// this may seem wrong because you could have texture coordinates with 2 components...
-							// but only the relevant ones are copied, based on the count defined by the vertex component
-							memcpy(pv, &pmd_3f[j], sizeof(float) * vcd[ci].m_Count);
-
-							pv += vsz;
-						}
-					}
-					else if (pmd_c)
-					{
-						for (size_t j = 0; j < vct; j++)
-						{
-							BYTE r = BYTE(std::min(std::max(0.0f, pmd_c[j].r), 1.0f) * 255.0f);
-							BYTE g = BYTE(std::min(std::max(0.0f, pmd_c[j].g), 1.0f) * 255.0f);
-							BYTE b = BYTE(std::min(std::max(0.0f, pmd_c[j].b), 1.0f) * 255.0f);
-							BYTE a = BYTE(std::min(std::max(0.0f, pmd_c[j].a), 1.0f) * 255.0f);
-							uint32_t c = r | (g << 8) | (b << 16) | (a << 24);
-
-							*((uint32_t *)pv) = c;
-
-							pv += vsz;
-						}
-					}
-
-					ofs += vcd[ci].size();
-					ci++;
-				}
-
-				pvb->Unlock();
-				pm->AttachVertexBuffer(pvb);
-			}
-
-			size_t numfaces = 0;
-			for (size_t k = 0; k < scene->mMeshes[i]->mNumFaces; k++)
-			{
-				aiFace pf = scene->mMeshes[i]->mFaces[k];
-				if (pf.mNumIndices == 3)
-					numfaces++;
-			}
-
-			BYTE *ibuf;
-			bool large_indices = (scene->mMeshes[i]->mNumVertices >= SHRT_MAX);
-			if (pib->Lock((void **)&ibuf, numfaces * 3, large_indices ? IndexBuffer::EIndexSize::IS_32BIT : IndexBuffer::EIndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
-			{
-				size_t ii = 0;
-
-				if (large_indices)
-				{
-					for (size_t k = 0; k < numfaces; k++)
-					{
-						aiFace pf = scene->mMeshes[i]->mFaces[k];
-						if (pf.mNumIndices != 3)
-							continue;
-
-						memcpy(&ibuf[ii], &pf.mIndices[0], sizeof(uint32_t) * 3);
-						ii += sizeof(uint32_t) * 3;
-					}
-				}
-				else
-				{
-					for (size_t k = 0; k < numfaces; k++)
-					{
-						aiFace pf = scene->mMeshes[i]->mFaces[k];
-						if (pf.mNumIndices != 3)
-							continue;
-
-						((uint16_t *)ibuf)[ii++] = (uint16_t)pf.mIndices[0];
-						((uint16_t *)ibuf)[ii++] = (uint16_t)pf.mIndices[1];
-						((uint16_t *)ibuf)[ii++] = (uint16_t)pf.mIndices[2];
-					}
-				}
-
-				pib->Unlock();
-				pm->AttachIndexBuffer(pib);
-			}
-		}
-
-		TNodeIndexMap nim;
-		AddModelNode(pmi, Model::NO_PARENT, scene->mRootNode, nim, mim);
 	}
 
 	return ResourceType::LoadResult::LR_SUCCESS;
@@ -1027,12 +1086,83 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 
 c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	return ResourceType::LoadResult::LR_ERROR;
+	if (returned_data)
+	{
+		*returned_data = nullptr;
+
+		Assimp::Importer import;
+		const aiScene *scene = import.ReadFileFromMemory(buffer, buffer_length, MakeImportFlags(options));
+
+		*returned_data = ImportModel(psys, scene, nullptr, nullptr);
+		if (!*returned_data)
+			return ResourceType::LoadResult::LR_ERROR;
+	}
+
+	return ResourceType::LoadResult::LR_SUCCESS;
+}
+
+size_t ParentlessNodeCount(ModelImpl *pm)
+{
+	size_t ret = 0;
+	for (size_t i = 0; i < pm->GetNodeCount(); i++)
+		if (pm->GetParentNode(i) <= 0)
+			ret++;
+
+	return ret;
 }
 
 
+// TODO: finish the write function - it's non-trivial because of the assimp data fill-out procedure
 bool RESOURCETYPENAME(Model)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
+	ModelImpl *pmod = dynamic_cast<ModelImpl *>((ModelImpl *)data);
+	if (pmod)
+	{
+		Assimp::Exporter e;
+		aiScene s;
+
+		std::vector<aiMesh *> meshes;
+		std::vector<aiMaterial *> mtls;
+		std::vector<aiNode *> nodes;
+
+		meshes.resize(pmod->GetMeshCount());
+		s.mMeshes = meshes.data();
+		s.mNumMeshes = (unsigned int)meshes.size();
+
+		aiNode *pn;
+
+		bool made_root = ParentlessNodeCount(pmod) != 1;
+		size_t nc = pmod->GetNodeCount() + made_root ? 1 : 0;
+		nodes.reserve(nc);
+		if (made_root)
+		{
+			pn = new aiNode();
+			nodes.push_back(pn);
+			for (unsigned int j = 0; j < 4; j++)
+				for (unsigned int k = 0; k < 4; k++)
+					pn->mTransformation[k][j] = (j == k) ? 1.0f : 0.0f;
+		}
+
+		while (nc)
+		{
+			size_t ni = nc - 1;
+
+			char *nn;
+			CONVERT_TCS2MBCS(pmod->GetNodeName(ni), nn);
+			pn = new aiNode(nn);
+			nodes.push_back(pn);
+
+			unsigned int snc = (unsigned int)pmod->GetMeshCountOnNode(ni);
+			nodes[ni]->mNumMeshes = snc;
+			glm::fmat4x4 mat;
+			pmod->GetTransform(ni, &mat);
+
+			for (unsigned int j = 0; j < 4; j++)
+				for (unsigned int k = 0; k < 4; k++)
+					pn->mTransformation[k][j] = mat[k][j];
+		}
+	}
+
 	return false;
 }
 

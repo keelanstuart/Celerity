@@ -1,13 +1,8 @@
-// This MFC Samples source code demonstrates using MFC Microsoft Office Fluent User Interface 
-// (the "Fluent UI") and is provided only as referential material to supplement the 
-// Microsoft Foundation Prototypees Reference and related electronic documentation 
-// included with the MFC C++ library software.  
-// License terms to copy, use or distribute the Fluent UI are available separately.  
-// To learn more about our Fluent UI licensing program, please visit 
-// https://go.microsoft.com/fwlink/?LinkId=238214.
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright (C) Microsoft Corporation
-// All rights reserved.
+// Copyright © 2001-2023, Keelan Stuart
+
 
 #pragma once
 

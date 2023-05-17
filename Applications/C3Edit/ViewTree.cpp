@@ -1,3 +1,8 @@
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
+//
+// Copyright © 2001-2023, Keelan Stuart
+
 
 #include "pch.h"
 #include "framework.h"
@@ -68,7 +73,7 @@ void CViewTree::OnNMDblclk(NMHDR *pNMHDR, LRESULT *pResult)
 	if (pproto)
 	{
 		HWND h = pfrm->GetActiveView()->GetSafeHwnd();
-		c3::Object *pcam = pdoc->GetPerViewInfo(h)->obj;
+		c3::Object *pcam = pdoc->GetPerViewInfo(h)->m_Camera;
 		c3::Camera *pcampos = (c3::Camera *)(pcam->FindComponent(c3::Camera::Type()));
 		pcam->Update();
 

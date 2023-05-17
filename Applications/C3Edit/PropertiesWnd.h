@@ -1,3 +1,8 @@
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
+//
+// Copyright © 2001-2023, Keelan Stuart
+
 
 #pragma once
 
@@ -81,6 +86,7 @@ protected:
 	afx_msg LRESULT OnCtlcolorlistbox(WPARAM wParam, LPARAM lParam);
 	afx_msg void OnCheckChangeFlags();
 	afx_msg void OnCheckChangeComponents();
+	afx_msg void OnChangeName();
 
 	DECLARE_MESSAGE_MAP()
 

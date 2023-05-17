@@ -82,13 +82,16 @@ bool VirtualMouseImpl::Update(float elapsed_seconds)
 	}
 
 	m_ButtonState[InputDevice::VirtualButton::THROTTLE1] = 0;
-	m_ButtonDelta[InputDevice::VirtualButton::THROTTLE1] = 0;
+	m_ButtonState[InputDevice::VirtualButton::THROTTLE2] = 0;
 
 	// Did we roll our mouse wheel?
-	if (state.lZ)
+	if (state.lZ > 0)
 	{
-		m_ButtonState[InputDevice::VirtualButton::THROTTLE1] = -state.lZ;
-		m_ButtonDelta[InputDevice::VirtualButton::THROTTLE1] = -state.lZ;
+		m_ButtonState[InputDevice::VirtualButton::THROTTLE1] = InputDevice::BUTTONVAL_MAX; //state.lZ;
+	}
+	else if (state.lZ < 0)
+	{
+		m_ButtonState[InputDevice::VirtualButton::THROTTLE2] = InputDevice::BUTTONVAL_MAX; //-state.lZ;
 	}
 
 	for (uint32_t i = 0; i < 8; i++)

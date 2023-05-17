@@ -43,6 +43,7 @@ namespace c3
 		HGLRC m_glrc;
 		HWND m_hwnd_override;
 		RECT m_Viewport;
+		float m_LastPresentTime;
 
 		props::TFlags64 m_BeginSceneFlags;
 
@@ -126,6 +127,8 @@ namespace c3
 
 		VertexBuffer *m_HemisphereVB;
 		Mesh *m_HemisphereMesh;
+
+		Mesh *m_SphereMesh;
 
 		Texture2D *m_BlackTex;
 		Texture2D *m_GreyTex;
@@ -319,6 +322,7 @@ namespace c3
 
 		VertexBuffer *GetHemisphereVB();
 		virtual Mesh *GetHemisphereMesh();
+		virtual Mesh *GetSphereMesh();
 
 		virtual Texture2D *GetBlackTexture();
 		virtual Texture2D *GetGreyTexture();

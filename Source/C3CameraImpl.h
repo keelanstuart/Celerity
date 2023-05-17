@@ -78,7 +78,8 @@ namespace c3
 		virtual void SetPolarDistance(float distance);
 		virtual float GetPolarDistance();
 
-		virtual void SetOrthoDimensions(const glm::fvec2 *dim);
+		virtual void SetOrthoDimensions(float dimx, float dimy);
+		virtual void SetOrthoDimensionsVec(const glm::fvec2 *dim);
 		virtual const glm::fvec2 *GetOrthoDimensions(glm::fvec2 *dim);
 		virtual float GetOrthoWidth();
 		virtual float GetOrthoHeight();

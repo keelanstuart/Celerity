@@ -41,6 +41,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_glrc = NULL;
 	m_hwnd_override = NULL;
 
+	m_LastPresentTime = 0;
+
 	m_glVersionMaj = 4;
 	m_glVersionMin = 5;
 
@@ -102,6 +104,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 
 	m_HemisphereVB = nullptr;
 	m_HemisphereMesh = nullptr;
+	m_SphereMesh = nullptr;
 
 	m_BlackTex = nullptr;
 	m_GreyTex = nullptr;
@@ -383,9 +386,6 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	GetFullscreenPlaneVB();
 	GetCubeMesh();
 	GetBoundsMesh();
-#if 0
-	GetHemisphereMesh();
-#endif
 	GetXYPlaneMesh();
 	GetXZPlaneMesh();
 	GetYZPlaneMesh();
@@ -417,6 +417,30 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		refcube->AssignMeshToNode(ni, mi);
 		refcube->SetMaterial(mi, refmtl);
 		rm->GetResource(_T("[refcube.model]"), RESF_CREATEENTRYONLY, rt, refcube);
+	}
+
+	{
+		c3::Material *refmtl = GetMaterialManager()->CreateMaterial();
+		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetGridTexture());
+		refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
+		c3::Model *hemisphere = c3::Model::Create(this);
+		c3::Model::MeshIndex mi = hemisphere->AddMesh(GetHemisphereMesh());
+		c3::Model::NodeIndex ni = hemisphere->AddNode();
+		hemisphere->AssignMeshToNode(ni, mi);
+		hemisphere->SetMaterial(mi, refmtl);
+		rm->GetResource(_T("[hemisphere.model]"), RESF_CREATEENTRYONLY, rt, hemisphere);
+	}
+
+	{
+		c3::Material *refmtl = GetMaterialManager()->CreateMaterial();
+		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetGridTexture());
+		refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
+		c3::Model *sphere = c3::Model::Create(this);
+		c3::Model::MeshIndex mi = sphere->AddMesh(GetSphereMesh());
+		c3::Model::NodeIndex ni = sphere->AddNode();
+		sphere->AssignMeshToNode(ni, mi);
+		sphere->SetMaterial(mi, refmtl);
+		rm->GetResource(_T("[sphere.model]"), RESF_CREATEENTRYONLY, rt, sphere);
 	}
 
 	{
@@ -596,10 +620,10 @@ void RendererImpl::Shutdown()
 		m_HemisphereMesh = nullptr;
 	}
 
-	if (m_HemisphereVB)
+	if (m_SphereMesh)
 	{
-		m_HemisphereVB->Release();
-		m_HemisphereVB = nullptr;
+		m_SphereMesh->Release();
+		m_SphereMesh = nullptr;
 	}
 
 	if (m_MatMan)
@@ -2609,49 +2633,56 @@ size_t hemisphereStackCount = 20;
 
 VertexBuffer *RendererImpl::GetHemisphereVB()
 {
-	typedef std::vector<Vertex::PNYT1::s> TVertexArray;
-	TVertexArray verts;
-
-	Vertex::PNYT1::s v;
-
-	glm::fvec4 n(0, 0, 1, 0);
-
-	v.pos.x = v.pos.y = v.norm.x = v.norm.y = 0.0f;
-	v.uv.x = v.uv.y = 0.5f;
-	v.pos.z = v.norm.z = 1.0f;
-
-	verts.push_back(v);
-
-	glm::fmat4x4 mz = (glm::fmat4x4)glm::angleAxis(C3_PI * 2.0f / (float)hemisphereSectorCount, glm::fvec3(0.0f, 0.0f, 1.0f));
-
-	for (size_t i = 1, maxi = hemisphereStackCount + 1; i < maxi; i++)
+	if (!m_HemisphereVB)
 	{
-		glm::fmat4x4 mx = (glm::fmat4x4)glm::angleAxis(C3_PI / 2.0f / (float)(hemisphereStackCount + 1) * i, glm::fvec3(0.0f, 1.0f, 0.0f));
-		n = glm::normalize(glm::fvec4(0, 0, 1, 0) * mx);
+		typedef std::vector<Vertex::PNYT1::s> TVertexArray;
+		TVertexArray verts;
 
-		for (size_t j = 0, maxj = hemisphereSectorCount + 1; j < maxj; j++)
+		Vertex::PNYT1::s v;
+
+		glm::fvec4 n(0, 0, 1, 0);
+
+		v.pos.x = v.pos.y = v.norm.x = v.norm.y = 0.0f;
+		v.uv.x = v.uv.y = 0.5f;
+		v.pos.z = v.norm.z = 1.0f;
+
+		verts.push_back(v);
+
+		glm::fmat4x4 mz = (glm::fmat4x4)glm::angleAxis(C3_PI * 2.0f / (float)hemisphereSectorCount, glm::fvec3(0.0f, 0.0f, 1.0f));
+
+		for (size_t i = 1, maxi = hemisphereStackCount + 1; i < maxi; i++)
 		{
-			v.norm = v.pos = n;
-			//v.uv.x = (float)j;
-			v.uv = glm::fvec2(n.x, n.y) * glm::fvec2(0.5f, 0.5f) + glm::fvec2(0.5f, 0.5f);
+			glm::fmat4x4 mx = (glm::fmat4x4)glm::angleAxis(C3_PI / 2.0f / (float)(hemisphereStackCount + 1) * i, glm::fvec3(0.0f, 1.0f, 0.0f));
+			n = glm::normalize(glm::fvec4(0, 0, 1, 0) * mx);
 
-			verts.push_back(v);
+			for (size_t j = 0, maxj = hemisphereSectorCount + 1; j < maxj; j++)
+			{
+				v.norm = v.pos = n;
+				v.uv.x = (float)j;
+				v.uv = glm::fvec2(n.x, n.y) * glm::fvec2(0.5f, 0.5f) + glm::fvec2(0.5f, 0.5f);
 
-			n = glm::normalize(n * mz);
+				verts.push_back(v);
+
+				n = glm::normalize(n * mz);
+			}
+
+			v.uv.y = (float)i;
 		}
 
-		//v.uv.y = (float)i;
-	}
-
-	m_HemisphereVB = CreateVertexBuffer(0);
-	if (m_HemisphereVB)
-	{
-		void *buf;
-		if ((m_HemisphereVB->Lock(&buf, verts.size(), Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
+		m_HemisphereVB = CreateVertexBuffer(0);
+		if (m_HemisphereVB)
 		{
-			memcpy(buf, &(verts.at(0)), sizeof(Vertex::PNYT1::s) * verts.size());
+			Vertex::PNYT1::s *buf;
+			if ((m_HemisphereVB->Lock((void **)&buf, verts.size(), Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
+			{
+				for (const auto v : verts)
+				{
+					memcpy(buf, &v, sizeof(Vertex::PNYT1::s));
+					buf++;
+				}
 
-			m_HemisphereVB->Unlock();
+				m_HemisphereVB->Unlock();
+			}
 		}
 	}
 
@@ -2674,7 +2705,7 @@ Mesh *RendererImpl::GetHemisphereMesh()
 			{
 				uint16_t *buf;
 
-				size_t ic_top = 3 * (hemisphereSectorCount + 1), ic = ic_top + ((ic_top * 2) * (hemisphereStackCount - 1));
+				size_t ic_top = 3 * (hemisphereSectorCount + 1), ic = ic_top + (ic_top * hemisphereStackCount * 2);
 
 				if (pib->Lock((void **)&buf, ic, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 				{
@@ -2717,6 +2748,123 @@ Mesh *RendererImpl::GetHemisphereMesh()
 	return m_HemisphereMesh;
 }
 
+Mesh *RendererImpl::GetSphereMesh()
+{
+	if (!m_SphereMesh)
+	{
+		size_t sectors = hemisphereSectorCount;
+		size_t stacks = hemisphereStackCount * 2;
+
+		typedef std::vector<Vertex::PNYT1::s> TVertexArray;
+		typedef std::vector<uint16_t> TIndexArray;
+
+		TVertexArray vertices;
+		TIndexArray indices;
+
+		float sectorStep = 2.0f * glm::pi<float>() / (float)sectors;
+		float stackStep = glm::pi<float>() / (float)stacks;
+		float radius = 1.0f;
+
+		// Generate vertices
+		for (size_t i = 0, max_i = stacks; i <= max_i; ++i)
+		{
+			float stackAngle = glm::pi<float>() / 2.0f - i * stackStep;
+			float xy = radius * cosf(stackAngle);
+			float z;
+			if (!i)
+				z = radius;
+			else if (i == max_i)
+				z = -radius;
+			else
+				z = radius * sinf(stackAngle);
+
+			for (size_t j = 0, max_j = (!i || i == max_i) ? 0 : sectors; j <= max_j; ++j)
+			{
+				float sectorAngle = j * sectorStep;
+				float x = xy * cosf(sectorAngle);
+				float y = xy * sinf(sectorAngle);
+
+				vertices.emplace_back();
+				vertices.back().pos.x = x;
+				vertices.back().pos.y = y;
+				vertices.back().pos.z = z;
+				glm::fvec3 n = glm::fvec3(x, y, z) / radius;
+				vertices.back().norm = glm::normalize(n);
+				glm::fvec3 t = glm::fvec3(-sinf(sectorAngle), cosf(sectorAngle), 0.0f);
+				vertices.back().tang = glm::normalize(t);
+				glm::fvec3 b = glm::cross(n, t);
+				vertices.back().binorm = glm::normalize(b);
+				vertices.back().uv.x = (float)j / (float)sectors;
+				vertices.back().uv.y = (float)i / (float)stacks;
+			}
+		}
+
+		// Generate indices
+		for (size_t i = 1, max_i = (stacks - 1); i < max_i; ++i)
+		{
+			uint16_t k1 = (uint16_t)((i - 1) * (sectors + 1));
+			uint16_t k2 = (uint16_t)(k1 + sectors + 1);
+
+			for (size_t j = 0; j <= sectors; ++j, ++k1, ++k2)
+			{
+				indices.push_back(k1);
+				indices.push_back(k1 + 1);
+				indices.push_back(k2);
+				indices.push_back(k2);
+				indices.push_back(k1 + 1);
+				indices.push_back(k2 + 1);
+			}
+		}
+
+		for (size_t j = 0, k1 = 1, k2 = 2; j < sectors; ++j, ++k1, ++k2)
+		{
+			indices.push_back(0);
+			indices.push_back((uint16_t)k2);
+			indices.push_back((uint16_t)k1);
+		}
+
+		for (size_t j = 0, q = (uint16_t)vertices.size() - 1, k1 = (q - 1), k2 = (k1 - 1); j < sectors; ++j, --k1, --k2)
+		{
+			indices.push_back((uint16_t)q);
+			indices.push_back((uint16_t)k2);
+			indices.push_back((uint16_t)k1);
+		}
+
+		m_SphereMesh = CreateMesh();
+
+		VertexBuffer *pvb = CreateVertexBuffer(0);
+		if (m_HemisphereVB)
+		{
+			Vertex::PNYT1::s *buf;
+			if ((pvb->Lock((void **)&buf, vertices.size(), Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
+			{
+				for (const auto v : vertices)
+					memcpy(buf++, &v, sizeof(Vertex::PNYT1::s));
+
+				pvb->Unlock();
+			}
+
+			m_SphereMesh->AttachVertexBuffer(pvb);
+		}
+
+		IndexBuffer *pib = CreateIndexBuffer(0);
+		if (pib)
+		{
+			uint16_t *buf;
+			if (pib->Lock((void **)&buf, indices.size(), IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
+			{
+				for (TIndexArray::const_iterator it = indices.cbegin(), last_it = indices.cend(); it != last_it; it++)
+					*(buf++) = *it;
+
+				pib->Unlock();
+			}
+
+			m_SphereMesh->AttachIndexBuffer(pib);
+		}
+	}
+
+	return m_SphereMesh;
+}
 
 Texture2D *RendererImpl::GetBlackTexture()
 {

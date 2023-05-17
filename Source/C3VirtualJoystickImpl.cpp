@@ -132,6 +132,25 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 		m_ButtonState[InputDevice::VirtualButton::THROTTLE2] = state.rglSlider[1];
 	}
 
+	switch (state.rgdwPOV[0])
+	{
+		case 0:
+			m_ButtonState[InputDevice::VirtualButton::POV_POSY] = InputDevice::BUTTONVAL_MAX;
+			break;
+
+		case 18000:
+			m_ButtonState[InputDevice::VirtualButton::POV_NEGY] = InputDevice::BUTTONVAL_MAX;
+			break;
+
+		case 9000:
+			m_ButtonState[InputDevice::VirtualButton::POV_POSX] = InputDevice::BUTTONVAL_MAX;
+			break;
+
+		case 27000:
+			m_ButtonState[InputDevice::VirtualButton::POV_NEGX] = InputDevice::BUTTONVAL_MAX;
+			break;
+	}
+
 	for (uint32_t i = 0; i < InputDevice::MAXBUTTONS; i++)
 	{
 		if (state.rgbButtons[i] >= (InputDevice::BUTTONVAL_MAX / 16))	// if the high-order bit is set, the button is being pressed.

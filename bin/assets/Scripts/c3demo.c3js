@@ -16,22 +16,14 @@ var player_ori;
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
-
-	player_pos = GetPropertyValue(hplayer_pos);
-	cam_pos = GetPropertyValue(hcam_pos);
-	SetPropertyValue(hcam_pos, Math.lerp(cam_pos, player_pos, 0.05));
-
-	player_ori = GetPropertyValue(hplayer_ori);
-	cam_ori = GetPropertyValue(hcam_ori);
-	SetPropertyValue(hcam_ori, Math.slerp(cam_ori, player_ori, 0.25));
 }
 
 function init()
 {
 	runtime = 0.0;
 
-	//LoadObject(self, "SimpleScene.c3o");
-	//Log("Demo scene loaded!\n");
+	LoadObject(self, "SpaceScene.c3o");
+	Log("Demo scene loaded!\n");
 
 	var hplayer = CreateObject("Ship", self);
 	RegisterObject("player", hplayer);

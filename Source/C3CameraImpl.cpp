@@ -25,7 +25,7 @@ CameraImpl::CameraImpl()
 	m_projmode = ProjectionMode::PM_PERSPECTIVE;
 
 	m_dim = glm::vec2(2048.0f, 2048.0f);
-	m_fov = 60.0f;
+	m_fov = 68.0f;
 	m_eyepos = glm::vec3(0, 0, 0);
 	m_targpos = glm::vec3(0, 0, 0);
 	m_nearclip = 0.01f;
@@ -210,7 +210,20 @@ float CameraImpl::GetPolarDistance()
 }
 
 
-void CameraImpl::SetOrthoDimensions(const glm::fvec2 *dim)
+void CameraImpl::SetOrthoDimensions(float dimx, float dimy)
+{
+	if (m_dim != glm::fvec2(dimx, dimy))
+	{
+		m_dim.x = dimx;
+		m_dim.y = dimy;
+
+		if (m_projmode == Camera::ProjectionMode::PM_ORTHOGRAPHIC)
+			m_Flags.Set(CAMFLAG_REBUILDMATRICES);
+	}
+}
+
+
+void CameraImpl::SetOrthoDimensionsVec(const glm::fvec2 *dim)
 {
 	if (m_dim != *dim)
 	{

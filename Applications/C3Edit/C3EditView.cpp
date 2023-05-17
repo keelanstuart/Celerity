@@ -1,6 +1,8 @@
-
-// C3EditView.cpp : implementation of the C3EditView class
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
 //
+// Copyright © 2001-2023, Keelan Stuart
+
 
 #include "pch.h"
 #include "framework.h"
@@ -178,7 +180,7 @@ void C3EditView::OnDraw(CDC *pDC)
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
 
-	c3::Object *camobj = pvi->obj;
+	c3::Object *camobj = pvi->m_Camera;
 	c3::Positionable *pcampos = camobj ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
 	c3::Camera *pcam = camobj ? dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type())) : nullptr;
 	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, camobj);
@@ -186,6 +188,7 @@ void C3EditView::OnDraw(CDC *pDC)
 	CRect r;
 	GetClientRect(r);
 
+	theApp.m_C3->UpdateTime();
 	float dt = pDoc->m_Paused ? 0.0f : (pDoc->m_TimeWarp * theApp.m_C3->GetElapsedTime());
 
 	c3::Renderer *prend = theApp.m_C3->GetRenderer();
@@ -202,9 +205,6 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		prend->SetClearColor(&(pDoc->m_ClearColor));
 		prend->SetClearDepth(1.0f);
-
-		theApp.m_C3->UpdateTime();
-		float dt = theApp.m_C3->GetElapsedTime();
 
 		C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
 
@@ -245,7 +245,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			float ldl = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGX, 1);
 			float ldr = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSX, 1);
 			if (ldu > 0 || ldd > 0 || ldl > 0 || ldr)
-				AdjustYawPitch((ldr - ldl) * 4, (ldu - ldd) * 4, false);
+				AdjustYawPitch((ldl - ldr) * 4, (ldu - ldd) * 4, false);
 
 			bool center = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::LETTER_C);
 			if (center && 
@@ -265,17 +265,16 @@ void C3EditView::OnDraw(CDC *pDC)
 			pcampos->AdjustPos(mv.x, mv.y, mv.z);
 		}
 
-		c3::Object *camobj = pvi->obj;
-		if (camobj)
-			camobj->Update(dt);
+		if (pvi->m_Camera)
+			pvi->m_Camera->Update(dt);
 
 		pDoc->m_RootObj->Update(dt);
 
 		if (pDoc->m_Brush)
 			pDoc->m_Brush->Update(dt);
 
-		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
-		c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
+		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pvi->m_Camera->FindComponent(c3::Positionable::Type()));
+		c3::Camera *pcam = dynamic_cast<c3::Camera *>(pvi->m_Camera->FindComponent(c3::Camera::Type()));
 
 		if (pcam)
 		{
@@ -380,6 +379,18 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->UseProgram(m_SP_resolve);
 			m_SP_resolve->ApplyUniforms(true);
 			prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
+
+			c3::Positionable *puicampos = dynamic_cast<c3::Positionable *>(pvi->m_GUICamera->FindComponent(c3::Positionable::Type()));
+			c3::Camera *puicam = dynamic_cast<c3::Camera *>(pvi->m_GUICamera->FindComponent(c3::Camera::Type()));
+			if (puicam)
+			{
+				prend->SetViewMatrix(puicam->GetViewMatrix());
+				prend->SetProjectionMatrix(puicam->GetProjectionMatrix());
+				prend->SetEyePosition(puicam->GetEyePos());
+				glm::fvec3 eyedir = glm::normalize(*puicam->GetTargetPos() - *(puicam->GetEyePos()));
+				prend->SetEyeDirection(&eyedir);
+			}
+			pDoc->m_GUIRootObj->Render();
 
 			prend->EndScene();
 			prend->Present();
@@ -631,7 +642,7 @@ void C3EditView::ComputePickRay(POINT screenpos, glm::fvec3 &pickpos, glm::fvec3
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
 
-	c3::Object *camobj = pvi->obj;
+	c3::Object *camobj = pvi->m_Camera;
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 
@@ -688,16 +699,17 @@ void C3EditView::AdjustYawPitch(float yawadj, float pitchadj, bool redraw)
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
 
-	pvi->pitch += pitchadj;
-	pvi->yaw -= yawadj;
-
-	c3::Object *camobj = pvi->obj;
+	c3::Object *camobj = pvi->m_Camera;
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 
 	if (theApp.m_Config->GetBool(_T("environment.camera.lockroll"), true))
 	{
-		c3::Object *camobj = pvi->obj;
+		float &pitch = pvi->pitch;//glm::degrees(pcampos->GetPitch());
+		float &yaw = pvi->yaw;//glm::degrees(pcampos->GetYaw());
+
+		pitch += pitchadj;
+		yaw -= yawadj;
 
 		props::IProperty *campitch_min = camobj->GetProperties()->GetPropertyById('PCAN');
 		props::IProperty *campitch_max = camobj->GetProperties()->GetPropertyById('PCAX');
@@ -705,13 +717,13 @@ void C3EditView::AdjustYawPitch(float yawadj, float pitchadj, bool redraw)
 		float pitchmin = campitch_min ? campitch_min->AsFloat() : -FLT_MAX;
 		float pitchmax = campitch_max ? campitch_max->AsFloat() :  FLT_MAX;
 
-		pvi->pitch = std::min(std::max(pitchmin, pvi->pitch), pitchmax);
+		pitch = std::min(std::max(pitchmin, pitch), pitchmax);
 
 		pcampos->SetYawPitchRoll(0, 0, 0);
 		pcampos->Update(0);
-		pcampos->AdjustYaw(glm::radians(pvi->yaw));
+		pcampos->AdjustYaw(glm::radians(yaw));
 		pcampos->Update(0);
-		pcampos->AdjustPitch(glm::radians(pvi->pitch));
+		pcampos->AdjustPitch(glm::radians(pitch));
 	}
 	else
 	{
@@ -762,7 +774,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	float scrpctx = (float)point.x / (float)r.Width();
 	float scrpcty = (float)point.y / (float)r.Height();
 
-	c3::Object *camobj = pvi->obj;
+	c3::Object *camobj = pvi->m_Camera;
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 
@@ -1029,7 +1041,7 @@ BOOL C3EditView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
 
-	c3::Object *camobj = pvi->obj;
+	c3::Object *camobj = pvi->m_Camera;
 
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));

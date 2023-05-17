@@ -1,6 +1,9 @@
-
-// C3Edit.h : main header file for the C3Edit application
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
 //
+// Copyright © 2001-2023, Keelan Stuart
+
+
 #pragma once
 
 #ifndef __AFXWIN_H__

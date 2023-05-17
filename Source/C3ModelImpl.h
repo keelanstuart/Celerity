@@ -89,9 +89,9 @@ namespace c3
 
 		virtual const glm::fmat4x4 *GetTransform(NodeIndex nidx, glm::fmat4x4 *pmat) const;
 
-		virtual void SetParent(NodeIndex nidx, NodeIndex parent_nidx = -1);
+		virtual void SetParentNode(NodeIndex nidx, NodeIndex parent_nidx = -1);
 
-		virtual NodeIndex GetParent(NodeIndex nidx) const;
+		virtual NodeIndex GetParentNode(NodeIndex nidx) const;
 
 		virtual SubMeshIndex AssignMeshToNode(NodeIndex nidx, MeshIndex midx);
 

@@ -48,7 +48,8 @@ namespace c3
 		virtual void SetPolarDistance(float distance) = NULL;
 		virtual float GetPolarDistance() = NULL;
 
-		virtual void SetOrthoDimensions(const glm::fvec2 *dim) = NULL;
+		virtual void SetOrthoDimensions(float dimx, float dimy) = NULL;
+		virtual void SetOrthoDimensionsVec(const glm::fvec2 *dim) = NULL;
 		virtual const glm::fvec2 *GetOrthoDimensions(glm::fvec2 *dim = nullptr) = NULL;
 		virtual float GetOrthoWidth() = NULL;
 		virtual float GetOrthoHeight() = NULL;

@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2021, Keelan Stuart
+// Copyright © 2001-2023, Keelan Stuart
 
 
 #pragma once
@@ -361,6 +361,7 @@ namespace c3
 		virtual Mesh *GetXZPlaneMesh() = NULL;
 
 		virtual Mesh *GetHemisphereMesh() = NULL;
+		virtual Mesh *GetSphereMesh() = NULL;
 
 		virtual Texture2D *GetBlackTexture() = NULL;
 		virtual Texture2D *GetGreyTexture() = NULL;

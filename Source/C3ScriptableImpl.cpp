@@ -841,10 +841,11 @@ const TCHAR *gGlobalDesignations[GlobalObjectRegistry::OD_NUMDESIGNATIONS] =
 {
 	_T("worldroot"),
 	_T("skyboxroot"),
-	_T("guiroot"),
 	_T("camera.root"),
 	_T("camera.arm"),
 	_T("camera"),
+	_T("gui.root"),
+	_T("gui.camera"),
 	_T("player"),
 };
 

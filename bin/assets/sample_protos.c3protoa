@@ -7,10 +7,10 @@
         <powerprops:property_set>
             <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4">-0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">50.000000,50.000000,50.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">sponza\sponza.gltf</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.707107,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.080000,0.080000,0.080000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD4}" name="XY Plane" group="Tests" flags="131075">
@@ -19,8 +19,8 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">[xyplane.model]</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[xyplane.model]</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD5}" name="REFCUBE" group="Tests" flags="131075">
@@ -29,34 +29,34 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD6}" name="SCRIPT1_REFCUBE" group="Tests" flags="131075">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
-            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
             <powerprops:property id="SRCF" name="SourceFile" type="STRING">test.c3js</powerprops:property>
-            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0167</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.016700</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD7}" name="SCRIPT2_REFCUBE" group="Tests" flags="131075">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
-            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
             <powerprops:property id="SRCF" name="SourceFile" type="STRING">test2.c3js</powerprops:property>
-            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0167</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.016700</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD8}" name="Hollow Cube" group="Tests" flags="131075">
@@ -65,25 +65,25 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">hollowcube.fbx</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hollowcube.fbx</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{3BCDDA41-5BEB-42C7-B041-1266DBC39A88}" name="AH64e" group="Vehicles" flags="131075">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
-            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
-			<component guid="{f8641b51-a0fc-4d93-892f-480b07ba2861}" name="Physical"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+            <component guid="{F8641B51-A0FC-4D93-892F-480B07BA2861}" name="Physical"/>
         </components>
         <powerprops:property_set>
             <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">ah64e\ah64e.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.000000,0.000000,0.707107,-0.707107</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.080000,0.080000,0.080000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="SRCF" name="SourceFile" type="STRING">chopper.c3js</powerprops:property>
-            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0167</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.016700</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{02DC7861-B1BC-495C-9C30-BFDEA742904A}" name="Racecar A" group="Vehicles" flags="131075">
@@ -93,10 +93,10 @@
         </components>
         <powerprops:property_set>
             <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">race.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{02DC7861-B1BC-495C-9C30-BFDEA742904B}" name="Racecar B" group="Vehicles" flags="131075">
@@ -106,10 +106,10 @@
         </components>
         <powerprops:property_set>
             <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">racefuture.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{E16CE1EB-C1D0-418A-AABB-7A4477094634}" name="Dirt" group="Hex Tiles" flags="131075">
@@ -118,11 +118,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/dirt.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{7736D9C5-BBF7-458F-B242-DFF257144B3F}" name="Lumber" group="Hex Tiles" flags="131075">
@@ -131,11 +131,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/dirt_lumber.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{BC75F5E0-9DD0-4335-8371-783D952B15CF}" name="Grass" group="Hex Tiles" flags="131075">
@@ -144,11 +144,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/grass.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{A5EF17D2-8736-44A8-8197-18B2CC57DADD}" name="Forest" group="Hex Tiles" flags="131075">
@@ -157,11 +157,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/grass_forest.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{A218C032-6D84-49BE-A7A2-8072FF3AEC47}" name="Grass Hill" group="Hex Tiles" flags="131075">
@@ -170,11 +170,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/grass_hill.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{5E950E5E-90FB-4837-85AE-C457F92A5739}" name="Sand" group="Hex Tiles" flags="131075">
@@ -183,11 +183,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/sand.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{6F2C4B95-46B8-468E-9CDE-7B624767F010}" name="Sand Rocks" group="Hex Tiles" flags="131075">
@@ -196,11 +196,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/sand_rocks.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{C364092E-EC76-4691-9A73-46E42BB5A1E7}" name="Stone" group="Hex Tiles" flags="131075">
@@ -209,11 +209,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/stone.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{19C4AB69-E82A-4375-8DF2-6A3C3DD54CA6}" name="Stone Hill" group="Hex Tiles" flags="131075">
@@ -222,11 +222,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/stone_hill.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{736903E8-956C-444F-8499-18946E3C10EA}" name="Stone Mountain" group="Hex Tiles" flags="131075">
@@ -235,11 +235,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/stone_mountain.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{919E4C3B-38FD-4F96-9455-2832E23097EE}" name="Stone Rocks" group="Hex Tiles" flags="131075">
@@ -248,11 +248,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/stone_rocks.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{2A98828D-6D1D-4012-853B-BF769D7CFEDC}" name="Water" group="Hex Tiles" flags="131075">
@@ -261,11 +261,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/water.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{2D99EB82-812B-42B9-820D-A11DAFB304C8}" name="Island" group="Hex Tiles" flags="131075">
@@ -274,11 +274,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/water_island.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{52AD5128-328C-444C-8DFD-31E8542BCA4B}" name="Rocky Water" group="Hex Tiles" flags="131075">
@@ -292,7 +292,6 @@
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{157F4398-CD65-4F9E-B44F-FA9B97A96AAC}" name="Cabin" group="Hex Tiles\Building" flags="131075">
@@ -301,11 +300,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_cabin.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{279D9A2F-EF2F-4B75-BEC2-16336E55D76C}" name="Castle" group="Hex Tiles\Building" flags="131075">
@@ -314,11 +313,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_castle.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{AEAD836B-03FD-41EC-8E56-27AF2E8982E2}" name="Dock" group="Hex Tiles\Building" flags="131075">
@@ -327,11 +326,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_dock.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{2297FA30-8031-48C1-8215-819158431D30}" name="Farm" group="Hex Tiles\Building" flags="131075">
@@ -340,11 +339,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_farm.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{83DC1DBD-3ED1-4C0A-95AA-047FD8965C48}" name="House" group="Hex Tiles\Building" flags="131075">
@@ -353,11 +352,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_house.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{1773E2FC-5E3F-470B-B290-AE35E9E6A414}" name="Market" group="Hex Tiles\Building" flags="131075">
@@ -366,11 +365,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_market.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{B7F9BE29-ABA0-45F4-85B4-A101E90EEF2A}" name="Mill" group="Hex Tiles\Building" flags="131075">
@@ -379,11 +378,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_mill.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{AD4E624A-914A-4F97-A130-76624905C50B}" name="Mine" group="Hex Tiles\Building" flags="131075">
@@ -392,11 +391,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_mine.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{F2CBC0B1-7108-47AB-AB4C-471CFDF8F594}" name="Sheep" group="Hex Tiles\Building" flags="131075">
@@ -405,11 +404,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_sheep.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{E9B2B4F5-3DB1-40D0-A7FD-2AB2450E7D27}" name="Smelter" group="Hex Tiles\Building" flags="131075">
@@ -418,11 +417,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_smelter.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{2E7D8143-EF1C-4E9F-90D8-43BA0C5673C8}" name="Tower" group="Hex Tiles\Building" flags="131075">
@@ -431,11 +430,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_tower.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{3429D69D-C41F-481F-A28E-27CF0B1C391D}" name="Village" group="Hex Tiles\Building" flags="131075">
@@ -444,11 +443,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_village.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{03879CAA-26B0-4354-8DC9-CB76604D6CCE}" name="Wall" group="Hex Tiles\Building" flags="131075">
@@ -457,11 +456,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_wall.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{F7270D5C-EE00-479B-B8AD-99A910CAD496}" name="Water" group="Hex Tiles\Building" flags="131075">
@@ -470,11 +469,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_water.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{DE44D1F6-A855-4BD9-ABBC-A08EEE7534A3}" name="Corner" group="Hex Tiles\Paths" flags="131075">
@@ -483,11 +482,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_corner.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{E850EBB2-637E-4E30-B47A-58CA0FD47818}" name="Sharp Corner" group="Hex Tiles\Paths" flags="131075">
@@ -496,11 +495,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_cornerSharp.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{E908ED6B-9C5F-4FFC-9090-FE01C597FF79}" name="Crossing" group="Hex Tiles\Paths" flags="131075">
@@ -509,11 +508,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_crossing.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{314837E3-329C-477A-8FAF-A333251AD3EC}" name="End" group="Hex Tiles\Paths" flags="131075">
@@ -522,11 +521,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_end.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{F83E44F8-3EBC-4D00-932D-73B0E56EEC95}" name="Intersection A" group="Hex Tiles\Paths" flags="131075">
@@ -535,11 +534,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionA.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{992A1F35-27F3-4695-B062-A1D76AD7C032}" name="Intersection B" group="Hex Tiles\Paths" flags="131075">
@@ -548,11 +547,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionB.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{CF0AD4C5-7D0D-48A0-8BE2-DEC4200884B6}" name="Intersection C" group="Hex Tiles\Paths" flags="131075">
@@ -561,11 +560,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionC.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{EEE4B987-5EA0-4ED8-AB82-CE4B6FD999A5}" name="Intersection D" group="Hex Tiles\Paths" flags="131075">
@@ -574,11 +573,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionD.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{1237DEEE-05DA-4F04-ADDF-EACD493B8FF4}" name="Intersection E" group="Hex Tiles\Paths" flags="131075">
@@ -587,11 +586,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionE.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{7E146CF8-EF28-438A-9173-79A087ABCA69}" name="Intersection F" group="Hex Tiles\Paths" flags="131075">
@@ -600,11 +599,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionF.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{0B670A79-58E2-4D02-8F4B-2EE921849346}" name="Intersection G" group="Hex Tiles\Paths" flags="131075">
@@ -613,11 +612,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionG.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{4EACF6E9-2F4D-4266-9FBF-07D2DE5A568A}" name="Intersection H" group="Hex Tiles\Paths" flags="131075">
@@ -626,11 +625,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionH.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{53C4913B-CEEB-4C00-A876-B451A8BCA7C3}" name="Start" group="Hex Tiles\Paths" flags="131075">
@@ -639,11 +638,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_start.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{8DBC40ED-53EA-4DA2-B0F3-ADC30853D1B5}" name="Straight" group="Hex Tiles\Paths" flags="131075">
@@ -652,11 +651,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_straight.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{F8EF9F1B-300E-4409-8C33-E1726067253C}" name="Corner" group="Hex Tiles\River" flags="131075">
@@ -665,11 +664,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_corner.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{D0A6ADC7-E65C-48C5-9E78-03248B7CD684}" name="Sharp Corner" group="Hex Tiles\River" flags="131075">
@@ -678,11 +677,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_cornerSharp.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{224E3E68-78E8-45BE-9098-0441F4CCAFD1}" name="Crossing" group="Hex Tiles\River" flags="131075">
@@ -691,11 +690,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_crossing.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{15DF6421-C33C-4B35-BD70-F9F295306B6B}" name="End" group="Hex Tiles\River" flags="131075">
@@ -704,11 +703,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_end.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{C46429CE-D417-4CAF-A18D-3987C761601F}" name="Intersection A" group="Hex Tiles\River" flags="131075">
@@ -717,11 +716,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionA.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{2DA25AC5-703E-40C7-81E0-3909413DDD03}" name="Intersection B" group="Hex Tiles\River" flags="131075">
@@ -730,11 +729,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionB.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{8E83E197-B14D-45DD-84FE-0E5157DA8195}" name="Intersection C" group="Hex Tiles\River" flags="131075">
@@ -743,11 +742,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionC.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{DE241888-DD09-45F4-8A41-1E66DF1B8D66}" name="Intersection D" group="Hex Tiles\River" flags="131075">
@@ -756,11 +755,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionD.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{669C9EE4-4D3F-44A8-A461-21C1D0E591C5}" name="Intersection E" group="Hex Tiles\River" flags="131075">
@@ -769,11 +768,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionE.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{D419452F-CBFA-4DB1-A841-079AFDDD186D}" name="Intersection F" group="Hex Tiles\River" flags="131075">
@@ -782,11 +781,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionF.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{EC1E0E1C-551E-4104-8168-3B01E97C2E4F}" name="Intersection G" group="Hex Tiles\River" flags="131075">
@@ -795,11 +794,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionG.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{1E7DAE5F-2EC6-4FA7-BEEB-34F376C779B6}" name="Intersection H" group="Hex Tiles\River" flags="131075">
@@ -808,11 +807,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionH.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{F6D3C0C5-570D-4556-93BE-913581189FCA}" name="Start" group="Hex Tiles\River" flags="131075">
@@ -821,11 +820,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_start.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{5496F57F-0FD6-45A3-A6B0-B8422BF570BA}" name="Straight" group="Hex Tiles\River" flags="131075">
@@ -834,11 +833,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_straight.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{00DE8478-4377-4A85-88A4-51AFB43AF8D0}" name="Boat" group="Hex Tiles\Units" flags="131075">
@@ -847,11 +846,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_boat.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{0655D325-8047-443A-BBDB-8509A84F6754}" name="House" group="Hex Tiles\Units" flags="131075">
@@ -860,11 +859,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_house.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{81242570-C9E1-4EC7-ABFE-9C9D160AEB94}" name="Large House" group="Hex Tiles\Units" flags="131075">
@@ -873,11 +872,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_houseLarge.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{11A25340-BA70-4315-BEFC-C4FAA5FFC109}" name="Mill" group="Hex Tiles\Units" flags="131075">
@@ -886,11 +885,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_mill.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{F91A9260-034A-4A76-ADB2-559ECE6F74AF}" name="Tower" group="Hex Tiles\Units" flags="131075">
@@ -899,11 +898,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_tower.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{84156525-F2C5-4151-A20D-88C0DB008FE8}" name="Tree" group="Hex Tiles\Units" flags="131075">
@@ -912,11 +911,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_tree.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{D4E41E89-D16F-48BE-9EC7-FFCF27426573}" name="Tower Wall" group="Hex Tiles\Units" flags="131075">
@@ -925,11 +924,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_wallTower.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
             <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{98B6F7EC-7E80-4C62-BBE3-93D529EA4EB8}" name="BasicCharacter" group="Tests" flags="131075">
@@ -939,24 +938,25 @@
         </components>
         <powerprops:property_set>
             <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">basicCharacter.fbx</powerprops:property>
             <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.0800,0.0800,0.0800</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.080000,0.080000,0.080000</powerprops:property>
         </powerprops:property_set>
     </prototype>
-    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3B}" name="Pellet" group="Projectiles" flags="335877">
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3B}" name="Pellet" group="Projectiles" flags="131075">
         <components>
+            <component guid="{F8641B51-A0FC-4D93-892F-480B07BA2861}" name="Physical"/>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
-            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.001,0.001,0.001</powerprops:property>
-            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,0.9,0.8</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.000000,0.900000,0.800000</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.020000,0.020000,0.020000</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3C}" name="Light" group="Lights" flags="335877">
@@ -966,11 +966,11 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
-            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.0100,0.0100,0.0100</powerprops:property>
-            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,1.0,1.0</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.010000,0.010000,0.010000</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3D}" name="FadingLight" group="Lights" flags="335877">
@@ -978,16 +978,16 @@
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
-            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
-            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.0100,0.0100,0.0100</powerprops:property>
-            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,1.0,1.0</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.010000,0.010000,0.010000</powerprops:property>
             <powerprops:property id="SRCF" name="SourceFile" type="STRING">fading_light.c3js</powerprops:property>
-            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0667</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.066700</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3E}" name="FlickeringLight" group="Lights" flags="335877">
@@ -995,16 +995,16 @@
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
-            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
-            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.0100,0.0100,0.0100</powerprops:property>
-            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,1.0,1.0</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.010000,0.010000,0.010000</powerprops:property>
             <powerprops:property id="SRCF" name="SourceFile" type="STRING">flickering_light.c3js</powerprops:property>
-            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0667</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.066700</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3F}" name="StrobingLight" group="Lights" flags="335877">
@@ -1012,16 +1012,16 @@
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
-            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
-            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.0100,0.0100,0.0100</powerprops:property>
-            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.0,1.0,1.0</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.010000,0.010000,0.010000</powerprops:property>
             <powerprops:property id="SRCF" name="SourceFile" type="STRING">strobing_light.c3js</powerprops:property>
-            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.0667</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.066700</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{884D72DE-73A5-4E3B-8B6F-D6CA2BFFF12C}" name="QuadTerrain" group="Terrain" flags="131075">
@@ -1039,17 +1039,17 @@
     </prototype>
     <prototype guid="{0413A21C-BEAC-471B-9047-3A0E8D9CE082}" name="Ship" group="Spaceships" flags="131075">
         <components>
-            <component guid="{1f1d4b43-8b2a-44de-bab5-d24d8ac32bec}" name="Scriptable"/>
-			<component guid="{f8641b51-a0fc-4d93-892f-480b07ba2861}" name="Physical"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+            <component guid="{F8641B51-A0FC-4D93-892F-480B07BA2861}" name="Physical"/>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">ship.x|force_smooth_normals</powerprops:property>
-            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.0,-1.0,0.0,0.0</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">ship.x|force_smooth_normals</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.000000,-1.000000,0.000000,0.000000</powerprops:property>
             <powerprops:property id="SRCF" name="SourceFile" type="STRING">PlayerShip.c3js</powerprops:property>
-            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.033</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.033000</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{B40195A1-64C4-45B1-907B-7A2232E5E948}" name="Ship1" group="Spaceships" flags="131075">
@@ -1058,9 +1058,9 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">ship1.x</powerprops:property>
-            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.0,-1.0,0.0,0.0</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">ship1.x</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.000000,-1.000000,0.000000,0.000000</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{82513D62-3E55-4046-B40E-214D17F6E017}" name="Ship2" group="Spaceships" flags="131075">
@@ -1069,9 +1069,9 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">ship2.x</powerprops:property>
-            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.0,-1.0,0.0,0.0</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">ship2.x</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.000000,-1.000000,0.000000,0.000000</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{4A2D0682-FBE0-4085-AA5F-0E7C2CCFDE38}" name="terrain_2417" group="Terrain" flags="131075">
@@ -1080,9 +1080,9 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">2417.glb</powerprops:property>
-            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">664915.750,-3312785.75,-5402887.00</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">2417.glb</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">664915.750000,-3312785.750000,-5402887.000000</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{4A2D0682-FBE0-4085-AA5F-0E7C2CCFDE39}" name="urban_sky" group="Skybox" flags="131075">
@@ -1091,32 +1091,31 @@
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">skybox.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">SkyDome.X</powerprops:property>
-            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">-1.0,0.0,0.0,0.0</powerprops:property>
-            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0,0,-10</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">skybox.c3rm</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">-1.000000,0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,-10.000000</powerprops:property>
         </powerprops:property_set>
     </prototype>
-    <prototype guid="{4A2D0682-FBE0-4085-AA5F-0E7C2CCFDE3A}" name="spacesphere" group="Skybox" flags="131075">
+    <prototype guid="{4A2D0682-FBE0-4085-AA5F-0E7C2CCFDE3A}" name="spacesphere" group="Skybox" flags="7">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">skybox.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">SpaceSphere.FBX</powerprops:property>
-            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">-6,-6,-6</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">skybox.c3rm</powerprops:property>
         </powerprops:property_set>
     </prototype>
-    <prototype guid="{4A2D0682-FBE0-4085-AA5F-0E7C2CCFDE3A}" name="CartoonSky" group="Skybox" flags="131075">
+    <prototype guid="{4A2D0682-FBE0-4085-AA5F-0E7C2CCFDE3A}" name="CartoonSky" group="Skybox" flags="7">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
             <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
         </components>
         <powerprops:property_set>
-            <powerprops:property id="MODF" name="Model" type="STRING">CartoonSky.FBX</powerprops:property>
-            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">-6,-6,-6</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">-6.000000,-6.000000,-6.000000</powerprops:property>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">skybox.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">CartoonSky.FBX</powerprops:property>
         </powerprops:property_set>
     </prototype>
 </prototypes>

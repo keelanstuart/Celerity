@@ -76,6 +76,10 @@ bool ModelRendererImpl::Initialize(Object *pobject)
 		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::HIDDEN));
 	}
 
+	pp = props->GetPropertyById('MODF');
+	if (pp)
+		m_Mod.second = pobject->GetSystem()->GetResourceManager()->GetResource(pp->AsString());
+
 	return true;
 }
 

@@ -1,6 +1,8 @@
-
-// C3EditDoc.cpp : implementation of the C3EditDoc class
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
 //
+// Copyright © 2001-2023, Keelan Stuart
+
 
 #include "pch.h"
 #include "framework.h"
@@ -50,12 +52,21 @@ C3EditDoc::~C3EditDoc()
 	}
 
 	for (auto it : m_PerViewInfo)
-		it.second.obj->Release();
+	{
+		it.second.m_Camera->Release();
+		it.second.m_GUICamera->Release();
+	}
 
 	if (m_RootObj)
 	{
 		m_RootObj->Release();
 		m_RootObj = nullptr;
+	}
+
+	if (m_GUIRootObj)
+	{
+		m_GUIRootObj->Release();
+		m_GUIRootObj = nullptr;
 	}
 }
 
@@ -72,6 +83,9 @@ BOOL C3EditDoc::OnNewDocument()
 	m_RootObj->AddComponent(c3::Positionable::Type());
 	m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
 
+	m_GUIRootObj = pf->Build();
+	m_GUIRootObj->AddComponent(c3::Positionable::Type());
+
 	return TRUE;
 }
 
@@ -86,6 +100,9 @@ void C3EditDoc::Serialize(CArchive& ar)
 
 C3EditDoc::SPerViewInfo *C3EditDoc::GetPerViewInfo(HWND h)
 {
+	CRect r;
+	GetClientRect(h, r);
+
 	TWndMappedObject::iterator it = m_PerViewInfo.find(h);
 	if (it != m_PerViewInfo.end())
 		return &it->second;
@@ -103,14 +120,15 @@ C3EditDoc::SPerViewInfo *C3EditDoc::GetPerViewInfo(HWND h)
 	c3::Factory *pf = theApp.m_C3->GetFactory();
 	assert(pf);
 
-	c3::Object *c = pf->Build();
-	assert(c);
+	SPerViewInfo pvi;
+	pvi.pitch = pvi.yaw = 0;
 
-	c->AddComponent(c3::Positionable::Type());
-	c->AddComponent(c3::Camera::Type());
-	c->SetName(_T("Camera"));
+	pvi.m_Camera = pf->Build();
+	pvi.m_Camera->AddComponent(c3::Positionable::Type());
+	pvi.m_Camera->AddComponent(c3::Camera::Type());
+	pvi.m_Camera->SetName(_T("Camera"));
 
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(c->FindComponent(c3::Camera::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pvi.m_Camera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
 		pcam->SetFOV(glm::radians(70.0f));
@@ -118,20 +136,34 @@ C3EditDoc::SPerViewInfo *C3EditDoc::GetPerViewInfo(HWND h)
 		pcam->SetPolarDistance(1.0f);
 	}
 
-	c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(c->FindComponent(c3::Positionable::Type()));
+	c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pvi.m_Camera->FindComponent(c3::Positionable::Type()));
 	if (ppos)
 	{
 		ppos->SetYawPitchRoll(0, 0, 0);
 	}
 
-	props::IProperty *campitch_min = c->GetProperties()->CreateProperty(_T("PitchCameraAngleMin"), 'PCAN');
+	props::IProperty *campitch_min = pvi.m_Camera->GetProperties()->CreateProperty(_T("PitchCameraAngleMin"), 'PCAN');
 	campitch_min->SetFloat(-88.0f);
-	props::IProperty *campitch_max = c->GetProperties()->CreateProperty(_T("PitchCameraAngleMax"), 'PCAX');
+	props::IProperty *campitch_max = pvi.m_Camera->GetProperties()->CreateProperty(_T("PitchCameraAngleMax"), 'PCAX');
 	campitch_max->SetFloat(88.0f);
 
-	SPerViewInfo pvi;
-	pvi.obj = c;
-	pvi.yaw = pvi.pitch = 0;
+
+	pvi.m_GUICamera = pf->Build(pvi.m_Camera);
+
+	pcam = dynamic_cast<c3::Camera *>(pvi.m_GUICamera->FindComponent(c3::Camera::Type()));
+	if (pcam)
+	{
+		pcam->SetProjectionMode(c3::Camera::EProjectionMode::PM_ORTHOGRAPHIC);
+		pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
+		pcam->SetViewMode(c3::Camera::EViewMode::VM_LOOKAT);
+	}
+
+	ppos = dynamic_cast<c3::Positionable *>(pvi.m_GUICamera->FindComponent(c3::Positionable::Type()));
+	if (ppos)
+	{
+		ppos->SetYawPitchRoll(0, glm::radians(-90.0f), 0);
+		ppos->SetPos((float)r.Width() / 2.0f, (float)r.Height() / 2.0f, 10.0f);
+	}
 
 	auto ret = m_PerViewInfo.insert(TWndMappedObject::value_type(h, pvi));
 
@@ -230,11 +262,12 @@ BOOL C3EditDoc::OnSaveDocument(LPCTSTR lpszPathName)
 		if (os->BeginBlock('CAM0'))
 		{
 			SPerViewInfo *pvi = &m_PerViewInfo.begin()->second;
-			c3::Object *cam = pvi->obj;
+			c3::Object *cam = pvi->m_Camera;
 			cam->Save(os, 0);
 
-			os->WriteFloat(pvi->pitch);
+			c3::Positionable *p = (c3::Positionable *)(cam->FindComponent(c3::Positionable::Type()));
 			os->WriteFloat(pvi->yaw);
+			os->WriteFloat(pvi->pitch);
 
 			os->EndBlock();
 		}
@@ -320,11 +353,29 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 			{
 				SPerViewInfo pvi;
 
-				pvi.obj = theApp.m_C3->GetFactory()->Build();
-				pvi.obj->Load(is);
+				pvi.m_Camera = theApp.m_C3->GetFactory()->Build();
+				pvi.m_Camera->Load(is);
 
-				is->ReadFloat(pvi.pitch);
 				is->ReadFloat(pvi.yaw);
+				is->ReadFloat(pvi.pitch);
+
+				pvi.m_GUICamera = pf->Build(pvi.m_Camera);
+				CRect r(0, 0, 1000, 1000);
+				c3::Camera *pcam = dynamic_cast<c3::Camera *>(pvi.m_GUICamera->FindComponent(c3::Camera::Type()));
+				if (pcam)
+				{
+					pcam->SetProjectionMode(c3::Camera::EProjectionMode::PM_ORTHOGRAPHIC);
+					pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
+					pcam->SetViewMode(c3::Camera::EViewMode::VM_LOOKAT);
+				}
+
+				c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pvi.m_GUICamera->FindComponent(c3::Positionable::Type()));
+				if (ppos)
+				{
+					ppos->SetYawPitchRoll(0, glm::radians(-90.0f), 0);
+					ppos->SetPos((float)r.Width() / 2.0f, (float)r.Height() / 2.0f, 10.0f);
+				}
+
 				m_PerViewInfo.insert(TWndMappedObject::value_type(0, pvi));
 
 				is->EndBlock();

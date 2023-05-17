@@ -18,12 +18,12 @@ PhysicalImpl::PhysicalImpl()
 {
 	m_LinVel = glm::fvec3(0, 0, 0);
 	m_LinAcc = glm::fvec3(0, 0, 0);
-	m_maxLinSpeed = 2.0f;
-	m_LinSpeedFalloff = 5.0f;
+	m_maxLinSpeed = 1000.0f;
+	m_LinSpeedFalloff = 0.01f;
 
 	m_RotVel = glm::fvec3(0, 0, 0);
 	m_RotAcc = glm::fvec3(0, 0, 0);
-	m_maxRotSpeed = glm::fvec3(4.0f, 4.0f, 4.0f);
+	m_maxRotSpeed = glm::fvec3(3.0f, 3.0f, 3.0f);
 	m_RotVelFalloff = glm::fvec3(6.0f, 6.0f, 6.0f);
 
 	m_pPositionable = nullptr;
@@ -70,6 +70,12 @@ bool PhysicalImpl::Initialize(Object *pobject)
 		prvel->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
 
+	props::IProperty *pdpos = propset->CreateReferenceProperty(_T("DeltaPosition"), 'DPOS', &m_DeltaPos, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	if (pdpos)
+	{
+		pdpos->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED) | props::IProperty::PROPFLAG(props::IProperty::HIDDEN));
+	}
+
 	props::IProperty *pracc = propset->CreateReferenceProperty(_T("RotationalAcceleration"), 'RACC', &m_RotAcc, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
 	if (pracc)
 	{
@@ -97,7 +103,7 @@ void PhysicalImpl::Update(float elapsed_time)
 
 	if (m_pPositionable)
 	{
-		m_LinVel = glm::mix(m_LinVel, glm::fvec3(0, 0, 0), glm::clamp<float>(m_LinSpeedFalloff * elapsed_time, 0, 1));
+		m_LinVel = glm::lerp(m_LinVel, glm::fvec3(0, 0, 0), glm::clamp<float>(m_LinSpeedFalloff * elapsed_time, 0, 1));
 		m_LinVel += m_LinAcc * elapsed_time;
 		float speed = glm::length(m_LinVel);
 		if (speed > m_maxLinSpeed)
@@ -107,7 +113,10 @@ void PhysicalImpl::Update(float elapsed_time)
 		m_RotVel += m_RotAcc * elapsed_time;
 		m_RotVel = glm::min(glm::max(-m_maxRotSpeed, m_RotVel), m_maxRotSpeed);
 
-		m_pPositionable->AdjustPos(m_LinVel.x * elapsed_time, m_LinVel.y * elapsed_time, m_LinVel.z * elapsed_time);
+		m_DeltaPos.x = m_LinVel.x * elapsed_time;
+		m_DeltaPos.y = m_LinVel.y * elapsed_time;
+		m_DeltaPos.z = m_LinVel.z * elapsed_time;
+		m_pPositionable->AdjustPos(m_DeltaPos.x, m_DeltaPos.y, m_DeltaPos.z);
 		m_pPositionable->AdjustYaw(m_RotVel.z);
 		m_pPositionable->AdjustPitch(m_RotVel.x);
 		m_pPositionable->AdjustRoll(m_RotVel.y);

@@ -55,7 +55,7 @@ namespace c3
 
 		virtual GlobalObjectRegistry *GetGlobalObjectRegistry() = NULL;
 
-		virtual float GetCurrentTime() = NULL;
+		virtual float GetCurrentRunTime() = NULL;
 
 		virtual float GetElapsedTime() = NULL;
 

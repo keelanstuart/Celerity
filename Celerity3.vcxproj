@@ -131,6 +131,7 @@
   <ItemGroup>
     <ClInclude Include="Include\C3.h" />
     <ClInclude Include="Include\C3ActionMapper.h" />
+    <ClInclude Include="Include\C3Animator.h" />
     <ClInclude Include="Include\C3BoundingBox.h" />
     <ClInclude Include="Include\C3Camera.h" />
     <ClInclude Include="Include\C3ColorDefs.h" />

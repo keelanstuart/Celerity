@@ -1,6 +1,8 @@
-
-// C3App.h : main header file for the PROJECT_NAME application
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
 //
+// Copyright © 2001-2023, Keelan Stuart
+
 
 #pragma once
 

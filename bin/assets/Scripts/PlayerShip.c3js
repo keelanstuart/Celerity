@@ -6,8 +6,6 @@ var hfacing = new Facing();
 var hpos;
 var hori;
 
-var speed = 1.0;
-
 var dir = { x: 0.0, y: 0.0, z: 0.0 };
 dir.x = 0.0;
 dir.y = 0.0;
@@ -21,8 +19,13 @@ rot.z = 0.0;
 var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
 var tmpv4 = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
 
-var hlacc;
+var hlvel;
 var hrvel;
+
+var speed = 0.0;
+var max_speed = 100.0;
+var tmp = 0.0;
+var speed_boost = 0.0;
 
 var hbullet;
 var bullet_idx;
@@ -31,131 +34,73 @@ function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 
-	dir.x = dir.x * speed;
-	dir.y = dir.y * speed;
-	dir.z = dir.z * speed;
-	SetPropertyValue(hlacc, dir);
-
-	dir.x = 0.0;
-	dir.y = 0.0;
-	dir.z = 0.0;
-
-	SetPropertyValue(hrvel, rot);
-
-	rot.x = 0.0;
-	rot.y = 0.0;
-	rot.z = 0.0;
-
-	speed = 1.0;
+	tmp = speed + (max_speed * speed_boost);
+	dir = GetPropertyValue(hfacing.forward);
+	dir.x = dir.x * tmp;
+	dir.y = dir.y * tmp;
+	dir.z = dir.z * tmp;
+	SetPropertyValue(hlvel, dir);
 }
 
 function fire_cannon()
 {
 	var hbpos = FindProperty(hbullet[bullet_idx], "Position");
-	var hbfacing = FindProperty(hbullet[bullet_idx], "Facing.Forward");
-	var hblacc = FindProperty(hbullet[bullet_idx], "LinearAcceleration");
-
-	var facing = GetPropertyValue(hfacing.forward);
-
 	SetPropertyValue(hbpos, GetPropertyValue(hpos));
-	SetPropertyValue(hbfacing, facing);
 
-	facing.x = facing.x * 10.0;
-	facing.y = facing.y * 10.0;
-	facing.z = facing.z * 10.0;
-	SetPropertyValue(hblacc, facing);
+	tmpv3 = GetPropertyValue(hfacing.forward);
+	tmp = speed + (max_speed * speed_boost) + 120.0;
+	tmpv3.x = tmpv3.x * tmp;
+	tmpv3.y = tmpv3.y * tmp;
+	tmpv3.z = tmpv3.z * tmp;
+	var hblvel = FindProperty(hbullet[bullet_idx], "LinearVelocity");
+	SetPropertyValue(hblvel, tmpv3);
 
-	bullet_idx = (bullet_idx + 1) % 100;
+	bullet_idx = (bullet_idx + 1) % 500;
 }
 
 function handle_input(action, value)
 {
 	//Log("input: " + action + ": " + value + "\n");
 
-	if (action == "Move Forward")
-	{
-		dir = GetPropertyValue(hlacc);
-		tmpv3 = GetPropertyValue(hfacing.forward);
-		dir.x += (tmpv3.x * 2.0 * value);
-		dir.y += (tmpv3.y * 2.0 * value);
-		dir.z += (tmpv3.z * 2.0 * value);
-		SetPropertyValue(hlacc, dir);
-	}
-	else if (action == "Move Backward")
-	{
-		dir = GetPropertyValue(hlacc);
-		tmpv3 = GetPropertyValue(hfacing.forward);
-		dir.x -= (tmpv3.x * 2.0 * value);
-		dir.y -= (tmpv3.y * 2.0 * value);
-		dir.z -= (tmpv3.z * 2.0 * value);
-		SetPropertyValue(hlacc, dir);
-	}
-	else if (action == "Strafe Left")
-	{
-		dir = GetPropertyValue(hlacc);
-		tmpv3 = GetPropertyValue(hfacing.right);
-		dir.x -= (tmpv3.x * 2.0 * value);
-		dir.y -= (tmpv3.y * 2.0 * value);
-		dir.z -= (tmpv3.z * 2.0 * value);
-		SetPropertyValue(hlacc, dir);
-	}
-	else if (action == "Strafe Right")
-	{
-		dir = GetPropertyValue(hlacc);
-		tmpv3 = GetPropertyValue(hfacing.right);
-		dir.x += (tmpv3.x * 2.0 * value);
-		dir.y += (tmpv3.y * 2.0 * value);
-		dir.z += (tmpv3.z * 2.0 * value);
-		SetPropertyValue(hlacc, dir);
-	}
-	else if (action == "Look Down")
+	if ((action == "Look Down") || (action == "Move Forward"))
 	{
 		rot = GetPropertyValue(hrvel);
-		rot.x += (value * 0.005);
+		rot.x -= Math.toRadians(value * 5.0);
 		SetPropertyValue(hrvel, rot);
 	}
-	else if (action == "Look Up")
+	else if ((action == "Look Up") || (action == "Move Backward"))
 	{
 		rot = GetPropertyValue(hrvel);
-		rot.x -= (value * 0.005);
+		rot.x += Math.toRadians(value * 5.0);
 		SetPropertyValue(hrvel, rot);
 	}
-	else if (action == "Look Left")
+	else if ((action == "Look Left") || (action == "Strafe Left"))
 	{
 		rot = GetPropertyValue(hrvel);
-		rot.z -= (value * 0.005);
+		rot.z -= Math.toRadians(value * 5.0);
 		SetPropertyValue(hrvel, rot);
 	}
-	else if (action == "Look Right")
+	else if ((action == "Look Right") || (action == "Strafe Right"))
 	{
 		rot = GetPropertyValue(hrvel);
-		rot.z += (value * 0.005);
+		rot.z += Math.toRadians(value * 5.0);
 		SetPropertyValue(hrvel, rot);
 	}
-	else if (action == "Ascend")
+	else if (action == "Increase Velocity")
 	{
-		dir = GetPropertyValue(hlacc);
-		tmpv3 = GetPropertyValue(hfacing.up);
-		dir.x += (tmpv3.x * value);
-		dir.y += (tmpv3.y * value);
-		dir.z += (tmpv3.z * value);
-		SetPropertyValue(hlacc, dir);
+		speed += value * max_speed;
+		if (speed > max_speed)
+			speed = max_speed;
 	}
-	else if (action == "Descend")
+	else if (action == "Decrease Velocity")
 	{
-		dir = GetPropertyValue(hlacc);
-		tmpv3 = GetPropertyValue(hfacing.up);
-		dir.x -= (tmpv3.x * value);
-		dir.y -= (tmpv3.y * value);
-		dir.z -= (tmpv3.z * value);
-		SetPropertyValue(hlacc, dir);
+		speed -= value * max_speed;
+		if (speed < 0.0)
+			speed = 0.0;
 	}
 	else if (action == "Run")
 	{
-		speed = 2.0;
-	}
-	else if (action == "Jump")
-	{
+		speed_boost = value;
 	}
 	else if (action == "Fire 1")
 	{
@@ -176,13 +121,13 @@ function init()
 	hfacing.forward = FindProperty(self, "Facing.Forward");
 	hfacing.right = FindProperty(self, "Facing.Right");
 	hfacing.up = FindProperty(self, "Facing.Up");
-	hlacc = FindProperty(self, "LinearAcceleration");
+	hlvel = FindProperty(self, "LinearVelocity");
 	hrvel = FindProperty(self, "RotationalVelocity");
 
 	// create projectiles up front to avoid run-time hitches
 	bullet_idx = 0;
 	hbullet = new Array();
 	var i;
-	for (i = 0; i < 3; i++)
+	for (i = 0; i < 500; i++)
 		hbullet[i] = CreateObject("Pellet", GetParent(self));
 }
