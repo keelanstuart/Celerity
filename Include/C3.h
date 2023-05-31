@@ -29,6 +29,8 @@
 // GLM init
 #define GLM_FORCE_CTOR_INIT
 #define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_DEPTH_ZERO_TO_ONE
+#define GLM_FORCE_LEFT_HANDED
 
 #include <glm/glm.hpp>		// https://github.com/g-truc/glm				==> third-party/glm
 #include <glm/ext.hpp>		// https://github.com/g-truc/glm				==> third-party/glm

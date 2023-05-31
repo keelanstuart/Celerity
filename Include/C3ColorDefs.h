@@ -7,8 +7,6 @@
 #pragma once
 
 
-#include <glm/glm.hpp>
-
 namespace c3
 {
 	namespace Color
