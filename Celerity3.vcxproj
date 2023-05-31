@@ -75,6 +75,7 @@
     <ClCompile Include="Source\C3VirtualJoystickImpl.cpp" />
     <ClCompile Include="Source\C3VirtualKeyboardImpl.cpp" />
     <ClCompile Include="Source\C3VirtualMouseImpl.cpp" />
+    <ClCompile Include="Source\C3Zip.cpp" />
     <ClCompile Include="Source\dllmain.cpp" />
     <ClCompile Include="Source\gl_wrapper.cpp" />
     <ClCompile Include="$(SolutionDir)third-party\tinyxml2\tinyxml2.cpp">
@@ -230,10 +231,12 @@
     <ClInclude Include="Source\C3VirtualJoystickImpl.h" />
     <ClInclude Include="Source\C3VirtualKeyboardImpl.h" />
     <ClInclude Include="Source\C3VirtualMouseImpl.h" />
+    <ClInclude Include="Source\C3Zip.h" />
     <ClInclude Include="Source\gl.h" />
     <ClInclude Include="Source\glext.h" />
     <ClInclude Include="Source\gl_wrapper.h" />
     <ClInclude Include="$(SolutionDir)third-party\tinyxml2\tinyxml2.h" />
+    <ClInclude Include="Source\miniaudio.h" />
     <ClInclude Include="Source\pch.h" />
     <ClInclude Include="Source\resource.h" />
     <ClInclude Include="Source\TinyJS.h" />

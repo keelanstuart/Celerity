@@ -163,13 +163,13 @@ void PositionableImpl::Update(float elapsed_time)
 		}
 
 		// Recalculate our facing vector in between...
-		m_Facing = tmp * glm::vec4(0, 1, 0, 0);
+		m_Facing = glm::normalize(tmp * glm::vec4(0, 1, 0, 0));
 
 		// Recalculate our local up vector after that...
-		m_LocalUp = tmp * glm::vec4(0, 0, 1, 0);
+		m_LocalUp = glm::normalize(tmp * glm::vec4(0, 0, 1, 0));
 
 		// Recalculate the local right vector
-		m_LocalRight = tmp * glm::vec4(1, 0, 0, 0);
+		m_LocalRight = glm::normalize(tmp * glm::vec4(1, 0, 0, 0));
 
 		//m_Bounds.Align(&m_Mat);
 

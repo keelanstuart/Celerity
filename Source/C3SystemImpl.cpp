@@ -23,6 +23,7 @@
 #include <C3ScriptableImpl.h>
 #include <C3PhysicalImpl.h>
 
+#include <C3ResourceImpl.h>
 
 
 using namespace c3;
@@ -194,6 +195,7 @@ ResourceManager *SystemImpl::GetResourceManager()
 	if (!m_ResourceManager)
 	{
 		m_ResourceManager = new ResourceManagerImpl(this);
+		ResourceImpl::s_pSys = this;
 
 		/// REGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES
 		// *************************************************

@@ -12,19 +12,26 @@ namespace c3
 {
 	class ResourceImpl : public Resource
 	{
+		friend class System;
 
 	protected:
-		System *m_pSys;
+
+#pragma pack(push, 1)
 		const ResourceType *m_pResType;
 		size_t m_RefCt;
 		tstring m_Filename;
 		tstring m_Options;
 		void *m_Data;
 		Status m_Status;
+		props::TFlags32 m_AuxFlags;
+		uint32_t m_Aux;
+#pragma pack(pop)
 
 	public:
 
-		ResourceImpl(System *psys, const TCHAR *filename, const TCHAR *options, const ResourceType *prestype, const void *data = nullptr);
+		static System *s_pSys;
+
+		ResourceImpl(const TCHAR *filename, const TCHAR *options, const ResourceType *prestype, const void *data = nullptr);
 
 		virtual ~ResourceImpl();
 
@@ -43,6 +50,8 @@ namespace c3
 		virtual void AddRef();
 
 		virtual void DelRef();
+
+		void SetAux(uint16_t aux, props::TFlags8 flags);
 
 	};
 };

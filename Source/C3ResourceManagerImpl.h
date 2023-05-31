@@ -7,6 +7,7 @@
 #pragma once
 
 #include <C3ResourceManager.h>
+#include <C3Zip.h>
 
 namespace c3
 {
@@ -32,6 +33,9 @@ namespace c3
 		typedef std::multimap<tstring, const ResourceType *> TExtToResourceTypeMap;
 		TExtToResourceTypeMap m_ExtResTypeMap;
 
+		typedef std::map<uint16_t, std::pair<tstring, ZipFile *>> TZipFileRegistry;
+		TZipFileRegistry m_ZipFileRegistry;
+
 
 	public:
 
@@ -41,7 +45,7 @@ namespace c3
 
 		static pool::IThreadPool::TASK_RETURN __cdecl LoadingThreadProc(void *presmanimpl, void *pres, size_t task_number);
 
-		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype, const void *data);
+		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype = nullptr, const void *data = nullptr);
 
 		virtual void ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype = nullptr, props::TFlags64 restypeflags = 0, ResTypeFlagMode flagmode = RTFM_IGNORE);
 
@@ -60,6 +64,12 @@ namespace c3
 		virtual const ResourceType *FindResourceType(GUID guid) const;
 
 		virtual void Reset();
+
+		virtual bool RegisterZipArchive(const TCHAR *filename);
+
+		virtual void UnregisterZipArchive(const TCHAR *filename);
+
+		const ZipFile *GetZipFile(uint16_t zipid) const;
 
 	};
 

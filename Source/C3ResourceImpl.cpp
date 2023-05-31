@@ -7,14 +7,19 @@
 #include "pch.h"
 
 #include <C3ResourceImpl.h>
+#include <C3ResourceManagerImpl.h>
+#include <C3Zip.h>
 
 
 using namespace c3;
 
 
-ResourceImpl::ResourceImpl(System *psys, const TCHAR *filename, const TCHAR *options, const ResourceType *prestype, const void *data)
+// this should be set when the ResourceManager is created
+System *ResourceImpl::s_pSys = nullptr;
+
+
+ResourceImpl::ResourceImpl(const TCHAR *filename, const TCHAR *options, const ResourceType *prestype, const void *data)
 {
-	m_pSys = psys;
 	m_Filename = filename;
 	m_Options = options;
 	m_pResType = prestype;
@@ -51,7 +56,7 @@ ResourceImpl::~ResourceImpl()
 
 Resource::Status ResourceImpl::GetStatus() const
 {
-	return m_Status;
+	return (Resource::Status)m_Status;
 }
 
 
@@ -89,26 +94,52 @@ void ResourceImpl::AddRef()
 	{
 		if (m_pResType)
 		{
-			m_pSys->GetLog()->Print(_T("Loading \"%s\" ..."), m_Filename.c_str());
+			s_pSys->GetLog()->Print(_T("Loading \"%s\" ..."), m_Filename.c_str());
 
 			m_Status = Resource::Status::RS_LOADING;
-			ResourceType::LoadResult r = m_pResType->ReadFromFile(m_pSys, m_Filename.c_str(), m_Options.c_str(), &m_Data);
+			ResourceType::LoadResult r;
+			if (!m_AuxFlags)
+				r = m_pResType->ReadFromFile(s_pSys, m_Filename.c_str(), m_Options.c_str(), &m_Data);
+			else
+			{
+				if (m_AuxFlags.IsSet(RESF_ZIPRES))
+				{
+					ResourceManagerImpl *prmi = (ResourceManagerImpl *)s_pSys->GetResourceManager();
+					const ZipFile *pzf = prmi->GetZipFile(m_Aux);
+					if (pzf)
+					{
+						size_t zfi = pzf->FindFileIndex(m_Filename.c_str());
+
+						void *addr = nullptr;
+						size_t len = 0;
+						if (pzf->GetContent(zfi, &addr, &len))
+						{
+							r = m_pResType->ReadFromMemory(s_pSys, (const BYTE *)addr, len, m_Options.c_str(), &m_Data);
+						}
+						else
+						{
+							r = ResourceType::LoadResult::LR_ERROR;
+						}
+					}
+				}
+			}
+
 			switch (r)
 			{
 				case ResourceType::LoadResult::LR_NOTFOUND:
 					m_Status = Resource::Status::RS_NOTFOUND;
-					m_pSys->GetLog()->Print(_T("not found\n"));
+					s_pSys->GetLog()->Print(_T("not found\n"));
 					break;
 
 				default:
 				case ResourceType::LoadResult::LR_ERROR:
 					m_Status = Resource::Status::RS_LOADERROR;
-					m_pSys->GetLog()->Print(_T("load error\n"));
+					s_pSys->GetLog()->Print(_T("load error\n"));
 					break;
 
 				case ResourceType::LoadResult::LR_SUCCESS:
 					m_Status = Resource::Status::RS_LOADED;
-					m_pSys->GetLog()->Print(_T("ok\n"));
+					s_pSys->GetLog()->Print(_T("ok\n"));
 					break;
 			}
 		}
@@ -134,4 +165,11 @@ void ResourceImpl::DelRef()
 			}
 		}
 	}
+}
+
+
+void ResourceImpl::SetAux(uint16_t aux, props::TFlags8 flags)
+{
+	m_Aux = aux;
+	m_AuxFlags = flags;
 }

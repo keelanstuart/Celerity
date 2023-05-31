@@ -253,6 +253,8 @@ BOOL C3App::InitInstance()
 
 	theApp.m_C3->GetLog()->Print(_T(" done\n"));
 
+	theApp.m_C3->GetResourceManager()->RegisterZipArchive(_T("./assets/models/hexagons.zip"));
+
 	theApp.m_C3->GetLog()->Print(_T("Loading Plugins..."));
 
 	c3::PluginManager *ppm = m_C3->GetPluginManager();

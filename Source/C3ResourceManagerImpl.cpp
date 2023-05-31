@@ -25,6 +25,14 @@ ResourceManagerImpl::~ResourceManagerImpl()
 {
 	// reset all resources
 	Reset();
+
+	for (auto &zit : m_ZipFileRegistry)
+	{
+		if (zit.second.second)
+			delete zit.second.second;
+	}
+
+	m_ZipFileRegistry.clear();
 }
 
 pool::IThreadPool::TASK_RETURN ResourceManagerImpl::LoadingThreadProc(void *presmanimpl, void *pres, size_t task_number)
@@ -69,13 +77,13 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 		filename_only.erase(opts_ofs, opts.length() + 1);
 	}
 
+	bool only_create_entry = flags.IsSet(RESF_CREATEENTRYONLY);
+
 	if (!pres)
 	{
-		bool only_create_entry = flags.IsSet(RESF_CREATEENTRYONLY);
-
 		const TCHAR *ext = NULL;
 
-		if (!only_create_entry)
+		//if (!only_create_entry)
 		{
 			// find the file extension and advance past the '.' if possible
 			ext = PathFindExtension(filename_only.c_str());
@@ -109,31 +117,34 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 				return nullptr;
 		}
 
-		pres = new ResourceImpl(m_pSys, only_create_entry ? filename_only.c_str() : fullpath, opts.c_str(), restype, only_create_entry ? data : nullptr);
+		pres = new ResourceImpl(only_create_entry ? filename_only.c_str() : fullpath, opts.c_str(), restype, only_create_entry ? data : nullptr);
 		if (pres)
 		{
 			m_ResMap.insert(TResourceMap::value_type(key, pres));
 			m_ResByTypeMap.insert(TResourceByTypeMap::value_type(restype, pres));
+		}
+	}
 
-			if (!only_create_entry)
+	if (pres)
+	{
+		if (!only_create_entry && (pres->GetStatus() == Resource::Status::RS_NONE))
+		{
+			if (flags.IsSet(RESF_DEMANDLOAD) || !pres->GetType()->Flags().IsSet(RTFLAG_RUNBYRENDERER))
 			{
-				if (flags.IsSet(RESF_DEMANDLOAD) || !restype->Flags().IsSet(RTFLAG_RUNBYRENDERER))
+				if (flags.IsSet(RESF_DEMANDLOAD))
 				{
-					if (flags.IsSet(RESF_DEMANDLOAD))
-					{
-						// Just adding a reference should cause the resource to load... and in this thread.
-						pres->AddRef();
-					}
-					else
-					{
-						// Since we didn't demand that this get loaded right now, schedule it on the thread pool.
-						m_pSys->GetThreadPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
-					}
+					// Just adding a reference should cause the resource to load... and in this thread.
+					pres->AddRef();
 				}
 				else
 				{
-					((RendererImpl *)(m_pSys->GetRenderer()))->GetTaskPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
+					// Since we didn't demand that this get loaded right now, schedule it on the thread pool.
+					m_pSys->GetThreadPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
 				}
+			}
+			else
+			{
+				((RendererImpl *)(m_pSys->GetRenderer()))->GetTaskPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
 			}
 		}
 	}
@@ -312,4 +323,81 @@ void ResourceManagerImpl::Reset()
 		while (pres->GetStatus() == Resource::Status::RS_LOADED)
 			pres->DelRef();
 	}
+}
+
+
+bool ResourceManagerImpl::RegisterZipArchive(const TCHAR *filename)
+{
+	bool ret = false;
+
+	if (filename)
+	{
+		ZipFile *pzf = new ZipFile();
+		if (pzf)
+		{
+			ret = pzf->Open(filename, ZIPOPEN_READ);
+			if (ret)
+			{
+				static uint16_t sZipId = 1;
+
+				m_ZipFileRegistry.insert(TZipFileRegistry::value_type(sZipId, TZipFileRegistry::mapped_type(filename, pzf)));
+
+				TCHAR *cfn = _tcsdup(filename);
+				PathRemoveExtension(cfn);
+
+				TCHAR *dfn = PathFindFileName(cfn);
+
+				tstring rfn;
+				rfn.reserve(_tcslen(cfn) * 2);
+
+				// register all the files inside
+				for (size_t i = 0, maxi = pzf->GetNumEntries(); i < maxi; i++)
+				{
+					rfn = dfn;
+					rfn += _T('/');
+					rfn += pzf->GetContentInfo(i)->fname;
+
+					ResourceImpl *pr = (ResourceImpl *)GetResource(rfn.c_str(), RESF_CREATEENTRYONLY | RESF_ZIPRES);
+					if (pr)
+						pr->SetAux(sZipId, RESF_ZIPRES);
+				}
+
+				free(cfn);
+
+				sZipId++;
+			}
+		}
+	}
+
+	return ret;
+}
+
+
+void ResourceManagerImpl::UnregisterZipArchive(const TCHAR *filename)
+{
+	TZipFileRegistry::iterator it = m_ZipFileRegistry.begin();
+	while (it != m_ZipFileRegistry.end())
+	{
+		if (!_tcsicmp(it->second.first.c_str(), filename))
+		{
+			it->second.second->Close();
+			delete it->second.second;
+
+			m_ZipFileRegistry.erase(it);
+
+			break;
+		}
+
+		it++;
+	}
+}
+
+
+const ZipFile *ResourceManagerImpl::GetZipFile(uint16_t zipid) const
+{
+	TZipFileRegistry::const_iterator it = m_ZipFileRegistry.find(zipid);
+	if (it != m_ZipFileRegistry.cend())
+		return it->second.second;
+
+	return nullptr;
 }
