@@ -39,6 +39,8 @@ namespace c3
 
 		virtual Renderer *GetRenderer() = NULL;
 
+		virtual SoundPlayer *GetSoundPlayer() = NULL;
+
 		virtual Environment *GetEnvironment() = NULL;
 
 		virtual InputManager *GetInputManager() = NULL;

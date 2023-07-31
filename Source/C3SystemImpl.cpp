@@ -22,6 +22,7 @@
 #include <C3ParticleEmitterImpl.h>
 #include <C3ScriptableImpl.h>
 #include <C3PhysicalImpl.h>
+#include <C3SoundPlayerImpl.h>
 
 #include <C3ResourceImpl.h>
 
@@ -81,6 +82,7 @@ SystemImpl::SystemImpl()
 	m_Pool = nullptr;
 	m_InputManager = nullptr;
 	m_ActionMapper = nullptr;
+	m_SoundPlayer = nullptr;
 
 	QueryPerformanceFrequency(&m_PerfFreq);
 	QueryPerformanceCounter(&m_PerfCount);
@@ -110,6 +112,12 @@ SystemImpl::~SystemImpl()
 		delete m_ActionMapper;
 		m_ActionMapper = nullptr;
 	}
+
+	if (m_SoundPlayer)
+	{
+		delete m_SoundPlayer;
+		m_SoundPlayer = nullptr;
+	}
 }
 
 
@@ -126,6 +134,7 @@ void SystemImpl::Release()
 		UNREGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(RenderMethod, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(Script, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(Sound, m_ResourceManager);
 		// *************************************************
 
 		delete m_ResourceManager;
@@ -206,6 +215,7 @@ ResourceManager *SystemImpl::GetResourceManager()
 		REGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
 		REGISTER_RESOURCETYPE(RenderMethod, m_ResourceManager);
 		REGISTER_RESOURCETYPE(Script, m_ResourceManager);
+		REGISTER_RESOURCETYPE(Sound, m_ResourceManager);
 		// *************************************************
 	}
 
@@ -221,6 +231,17 @@ Renderer *SystemImpl::GetRenderer()
 	}
 
 	return m_Renderer;
+}
+
+
+SoundPlayer *SystemImpl::GetSoundPlayer()
+{
+	if (!m_SoundPlayer)
+	{
+		m_SoundPlayer = new SoundPlayerImpl(this);
+	}
+
+	return m_SoundPlayer;
 }
 
 

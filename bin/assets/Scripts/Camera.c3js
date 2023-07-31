@@ -1,0 +1,51 @@
+var runtime;
+
+var hplayer;
+var hplayer_pos;
+var hplayer_dpos;
+var hplayer_ori;
+var player_pos;
+var player_ori;
+
+var hpos;
+var hori;
+var pos;
+var ori;
+
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+var tmpv4 = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	player_pos = GetPropertyValue(hplayer_pos);
+	pos = GetPropertyValue(hpos);
+	SetPropertyValue(hpos, Math.lerp(pos, player_pos, 0.8));
+
+	player_ori = GetPropertyValue(hplayer_ori);
+	ori = GetPropertyValue(hori);
+	SetPropertyValue(hori, Math.slerp(ori, player_ori, 0.7));
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	var hplayer = GetRegisteredObject("player");
+
+	hplayer_pos = FindProperty(hplayer, "Position");
+	player_pos = GetPropertyValue(hplayer_pos);
+
+	hplayer_dpos = FindProperty(hplayer, "DeltaPosition");
+	player_dpos = GetPropertyValue(hplayer_dpos);
+
+	hplayer_ori = FindProperty(hplayer, "Orientation");
+	player_ori = GetPropertyValue(hplayer_ori);
+
+	hpos = FindProperty(self, "Position");
+	SetPropertyValue(hpos, player_pos);
+
+	hori = FindProperty(self, "Orientation");
+	SetPropertyValue(hori, player_ori);
+}

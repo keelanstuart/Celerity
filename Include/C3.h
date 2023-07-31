@@ -50,6 +50,7 @@
 #include <C3RenderMethod.h>
 #include <C3Model.h>
 #include <C3Renderer.h>
+#include <C3SoundPlayer.h>
 #include <C3Log.h>
 
 #include <C3Component.h>

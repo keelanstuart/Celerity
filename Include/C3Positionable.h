@@ -9,7 +9,6 @@
 #include <C3.h>
 #include <C3Component.h>
 
-
 namespace c3
 {
 

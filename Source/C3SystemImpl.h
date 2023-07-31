@@ -19,6 +19,7 @@
 #include <C3ActionMapperImpl.h>
 #include <C3GlobalObjectRegistryImpl.h>
 #include <C3EnvironmentImpl.h>
+#include <C3SoundPlayerImpl.h>
 
 
 namespace c3
@@ -41,6 +42,7 @@ namespace c3
 		FileMapperImpl *m_FileMapper;
 		GlobalObjectRegistryImpl m_GlobalObjectRegistry;
 		EnvironmentImpl m_Environment;
+		SoundPlayerImpl *m_SoundPlayer;
 
 		LARGE_INTEGER m_PerfFreq, m_PerfCount, m_PerfDelta;
 		float m_CurrentTime;
@@ -63,6 +65,8 @@ namespace c3
 		virtual ResourceManager *GetResourceManager();
 
 		virtual Renderer *GetRenderer();
+
+		virtual SoundPlayer *GetSoundPlayer();
 
 		virtual Environment *GetEnvironment();
 

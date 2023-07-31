@@ -222,6 +222,10 @@ BOOL C3App::InitInstance()
 	resexts = m_Config->GetString(_T("resources.levels.extensions"), _T("c3o"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
+	respaths = m_Config->GetString(_T("resources.sound.paths"), _T("./;./assets;./assets/sound"));
+	resexts = m_Config->GetString(_T("resources.sound.extensions"), _T("wav;mp3;flac"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
 	theApp.m_C3->GetLog()->Print(_T("done\n"));
 
 	theApp.m_C3->GetLog()->Print(_T("Loading prototypes..."));

@@ -157,6 +157,8 @@ void C3EditView::OnInitialUpdate()
 		theApp.m_C3->GetLog()->Print(_T("RenderDoc detected; capturing initialization...\n"));
 	}
 
+	theApp.m_C3->GetSoundPlayer()->Initialize();
+
 	SetTimer('DRAW', 17, nullptr);
 	SetTimer('PICK', 500, nullptr);
 	SetTimer('PROP', 1000, nullptr);

@@ -113,6 +113,8 @@ BOOL C3Dlg::OnInitDialog()
 
 	theApp.m_C3->SetOwner(GetSafeHwnd());
 
+	theApp.m_C3->GetSoundPlayer()->Initialize();
+
 	// At init, on windows
 	if (HMODULE mod = GetModuleHandle(_T("C:/Program Files/RenderDoc/renderdoc.dll")))
 	{
@@ -154,11 +156,17 @@ BOOL C3Dlg::OnInitDialog()
 	RegisterAction(_T("Increase Velocity"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Decrease Velocity"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Cycle View Mode"), c3::ActionMapper::ETriggerType::UP_DELTA, 0);
-	theApp.m_C3->GetActionMapper()->RegisterAction(_T("Toggle Debug"), c3::ActionMapper::ETriggerType::UP_DELTA, 0, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		*((bool *)userdata) ^= true;
-		return true;
-	}, &m_DebugEnabled);
+	theApp.m_C3->GetActionMapper()->RegisterAction(_T("Toggle Debug"), c3::ActionMapper::ETriggerType::UP_DELTA, 0,
+		[](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
+		{
+			c3::Resource *psr = theApp.m_C3->GetResourceManager()->GetResource(_T("click.wav"), RESF_DEMANDLOAD);
+			if (psr->GetStatus() == c3::Resource::RS_LOADED)
+				theApp.m_C3->GetSoundPlayer()->Play((c3::SoundPlayer::HSAMPLE)psr->GetData());
+
+			*((bool *)userdata) ^= true;
+			return true;
+		},
+		&m_DebugEnabled);
 
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
