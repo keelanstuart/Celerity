@@ -57,7 +57,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlibstatic", "third-party\z
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "irrXML", "third-party\irrxml\irrXML.vcxproj", "{07634C8F-D3BF-37DD-B8B7-EA2301F133B2}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "assimp", "third-party\assimp\code\assimp.vcxproj", "{FF33ED36-AD2A-365E-AC51-0193D006DAD9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "assimp", "third-party\assimp\assimp.vcxproj", "{FF33ED36-AD2A-365E-AC51-0193D006DAD9}"
 	ProjectSection(ProjectDependencies) = postProject
 		{07634C8F-D3BF-37DD-B8B7-EA2301F133B2} = {07634C8F-D3BF-37DD-B8B7-EA2301F133B2}
 		{79B93CA5-6C17-3E03-8BD3-89E00F980594} = {79B93CA5-6C17-3E03-8BD3-89E00F980594}
