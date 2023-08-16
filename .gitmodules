@@ -28,12 +28,15 @@
 [submodule "third-party/assimp"]
 	path = third-party/assimp
 	url = https://github.com/keelanstuart/assimp
+	branch = Celerity_Integration
 [submodule "third-party/zlib"]
 	path = third-party/zlib
 	url = https://github.com/keelanstuart/zlib
+	branch = Celerity_Integration
 [submodule "third-party/irrXML"]
 	path = third-party/irrXML
 	url = https://github.com/keelanstuart/irrXML
+	branch = Celerity_Integration
 [submodule "third-party/bullet3"]
 	path = third-party/bullet3
 	url = https://github.com/keelanstuart/bullet3
