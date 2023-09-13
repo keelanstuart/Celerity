@@ -419,6 +419,10 @@
       <Command>
       </Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -445,6 +449,10 @@
       <Command>
       </Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap|x64'">
     <ClCompile>
@@ -469,6 +477,9 @@
     <PreBuildEvent>
       <Command>$(SolutionDir)Bin\glLibGen64.exe -class:"COpenGL" -basefile:"gl_wrapper" -outdir:"$(SolutionDir)Source" -ver:4.5 -glh:"$(CppWinRT_IncludePath)\..\um\gl\GL.h" -glexth:"https://www.khronos.org/registry/OpenGL/api/GL/glext.h" -wglexth:"https://www.khronos.org/registry/OpenGL/api/GL/wglext.h" -khrh:"https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h" -pch -ext -logcb</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>$(SFXPACKAGER) -b $(SolutionDir)CeleritySDK.sfxpp</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap|Win32'">
     <ClCompile>
@@ -492,6 +503,9 @@
     <PreBuildEvent>
       <Command>$(SolutionDir)Bin\glLibGen64.exe -class:"COpenGL" -basefile:"gl_wrapper" -outdir:"$(SolutionDir)Source" -ver:4.5 -glh:"C:\Program Files (x86)\Windows Kits\10\Include\10.0.22000.0\um\gl\GL.h" -glexth:"https://www.khronos.org/registry/OpenGL/api/GL/glext.h" -wglexth:"https://www.khronos.org/registry/OpenGL/api/GL/wglext.h" -khrh:"https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h" -pch -ext -logcb</Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>$(SFXPACKAGER) -b $(SolutionDir)CeleritySDK.sfxpp</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -520,6 +534,10 @@
       <Command>
       </Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -548,6 +566,10 @@
       <Command>
       </Command>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>
+      </Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -127,6 +127,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	memset(&m_glARBWndClass, 0, sizeof(WNDCLASS));
 
 	m_ident = glm::identity<glm::fmat4x4>();
+	m_texturetransform = m_ident;
 
 	m_matupflags.Set(MATRIXUPDATE_ALL);
 
@@ -170,6 +171,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 {
 	m_hwnd = m_hwnd_override = hwnd;
 	m_hdc = ::GetDC(hwnd);
+	m_RendThreadId = GetCurrentThreadId();
 
 	PIXELFORMATDESCRIPTOR pfd =
 	{
@@ -689,6 +691,7 @@ void RendererImpl::SetViewport(const RECT *viewport)
 	LONG w = m_Viewport.right - m_Viewport.left;
 	LONG h = m_Viewport.bottom - m_Viewport.top;
 	gl.Viewport(0, 0, w, h);
+	gl.Scissor(0, 0, w, h);
 
 	if (m_Gui)
 	{
@@ -2010,7 +2013,19 @@ void RendererImpl::SetWorldMatrix(const glm::fmat4x4 *m)
 
 void RendererImpl::SetSunShadowMatrix(const glm::fmat4x4 *m)
 {
-	m_sunshadow = *m;
+	if (m)
+		m_sunshadow = *m;
+	else
+		m_sunshadow = m_ident;
+}
+
+
+void RendererImpl::SetTextureTransformMatrix(const glm::fmat4x4 *m)
+{
+	if (m)
+		m_texturetransform = *m;
+	else
+		m_texturetransform = m_ident;
 }
 
 
@@ -2114,6 +2129,16 @@ const glm::fmat4x4 *RendererImpl::GetSunShadowMatrix(glm::fmat4x4 *m)
 		return &m_sunshadow;
 
 	*m = m_sunshadow;
+	return m;
+}
+
+
+const glm::fmat4x4 *RendererImpl::GetTextureTransformMatrix(glm::fmat4x4 *m)
+{
+	if (!m)
+		return &m_texturetransform;
+
+	*m = m_texturetransform;
 	return m;
 }
 
@@ -2367,40 +2392,40 @@ VertexBuffer *RendererImpl::GetRefCubeVB()
 		static Vertex::PNYT1::s v[6 * 4] =
 		{
 			// RIGHT +X 0
-			{ {  1,  1,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu0, xpv0 } },
-			{ {  1,  1, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu0, xpv1 } },
-			{ {  1, -1, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu1, xpv1 } },
-			{ {  1, -1,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu1, xpv0 } },
+			{ {  1,  1,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu1, xpv0 } },
+			{ {  1,  1, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu1, xpv1 } },
+			{ {  1, -1, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu0, xpv1 } },
+			{ {  1, -1,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xpu0, xpv0 } },
 
 			// FRONT +Y 4
-			{ {  1,  1,  1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu1, ypv0 } },
-			{ {  1,  1, -1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu1, ypv1 } },
-			{ { -1,  1, -1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu0, ypv1 } },
-			{ { -1,  1,  1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu0, ypv0 } },
+			{ {  1,  1,  1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu0, ypv0 } },
+			{ {  1,  1, -1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu0, ypv1 } },
+			{ { -1,  1, -1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu1, ypv1 } },
+			{ { -1,  1,  1 }, {  0,  1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ypu1, ypv0 } },
 
 			// TOP +Z 8
-			{ {  1,  1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu1, zpv1 } },
-			{ {  1, -1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu1, zpv0 } },
-			{ { -1, -1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu0, zpv0 } },
-			{ { -1,  1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu0, zpv1 } },
+			{ {  1,  1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu0, zpv1 } },
+			{ {  1, -1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu0, zpv0 } },
+			{ { -1, -1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu1, zpv0 } },
+			{ { -1,  1,  1 }, {  0,  0,  1 }, {  1,  0,  0 }, {  0,  1,  0 }, { zpu1, zpv1 } },
 
 			// LEFT -X 12
-			{ { -1,  1,  1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu1, xnv0 } },
-			{ { -1,  1, -1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu1, xnv1 } },
-			{ { -1, -1, -1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu0, xnv1 } },
-			{ { -1, -1,  1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu0, xnv0 } },
+			{ { -1,  1,  1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu0, xnv0 } },
+			{ { -1,  1, -1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu0, xnv1 } },
+			{ { -1, -1, -1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu1, xnv1 } },
+			{ { -1, -1,  1 }, { -1,  0,  0 }, {  0,  1,  0 }, {  0,  0,  1 }, { xnu1, xnv0 } },
 
 			// FRONT -Y 16
-			{ {  1, -1,  1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu0, ynv0 } },
-			{ {  1, -1, -1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu0, ynv1 } },
-			{ { -1, -1, -1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu1, ynv1 } },
-			{ { -1, -1,  1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu1, ynv0 } },
+			{ {  1, -1,  1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu1, ynv0 } },
+			{ {  1, -1, -1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu1, ynv1 } },
+			{ { -1, -1, -1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu0, ynv1 } },
+			{ { -1, -1,  1 }, {  0, -1,  0 }, {  1,  0,  0 }, {  0,  0,  1 }, { ynu0, ynv0 } },
 
 			// BOTTOM -Z 20
-			{ {  1,  1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu0, znv1 } },
-			{ {  1, -1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu0, znv0 } },
-			{ { -1, -1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu1, znv0 } },
-			{ { -1,  1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu1, znv1 } },
+			{ {  1,  1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu1, znv1 } },
+			{ {  1, -1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu1, znv0 } },
+			{ { -1, -1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu0, znv0 } },
+			{ { -1,  1, -1 }, {  0,  0, -1 }, {  1,  0,  0 }, {  0,  1,  0 }, { znu0, znv1 } },
 		};
 
 		void *buf;

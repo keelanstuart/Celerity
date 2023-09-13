@@ -501,6 +501,25 @@ bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, 
 }
 
 
+void ModelImpl::SetBounds(glm::fvec3 &bmin, glm::fvec3 &bmax)
+{
+	m_Bounds->SetOrigin(&bmin);
+	m_Bounds->SetExtents(&bmax);
+
+	glm::fvec3 d = bmax - bmin;
+	m_BoundingRadius = glm::length(d) / 2.0f;
+	m_BoundingCentroid = d / 2.0f;
+}
+
+void ModelImpl::GetBoundingSphere(glm::fvec3 *centroid, float *radius) const
+{
+	if (centroid)
+		*centroid = m_BoundingCentroid;
+
+	if (radius)
+		*radius = m_BoundingRadius;
+}
+
 
 DECLARE_RESOURCETYPE(Model);
 
@@ -649,6 +668,8 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 			paim->GetTexture(aiTextureType_DIFFUSE, 0, &aipath);
 		else if (!has_difftex && (true == (has_difftex = (paim->GetTextureCount(aiTextureType_BASE_COLOR) > 0))))
 			paim->GetTexture(aiTextureType_BASE_COLOR, 0, &aipath);
+		else if (!has_difftex && (true == (has_difftex = (paim->GetTextureCount(aiTextureType_UNKNOWN) > 0))))
+			paim->GetTexture(aiTextureType_UNKNOWN, 0, &aipath);
 
 		// locally-defined function to set texture filenames for specific types of textures
 		auto SetTextureFileName = [&](Material::TextureComponentType t, const char *s)
@@ -1018,6 +1039,8 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 			pm->AttachIndexBuffer(pib);
 		}
 	}
+
+	pmi->SetBounds(vmin, vmax);
 
 #if 0
 	int upAxis = 0;

@@ -62,7 +62,7 @@ namespace c3
 		TMeshInfoArray m_Meshes;
 
 		BoundingBox *m_Bounds;
-		float m_BoundingCentroid;
+		glm::fvec3 m_BoundingCentroid;
 		float m_BoundingRadius;
 
 		MatrixStack *m_MatStack;
@@ -113,11 +113,15 @@ namespace c3
 
 		virtual const BoundingBox *GetBounds(BoundingBox *pbb = nullptr) const;
 
+		virtual void GetBoundingSphere(glm::fvec3 *centroid = nullptr, float *radius = nullptr) const;
+
 		virtual void Draw(const glm::fmat4x4 *pmat, bool allow_material_changes) const;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, size_t *pMeshIndex,
 							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
 							   const glm::fmat4x4 *pmat = nullptr) const;
+
+		void SetBounds(glm::fvec3 &bmin, glm::fvec3 &bmax);
 
 	protected:
 		bool DrawNode(const SNodeInfo *pnode, bool allow_material_changes) const;

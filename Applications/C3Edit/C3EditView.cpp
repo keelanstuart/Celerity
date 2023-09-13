@@ -190,6 +190,8 @@ void C3EditView::OnDraw(CDC *pDC)
 	CRect r;
 	GetClientRect(r);
 
+	pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
+
 	theApp.m_C3->UpdateTime();
 	float dt = pDoc->m_Paused ? 0.0f : (pDoc->m_TimeWarp * theApp.m_C3->GetElapsedTime());
 
@@ -232,7 +234,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			float mdr = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_D) +
 						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSX)) / 2.0f;
 
-			mv += *(pcampos->GetLocalRightVector()) * (mdl - mdr) * spd;
+			mv += *(pcampos->GetLocalRightVector()) * (mdr - mdl) * spd;
 
 			float mdu = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Q) +
 						 theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSZ)) / 2.0f;
@@ -247,7 +249,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			float ldl = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGX, 1);
 			float ldr = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSX, 1);
 			if (ldu > 0 || ldd > 0 || ldl > 0 || ldr)
-				AdjustYawPitch((ldl - ldr) * 4, (ldu - ldd) * 4, false);
+				AdjustYawPitch((ldr - ldl) * 4, (ldu - ldd) * 4, false);
 
 			bool center = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::LETTER_C);
 			if (center && 
@@ -325,6 +327,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetAlphaPassRange(254.9f / 255.0f);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
+			prend->SetTextureTransformMatrix(nullptr);
 			pDoc->m_RootObj->Render(RF_EDITORDRAW);
 
 			// Shadow pass
@@ -379,6 +382,8 @@ void C3EditView::OnDraw(CDC *pDC)
 
 			prend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST);
 			prend->UseProgram(m_SP_resolve);
+			glm::fmat4x4 revmat = glm::scale(glm::fvec3(-1, 1, 1));
+			prend->SetTextureTransformMatrix(&revmat);
 			m_SP_resolve->ApplyUniforms(true);
 			prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
@@ -659,7 +664,7 @@ void C3EditView::ComputePickRay(POINT screenpos, glm::fvec3 &pickpos, glm::fvec3
 	CRect r;
 	GetClientRect(&r);
 	ClientToScreen(&r);
-	float pctx = (float)screenpos.x / (float)r.Width();
+	float pctx = 1.0f - ((float)screenpos.x / (float)r.Width());
 	float pcty = 1.0f - ((float)screenpos.y / (float)r.Height());
 
 	float rposx = pctx * m_DepthTarg->Width();
@@ -686,6 +691,7 @@ c3::Object *C3EditView::Pick(POINT p) const
 	ASSERT_VALID(pDoc);
 
 	glm::fvec3 pickpos, pickray;
+
 	ComputePickRay(p, pickpos, pickray);
 
 	pDoc->m_RootObj->Intersect(&pickpos, &pickray, nullptr, &ret, 1);
@@ -711,7 +717,7 @@ void C3EditView::AdjustYawPitch(float yawadj, float pitchadj, bool redraw)
 		float &yaw = pvi->yaw;//glm::degrees(pcampos->GetYaw());
 
 		pitch += pitchadj;
-		yaw -= yawadj;
+		yaw += yawadj;
 
 		props::IProperty *campitch_min = camobj->GetProperties()->GetPropertyById('PCAN');
 		props::IProperty *campitch_max = camobj->GetProperties()->GetPropertyById('PCAX');
@@ -761,7 +767,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 	CView::OnMouseMove(nFlags, point);
 
-	int deltax = m_MousePos.x - point.x;
+	int deltax = point.x - m_MousePos.x;
 	int deltay = m_MousePos.y - point.y;
 
 	m_MousePos.x = point.x;
@@ -839,7 +845,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 		C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
 
-		AdjustYawPitch((float)deltax, (float)deltay);
+		AdjustYawPitch((float)-deltax, (float)deltay);
 	}
 	else if (nFlags & MK_MBUTTON)
 	{
@@ -1146,7 +1152,7 @@ void C3EditView::OnLButtonDown(UINT nFlags, CPoint point)
 	CView::OnLButtonDown(nFlags, point);
 
 	// cache the pick ray so we can get a diff later
-	ComputePickRay(point, m_BasePickPos, m_BasePickVec);
+	//ComputePickRay(point, m_BasePickPos, m_BasePickVec);
 	c3::Object *pickobj = Pick(point);
 	
 	if (pickobj)

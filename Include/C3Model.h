@@ -66,6 +66,8 @@ namespace c3
 
 		virtual const BoundingBox *GetBounds(BoundingBox *pbb = nullptr) const = NULL;
 
+		virtual void GetBoundingSphere(glm::fvec3 *centroid = nullptr, float *radius = nullptr) const = NULL;
+
 		virtual void Draw(const glm::fmat4x4 *pmat = nullptr, bool allow_material_changes = true) const = NULL;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, size_t *pMeshIndex,

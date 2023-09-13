@@ -1,21 +1,23 @@
 [submodule "third-party/GenIO"]
 	path = third-party/GenIO
 	url = https://github.com/keelanstuart/GenIO
+	branch = master
 [submodule "third-party/Pool"]
 	path = third-party/Pool
 	url = https://github.com/keelanstuart/Pool
-[submodule "third-party/glm"]
-	path = third-party/glm
-	url = https://github.com/keelanstuart/glm
+	branch = master
 [submodule "third-party/mqme"]
 	path = third-party/mqme
 	url = https://github.com/keelanstuart/mqme
+	branch = master
 [submodule "third-party/GLlibgen"]
 	path = third-party/GLlibgen
 	url = https://github.com/keelanstuart/GLlibgen
+	branch = master
 [submodule "third-party/PowerProps"]
 	path = third-party/PowerProps
 	url = https://github.com/keelanstuart/PowerProps
+	branch = master
 [submodule "third-party/tinyxml2"]
 	path = third-party/tinyxml2
 	url = https://github.com/leethomason/tinyxml2
@@ -25,6 +27,7 @@
 [submodule "third-party/imgui"]
 	path = third-party/imgui
 	url = https://github.com/keelanstuart/imgui
+	branch = Celerity_Integration
 [submodule "third-party/assimp"]
 	path = third-party/assimp
 	url = https://github.com/keelanstuart/assimp
@@ -33,4 +36,15 @@
 	path = third-party/irrXML
 	url = https://github.com/keelanstuart/irrXML
 	branch = Celerity_Integration
-
+[submodule "third-party/zlib"]
+	path = third-party/zlib
+	url = https://github.com/keelanstuart/zlib
+	branch = Celerity_Integration
+[submodule "third-party/glm"]
+	path = third-party/glm
+	url = https://github.com/keelanstuart/glm
+	branch = master
+[submodule "third-party/bullet3"]
+	path = third-party/bullet3
+	url = https://github.com/keelanstuart/bullet3
+	branch = master

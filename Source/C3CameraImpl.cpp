@@ -133,7 +133,7 @@ void CameraImpl::Update(float elapsed_time)
 				break;
 
 			case PM_ORTHOGRAPHIC:
-				m_proj = glm::ortho(0.0f, 2048.0f, 0.0f, 2048.0f, m_nearclip, m_farclip);
+				m_proj = glm::ortho(0.0f, m_dim.x, 0.0f, m_dim.y, m_nearclip, m_farclip);
 				break;
 		}
 

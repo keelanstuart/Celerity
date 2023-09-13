@@ -17,7 +17,8 @@ namespace c3
 		/// Position / Normal / Tangent / Binormal / 1x Texture Coords
 		namespace PNYT1
 		{
-			constexpr VertexBuffer::ComponentDescription d[] ={
+			constexpr VertexBuffer::ComponentDescription d[] =
+			{
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_NORMAL},
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_TANGENT},
@@ -40,7 +41,8 @@ namespace c3
 		/// Position / Normal / 1x Texture Coords
 		namespace PNT1
 		{
-			constexpr VertexBuffer::ComponentDescription d[] ={
+			constexpr VertexBuffer::ComponentDescription d[] =
+			{
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_NORMAL},
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
@@ -59,7 +61,8 @@ namespace c3
 		/// Pre-transformed Position / 1x Texture Coords
 		namespace WT1
 		{
-			constexpr VertexBuffer::ComponentDescription d[] ={
+			constexpr VertexBuffer::ComponentDescription d[] =
+			{
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 4, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
 

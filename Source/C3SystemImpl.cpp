@@ -368,4 +368,6 @@ void SystemImpl::UpdateTime()
 
 	if (m_ActionMapper)
 		m_ActionMapper->Update();
+
+	m_Environment.Update(m_ElapsedTime);
 }

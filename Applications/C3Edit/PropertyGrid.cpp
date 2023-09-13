@@ -903,51 +903,78 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
 			{
-				if (p->GetAspect() != props::IProperty::PA_COLOR_RGBA)
+				switch (p->GetAspect())
 				{
-					COLORREF c = ((CWTFPropertyGridColorProperty *)pProp)->GetColor();
-					props::TVec3F v3;
-					v3.x = (float)(c & 0xFF) / 255.0f;
-					v3.y = (float)((c >> 8) & 0xFF) / 255.0f;
-					v3.z = (float)((c >> 16) & 0xFF) / 255.0f;
-					p->SetVec3F(v3);
+					case props::IProperty::PA_COLOR_RGBA:
+					case props::IProperty::PA_COLOR_RGB:
+					{
+						COLORREF c = ((CWTFPropertyGridColorProperty *)pProp)->GetColor();
+						props::TVec3F v3;
+						v3.x = (float)(c & 0xFF) / 255.0f;
+						v3.y = (float)((c >> 8) & 0xFF) / 255.0f;
+						v3.z = (float)((c >> 16) & 0xFF) / 255.0f;
+						p->SetVec3F(v3);
+						break;
+					}
+
+					case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG:
+					{
+						props::TVec3F v3;
+						for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
+							v3.v[i] = glm::radians(pProp->GetSubItem(i)->GetValue().fltVal);
+						p->SetVec3F(v3);
+						break;
+					}
+
+					default:
+					{
+						props::TVec3F v3;
+						for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
+							v3.v[i] = pProp->GetSubItem(i)->GetValue().fltVal;
+						p->SetVec3F(v3);
+						break;
+					}
 				}
-				else if (p->GetAspect() != props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG)
-				{
-					props::TVec3F v3;
-					for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
-						v3.v[i] = glm::radians(pProp->GetSubItem(i)->GetValue().fltVal);
-					p->SetVec3F(v3);
-				}
-				else
-				{
-				}
+
 				break;
 			}
 
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
 			{
-				if (p->GetAspect() == props::IProperty::PA_QUATERNION)
+				switch (p->GetAspect())
 				{
-					float _p = glm::radians(pProp->GetSubItem(0)->GetValue().fltVal);
-					float _y = glm::radians(pProp->GetSubItem(1)->GetValue().fltVal);
-					float _r = glm::radians(pProp->GetSubItem(2)->GetValue().fltVal);
+					case props::IProperty::PA_QUATERNION:
+					{
+						float _p = glm::radians(pProp->GetSubItem(0)->GetValue().fltVal);
+						float _y = glm::radians(pProp->GetSubItem(1)->GetValue().fltVal);
+						float _r = glm::radians(pProp->GetSubItem(2)->GetValue().fltVal);
 
-					glm::fquat q(glm::fvec3(_p, _y, _r));
-					q = glm::normalize(q);
+						glm::fquat q(glm::fvec3(_p, _y, _r));
+						q = glm::normalize(q);
 
-					p->SetVec4F(props::TVec4F(q.x, q.y, q.z, q.w));
+						p->SetVec4F(props::TVec4F(q.x, q.y, q.z, q.w));
+						break;
+					}
+
+					case props::IProperty::PA_COLOR_RGBA:
+					{
+						props::TVec4F v4;
+						for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
+							v4.v[i] = pProp->GetSubItem(i)->GetValue().fltVal;
+						p->SetVec4F(v4);
+						break;
+					}
+
+					default:
+					{
+						props::TVec4F v4;
+						for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
+							v4.v[i] = pProp->GetSubItem(i)->GetValue().fltVal;
+						p->SetVec4F(v4);
+						break;
+					}
 				}
-				else if (p->GetAspect() != props::IProperty::PA_COLOR_RGBA)
-				{
-					props::TVec4F v4;
-					for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
-						v4.v[i] = pProp->GetSubItem(i)->GetValue().fltVal;
-					p->SetVec4F(v4);
-				}
-				else
-				{
-				}
+
 				break;
 			}
 

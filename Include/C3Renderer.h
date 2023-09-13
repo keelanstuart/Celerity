@@ -334,6 +334,7 @@ namespace c3
 		virtual void SetViewMatrix(const glm::fmat4x4 *m) = NULL;
 		virtual void SetWorldMatrix(const glm::fmat4x4 *m) = NULL;
 		virtual void SetSunShadowMatrix(const glm::fmat4x4 *m) = NULL;
+		virtual void SetTextureTransformMatrix(const glm::fmat4x4 *m) = NULL;
 
 		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *m = nullptr) = NULL;
@@ -343,6 +344,7 @@ namespace c3
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetSunShadowMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+		virtual const glm::fmat4x4 *GetTextureTransformMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 
 		virtual void SetEyePosition(const glm::fvec3 *pos) = NULL;
 		virtual void SetEyeDirection(const glm::fvec3 *dir) = NULL;

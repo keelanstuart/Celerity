@@ -327,6 +327,8 @@ void ShaderProgramImpl::CaptureUniforms()
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_VIEWPROJECTION);
 				else if (!_tcscmp(n, _T("uMatrixS")))
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUNSHADOWMAT);
+				else if (!_tcscmp(n, _T("uMatrixT")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TEXTUREMAT);
 
 				break;
 			}
@@ -494,6 +496,10 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 
 					case props::IProperty::PROPERTY_ASPECT::PA_SUNSHADOWMAT:
 						SetUniformMatrix(p->GetID(), m_Rend->GetSunShadowMatrix());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_TEXTUREMAT:
+						SetUniformMatrix(p->GetID(), m_Rend->GetTextureTransformMatrix());
 						break;
 				}
 				break;

@@ -63,7 +63,7 @@ namespace c3
 		glm::fmat4x4 m_ident;
 
 		glm::fvec3 m_eyepos, m_eyedir;
-		glm::fmat4x4 m_proj, m_view, m_world, m_worldview, m_normal, m_viewproj, m_worldviewproj, m_sunshadow;
+		glm::fmat4x4 m_proj, m_view, m_world, m_worldview, m_normal, m_viewproj, m_worldviewproj, m_sunshadow, m_texturetransform;
 		props::TFlags32 m_matupflags;
 
 		glm::fvec4 m_clearColor;
@@ -159,6 +159,9 @@ namespace c3
 		RenderMethod *m_DefaultRenderMethod;
 
 		Material *m_ActiveMaterial;
+
+		DWORD m_RendThreadId;
+
 
 	public:
 
@@ -291,6 +294,7 @@ namespace c3
 		virtual void SetViewMatrix(const glm::fmat4x4 *m);
 		virtual void SetWorldMatrix(const glm::fmat4x4 *m);
 		virtual void SetSunShadowMatrix(const glm::fmat4x4 *m);
+		virtual void SetTextureTransformMatrix(const glm::fmat4x4 *m);
 
 		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *m = nullptr);
@@ -300,6 +304,7 @@ namespace c3
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetSunShadowMatrix(glm::fmat4x4 *m = nullptr);
+		virtual const glm::fmat4x4 *GetTextureTransformMatrix(glm::fmat4x4 *m = nullptr);
 
 		virtual void SetEyePosition(const glm::fvec3 *pos);
 		virtual void SetEyeDirection(const glm::fvec3 *dir);
