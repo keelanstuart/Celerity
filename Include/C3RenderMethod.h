@@ -71,7 +71,7 @@ namespace c3
 
 			virtual bool Begin(size_t &passes) const = NULL;
 
-			virtual bool ApplyPass(size_t idx) const = NULL;
+			virtual Renderer::RenderStateOverrideFlags ApplyPass(size_t idx) const = NULL;
 
 			virtual void End() const = NULL;
 		};

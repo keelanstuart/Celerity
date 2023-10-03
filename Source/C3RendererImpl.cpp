@@ -21,9 +21,10 @@
 
 #include "resource.h"
 
-//#define STB_IMAGE_STATIC
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <Shlwapi.h>
+#include <ddraw.h>
 
 
 using namespace c3;
@@ -734,6 +735,8 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 	if (!m_Initialized || m_needsFinish)
 		return false;
 
+	m_needsFinish = true;
+
 	m_VertsPerFrame = 0;
 	m_IndicesPerFrame = 0;
 	m_TrisPerFrame = 0;
@@ -748,19 +751,12 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 	if (m_Gui && flags.IsSet(BSFLAG_SHOWGUI))
 	{
 		m_Gui->BeginFrame();
-
-		int32_t mx, my;
-		m_pSys->GetInputManager()->GetMousePos(mx, my);
-		ImGui::GetIO().MousePos = glm::fvec2(float(mx), float(my));
-		//ImGui::GetIO().MouseClicked
 	}
 
 	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL))
 		gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) |
 			(flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_DEPTH_BUFFER_BIT : 0) |
 			(flags.IsSet(UFBFLAG_CLEARSTENCIL) ? GL_STENCIL_BUFFER_BIT : 0));
-
-	m_needsFinish = true;
 
 	return true;
 }
@@ -778,7 +774,11 @@ bool RendererImpl::EndScene(props::TFlags64 flags)
 
 	if (m_Gui && m_BeginSceneFlags.IsSet(BSFLAG_SHOWGUI))
 	{
-		static bool show_metrics = true;
+		int32_t mx, my;
+		m_pSys->GetInputManager()->GetMousePos(mx, my);
+		ImGui::GetIO().MousePos = glm::fvec2(float(mx), float(my));
+
+		static bool show_metrics = false;
 		if (show_metrics)
 		{
 			ImGui::GetIO().MetricsRenderVertices = (int)m_VertsPerFrame;
@@ -1282,6 +1282,15 @@ GLenum RendererImpl::GLType(TextureType type)
 		case Renderer::TextureType::F32_3CH:
 		case Renderer::TextureType::F32_4CH:
 			return GL_FLOAT;
+
+		case Renderer::TextureType::DXT1:
+			return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+
+		case Renderer::TextureType::DXT3:
+			return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+
+		case Renderer::TextureType::DXT5:
+			return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 	}
 
 	return 0;
@@ -1343,6 +1352,15 @@ GLenum RendererImpl::GLInternalFormat(TextureType type)
 
 		case Renderer::TextureType::F32_4CH:
 			return GL_RGBA32F;
+
+		case Renderer::TextureType::DXT1:
+			return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+
+		case Renderer::TextureType::DXT3:
+			return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+
+		case Renderer::TextureType::DXT5:
+			return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 	}
 
 	return 0;
@@ -1379,6 +1397,15 @@ GLenum RendererImpl::GLFormat(TextureType type)
 		case Renderer::TextureType::F16_4CH:
 		case Renderer::TextureType::F32_4CH:
 			return GL_RGBA;
+
+		case Renderer::TextureType::DXT1:
+			return GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+
+		case Renderer::TextureType::DXT3:
+			return GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+
+		case Renderer::TextureType::DXT5:
+			return GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 	}
 
 	return 0;
@@ -1400,70 +1427,6 @@ TextureCube *RendererImpl::CreateTextureCube(size_t width, size_t height, size_t
 Texture3D *RendererImpl::CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 createflags)
 {
 	return new Texture3DImpl(this, width, height, depth, type, mipcount, createflags);
-}
-
-
-Texture2D *RendererImpl::CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 createflags)
-{
-	Texture2D *ret = nullptr;
-
-	char *_filename;
-	CONVERT_TCS2MBCS(filename, _filename);
-
-	unsigned char *data;
-	int width, height, numchannels;
-	data = stbi_load(_filename, &width, &height, &numchannels, 0);
-	if (data)
-	{
-		Renderer::TextureType tt;
-
-		switch (numchannels)
-		{
-			case 1:
-				tt = Renderer::TextureType::U8_1CH;
-				break;
-
-			case 2:
-				tt = Renderer::TextureType::U8_2CH;
-				break;
-
-			case 3:
-				tt = Renderer::TextureType::U8_3CH;
-				break;
-
-			case 4:
-				tt = Renderer::TextureType::U8_4CH;
-				break;
-		}
-
-		ret = CreateTexture2D(width, height, tt, 0, createflags);
-		
-		if (ret)
-		{
-			unsigned char *buf;
-			Texture2D::SLockInfo li;
-			if ((ret->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
-			{
-				int src_ofs = width * numchannels;
-				unsigned char *src = data + (width * height * numchannels) - src_ofs;
-
-				for (size_t y = 0; y < height; y++)
-				{
-					memcpy(buf, src, width * numchannels);
-					src -= src_ofs;
-					buf += src_ofs;
-				}
-
-				ret->Unlock();
-			}
-
-			ret->SetName(filename);
-		}
-
-		free(data);
-	}
-
-	return ret;
 }
 
 
@@ -1847,12 +1810,12 @@ bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
 			{
 				for (size_t passidx = 0; passidx < passct; passidx++)
 				{
-					tech->ApplyPass(passidx);
+					Renderer::RenderStateOverrideFlags rsof = tech->ApplyPass(passidx);
 
 					if (m_CurProg)
 					{
 						if (m_ActiveMaterial)
-							m_ActiveMaterial->Apply(m_CurProg);
+							m_ActiveMaterial->Apply(m_CurProg, rsof);
 
 						m_CurProg->ApplyUniforms();
 					}
@@ -1930,10 +1893,10 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 		{
 			for (size_t passidx = 0; passidx < passct; passidx++)
 			{
-				tech->ApplyPass(passidx);
+				Renderer::RenderStateOverrideFlags rsof = tech->ApplyPass(passidx);
 
 				if (m_ActiveMaterial)
-					m_ActiveMaterial->Apply(m_CurProg);
+					m_ActiveMaterial->Apply(m_CurProg, rsof);
 
 				if (m_CurProg)
 					m_CurProg->ApplyUniforms();

@@ -194,33 +194,56 @@ Renderer::Test MaterialImpl::GetStencilTest(uint8_t *ref, uint8_t *mask) const
 }
 
 
-bool MaterialImpl::Apply(ShaderProgram *shader) const
+bool MaterialImpl::Apply(ShaderProgram *shader, Renderer::RenderStateOverrideFlags overridden) const
 {
-	if (m_flags.IsSet(RENDERMODEFLAG(RMF_WRITEDEPTH) | RENDERMODEFLAG(RMF_READDEPTH)))
-		m_pRend->SetDepthMode(Renderer::DepthMode::DM_READWRITE);
-	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_WRITEDEPTH)))
-		m_pRend->SetDepthMode(Renderer::DepthMode::DM_WRITEONLY);
-	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_READDEPTH)))
-		m_pRend->SetDepthMode(Renderer::DepthMode::DM_READONLY);
-	else
-		m_pRend->SetDepthMode(Renderer::DepthMode::DM_DISABLED);
+	if (!overridden.IsSet(RSOF_DEPTHMODE))
+	{
+		if (m_flags.IsSet(RENDERMODEFLAG(RMF_WRITEDEPTH) | RENDERMODEFLAG(RMF_READDEPTH)))
+			m_pRend->SetDepthMode(Renderer::DepthMode::DM_READWRITE);
+		else if (m_flags.IsSet(RENDERMODEFLAG(RMF_WRITEDEPTH)))
+			m_pRend->SetDepthMode(Renderer::DepthMode::DM_WRITEONLY);
+		else if (m_flags.IsSet(RENDERMODEFLAG(RMF_READDEPTH)))
+			m_pRend->SetDepthMode(Renderer::DepthMode::DM_READONLY);
+		else
+			m_pRend->SetDepthMode(Renderer::DepthMode::DM_DISABLED);
+	}
 
-	m_pRend->SetDepthTest(m_DepthTest);
+	if (!overridden.IsSet(RSOF_FILLMODE))
+	{
+		if (m_flags.IsSet(RENDERMODEFLAG(RMF_WIREFRAME)))
+			m_pRend->SetFillMode(Renderer::FillMode::FM_WIRE);
+		else
+			m_pRend->SetFillMode(Renderer::FillMode::FM_FILL);
+	}
 
-	if (m_flags.IsSet(RENDERMODEFLAG(RMF_RENDERFRONT) | RENDERMODEFLAG(RMF_RENDERBACK)))
-		m_pRend->SetCullMode(Renderer::CullMode::CM_DISABLED);
-	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_RENDERFRONT)))
-		m_pRend->SetCullMode(Renderer::CullMode::CM_BACK);
-	else if (m_flags.IsSet(RENDERMODEFLAG(RMF_RENDERBACK)))
-		m_pRend->SetCullMode(Renderer::CullMode::CM_FRONT);
-	else
-		m_pRend->SetCullMode(Renderer::CullMode::CM_ALL);
+	if (!overridden.IsSet(RSOF_DEPTHTEST))
+	{
+		m_pRend->SetDepthTest(m_DepthTest);
+	}
 
-	m_pRend->SetStencilEnabled(m_StencilEnabled);
-	m_pRend->SetStencilTest(m_StencilTest, m_StencilRef, m_StencilMask);
-	m_pRend->SetStencilOperation(m_StencilFailOp, m_StencilZFailOp, m_StencilZPassOp);
+	if (!overridden.IsSet(RSOF_CULLMODE))
+	{
+		if (m_flags.IsSet(RENDERMODEFLAG(RMF_RENDERFRONT) | RENDERMODEFLAG(RMF_RENDERBACK)))
+			m_pRend->SetCullMode(Renderer::CullMode::CM_DISABLED);
+		else if (m_flags.IsSet(RENDERMODEFLAG(RMF_RENDERFRONT)))
+			m_pRend->SetCullMode(Renderer::CullMode::CM_BACK);
+		else if (m_flags.IsSet(RENDERMODEFLAG(RMF_RENDERBACK)))
+			m_pRend->SetCullMode(Renderer::CullMode::CM_FRONT);
+		else
+			m_pRend->SetCullMode(Renderer::CullMode::CM_ALL);
+	}
 
-	m_pRend->SetWindingOrder(m_WindingOrder);
+	if (!overridden.IsSet(RSOF_STENCIL))
+	{
+		m_pRend->SetStencilEnabled(m_StencilEnabled);
+		m_pRend->SetStencilTest(m_StencilTest, m_StencilRef, m_StencilMask);
+		m_pRend->SetStencilOperation(m_StencilFailOp, m_StencilZFailOp, m_StencilZPassOp);
+	}
+
+	if (!overridden.IsSet(RSOF_WINDINGORDER))
+	{
+		m_pRend->SetWindingOrder(m_WindingOrder);
+	}
 
 	if (shader)
 	{

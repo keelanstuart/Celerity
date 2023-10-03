@@ -88,6 +88,7 @@ public:
 	afx_msg void OnFileNew();
 	DECLARE_MESSAGE_MAP()
 	virtual int ExitInstance();
+    afx_msg void OnViewGrapheditor();
 };
 
 extern C3EditApp theApp;

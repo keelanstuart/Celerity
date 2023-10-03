@@ -16,6 +16,8 @@
 #include "C3EditDoc.h"
 #include "C3EditView.h"
 
+#include <C3Gui.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -44,6 +46,8 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DUPLICATE, &C3EditView::OnUpdateEditDuplicate)
 	ON_COMMAND(ID_EDIT_DUPLICATE, &C3EditView::OnEditDuplicate)
 	ON_WM_KEYUP()
+	ON_COMMAND(ID_GRAPH_DELETENODE, &C3EditView::OnGraphDeleteNode)
+	ON_UPDATE_COMMAND_UI(ID_GRAPH_DELETENODE, &C3EditView::OnUpdateGraphDeleteNode)
 END_MESSAGE_MAP()
 
 c3::FrameBuffer *C3EditView::m_GBuf = nullptr;
@@ -313,7 +317,7 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		pDoc->m_RootObj->Update(dt);
 
-		if (prend->BeginScene(0))
+		if (prend->BeginScene(BSFLAG_SHOWGUI))
 		{
 			if (m_pRenderDoc && m_RenderDocCaptureFrame)
 			{
@@ -399,7 +403,44 @@ void C3EditView::OnDraw(CDC *pDC)
 			}
 			pDoc->m_GUIRootObj->Render();
 
-			prend->EndScene();
+			c3::Gui *pgui = prend->GetGui();
+#if 0
+			auto ShowTestDlg = [&](const TCHAR *title)
+			{
+				if (!pgui->Begin(title))
+				{
+					pgui->End();
+					return;
+				}
+
+				// Basic info
+				pgui->Text(_T("Celerity 3.x"));
+
+				pgui->Separator();
+
+				// Misc Details
+				if (pgui->TreeNode(_T("Internal state")))
+				{
+					pgui->Text(_T("FOO"));
+					pgui->Indent();
+					pgui->Text(_T("This is a test!"));
+					pgui->Unindent();
+
+					pgui->Text(_T("BAR"));
+					pgui->Indent();
+					pgui->Text(_T("This is a test!"));
+					pgui->Unindent();
+
+					pgui->TreePop();
+				}
+
+				pgui->End();
+			};
+
+			ShowTestDlg(_T("Blah"));
+#endif
+
+			prend->EndScene(BSFLAG_SHOWGUI);
 			prend->Present();
 
 			if (m_pRenderDoc && m_RenderDocCaptureFrame)
@@ -746,6 +787,8 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 {
 	C3EditDoc *pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
+
+	theApp.m_C3->GetInputManager()->SetMousePos(point.x, point.y);
 
 	int64_t active_tool = theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
 	int64_t active_axis_t = theApp.m_Config->GetInt(_T("environment.active.axis.translation"), C3EditApp::AT_X | C3EditApp::AT_Y);
@@ -1180,6 +1223,8 @@ void C3EditView::OnLButtonDown(UINT nFlags, CPoint point)
 
 	UpdateStatusMessage(pickobj);
 	SetAppropriateMouseCursor(nFlags);
+
+	theApp.m_C3->GetRenderer()->GetGui()->AddMouseButtonEvent(c3::Gui::MouseButton::MBUT_LEFT, true);
 }
 
 
@@ -1194,6 +1239,8 @@ void C3EditView::OnLButtonUp(UINT nFlags, CPoint point)
 		ReleaseCapture();
 
 	SetAppropriateMouseCursor(nFlags);
+
+	theApp.m_C3->GetRenderer()->GetGui()->AddMouseButtonEvent(c3::Gui::MouseButton::MBUT_LEFT, false);
 }
 
 
@@ -1313,4 +1360,16 @@ void C3EditView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	}
 
 	CView::OnKeyUp(nChar, nRepCnt, nFlags);
+}
+
+
+void C3EditView::OnGraphDeleteNode()
+{
+	// TODO: Add your command handler code here
+}
+
+
+void C3EditView::OnUpdateGraphDeleteNode(CCmdUI *pCmdUI)
+{
+	// TODO: Add your command update UI handler code here
 }

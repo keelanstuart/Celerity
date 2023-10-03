@@ -221,12 +221,16 @@
     <ClInclude Include="C3EditView.h" />
     <ClInclude Include="EditPrototypeDlg.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="GraphEditorDlg.h" />
+    <ClInclude Include="GraphNode.h" />
+    <ClInclude Include="GraphView.h" />
     <ClInclude Include="OutputWnd.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="PropertiesWnd.h" />
     <ClInclude Include="PropertyGrid.h" />
     <ClInclude Include="PrototypeView.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="ScrollPanel.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="ViewTree.h" />
     <ClInclude Include="wtfchecklistbox.h" />
@@ -244,6 +248,9 @@
     <ClCompile Include="C3EditFrame.cpp" />
     <ClCompile Include="C3EditView.cpp" />
     <ClCompile Include="EditPrototypeDlg.cpp" />
+    <ClCompile Include="GraphEditorDlg.cpp" />
+    <ClCompile Include="GraphNode.cpp" />
+    <ClCompile Include="GraphView.cpp" />
     <ClCompile Include="OutputWnd.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -254,6 +261,7 @@
     <ClCompile Include="PropertiesWnd.cpp" />
     <ClCompile Include="PropertyGrid.cpp" />
     <ClCompile Include="PrototypeView.cpp" />
+    <ClCompile Include="ScrollPanel.cpp" />
     <ClCompile Include="ViewTree.cpp" />
     <ClCompile Include="wtfchecklistbox.cpp" />
     <ClCompile Include="wtfcolorbar.cpp" />

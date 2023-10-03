@@ -51,9 +51,9 @@ pool::IThreadPool::TASK_RETURN ResourceManagerImpl::LoadingThreadProc(void *pres
 Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype, const void *data)
 {
 	if (!filename || !*filename)
-		return NULL;
+		return nullptr;
 
-	Resource *pres = NULL;
+	Resource *pres = nullptr;
 
 	tstring key = filename;
 	std::transform(key.begin(), key.end(), key.begin(), tolower);
@@ -64,9 +64,12 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 	for (TResourceMap::const_iterator i = m_ResMap.lower_bound(key); i != e; i++)
 	{
 		pres = i->second;
-		if ((pres->GetStatus() == Resource::RS_LOADED) && (!pres->GetType() || (pres->GetType() == restype)))
+		if (flags.IsSet(RESF_FINDENTRYONLY) || ((pres->GetStatus() == Resource::RS_LOADED) && (!pres->GetType() || (pres->GetType() == restype))))
 			return pres;
 	}
+
+	if (flags.IsSet(RESF_FINDENTRYONLY))
+		return pres;
 
 	tstring filename_only = key;
 	tstring opts;
@@ -400,4 +403,32 @@ const ZipFile *ResourceManagerImpl::GetZipFile(uint16_t zipid) const
 		return it->second.second;
 
 	return nullptr;
+}
+
+
+bool ResourceManagerImpl::FindZippedFile(const TCHAR *filename, TCHAR *fullpath, size_t fullpathlen)
+{
+	TZipFileRegistry::const_iterator it = m_ZipFileRegistry.cbegin();
+	while (it != m_ZipFileRegistry.cend())
+	{
+		TCHAR tmp[512];
+
+		_tcscpy_s(tmp, PathFindFileName(it->second.first.c_str()));
+		PathRemoveExtension(tmp);
+		_tcscat_s(tmp, _T("/"));
+		_tcscat_s(tmp, filename);
+		if (GetResource(tmp, RESF_FINDENTRYONLY) != nullptr)
+		{
+			if (fullpath)
+				_tcscpy_s(fullpath, fullpathlen, tmp);
+			return true;
+		}
+
+		it++;
+	}
+
+	if (fullpath && fullpathlen > 0)
+		*fullpath = _T('\0');
+
+	return false;
 }

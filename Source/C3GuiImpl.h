@@ -46,6 +46,8 @@ namespace c3
 
 		// USER CALLS BELOW
 
+		virtual void AddMouseButtonEvent(MouseButton but, bool down);
+
 		virtual bool Begin(const TCHAR *name, bool *p_openptr, props::TFlags64 flags = 0);
 
 		virtual void End();

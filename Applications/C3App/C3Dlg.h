@@ -108,4 +108,10 @@ public:
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg LRESULT OnDevChange(WPARAM wparam, LPARAM lparam);
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnMButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 };

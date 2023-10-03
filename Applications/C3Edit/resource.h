@@ -11,6 +11,7 @@
 #define IDS_TOOLBAR_STANDARD            124
 #define IDS_TOOLBAR_CUSTOMIZE           125
 #define ID_VIEW_CUSTOMIZE               126
+#define IDS_POPUP_GRAPH                 126
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAME_256               129
 #define IDR_C3EditTYPE                  130
@@ -105,12 +106,12 @@
 #define IDC_SELECT_MINUS                312
 #define IDC_SELECT_PLUS                 313
 #define IDC_UNISCALE                    314
-#define IDB_BITMAP1                     314
 #define IDB_CHECKBOX                    314
 #define IDC_WAND                        315
 #define IDC_CURSOR9                     316
 #define IDC_ZOOM                        317
 #define IDR_TOOLBAR_3DTOOLS             318
+#define IDR_POPUP_GRAPH                 318
 #define IDR_TOOLBAR_AXES                319
 #define ID_AXIS_X                       321
 #define ID_AXIS_Y                       322
@@ -122,21 +123,29 @@
 #define ID_TOOL_UNISCALE                328
 #define ID_TOOL_SCALE                   329
 #define ID_TOOL_WAND                    330
+#define IDD_GRAPHEDITOR                 332
+#define IDD_GRAPHNODE                   333
 #define IDC_PROPERTIES                  1000
 #define IDC_COMPONENTS                  1001
 #define IDC_NAME                        1002
 #define IDC_FLAGS                       1003
+#define IDC_NODEPROPERTIES              1005
+#define IDC_BUTTON_INPUT1               1006
+#define IDC_BUTTON_OUTPUT1              1007
 #define ID_EDIT_TRIGGERRENDERDOCCAPTURE 32771
 #define ID_EDIT_DELETE                  32772
 #define ID_EDIT_DUPLICATE               32773
+#define ID_VIEW_GRAPHEDITOR             32776
+#define ID_GRAPH_ADDNODE                32777
+#define ID_GRAPH_DELETENODE             32778
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        315
-#define _APS_NEXT_COMMAND_VALUE         32776
-#define _APS_NEXT_CONTROL_VALUE         1005
-#define _APS_NEXT_SYMED_VALUE           332
+#define _APS_NEXT_RESOURCE_VALUE        319
+#define _APS_NEXT_COMMAND_VALUE         32779
+#define _APS_NEXT_CONTROL_VALUE         1009
+#define _APS_NEXT_SYMED_VALUE           334
 #endif
 #endif

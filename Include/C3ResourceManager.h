@@ -23,6 +23,7 @@ namespace c3
 		#define RESF_DEMANDLOAD			0x00000001			// Loads the Resource immediately in the current thread
 		#define RESF_CREATEENTRYONLY	0x00000002			// Creates an empty Resource in the table
 		#define RESF_ZIPRES				0x00000004			// Indicates that the resource comes from a zipfile (loads only from memory)
+		#define RESF_FINDENTRYONLY		0x00000008			// Only check to see if the resource exists - don't create an new entry or attempt to load anything!
 
 
 		/// ResTypeFlagMode is used in ForAllResourceDo calls
@@ -71,6 +72,8 @@ namespace c3
 		virtual bool RegisterZipArchive(const TCHAR *filename) = NULL;
 
 		virtual void UnregisterZipArchive(const TCHAR *filename) = NULL;
+
+		virtual bool FindZippedFile(const TCHAR *filename, TCHAR *fullpath, size_t fullpathlen) = NULL;
 
 	};
 

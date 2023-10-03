@@ -82,7 +82,7 @@ namespace c3
 
 		virtual Renderer::Test GetStencilTest(uint8_t *ref = nullptr, uint8_t *mask = nullptr) const;
 
-		virtual bool Apply(ShaderProgram *shader) const;
+		virtual bool Apply(ShaderProgram *shader, Renderer::RenderStateOverrideFlags overridden) const;
 
 	};
 }

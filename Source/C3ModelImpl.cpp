@@ -620,6 +620,7 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 	aiString aipath;
 	TCHAR *textmp, *texfilename;
 	TCHAR texpath[MAX_PATH];
+	bool has_difftex = false;
 
 	for (size_t j = 0; j < scene->mNumMaterials; j++)
 	{
@@ -655,6 +656,7 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 					pmtl->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERBACK));
 			}
 		}
+
 		pmtl->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &diff);
 		pmtl->SetColor(Material::ColorComponentType::CCT_EMISSIVE, &emis);
 		pmtl->SetColor(Material::ColorComponentType::CCT_SPECULAR, &spec);
@@ -663,7 +665,6 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 
 		props::TFlags64 rf = 0; //c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
 
-		bool has_difftex = false;
 		if (true == (has_difftex = (paim->GetTextureCount(aiTextureType_DIFFUSE) > 0)))
 			paim->GetTexture(aiTextureType_DIFFUSE, 0, &aipath);
 		else if (!has_difftex && (true == (has_difftex = (paim->GetTextureCount(aiTextureType_BASE_COLOR) > 0))))
@@ -675,62 +676,76 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 		auto SetTextureFileName = [&](Material::TextureComponentType t, const char *s)
 		{
 			CONVERT_MBCS2TCS(s, textmp);
-			if (textmp && (*textmp != '*'))
+
+			if (scene->HasTextures())
 			{
+				size_t texidx = 0;
+				if (*textmp == '*')
+				{
+					textmp++;
+					texidx = _ttoi(textmp);
+				}
+				else
+				{
+					while ((texidx < scene->mNumTextures) && _stricmp(s, scene->mTextures[texidx]->mFilename.C_Str()))
+						texidx++;
+
+					if (texidx >= scene->mNumTextures)
+						texidx = 0;
+				}
+
+				int w, h, c;
+				stbi_uc *data = stbi_load_from_memory((const stbi_uc *)(scene->mTextures[texidx]->pcData),
+													  scene->mTextures[texidx]->mWidth, &w, &h, &c, 0);
+				if (data)
+				{
+					c3::Texture2D *pt = psys->GetRenderer()->CreateTexture2D(w, h, (c3::Renderer::TextureType)(c3::Renderer::TextureType::U8_1CH + c - 1));
+					if (pt)
+					{
+						void *buf;
+						Texture2D::SLockInfo li;
+						if ((pt->Lock(&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+						{
+							memcpy(buf, data, w * h * c);
+
+							pt->Unlock();
+						}
+
+						GUID guid;
+						CoCreateGuid(&guid);
+
+						tstring texname = sourcename;
+						texname += _T(":texture[");
+						texname += textmp;
+						texname += _T("]");
+						pt->SetName(texname.c_str());
+						pmtl->SetTexture(t, pt);
+						psys->GetResourceManager()->GetResource(texname.c_str(),
+																RESF_CREATEENTRYONLY,
+																psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D")),
+																pt);
+					}
+
+					free(data);
+				}
+			}
+			else
+			{
+				TCHAR fulltexpath[512];
+				fulltexpath[0] = _T('\0');
+
 				PathCombine(texpath, rootpath, textmp);
-				bool loctex = psys->GetFileMapper()->FindFile(texpath);
+				bool loctex = psys->GetFileMapper()->FindFile(texpath, fulltexpath, 512);
 				if (!loctex)
 				{
 					TCHAR *fnstart = PathFindFileName(textmp);
 					PathCombine(texpath, rootpath, fnstart);
 					loctex = psys->GetFileMapper()->FindFile(texpath);
 				}
-				texfilename = loctex ? texpath : PathFindFileName(texpath);
+				texfilename = loctex ? ((_tcslen(texpath) < _tcslen(fulltexpath)) ? fulltexpath : texpath) : PathFindFileName(texpath);
 				if (t == Material::TextureComponentType::TCT_DIFFUSE)
 					_tcsncpy_s(difftexpath, textmp, MAX_PATH - 1);
 				pmtl->SetTexture(t, psys->GetResourceManager()->GetResource(texfilename, rf));
-			}
-			else
-			{
-				textmp++;
-				size_t texidx = _ttoi(textmp);
-				if (scene->HasTextures() && texidx < scene->mNumTextures)
-				{
-					int w, h, c;
-					stbi_uc *data = stbi_load_from_memory((const stbi_uc *)(scene->mTextures[texidx]->pcData),
-														  scene->mTextures[texidx]->mWidth, &w, &h, &c, 0);
-					if (data)
-					{
-						c3::Texture2D *pt = psys->GetRenderer()->CreateTexture2D(w, h, (c3::Renderer::TextureType)(c3::Renderer::TextureType::U8_1CH + c - 1));
-						if (pt)
-						{
-							void *buf;
-							Texture2D::SLockInfo li;
-							if ((pt->Lock(&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
-							{
-								memcpy(buf, data, w * h * c);
-
-								pt->Unlock();
-							}
-
-							GUID guid;
-							CoCreateGuid(&guid);
-
-							tstring texname = sourcename;
-							texname += _T(":texture[");
-							texname += textmp;
-							texname += _T("]");
-							pt->SetName(texname.c_str());
-							pmtl->SetTexture(t, pt);
-							psys->GetResourceManager()->GetResource(texname.c_str(),
-																	RESF_CREATEENTRYONLY,
-																	psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D")),
-																	pt);
-						}
-
-						free(data);
-					}
-				}
 			}
 		};
 
@@ -1085,19 +1100,29 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 
 		Assimp::Importer import;
 		const aiScene *scene = import.ReadFile(fn, MakeImportFlags(options));
-
-		TCHAR modbasepath[MAX_PATH];
-		_tcscpy_s(modbasepath, filename);
-		TCHAR *c = modbasepath;
-		while (*c) { if (*c == _T('/')) { *c = _T('\\'); } c++; }
-		c = _tcsrchr(modbasepath, _T('\\'));
-		if (c)
+		if (!scene)
 		{
-			*c = _T('\0');
-			c++;
+			TCHAR *err;
+			CONVERT_MBCS2TCS(import.GetErrorString(), err);
+			psys->GetLog()->Print(_T(" ("));
+			psys->GetLog()->Print(err);
+			psys->GetLog()->Print(_T(") - "));
 		}
+		else
+		{
+			TCHAR modbasepath[MAX_PATH];
+			_tcscpy_s(modbasepath, filename);
+			TCHAR *c = modbasepath;
+			while (*c) { if (*c == _T('/')) { *c = _T('\\'); } c++; }
+			c = _tcsrchr(modbasepath, _T('\\'));
+			if (c)
+			{
+				*c = _T('\0');
+				c++;
+			}
 
-		*returned_data = ImportModel(psys, scene, modbasepath, c);
+			*returned_data = ImportModel(psys, scene, modbasepath, c);
+		}
 
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;

@@ -71,6 +71,8 @@ namespace c3
 
 		const ZipFile *GetZipFile(uint16_t zipid) const;
 
+		virtual bool FindZippedFile(const TCHAR *filename, TCHAR *fullpath, size_t fullpathlen);
+
 	};
 
 };

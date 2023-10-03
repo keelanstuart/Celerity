@@ -260,6 +260,13 @@ void GuiImpl::SetDisplaySize(float w, float h)
 }
 
 
+void GuiImpl::AddMouseButtonEvent(MouseButton but, bool down)
+{
+	ImGuiIO &io = ImGui::GetIO();
+	io.AddMouseButtonEvent(but, down);
+}
+
+
 bool GuiImpl::Begin(const TCHAR *name, bool *p_openptr, props::TFlags64 flags)
 {
 	char *_name;
@@ -2346,25 +2353,25 @@ int GuiImpl::GetKeyIndex(ImGuiKey imgui_key)
 
 bool GuiImpl::IsKeyDown(int user_key_index)
 {
-	return ImGui::IsKeyDown(user_key_index);
+	return ImGui::IsKeyDown((ImGuiKey)user_key_index);
 }
 
 
 bool GuiImpl::IsKeyPressed(int user_key_index, bool repeat)
 {
-	return ImGui::IsKeyPressed(user_key_index, repeat);
+	return ImGui::IsKeyPressed((ImGuiKey)user_key_index, repeat);
 }
 
 
 bool GuiImpl::IsKeyReleased(int user_key_index)
 {
-	return ImGui::IsKeyReleased(user_key_index);
+	return ImGui::IsKeyReleased((ImGuiKey)user_key_index);
 }
 
 
 int GuiImpl::GetKeyPressedAmount(int key_index, float repeat_delay, float rate)
 {
-	return ImGui::GetKeyPressedAmount(key_index, repeat_delay, rate);
+	return ImGui::GetKeyPressedAmount((ImGuiKey)key_index, repeat_delay, rate);
 }
 
 

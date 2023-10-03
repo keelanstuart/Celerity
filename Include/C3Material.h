@@ -113,7 +113,7 @@ namespace c3
 		virtual Renderer::Test GetStencilTest(uint8_t *ref = nullptr, uint8_t *mask = nullptr) const = NULL;
 
 		/// Applies this Materials settings to the Renderer and the given shader (READ: set shader FIRST for proper operation)
-		virtual bool Apply(ShaderProgram *shader) const = NULL;
+		virtual bool Apply(ShaderProgram *shader, Renderer::RenderStateOverrideFlags overridden = 0) const = NULL;
 
 		/// User-supplied callback intended to provide the filenames for textures types that were not given
 		/// when a material is created as a result of a Model being loaded (via ResourceManager).

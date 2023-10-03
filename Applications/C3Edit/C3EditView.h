@@ -128,6 +128,8 @@ public:
 	afx_msg void OnUpdateEditDuplicate(CCmdUI *pCmdUI);
 	afx_msg void OnEditDuplicate();
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
+    afx_msg void OnGraphDeleteNode();
+    afx_msg void OnUpdateGraphDeleteNode(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

@@ -450,6 +450,7 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 			{
 				if (pproto)
 				{
+					theApp.SetActiveProperties(nullptr);
 					pfac->RemovePrototype(pproto);
 					pWndTree->DeleteItem(hTreeItem);
 				}

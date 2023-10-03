@@ -14,6 +14,8 @@
 #include "C3EditDoc.h"
 #include "C3EditView.h"
 
+#include "GraphEditorDlg.h"
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -41,6 +43,7 @@ BEGIN_MESSAGE_MAP(C3EditApp, CWinAppEx)
 	ON_COMMAND(ID_FILE_NEW, &C3EditApp::OnFileNew)
 	// Standard file based document commands
 	ON_COMMAND(ID_FILE_OPEN, &CWinAppEx::OnFileOpen)
+    ON_COMMAND(ID_VIEW_GRAPHEDITOR, &C3EditApp::OnViewGrapheditor)
 END_MESSAGE_MAP()
 
 
@@ -215,7 +218,7 @@ BOOL C3EditApp::InitInstance()
 	tstring respaths, resexts;
 
 	respaths = m_Config->GetString(_T("resources.textures.paths"), _T("./;./assets;./assets/textures"));
-	resexts = m_Config->GetString(_T("resources.textures.extensions"), _T("tga;png;jpg;dds;bmp;tiff"));
+	resexts = m_Config->GetString(_T("resources.textures.extensions"), _T("tga;png;jpg;dds;bmp;tif"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.models.paths"), _T("./;./assets;./assets/models"));
@@ -238,13 +241,13 @@ BOOL C3EditApp::InitInstance()
 	resexts = m_Config->GetString(_T("resources.scripts.extensions"), _T("c3js"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
-	theApp.m_C3->GetLog()->Print(_T(" done\n"));
-
-	theApp.m_C3->GetLog()->Print(_T("Loading Prototypes..."));
+	theApp.m_C3->GetLog()->Print(_T(" done.\n"));
 
 	c3::Factory *pf = m_C3->GetFactory();
 	if (!pf)
 		return FALSE;
+
+	theApp.m_C3->GetLog()->Print(_T("Loading Prototypes..."));
 
 	c3::Material::SetAlternateTextureFilenameFunc(AltTextureName);
 
@@ -274,9 +277,20 @@ BOOL C3EditApp::InitInstance()
 		}
 	}
 
-	theApp.m_C3->GetLog()->Print(_T(" done\n"));
+	theApp.m_C3->GetLog()->Print(_T(" done.\n"));
 
-	theApp.m_C3->GetResourceManager()->RegisterZipArchive(_T("./assets/models/hexagons.zip"));
+	theApp.m_C3->GetLog()->Print(_T("Registering Resource Packages...\n"));
+	size_t numrespacks = m_Config->GetNumSubKeys(_T("resources.packfiles"));
+	for (size_t rpi = 0; rpi < numrespacks; rpi++)
+	{
+		TCHAR kn[256];
+		_stprintf_s(kn, _T("resources.packfiles.packfile#%zu"), rpi);
+
+		const TCHAR *zp = m_Config->GetString(kn, nullptr);
+		theApp.m_C3->GetLog()->Print(_T("\t%s\n"), zp);
+		theApp.m_C3->GetResourceManager()->RegisterZipArchive(zp);
+	}
+	theApp.m_C3->GetLog()->Print(_T("done.\n"));
 
 	theApp.m_C3->GetLog()->Print(_T("Loading Plugins..."));
 
@@ -287,7 +301,7 @@ BOOL C3EditApp::InitInstance()
 	ppm->DiscoverPlugins(m_Config->GetString(_T("resources.plugin.path"), _T("./")));	// scan in app data
 	ppm->DiscoverPlugins();																// scan locally
 
-	theApp.m_C3->GetLog()->Print(_T(" done\n"));
+	theApp.m_C3->GetLog()->Print(_T(" done.\n"));
 
 	EnableTaskbarInteraction(FALSE);
 
@@ -403,12 +417,18 @@ void C3EditApp::PreLoadState()
 {
 	BOOL bNameValid;
 	CString strName;
+
 	bNameValid = strName.LoadString(IDS_EDIT_MENU);
 	ASSERT(bNameValid);
 	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EDIT);
+
 	bNameValid = strName.LoadString(IDS_EXPLORER);
 	ASSERT(bNameValid);
 	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_EXPLORER);
+
+	bNameValid = strName.LoadString(IDS_POPUP_GRAPH);
+	ASSERT(bNameValid);
+	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_GRAPH);
 }
 
 void C3EditApp::LoadCustomState()
@@ -533,4 +553,10 @@ void C3EditApp::RefreshActiveProperties()
 {
 	if (m_pMainWnd && m_pMainWnd->GetSafeHwnd())
 		((C3EditFrame *)m_pMainWnd)->RefreshActiveProperties();
+}
+
+
+void C3EditApp::OnViewGrapheditor()
+{
+	CGraphEditorDlg *pged = CGraphEditorDlg::DoModeless(this->GetMainWnd());
 }

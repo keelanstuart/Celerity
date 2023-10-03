@@ -9,6 +9,10 @@
 #include <C3TextureImpl.h>
 #include <C3Resource.h>
 
+#include <stb_image.h>
+#include <Shlwapi.h>
+#include <ddraw.h>
+
 
 using namespace c3;
 
@@ -215,7 +219,10 @@ Texture::RETURNCODE Texture2DImpl::Lock(void **buffer, Texture2D::SLockInfo &loc
 
 	if (flags.IsSet(TEXLOCKFLAG_READ))
 	{
-		m_Rend->gl.GetTexImage(GL_TEXTURE_2D, (GLsizei)mip, m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
+		if (m_Type < Renderer::TextureType::DXT1)
+			m_Rend->gl.GetTexImage(GL_TEXTURE_2D, (GLsizei)mip, m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
+		else
+			m_Rend->gl.GetCompressedTexImage(GL_TEXTURE_2D, (GLsizei)mip, m_Buffer);
 	}
 
 	if (flags.IsSet(TEXLOCKFLAG_GENMIPS))
@@ -237,8 +244,12 @@ Texture::RETURNCODE Texture2DImpl::Unlock()
 		return RET_NOT_LOCKED;
 
 	Bind();
-
-	m_Rend->gl.TexSubImage2D(GL_TEXTURE_2D, (GLint)m_LockMip, 0, 0, GLsizei(m_Width >> m_LockMip), GLsizei(m_Height >> m_LockMip), m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
+	if (m_Type < Renderer::TextureType::DXT1)
+		m_Rend->gl.TexSubImage2D(GL_TEXTURE_2D, (GLint)m_LockMip, 0, 0, GLsizei(m_Width >> m_LockMip), GLsizei(m_Height >> m_LockMip), m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
+	else
+	{
+		m_Rend->gl.CompressedTexSubImage2D(GL_TEXTURE_2D, (GLint)m_LockMip, 0, 0, GLsizei(m_Width >> m_LockMip), GLsizei(m_Height >> m_LockMip), m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
+	}
 
 	free(m_Buffer);
 	m_Buffer = nullptr;
@@ -257,20 +268,142 @@ DECLARE_RESOURCETYPE(Texture2D);
 
 c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
+	c3::ResourceType::LoadResult ret = c3::ResourceType::LR_ERROR;
+
 	if (returned_data)
 	{
-		*returned_data = psys->GetRenderer()->CreateTexture2DFromFile(filename, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
-		if (!*returned_data)
-			return ResourceType::LoadResult::LR_ERROR;
+		*returned_data = nullptr;
+
+		Renderer::TextureType tt = Renderer::TextureType::TEXTYPE_UNKNOWN;
+
+		char *_filename;
+		CONVERT_TCS2MBCS(filename, _filename);
+
+		unsigned char *data;
+		int width, height, numchannels;
+		data = stbi_load(_filename, &width, &height, &numchannels, 0);
+		if (data)
+		{
+			switch (numchannels)
+			{
+				case 1:
+					tt = Renderer::TextureType::U8_1CH;
+					break;
+
+				case 2:
+					tt = Renderer::TextureType::U8_2CH;
+					break;
+
+				case 3:
+					tt = Renderer::TextureType::U8_3CH;
+					break;
+
+				case 4:
+					tt = Renderer::TextureType::U8_4CH;
+					break;
+			}
+
+			Texture2D *tex = psys->GetRenderer()->CreateTexture2D(width, height, tt, 0, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
+
+			if (tex)
+			{
+				unsigned char *buf;
+				Texture2D::SLockInfo li;
+				if ((tex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+				{
+					int src_ofs = width * numchannels;
+					unsigned char *src = data + (width * height * numchannels) - src_ofs;
+
+					for (size_t y = 0; y < height; y++)
+					{
+						memcpy(buf, src, width * numchannels);
+						src -= src_ofs;
+						buf += src_ofs;
+					}
+
+					tex->Unlock();
+				}
+
+				tex->SetName(filename);
+
+				ret = ResourceType::LoadResult::LR_SUCCESS;
+			}
+
+			free(data);
+
+			*returned_data = tex;
+		}
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ret;
 }
 
 
 c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	return ResourceType::LoadResult::LR_ERROR;
+	c3::ResourceType::LoadResult ret = c3::ResourceType::LR_ERROR;
+
+	if (returned_data)
+	{
+		*returned_data = nullptr;
+
+		Renderer::TextureType tt = Renderer::TextureType::TEXTYPE_UNKNOWN;
+
+		unsigned char *data;
+		int width, height, numchannels;
+		data = stbi_load_from_memory((const stbi_uc *)buffer, (int)buffer_length, &width, &height, &numchannels, 0);
+		if (data)
+		{
+			switch (numchannels)
+			{
+				case 1:
+					tt = Renderer::TextureType::U8_1CH;
+					break;
+
+				case 2:
+					tt = Renderer::TextureType::U8_2CH;
+					break;
+
+				case 3:
+					tt = Renderer::TextureType::U8_3CH;
+					break;
+
+				case 4:
+					tt = Renderer::TextureType::U8_4CH;
+					break;
+			}
+
+			Texture2D *tex = psys->GetRenderer()->CreateTexture2D(width, height, tt, 0, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
+
+			if (tex)
+			{
+				unsigned char *buf;
+				Texture2D::SLockInfo li;
+				if ((tex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+				{
+					int src_ofs = width * numchannels;
+					unsigned char *src = data + (width * height * numchannels) - src_ofs;
+
+					for (size_t y = 0; y < height; y++)
+					{
+						memcpy(buf, src, width * numchannels);
+						src -= src_ofs;
+						buf += src_ofs;
+					}
+
+					tex->Unlock();
+				}
+
+				ret = ResourceType::LoadResult::LR_SUCCESS;
+			}
+
+			free(data);
+
+			*returned_data = tex;
+		}
+	}
+
+	return ret;
 }
 
 

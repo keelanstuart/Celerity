@@ -48,7 +48,9 @@ namespace c3
 
 		typedef enum ETextureType
 		{
-			P8_3CH = 0,			// packed 8-bit, R3G3B2
+			TEXTYPE_UNKNOWN = 0,
+
+			P8_3CH,				// packed 8-bit, R3G3B2
 			P16_3CH,			// packed 16-bit, R5G6B5
 			P16_3CHT,			// packed 16-bit, R5G5B5A1
 			P16_4CH,			// packed 16-bit, R4G4B4A4
@@ -68,6 +70,10 @@ namespace c3
 			F32_2CH,			// 32-bit float, 2 channel
 			F32_3CH,			// 32-bit float, 3 channel
 			F32_4CH,			// 32-bit float, 4 channel
+
+			DXT1,				// compressed textures
+			DXT3,
+			DXT5,
 
 			NUM_TEXTURETYPES
 
@@ -194,6 +200,30 @@ namespace c3
 
 		} BlendEquation;
 
+		// There is an interplay between RenderMethods and Materials. Since Materials are (or can be) data driven by Models,
+		// and because RenderMethods sit logically on top of them and because it is often desirable to make them override render states set
+		// by a Material, RenderMethod Passes will return a set of RenderStateOverrideFlags indicating which states have been overridden
+		// and should therefore not be re-set by Materials. This is not really useful for most users of Materials or RenderMethods,
+		// but the flags are being defined here because the Apply interfaces are public-facing and these represent only the overlapping parts of both
+		using RenderStateOverrideFlags = props::TFlags32;
+		#define RSOF_WINDINGORDER	0x0001
+		#define RSOF_CULLMODE		0x0002
+		#define RSOF_FILLMODE		0x0004
+		#define RSOF_DEPTHMODE		0x0008
+		#define RSOF_DEPTHTEST		0x0010
+		#define RSOF_STENCIL		0x0020
+		#define RSOF_BLENDMODE		0x0040
+		#define RSOF_BLENDEQ		0x0080
+		#define RSOF_COLORAMB		0x0100
+		#define RSOF_COLORDIFF		0x0200
+		#define RSOF_COLOREMIS		0x0400
+		#define RSOF_TEXDIFF		0x1000
+		#define RSOF_TEXNORM		0x2000
+		#define RSOF_TEXEMIS		0x4000
+		#define RSOF_TEXSURF		0x8000
+
+
+
 		// Flags for use with UseFrameBuffer
 		#define UFBFLAG_CLEARCOLOR			0x0001
 		#define UFBFLAG_CLEARDEPTH			0x0002
@@ -291,9 +321,6 @@ namespace c3
 		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount = 0, props::TFlags64 createflags = 0) = NULL;
 		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 createflags = 0) = NULL;
 		virtual Texture3D *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 createflags = 0) = NULL;
-
-		// Loads a Texture2D from a file on disk (the dimensions may not be known beforehand)
-		virtual Texture2D *CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 createflags = 0) = NULL;
 
 		// Creates a depth surface
 		virtual DepthBuffer *CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 createflags = 0) = NULL;

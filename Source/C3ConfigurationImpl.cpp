@@ -451,7 +451,7 @@ const TCHAR *ConfigurationImpl::GetString(const TCHAR *path, const TCHAR *def)
 		TXmlEl2StrMap::iterator it = m_StringMap.find(pel);
 		if (it == m_StringMap.end())
 		{
-			m_StringMap.insert(TXmlEl2StrPair(pel, tstring(def)));
+			m_StringMap.insert(TXmlEl2StrPair(pel, tstring(def ? def : _T(""))));
 			it = m_StringMap.find(pel);
 		}
 

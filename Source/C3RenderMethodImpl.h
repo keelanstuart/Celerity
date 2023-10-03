@@ -46,7 +46,7 @@ namespace c3
 
 			virtual ~PassImpl();
 
-			void Apply(Renderer *prend);
+			Renderer::RenderStateOverrideFlags Apply(Renderer *prend);
 			bool LoadSetting(const tinyxml2::XMLElement *proot);
 
 			virtual void SetFrameBufferName(const TCHAR *name);
@@ -94,7 +94,7 @@ namespace c3
 			virtual Pass *GetPass(size_t idx) const;
 			virtual Pass *AddPass();
 			virtual bool Begin(size_t &passes) const;
-			virtual bool ApplyPass(size_t idx) const;
+			virtual Renderer::RenderStateOverrideFlags ApplyPass(size_t idx) const;
 			virtual void End() const;
 		};
 		typedef std::vector<TechniqueImpl> TTechniqueVector;

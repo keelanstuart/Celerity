@@ -108,7 +108,7 @@ namespace c3
 			CT_NUMCOLORTYPES
 		} ColorType;
 
-		typedef enum
+		using Direction = enum
 		{
 			DIR_NONE = -1,
 
@@ -118,16 +118,16 @@ namespace c3
 			DIR_DOWN,
 
 			DIR_NUMDIRS
-		} Direction;
+		};
 
-		typedef enum
+		using MouseButton = enum
 		{
 			MBUT_LEFT = 0,
 			MBUT_RIGHT,
 			MBUT_MIDDLE
-		} MouseButton;
+		};
 
-		typedef enum
+		using MouseCursor = enum
 		{
 			MCUR_NONE = -1,
 
@@ -142,9 +142,9 @@ namespace c3
 			MCUR_NOTALLOWED,
 
 			MCUR_NUMCURSORS
-		} MouseCursor;
+		};
 
-		typedef enum
+		using DataType = enum
 		{
 			DT_S8 = 0,
 			DT_U8,
@@ -158,7 +158,9 @@ namespace c3
 			DT_DOUBLE,
 
 			DT_NUMTYPES
-		} DataType;
+		};
+
+		virtual void AddMouseButtonEvent(MouseButton but, bool down) = NULL;
 
 		virtual bool Begin(const TCHAR *name, bool *p_open = nullptr, props::TFlags64 flags = 0) = NULL;
 

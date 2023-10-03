@@ -62,6 +62,12 @@ BEGIN_MESSAGE_MAP(C3Dlg, CDialog)
 	ON_WM_ACTIVATEAPP()
 	ON_WM_ACTIVATE()
 	ON_WM_TIMER()
+	ON_WM_LBUTTONDOWN()
+	ON_WM_LBUTTONUP()
+	ON_WM_MBUTTONDOWN()
+	ON_WM_MBUTTONUP()
+	ON_WM_RBUTTONDOWN()
+	ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
 c3::FrameBuffer::TargetDesc GBufTargData[] =
@@ -684,24 +690,6 @@ BOOL C3Dlg::DestroyWindow()
 }
 
 
-BOOL C3Dlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
-{
-#if 0
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
-	if (pcam)
-	{
-		float m = 1.0f;//(m_Controls[0].move.run * 3.5f) + 1.0f;
-		float d = pcam->GetPolarDistance();
-		d += ((zDelta < 0) ? m : -m);
-		d = std::max(d, 0.1f);
-
-		pcam->SetPolarDistance(d);
-	}
-#endif
-
-	return CDialog::OnMouseWheel(nFlags, zDelta, pt);
-}
-
 
 void C3Dlg::OnSize(UINT nType, int cx, int cy)
 {
@@ -730,28 +718,6 @@ void C3Dlg::OnSize(UINT nType, int cx, int cy)
 void C3Dlg::OnSizing(UINT fwSide, LPRECT pRect)
 {
 	CDialog::OnSizing(fwSide, pRect);
-}
-
-
-void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
-{
-	CDialog::OnMouseMove(nFlags, point);
-
-	theApp.m_C3->GetInputManager()->SetMousePos(point.x, point.y);
-
-	if ((m_bMouseCursorEnabled) || (this != GetCapture()))
-		return;
-
-	CRect r;
-	GetClientRect(&r);
-
-	CPoint cp = r.CenterPoint(), cpc = cp;
-	ClientToScreen(&cp);
-
-	int deltax = cpc.x - point.x;
-	int deltay = cpc.y - point.y;
-
-	SetCursorPos(cp.x, cp.y);
 }
 
 
@@ -970,4 +936,93 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 	}
 
 	return true;
+}
+
+
+void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
+{
+	CDialog::OnMouseMove(nFlags, point);
+
+	theApp.m_C3->GetInputManager()->SetMousePos(point.x, point.y);
+
+	if ((m_bMouseCursorEnabled) || (this != GetCapture()))
+		return;
+
+	CRect r;
+	GetClientRect(&r);
+
+	CPoint cp = r.CenterPoint(), cpc = cp;
+	ClientToScreen(&cp);
+
+	int deltax = cpc.x - point.x;
+	int deltay = cpc.y - point.y;
+
+	SetCursorPos(cp.x, cp.y);
+}
+
+
+BOOL C3Dlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
+{
+#if 0
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
+	if (pcam)
+	{
+		float m = 1.0f;//(m_Controls[0].move.run * 3.5f) + 1.0f;
+		float d = pcam->GetPolarDistance();
+		d += ((zDelta < 0) ? m : -m);
+		d = std::max(d, 0.1f);
+
+		pcam->SetPolarDistance(d);
+	}
+#endif
+
+	return CDialog::OnMouseWheel(nFlags, zDelta, pt);
+}
+
+
+void C3Dlg::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	theApp.m_C3->GetRenderer()->GetGui()->AddMouseButtonEvent(c3::Gui::MouseButton::MBUT_LEFT, true);
+
+	CDialog::OnLButtonDown(nFlags, point);
+}
+
+
+void C3Dlg::OnLButtonUp(UINT nFlags, CPoint point)
+{
+	theApp.m_C3->GetRenderer()->GetGui()->AddMouseButtonEvent(c3::Gui::MouseButton::MBUT_LEFT, false);
+
+	CDialog::OnLButtonUp(nFlags, point);
+}
+
+
+void C3Dlg::OnMButtonDown(UINT nFlags, CPoint point)
+{
+	theApp.m_C3->GetRenderer()->GetGui()->AddMouseButtonEvent(c3::Gui::MouseButton::MBUT_MIDDLE, true);
+
+	CDialog::OnMButtonDown(nFlags, point);
+}
+
+
+void C3Dlg::OnMButtonUp(UINT nFlags, CPoint point)
+{
+	theApp.m_C3->GetRenderer()->GetGui()->AddMouseButtonEvent(c3::Gui::MouseButton::MBUT_MIDDLE, false);
+
+	CDialog::OnMButtonUp(nFlags, point);
+}
+
+
+void C3Dlg::OnRButtonDown(UINT nFlags, CPoint point)
+{
+	theApp.m_C3->GetRenderer()->GetGui()->AddMouseButtonEvent(c3::Gui::MouseButton::MBUT_RIGHT, true);
+
+	CDialog::OnRButtonDown(nFlags, point);
+}
+
+
+void C3Dlg::OnRButtonUp(UINT nFlags, CPoint point)
+{
+	theApp.m_C3->GetRenderer()->GetGui()->AddMouseButtonEvent(c3::Gui::MouseButton::MBUT_MIDDLE, false);
+
+	CDialog::OnRButtonUp(nFlags, point);
 }

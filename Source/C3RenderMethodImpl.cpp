@@ -29,27 +29,47 @@ RenderMethodImpl::PassImpl::~PassImpl()
 }
 
 
-void RenderMethodImpl::PassImpl::Apply(Renderer *prend)
+Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *prend)
 {
 	assert(prend);
 
+	Renderer::RenderStateOverrideFlags ret;
+
 	if (m_BlendMode.has_value())
+	{
 		prend->SetBlendMode(*m_BlendMode);
+		ret.Set(RSOF_BLENDMODE);
+	}
 
 	if (m_BlendEq.has_value())
+	{
 		prend->SetBlendEquation(*m_BlendEq);
+		ret.Set(RSOF_BLENDEQ);
+	}
 
 	if (m_CullMode.has_value())
+	{
 		prend->SetCullMode(*m_CullMode);
+		ret.Set(RSOF_CULLMODE);
+	}
 
 	if (m_WindingOrder.has_value())
+	{
 		prend->SetWindingOrder(*m_WindingOrder);
+		ret.Set(RSOF_WINDINGORDER);
+	}
 
 	if (m_DepthMode.has_value())
+	{
 		prend->SetDepthMode(*m_DepthMode);
+		ret.Set(RSOF_DEPTHMODE);
+	}
 
 	if (m_FillMode.has_value())
+	{
 		prend->SetFillMode(*m_FillMode);
+		ret.Set(RSOF_FILLMODE);
+	}
 
 	if (m_FrameBufferName.has_value())
 	{
@@ -99,6 +119,8 @@ void RenderMethodImpl::PassImpl::Apply(Renderer *prend)
 		if (m_ShaderProg && m_ShaderProg->IsLinked())
 			prend->UseProgram(m_ShaderProg);
 	}
+
+	return ret;
 }
 
 void RenderMethodImpl::PassImpl::SetFrameBufferName(const TCHAR *name)
@@ -283,14 +305,13 @@ bool RenderMethodImpl::TechniqueImpl::Begin(size_t &passes) const
 }
 
 
-bool RenderMethodImpl::TechniqueImpl::ApplyPass(size_t idx) const
+Renderer::RenderStateOverrideFlags RenderMethodImpl::TechniqueImpl::ApplyPass(size_t idx) const
 {
 	if (idx >= m_Passes.size())
-		return false;
+		return 0;
 
 	PassImpl &pr = (PassImpl &)m_Passes[idx];
-	pr.Apply(m_pRend);
-	return true;
+	return pr.Apply(m_pRend);
 }
 
 
@@ -643,7 +664,21 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromFile(c3::Sy
 
 c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	return ResourceType::LoadResult::LR_ERROR;
+	if (returned_data)
+	{
+		*returned_data = nullptr;
+
+		tinyxml2::XMLDocument doc;
+		if (doc.Parse((const char *)buffer, buffer_length) != tinyxml2::XMLError::XML_SUCCESS)
+			return ResourceType::LoadResult::LR_ERROR;
+
+		RenderMethod *prm = psys->GetRenderer()->CreateRenderMethod();
+		((RenderMethodImpl *)prm)->Load(doc.FirstChildElement());
+
+		*returned_data = (void *)prm;
+	}
+
+	return ResourceType::LoadResult::LR_SUCCESS;
 }
 
 

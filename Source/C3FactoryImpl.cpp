@@ -176,6 +176,7 @@ void FactoryImpl::RemovePrototype(Prototype *pproto)
 		return;
 
 	delete (PrototypeImpl *)(*it);
+	m_Prototypes.erase(it);
 }
 
 
@@ -547,7 +548,7 @@ bool FactoryImpl::RegisterComponentType(ComponentType *pctype)
 		}
 	}
 
-	m_pSys->GetLog()->Print(_T("OK\n"));
+	m_pSys->GetLog()->Print(_T("ok\n"));
 	s_ComponentTypes.push_back(pctype);
 
 	return true;
@@ -634,7 +635,7 @@ bool FactoryImpl::RegisterFlowNodeType(FlowNodeType *pfntype)
 	if (!pfntype)
 		return false;
 
-	m_pSys->GetLog()->Print(_T("Registering FlowNodeType \"%s\" ... "), pfntype->GetName());
+	m_pSys->GetLog()->Print(_T("Registering FlowNodeType \"%s\"... "), pfntype->GetName());
 	for (const auto &it : s_FlowNodeTypes)
 	{
 		if (!_tcscmp(it->GetName(), pfntype->GetName()) || (it->GetGUID() == pfntype->GetGUID()))

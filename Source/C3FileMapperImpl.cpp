@@ -7,6 +7,7 @@
 #include "pch.h"
 
 #include <C3FileMapperImpl.h>
+#include <C3ResourceManagerImpl.h>
 #include <Shlwapi.h>
 
 
@@ -265,7 +266,7 @@ bool FileMapperImpl::FindFile(const TCHAR *filename, TCHAR *fullpath, size_t ful
 	if (fullpath && (fullpathlen > 0))
 		*fullpath = '\0';
 
-	return false;
+	return ((ResourceManagerImpl *)(m_pSys->GetResourceManager()))->FindZippedFile(filename, fullpath, fullpathlen);
 }
 
 

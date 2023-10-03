@@ -255,8 +255,6 @@ namespace c3
 		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags);
 		virtual Texture3D *CreateTexture3D(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount, props::TFlags64 flags);
 
-		virtual Texture2D *CreateTexture2DFromFile(const TCHAR *filename, props::TFlags64 flags);
-
 		virtual DepthBuffer *CreateDepthBuffer(size_t width, size_t height, DepthType type, props::TFlags64 flags);
 
 		virtual FrameBuffer *CreateFrameBuffer(props::TFlags64 flags, const TCHAR *name);

@@ -195,7 +195,7 @@ BOOL C3App::InitInstance()
 	tstring respaths, resexts;
 
 	respaths = m_Config->GetString(_T("resources.textures.paths"), _T("./;./assets;./assets/textures"));
-	resexts = m_Config->GetString(_T("resources.textures.extensions"), _T("tga;png;jpg;dds;bmp;tiff"));
+	resexts = m_Config->GetString(_T("resources.textures.extensions"), _T("tga;png;jpg;dds;bmp;tif"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.models.paths"), _T("./;./assets;./assets/models"));
