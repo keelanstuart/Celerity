@@ -31,6 +31,9 @@ namespace c3
 		/// Creates a new Material
 		virtual Material *CreateMaterial();
 
+		/// Clones a new Material from an existing one
+		virtual Material *CloneMaterial(const Material *to_clone);
+
 		/// Destroys the given material
 		virtual bool DestroyMaterial(Material *mtl);
 

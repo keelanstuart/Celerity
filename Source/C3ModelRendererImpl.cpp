@@ -21,6 +21,7 @@ ModelRendererImpl::ModelRendererImpl() : m_Pos(0, 0, 0), m_Ori(1, 0, 0, 0), m_Sc
 	m_Mod = TModOrRes(nullptr, nullptr);
 	m_Mat = glm::identity<glm::fmat4x4>();
 	m_MatN = glm::identity<glm::fmat4x4>();
+	m_Inst = nullptr;
 
 	m_Flags.SetAll(MRIF_REBUILDMATRIX);
 }
@@ -28,6 +29,11 @@ ModelRendererImpl::ModelRendererImpl() : m_Pos(0, 0, 0), m_Ori(1, 0, 0, 0), m_Sc
 
 ModelRendererImpl::~ModelRendererImpl()
 {
+	if (m_Inst)
+	{
+		m_Inst->Release();
+		m_Inst = nullptr;
+	}
 }
 
 
@@ -134,6 +140,20 @@ void ModelRendererImpl::Render(Object::RenderFlags flags)
 	{
 		// if the resource is loaded and actually a model, use it
 		pmod = dynamic_cast<Model *>((Model *)(m_Mod.second->GetData()));
+		if (pmod)
+		{
+
+			// if we had some model instance data already, then free it now
+			if (m_Inst && (m_Inst->GetSourceModel() != pmod))
+			{
+				m_Inst->Release();
+				m_Inst = nullptr;
+			}
+
+			// make new instance data for this new model
+			if (!m_Inst)
+				m_Inst = (ModelImpl::ModelInstanceDataImpl *)(((ModelImpl *)pmod)->CloneInstanceData());
+		}
 	}
 
 	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
@@ -180,7 +200,7 @@ void ModelRendererImpl::Render(Object::RenderFlags flags)
 			mat = *m_pPos->GetTransformMatrix() * m_Mat * glm::scale(glm::identity<glm::fmat4x4>(), invscl);
 		}
 
-		pmod->Draw(&mat, !flags.IsSet(RF_LOCKMATERIAL));
+		pmod->Draw(&mat, !flags.IsSet(RF_LOCKMATERIAL), (Model::ModelInstanceData *)m_Inst);
 	}
 }
 
@@ -288,6 +308,12 @@ const Model *ModelRendererImpl::GetModel() const
 	}
 
 	return pmod;
+}
+
+
+Model::ModelInstanceData *ModelRendererImpl::GetModelInstanceData()
+{
+	return (Model::ModelInstanceData *)m_Inst;
 }
 
 

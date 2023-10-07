@@ -32,8 +32,12 @@ namespace c3
 		/// Add the path to the mapping for whatever extension you want
 		virtual void AddMapping(const TCHAR *extension, const TCHAR *path) = NULL;
 
-		/// removes the path to the mapping for whatever extension you want
-		virtual void RemoveMapping(const TCHAR *extension, const TCHAR *path) = NULL;
+		/// Removes the path to the mapping for whatever extension you want.
+		/// Setting path to nullptr will remove all mappings for the given extension
+		virtual void RemoveMapping(const TCHAR *extension, const TCHAR *path = nullptr) = NULL;
+
+		// Reset removes all file mappings
+		virtual void Reset() = NULL;
 
 		/// Supply a filename only and receive a fully qualified path in return, based on the
 		/// file extension mappings you have previously set up.

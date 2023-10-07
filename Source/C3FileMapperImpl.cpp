@@ -185,14 +185,14 @@ void FileMapperImpl::AddMapping(const TCHAR *extension, const TCHAR *path)
 // removes the path to the mapping for whatever extension you want
 void FileMapperImpl::RemoveMapping(const TCHAR *extension, const TCHAR *path)
 {
-	if (extension && path)
+	if (extension)
 	{
 		TExtToPathMap::iterator i = m_mapExts.lower_bound(extension);
 		TExtToPathMap::iterator e = m_mapExts.upper_bound(extension);
 
 		while (i != e)
 		{
-			if (i->second == path)
+			if (!path || !_tcsicmp(i->second.c_str(), path))
 			{
 				m_mapExts.erase(i);
 
@@ -206,6 +206,12 @@ void FileMapperImpl::RemoveMapping(const TCHAR *extension, const TCHAR *path)
 			i++;
 		}
 	}
+}
+
+
+void FileMapperImpl::Reset()
+{
+	m_mapExts.clear();
 }
 
 

@@ -320,6 +320,17 @@ pool::IThreadPool *SystemImpl::GetThreadPool()
 }
 
 
+ScreenManager *SystemImpl::GetScreenManager()
+{
+	if (!m_ScreenManager)
+	{
+		m_ScreenManager = new ScreenManagerImpl(this);
+	}
+
+	return m_ScreenManager;
+}
+
+
 Configuration *SystemImpl::CreateConfiguration(const TCHAR *filename)
 {
 	Configuration *ret = new ConfigurationImpl(filename);

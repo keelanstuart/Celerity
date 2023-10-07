@@ -48,6 +48,14 @@ void ModelImpl::Release()
 }
 
 
+Model::ModelInstanceData *ModelImpl::CloneInstanceData()
+{
+	ModelImpl::ModelInstanceDataImpl *ret = new ModelImpl::ModelInstanceDataImpl(this);
+
+	return (ModelInstanceData *)ret;
+}
+
+
 Model::NodeIndex ModelImpl::AddNode()
 {
 	SNodeInfo *pni = new SNodeInfo();
@@ -208,9 +216,8 @@ Model::MeshIndex ModelImpl::GetMeshFromNode(NodeIndex nidx, SubMeshIndex midx) c
 		SNodeInfo *node = m_Nodes[nidx];
 		if (node)
 		{
-			size_t ret = node->meshes.size();
-			node->meshes.push_back(midx);
-			return ret;
+			if (midx < node->meshes.size())
+				return node->meshes[midx];
 		}
 	}
 
@@ -336,20 +343,19 @@ const BoundingBox *ModelImpl::GetBounds(BoundingBox *pbb) const
 }
 
 
-void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes) const
+void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const ModelInstanceData *inst) const
 {
+	if (inst && (((ModelInstanceDataImpl *)inst)->m_pSourceModel != this))
+		return;
+
 	if (pmat)
 		m_MatStack->Push(pmat);
 
-	for (const auto cit : m_Nodes)
+	for (size_t i = 0, maxi = m_Nodes.size(); i < maxi; i++)
 	{
-		const SNodeInfo *node = cit;
-		if (!node)
-			continue;
-
 		// from this point, only draw top-level nodes
-		if (node->parent == NO_PARENT)
-			DrawNode(cit, allow_material_changes);
+		if (m_Nodes[i]->parent == NO_PARENT)
+			DrawNode(i, allow_material_changes, inst);
 	}
 
 	if (pmat)
@@ -357,40 +363,46 @@ void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes) cons
 }
 
 
-bool ModelImpl::DrawNode(const SNodeInfo *pnode, bool allow_material_changes) const
+bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const Model::ModelInstanceData *inst) const
 {
-	if (!pnode)
-		return false;
+	const SNodeInfo *pnode = m_Nodes[nodeidx];
 
 	// push the node's transform to build the hierarchy correctly
-	m_MatStack->Push(&pnode->mat);
+	if (!inst)
+		m_MatStack->Push(&pnode->mat);
+	else
+		m_MatStack->Push(&(((ModelInstanceDataImpl *)inst)->m_NodeData[nodeidx].mat));
 
 	glm::fmat4x4 m;
 
 	// set up the world matrix to draw meshes at this node level
 	m_pRend->SetWorldMatrix(m_MatStack->Top(&m));
 
-	for (const auto &mit : pnode->meshes)
+	MeshIndex maxi = pnode->meshes.size();
+	for (MeshIndex i = 0; i < maxi; i++)
 	{
 		// render each of the meshes on this node
-		const SMeshInfo *mesh = m_Meshes[mit];
-		if (!mesh)
-			continue;
+		const SMeshInfo *mesh = m_Meshes[pnode->meshes[i]];
+		assert(mesh != nullptr);
 
 		if (allow_material_changes)
-			m_pRend->UseMaterial(mesh->pmtl);
+		{
+			if (!inst)
+				m_pRend->UseMaterial(mesh->pmtl);
+			else
+				m_pRend->UseMaterial(((ModelInstanceDataImpl *)inst)->m_NodeData[nodeidx].pmtl[i]);
+		}
 
 		mesh->pmesh->Draw();
 	}
 
-	for (const auto &cit : pnode->children)
+	NodeIndex maxc = pnode->children.size();
+	for (NodeIndex c = 0; c < maxc; c++)
 	{
-		// recursively draw each of the child nodes here
-		const SNodeInfo *child = m_Nodes[cit];
-		if (!child)
-			continue;
+		assert(m_Nodes[pnode->children[c]] != nullptr);
 
-		DrawNode(child, allow_material_changes);
+		// recursively draw each of the child nodes here
+		DrawNode(pnode->children[c], allow_material_changes, inst);
 	}
 
 	// pop the node's transform
@@ -1218,4 +1230,71 @@ bool RESOURCETYPENAME(Model)::WriteToFile(c3::System *psys, const TCHAR *filenam
 void RESOURCETYPENAME(Model)::Unload(void *data) const
 {
 	((Mesh *)data)->Release();
+}
+
+
+ModelImpl::ModelInstanceDataImpl::ModelInstanceDataImpl(const Model *psource)
+{
+	assert(psource);
+
+	m_pSourceModel = (const ModelImpl *)psource;
+
+	NodeIndex maxi = psource->GetNodeCount();
+	m_NodeData.resize(maxi);
+
+	for (NodeIndex i = 0; i < maxi; i++)
+	{
+		m_NodeData[i].mat = *psource->GetTransform(i);
+
+		MeshIndex maxj = psource->GetMeshCountOnNode(i);
+		if (maxj)
+		{
+			m_NodeData[i].pmtl.resize(maxj, nullptr);
+			for (MeshIndex j = 0; j < maxj; j++)
+			{
+				MeshIndex m = psource->GetMeshFromNode(i, j);
+				m_NodeData[i].pmtl[j] = ((ModelImpl *)psource)->m_pRend->GetMaterialManager()->CloneMaterial(psource->GetMaterial(m));
+			}
+		}
+	}
+}
+
+
+void ModelImpl::ModelInstanceDataImpl::Release()
+{
+	delete this;
+}
+
+
+const Model *ModelImpl::ModelInstanceDataImpl::GetSourceModel()
+{
+	return m_pSourceModel;
+}
+
+
+bool ModelImpl::ModelInstanceDataImpl::GetTransform(NodeIndex idx, glm::fmat4x4 &mat)
+{
+	if (idx < m_NodeData.size())
+	{
+		mat = m_NodeData[idx].mat;
+		return true;
+	}
+
+	return false;
+}
+
+
+void ModelImpl::ModelInstanceDataImpl::SetTransform(NodeIndex idx, glm::fmat4x4 &mat)
+{
+	if (idx < m_NodeData.size())
+		m_NodeData[idx].mat = mat;
+}
+
+
+Material *ModelImpl::ModelInstanceDataImpl::GetMaterial(NodeIndex nodeidx, MeshIndex meshidx)
+{
+	if ((nodeidx >= m_NodeData.size()) || (meshidx >= m_pSourceModel->GetMeshCountOnNode(nodeidx)))
+		return nullptr;
+
+	return m_NodeData[nodeidx].pmtl[meshidx];
 }

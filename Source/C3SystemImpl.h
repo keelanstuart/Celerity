@@ -20,6 +20,7 @@
 #include <C3GlobalObjectRegistryImpl.h>
 #include <C3EnvironmentImpl.h>
 #include <C3SoundPlayerImpl.h>
+#include <C3ScreenManagerImpl.h>
 
 
 namespace c3
@@ -43,6 +44,7 @@ namespace c3
 		GlobalObjectRegistryImpl m_GlobalObjectRegistry;
 		EnvironmentImpl m_Environment;
 		SoundPlayerImpl *m_SoundPlayer;
+		ScreenManager *m_ScreenManager;
 
 		LARGE_INTEGER m_PerfFreq, m_PerfCount, m_PerfDelta;
 		float m_CurrentTime;
@@ -81,6 +83,8 @@ namespace c3
 		virtual pool::IThreadPool *GetThreadPool();
 
 		virtual FileMapper *GetFileMapper();
+
+		virtual ScreenManager *GetScreenManager();
 
 		virtual Configuration *CreateConfiguration(const TCHAR *filename);
 

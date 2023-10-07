@@ -20,39 +20,71 @@ void Material::SetAlternateTextureFilenameFunc(Material::MTL_ALT_TEXNAME_FUNC fu
 }
 
 
-MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend)
+MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend, const Material *copy_from)
 {
 	m_pMatMan = pmatman;
 	m_pRend = prend;
 
-	m_flags = RENDERMODEFLAG(RMF_RENDERFRONT) | RENDERMODEFLAG(RMF_WRITEDEPTH) | RENDERMODEFLAG(RMF_READDEPTH);
+	if (!copy_from)
+	{
+		m_flags = RENDERMODEFLAG(RMF_RENDERFRONT) | RENDERMODEFLAG(RMF_WRITEDEPTH) | RENDERMODEFLAG(RMF_READDEPTH);
 
-	m_tex[ETextureComponentType::TCT_DIFFUSE] = TTexOrRes(prend->GetWhiteTexture(), nullptr);
-	m_tex[ETextureComponentType::TCT_NORMAL] = TTexOrRes(prend->GetDefaultNormalTexture(), nullptr);
-	m_tex[ETextureComponentType::TCT_EMISSIVE] = TTexOrRes(prend->GetBlackTexture(), nullptr);
-	m_tex[ETextureComponentType::TCT_SURFACEDESC] = TTexOrRes(prend->GetDefaultDescTexture(), nullptr);
-	m_tex[ETextureComponentType::TCT_POSITIONDEPTH] = TTexOrRes(prend->GetBlackTexture(), nullptr);
+		m_tex[ETextureComponentType::TCT_DIFFUSE] = TTexOrRes(prend->GetWhiteTexture(), nullptr);
+		m_tex[ETextureComponentType::TCT_NORMAL] = TTexOrRes(prend->GetDefaultNormalTexture(), nullptr);
+		m_tex[ETextureComponentType::TCT_EMISSIVE] = TTexOrRes(prend->GetBlackTexture(), nullptr);
+		m_tex[ETextureComponentType::TCT_SURFACEDESC] = TTexOrRes(prend->GetDefaultDescTexture(), nullptr);
+		m_tex[ETextureComponentType::TCT_POSITIONDEPTH] = TTexOrRes(prend->GetBlackTexture(), nullptr);
 
-	m_color[EColorComponentType::CCT_DIFFUSE] = Color::fWhite;
-	m_color[EColorComponentType::CCT_EMISSIVE] = Color::fBlack;
-	m_color[EColorComponentType::CCT_SPECULAR] = Color::fDarkGrey;
+		m_color[EColorComponentType::CCT_DIFFUSE] = Color::fWhite;
+		m_color[EColorComponentType::CCT_EMISSIVE] = Color::fBlack;
+		m_color[EColorComponentType::CCT_SPECULAR] = Color::fDarkGrey;
 
-	m_DepthTest = Renderer::Test::DT_LESSER;
+		m_DepthTest = Renderer::Test::DT_LESSER;
 
-	m_StencilEnabled = false;
-	m_StencilTest = Renderer::Test::DT_ALWAYS;
-	m_StencilFailOp = Renderer::StencilOperation::SO_KEEP;
-	m_StencilZFailOp = Renderer::StencilOperation::SO_KEEP;
-	m_StencilZPassOp = Renderer::StencilOperation::SO_REPLACE;
-	m_StencilRef = 0;
-	m_StencilMask = 0xff;
+		m_StencilEnabled = false;
+		m_StencilTest = Renderer::Test::DT_ALWAYS;
+		m_StencilFailOp = Renderer::StencilOperation::SO_KEEP;
+		m_StencilZFailOp = Renderer::StencilOperation::SO_KEEP;
+		m_StencilZPassOp = Renderer::StencilOperation::SO_REPLACE;
+		m_StencilRef = 0;
+		m_StencilMask = 0xff;
 
-	m_WindingOrder = Renderer::WindingOrder::WO_CW;
+		m_WindingOrder = Renderer::WindingOrder::WO_CW;
+	}
+	else
+	{
+		Copy(copy_from);
+	}
 }
 
 
 MaterialImpl::~MaterialImpl()
 {
+}
+
+
+void MaterialImpl::Copy(const Material *from)
+{
+	if (!from)
+		return;
+
+	m_flags				= ((const MaterialImpl *)from)->m_flags;
+	m_CullMode			= ((const MaterialImpl *)from)->m_CullMode;
+	m_WindingOrder		= ((const MaterialImpl *)from)->m_WindingOrder;
+	m_DepthTest			= ((const MaterialImpl *)from)->m_DepthTest;
+	m_StencilEnabled	= ((const MaterialImpl *)from)->m_StencilEnabled;
+	m_StencilTest		= ((const MaterialImpl *)from)->m_StencilTest;
+	m_StencilRef		= ((const MaterialImpl *)from)->m_StencilRef;
+	m_StencilMask		= ((const MaterialImpl *)from)->m_StencilMask;
+	m_StencilFailOp		= ((const MaterialImpl *)from)->m_StencilFailOp;
+	m_StencilZFailOp	= ((const MaterialImpl *)from)->m_StencilZFailOp;
+	m_StencilZPassOp	= ((const MaterialImpl *)from)->m_StencilZPassOp;
+
+	for (size_t i = 0; i < TextureComponentType::NUM_TEXTURETYPES; i++)
+		m_tex[i] = ((const MaterialImpl *)from)->m_tex[i];
+
+	for (size_t i = 0; i < ColorComponentType::NUM_COLORTYPES; i++)
+		m_color[i] = ((const MaterialImpl *)from)->m_color[i];
 }
 
 

@@ -10,6 +10,7 @@
 #include <C3ModelRenderer.h>
 #include <C3PositionableImpl.h>
 #include <C3RenderMethod.h>
+#include <C3ModelImpl.h>
 
 namespace c3
 {
@@ -31,6 +32,8 @@ namespace c3
 
 		typedef std::pair<Model *, Resource *> TModOrRes;
 		TModOrRes m_Mod;
+
+		ModelImpl::ModelInstanceDataImpl *m_Inst;
 
 #define MRIF_REBUILDMATRIX		0x0001
 
@@ -73,6 +76,8 @@ namespace c3
 		virtual const glm::fmat4x4 *GetMatrix(glm::fmat4x4 *mat = nullptr) const;
 
 		virtual const Model *GetModel() const;
+
+		virtual Model::ModelInstanceData *GetModelInstanceData();
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
 

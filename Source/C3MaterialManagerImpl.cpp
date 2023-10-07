@@ -34,6 +34,14 @@ Material *MaterialManagerImpl::CreateMaterial()
 	return ret;
 }
 
+/// Creates a new Material
+Material *MaterialManagerImpl::CloneMaterial(const Material *to_clone)
+{
+	MaterialImpl *ret = new MaterialImpl(this, m_pRend, to_clone);
+
+	return ret;
+}
+
 /// Destroys the given material
 bool MaterialManagerImpl::DestroyMaterial(Material *mtl)
 {

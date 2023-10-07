@@ -44,6 +44,9 @@ namespace c3
 		// Returns the model that is being rendered
 		virtual const Model *GetModel() const = NULL;
 
+		// Returns the ModelInstanceData for the rendered Model
+		virtual Model::ModelInstanceData *GetModelInstanceData() = NULL;
+
 	};
 
 };

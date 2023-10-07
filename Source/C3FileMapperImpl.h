@@ -39,6 +39,8 @@ namespace c3
 
 		virtual void RemoveMapping(const TCHAR *extension, const TCHAR *path);
 
+		virtual void Reset();
+
 		virtual bool FindFile(const TCHAR *filename, TCHAR *fullpath, size_t fullpathlen);
 
 		virtual void SetMappingsFromDelimitedStrings(const TCHAR *exts, const TCHAR *paths, const TCHAR delimiter);

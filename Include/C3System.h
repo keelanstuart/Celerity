@@ -51,6 +51,8 @@ namespace c3
 
 		virtual FileMapper *GetFileMapper() = NULL;
 
+		virtual ScreenManager *GetScreenManager() = NULL;
+
 		virtual Configuration *CreateConfiguration(const TCHAR *filename) = NULL;
 
 		virtual Log *GetLog() = NULL;

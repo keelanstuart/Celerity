@@ -17,14 +17,29 @@ namespace c3
 
 	public: 
 
-		static C3_API Model *Create(Renderer *prend);
-
 		typedef size_t NodeIndex;
 		typedef size_t MeshIndex;
 		typedef size_t SubMeshIndex;
 
 		enum { NO_PARENT = -1 };
 		enum { INVALID_INDEX = -1 };
+
+		// ModelInstanceData lets you adjust the transform and the material when rendering an instance 
+		class ModelInstanceData
+		{
+		public:
+			virtual void Release() = NULL;
+
+			virtual const Model *GetSourceModel() = NULL;
+
+			virtual bool GetTransform(NodeIndex idx, glm::fmat4x4 &mat) = NULL;
+
+			virtual void SetTransform(NodeIndex idx, glm::fmat4x4 &mat) = NULL;
+
+			virtual Material *GetMaterial(NodeIndex nodeidx, MeshIndex meshidx) = NULL;
+		};
+
+		static C3_API Model *Create(Renderer *prend);
 
 		virtual void Release() = NULL;
 
@@ -68,7 +83,7 @@ namespace c3
 
 		virtual void GetBoundingSphere(glm::fvec3 *centroid = nullptr, float *radius = nullptr) const = NULL;
 
-		virtual void Draw(const glm::fmat4x4 *pmat = nullptr, bool allow_material_changes = true) const = NULL;
+		virtual void Draw(const glm::fmat4x4 *pmat = nullptr, bool allow_material_changes = true, const ModelInstanceData *instance_data = nullptr) const = NULL;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, size_t *pMeshIndex,
 							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,

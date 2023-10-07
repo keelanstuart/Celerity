@@ -21,30 +21,6 @@ namespace c3
 	protected:
 		Renderer *m_pRend;
 
-		typedef struct sNodeInfo
-		{
-			sNodeInfo()
-			{
-				parent = NO_PARENT;
-				mat = glm::identity<glm::fmat4x4>();
-			}
-
-			typedef std::vector<MeshIndex> TMeshIndexArray;
-			TMeshIndexArray meshes;
-
-			tstring name;
-
-			NodeIndex parent;
-			typedef std::vector<NodeIndex> TNodeIndexArray;
-			TNodeIndexArray children;
-
-			glm::fmat4x4 mat;
-
-		} SNodeInfo;
-
-		typedef std::vector<SNodeInfo *> TNodeInfoArray;
-		TNodeInfoArray m_Nodes;
-
 		typedef struct sMeshInfo
 		{
 			sMeshInfo()
@@ -58,8 +34,35 @@ namespace c3
 
 		} SMeshInfo;
 
+		typedef struct sNodeInfo
+		{
+			sNodeInfo()
+			{
+				parent = NO_PARENT;
+				mat = glm::identity<glm::fmat4x4>();
+			}
+
+			NodeIndex parent;
+			typedef std::vector<NodeIndex> TNodeIndexArray;
+			TNodeIndexArray children;
+
+			typedef std::vector<MeshIndex> TMeshIndexArray;
+			TMeshIndexArray meshes;
+
+			tstring name;
+
+			glm::fmat4x4 mat;
+
+		} SNodeInfo;
+
+		typedef std::vector<SNodeInfo *> TNodeInfoArray;
+		TNodeInfoArray m_Nodes;
+
 		typedef std::vector<SMeshInfo *> TMeshInfoArray;
 		TMeshInfoArray m_Meshes;
+
+		typedef std::vector<Material *> TMaterialArray;
+		TMaterialArray m_Materials;
 
 		BoundingBox *m_Bounds;
 		glm::fvec3 m_BoundingCentroid;
@@ -69,11 +72,40 @@ namespace c3
 
 	public:
 
+		class ModelInstanceDataImpl : Model::ModelInstanceData
+		{
+		public:
+
+			const ModelImpl *m_pSourceModel;
+
+			struct NodeData
+			{
+				glm::fmat4x4 mat;
+				std::vector<Material *> pmtl;
+			};
+			std::vector<NodeData> m_NodeData;
+
+			ModelInstanceDataImpl(const Model *psource);
+
+			virtual void Release();
+
+			virtual const Model *GetSourceModel();
+
+			virtual bool GetTransform(NodeIndex idx, glm::fmat4x4 &mat);
+
+			virtual void SetTransform(NodeIndex idx, glm::fmat4x4 &mat);
+
+			virtual Material *GetMaterial(NodeIndex nodeidx, MeshIndex meshidx);
+		};
+
+
 		ModelImpl(RendererImpl *prend);
 
 		virtual ~ModelImpl();
 
 		virtual void Release();
+
+		virtual ModelInstanceData *CloneInstanceData();
 
 		virtual NodeIndex AddNode();
 
@@ -115,7 +147,7 @@ namespace c3
 
 		virtual void GetBoundingSphere(glm::fvec3 *centroid = nullptr, float *radius = nullptr) const;
 
-		virtual void Draw(const glm::fmat4x4 *pmat, bool allow_material_changes) const;
+		virtual void Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const ModelInstanceData *inst = nullptr) const;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, size_t *pMeshIndex,
 							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
@@ -124,7 +156,7 @@ namespace c3
 		void SetBounds(glm::fvec3 &bmin, glm::fvec3 &bmax);
 
 	protected:
-		bool DrawNode(const SNodeInfo *pnode, bool allow_material_changes) const;
+		bool DrawNode(NodeIndex nodeidx, bool allow_material_changes, const ModelInstanceData *inst) const;
 
 		bool IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
 						   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;

@@ -65,6 +65,7 @@
     <ClCompile Include="Source\C3RendererImpl.cpp" />
     <ClCompile Include="source\C3RenderMethodImpl.cpp" />
     <ClCompile Include="Source\C3ResourceManagerImpl.cpp" />
+    <ClCompile Include="Source\C3ScreenManagerImpl.cpp" />
     <ClCompile Include="source\C3ScriptableImpl.cpp" />
     <ClCompile Include="Source\C3ShaderBuilderImpl.cpp" />
     <ClCompile Include="Source\C3ShaderComponentImpl.cpp" />
@@ -184,6 +185,8 @@
     <ClInclude Include="include\C3RenderMethod.h" />
     <ClInclude Include="Include\C3Resource.h" />
     <ClInclude Include="Include\C3ResourceManager.h" />
+    <ClInclude Include="Include\C3Screen.h" />
+    <ClInclude Include="Include\C3ScreenManager.h" />
     <ClInclude Include="include\C3Scriptable.h" />
     <ClInclude Include="Include\C3ShaderComponent.h" />
     <ClInclude Include="Include\C3ShaderProgram.h" />
@@ -231,6 +234,7 @@
     <ClInclude Include="source\C3RenderMethodImpl.h" />
     <ClInclude Include="Source\C3ResourceImpl.h" />
     <ClInclude Include="Source\C3ResourceManagerImpl.h" />
+    <ClInclude Include="Source\C3ScreenManagerImpl.h" />
     <ClInclude Include="source\C3ScriptableImpl.h" />
     <ClInclude Include="Source\C3ShaderBuilderImpl.h" />
     <ClInclude Include="Source\C3ShaderProgramImpl.h" />

@@ -53,6 +53,8 @@ namespace c3
 
 		static constexpr uint64_t RENDERMODEFLAG(RenderModeFlag f) { return (1LL << (f)); }
 
+		virtual void Copy(const Material *from) = NULL;
+
 		virtual void Release() = NULL;
 
 		/// Sets the given material component color

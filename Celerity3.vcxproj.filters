@@ -219,6 +219,9 @@
     <ClCompile Include="third-party\imgui\imgui_tables.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3ScreenManagerImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -583,6 +586,15 @@
     </ClInclude>
     <ClInclude Include="Include\C3SoundPlayer.h">
       <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3ScreenManager.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Screen.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ScreenManagerImpl.h">
+      <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

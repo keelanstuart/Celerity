@@ -40,9 +40,11 @@ namespace c3
 
 
 	public:
-		MaterialImpl(MaterialManager *pmatman, Renderer *prend);
+		MaterialImpl(MaterialManager *pmatman, Renderer *prend, const Material *copy_from = nullptr);
 
 		virtual ~MaterialImpl();
+
+		virtual void Copy(const Material *from);
 
 		virtual void Release();
 
