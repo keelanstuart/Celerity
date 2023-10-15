@@ -162,13 +162,10 @@ BOOL C3Dlg::OnInitDialog()
 	RegisterAction(_T("Increase Velocity"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Decrease Velocity"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Cycle View Mode"), c3::ActionMapper::ETriggerType::UP_DELTA, 0);
+
 	theApp.m_C3->GetActionMapper()->RegisterAction(_T("Toggle Debug"), c3::ActionMapper::ETriggerType::UP_DELTA, 0,
 		[](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
 		{
-			c3::Resource *psr = theApp.m_C3->GetResourceManager()->GetResource(_T("click.wav"), RESF_DEMANDLOAD);
-			if (psr->GetStatus() == c3::Resource::RS_LOADED)
-				theApp.m_C3->GetSoundPlayer()->Play((c3::SoundPlayer::HSAMPLE)psr->GetData());
-
 			*((bool *)userdata) ^= true;
 			return true;
 		},
@@ -521,7 +518,7 @@ void C3Dlg::OnPaint()
 		m_WorldRoot->Update(dt);
 		m_GUIRoot->Update(dt);
 
-		if (m_Rend->BeginScene(m_DebugEnabled ? BSFLAG_SHOWGUI : 0))
+		if (m_Rend->BeginScene(BSFLAG_SHOWGUI))
 		{
 			// Solid color pass
 			m_Rend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
@@ -586,6 +583,9 @@ void C3Dlg::OnPaint()
 				m_Rend->SetEyeDirection(&eyedir);
 			}
 			m_GUIRoot->Render();
+
+			if (m_DebugEnabled)
+				theApp.m_C3->GetRenderer()->GetGui()->ShowDebugWindow(&m_DebugEnabled);
 
 			m_Rend->EndScene();
 			m_Rend->Present();
@@ -963,18 +963,7 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 
 BOOL C3Dlg::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 {
-#if 0
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->FindComponent(c3::Camera::Type()));
-	if (pcam)
-	{
-		float m = 1.0f;//(m_Controls[0].move.run * 3.5f) + 1.0f;
-		float d = pcam->GetPolarDistance();
-		d += ((zDelta < 0) ? m : -m);
-		d = std::max(d, 0.1f);
-
-		pcam->SetPolarDistance(d);
-	}
-#endif
+	theApp.m_C3->GetRenderer()->GetGui()->AddMouseWheelEvent(0, (float)zDelta);
 
 	return CDialog::OnMouseWheel(nFlags, zDelta, pt);
 }

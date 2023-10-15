@@ -254,7 +254,7 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool ScriptableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const
+bool ScriptableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
 {
 	return false;
 }
@@ -912,7 +912,7 @@ void jcAdjustQuaternion(CScriptVar *c, void *userdata)
 	CScriptVarLink *pax = paxis->FindChild(_T("x"));
 	CScriptVarLink *pay = paxis->FindChild(_T("y"));
 	CScriptVarLink *paz = paxis->FindChild(_T("z"));
-	if (!(pax && pay && paz) || (paxis->GetArrayLength() != 3))
+	if (!(pax && pay && paz)) // || (paxis->GetArrayLength() != 3))
 		return;
 
 	glm::fvec3 axis;
@@ -925,7 +925,7 @@ void jcAdjustQuaternion(CScriptVar *c, void *userdata)
 	CScriptVarLink *pqy = pquat->FindChild(_T("y"));
 	CScriptVarLink *pqz = pquat->FindChild(_T("z"));
 	CScriptVarLink *pqw = pquat->FindChild(_T("w"));
-	if (!(pqx && pqy && pqz && pqw) || (pquat->GetArrayLength() != 4))
+	if (!(pqx && pqy && pqz && pqw)) // || (pquat->GetArrayLength() != 4))
 		return;
 
 	glm::fquat q;

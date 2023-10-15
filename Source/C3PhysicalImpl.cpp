@@ -155,7 +155,7 @@ void PhysicalImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool PhysicalImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const
+bool PhysicalImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
 {
 	return false;
 }
@@ -321,9 +321,9 @@ void PhysicalImpl::AdjustLinAcc(float xadj, float yadj, float zadj)
 
 void PhysicalImpl::SetRotVel(float y, float p, float r)
 {
-	m_RotVel.y = y;
-	m_RotVel.p = p;
-	m_RotVel.r = r;
+	m_RotVel.z = y;
+	m_RotVel.x = p;
+	m_RotVel.y = r;
 }
 
 
@@ -335,19 +335,19 @@ void PhysicalImpl::SetRotVelVec(const glm::fvec3 *rvel)
 
 void PhysicalImpl::SetRotVelY(float y)
 {
-	m_RotVel.y = y;
+	m_RotVel.z = y;
 }
 
 
 void PhysicalImpl::SetRotVelP(float p)
 {
-	m_RotVel.p = p;
+	m_RotVel.x = p;
 }
 
 
 void PhysicalImpl::SetRotVelR(float r)
 {
-	m_RotVel.r = r;
+	m_RotVel.y = r;
 }
 
 
@@ -365,27 +365,27 @@ const glm::fvec3 *PhysicalImpl::GetRotVel(glm::fvec3 *rvelptr)
 
 float PhysicalImpl::GetRotVelY()
 {
-	return m_RotVel.y;
+	return m_RotVel.z;
 }
 
 
 float PhysicalImpl::GetRotVelP()
 {
-	return m_RotVel.p;
+	return m_RotVel.x;
 }
 
 
 float PhysicalImpl::GetRotVelR()
 {
-	return m_RotVel.r;
+	return m_RotVel.y;
 }
 
 
 void PhysicalImpl::AdjustRotVel(float yadj, float padj, float radj)
 {
-	m_RotVel.y += yadj;
-	m_RotVel.p += padj;
-	m_RotVel.r += radj;
+	m_RotVel.z += yadj;
+	m_RotVel.x += padj;
+	m_RotVel.y += radj;
 }
 
 
@@ -427,9 +427,9 @@ glm::fvec3 *PhysicalImpl::GetRotVelFalloffFactor(glm::fvec3 *factorptr)
 
 void PhysicalImpl::SetRotAcc(float y, float p, float r)
 {
-	m_RotAcc.y = y;
-	m_RotAcc.p = p;
-	m_RotAcc.r = r;
+	m_RotAcc.z = y;
+	m_RotAcc.x = p;
+	m_RotAcc.y = r;
 }
 
 
@@ -441,19 +441,19 @@ void PhysicalImpl::SetRotAccVec(const glm::fvec3 *racc)
 
 void PhysicalImpl::SetRotAccY(float y)
 {
-	m_RotAcc.y = y;
+	m_RotAcc.z = y;
 }
 
 
 void PhysicalImpl::SetRotAccP(float p)
 {
-	m_RotAcc.p = p;
+	m_RotAcc.x = p;
 }
 
 
 void PhysicalImpl::SetRotAccR(float r)
 {
-	m_RotAcc.r = r;
+	m_RotAcc.y = r;
 }
 
 
@@ -471,27 +471,27 @@ const glm::fvec3 *PhysicalImpl::GetRotAcc(glm::fvec3 *raccptr)
 
 float PhysicalImpl::GetRotAccY()
 {
-	return m_RotAcc.y;
+	return m_RotAcc.z;
 }
 
 
 float PhysicalImpl::GetRotAccP()
 {
-	return m_RotAcc.p;
+	return m_RotAcc.x;
 }
 
 
 float PhysicalImpl::GetRotAccR()
 {
-	return m_RotAcc.r;
+	return m_RotAcc.y;
 }
 
 
 void PhysicalImpl::AdjustRotAcc(float yadj, float padj, float radj)
 {
-	m_RotAcc.y += yadj;
-	m_RotAcc.p += padj;
-	m_RotAcc.r += radj;
+	m_RotAcc.z += yadj;
+	m_RotAcc.x += padj;
+	m_RotAcc.y += radj;
 }
 
 

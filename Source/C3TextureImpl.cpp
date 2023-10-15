@@ -284,54 +284,62 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::Syste
 		data = stbi_load(_filename, &width, &height, &numchannels, 0);
 		if (data)
 		{
-			switch (numchannels)
+			// only allow power of 2 dimensions......?
+			if (((width & (width - 1)) == 0) && ((height & (height - 1)) == 0))
 			{
-				case 1:
-					tt = Renderer::TextureType::U8_1CH;
-					break;
-
-				case 2:
-					tt = Renderer::TextureType::U8_2CH;
-					break;
-
-				case 3:
-					tt = Renderer::TextureType::U8_3CH;
-					break;
-
-				case 4:
-					tt = Renderer::TextureType::U8_4CH;
-					break;
-			}
-
-			Texture2D *tex = psys->GetRenderer()->CreateTexture2D(width, height, tt, 0, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
-
-			if (tex)
-			{
-				unsigned char *buf;
-				Texture2D::SLockInfo li;
-				if ((tex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+				switch (numchannels)
 				{
-					int src_ofs = width * numchannels;
-					unsigned char *src = data + (width * height * numchannels) - src_ofs;
+					case 1:
+						tt = Renderer::TextureType::U8_1CH;
+						break;
 
-					for (size_t y = 0; y < height; y++)
-					{
-						memcpy(buf, src, width * numchannels);
-						src -= src_ofs;
-						buf += src_ofs;
-					}
+					case 2:
+						tt = Renderer::TextureType::U8_2CH;
+						break;
 
-					tex->Unlock();
+					case 3:
+						tt = Renderer::TextureType::U8_3CH;
+						break;
+
+					case 4:
+						tt = Renderer::TextureType::U8_4CH;
+						break;
 				}
 
-				tex->SetName(filename);
+				Texture2D *tex = psys->GetRenderer()->CreateTexture2D(width, height, tt, 0, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
 
-				ret = ResourceType::LoadResult::LR_SUCCESS;
+				if (tex)
+				{
+					uint8_t *buf;
+					Texture2D::SLockInfo li;
+					if ((tex->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+					{
+						int src_ofs = width * numchannels;
+						unsigned char *src = data + (width * height * numchannels) - src_ofs;
+
+						for (size_t y = 0; y < height; y++)
+						{
+							memcpy(buf, src, width * numchannels);
+							src -= src_ofs;
+							buf += src_ofs;
+						}
+
+						tex->Unlock();
+					}
+
+					tex->SetName(filename);
+
+					ret = ResourceType::LoadResult::LR_SUCCESS;
+				}
+
+				*returned_data = tex;
+			}
+			else
+			{
+				psys->GetLog()->Print(_T("\nTexture2D: non-power-of-2 texture found ... not loading for safety reasons. (SIGH) \"%s\"\n"), filename);
 			}
 
 			free(data);
-
-			*returned_data = tex;
 		}
 	}
 

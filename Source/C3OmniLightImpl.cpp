@@ -246,7 +246,7 @@ void OmniLightImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool OmniLightImpl::Intersect(const glm::vec3 * pRayPos, const glm::vec3 * pRayDir, float *pDistance) const
+bool OmniLightImpl::Intersect(const glm::vec3 * pRayPos, const glm::vec3 * pRayDir, MatrixStack *mats, float *pDistance) const
 {
 	return false;
 }

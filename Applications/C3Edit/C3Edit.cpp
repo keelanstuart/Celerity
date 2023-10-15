@@ -186,6 +186,8 @@ BOOL C3EditApp::InitInstance()
 	InitCtrls.dwICC = ICC_WIN95_CLASSES;
 	InitCommonControlsEx(&InitCtrls);
 
+	AfxInitRichEdit5();
+
 	CWinAppEx::InitInstance();
 
 	m_C3 = c3::System::Create(NULL, 0);

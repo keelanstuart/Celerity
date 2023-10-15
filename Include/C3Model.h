@@ -85,9 +85,8 @@ namespace c3
 
 		virtual void Draw(const glm::fmat4x4 *pmat = nullptr, bool allow_material_changes = true, const ModelInstanceData *instance_data = nullptr) const = NULL;
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, size_t *pMeshIndex,
-							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
-							   const glm::fmat4x4 *pmat = nullptr) const = NULL;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, size_t *pMeshIndex,
+							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const = NULL;
 
 	};
 

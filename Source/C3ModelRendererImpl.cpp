@@ -20,7 +20,7 @@ ModelRendererImpl::ModelRendererImpl() : m_Pos(0, 0, 0), m_Ori(1, 0, 0, 0), m_Sc
 	m_pMethod = nullptr;
 	m_Mod = TModOrRes(nullptr, nullptr);
 	m_Mat = glm::identity<glm::fmat4x4>();
-	m_MatN = glm::identity<glm::fmat4x4>();
+	m_MatN = glm::inverseTranspose(m_Mat);
 	m_Inst = nullptr;
 
 	m_Flags.SetAll(MRIF_REBUILDMATRIX);
@@ -98,7 +98,7 @@ void ModelRendererImpl::Update(float elapsed_time)
 	if (m_Flags.IsSet(MRIF_REBUILDMATRIX))
 	{
 		// Scale first, then rotate...
-		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * (glm::fmat4x4)m_Ori;
+		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * (glm::fmat4x4)(glm::normalize(m_Ori));
 
 		// Then translate last... 
 		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * m_Mat;
@@ -256,7 +256,7 @@ void ModelRendererImpl::SetOriQuat(const glm::fquat *ori)
 	if (!ori)
 		return;
 
-	m_Ori = *ori;
+	m_Ori = normalize(*ori);
 	m_Flags.Set(MRIF_REBUILDMATRIX);
 }
 
@@ -317,7 +317,7 @@ Model::ModelInstanceData *ModelRendererImpl::GetModelInstanceData()
 }
 
 
-bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const
+bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
 {
 	bool ret = false;
 
@@ -325,30 +325,23 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 
 	if (pmod)
 	{
-		glm::fmat4x4 mat, matit;
-
-		mat = m_Mat;
-		matit = glm::inverseTranspose(mat);
-
-		glm::fmat4x4 invt = glm::inverse(mat);
-		glm::fmat4x4 invtn = glm::inverse(matit);
-
-		glm::vec3 raypos = invt * glm::vec4(*pRayPos, 1);
-		glm::vec3 raydir = glm::normalize(invtn * glm::vec4(*pRayDir, 0));
+		mats->Push(&m_Mat);
 
 		size_t meshidx;
 		float dist;
 		size_t faceidx;
 		glm::vec2 uv;
 
-		ret = pmod->Intersect(&raypos, &raydir, &meshidx, &dist, &faceidx, &uv);
-		dist = fabs(dist);
+		ret = pmod->Intersect(pRayPos, pRayDir, mats, &meshidx, &dist, &faceidx, &uv);
 		if (ret && pDistance)
 		{
-			raydir = invtn * glm::vec4(raydir, 0);
-			raydir *= dist;
-			*pDistance = glm::length(raydir);
+			if (dist < *pDistance)
+				*pDistance = dist;
+			else
+				ret = false;
 		}
+
+		mats->Pop();
 	}
 
 	return ret;

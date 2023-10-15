@@ -50,7 +50,7 @@ namespace c3
 		virtual void PropertyChanged(const props::IProperty *pprop) = NULL;
 
 		/// Casts a ray against the component
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const = NULL;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const = NULL;
 
 	};
 

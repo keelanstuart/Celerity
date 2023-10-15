@@ -430,9 +430,9 @@ void ObjectImpl::PostLoad()
 }
 
 
-bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance, Object **ppHitObj, size_t child_depth) const
+bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance, Object **ppHitObj, size_t child_depth) const
 {
-	if (!pRayPos || !pRayDir)
+	if (!pRayPos || !pRayDir || !mats)
 		return false;
 
 	float tmpdist;
@@ -444,38 +444,21 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, f
 
 	bool ret = false;
 
-	glm::fmat4x4 t, tn;
-
 	Positionable *ppos = (Positionable *)((ObjectImpl *)this)->FindComponent(Positionable::Type());
 	OmniLight *plight = (OmniLight *)((ObjectImpl *)this)->FindComponent(OmniLight::Type());
 
 	if (ppos)
 	{
+		glm::fmat4x4 t;
 		ppos->GetTransformMatrix(&t);
-		ppos->GetTransformMatrixNormal(&tn);
 
-		if (plight)
-		{
-			glm::fvec3 invscl = 1.0f / *(ppos->GetScl());
-			t = t * glm::scale(glm::identity<glm::fmat4x4>(), invscl);
-		}
+		mats->Push(&t);
 	}
-	else
-	{
-		t = glm::identity<glm::fmat4x4>();
-		tn = glm::identity<glm::fmat4x4>();
-	}
-
-	glm::fmat4x4 invt = glm::inverse(t);
-	glm::fmat4x4 invtn = glm::inverse(tn);
-
-	glm::vec3 raypos = invt * glm::vec4(pRayPos->x, pRayPos->y, pRayPos->z, 1);
-	glm::vec3 raydir = glm::normalize(invtn * glm::vec4(pRayDir->x, pRayDir->y, pRayDir->z, 0));
 
 	float dist = FLT_MAX;
 	for (auto comp : m_Components)
 	{
-		if (comp->Intersect(&raypos, &raydir, &dist))
+		if (comp->Intersect(pRayPos, pRayDir, mats, &dist))
 		{
 			if (pDistance)
 			{
@@ -500,12 +483,15 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, f
 		Object *hitobj = nullptr;
 		for (auto child : m_Children)
 		{
-			ret |= child->Intersect(&raypos, &raydir, pDistance, &hitobj, child_depth - 1);
+			ret |= child->Intersect(pRayPos, pRayDir, mats, pDistance, &hitobj, child_depth - 1);
 		}
 
 		if (ppHitObj)
 			*ppHitObj = hitobj;
 	}
+
+	if (ppos)
+		mats->Pop();
 
 	return ret;
 }

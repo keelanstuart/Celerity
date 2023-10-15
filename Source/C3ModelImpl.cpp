@@ -411,16 +411,12 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const M
 	return true;
 }
 
-bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, size_t *pMeshIndex,
-							float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
-							const glm::fmat4x4 *pmat) const
+bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, size_t *pMeshIndex,
+							float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
 {
 	bool ret = false;
 
 	float d = FLT_MAX;
-
-	if (pmat)
-		m_MatStack->Push(pmat);
 
 	float mindist = FLT_MAX;
 
@@ -433,7 +429,7 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, si
 		// from this point, only draw top-level nodes
 		if (node->parent == NO_PARENT)
 		{
-			ret = IntersectNode(node, pRayPos, pRayDir, &d, pFaceIndex, pUV);
+			ret = IntersectNode(node, pRayPos, pRayDir, mats, &d, pFaceIndex, pUV);
 
 			if (ret && (d < mindist))
 			{
@@ -443,18 +439,15 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, si
 				if (pDistance)
 					*pDistance = d;
 
-				d = mindist;
+				mindist = d;
 			}
 		}
 	}
 
-	if (pmat)
-		m_MatStack->Pop();
-
 	return ret;
 }
 
-bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
+bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats,
 				   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
 {
 	if (!pnode)
@@ -463,19 +456,13 @@ bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, 
 	bool ret = false;
 
 	// push the node's transform to build the hierarchy correctly
-	m_MatStack->Push(&pnode->mat);
+	mats->Push(&pnode->mat);
 
-	glm::fmat4x4 m;
-	m_MatStack->Top(&m);
-	m = glm::inverse(m);
+	float tmpdist = FLT_MAX;
+	if (!pDistance)
+		pDistance = &tmpdist;
 
-	glm::vec4 rp(pRayPos->x, pRayPos->y, pRayPos->z, 1);
-	glm::vec3 rpt = m * rp;
-
-	glm::fmat4x4 mit = glm::inverseTranspose(m);
-	glm::vec4 rd(pRayDir->x, pRayDir->y, pRayDir->z, 0);
-	glm::vec3 rdt = mit * rd;
-
+	float d = FLT_MAX;
 	for (const auto &mit : pnode->meshes)
 	{
 		// render each of the meshes on this node
@@ -483,16 +470,17 @@ bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, 
 		if (!mesh)
 			continue;
 
-		float d = FLT_MAX;
-		if (mesh->pmesh->Intersect(&rpt, &rdt, &d, pFaceIndex, pUV))
+		float tmpd = d;
+		if (mesh->pmesh->Intersect(pRayPos, pRayDir, &tmpd, pFaceIndex, pUV, mats->Top()))
 		{
-			ret = true;
+			if (tmpd < d)
+				d = tmpd;
 
-			if (!pDistance)
-				break;
-
-			if (*pDistance > d)
+			if (d < *pDistance)
+			{
 				*pDistance = d;
+				ret = true;
+			}
 		}
 	}
 
@@ -503,11 +491,11 @@ bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, 
 		if (!child)
 			continue;
 
-		ret |= IntersectNode(child, &rpt, &rdt, pDistance, pFaceIndex, pUV);
+		ret |= IntersectNode(child, pRayPos, pRayDir, mats, pDistance, pFaceIndex, pUV);
 	}
 
 	// pop the node's transform
-	m_MatStack->Pop();
+	mats->Pop();
 
 	return ret;
 }
@@ -714,11 +702,19 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 					c3::Texture2D *pt = psys->GetRenderer()->CreateTexture2D(w, h, (c3::Renderer::TextureType)(c3::Renderer::TextureType::U8_1CH + c - 1));
 					if (pt)
 					{
-						void *buf;
+						uint8_t *buf;
 						Texture2D::SLockInfo li;
-						if ((pt->Lock(&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
+						if ((pt->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
 						{
-							memcpy(buf, data, w * h * c);
+							int src_ofs = w * c;
+							unsigned char *src = data + (w * h * c) - src_ofs;
+
+							for (size_t y = 0; y < h; y++)
+							{
+								memcpy(buf, src, w * c);
+								src -= src_ofs;
+								buf += src_ofs;
+							}
 
 							pt->Unlock();
 						}

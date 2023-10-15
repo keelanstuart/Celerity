@@ -85,7 +85,7 @@ void EnvironmentModifierImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool EnvironmentModifierImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const
+bool EnvironmentModifierImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
 {
 	return false;
 }

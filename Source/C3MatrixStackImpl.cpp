@@ -14,9 +14,8 @@ using namespace c3;
 
 MatrixStackImpl::MatrixStackImpl()
 {
-	glm::fmat4x4 m = glm::identity<glm::fmat4x4>();
-	pre.push_back(m);
-	post.push_back(m);
+	pre.push_back(glm::identity<glm::fmat4x4>());
+	post.push_back(glm::identity<glm::fmat4x4>());
 }
 
 MatrixStackImpl::~MatrixStackImpl()
@@ -50,6 +49,7 @@ bool MatrixStackImpl::Pop()
 
 	return true;
 }
+
 
 const glm::fmat4x4 *MatrixStackImpl::Top(glm::fmat4x4 *m) const
 {

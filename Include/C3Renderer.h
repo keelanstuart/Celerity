@@ -253,6 +253,16 @@ namespace c3
 		// Returns the name of the active graphics adapter
 		virtual const TCHAR* GetDeviceName() const = NULL;
 
+		// Returns the number of triangles rendered in the last frame
+		virtual size_t LastTriagleCount() const = NULL;
+
+		// Returns the number of lines rendered in the last frame
+		virtual size_t LastLineCount() const = NULL;
+
+		// Returns the number of points rendered in the last frame
+		virtual size_t LastPointCount() const = NULL;
+
+		// Returns the immediate mode GUI system
 		virtual Gui *GetGui() = NULL;
 
 		virtual void SetViewport(const RECT *viewport = nullptr) = NULL;

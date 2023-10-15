@@ -143,7 +143,7 @@ namespace c3
 		virtual void PostLoad() = NULL;
 
 		/// Casts a ray against the object
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance = nullptr, Object **ppHitObj = nullptr, size_t child_depth = 0) const = NULL;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance = nullptr, Object **ppHitObj = nullptr, size_t child_depth = 0) const = NULL;
 
 	};
 

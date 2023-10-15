@@ -596,6 +596,9 @@
     <ClInclude Include="Source\C3ScreenManagerImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
+    <ClInclude Include="Include\C3Zip.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Source\Celerity.rc">

@@ -144,11 +144,8 @@ void PositionableImpl::Update(float elapsed_time)
 
 	if (m_Flags.AnySet(POSFLAG_REBUILDMATRIX))
 	{
-		// Start with rotation, then apply scaling
-		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * (glm::fmat4x4)m_Ori;
-
-		// Then translate
-		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * m_Mat;
+		// Scale, rotate, then translate
+		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * ((glm::fmat4x4)(glm::normalize(m_Ori)) * glm::scale(glm::identity<glm::fmat4x4>(), m_Scl));
 
 		// Make a normal matrix
 		m_MatN = glm::inverseTranspose(m_Mat);
@@ -324,10 +321,7 @@ void PositionableImpl::SetOri(float x, float y, float z, float w)
 {
 	if ((m_Ori.x != x) || (m_Ori.y != y) || (m_Ori.z != z) || (m_Ori.w != w))
 	{
-		m_Ori.x = x;
-		m_Ori.y = y;
-		m_Ori.z = z;
-		m_Ori.w = w;
+		m_Ori = glm::normalize(glm::fquat(x, y, z, w));
 
 		m_Flags.Set(POSFLAG_ORICHANGED);
 	}
@@ -351,7 +345,7 @@ void PositionableImpl::SetYawPitchRoll(float y, float p, float r)
 	glm::fquat qp = glm::angleAxis(p, glm::fvec3(1, 0, 0));
 	glm::fquat qr = glm::angleAxis(r, glm::fvec3(0, 1, 0));
 
-	m_Ori = (qr * qp) * qy;
+	m_Ori = glm::normalize((qr * qp) * qy);
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -403,7 +397,7 @@ void PositionableImpl::AdjustYaw(float dy)
 
 	glm::fquat qy = glm::angleAxis(dy, m_LocalUp);
 
-	m_Ori = qy * m_Ori;
+	m_Ori = glm::normalize(qy * m_Ori);
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -416,7 +410,7 @@ void PositionableImpl::AdjustYawFlat(float dy)
 
 	glm::fquat qy = glm::angleAxis(dy, glm::vec3(0, 0, 1));
 
-	m_Ori = qy * m_Ori;
+	m_Ori = glm::normalize(qy * m_Ori);
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -429,7 +423,7 @@ void PositionableImpl::AdjustPitch(float dp)
 
 	glm::fquat qp = glm::angleAxis(dp, m_LocalRight);
 
-	m_Ori = qp * m_Ori;
+	m_Ori = glm::normalize(qp * m_Ori);
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -442,7 +436,7 @@ void PositionableImpl::AdjustRoll(float dr)
 
 	glm::fquat qr = glm::angleAxis(dr, m_Facing);
 
-	m_Ori = qr * m_Ori;
+	m_Ori = glm::normalize(qr * m_Ori);
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -608,7 +602,7 @@ const glm::fmat4x4 *PositionableImpl::GetTransformMatrixNormal(glm::fmat4x4 *mat
 }
 
 
-bool PositionableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const
+bool PositionableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
 {
 	return false;
 }

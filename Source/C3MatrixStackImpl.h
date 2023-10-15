@@ -19,7 +19,7 @@ namespace c3
 		typedef std::deque<glm::fmat4x4> TMatrixStack;
 
 		// pre is each matrix that has been pushed, post is the result of a multiply of that and the previous top
-		TMatrixStack pre, post;
+		TMatrixStack pre, post, inv, invtrans;
 
 	public:
 

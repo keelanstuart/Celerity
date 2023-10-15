@@ -149,16 +149,15 @@ namespace c3
 
 		virtual void Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const ModelInstanceData *inst = nullptr) const;
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, size_t *pMeshIndex,
-							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
-							   const glm::fmat4x4 *pmat = nullptr) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, size_t *pMeshIndex,
+							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;
 
 		void SetBounds(glm::fvec3 &bmin, glm::fvec3 &bmax);
 
 	protected:
 		bool DrawNode(NodeIndex nodeidx, bool allow_material_changes, const ModelInstanceData *inst) const;
 
-		bool IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
+		bool IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats,
 						   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;
 
 	};

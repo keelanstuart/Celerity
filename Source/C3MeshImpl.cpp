@@ -240,10 +240,14 @@ Mesh::RETURNCODE MeshImpl::Draw(Renderer::PrimType type) const
 }
 
 
-bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
+bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const glm::fmat4x4 *pMat) const
 {
 	if (!pRayPos || !pRayDir)
 		return false;
+
+	static glm::fmat4x4 identMat = glm::identity<glm::fmat4x4>();
+	if (!pMat)
+		pMat = &identMat;
 
 	bool ret = false;
 
@@ -261,7 +265,6 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 
 		if (pib)
 		{
-
 			float cdist, *pcdist = pDistance ? pDistance : &cdist;
 			*pcdist = FLT_MAX;
 
@@ -274,33 +277,40 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 			for (size_t face = 0, max_face = m_IB->Count() / 3, i = 0; face < max_face; face++)
 			{
 				// assume the first element in the vertex is position
-				glm::vec3 *v[3];
+				glm::vec3 v[3];
 
-				v[0] = (glm::vec3 *)(pvb + (vsz * pib[i++]));
-				v[1] = (glm::vec3 *)(pvb + (vsz * pib[i++]));
-				v[2] = (glm::vec3 *)(pvb + (vsz * pib[i++]));
+				v[0] = *pMat * glm::vec4(*(glm::vec3 *)(pvb + (vsz * pib[i++])), 1);
+				v[1] = *pMat * glm::vec4(*(glm::vec3 *)(pvb + (vsz * pib[i++])), 1);
+				v[2] = *pMat * glm::vec4(*(glm::vec3 *)(pvb + (vsz * pib[i++])), 1);
 
 				glm::vec2 luv;
 				float ldist;
 
+#if 0
 				// ignore backfacing triangles
 				glm::fvec3 na = glm::normalize(*v[1] - *v[0]);
 				glm::fvec3 nb = glm::normalize(*v[2] - *v[0]);
 				glm::fvec3 n = glm::normalize(glm::cross(na, nb));
 				if (glm::dot(n, *pRayDir) < 0)
 					continue;
+#endif
 
 				// check for a collision
-				bool hit = glm::intersectRayTriangle(*pRayPos, *pRayDir, *v[0], *v[2], *v[1], luv, ldist);
+				bool hit = glm::intersectRayTriangle(*pRayPos, *pRayDir, v[0], v[2], v[1], luv, ldist);
 
 				if (hit)
 				{
 					// get the nearest collision
 					if (ldist < *pcdist)
 					{
-						*pcdist = ldist;
-						*pcface = face;
-						*pcuv = luv;
+						if (pcdist)
+							*pcdist = ldist;
+
+						if (pcface)
+							*pcface = face;
+
+						if (pcuv)
+							*pcuv = luv;
 					}
 
 					ret = true;

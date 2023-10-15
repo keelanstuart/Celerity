@@ -162,6 +162,8 @@ namespace c3
 
 		virtual void AddMouseButtonEvent(MouseButton but, bool down) = NULL;
 
+		virtual void AddMouseWheelEvent(float wheelx, float wheely) = NULL;
+
 		virtual bool Begin(const TCHAR *name, bool *p_open = nullptr, props::TFlags64 flags = 0) = NULL;
 
 		virtual void End() = NULL;
@@ -809,6 +811,8 @@ namespace c3
 		virtual const TCHAR *GetClipboardText() = NULL;
 
 		virtual void SetClipboardText(const TCHAR *text) = NULL;
+
+		virtual void ShowDebugWindow(bool* p_open) = NULL;
 
 	};
 

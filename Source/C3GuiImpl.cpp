@@ -8,6 +8,7 @@
 
 #include <C3GuiImpl.h>
 #include <imgui.h>
+#include <imgui_internal.h>
 
 
 using namespace c3;
@@ -264,6 +265,13 @@ void GuiImpl::AddMouseButtonEvent(MouseButton but, bool down)
 {
 	ImGuiIO &io = ImGui::GetIO();
 	io.AddMouseButtonEvent(but, down);
+}
+
+
+void GuiImpl::AddMouseWheelEvent(float wheelx, float wheely)
+{
+	ImGuiIO &io = ImGui::GetIO();
+	io.AddMouseWheelEvent(wheelx, wheely);
 }
 
 
@@ -2487,4 +2495,36 @@ void GuiImpl::SetClipboardText(const TCHAR *text)
 	char *_text;
 	CONVERT_TCS2MBCS(text, _text);
 	ImGui::SetClipboardText(_text);
+}
+
+
+void GuiImpl::ShowDebugWindow(bool* p_open)
+{
+	ImGuiIO &io = m_ImGui->IO;
+
+	if (!Begin(_T("Celerity3 Debug Info"), p_open))
+	{
+		End();
+		return;
+	}
+
+	// Basic info
+	Text(_T("Application average %.3f ms/frame (%.1f FPS)"), 1000.0f / io.Framerate, io.Framerate);
+	Text(_T("%d triangles (non-GUI)"), m_pRend->LastTriagleCount());
+	Text(_T("%d triangles (GUI)"), io.MetricsRenderIndices / 3);
+
+	Separator();
+
+	// Tools
+	if (TreeNode(_T("Tools")))
+	{
+		TreePop();
+	}
+
+	if (TreeNode(_T("Debug log")))
+	{
+		TreePop();
+	}
+
+	End();
 }

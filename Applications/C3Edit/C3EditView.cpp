@@ -404,41 +404,6 @@ void C3EditView::OnDraw(CDC *pDC)
 			pDoc->m_GUIRootObj->Render();
 
 			c3::Gui *pgui = prend->GetGui();
-#if 0
-			auto ShowTestDlg = [&](const TCHAR *title)
-			{
-				if (!pgui->Begin(title))
-				{
-					pgui->End();
-					return;
-				}
-
-				// Basic info
-				pgui->Text(_T("Celerity 3.x"));
-
-				pgui->Separator();
-
-				// Misc Details
-				if (pgui->TreeNode(_T("Internal state")))
-				{
-					pgui->Text(_T("FOO"));
-					pgui->Indent();
-					pgui->Text(_T("This is a test!"));
-					pgui->Unindent();
-
-					pgui->Text(_T("BAR"));
-					pgui->Indent();
-					pgui->Text(_T("This is a test!"));
-					pgui->Unindent();
-
-					pgui->TreePop();
-				}
-
-				pgui->End();
-			};
-
-			ShowTestDlg(_T("Blah"));
-#endif
 
 			prend->EndScene(BSFLAG_SHOWGUI);
 			prend->Present();
@@ -735,7 +700,7 @@ c3::Object *C3EditView::Pick(POINT p) const
 
 	ComputePickRay(p, pickpos, pickray);
 
-	pDoc->m_RootObj->Intersect(&pickpos, &pickray, nullptr, &ret, 1);
+	pDoc->m_RootObj->Intersect(&pickpos, &pickray, m_SelectionXforms, nullptr, &ret, 1);
 
 	return ret;
 }

@@ -276,10 +276,10 @@ void FrameBufferImpl::SetClearColor(size_t position, uint32_t color)
 	if (position < m_ColorTarget.size())
 	{
 		glm::vec4 c;
-		c.r = float(color & 0xff) / 255.0f;
-		c.g = float((color >> 8) & 0xff) / 255.0f;
-		c.b = float((color >> 16) & 0xff) / 255.0f;
-		c.a = float((color >> 24) & 0xff) / 255.0f;
+		c.x = float(color & 0xff) / 255.0f;
+		c.y = float((color >> 8) & 0xff) / 255.0f;
+		c.z = float((color >> 16) & 0xff) / 255.0f;
+		c.w = float((color >> 24) & 0xff) / 255.0f;
 
 		switch (m_ColorTarget[position].tex->Format())
 		{
@@ -306,10 +306,10 @@ void FrameBufferImpl::SetClearColor(size_t position, uint32_t color)
 			case Renderer::TextureType::F32_3CH:
 			case Renderer::TextureType::F32_4CH:
 			{
-				m_ColorTarget[position].clearcolor.fr = c.r;
-				m_ColorTarget[position].clearcolor.fg = c.g;
-				m_ColorTarget[position].clearcolor.fb = c.b;
-				m_ColorTarget[position].clearcolor.fa = c.a;
+				m_ColorTarget[position].clearcolor.fr = c.x;
+				m_ColorTarget[position].clearcolor.fg = c.y;
+				m_ColorTarget[position].clearcolor.fb = c.z;
+				m_ColorTarget[position].clearcolor.fa = c.w;
 				break;
 			}
 		}
@@ -337,7 +337,7 @@ uint32_t FrameBufferImpl::GetClearColor(size_t position) const
 			case Renderer::TextureType::F16_4CH:
 			{
 				glm::vec4 c = glm::unpackHalf4x16(m_ColorTarget[position].clearcolor.ph);
-				return uint32_t(uint8_t(c.r * 255.0f) | (uint8_t(c.g * 255.0f) << 8) | (uint8_t(c.b * 255.0f) << 16) | (uint8_t(c.a * 255.0f) << 24));
+				return uint32_t(uint8_t(c.x * 255.0f) | (uint8_t(c.y * 255.0f) << 8) | (uint8_t(c.z * 255.0f) << 16) | (uint8_t(c.w * 255.0f) << 24));
 				break;
 			}
 
@@ -347,7 +347,7 @@ uint32_t FrameBufferImpl::GetClearColor(size_t position) const
 			case Renderer::TextureType::F32_4CH:
 			{
 				glm::vec4 *c = (glm::vec4 *)&(m_ColorTarget[position].clearcolor.f[0]);
-				return uint32_t(uint8_t(c->r * 255.0f) | (uint8_t(c->g * 255.0f) << 8) | (uint8_t(c->b * 255.0f) << 16) | (uint8_t(c->a * 255.0f) << 24));
+				return uint32_t(uint8_t(c->x * 255.0f) | (uint8_t(c->y * 255.0f) << 8) | (uint8_t(c->z * 255.0f) << 16) | (uint8_t(c->w * 255.0f) << 24));
 			}
 		}
 	}

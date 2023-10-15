@@ -88,7 +88,7 @@ namespace c3
 
 		virtual void PostLoad();
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance = nullptr, Object **ppHitObj = nullptr, size_t child_depth = 0) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance = nullptr, Object **ppHitObj = nullptr, size_t child_depth = 0) const;
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 

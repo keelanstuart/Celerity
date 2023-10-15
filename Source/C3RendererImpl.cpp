@@ -372,7 +372,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	SetViewMatrix(&m_ident);
 	SetWorldMatrix(&m_ident);
 
-	gl.ClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+	gl.ClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, m_clearColor.w);
 	gl.ClearDepthf(m_clearZ);
 	gl.ClearStencil((GLint)m_clearStencil);
 
@@ -666,6 +666,24 @@ const TCHAR *RendererImpl::GetDeviceName() const
 }
 
 
+size_t RendererImpl::LastTriagleCount() const
+{
+	return m_TrisPerFrame;
+}
+
+
+size_t RendererImpl::LastLineCount() const
+{
+	return m_LinesPerFrame;
+}
+
+
+size_t RendererImpl::LastPointCount() const
+{
+	return m_PointsPerFrame;
+}
+
+
 pool::IThreadPool *RendererImpl::GetTaskPool()
 {
 	return m_TaskPool[m_ActiveTaskPool ^ 1];
@@ -832,7 +850,7 @@ void RendererImpl::SetClearColor(const glm::fvec4 *color)
 	if (m_clearColor != *color)
 	{
 		m_clearColor = *color;
-		gl.ClearColor(m_clearColor.r, m_clearColor.g, m_clearColor.b, m_clearColor.a);
+		gl.ClearColor(m_clearColor.x, m_clearColor.y, m_clearColor.z, m_clearColor.w);
 	}
 }
 
@@ -2569,7 +2587,7 @@ Mesh *RendererImpl::GetXZPlaneMesh()
 			{
 				static const uint16_t i[2][3] =
 				{
-					 {  4,  6,  5 }, {  4,  7, 6  }
+					 {  4,  6, 5 }, {  4,  7, 6  }
 				};
 
 				void *buf;

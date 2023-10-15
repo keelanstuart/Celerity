@@ -185,6 +185,10 @@ namespace c3
 		virtual const TCHAR* GetVendorName() const;
 		virtual const TCHAR* GetDeviceName() const;
 
+		virtual size_t LastTriagleCount() const;
+		virtual size_t LastLineCount() const;
+		virtual size_t LastPointCount() const;
+
 		pool::IThreadPool *GetTaskPool();
 
 		virtual Gui *GetGui();

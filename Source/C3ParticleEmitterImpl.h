@@ -106,7 +106,7 @@ namespace c3
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;
 
 	};
 

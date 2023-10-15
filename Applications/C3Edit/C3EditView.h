@@ -102,7 +102,7 @@ protected:
 	UINT_PTR m_PickTimer;
 	glm::fvec3 m_BasePickPos;
 	glm::fvec3 m_BasePickVec;
-
+	c3::MatrixStack *m_PickMats;
 
 // Generated message map functions
 protected:
