@@ -20,6 +20,8 @@ protected:
 	IRichEditOle *m_pRichEdOle;
 	ITextDocument *m_pTextDoc;
 
+	CFont m_CodeFont;
+
 	DECLARE_MESSAGE_MAP()
 
 public:

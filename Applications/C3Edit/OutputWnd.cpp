@@ -51,38 +51,20 @@ int COutputWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CDockablePane::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	CRect rectDummy;
-	rectDummy.SetRectEmpty();
-
-	// Create tabs window:
-	if (!m_wndTabs.Create(CMFCTabCtrl::STYLE_FLAT, rectDummy, this, 1))
-	{
-		TRACE0("Failed to create output tab window\n");
-		return -1;      // fail to create
-	}
+	CRect r;
+	r.SetRectEmpty();
 
 	// Create output panes:
 	const DWORD dwStyle_ol = WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL | LBS_OWNERDRAWFIXED;// | LBS_NOINTEGRALHEIGHT;
 	const DWORD dwStyle_e = ES_MULTILINE | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL;
 
-	if (!m_wndOutputDebug.Create(dwStyle_e, rectDummy, &m_wndTabs, 2))
+	if (!m_wndOutputDebug.Create(dwStyle_e, r, this, 2))
 	{
 		TRACE0("Failed to create output window\n");
 		return -1;      // fail to create
 	}
 
 	UpdateFonts();
-
-	CString strTabName;
-	BOOL bNameValid;
-
-	// Attach list windows to tab:
-	bNameValid = strTabName.LoadString(IDS_DEBUG_TAB);
-	ASSERT(bNameValid);
-	m_wndTabs.AddTab(&m_wndOutputDebug, strTabName, (UINT)0);
-
-	// Fill output tabs with some dummy text (nothing magic here)
-	FillDebugWindow();
 
 	theApp.m_C3->GetLog()->SetRedirectFunction([](void *userdata, const TCHAR *msg)
 	{
@@ -127,7 +109,7 @@ void COutputWnd::OnSize(UINT nType, int cx, int cy)
 	CDockablePane::OnSize(nType, cx, cy);
 
 	// Tab control should cover the whole client area:
-	m_wndTabs.SetWindowPos (nullptr, -1, -1, cx, cy, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
+	m_wndOutputDebug.SetWindowPos (nullptr, -1, -1, cx, cy, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER);
 }
 
 void COutputWnd::FillDebugWindow()

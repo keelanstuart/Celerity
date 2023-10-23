@@ -52,6 +52,8 @@ namespace c3
 		#define OF_CASTSHADOW		0x00020000					// Indicates that the object casts a shadow
 		#define OF_NOMODELSCALE		0x00040000					// Affects only ModelRenderer; does not scale the model
 
+		#define OF_EXPANDED			0x10000000					// A flag for tools, indicates that the child objects should be displayed
+
 
 		typedef props::TFlags64		RenderFlags;
 
@@ -65,31 +67,31 @@ namespace c3
 
 
 		/// Returns the Celerity System in which the Object exists
-		virtual System *GetSystem() = NULL;
+		virtual System *GetSystem() const = NULL;
 
 		/// Frees any resources that the Object may have allocated
 		virtual void Release() = NULL;
 
 		/// Returns the name of the Object
-		virtual const TCHAR *GetName() = NULL;
+		virtual const TCHAR *GetName() const = NULL;
 
 		/// Sets the name of the Object
 		virtual void SetName(const TCHAR *name) = NULL;
 
 		/// Returns the Object's GUID
-		virtual GUID GetGuid() = NULL;
+		virtual GUID GetGuid() const = NULL;
 
 		/// Returns the parent of this Object
-		virtual Object *GetParent() = NULL;
+		virtual Object *GetParent() const = NULL;
 
 		/// Sets the Object's owner
 		virtual void SetParent(Object *pparent) = NULL;
 
 		/// Returns the number of direct decendents from the Object
-		virtual size_t GetNumChildren() = NULL;
+		virtual size_t GetNumChildren() const = NULL;
 
 		/// Returns the child Object at the given index, or nullptr if there is not one
-		virtual Object *GetChild(size_t index) = NULL;
+		virtual Object *GetChild(size_t index) const = NULL;
 
 		/// Adds a child Object
 		virtual void AddChild(Object *pchild) = NULL;
@@ -104,13 +106,13 @@ namespace c3
 		virtual props::IPropertySet *GetProperties() = NULL;
 
 		/// Returns the number of Components currently attached to this Object
-		virtual size_t GetNumComponents() = NULL;
+		virtual size_t GetNumComponents() const = NULL;
 
 		/// Returns the attached Component at the given index
-		virtual Component *GetComponent(size_t index) = NULL;
+		virtual Component *GetComponent(size_t index) const = NULL;
 
 		/// Returns an attached Component with the given ComponentType
-		virtual Component *FindComponent(const ComponentType *pctype) = NULL;
+		virtual Component *FindComponent(const ComponentType *pctype) const = NULL;
 
 		/// Creates, attaches, and returns a Component of the given ComponentType
 		virtual Component *AddComponent(const ComponentType *pctype, bool init = true) = NULL;
@@ -137,7 +139,7 @@ namespace c3
 		virtual bool Load(genio::IInputStream *is) = NULL;
 
 		/// Saves an Object to a stream
-		virtual bool Save(genio::IOutputStream *os, props::TFlags64 saveflags) = NULL;
+		virtual bool Save(genio::IOutputStream *os, props::TFlags64 saveflags) const = NULL;
 
 		/// Called once Load has finished
 		virtual void PostLoad() = NULL;

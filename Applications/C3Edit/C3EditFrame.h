@@ -8,6 +8,8 @@
 #include "PrototypeView.h"
 #include "OutputWnd.h"
 #include "PropertiesWnd.h"
+#include "ScriptingWnd.h"
+#include "ObjectsWnd.h"
 #include "Resource.h"
 #include "C3Edit.h"
 
@@ -58,7 +60,7 @@ public:
 	void SetActivePrototype(c3::Prototype *pproto, bool readonly = false, const TCHAR *title = nullptr);
 	void SetActiveObject(c3::Object *pobj, bool readonly = false, const TCHAR *title = nullptr);
 	void RefreshActiveProperties();
-
+	void UpdateObjectList();
 
 protected:
 	CMFCToolBarButton *GetToolButtonByID(CMFCToolBar *toolbar, DWORD butid);
@@ -72,6 +74,8 @@ public:  // control bar embedded members
 	CMFCStatusBar     m_wndStatusBar;
 	CPrototypeView    m_wndProtoView;
 	CPropertiesWnd    m_wndProperties;
+	CScriptingWnd     m_wndScripting;
+	CObjectWnd        m_wndObjects;
 	CMFCShellTreeCtrl m_wndTree;
 	CMFCCaptionBar    m_wndCaptionBar;
 
@@ -115,6 +119,10 @@ protected:
 	afx_msg void OnUpdateViewPropertiesWindow(CCmdUI* pCmdUI);
 	afx_msg void OnViewCaptionBar();
 	afx_msg void OnUpdateViewCaptionBar(CCmdUI* pCmdUI);
+	afx_msg void OnViewScriptingWindow();
+	afx_msg void OnUpdateViewScriptingWindow(CCmdUI* pCmdUI);
+	afx_msg void OnViewObjectsWindow();
+	afx_msg void OnUpdateViewObjectsWindow(CCmdUI* pCmdUI);
 	afx_msg void OnOptions();
 	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
 	DECLARE_MESSAGE_MAP()

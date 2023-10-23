@@ -46,7 +46,7 @@ ObjectImpl::~ObjectImpl()
 }
 
 
-System *ObjectImpl::GetSystem()
+System *ObjectImpl::GetSystem() const
 {
 	return m_pSys;
 }
@@ -58,7 +58,7 @@ void ObjectImpl::Release()
 }
 
 
-const TCHAR *ObjectImpl::GetName()
+const TCHAR *ObjectImpl::GetName() const
 {
 	return m_Name.c_str();
 }
@@ -70,13 +70,13 @@ void ObjectImpl::SetName(const TCHAR *name)
 }
 
 
-GUID ObjectImpl::GetGuid()
+GUID ObjectImpl::GetGuid() const
 {
 	return m_GUID;
 }
 
 
-Object *ObjectImpl::GetParent()
+Object *ObjectImpl::GetParent() const
 {
 	return m_pParent;
 }
@@ -97,13 +97,13 @@ void ObjectImpl::SetParent(Object *pparent)
 }
 
 
-size_t ObjectImpl::GetNumChildren()
+size_t ObjectImpl::GetNumChildren() const
 {
 	return m_Children.size();
 }
 
 
-Object *ObjectImpl::GetChild(size_t index)
+Object *ObjectImpl::GetChild(size_t index) const
 {
 	if (index >= m_Children.size())
 		return nullptr;
@@ -156,13 +156,13 @@ props::IPropertySet *ObjectImpl::GetProperties()
 }
 
 
-size_t ObjectImpl::GetNumComponents()
+size_t ObjectImpl::GetNumComponents() const
 {
 	return m_Components.size();
 }
 
 
-Component *ObjectImpl::GetComponent(size_t index)
+Component *ObjectImpl::GetComponent(size_t index) const
 {
 	if (index >= m_Components.size())
 		return nullptr;
@@ -171,7 +171,7 @@ Component *ObjectImpl::GetComponent(size_t index)
 }
 
 
-Component *ObjectImpl::FindComponent(const ComponentType *pctype)
+Component *ObjectImpl::FindComponent(const ComponentType *pctype) const
 {
 	Component *ret = nullptr;
 
@@ -370,7 +370,7 @@ bool ObjectImpl::Load(genio::IInputStream *is)
 }
 
 
-bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags)
+bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags) const
 {
 	if (!os)
 		return false;

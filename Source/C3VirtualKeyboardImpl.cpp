@@ -146,5 +146,5 @@ void VirtualKeyboardImpl::SetDefaultKeyMapping()
 	real_to_virtual[DIK_F1]			= InputDevice::VirtualButton::HELP;
 	real_to_virtual[DIK_F2]			= InputDevice::VirtualButton::LOAD;
 	real_to_virtual[DIK_F3]			= InputDevice::VirtualButton::SAVE;
-	real_to_virtual[DIK_F10]		= InputDevice::VirtualButton::DEBUGBUTTON;
+	real_to_virtual[DIK_F11]		= InputDevice::VirtualButton::DEBUGBUTTON;
 }

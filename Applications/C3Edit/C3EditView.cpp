@@ -92,6 +92,7 @@ C3EditView::C3EditView() noexcept
 {
 	m_RenderDocCaptureFrame = theApp.m_Config->GetBool(_T("debug.renderdoc.capture_initialization"), true);
 	m_ResourcesRefCt++;
+	m_ShowDebug = false;
 }
 
 
@@ -270,6 +271,9 @@ void C3EditView::OnDraw(CDC *pDC)
 				pcampos->SetPosVec(&cpos);
 			}
 
+			if (theApp.m_C3->GetInputManager()->ButtonReleased(c3::InputDevice::VirtualButton::DEBUGBUTTON))
+				m_ShowDebug ^= true;
+
 			pcampos->AdjustPos(mv.x, mv.y, mv.z);
 		}
 
@@ -359,7 +363,8 @@ void C3EditView::OnDraw(CDC *pDC)
 			TPositionableVec selpos;
 			for (auto sel : m_Selected)
 			{
-				sel->Render(RF_FORCE | RF_LOCKSHADER | RF_LOCKMATERIAL);
+				if (sel)
+					sel->Render(RF_FORCE | RF_LOCKSHADER | RF_LOCKMATERIAL);
 			}
 
 			// Resolve
@@ -404,6 +409,9 @@ void C3EditView::OnDraw(CDC *pDC)
 			pDoc->m_GUIRootObj->Render();
 
 			c3::Gui *pgui = prend->GetGui();
+
+			if (m_ShowDebug)
+				pgui->ShowDebugWindow(&m_ShowDebug);
 
 			prend->EndScene(BSFLAG_SHOWGUI);
 			prend->Present();
@@ -926,7 +934,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 					{
 						if (active_axis_t & C3EditApp::AT_SCREENREL)
 						{
-							mv += fv;
+							mv += (fv * (float)(deltay));
 						}
 						else
 						{
@@ -1014,6 +1022,12 @@ void C3EditView::OnTimer(UINT_PTR nIDEvent)
 	CView::OnTimer(nIDEvent);
 }
 
+void C3EditView::UpdateObjectList()
+{
+	C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
+	if (pef->GetSafeHwnd() && pef->m_wndObjects.GetSafeHwnd())
+		pef->m_wndObjects.UpdateContents();
+}
 
 void C3EditView::UpdateStatusMessage(c3::Object *pobj)
 {
@@ -1092,6 +1106,7 @@ void C3EditView::ClearSelection()
 	theApp.SetActiveObject(nullptr);
 
 	UpdateStatusMessage();
+	UpdateObjectList();
 }
 
 
@@ -1107,9 +1122,25 @@ void C3EditView::AddToSelection(const c3::Object *obj)
 		m_Selected.push_back((c3::Object *)obj);
 
 	if (m_Selected.size() == 1)
-		theApp.SetActiveObject(m_Selected[0]);
+	{
+		if (m_Selected[0])
+		{
+			theApp.SetActiveObject(m_Selected[0]);
+			props::IProperty *psrcf_prop = m_Selected[0]->GetProperties()->GetPropertyById('SRCF');
+			if (psrcf_prop)
+			{
+				c3::Resource *psrcf_res = theApp.m_C3->GetResourceManager()->GetResource(psrcf_prop->AsString(), RESF_DEMANDLOAD);
+				C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
+				if (pef->GetSafeHwnd() && pef->m_wndScripting.GetSafeHwnd())
+					pef->m_wndScripting.SetResourceScript(psrcf_res);
+			}
+		}
+		else
+			m_Selected.clear();
+	}
 
 	UpdateStatusMessage();
+	UpdateObjectList();
 }
 
 
@@ -1125,6 +1156,7 @@ void C3EditView::RemoveFromSelection(const c3::Object *obj)
 		theApp.SetActiveObject(nullptr);
 
 	UpdateStatusMessage();
+	UpdateObjectList();
 }
 
 
@@ -1272,6 +1304,8 @@ void C3EditView::OnEditDelete()
 		else
 			o->Release();
 	}
+
+	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
 
 	ClearSelection();
 }

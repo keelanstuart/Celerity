@@ -105,15 +105,23 @@ namespace c3
 		#define VBLOCKFLAG_UPDATENOW	0x0010		// update the buffer data (used with USERBUFFER) - requires no unlock
 		#define VBLOCKFLAG_CACHE		0x0020		// create a cache of the data so that it can be queried quickly later
 
-
+		// Lock the vertex buffer's memory so you can read from or write to it, depending on how it was created and the flags you supply here
 		virtual RETURNCODE Lock(void **buffer, size_t numverts, const ComponentDescription *components, props::TFlags64 flags) = NULL;
+
+		// Unlocks the vertex buffer's memory once you are done doing whatever it is you were doing to it. Writes will typically be
+		// finalized by updating GPU memory
 		virtual void Unlock() = NULL;
 
+		// Returns the number of vertices in this buffer
 		virtual size_t Count() = NULL;
 
+		// Returns the number of components on these vertices
 		virtual size_t NumComponents() = NULL;
+
+		// Gets the vertex component type by index
 		virtual const ComponentDescription *Component(size_t compidx) = NULL;
 
+		// Returns the size in bytes of each vertex
 		virtual size_t VertexSize() = NULL;
 	};
 

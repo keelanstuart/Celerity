@@ -64,6 +64,7 @@ public:
 #endif
 
 protected:
+	void ResetViews();
 
 // Generated message map functions
 protected:

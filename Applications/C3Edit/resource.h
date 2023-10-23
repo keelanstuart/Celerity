@@ -12,9 +12,12 @@
 #define IDS_TOOLBAR_CUSTOMIZE           125
 #define ID_VIEW_CUSTOMIZE               126
 #define IDS_POPUP_GRAPH                 126
+#define IDS_OBJECTS_WND                 127
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAME_256               129
+#define IDS_SCRIPTEDITOR_STATUS_NAME    129
 #define IDR_C3EditTYPE                  130
+#define IDS_SCRIPTEDITOR_STATUS_ROWCOL  130
 #define ID_WINDOW_MANAGER               131
 #define ID_VIEW_FILEVIEW                133
 #define ID_VIEW_PROTOVIEW               134
@@ -113,10 +116,14 @@
 #define IDR_TOOLBAR_3DTOOLS             318
 #define IDR_POPUP_GRAPH                 318
 #define IDR_TOOLBAR_AXES                319
+#define IDB_SCRIPTING_HC                320
 #define ID_AXIS_X                       321
+#define IDR_SCRIPTING                   321
 #define ID_AXIS_Y                       322
 #define ID_AXIS_Z                       323
+#define IDI_OBJECTS_WND                 323
 #define ID_AXIS_SCREENREL               324
+#define IDI_OBJECTS_WND_HC              324
 #define ID_TOOL_SELECT                  325
 #define ID_TOOL_TRANSLATE               326
 #define ID_TOOL_ROTATE                  327
@@ -125,6 +132,21 @@
 #define ID_TOOL_WAND                    330
 #define IDD_GRAPHEDITOR                 332
 #define IDD_GRAPHNODE                   333
+#define ID_VIEW_SCRIPTINGWND            334
+#define IDS_SCRIPTING_WND               335
+#define ID_VIEW_OBJECTSWND              335
+#define IDI_SCRIPTING_WND               336
+#define ID_SCRIPTEDITOR_STATUS_NAME     336
+#define IDI_SCRIPTING_WND_HC            337
+#define ID_SCRIPTEDITOR_STATUS_ROWCOL   337
+#define ID_SCRIPT_NEW                   338
+#define ID_SCRIPT_LOAD                  339
+#define ID_SCRIPT_SAVE                  340
+#define ID_SCRIPT_RUN                   341
+#define IDS_SCRIPT_NEW                  342
+#define IDS_SCRIPT_LOAD                 343
+#define IDS_SCRIPT_SAVE                 344
+#define IDS_SCRIPT_RUN                  345
 #define IDC_PROPERTIES                  1000
 #define IDC_COMPONENTS                  1001
 #define IDC_NAME                        1002
@@ -143,9 +165,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        319
+#define _APS_NEXT_RESOURCE_VALUE        325
 #define _APS_NEXT_COMMAND_VALUE         32779
 #define _APS_NEXT_CONTROL_VALUE         1009
-#define _APS_NEXT_SYMED_VALUE           334
+#define _APS_NEXT_SYMED_VALUE           339
 #endif
 #endif

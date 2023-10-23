@@ -87,6 +87,8 @@ void CViewTree::OnNMDblclk(NMHDR *pNMHDR, LRESULT *pResult)
 		pobjpos->SetPosVec(&ct);
 
 		pdoc->SetModifiedFlag();
+
+		pfrm->UpdateObjectList();
 	}
 
 	*pResult = 0;

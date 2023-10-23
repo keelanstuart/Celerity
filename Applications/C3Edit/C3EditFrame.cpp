@@ -27,11 +27,15 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_COMMAND(ID_VIEW_PROTOVIEW, &C3EditFrame::OnViewProtoView)
 	ON_COMMAND(ID_VIEW_OUTPUTWND, &C3EditFrame::OnViewOutputWindow)
 	ON_COMMAND(ID_VIEW_PROPERTIESWND, &C3EditFrame::OnViewPropertiesWindow)
+	ON_COMMAND(ID_VIEW_SCRIPTINGWND, &C3EditFrame::OnViewScriptingWindow)
+	ON_COMMAND(ID_VIEW_OBJECTSWND, &C3EditFrame::OnViewObjectsWindow)
 
 	ON_UPDATE_COMMAND_UI(ID_VIEW_CAPTION_BAR, &C3EditFrame::OnUpdateViewCaptionBar)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PROTOVIEW, &C3EditFrame::OnUpdateViewProtoView)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_OUTPUTWND, &C3EditFrame::OnUpdateViewOutputWindow)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PROPERTIESWND, &C3EditFrame::OnUpdateViewPropertiesWindow)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_SCRIPTINGWND, &C3EditFrame::OnUpdateViewScriptingWindow)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_OBJECTSWND, &C3EditFrame::OnUpdateViewObjectsWindow)
 
 	ON_WM_SETTINGCHANGE()
 
@@ -193,6 +197,12 @@ int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndProperties.EnableDocking(CBRS_ALIGN_ANY);
 	DockPane(&m_wndProperties);
 
+	m_wndScripting.EnableDocking(CBRS_ALIGN_ANY);
+	DockPane(&m_wndScripting);
+
+	m_wndObjects.EnableDocking(CBRS_ALIGN_ANY);
+	DockPane(&m_wndObjects);
+
 	// set the visual manager used to draw all user interface elements
 	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerOffice2007));
 
@@ -258,6 +268,26 @@ BOOL C3EditFrame::CreateDockingWindows()
 		return FALSE; // failed to create
 	}
 
+	// Create scripting window
+	CString strScriptingWnd;
+	bNameValid = strScriptingWnd.LoadString(IDS_SCRIPTING_WND);
+	ASSERT(bNameValid);
+	if (!m_wndScripting.Create(strScriptingWnd, this, CRect(0, 0, 200, 200), TRUE, ID_VIEW_SCRIPTINGWND, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_RIGHT | CBRS_FLOAT_MULTI))
+	{
+		TRACE0("Failed to create Scripting window\n");
+		return FALSE; // failed to create
+	}
+
+	// Create objects window
+	CString strObjectsWnd;
+	bNameValid = strObjectsWnd.LoadString(IDS_OBJECTS_WND);
+	ASSERT(bNameValid);
+	if (!m_wndObjects.Create(strObjectsWnd, this, CRect(0, 0, 200, 200), TRUE, ID_VIEW_OBJECTSWND, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_RIGHT | CBRS_FLOAT_MULTI))
+	{
+		TRACE0("Failed to create Objects window\n");
+		return FALSE; // failed to create
+	}
+
 	SetDockingWindowIcons(TRUE);
 	return TRUE;
 }
@@ -273,6 +303,11 @@ void C3EditFrame::SetDockingWindowIcons(BOOL bHiColorIcons)
 	HICON hPropertiesBarIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_PROPERTIES_WND_HC : IDI_PROPERTIES_WND), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
 	m_wndProperties.SetIcon(hPropertiesBarIcon, FALSE);
 
+	HICON hScriptingBarIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_SCRIPTING_WND_HC : IDI_SCRIPTING_WND), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
+	m_wndScripting.SetIcon(hScriptingBarIcon, FALSE);
+
+	HICON hObjectsBarIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_OBJECTS_WND_HC : IDI_OBJECTS_WND), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
+	m_wndObjects.SetIcon(hObjectsBarIcon, FALSE);
 }
 
 
@@ -401,6 +436,34 @@ void C3EditFrame::OnViewPropertiesWindow()
 }
 
 void C3EditFrame::OnUpdateViewPropertiesWindow(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(TRUE);
+}
+
+
+void C3EditFrame::OnViewScriptingWindow()
+{
+	// Show or activate the pane, depending on current state.  The
+	// pane can only be closed via the [x] button on the pane frame.
+	m_wndScripting.ShowPane(TRUE, FALSE, TRUE);
+	m_wndScripting.SetFocus();
+}
+
+void C3EditFrame::OnUpdateViewScriptingWindow(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(TRUE);
+}
+
+
+void C3EditFrame::OnViewObjectsWindow()
+{
+	// Show or activate the pane, depending on current state.  The
+	// pane can only be closed via the [x] button on the pane frame.
+	m_wndObjects.ShowPane(TRUE, FALSE, TRUE);
+	m_wndObjects.SetFocus();
+}
+
+void C3EditFrame::OnUpdateViewObjectsWindow(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(TRUE);
 }
@@ -809,4 +872,9 @@ void C3EditFrame::RefreshActiveProperties()
 {
 	if (m_wndProperties.GetSafeHwnd())
 		m_wndProperties.UpdateCurrentProperties();
+}
+
+void C3EditFrame::UpdateObjectList()
+{
+	m_wndObjects.UpdateContents();
 }

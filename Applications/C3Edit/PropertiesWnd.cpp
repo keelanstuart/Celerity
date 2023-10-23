@@ -108,19 +108,19 @@ int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	if (CDockablePane::OnCreate(lpCreateStruct) == -1)
 		return -1;
 
-	CRect rectDummy;
-	rectDummy.SetRectEmpty();
+	CRect r;
+	r.SetRectEmpty();
 
-	if (!m_wndNameEdit.Create(WS_VISIBLE | WS_CHILD | WS_BORDER, rectDummy, this, PWID_EDITNAME))
+	if (!m_wndNameEdit.Create(WS_VISIBLE | WS_CHILD | WS_BORDER, r, this, PWID_EDITNAME))
 		return -1;      // fail to create
 
-	if (!m_wndCompList.Create(WS_VISIBLE | WS_CHILD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_BORDER | WS_VSCROLL, rectDummy, this, PWID_COMPLIST))
+	if (!m_wndCompList.Create(WS_VISIBLE | WS_CHILD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_BORDER | WS_VSCROLL, r, this, PWID_COMPLIST))
 		return -1;      // fail to create
 
-	if (!m_wndFlagList.Create(WS_VISIBLE | WS_CHILD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_BORDER | WS_VSCROLL, rectDummy, this, PWID_FLAGLIST))
+	if (!m_wndFlagList.Create(WS_VISIBLE | WS_CHILD | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_BORDER | WS_VSCROLL, r, this, PWID_FLAGLIST))
 		return -1;      // fail to create
 
-	if (!m_wndPropList.Create(WS_VISIBLE | WS_CHILD | WS_BORDER, rectDummy, this, PWID_PROPLIST))
+	if (!m_wndPropList.Create(WS_VISIBLE | WS_CHILD | WS_BORDER, r, this, PWID_PROPLIST))
 		return -1;      // fail to create
 
 	for (auto f : FlagInfo)
@@ -132,6 +132,7 @@ int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_wndNameEdit.SetFont(m_wndPropList.GetFont());
 
+	m_wndPropList.SetCustomColors(RGB(64, 64, 64), RGB(255, 255, 255), RGB(64, 64, 64), RGB(255, 255, 255), RGB(0, 0, 0), RGB(200, 200, 200), RGB(128, 128, 128));
 	InitPropList();
 
 	m_wndToolBar.Create(this, AFX_DEFAULT_TOOLBAR_STYLE, IDR_PROPERTIES);
@@ -142,8 +143,6 @@ int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndToolBar.SetPaneStyle(m_wndToolBar.GetPaneStyle() | CBRS_TOOLTIPS | CBRS_FLYBY);
 	m_wndToolBar.SetPaneStyle(m_wndToolBar.GetPaneStyle() & ~(CBRS_GRIPPER | CBRS_SIZE_DYNAMIC | CBRS_BORDER_TOP | CBRS_BORDER_BOTTOM | CBRS_BORDER_LEFT | CBRS_BORDER_RIGHT));
 	m_wndToolBar.SetOwner(this);
-
-	m_wndPropList.SetCustomColors(RGB(64, 64, 64), RGB(255, 255, 255), RGB(64, 64, 64), RGB(255, 255, 255), RGB(0, 0, 0), RGB(200, 200, 200), RGB(128, 128, 128));
 
 	// All commands will be routed via this control , not via the parent frame:
 	m_wndToolBar.SetRouteCommandsViaFrame(FALSE);
@@ -361,12 +360,18 @@ afx_msg void CPropertiesWnd::OnCheckChangeFlags()
 	}
 
 	if (m_pProto)
+	{
 		m_pProto->Flags().SetAll(f);
+	}
 	else if (m_pObj)
 	{
 		m_pObj->Flags().SetAll(f);
 		m_pObj->Flags().Set(OF_SCLCHANGED);
 	}
+
+	C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
+	if (pef->GetSafeHwnd() && pef->m_wndObjects.GetSafeHwnd())
+		pef->m_wndObjects.UpdateContents();
 }
 
 

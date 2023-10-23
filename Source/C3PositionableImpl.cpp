@@ -202,7 +202,7 @@ void PositionableImpl::Render(Object::RenderFlags flags)
 	pr->UseProgram(sp);
 	pr->GetWhiteMaterial()->Apply(sp);
 
-	//pr->GetBoundsMesh()->Draw(c3::Renderer::PrimType::LINELIST);
+	pr->GetBoundsMesh()->Draw(c3::Renderer::PrimType::LINELIST);
 #endif
 }
 

@@ -22,6 +22,7 @@ public:
 protected:
 	typedef std::deque<c3::Object *> TObjectArray;
 	TObjectArray m_Selected;
+	bool m_ShowDebug;
 
 // Operations
 public:
@@ -36,6 +37,7 @@ public:
 	c3::Object *Pick(POINT p) const;
 
 	void UpdateStatusMessage(c3::Object *pobj = nullptr);
+	void UpdateObjectList();
 
 	void AdjustYawPitch(float yawadj, float pitchadj, bool redraw = true);
 

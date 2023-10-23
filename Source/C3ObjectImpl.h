@@ -36,23 +36,23 @@ namespace c3
 
 		virtual ~ObjectImpl();
 
-		virtual System *GetSystem();
+		virtual System *GetSystem() const;
 
 		virtual void Release();
 
-		virtual const TCHAR *GetName();
+		virtual const TCHAR *GetName() const;
 
 		virtual void SetName(const TCHAR *name);
 
-		virtual GUID GetGuid();
+		virtual GUID GetGuid() const;
 
-		virtual Object *GetParent();
+		virtual Object *GetParent() const;
 
 		virtual void SetParent(Object *pparent);
 
-		virtual size_t GetNumChildren();
+		virtual size_t GetNumChildren() const;
 
-		virtual Object *GetChild(size_t index);
+		virtual Object *GetChild(size_t index) const;
 
 		virtual void AddChild(Object *pchild);
 
@@ -62,11 +62,11 @@ namespace c3
 
 		virtual props::IPropertySet *GetProperties();
 
-		virtual size_t GetNumComponents();
+		virtual size_t GetNumComponents() const;
 
-		virtual Component *GetComponent(size_t index);
+		virtual Component *GetComponent(size_t index) const;
 
-		virtual Component *FindComponent(const ComponentType *pctype);
+		virtual Component *FindComponent(const ComponentType *pctype) const;
 
 		virtual Component *AddComponent(const ComponentType *pctype, bool init = true);
 
@@ -84,7 +84,7 @@ namespace c3
 
 		virtual bool Load(genio::IInputStream *is);
 
-		virtual bool Save(genio::IOutputStream *os, props::TFlags64 saveflags);
+		virtual bool Save(genio::IOutputStream *os, props::TFlags64 saveflags) const;
 
 		virtual void PostLoad();
 

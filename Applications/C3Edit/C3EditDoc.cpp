@@ -13,6 +13,8 @@
 #endif
 
 #include "C3EditDoc.h"
+#include "C3EditView.h"
+#include "C3EditFrame.h"
 
 #include <propkey.h>
 
@@ -81,10 +83,12 @@ BOOL C3EditDoc::OnNewDocument()
 
 	m_RootObj = pf->Build();
 	m_RootObj->AddComponent(c3::Positionable::Type());
-	m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
+	m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW | OF_EXPANDED);
 
 	m_GUIRootObj = pf->Build();
 	m_GUIRootObj->AddComponent(c3::Positionable::Type());
+
+	ResetViews();
 
 	return TRUE;
 }
@@ -310,7 +314,7 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	if (m_RootObj)
 	{
 		m_RootObj->AddComponent(c3::Positionable::Type());
-		m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
+		m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW | OF_EXPANDED);
 	}
 
 	genio::IInputStream *is = genio::IInputStream::Create();
@@ -394,7 +398,10 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 			}
 
 			if (m_RootObj)
+			{
 				m_RootObj->Load(is);
+				m_RootObj->Flags().Set(OF_EXPANDED);
+			}
 
 			is->EndBlock();
 		}
@@ -402,5 +409,23 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 	is->Close();
 
+	ResetViews();
+
 	return TRUE;
+}
+
+
+void C3EditDoc::ResetViews()
+{
+	POSITION p = m_viewList.GetHeadPosition();
+	while (p)
+	{
+		C3EditView *pv = dynamic_cast<C3EditView *>((CView *)m_viewList.GetAt(p));
+		if (pv)
+			pv->ClearSelection();
+
+		m_viewList.GetNext(p);
+	}
+
+	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
 }

@@ -23,7 +23,6 @@ public:
 
 // Attributes
 protected:
-	CMFCTabCtrl	m_wndTabs;
 
 	CDebugOutputEdit m_wndOutputDebug;
 

@@ -27,6 +27,11 @@ CCodeEditCtrl::~CCodeEditCtrl()
 
     if (m_pRichEdOle)
         m_pRichEdOle->Release();
+
+	if (m_CodeFont.GetSafeHandle() != NULL)
+	{
+		::DeleteObject(m_CodeFont.Detach());
+	}
 }
 
 
@@ -49,8 +54,6 @@ void CCodeEditCtrl::EnableUndo(bool en)
 
 BOOL CCodeEditCtrl::PreCreateWindow(CREATESTRUCT &cs)
 {
-	SetEventMask(ENM_CHANGE);
-
 	return CRichEditCtrl::PreCreateWindow(cs);
 }
 
@@ -59,10 +62,22 @@ BOOL CCodeEditCtrl::Create(DWORD dwStyle, const RECT &rect, CWnd *pParentWnd, UI
 {
 	BOOL ret = CRichEditCtrl::Create(dwStyle, rect, pParentWnd, nID);
 
-    m_pRichEdOle = GetIRichEditOle();
+	if (ret)
+	{
+		SetEventMask(ENM_CHANGE);
 
-    if (m_pRichEdOle)
-        m_pRichEdOle->QueryInterface(IID_ITextDocument, (LPVOID *)&m_pTextDoc);
+		m_pRichEdOle = GetIRichEditOle();
+
+		if (m_pRichEdOle)
+			m_pRichEdOle->QueryInterface(IID_ITextDocument, (LPVOID *)&m_pTextDoc);
+
+		LOGFONT lf;
+		afxGlobalData.fontRegular.GetLogFont(&lf);
+		_tcscpy_s(lf.lfFaceName, _T("Consolas"));
+		m_CodeFont.CreateFontIndirect(&lf);
+
+		SetFont(&m_CodeFont);
+	}
 
     return ret;
 }
@@ -75,7 +90,7 @@ void CCodeEditCtrl::OnEnChange()
 
 void CCodeEditCtrl::OnEnUpdate()
 {
-	EnableUndo(false);
+	//EnableUndo(false);
 
-	EnableUndo(true);
+	//EnableUndo(true);
 }
