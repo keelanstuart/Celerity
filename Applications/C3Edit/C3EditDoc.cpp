@@ -83,6 +83,7 @@ BOOL C3EditDoc::OnNewDocument()
 
 	m_RootObj = pf->Build();
 	m_RootObj->AddComponent(c3::Positionable::Type());
+	m_RootObj->AddComponent(c3::Scriptable::Type());
 	m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW | OF_EXPANDED);
 
 	m_GUIRootObj = pf->Build();

@@ -54,6 +54,7 @@ public:
 	void FillOutComponents();
 
 protected:
+
 	CFont m_fntPropList;
 	CPropertiesToolBar m_wndToolBar;
 	CEdit m_wndNameEdit;

@@ -14,6 +14,7 @@
 
 CScriptingWnd::CScriptingWnd() noexcept
 {
+	m_pRes = nullptr;
 }
 
 CScriptingWnd::~CScriptingWnd()
@@ -23,14 +24,7 @@ CScriptingWnd::~CScriptingWnd()
 BEGIN_MESSAGE_MAP(CScriptingWnd, CDockablePane)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
-	ON_COMMAND(ID_SCRIPT_NEW, OnNewScript)
-	ON_UPDATE_COMMAND_UI(ID_SCRIPT_NEW, OnUpdateNewScript)
-	ON_COMMAND(ID_SCRIPT_LOAD, OnLoadScript)
-	ON_UPDATE_COMMAND_UI(ID_SCRIPT_LOAD, OnUpdateLoadScript)
-	ON_COMMAND(ID_SCRIPT_SAVE, OnSaveScript)
-	ON_UPDATE_COMMAND_UI(ID_SCRIPT_SAVE, OnUpdateSaveScript)
-	ON_COMMAND(ID_SCRIPT_RUN, OnRunScript)
-	ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUN, OnUpdateRunScript)
+	ON_WM_SETFOCUS()
 END_MESSAGE_MAP()
 
 int CScriptingWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -41,34 +35,20 @@ int CScriptingWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	CRect r;
 	r.SetRectEmpty();
 
-	m_wndToolBar.Create(this, AFX_DEFAULT_TOOLBAR_STYLE, IDR_SCRIPTING);
-	m_wndToolBar.LoadToolBar(IDR_SCRIPTING, 0, 0, TRUE /* Is locked */);
-	m_wndToolBar.CleanUpLockedImages();
-	m_wndToolBar.LoadBitmap(IDB_SCRIPTING_HC, 0, 0, TRUE /* Locked */);
-
-	m_wndToolBar.SetPaneStyle(m_wndToolBar.GetPaneStyle() | CBRS_TOOLTIPS | CBRS_FLYBY);
-	m_wndToolBar.SetPaneStyle(m_wndToolBar.GetPaneStyle() & ~(CBRS_GRIPPER | CBRS_SIZE_DYNAMIC | CBRS_BORDER_TOP | CBRS_BORDER_BOTTOM | CBRS_BORDER_LEFT | CBRS_BORDER_RIGHT));
-	m_wndToolBar.SetOwner(this);
-
-	// All commands will be routed via this control , not via the parent frame:
-	m_wndToolBar.SetRouteCommandsViaFrame(FALSE);
-
 	m_wndTabs.Create(CMFCTabCtrl::STYLE_3D, r, this, 3, CMFCBaseTabCtrl::LOCATION_TOP);
 
 	const DWORD dwStyle_e = WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_NOHIDESEL | ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_OEMCONVERT;
 
-	m_wndCodeEditorImm.Create(dwStyle_e, r, &m_wndTabs, 1);
-	m_wndCodeEditorImm.ModifyStyleEx(0, ES_EX_ZOOMABLE);
-	m_wndCodeEditorImm.SetOptions(ECOOP_SET, ECO_AUTOWORDSELECTION | ECO_AUTOHSCROLL | ECO_AUTOVSCROLL | ECO_NOHIDESEL | ECO_SAVESEL | ECO_WANTRETURN);
-	m_wndTabs.AddTab(&m_wndCodeEditorImm, _T("Immediate"), 0, FALSE);
+	m_wndCodeEditorImm.Create(dwStyle_e, r, &m_wndTabs, 700);
+	m_wndTabs.AddTab(&m_wndCodeEditorImm, _T("Immediate"), 100, FALSE);
 
-	m_wndCodeEditorRes.Create(dwStyle_e, r, &m_wndTabs, 2);
-	m_wndCodeEditorRes.ModifyStyleEx(0, ES_EX_ZOOMABLE);
-	m_wndCodeEditorRes.SetOptions(ECOOP_SET, ECO_AUTOWORDSELECTION | ECO_AUTOHSCROLL | ECO_AUTOVSCROLL | ECO_NOHIDESEL | ECO_SAVESEL | ECO_WANTRETURN);
-	m_wndTabs.AddTab(&m_wndCodeEditorRes, _T("Resource"), 1, FALSE);
+	m_wndCodeEditorRes.Create(dwStyle_e, r, &m_wndTabs, 800);
+	m_wndTabs.AddTab(&m_wndCodeEditorRes, _T("Resource"), 200, FALSE);
 
 	return 0;
 }
+
+
 
 void CScriptingWnd::OnSize(UINT nType, int cx, int cy)
 {
@@ -82,63 +62,141 @@ void CScriptingWnd::AdjustLayout()
 	CRect rc;
 	GetClientRect(rc);
 
-	int cyTlb = m_wndToolBar.CalcFixedLayout(FALSE, TRUE).cy;
-	m_wndToolBar.SetWindowPos(nullptr, rc.left, rc.top, rc.Width(), cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
-
-	m_wndTabs.SetWindowPos(nullptr, rc.left, rc.top + cyTlb, rc.Width(), rc.Height() - cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
+	m_wndTabs.SetWindowPos(nullptr, rc.left, rc.top, rc.Width(), rc.Height(), SWP_NOACTIVATE | SWP_NOZORDER);
 }
 
-void CScriptingWnd::OnNewScript()
+
+void CScriptingWnd::EditScriptResource(c3::Resource *pres)
 {
+	m_wndCodeEditorRes.SetSel(0, -1);
 
-}
-
-void CScriptingWnd::OnUpdateNewScript(CCmdUI *pCmdUI)
-{
-	//pCmdUI->Enable();
-}
-
-void CScriptingWnd::OnLoadScript()
-{
-
-}
-
-void CScriptingWnd::OnUpdateLoadScript(CCmdUI *pCmdUI)
-{
-	//pCmdUI->Enable();
-}
-
-void CScriptingWnd::OnSaveScript()
-{
-
-}
-
-void CScriptingWnd::OnUpdateSaveScript(CCmdUI *pCmdUI)
-{
-	//pCmdUI->Enable();
-}
-
-void CScriptingWnd::OnRunScript()
-{
-	MessageBox(L"", L"",  MB_OK);
-}
-
-void CScriptingWnd::OnUpdateRunScript(CCmdUI *pCmdUI)
-{
-	//pCmdUI->Enable();
-}
-
-void CScriptingWnd::SetResourceScript(c3::Resource *pres)
-{
 	if (pres && pres->GetData() && (pres->GetType() == theApp.m_C3->GetResourceManager()->FindResourceTypeByName(_T("Script"))))
 	{
+		m_pRes = pres;
+
 		tstring *scr = (tstring *)(pres->GetData());
-#if 0
-		m_wndCodeEditorRes.SetSel(0, -1);
+
 		m_wndCodeEditorRes.ReplaceSel(scr->c_str());
-#else
-		m_wndCodeEditorRes.SetWindowText(scr->c_str());
-		m_wndCodeEditorRes.UpdateWindow();
-#endif
 	}
+	else
+	{
+		m_wndCodeEditorRes.ReplaceSel(_T(""));
+	}
+
+	m_wndCodeEditorRes.SetSel(0, 0);
+}
+
+bool CScriptingWnd::IsEditingScriptResource(c3::Resource *pres, int &tabidx)
+{
+	return false;
+}
+
+
+BOOL CScriptingWnd::PreTranslateMessage(MSG *pMsg)
+{
+	return CDockablePane::PreTranslateMessage(pMsg);
+}
+
+BOOL CScriptingWnd::OnShowControlBarMenu(CPoint point)
+{
+	CRect rc;
+	GetClientRect(&rc);
+	ClientToScreen(&rc);
+	if(rc.PtInRect(point))
+		return FALSE;
+
+	return CDockablePane::OnShowControlBarMenu(point);
+}
+
+HBRUSH CScriptingWnd::OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor)
+{
+	HBRUSH hbr = CDockablePane::OnCtlColor(pDC, pWnd, nCtlColor);
+
+	return hbr;
+}
+
+
+BOOL CScriptingWnd::OnEraseBkgnd(CDC *pDC)
+{
+	CRect r;
+	GetClientRect(r);
+	pDC->FillSolidRect(r, RGB(64, 64, 64));
+
+	return false;//CDockablePane::OnEraseBkgnd(pDC);
+}
+
+
+void CScriptingWnd::OnSetFocus(CWnd *pOldWnd)
+{
+	CDockablePane::OnSetFocus(pOldWnd);
+	int t = m_wndTabs.GetActiveTab();
+	switch (t)
+	{
+		case 0:
+			m_wndCodeEditorImm.SetFocus();
+			break;
+		case 1:
+			m_wndCodeEditorRes.SetFocus();
+			break;
+	}
+}
+
+
+bool CScriptingWnd::ImmediateScriptEmpty()
+{
+	CString s;
+	m_wndCodeEditorImm.GetWindowText(s);
+
+	return s.IsEmpty();
+}
+
+
+bool CScriptingWnd::ResourceScriptChanged()
+{
+	return m_wndCodeEditorRes.GetModify();
+}
+
+
+void CScriptingWnd::UpdateResourceScript()
+{
+	if (!m_pRes)
+		return;
+
+	CString s;
+	GetResourceScript(s);
+
+	FILE *f;
+	if (_tfopen_s(&f, m_pRes->GetFilename(), _T("wt")) != EINVAL)
+	{
+		char *ss;
+		CONVERT_TCS2MBCS((LPCTSTR)s, ss);
+		fprintf(f, ss);
+
+		fclose(f);
+	}
+
+	m_pRes->DelRef();
+}
+
+
+void CScriptingWnd::AssignImmediateScript()
+{
+
+}
+
+void CScriptingWnd::GetImmediateScript(CString &s)
+{
+	m_wndCodeEditorImm.GetWindowText(s);
+
+	// The richedit uses the \r\n Windowsy convention for newlines - just use \n though
+	s.Remove(_T('\r'));
+}
+
+
+void CScriptingWnd::GetResourceScript(CString &s)
+{
+	m_wndCodeEditorRes.GetWindowText(s);
+
+	// The richedit uses the \r\n Windowsy convention for newlines - just use \n though
+	s.Remove(_T('\r'));
 }

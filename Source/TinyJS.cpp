@@ -1618,6 +1618,7 @@ bool CTinyJS::Execute(const TCHAR *code)
 		last_error = msg.str();
 
 		m_pSys->GetLog()->Print(last_error.c_str());
+		m_pSys->GetLog()->Print(_T("\n"));
 
 		ret = false;
 	}

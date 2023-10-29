@@ -8,6 +8,8 @@
 #include "framework.h"
 
 #include "C3EditFrame.h"
+#include "C3EditDoc.h"
+#include "C3EditView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -61,6 +63,13 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_AXIS_Y, &C3EditFrame::OnUpdateAxisY)
 	ON_UPDATE_COMMAND_UI(ID_AXIS_Z, &C3EditFrame::OnUpdateAxisZ)
 
+	ON_COMMAND(ID_SCRIPT_ASSIGN, &C3EditFrame::OnAssignScript)
+	ON_COMMAND(ID_SCRIPT_RUN, &C3EditFrame::OnRunScript)
+	ON_COMMAND(ID_SCRIPT_UPDATE, &C3EditFrame::OnUpdateScript)
+	ON_UPDATE_COMMAND_UI(ID_SCRIPT_ASSIGN, &C3EditFrame::OnUpdateAssignScript)
+	ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUN, &C3EditFrame::OnUpdateRunScript)
+	ON_UPDATE_COMMAND_UI(ID_SCRIPT_UPDATE, &C3EditFrame::OnUpdateUpdateScript)
+
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -100,10 +109,12 @@ int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// prevent the menu bar from taking the focus on activation
 	CMFCPopupMenu::SetForceMenuFocus(FALSE);
 
+	GetGlobalData()->EnableRibbonImageScale();
+
 	// ****** standard toolbar
 
-	if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
-		!m_wndToolBar.LoadToolBar(IDR_MAINFRAME_256))
+	if (!m_wndToolBar.CreateEx(this, TBSTYLE_FLAT, AFX_DEFAULT_TOOLBAR_STYLE, CRect(1,1,1,1), IDR_MAINFRAME_256) ||
+		!m_wndToolBar.LoadToolBar(IDR_MAINFRAME_256, 0, 0, TRUE))
 	{
 		TRACE0("Failed to create toolbar\n");
 		return -1;      // fail to create
@@ -116,22 +127,22 @@ int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	// ****** axes toolbar
 
-	if (!m_wndAxesToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
-		!m_wndAxesToolBar.LoadToolBar(IDR_TOOLBAR_AXES))
+	if (!m_wndAxesToolBar.CreateEx(this, TBSTYLE_FLAT, AFX_DEFAULT_TOOLBAR_STYLE, CRect(1,1,1,1), IDR_TOOLBAR_AXES) ||
+		!m_wndAxesToolBar.LoadToolBar(IDR_TOOLBAR_AXES, 0, 0, TRUE))
 	{
 		TRACE0("Failed to create axes toolbar\n");
 		return -1;      // fail to create
 	}
 
 	CString strAxesToolBarName;
-	bNameValid = strToolBarName.LoadString(IDS_TOOLBAR_AXES);
+	bNameValid = strAxesToolBarName.LoadString(IDS_TOOLBAR_AXES);
 	ASSERT(bNameValid);
 	m_wndAxesToolBar.SetWindowText(strAxesToolBarName);
 
 	// ****** 3D tools toolbar
 
-	if (!m_wnd3DToolBar.CreateEx(this, TBSTYLE_FLAT, WS_CHILD | WS_VISIBLE | CBRS_TOP | CBRS_GRIPPER | CBRS_TOOLTIPS | CBRS_FLYBY | CBRS_SIZE_DYNAMIC) ||
-		!m_wnd3DToolBar.LoadToolBar(IDR_TOOLBAR_3DTOOLS))
+	if (!m_wnd3DToolBar.CreateEx(this, TBSTYLE_FLAT, AFX_DEFAULT_TOOLBAR_STYLE, CRect(1,1,1,1), IDR_TOOLBAR_3DTOOLS) ||
+		!m_wnd3DToolBar.LoadToolBar(IDR_TOOLBAR_3DTOOLS, 0, 0, TRUE))
 	{
 		TRACE0("Failed to create 3d tools toolbar\n");
 		return -1;      // fail to create
@@ -141,6 +152,20 @@ int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	bNameValid = str3DToolBarName.LoadString(IDS_TOOLBAR_3DTOOLS);
 	ASSERT(bNameValid);
 	m_wnd3DToolBar.SetWindowText(str3DToolBarName);
+
+	// ****** scripting toolbar
+
+	if (!m_wndScriptingToolBar.CreateEx(this, TBSTYLE_FLAT, AFX_DEFAULT_TOOLBAR_STYLE, CRect(1,1,1,1), IDR_TOOLBAR_SCRIPTING) ||
+		!m_wndScriptingToolBar.LoadToolBar(IDR_TOOLBAR_SCRIPTING, 0, 0, TRUE))
+	{
+		TRACE0("Failed to create scripting toolbar\n");
+		return -1;      // fail to create
+	}
+
+	CString strScriptingToolBarName;
+	bNameValid = strScriptingToolBarName.LoadString(IDS_TOOLBAR_SCRIPTING);
+	ASSERT(bNameValid);
+	m_wndScriptingToolBar.SetWindowText(strScriptingToolBarName);
 
 	// ****** status bar
 
@@ -156,11 +181,14 @@ int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
 	m_wndAxesToolBar.EnableDocking(CBRS_ALIGN_ANY);
 	m_wnd3DToolBar.EnableDocking(CBRS_ALIGN_ANY);
+	m_wndScriptingToolBar.EnableDocking(CBRS_ALIGN_ANY);
+
 	EnableDocking(CBRS_ALIGN_ANY);
 	DockPane(&m_wndMenuBar);
 	DockPane(&m_wndToolBar);
 	DockPane(&m_wndAxesToolBar);
 	DockPane(&m_wnd3DToolBar);
+	DockPane(&m_wndScriptingToolBar);
 
 
 	// enable Visual Studio 2005 style docking window behavior
@@ -877,4 +905,83 @@ void C3EditFrame::RefreshActiveProperties()
 void C3EditFrame::UpdateObjectList()
 {
 	m_wndObjects.UpdateContents();
+}
+
+void C3EditFrame::OnUpdateAssignScript(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!m_wndScripting.ImmediateScriptEmpty());
+}
+
+void C3EditFrame::OnAssignScript()
+{
+
+}
+
+void C3EditFrame::OnUpdateRunScript(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!m_wndScripting.ImmediateScriptEmpty());
+}
+
+void C3EditFrame::OnRunScript()
+{
+	C3EditView *pSceneView = dynamic_cast<C3EditView *>(GetActiveView());
+	if (pSceneView)
+	{
+		CString s;
+		m_wndScripting.GetImmediateScript(s);
+
+		size_t maxi = pSceneView->GetNumSelected();
+		if (!maxi)
+		{
+			c3::Scriptable *psc = (c3::Scriptable *)pSceneView->GetDocument()->m_RootObj->FindComponent(c3::Scriptable::Type());
+			if (psc)
+				psc->Execute((LPCTSTR)s);
+
+			return;
+		}
+
+		for (size_t i = 0; i < maxi; i++)
+		{
+			c3::Object *po = pSceneView->GetSelection(i);
+			if (!po)
+				continue;
+
+			c3::Scriptable *psc = (c3::Scriptable *)po->FindComponent(c3::Scriptable::Type());
+			if (!psc)
+				continue;
+
+			psc->Execute((LPCTSTR)s);
+		}
+	}
+}
+
+void C3EditFrame::OnUpdateUpdateScript(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(m_wndScripting.ResourceScriptChanged());
+}
+
+void C3EditFrame::OnUpdateScript()
+{
+	m_wndScripting.UpdateResourceScript();
+
+	C3EditView *pSceneView = dynamic_cast<C3EditView *>(GetActiveView());
+	if (pSceneView)
+	{
+		size_t maxi = pSceneView->GetNumSelected();
+		if (!maxi)
+			return;
+
+		for (size_t i = 0; i < maxi; i++)
+		{
+			c3::Object *po = pSceneView->GetSelection(i);
+			if (!po)
+				continue;
+
+			props::IProperty *pp = po->GetProperties()->GetPropertyById('SRCF');
+			if (!pp)
+				continue;
+
+			po->PropertyChanged(pp);
+		}
+	}
 }

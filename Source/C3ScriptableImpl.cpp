@@ -11,6 +11,7 @@
 #include <TinyJS_MathFunctions.h>
 #include <TinyJS_Functions.h>
 #include <C3GlobalObjectRegistry.h>
+#include <C3Math.h>
 
 using namespace c3;
 
@@ -29,18 +30,17 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromFile(c3::System *
 		size_t sz = ftell(f);
 		fseek(f, 0, SEEK_SET);
 
+		TCHAR *code = (TCHAR *)calloc(sz + 1, sizeof(TCHAR));
+
 		if (sz)
-		{
-			TCHAR *code = (TCHAR *)calloc(sz + 1, sizeof(TCHAR));
-
 			fread(code, sizeof(TCHAR), sz, f);
-			fclose(f);
 
-			Script *ps = new Script;
-			ps->m_Code = code;
-			*returned_data = ps;
-			free(code);
-		}
+		fclose(f);
+
+		Script *ps = new Script;
+		ps->m_Code = code;
+		*returned_data = ps;
+		free(code);
 	}
 
 	return ResourceType::LoadResult::LR_SUCCESS;
@@ -78,6 +78,7 @@ DECLARE_COMPONENTTYPE(Scriptable, ScriptableImpl);
 ScriptableImpl::ScriptableImpl()
 {
 	m_JS = nullptr;
+	m_Continue = true;
 }
 
 
@@ -115,7 +116,9 @@ void jcSetObjectName(CScriptVar *c, void *userdata);
 void jcLoadObject(CScriptVar *c, void *userdata);
 void jcGetRegisteredObject(CScriptVar *c, void *userdata);
 void jcRegisterObject(CScriptVar *c, void *userdata);
-void jcAdjustQuaternion(CScriptVar *c, void *userdata);
+void jcAdjustQuat(CScriptVar *c, void *userdata);
+void jcQuatToEuler(CScriptVar *c, void *userdata);
+void jcEulerToQuat(CScriptVar *c, void *userdata);
 
 void ScriptableImpl::ResetJS()
 {
@@ -146,7 +149,9 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function LoadObject(hobj, filename)"),						jcLoadObject, psys);
 	m_JS->AddNative(_T("function GetRegisteredObject(designation)"),				jcGetRegisteredObject, psys);
 	m_JS->AddNative(_T("function RegisterObject(designation, hobj)"),				jcRegisterObject, psys);
-	m_JS->AddNative(_T("function AdjustQuaternion(quat, axis, angle)"),				jcAdjustQuaternion, psys);
+	m_JS->AddNative(_T("function AdjustQuat(quat, axis, angle)"),					jcAdjustQuat, psys);
+	m_JS->AddNative(_T("function EulerToQuat(euler)"),								jcEulerToQuat, psys);
+	m_JS->AddNative(_T("function QuatToEuler(quat)"),								jcQuatToEuler, psys);
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -187,14 +192,17 @@ void ScriptableImpl::Update(float elapsed_time)
 	if (!m_Continue)
 		return;
 
-	m_UpdateTime -= elapsed_time;
-	if (m_UpdateTime <= 0)
+	//if (m_JS->GetScriptVariable(_T("update")))
 	{
-		m_UpdateTime = m_UpdateRate + m_UpdateTime;
-		if (m_UpdateTime < 0)
-			m_UpdateTime = m_UpdateRate;
+		m_UpdateTime -= elapsed_time;
 
-		Execute(_T("update(%0.3f);"), elapsed_time);
+		if (m_UpdateTime <= 0)
+		{
+			m_UpdateTime = m_UpdateRate + m_UpdateTime;
+			if (m_UpdateTime < 0)
+				m_UpdateTime = m_UpdateRate;
+			Execute(_T("update(%0.3f);"), elapsed_time);
+		}
 	}
 }
 
@@ -216,6 +224,8 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 	if (!pprop)
 		return;
 
+	bool needs_init = false;
+
 	switch (pprop->GetID())
 	{
 		case 'SRCF':
@@ -229,7 +239,7 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 
 					m_Code = ((Script *)(pres->GetData()))->m_Code;
 					m_Continue = m_JS->Execute(m_Code.c_str());
-					Execute(_T("init();"));
+					needs_init = true;
 				}
 			}
 			break;
@@ -242,7 +252,7 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 
 				m_Code = pprop->AsString();
 				m_Continue = m_JS->Execute(m_Code.c_str());
-				Execute(_T("init();"));
+				needs_init = true;
 			}
 			break;
 
@@ -251,6 +261,9 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 			m_UpdateTime = 0.0f;
 			break;
 	}
+
+	if (needs_init)
+		Execute(_T("init();"));
 }
 
 
@@ -260,20 +273,26 @@ bool ScriptableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDi
 }
 
 
-#define CMD_BUFSIZE	1024
-
 void ScriptableImpl::Execute(const TCHAR *pcmd, ...)
 {
+	static tstring execbuf;
+
 	va_list marker;
 	va_start(marker, pcmd);
 
-	if (!m_Continue)
-		return;
+//	if (!m_Continue)
+		//return;
 
-	TCHAR buf[CMD_BUFSIZE];	// Temporary buffer for output
-	_vsntprintf_s(buf, CMD_BUFSIZE - 1, pcmd, marker);
+	int sz = _vsctprintf(pcmd, marker);
+	if (sz > (int)execbuf.capacity())
+	{
+		execbuf.reserve((sz * 2) + 1);
+	}
+	execbuf.resize(sz + 1);
 
-	m_Continue = m_JS->Execute(buf);
+	_vsntprintf_s((TCHAR *)(execbuf.data()), execbuf.capacity(), execbuf.capacity(), pcmd, marker);
+
+	m_Continue = m_JS->Execute(execbuf.c_str());
 }
 
 
@@ -896,8 +915,8 @@ void jcRegisterObject(CScriptVar *c, void *userdata)
 }
 
 
-//m_JS->AddNative(_T("function AdjustQuaternion(quat, axis, angle)"),			jcAdjustQuaternion, psys);
-void jcAdjustQuaternion(CScriptVar *c, void *userdata)
+//m_JS->AddNative(_T("function AdjustQuat(quat, axis, angle)"),			jcAdjustQuat, psys);
+void jcAdjustQuat(CScriptVar *c, void *userdata)
 {
 	CScriptVar *ret = c->GetReturnVar();
 	if (!ret)
@@ -962,4 +981,101 @@ void jcAdjustQuaternion(CScriptVar *c, void *userdata)
 	pry->SetFloat(q.y);
 	prz->SetFloat(q.z);
 	prw->SetFloat(q.w);
+}
+
+
+//m_JS->AddNative(_T("function EulerToQuat(euler)"),			jcEulerToQuat, psys);
+void jcEulerToQuat(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	CScriptVar *peuler = c->GetParameter(_T("euler"));
+	if (!peuler)
+		return;
+
+	CScriptVarLink *px = peuler->FindChild(_T("x"));
+	CScriptVarLink *py = peuler->FindChild(_T("y"));
+	CScriptVarLink *pz = peuler->FindChild(_T("z"));
+	if (!(px && py && pz))
+		return;
+
+	glm::fquat q = glm::identity<glm::fquat>();
+
+	float roll = glm::radians(py->m_Var->GetFloat());
+	q = glm::angleAxis(roll, glm::fvec3(0, 1, 0)) * q;
+
+	float pitch = glm::radians(px->m_Var->GetFloat());
+	q = glm::angleAxis(pitch, glm::fvec3(1, 0, 0)) * q;
+
+	float yaw = glm::radians(pz->m_Var->GetFloat());
+	q = glm::angleAxis(yaw, glm::fvec3(0, 0, 1)) * q;
+
+	CScriptVarLink *psvl;
+
+	psvl = ret->FindChildOrCreate(_T("x"));
+	psvl->m_Owned = true;
+	CScriptVar *prx = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("y"));
+	psvl->m_Owned = true;
+	CScriptVar *pry = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("z"));
+	psvl->m_Owned = true;
+	CScriptVar *prz = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("w"));
+	psvl->m_Owned = true;
+	CScriptVar *prw = psvl->m_Var;
+
+	prx->SetFloat(q.x);
+	pry->SetFloat(q.y);
+	prz->SetFloat(q.z);
+	prw->SetFloat(q.w);
+}
+
+
+//m_JS->AddNative(_T("function QuatToEuler(quat)"),			jcQuatToEuler, psys);
+void jcQuatToEuler(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	CScriptVar *pquat = c->GetParameter(_T("quat"));
+	if (!pquat)
+		return;
+
+	CScriptVarLink *pqx = pquat->FindChild(_T("x"));
+	CScriptVarLink *pqy = pquat->FindChild(_T("y"));
+	CScriptVarLink *pqz = pquat->FindChild(_T("z"));
+	CScriptVarLink *pqw = pquat->FindChild(_T("w"));
+	if (!(pqx && pqy && pqz && pqw))
+		return;
+
+	glm::fquat q;
+	q.x = (float)(pqx ? pqx->m_Var->GetFloat() : pquat->GetArrayIndex(0)->GetFloat());
+	q.y = (float)(pqy ? pqy->m_Var->GetFloat() : pquat->GetArrayIndex(1)->GetFloat());
+	q.z = (float)(pqz ? pqz->m_Var->GetFloat() : pquat->GetArrayIndex(2)->GetFloat());
+	q.w = (float)(pqw ? pqw->m_Var->GetFloat() : pquat->GetArrayIndex(3)->GetFloat());
+
+	CScriptVarLink *psvl;
+
+	psvl = ret->FindChildOrCreate(_T("x"));
+	psvl->m_Owned = true;
+	CScriptVar *prx = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("y"));
+	psvl->m_Owned = true;
+	CScriptVar *pry = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("z"));
+	psvl->m_Owned = true;
+	CScriptVar *prz = psvl->m_Var;
+
+	prx->SetFloat(glm::degrees(c3::math::GetPitch(&q)));
+	pry->SetFloat(glm::degrees(c3::math::GetRoll(&q)));
+	prz->SetFloat(glm::degrees(c3::math::GetYaw(&q)));
 }

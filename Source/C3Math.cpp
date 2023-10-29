@@ -8,10 +8,7 @@
 
 #include <C3Math.h>
 
-using namespace c3;
-
-
-void Hermite(float s, glm::fvec3 &ap, glm::fvec3 &at, glm::fvec3 &bp, glm::fvec3 &bt, glm::fvec3 &p, glm::fvec3 *pd, glm::fvec3 *pdd)
+void c3::math::Hermite(float s, glm::fvec3 &ap, glm::fvec3 &at, glm::fvec3 &bp, glm::fvec3 &bt, glm::fvec3 &p, glm::fvec3 *pd, glm::fvec3 *pdd)
 {
 	// There are some values which can be computed once for all equations here...
 	float s_sq = s * s;
@@ -66,4 +63,31 @@ void Hermite(float s, glm::fvec3 &ap, glm::fvec3 &at, glm::fvec3 &bp, glm::fvec3
 			pdd->z = (pddcomp[0] * (ap.z - bp.z)) + (pddcomp[1] * (at.z + bt.z)) + (6 * (bp.z + ap.z)) - ((4 * at.z) + (2 * bt.z));
 		}
 	}
+}
+
+
+float c3::math::GetYaw(const glm::fquat *q)
+{
+	// Extract the tangent of the yaw angle (rotation about the z-axis) from the orientation quaternion
+	float tanyaw = (2 * ((q->x * q->y) + (q->w * q->z))) / ((q->w * q->w) + (q->x * q->x) - (q->y * q->y) - (q->z * q->z));
+
+	return (float)atan(tanyaw);
+}
+
+
+float c3::math::GetPitch(const glm::fquat *q)
+{
+	// Extract the sine of the pitch angle (rotation about the x-axis) from the orientation quaternion
+	float sinpitch = -2 * ((q->x * q->z) - (q->w * q->y));
+
+	return (float)asin(sinpitch);
+}
+
+
+float c3::math::GetRoll(const glm::fquat *q)
+{
+	// Extract the tangent of the roll angle (rotation about the y-axis) from the orientation quaternion
+	float tanroll = (2 * ((q->w * q->x) + (q->y * q->z))) / ((q->w * q->w) - (q->x * q->x) - (q->y * q->y) + (q->z * q->z));
+
+	return (float)atan(tanroll);
 }

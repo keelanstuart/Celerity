@@ -11,6 +11,7 @@
 #include "Resource.h"
 #include "C3EditFrame.h"
 #include "C3Edit.h"
+#include <gdiplus.h>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -67,8 +68,6 @@ END_MESSAGE_MAP()
 
 void CPropertiesWnd::AdjustLayout()
 {
-	RedrawWindow(nullptr, nullptr, RDW_ERASE | RDW_ERASENOW | RDW_INVALIDATE);
-
 	if (GetSafeHwnd () == nullptr || (AfxGetMainWnd() != nullptr && AfxGetMainWnd()->IsIconic()))
 	{
 		return;
@@ -78,29 +77,39 @@ void CPropertiesWnd::AdjustLayout()
 	GetClientRect(rc);
 
 	int lh = rc.Height() / 6;
-	#define CONTROL_SPACING		0
+	#define CTRL_SPACE		4
+	#define EDIT_HT			21
+
+	if (m_pProto || m_pObj)
+	{
+		CRect rne = rc;
+		rne.left = EDIT_HT / 2;
+		rne.bottom = rne.top + EDIT_HT;
+		rne.OffsetRect(0, EDIT_HT);
+		m_wndNameEdit.SetWindowPos(nullptr, rne.left, rne.top, rne.Width(), rne.Height(), SWP_NOACTIVATE | SWP_NOZORDER);
+
+		CRect rcl = rc;
+		rcl.top = rne.bottom + EDIT_HT + CTRL_SPACE;
+		rcl.bottom = rcl.top + lh;
+		m_wndCompList.SetWindowPos(nullptr, rcl.left, rcl.top, rcl.Width(), rcl.Height(), SWP_NOACTIVATE | SWP_NOZORDER);
+
+		CRect rfl = rc;
+		rfl.top = rcl.bottom;
+		rfl.bottom = rfl.top + lh;
+		m_wndFlagList.SetWindowPos(nullptr, rfl.left, rfl.top, rfl.Width(), rfl.Height(), SWP_NOACTIVATE | SWP_NOZORDER);
+
+		rc.top = rfl.bottom + 2;
+	}
+
+	int cyTlb = m_wndToolBar.CalcFixedLayout(FALSE, TRUE).cy;
+	m_wndToolBar.SetWindowPos(nullptr, rc.left, rc.top, rc.Width(), cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
+	m_wndPropList.SetWindowPos(nullptr, rc.left, rc.top + cyTlb, rc.Width(), rc.Height() - cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
 
 	m_wndNameEdit.ShowWindow((m_pProto || m_pObj) ? SW_NORMAL : SW_HIDE);
 	m_wndCompList.ShowWindow((m_pProto || m_pObj) ? SW_NORMAL : SW_HIDE);
 	m_wndFlagList.ShowWindow((m_pProto || m_pObj) ? SW_NORMAL : SW_HIDE);
 
-	if (m_pProto || m_pObj)
-	{
-		CRect rne(0, 0, 0, 21);
-		m_wndNameEdit.SetWindowPos(nullptr, rc.left, rc.top, rc.Width() - CONTROL_SPACING, rne.Height(), SWP_NOACTIVATE | SWP_NOZORDER);
-
-		rc.DeflateRect(0, rne.Height() + CONTROL_SPACING, 0,  0);
-		m_wndCompList.SetWindowPos(nullptr, rc.left, rc.top, rc.Width() - CONTROL_SPACING, lh, SWP_NOACTIVATE | SWP_NOZORDER);
-
-		rc.DeflateRect(0, lh + CONTROL_SPACING, 0,  0);
-		m_wndFlagList.SetWindowPos(nullptr, rc.left, rc.top, rc.Width() - CONTROL_SPACING, lh, SWP_NOACTIVATE | SWP_NOZORDER);
-
-		rc.DeflateRect(0, lh + CONTROL_SPACING, 0,  0);
-	}
-
-	int cyTlb = m_wndToolBar.CalcFixedLayout(FALSE, TRUE).cy;
-	m_wndToolBar.SetWindowPos(nullptr, rc.left, rc.top, rc.Width() - CONTROL_SPACING, cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
-	m_wndPropList.SetWindowPos(nullptr, rc.left, rc.top + cyTlb, rc.Width() - CONTROL_SPACING, rc.Height() - cyTlb, SWP_NOACTIVATE | SWP_NOZORDER);
+	RedrawWindow(nullptr, nullptr, RDW_ERASE | RDW_ERASENOW | RDW_INVALIDATE);
 }
 
 int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -331,9 +340,59 @@ HBRUSH CPropertiesWnd::OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor)
 
 BOOL CPropertiesWnd::OnEraseBkgnd(CDC *pDC)
 {
+	HDC hdc = pDC->GetSafeHdc();
+	if (!hdc)
+		return true;
+
 	CRect r;
 	GetClientRect(r);
 	pDC->FillSolidRect(r, RGB(64, 64, 64));
+
+	if (m_pObj || m_pProto)
+	{
+		CPaintDC *pdc = (CPaintDC *)CDC::FromHandle(pDC->GetSafeHdc());
+
+		CRect rc, r;
+		m_wndNameEdit.GetWindowRect(rc);
+		ScreenToClient(rc);
+
+		Gdiplus::RectF tnr;
+
+		// Get GUID
+		TCHAR gs[128];
+		INT gslen;
+		GUID g;
+
+		if (m_pObj)
+		{
+			_tcscpy_s(gs, _T("Object Name"));
+			g = m_pObj->GetGuid();
+		}
+		else if (m_pProto)
+		{
+			_tcscpy_s(gs, _T("Prototype Name"));
+			g = m_pProto->GetGUID();
+		}
+
+		COLORREF old_color = pdc->SetTextColor(RGB(255,255,255));
+
+		r = rc;
+		r.left = 1;
+		r.OffsetRect(0, 2 - r.Height());
+		gslen = (INT)_tcslen(gs);
+		pdc->DrawText(gs, gslen, r, DT_LEFT);
+
+		gslen = _stprintf_s(gs, _T("{%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}"),
+								g.Data1, g.Data2, g.Data3, g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
+
+		// DRAW OBJECT GUID
+		pdc->SetTextColor(RGB(128,128,128));
+		r = rc;
+		r.OffsetRect(0, r.Height());
+		pdc->DrawText(gs, gslen, r, DT_LEFT | DT_WORD_ELLIPSIS);
+
+		pdc->SetTextColor(old_color);
+	}
 
 	return false;//CDockablePane::OnEraseBkgnd(pDC);
 }
@@ -413,9 +472,11 @@ afx_msg void CPropertiesWnd::OnChangeName()
 	if (m_pProto)
 	{
 		m_pProto->SetName(name);
+		//((C3EditFrame *)theApp.GetMainWnd())->m_wndObjects.UpdateData();
 	}
 	else if (m_pObj)
 	{
 		m_pObj->SetName(name);
+		((C3EditFrame *)theApp.GetMainWnd())->m_wndProtoView.UpdateData();
 	}
 }

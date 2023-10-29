@@ -7,6 +7,7 @@
 #include "pch.h"
 
 #include <C3PositionableImpl.h>
+#include <C3Math.h>
 
 using namespace c3;
 
@@ -365,28 +366,19 @@ const glm::fquat *PositionableImpl::GetOriQuat(glm::fquat *ori)
 
 float PositionableImpl::GetYaw()
 {
-	// Extract the tangent of the yaw angle (rotation about the z-axis) from the orientation quaternion
-	float tanyaw = (2 * ((m_Ori.x * m_Ori.y) + (m_Ori.w * m_Ori.z))) / ((m_Ori.w * m_Ori.w) + (m_Ori.x * m_Ori.x) - (m_Ori.y * m_Ori.y) - (m_Ori.z * m_Ori.z));
-
-	return (float)atan(tanyaw);
+	return math::GetYaw(&m_Ori);
 }
 
 
 float PositionableImpl::GetPitch()
 {
-	// Extract the sine of the pitch angle (rotation about the x-axis) from the orientation quaternion
-	float sinpitch = -2 * ((m_Ori.x * m_Ori.z) - (m_Ori.w * m_Ori.y));
-
-	return (float)asin(sinpitch);
+	return math::GetPitch(&m_Ori);
 }
 
 
 float PositionableImpl::GetRoll()
 {
-	// Extract the tangent of the roll angle (rotation about the y-axis) from the orientation quaternion
-	float tanroll = (2 * ((m_Ori.w * m_Ori.x) + (m_Ori.y * m_Ori.z))) / ((m_Ori.w * m_Ori.w) - (m_Ori.x * m_Ori.x) - (m_Ori.y * m_Ori.y) + (m_Ori.z * m_Ori.z));
-
-	return (float)atan(tanroll);
+	return math::GetRoll(&m_Ori);
 }
 
 

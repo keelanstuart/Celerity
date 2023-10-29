@@ -116,12 +116,6 @@ void C3ObjectListCtrl::OnSize(UINT nType, int cx, int cy)
 }
 
 
-#if defined(UNICODE)
-#define GetLogFont	GetLogFontW
-#else
-#define GetLogFont	GetLogFontA
-#endif
-
 void C3ObjectListCtrl::DrawItem(LPDRAWITEMSTRUCT pdi)
 {
 	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
@@ -143,7 +137,7 @@ void C3ObjectListCtrl::DrawItem(LPDRAWITEMSTRUCT pdi)
 	Gdiplus::Graphics gr(*pdc);
 
 	Gdiplus::SolidBrush br_selected(Gdiplus::Color(255, 45, 45, 192));
-	Gdiplus::SolidBrush br_bg(Gdiplus::Color(255, 45, 45, 45));
+	Gdiplus::SolidBrush br_bg(Gdiplus::Color(255, 80, 80, 80));
 	Gdiplus::SolidBrush br_text(Gdiplus::Color(255, 255, 255, 255));
 	Gdiplus::SolidBrush br_text_dark(Gdiplus::Color(255, 128, 128, 128));
 	Gdiplus::SolidBrush br_text_seldark(Gdiplus::Color(255, 160, 160, 192));
@@ -178,7 +172,7 @@ void C3ObjectListCtrl::DrawItem(LPDRAWITEMSTRUCT pdi)
 
 	Gdiplus::Font f_list(pdi->hDC);
 	LOGFONT lf_guid;
-	f_list.GetLogFont(&gr, &lf_guid);
+	f_list.GetLogFontW(&gr, &lf_guid);
 	lf_guid.lfWeight = FW_EXTRALIGHT;
 	lf_guid.lfHeight = lf_guid.lfHeight * 3 / 4;
 	lf_guid.lfItalic = TRUE;
@@ -238,7 +232,7 @@ void C3ObjectListCtrl::OnPaint()
 
 	Gdiplus::Graphics gr(mdc.GetDC());
 
-	Gdiplus::SolidBrush br_bg(Gdiplus::Color(255, 40, 40, 40));
+	Gdiplus::SolidBrush br_bg(Gdiplus::Color(255, 64, 64, 64));
 
 	CRect r;
 	GetClientRect(r);

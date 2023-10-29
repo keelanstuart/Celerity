@@ -617,7 +617,7 @@ void C3EditView::OnRButtonUp(UINT /* nFlags */, CPoint point)
 	OnContextMenu(this, point);
 }
 
-void C3EditView::OnContextMenu(CWnd* /* pWnd */, CPoint point)
+void C3EditView::OnContextMenu(CWnd *pWnd, CPoint point)
 {
 #ifndef SHARED_HANDLERS
 	theApp.GetContextMenuManager()->ShowPopupMenu(IDR_POPUP_EDIT, point.x, point.y, this, TRUE);
@@ -1132,7 +1132,7 @@ void C3EditView::AddToSelection(const c3::Object *obj)
 				c3::Resource *psrcf_res = theApp.m_C3->GetResourceManager()->GetResource(psrcf_prop->AsString(), RESF_DEMANDLOAD);
 				C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
 				if (pef->GetSafeHwnd() && pef->m_wndScripting.GetSafeHwnd())
-					pef->m_wndScripting.SetResourceScript(psrcf_res);
+					pef->m_wndScripting.EditScriptResource(psrcf_res);
 			}
 		}
 		else

@@ -5,6 +5,7 @@
 
 
 #include "CodeEditCtrl.h"
+#include "ReactorButton.h"
 
 
 #pragma once
@@ -28,14 +29,24 @@ class CScriptingWnd : public CDockablePane
 public:
 	CScriptingWnd() noexcept;
 
-	void SetResourceScript(c3::Resource *pres);
+	void EditScriptResource(c3::Resource *pres);
+	bool IsEditingScriptResource(c3::Resource *pres, int &tabidx);
+	bool ImmediateScriptEmpty();
+	bool ResourceScriptChanged();
+
+	void GetImmediateScript(CString &s);
+	void GetResourceScript(CString &s);
+
+	void UpdateResourceScript();
+	void AssignImmediateScript();
 
 // Attributes
 protected:
+	c3::Resource *m_pRes;
+
 	CMFCTabCtrl m_wndTabs;
 	CCodeEditCtrl m_wndCodeEditorRes;
 	CCodeEditCtrl m_wndCodeEditorImm;
-	CScriptingToolBar m_wndToolBar;
 
 	void UpdateFonts();
 
@@ -46,18 +57,16 @@ public:
 protected:
 	void AdjustLayout();
 
+	virtual BOOL OnShowControlBarMenu(CPoint point);
+	virtual HBRUSH OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor);
+	virtual BOOL OnEraseBkgnd(CDC *pDC);
+
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 
-	afx_msg void OnNewScript();
-	afx_msg void OnUpdateNewScript(CCmdUI *pCmdUI);
-	afx_msg void OnLoadScript();
-	afx_msg void OnUpdateLoadScript(CCmdUI *pCmdUI);
-	afx_msg void OnSaveScript();
-	afx_msg void OnUpdateSaveScript(CCmdUI *pCmdUI);
-	afx_msg void OnRunScript();
-	afx_msg void OnUpdateRunScript(CCmdUI *pCmdUI);
-
 	DECLARE_MESSAGE_MAP()
+public:
+    virtual BOOL PreTranslateMessage(MSG *pMsg);
+	afx_msg void OnSetFocus(CWnd *pOldWnd);
 };
 

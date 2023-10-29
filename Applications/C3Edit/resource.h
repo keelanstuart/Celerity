@@ -11,13 +11,11 @@
 #define IDS_TOOLBAR_STANDARD            124
 #define IDS_TOOLBAR_CUSTOMIZE           125
 #define ID_VIEW_CUSTOMIZE               126
-#define IDS_POPUP_GRAPH                 126
+#define IDS_SCRIPTING_MENU              126
 #define IDS_OBJECTS_WND                 127
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAME_256               129
-#define IDS_SCRIPTEDITOR_STATUS_NAME    129
 #define IDR_C3EditTYPE                  130
-#define IDS_SCRIPTEDITOR_STATUS_ROWCOL  130
 #define ID_WINDOW_MANAGER               131
 #define ID_VIEW_FILEVIEW                133
 #define ID_VIEW_PROTOVIEW               134
@@ -30,7 +28,6 @@
 #define ID_CLASS_DEFINITION             141
 #define ID_CLASS_PROPERTIES             142
 #define ID_NEW_FOLDER                   143
-#define ID_SEARCH                       143
 #define ID_SORT_MENU                    144
 #define ID_SORTING_GROUPBYTYPE          145
 #define ID_SORTING_SORTALPHABETIC       146
@@ -44,7 +41,6 @@
 #define ID_EXPAND_ALL                   154
 #define IDS_FILE_VIEW                   155
 #define IDS_CLASS_VIEW                  156
-#define IDS_PROTOTYPE_VIEW              156
 #define IDS_OUTPUT_WND                  157
 #define IDS_PROPERTIES_WND              158
 #define IDI_FILE_VIEW                   161
@@ -58,7 +54,6 @@
 #define IDR_EXPLORER                    169
 #define IDB_EXPLORER_24                 170
 #define IDR_SORT                        171
-#define IDR_PROTOTREE                   171
 #define IDB_SORT_24                     172
 #define IDR_POPUP_SORT                  173
 #define IDR_POPUP_EXPLORER              174
@@ -109,23 +104,19 @@
 #define IDC_SELECT_MINUS                312
 #define IDC_SELECT_PLUS                 313
 #define IDC_UNISCALE                    314
-#define IDB_CHECKBOX                    314
 #define IDC_WAND                        315
 #define IDC_CURSOR9                     316
 #define IDC_ZOOM                        317
 #define IDR_TOOLBAR_3DTOOLS             318
-#define IDR_POPUP_GRAPH                 318
 #define IDR_TOOLBAR_AXES                319
-#define IDB_SCRIPTING_HC                320
+#define IDR_TOOLBAR_SCRIPTING           320
 #define ID_AXIS_X                       321
-#define IDR_SCRIPTING                   321
 #define ID_AXIS_Y                       322
 #define ID_AXIS_Z                       323
-#define IDI_OBJECTS_WND                 323
 #define ID_AXIS_SCREENREL               324
-#define IDI_OBJECTS_WND_HC              324
 #define ID_TOOL_SELECT                  325
 #define ID_TOOL_TRANSLATE               326
+#define IDR_ACC_CODE_EDIT               326
 #define ID_TOOL_ROTATE                  327
 #define ID_TOOL_UNISCALE                328
 #define ID_TOOL_SCALE                   329
@@ -134,19 +125,29 @@
 #define IDD_GRAPHNODE                   333
 #define ID_VIEW_SCRIPTINGWND            334
 #define IDS_SCRIPTING_WND               335
-#define ID_VIEW_OBJECTSWND              335
 #define IDI_SCRIPTING_WND               336
-#define ID_SCRIPTEDITOR_STATUS_NAME     336
 #define IDI_SCRIPTING_WND_HC            337
-#define ID_SCRIPTEDITOR_STATUS_ROWCOL   337
-#define ID_SCRIPT_NEW                   338
-#define ID_SCRIPT_LOAD                  339
-#define ID_SCRIPT_SAVE                  340
+#define ID_SCRIPT_UPDATE                339
+#define ID_SCRIPT_ASSIGN                340
 #define ID_SCRIPT_RUN                   341
-#define IDS_SCRIPT_NEW                  342
-#define IDS_SCRIPT_LOAD                 343
-#define IDS_SCRIPT_SAVE                 344
-#define IDS_SCRIPT_RUN                  345
+#define IDS_SCRIPT_UPDATE               342
+#define IDS_SCRIPT_ASSIGN               343
+#define IDS_SCRIPT_RUN                  344
+#define IDS_POPUP_GRAPH                 345
+#define IDS_SCRIPTEDITOR_STATUS_NAME    346
+#define IDS_SCRIPTEDITOR_STATUS_ROWCOL  347
+#define IDS_TOOLBAR_SCRIPTING           348
+#define ID_SEARCH                       349
+#define IDS_PROTOTYPE_VIEW              350
+#define IDR_PROTOTREE                   351
+#define IDB_CHECKBOX                    352
+#define IDR_POPUP_GRAPH                 353
+#define IDI_OBJECTS_WND                 354
+#define IDI_OBJECTS_WND_HC              355
+#define IDR_POPUP_SCRIPTING             356
+#define ID_VIEW_OBJECTSWND              357
+#define ID_SCRIPTEDITOR_STATUS_NAME     358
+#define ID_SCRIPTEDITOR_STATUS_ROWCOL   359
 #define IDC_PROPERTIES                  1000
 #define IDC_COMPONENTS                  1001
 #define IDC_NAME                        1002
@@ -160,13 +161,23 @@
 #define ID_VIEW_GRAPHEDITOR             32776
 #define ID_GRAPH_ADDNODE                32777
 #define ID_GRAPH_DELETENODE             32778
+#define ID_EDIT_CUT32779                32779
+#define ID_EDIT_COPY32780               32780
+#define ID_EDIT_PASTE32781              32781
+#define ID_EDIT_EXECUTESELECTION        32782
+#define ID_EDIT_EXECUTE                 32783
+#define ID_EDIT_CLEAR32784              32784
+#define ID_EDIT_SAVE                    32785
+#define ID_EDIT_LOAD                    32786
+#define ID_CUT                          32787
+#define ID_CLEAR                        32788
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        325
-#define _APS_NEXT_COMMAND_VALUE         32779
+#define _APS_NEXT_RESOURCE_VALUE        327
+#define _APS_NEXT_COMMAND_VALUE         32794
 #define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           339
 #endif

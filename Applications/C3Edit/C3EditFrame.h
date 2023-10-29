@@ -71,6 +71,7 @@ public:  // control bar embedded members
 	CMFCToolBar       m_wndToolBar;
 	CMFCToolBar       m_wndAxesToolBar;
 	CMFCToolBar       m_wnd3DToolBar;
+	CMFCToolBar       m_wndScriptingToolBar;
 	CMFCStatusBar     m_wndStatusBar;
 	CPrototypeView    m_wndProtoView;
 	CPropertiesWnd    m_wndProperties;
@@ -125,6 +126,13 @@ protected:
 	afx_msg void OnUpdateViewObjectsWindow(CCmdUI* pCmdUI);
 	afx_msg void OnOptions();
 	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
+
+	afx_msg void OnUpdateAssignScript(CCmdUI *pCmdUI);
+	afx_msg void OnAssignScript();
+	afx_msg void OnUpdateRunScript(CCmdUI *pCmdUI);
+	afx_msg void OnRunScript();
+	afx_msg void OnUpdateUpdateScript(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateScript();
 	DECLARE_MESSAGE_MAP()
 
 	BOOL CreateDockingWindows();

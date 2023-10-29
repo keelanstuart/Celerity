@@ -431,6 +431,10 @@ void C3EditApp::PreLoadState()
 	bNameValid = strName.LoadString(IDS_POPUP_GRAPH);
 	ASSERT(bNameValid);
 	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_GRAPH);
+
+	bNameValid = strName.LoadString(IDS_SCRIPTING_MENU);
+	ASSERT(bNameValid);
+	GetContextMenuManager()->AddMenu(strName, IDR_POPUP_SCRIPTING);
 }
 
 void C3EditApp::LoadCustomState()

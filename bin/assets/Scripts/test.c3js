@@ -1,13 +1,21 @@
 var runtime;
 var hpos;
+var hori;
 
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
+
 	var pos = GetPropertyValue(hpos);
 	pos.x = Math.sin(runtime) * 10.0;
 	pos.y = Math.cos(runtime) * 10.0;
+        pos.z = Math.sin(runtime * 3.0) * 4.0;
 	SetPropertyValue(hpos, pos);
+
+        var ori = GetPropertyValue(hori);
+        ori.x = Math.sin(runtime);
+        ori.w = Math.cos(runtime);
+        SetPropertyValue(hori, ori);
 }
 
 function init()
@@ -15,4 +23,5 @@ function init()
 	runtime = 0.0;
 
 	hpos = FindProperty(self, "Position");
+        hori = FindProperty(self, "Orientation"); 
 }
