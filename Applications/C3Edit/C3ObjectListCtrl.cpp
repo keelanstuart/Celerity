@@ -245,9 +245,12 @@ void C3ObjectListCtrl::OnPaint()
 
 void C3ObjectListCtrl::MeasureItem(LPMEASUREITEMSTRUCT pmi)
 {
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	float scl = pfrm ? pfrm->m_Scale : 1.0f;
+
 	CRect r;
 	GetClientRect(r);
-	pmi->itemHeight = 36;
+	pmi->itemHeight = UINT(36.0f * scl);
 	pmi->itemWidth = r.Width();
 }
 

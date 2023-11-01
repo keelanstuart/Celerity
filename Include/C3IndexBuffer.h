@@ -46,11 +46,17 @@ namespace c3
 		#define IBLOCKFLAG_UPDATENOW	0x0010
 		#define IBLOCKFLAG_CACHE		0x0020
 
+		// Locks the IndexBuffer's memory so that it can be read from or written to
+		// Requires an eventual, corresponding Unlock call
 		virtual RETURNCODE Lock(void **buffer, size_t numindices, IndexSize sz, props::TFlags64 flags) = NULL;
+
+		// Unlocks the IndexBuffer's memory, possibly updating GPU memory
 		virtual void Unlock() = NULL;
 
+		// Returns the number of indices in the buffer
 		virtual size_t Count() = NULL;
 
+		// Returns the size of an individual index in bytes, corresponds to EIndexSize
 		virtual size_t GetIndexSize() = NULL;
 
 	};

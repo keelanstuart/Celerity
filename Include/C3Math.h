@@ -26,10 +26,13 @@ namespace c3
 					 glm::fvec3 &point_B, glm::fvec3 &tangent_B,
 					 glm::fvec3 &p, glm::fvec3 *pd = nullptr, glm::fvec3 *pdd = nullptr);
 
+		// Derives the rotation (in radians) about the Z axis, given an input quaternion
 		float C3_API GetYaw(const glm::fquat *q);
 
+		// Derives the rotation (in radians) about the X axis, given an input quaternion
 		float C3_API GetPitch(const glm::fquat *q);
 
+		// Derives the rotation (in radians) about the Y axis, given an input quaternion
 		float C3_API GetRoll(const glm::fquat *q);
 
 	};

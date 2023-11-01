@@ -10,6 +10,7 @@
 #include "C3EditFrame.h"
 #include "C3EditDoc.h"
 #include "C3EditView.h"
+#include <shellscalingapi.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -70,6 +71,8 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUN, &C3EditFrame::OnUpdateRunScript)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_UPDATE, &C3EditFrame::OnUpdateUpdateScript)
 
+	ON_WM_MOVE()
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -239,6 +242,8 @@ int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	// enable quick (Alt+drag) toolbar customization
 	//CMFCToolBar::EnableQuickCustomization();
+
+	//RegisterScaleChangeEvent([in]  HANDLE    hEvent, [out] DWORD_PTR *pdwCookie);
 
 	return 0;
 }
@@ -984,4 +989,45 @@ void C3EditFrame::OnUpdateScript()
 			po->PropertyChanged(pp);
 		}
 	}
+}
+
+
+void C3EditFrame::OnMove(int x, int y)
+{
+	CFrameWndEx::OnMove(x, y);
+
+	HMONITOR hmon = MonitorFromWindow(GetSafeHwnd(), MONITOR_DEFAULTTONEAREST);
+
+	DEVICE_SCALE_FACTOR sf;
+	if (SUCCEEDED(GetScaleFactorForMonitor(hmon, &sf)))
+	{
+		switch (sf)
+		{
+			default:
+			case SCALE_100_PERCENT: m_Scale = 1.0f; break;
+			case SCALE_120_PERCENT: m_Scale = 1.2f; break;
+			case SCALE_125_PERCENT: m_Scale = 1.25f; break;
+			case SCALE_140_PERCENT: m_Scale = 1.4f; break;
+			case SCALE_150_PERCENT: m_Scale = 1.5f; break;
+			case SCALE_160_PERCENT: m_Scale = 1.6f; break;
+			case SCALE_175_PERCENT: m_Scale = 1.75f; break;
+			case SCALE_180_PERCENT: m_Scale = 1.8f; break;
+			case SCALE_200_PERCENT: m_Scale = 2.0f; break;
+			case SCALE_225_PERCENT: m_Scale = 2.25f; break;
+			case SCALE_250_PERCENT: m_Scale = 2.5f; break;
+			case SCALE_300_PERCENT: m_Scale = 3.0f; break;
+			case SCALE_350_PERCENT: m_Scale = 3.5f; break;
+			case SCALE_400_PERCENT: m_Scale = 4.0f; break;
+			case SCALE_450_PERCENT: m_Scale = 4.5f; break;
+			case SCALE_500_PERCENT: m_Scale = 5.0f; break;
+		}
+	}
+}
+
+
+void C3EditFrame::OnClose()
+{
+	//UnregisterScaleChangeEvent([in]  HANDLE    hEvent, [out] DWORD_PTR *pdwCookie);
+
+	CFrameWndEx::OnClose();
 }

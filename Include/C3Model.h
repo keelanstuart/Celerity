@@ -12,6 +12,11 @@
 namespace c3
 {
 
+	// A Model is a collection of Meshes and Nodes - Nodes simply reference those Meshes and contain transform and material information
+	// used in drawing those Meshes.
+
+	// Conceptually, you could have a Model with only one Mesh, but many Nodes, each with a unique transform and Texture / Color configuration
+
 	class Model
 	{
 

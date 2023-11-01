@@ -21,10 +21,10 @@ namespace c3
 
 		virtual Renderer::EDepthType Format() = NULL;
 
-		// The X length of the texture
+		// The width of the texture
 		virtual size_t Width() = NULL;
 
-		// The Y length of the texture
+		// The height of the texture
 		virtual size_t Height() = NULL;
 
 	};

@@ -9,11 +9,11 @@ function update(elapsed_seconds)
 	var pos = GetPropertyValue(hpos);
 	pos.x = Math.sin(runtime) * 10.0;
 	pos.y = Math.cos(runtime) * 10.0;
-        pos.z = Math.sin(runtime * 3.0) * 4.0;
+        pos.z = Math.sin(runtime * 3.0) * 2.0;
 	SetPropertyValue(hpos, pos);
 
         var ori = GetPropertyValue(hori);
-        ori.x = Math.sin(runtime);
+        ori.z = Math.sin(runtime);
         ori.w = Math.cos(runtime);
         SetPropertyValue(hori, ori);
 }

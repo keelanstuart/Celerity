@@ -24,6 +24,8 @@ namespace c3
 
 		props::TFlags64 m_Flags;
 
+		bool m_bCameraInside;
+
 	public:
 
 		EnvironmentModifierImpl();

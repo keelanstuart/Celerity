@@ -80,6 +80,8 @@ public:  // control bar embedded members
 	CMFCShellTreeCtrl m_wndTree;
 	CMFCCaptionBar    m_wndCaptionBar;
 
+	float m_Scale;
+
 // Generated message map functions
 protected:
 	afx_msg void OnUpdateAxisScreenrel(CCmdUI* pCmdUI);
@@ -138,6 +140,9 @@ protected:
 	BOOL CreateDockingWindows();
 	void SetDockingWindowIcons(BOOL bHiColorIcons);
 	BOOL CreateCaptionBar();
+public:
+	afx_msg void OnMove(int x, int y);
+	afx_msg void OnClose();
 };
 
 

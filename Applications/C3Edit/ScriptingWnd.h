@@ -5,7 +5,6 @@
 
 
 #include "CodeEditCtrl.h"
-#include "ReactorButton.h"
 
 
 #pragma once

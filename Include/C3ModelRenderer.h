@@ -13,6 +13,8 @@
 namespace c3
 {
 
+	// ModelRenderer is a Component that you can attach to an Object to make it render a Model when it's Draw function is called
+
 	class C3_API ModelRenderer : public Component
 	{
 
