@@ -276,10 +276,16 @@ void FrameBufferImpl::SetClearColor(size_t position, uint32_t color)
 	if (position < m_ColorTarget.size())
 	{
 		glm::vec4 c;
-		c.x = float(color & 0xff) / 255.0f;
-		c.y = float((color >> 8) & 0xff) / 255.0f;
-		c.z = float((color >> 16) & 0xff) / 255.0f;
-		c.w = float((color >> 24) & 0xff) / 255.0f;
+		if (((m_ColorTarget[position].tex->Format() >= Renderer::TextureType::F16_1CH) &&
+			(m_ColorTarget[position].tex->Format() <= Renderer::TextureType::F16_4CH)) ||
+			((m_ColorTarget[position].tex->Format() >= Renderer::TextureType::F32_1CH) &&
+			(m_ColorTarget[position].tex->Format() <= Renderer::TextureType::F32_4CH)))
+		{
+			c.x = float(color & 0xff) / 255.0f;
+			c.y = float((color >> 8) & 0xff) / 255.0f;
+			c.z = float((color >> 16) & 0xff) / 255.0f;
+			c.w = float((color >> 24) & 0xff) / 255.0f;
+		}
 
 		switch (m_ColorTarget[position].tex->Format())
 		{
@@ -386,7 +392,13 @@ void FrameBufferImpl::Clear(props::TFlags64 flags)
 	{
 		for (size_t i = 0; i < m_ColorTarget.size(); i++)
 		{
-			m_Rend->gl.ClearBufferiv(GL_COLOR, (GLint)i, (const GLint *)&(m_ColorTarget[i].clearcolor.pu));
+			GLuint c[4];
+			c[0] = m_ColorTarget[i].clearcolor.pu & 0xff;
+			c[1] = (m_ColorTarget[i].clearcolor.pu >> 8) & 0xff;
+			c[2] = (m_ColorTarget[i].clearcolor.pu >> 16) & 0xff;
+			c[3] = (m_ColorTarget[i].clearcolor.pu >> 24) & 0xff;
+
+			m_Rend->gl.ClearBufferuiv(GL_COLOR, (GLint)i, (const GLuint *)c);
 		}
 	}
 

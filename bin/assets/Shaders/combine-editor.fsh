@@ -42,11 +42,8 @@ void main()
 		glow += aux[i].r;
 	glow /= 9;
 	
-	if ((texNormalAmbOcc.rgb == vec3(0, 0, 0)) && (texNormalAmbOcc.rgb != vec3(1, 1, 1)) && (glow == 0))
-		discard;
-
 	vec4 texDiffuseMetalness = texture(uSamplerDiffuseMetalness, fTex0);
-	if (texNormalAmbOcc.rgb == vec3(1, 1, 1))
+	if (((texNormalAmbOcc.rgb == vec3(0, 0, 0)) || (texNormalAmbOcc.rgb == vec3(1, 1, 1))) && (glow == 0))
 	{
 		oColor = vec4(texDiffuseMetalness.rgb, 1);
 		return;

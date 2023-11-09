@@ -46,9 +46,37 @@ bool EnvironmentModifierImpl::Initialize(Object *pobject)
 	if (nullptr == (m_pPos = dynamic_cast<PositionableImpl *>(pobject->FindComponent(Positionable::Type()))))
 		return false;
 
-	props::IPropertySet *props = pobject->GetProperties();
-	if (!props)
+	props::IPropertySet *ps = pobject->GetProperties();
+	if (!ps)
 		return false;
+
+	props::IProperty *pp;
+
+	if ((pp = ps->GetPropertyById('eBGC')) || (pp = ps->CreateProperty(_T("uBackgroundColor"), 'eBGC')))
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+		pp->SetVec4F(*(props::TVec4F *)&Color::fBlack);
+	}
+
+#if 1
+	if ((pp = ps->GetPropertyById('eAMB')) || (pp = ps->CreateProperty(_T("uAmbientColor"), 'eAMB')))
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR);
+		pp->SetVec3F(props::SVec3(0.1f, 0.1f, 0.1f));
+	}
+
+	if ((pp = ps->GetPropertyById('eSNC')) || (pp = ps->CreateProperty(_T("uSunColor"), 'eSNC')))
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR);
+		pp->SetVec3F(props::SVec3(1.0f, 0.97f, 0.92f));
+	}
+
+	if ((pp = ps->GetPropertyById('eSND')) || (pp = ps->CreateProperty(_T("uSunDirection"), 'eSND')))
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_DIRECTION);
+		pp->SetVec3F(props::SVec3(-0.1f, -0.1f, -1.0f));
+	}
+#endif
 
 	return true;
 }
@@ -88,18 +116,20 @@ void EnvironmentModifierImpl::Update(float elapsed_time)
 	Environment *penv = m_pOwner->GetSystem()->GetEnvironment();
 	props::IPropertySet *ps = m_pOwner->GetProperties();
 
+#if 0
 	if (apply && !m_bCameraInside)
 	{
-		if (props::IProperty *pp = ps->GetPropertyById('eAMB'))
+		props::IProperty *pp;
+		if (pp = ps->GetPropertyById('eAMB'))
 			penv->PushAmbientColor(*((glm::fvec3 *)(pp->AsVec3F())));
 
-		if (props::IProperty *pp = ps->GetPropertyById('eBGC'))
-			penv->PushBackgroundColor(*((glm::fvec3 *)(pp->AsVec3F())));
+		if (pp = ps->GetPropertyById('eBGC'))
+			penv->PushBackgroundColor(*((glm::fvec4 *)(pp->AsVec4F())));
 
-		if (props::IProperty *pp = ps->GetPropertyById('eSNC'))
+		if (pp = ps->GetPropertyById('eSNC'))
 			penv->PushSunColor(*((glm::fvec3 *)(pp->AsVec3F())));
 
-		if (props::IProperty *pp = ps->GetPropertyById('eSND'))
+		if (pp = ps->GetPropertyById('eSND'))
 			penv->PushSunDirection(*((glm::fvec3 *)(pp->AsVec3F())));
 	}
 	else if (!apply && m_bCameraInside)
@@ -116,6 +146,25 @@ void EnvironmentModifierImpl::Update(float elapsed_time)
 		if (ps->GetPropertyById('eSND'))
 			penv->PopSunDirection();
 	}
+#else
+	if (apply)
+	{
+		props::IProperty *pp;
+		if (pp = ps->GetPropertyById('eAMB'))
+			penv->SetAmbientColor(*((glm::fvec3 *)(pp->AsVec3F())));
+
+		if (pp = ps->GetPropertyById('eBGC'))
+			penv->SetBackgroundColor(*((glm::fvec4 *)(pp->AsVec4F())));
+
+		if (pp = ps->GetPropertyById('eSNC'))
+			penv->SetSunColor(*((glm::fvec3 *)(pp->AsVec3F())));
+
+		if (pp = ps->GetPropertyById('eSND'))
+			penv->SetSunDirection(*((glm::fvec3 *)(pp->AsVec3F())));
+	}
+#endif
+
+	m_bCameraInside = apply;
 }
 
 

@@ -204,7 +204,10 @@ void CObjectWnd::UpdateContents()
 	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
 
 	if (!pdoc || !pdoc->m_RootObj)
+	{
+		m_ObjList.SetItemCount(1);
 		return;
+	}
 
 	size_t ct = GetVisibleItemCount(pdoc->m_RootObj);
 	m_ObjList.SetItemCount((int)ct);

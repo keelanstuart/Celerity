@@ -170,17 +170,15 @@ CWTFPropertyGridProperty *CPropertyGrid::FindItemByID(props::FOURCHARCODE id, CW
 
 void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DESCRIPTION_CB prop_desc, FILE_FILTER_CB file_filter, bool reset)
 {
-	if (!m_Props && !props)
-		return;
-
 	if (reset)
 	{
 		if (props == m_Props)
 			return;
 
-		m_Props = props;
+		if (m_Props)
+			RemoveAll();
 
-		RemoveAll();
+		m_Props = props;
 	}
 
 	if (!props)
@@ -364,6 +362,11 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 				{
 					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
 					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR:
+					case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+					case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
 					{
 						UINT r = GetRValue(p->AsInt());
 						UINT g = GetGValue(p->AsInt());
@@ -430,12 +433,17 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 						break;
 
 					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+					case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+					case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
 						xname = _T("Red");
 						yname = _T("Green");
 						zname = _T("Blue");
 						break;
 
 					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR:
 						xname = _T("Red");
 						yname = _T("Green");
 						zname = _T("Blue");
@@ -465,23 +473,32 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
 			{
-				if ((props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3 == p->GetType()) && (props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB == p->GetAspect()))
+				bool iscolor =
+					(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB) ||
+					(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA) ||
+					(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE) ||
+					(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE) ||
+					(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR) ||
+					(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR) ||
+					(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR);
+
+				if ((props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3 == p->GetType()) && iscolor)
 				{
-					UINT r = UINT(std::clamp<float>(p->AsVec3F()->x, 0.0f, 1.0f)) * 255;
-					UINT g = UINT(std::clamp<float>(p->AsVec3F()->y, 0.0f, 1.0f)) * 255;
-					UINT b = UINT(std::clamp<float>(p->AsVec3F()->z, 0.0f, 1.0f)) * 255;
+					UINT r = UINT(std::clamp<float>(p->AsVec3F()->x, 0.0f, 1.0f) * 255.0f);
+					UINT g = UINT(std::clamp<float>(p->AsVec3F()->y, 0.0f, 1.0f) * 255.0f);
+					UINT b = UINT(std::clamp<float>(p->AsVec3F()->z, 0.0f, 1.0f) * 255.0f);
 					pwp = new CWTFPropertyGridColorProperty(propname, RGB(r, g, b));
 					((CWTFPropertyGridColorProperty *)pwp)->EnableOtherButton(_T("Other..."));
 					((CWTFPropertyGridColorProperty *)pwp)->EnableAutomaticButton(_T("Default"), ::GetSysColor(COLOR_3DFACE));
 
 					pwp->SetDescription(prop_desc ? prop_desc(p->GetID()) : _T("RGB Color"));
 				}
-				else if ((props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4 == p->GetType()) && (props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA == p->GetAspect()))
+				else if ((props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4 == p->GetType()) && iscolor)
 				{
-					UINT r = UINT(std::clamp<float>(p->AsVec4F()->x, 0.0f, 1.0f)) * 255;
-					UINT g = UINT(std::clamp<float>(p->AsVec4F()->y, 0.0f, 1.0f)) * 255;
-					UINT b = UINT(std::clamp<float>(p->AsVec4F()->z, 0.0f, 1.0f)) * 255;
-					UINT a = UINT(std::clamp<float>(p->AsVec4F()->w, 0.0f, 1.0f)) * 255;
+					UINT r = UINT(std::clamp<float>(p->AsVec4F()->x, 0.0f, 1.0f) * 255.0f);
+					UINT g = UINT(std::clamp<float>(p->AsVec4F()->y, 0.0f, 1.0f) * 255.0f);
+					UINT b = UINT(std::clamp<float>(p->AsVec4F()->z, 0.0f, 1.0f) * 255.0f);
+					UINT a = UINT(std::clamp<float>(p->AsVec4F()->w, 0.0f, 1.0f) * 255.0f);
 					pwp = new CWTFPropertyGridColorProperty(propname, RGB(r, g, b));
 					((CWTFPropertyGridColorProperty *)pwp)->EnableOtherButton(_T("Other..."));
 					((CWTFPropertyGridColorProperty *)pwp)->EnableAutomaticButton(_T("Default"), ::GetSysColor(COLOR_3DFACE));
@@ -570,8 +587,6 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 
 	if (reset)
 	{
-		ExpandAll();
-
 		AdjustLayout();
 	}
 }
@@ -609,6 +624,15 @@ void CPropertyGrid::UpdateCurrentProperties()
 
 		if (p)
 		{
+			bool iscolor =
+				(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB) ||
+				(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA) ||
+				(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE) ||
+				(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE) ||
+				(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR) ||
+				(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR) ||
+				(p->GetAspect() == props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR);
+
 			switch (p->GetType())
 			{
 				case props::IProperty::PROPERTY_TYPE::PT_STRING:
@@ -623,13 +647,13 @@ void CPropertyGrid::UpdateCurrentProperties()
 					{
 						// add other cases if necessary
 
-						case props::IProperty::PA_COLOR_RGB:
-						case props::IProperty::PA_COLOR_RGBA:
-						case props::IProperty::PA_COLOR_DIFFUSE:
-						case props::IProperty::PA_COLOR_EMISSIVE:
-						case props::IProperty::PA_COLOR_SPECULAR:
-						case props::IProperty::PA_AMBIENT_COLOR:
-						case props::IProperty::PA_SUN_COLOR:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR:
+						case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+						case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
 
 						default:
 							pgp->SetValue(p->AsInt());
@@ -699,14 +723,17 @@ void CPropertyGrid::UpdateCurrentProperties()
 							pgp->GetSubItem(2)->SetValue(glm::degrees(p->AsVec3F()->z));
 							break;
 
-						case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA:
 						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
 						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
-						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR:
+						case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+						case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
 						{
-							UINT r = UINT(std::clamp<float>(p->AsVec3F()->x, 0.0f, 1.0f)) * 255;
-							UINT g = UINT(std::clamp<float>(p->AsVec3F()->y, 0.0f, 1.0f)) * 255;
-							UINT b = UINT(std::clamp<float>(p->AsVec3F()->z, 0.0f, 1.0f)) * 255;
+							UINT r = UINT(std::clamp<float>(p->AsVec3F()->x, 0.0f, 1.0f) * 255.0f);
+							UINT g = UINT(std::clamp<float>(p->AsVec3F()->y, 0.0f, 1.0f) * 255.0f);
+							UINT b = UINT(std::clamp<float>(p->AsVec3F()->z, 0.0f, 1.0f) * 255.0f);
 							((CWTFPropertyGridColorProperty *)pgp)->SetColor(RGB(r, g, b));
 							break;
 						}
@@ -745,13 +772,21 @@ void CPropertyGrid::UpdateCurrentProperties()
 							break;
 						}
 
-						case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA:
 						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
 						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
-						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA:
-						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
-							pgp->SetValue(p->AsInt());
+						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR:
+						case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+						case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
+						{
+							UINT r = UINT(std::clamp<float>(p->AsVec4F()->x, 0.0f, 1.0f) * 255.0f);
+							UINT g = UINT(std::clamp<float>(p->AsVec4F()->y, 0.0f, 1.0f) * 255.0f);
+							UINT b = UINT(std::clamp<float>(p->AsVec4F()->z, 0.0f, 1.0f) * 255.0f);
+							UINT a = UINT(std::clamp<float>(p->AsVec4F()->w, 0.0f, 1.0f) * 255.0f);
+							((CWTFPropertyGridColorProperty *)pgp)->SetColor(RGBA(r, g, b, a));
 							break;
+						}
 
 						default:
 							pgp->GetSubItem(0)->SetValue(p->AsVec4F()->x);
@@ -809,6 +844,18 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 			{
 				switch (p->GetAspect())
 				{
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR:
+					case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+					case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
+					{
+						COLORREF c = ((CWTFPropertyGridColorProperty *)pProp)->GetColor();
+						p->SetInt(c);
+					}
+
 					case props::IProperty::PA_DATE:
 					{
 						CString propstr = var;
@@ -877,8 +924,29 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 			case props::IProperty::PROPERTY_TYPE::PT_INT_V3:
 			{
 				props::TVec3I v3;
-				for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
-					v3.v[i] = pProp->GetSubItem(i)->GetValue().llVal;
+				switch (p->GetAspect())
+				{
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR:
+					case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+					case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
+					{
+						LONG lval = pProp->GetValue().lVal;
+						v3.x = lval & 0xff;
+						v3.y = (lval >> 8) & 0xff;
+						v3.z = (lval >> 16) & 0xff;
+						break;
+					}
+
+					default:
+					{
+						for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
+							v3.v[i] = pProp->GetSubItem(i)->GetValue().llVal;
+						break;
+					}
+				}
 				p->SetVec3I(v3);
 				break;
 			}
@@ -886,8 +954,35 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 			case props::IProperty::PROPERTY_TYPE::PT_INT_V4:
 			{
 				props::TVec4I v4;
-				for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
-					v4.v[i] = pProp->GetSubItem(i)->GetValue().llVal;
+				switch (p->GetAspect())
+				{
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR:
+					case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+					case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
+					{
+						COLORREF c = ((CWTFPropertyGridColorProperty *)pProp)->GetColor();
+						v4.w = (c >> 24) & 0xff;
+					}
+
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+					{
+						COLORREF c = ((CWTFPropertyGridColorProperty *)pProp)->GetColor();
+						v4.x = c & 0xff;
+						v4.y = (c >> 8) & 0xff;
+						v4.z = (c >> 16) & 0xff;
+						break;
+					}
+
+					default:
+					{
+						for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
+							v4.v[i] = pProp->GetSubItem(i)->GetValue().llVal;
+						break;
+					}
+				}
 				p->SetVec4I(v4);
 				break;
 			}
@@ -903,13 +998,18 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
 			{
+				props::TVec3F v3;
+
 				switch (p->GetAspect())
 				{
-					case props::IProperty::PA_COLOR_RGBA:
-					case props::IProperty::PA_COLOR_RGB:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR:
+					case props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR:
+					case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
 					{
 						COLORREF c = ((CWTFPropertyGridColorProperty *)pProp)->GetColor();
-						props::TVec3F v3;
 						v3.x = (float)(c & 0xFF) / 255.0f;
 						v3.y = (float)((c >> 8) & 0xFF) / 255.0f;
 						v3.z = (float)((c >> 16) & 0xFF) / 255.0f;
@@ -919,7 +1019,6 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 
 					case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG:
 					{
-						props::TVec3F v3;
 						for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
 							v3.v[i] = glm::radians(pProp->GetSubItem(i)->GetValue().fltVal);
 						p->SetVec3F(v3);
@@ -928,7 +1027,6 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 
 					default:
 					{
-						props::TVec3F v3;
 						for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
 							v3.v[i] = pProp->GetSubItem(i)->GetValue().fltVal;
 						p->SetVec3F(v3);
@@ -957,10 +1055,18 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 					}
 
 					case props::IProperty::PA_COLOR_RGBA:
+					case props::IProperty::PA_COLOR_DIFFUSE:
+					case props::IProperty::PA_COLOR_EMISSIVE:
+					case props::IProperty::PA_COLOR_SPECULAR:
+					case props::IProperty::PA_AMBIENT_COLOR:
+					case props::IProperty::PA_SUN_COLOR:
 					{
+						COLORREF c = ((CWTFPropertyGridColorProperty *)pProp)->GetColor();
 						props::TVec4F v4;
-						for (int i = 0, maxi = pProp->GetSubItemsCount(); i < maxi; i++)
-							v4.v[i] = pProp->GetSubItem(i)->GetValue().fltVal;
+						v4.x = (float)(c & 0xFF) / 255.0f;
+						v4.y = (float)((c >> 8) & 0xFF) / 255.0f;
+						v4.z = (float)((c >> 16) & 0xFF) / 255.0f;
+						v4.w = (float)((c >> 24) & 0xFF) / 255.0f;
 						p->SetVec4F(v4);
 						break;
 					}

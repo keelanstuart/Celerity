@@ -68,6 +68,8 @@ namespace c3
 
 					ret = interp(val, stack.back(), timeleft / transtime);
 				}
+				else
+					ret = stack.back();
 			}
 
 			T val, ret;

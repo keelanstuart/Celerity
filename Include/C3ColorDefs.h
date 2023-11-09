@@ -55,6 +55,10 @@ namespace c3
 		};
 #pragma pack(pop)
 
+#ifndef RGBA
+#define RGBA(r, g, b, a)		((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)|(((DWORD)(BYTE)(a))<<24)))
+#endif
+
 		constexpr SRGBAColor iWhite = {255, 255, 255, 255};
 		constexpr SRGBAColor iWhiteTT = {255, 255, 255, 192};		// white, three-quarter transparency
 		constexpr SRGBAColor iWhiteHT = {255, 255, 255, 128};		// white, half transparency

@@ -31,10 +31,13 @@ CPropertiesWnd::CPropertiesWnd() noexcept
 	m_pObj = nullptr;
 	m_pProps = nullptr;
 	m_bExpanded = false;
+
+	InitializeCriticalSection(&m_PropLock);
 }
 
 CPropertiesWnd::~CPropertiesWnd()
 {
+	DeleteCriticalSection(&m_PropLock);
 }
 
 #define PWID_EDITNAME		1
@@ -234,10 +237,9 @@ void CPropertiesWnd::SetActivePrototype(c3::Prototype *pproto)
 
 	m_wndNameEdit.SetWindowText(m_pProto ? m_pProto->GetName() : _T(""));
 
-	if (m_pProto && m_wndPropList.GetSafeHwnd())
+	if (m_wndPropList.GetSafeHwnd())
 	{
-		m_wndPropList.SetActiveProperties(m_pProto->GetProperties());
-		m_wndPropList.ExpandAll(m_bExpanded);
+		m_wndPropList.SetActiveProperties(m_pProto ? m_pProto->GetProperties() : nullptr);
 	}
 
 	FillOutFlags();
@@ -257,7 +259,6 @@ void CPropertiesWnd::SetActiveObject(c3::Object *pobj)
 	if (m_wndPropList.GetSafeHwnd())
 	{
 		m_wndPropList.SetActiveProperties(m_pObj ? m_pObj->GetProperties() : nullptr);
-		m_wndPropList.ExpandAll(m_bExpanded);
 	}
 
 	FillOutFlags();
@@ -275,7 +276,6 @@ void CPropertiesWnd::SetActiveProperties(props::IPropertySet* props, bool readon
 	if (m_wndPropList.GetSafeHwnd())
 	{
 		m_wndPropList.SetActiveProperties(props);
-		m_wndPropList.ExpandAll(m_bExpanded);
 	}
 
 	AdjustLayout();
@@ -436,6 +436,8 @@ afx_msg void CPropertiesWnd::OnCheckChangeFlags()
 
 afx_msg void CPropertiesWnd::OnCheckChangeComponents()
 {
+	EnterCriticalSection(&m_PropLock);
+
 	for (int i = 0, maxi = m_wndCompList.GetCount(); i < maxi; i++)
 	{
 		// this is awful... for whatever reason, WtfCheckListBox is using item data (?) so for now, look up components by name
@@ -462,6 +464,10 @@ afx_msg void CPropertiesWnd::OnCheckChangeComponents()
 			}
 		}
 	}
+
+	m_RebuildProps = true;
+
+	LeaveCriticalSection(&m_PropLock);
 }
 
 afx_msg void CPropertiesWnd::OnChangeName()
@@ -472,11 +478,31 @@ afx_msg void CPropertiesWnd::OnChangeName()
 	if (m_pProto)
 	{
 		m_pProto->SetName(name);
-		//((C3EditFrame *)theApp.GetMainWnd())->m_wndObjects.UpdateData();
+		((C3EditFrame *)theApp.GetMainWnd())->m_wndProtoView.UpdateData();
 	}
 	else if (m_pObj)
 	{
 		m_pObj->SetName(name);
-		((C3EditFrame *)theApp.GetMainWnd())->m_wndProtoView.UpdateData();
+		((C3EditFrame *)theApp.GetMainWnd())->m_wndObjects.UpdateData();
+	}
+}
+
+
+void CPropertiesWnd::UpdateCurrentProperties()
+{
+	if (TryEnterCriticalSection(&m_PropLock))
+	{
+		if (!m_RebuildProps)
+		{
+			m_wndPropList.UpdateCurrentProperties();
+		}
+		else
+		{
+			m_wndPropList.SetActiveProperties(nullptr);
+			m_wndPropList.SetActiveProperties(m_pObj ? m_pObj->GetProperties() : (m_pProto ? m_pProto->GetProperties() : nullptr));
+			m_RebuildProps = false;
+		}
+
+		LeaveCriticalSection(&m_PropLock);
 	}
 }

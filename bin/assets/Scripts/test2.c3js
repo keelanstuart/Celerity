@@ -6,7 +6,7 @@ function update(elapsed_seconds)
 	runtime += elapsed_seconds * 4.0;
 	var scl = GetPropertyValue(hscl);
 	scl.x = 2.0 + Math.sin(runtime) * 0.5;
-	scl.y = 2.0 + Math.cos(runtime * 2.0) * 0.5;
+	scl.y = 2.0 + Math.cos(runtime * 1.0) * 0.5;
 	scl.z = 2.0 + Math.cos(runtime + 1.0) * 0.5;
 	SetPropertyValue(hscl, scl);
 }

@@ -48,7 +48,7 @@ public:
 	void SetActivePrototype(c3::Prototype *pproto);
 	void SetActiveObject(c3::Object *pobj);
 	void SetActiveProperties(props::IPropertySet* props, bool readonly, const TCHAR* title);
-	void UpdateCurrentProperties() { m_wndPropList.UpdateCurrentProperties(); }
+	void UpdateCurrentProperties();
 
 	void FillOutFlags();
 	void FillOutComponents();
@@ -66,6 +66,8 @@ protected:
 	c3::Object *m_pObj;
 	props::IPropertySet *m_pProps;
 	bool m_bExpanded;
+	CRITICAL_SECTION m_PropLock;
+	bool m_RebuildProps;
 
 // Implementation
 public:

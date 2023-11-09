@@ -45,6 +45,10 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_COMMAND(ID_EDIT_DELETE, &C3EditView::OnEditDelete)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DUPLICATE, &C3EditView::OnUpdateEditDuplicate)
 	ON_COMMAND(ID_EDIT_DUPLICATE, &C3EditView::OnEditDuplicate)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_GROUP, &C3EditView::OnUpdateEditGroup)
+	ON_COMMAND(ID_EDIT_GROUP, &C3EditView::OnEditGroup)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_UNGROUP, &C3EditView::OnUpdateEditUngroup)
+	ON_COMMAND(ID_EDIT_UNGROUP, &C3EditView::OnEditUngroup)
 	ON_WM_KEYUP()
 	ON_COMMAND(ID_GRAPH_DELETENODE, &C3EditView::OnGraphDeleteNode)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_DELETENODE, &C3EditView::OnUpdateGraphDeleteNode)
@@ -206,13 +210,21 @@ void C3EditView::OnDraw(CDC *pDC)
 	c3::ResourceManager *presman = theApp.m_C3->GetResourceManager();
 	assert(presman);
 
+	c3::Environment *penv = theApp.m_C3->GetEnvironment();
+	assert(penv);
+
 	if (prend && prend->Initialized())
 	{
 		prend->SetOverrideHwnd(GetSafeHwnd());
 
 		prend->SetViewport(r);
 
-		prend->SetClearColor(&(pDoc->m_ClearColor));
+		glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 1.0f);
+		prend->SetClearColor(&cc);
+
+		COLORREF cci = uint32_t(cc.x * 255.0f) | (uint32_t(cc.y * 255.0f) << 8) | (uint32_t(cc.z * 255.0f) << 16) | (uint32_t(cc.w * 255.0f) << 24);
+		m_GBuf->SetClearColor(0, cci);
+
 		prend->SetClearDepth(1.0f);
 
 		C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
@@ -299,7 +311,10 @@ void C3EditView::OnDraw(CDC *pDC)
 		float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
 		float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
 		glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-800, 800, -800, 800, nearclip, farclip);
-		glm::fvec3 sunpos = m_SunDir * -700.0f;
+		glm::fvec3 sunpos;
+		penv->GetSunDirection(&sunpos);
+		sunpos *= -700.0f;
+
 		glm::fvec3 campos;
 		pcam->GetEyePos(&campos);
 		//		sunpos += campos;
@@ -314,10 +329,10 @@ void C3EditView::OnDraw(CDC *pDC)
 			0.5, 0.5, 0.5, 1.0
 		);
 
-		m_SP_combine->SetUniform3(m_ulAmbientColor, &m_AmbientColor);
-		m_SP_combine->SetUniform3(m_ulSunColor, &m_SunColor);
+		m_SP_combine->SetUniform3(m_ulAmbientColor, penv->GetAmbientColor());
+		m_SP_combine->SetUniform3(m_ulSunColor, penv->GetSunColor());
 		//m_SunDir = glm::normalize(glm::fvec3(sinf(theApp.m_C3->GetCurrentTime() / 4.0f) / 5.0f, cosf(theApp.m_C3->GetCurrentTime() / 3.0f) / 8.0f, -2.0f));
-		m_SP_combine->SetUniform3(m_ulSunDir, &m_SunDir);
+		m_SP_combine->SetUniform3(m_ulSunDir, penv->GetSunDirection());
 
 		pDoc->m_RootObj->Update(dt);
 
@@ -1319,6 +1334,79 @@ void C3EditView::OnUpdateEditDuplicate(CCmdUI *pCmdUI)
 
 void C3EditView::OnEditDuplicate()
 {
+	for (auto o : m_Selected)
+	{
+		theApp.m_C3->GetFactory()->Build(o);
+	}
+}
+
+
+void C3EditView::OnUpdateEditGroup(CCmdUI *pCmdUI)
+{
+	bool b = !m_Selected.empty();
+
+	if (b)
+	{
+		c3::Object *pp = m_Selected[0]->GetParent();
+		if (!pp)
+		{
+			b = false;
+		}
+		else
+		{
+			for (auto o : m_Selected)
+			{
+				if (o->GetParent() != pp)
+				{
+					b = false;
+					break;
+				}
+			}
+		}
+	}
+
+	pCmdUI->Enable(b);
+}
+
+
+void C3EditView::OnEditGroup()
+{
+	c3::Object *pg = theApp.m_C3->GetFactory()->Build();
+	if (pg)
+	{
+		pg->SetName(_T("Group"));
+		pg->Flags().Set(OF_UPDATE | OF_DRAW | OF_LIGHT | OF_CASTSHADOW | OF_CHECKCOLLISIONS | OF_EXPANDED);
+		pg->SetParent(m_Selected[0]->GetParent());
+
+		for (auto o : m_Selected)
+		{
+			o->SetParent(pg);
+		}
+
+		((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
+	}
+}
+
+
+void C3EditView::OnUpdateEditUngroup(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable((!m_Selected.empty() && (m_Selected.size() == 1) && m_Selected[0]->GetNumChildren()) ? TRUE : FALSE);
+}
+
+
+void C3EditView::OnEditUngroup()
+{
+	c3::Object *pg = m_Selected[0];
+	if (!pg->GetParent())
+		return;
+
+	while (size_t i = pg->GetNumChildren())
+	{
+		c3::Object *o = pg->GetChild(i - 1);
+		o->SetParent(pg->GetParent());
+	}
+
+	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
 }
 
 

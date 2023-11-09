@@ -171,13 +171,15 @@
 #define ID_EDIT_LOAD                    32786
 #define ID_CUT                          32787
 #define ID_CLEAR                        32788
+#define ID_EDIT_GROUP                   32794
+#define ID_EDIT_UNGROUP                 32795
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        327
-#define _APS_NEXT_COMMAND_VALUE         32794
+#define _APS_NEXT_COMMAND_VALUE         32796
 #define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           339
 #endif

@@ -57,7 +57,15 @@ IMPLEMENT_DYNAMIC(CWTFPropertyGridProperty, CObject)
 #define AFX_FORMAT_FLOAT  _T("%f")
 #define AFX_FORMAT_DOUBLE _T("%lf")
 
-CWTFPropertyGridProperty::CWTFPropertyGridProperty(const CString& strName, const COleVariant& varValue, LPCTSTR lpszDescr, DWORD_PTR dwData, LPCTSTR lpszEditMask, LPCTSTR lpszEditTemplate, LPCTSTR lpszValidChars) : m_strName(strName), m_varValue(varValue), m_varValueOrig(varValue), m_strDescr(lpszDescr == NULL ? _T("") : lpszDescr), m_strEditMask(lpszEditMask == NULL ? _T("") : lpszEditMask), m_strEditTempl(lpszEditTemplate == NULL ? _T("") : lpszEditTemplate), m_strValidChars(lpszValidChars == NULL ? _T("") : lpszValidChars), m_dwData(dwData)
+CWTFPropertyGridProperty::CWTFPropertyGridProperty(const CString& strName, const COleVariant& varValue, LPCTSTR lpszDescr, DWORD_PTR dwData, LPCTSTR lpszEditMask, LPCTSTR lpszEditTemplate, LPCTSTR lpszValidChars)
+	:	m_strName(strName),
+		m_varValue(varValue),
+		m_varValueOrig(varValue),
+		m_strDescr(lpszDescr == NULL ? _T("") : lpszDescr),
+		m_strEditMask(lpszEditMask == NULL ? _T("") : lpszEditMask),
+		m_strEditTempl(lpszEditTemplate == NULL ? _T("") : lpszEditTemplate),
+		m_strValidChars(lpszValidChars == NULL ? _T("") : lpszValidChars),
+		m_dwData(dwData)
 {
 	m_bGroup = FALSE;
 	m_bIsValueList = FALSE;
@@ -71,7 +79,10 @@ CWTFPropertyGridProperty::CWTFPropertyGridProperty(const CString& strName, const
 	}
 }
 
-CWTFPropertyGridProperty::CWTFPropertyGridProperty(const CString& strGroupName, DWORD_PTR dwData, BOOL bIsValueList) : m_strName(strGroupName), m_dwData(dwData), m_bIsValueList(bIsValueList)
+CWTFPropertyGridProperty::CWTFPropertyGridProperty(const CString& strGroupName, DWORD_PTR dwData, BOOL bIsValueList)
+	:	m_strName(strGroupName),
+		m_dwData(dwData),
+		m_bIsValueList(bIsValueList)
 {
 	m_bGroup = TRUE;
 
@@ -330,6 +341,11 @@ BOOL CWTFPropertyGridCtrl::DeleteProperty(CWTFPropertyGridProperty*& pProp, BOOL
 
 	if (bAdjustLayout)
 	{
+		if (m_bAlphabeticMode)
+		{
+			ReposProperties();
+		}
+
 		AdjustLayout();
 		return TRUE;
 	}
@@ -2115,7 +2131,7 @@ IMPLEMENT_DYNAMIC(CWTFPropertyGridColorProperty, CWTFPropertyGridProperty)
 
 CWTFPropertyGridColorProperty::CWTFPropertyGridColorProperty(const CString& strName, const COLORREF& color, CPalette* pPalette, LPCTSTR lpszDescr, DWORD_PTR dwData) : CWTFPropertyGridProperty(strName, COleVariant(), lpszDescr, dwData), m_Color(color), m_ColorOrig(color)
 {
-	//CMFCColorBar::InitColors(pPalette, m_Colors);
+	CWTFColorBar::InitColors(pPalette, m_Colors);
 
 	m_varValue = (LONG) color;
 	m_varValueOrig = (LONG) color;
@@ -2559,9 +2575,9 @@ CWTFPropertyGridCtrl::CWTFPropertyGridCtrl()
 	m_rectTrackHeader.SetRectEmpty();
 	m_rectTrackDescr.SetRectEmpty();
 	m_nRowHeight = 0;
-	m_nRowVerticalPadding = 10;
+	m_nRowVerticalPadding = 12;
 	m_nHeaderHeight = 0;
-	m_nSubItemIndent = 0;
+	m_nSubItemIndent = 5;
 	m_nVertScrollOffset = 0;
 	m_nVertScrollTotal = 0;
 	m_nVertScrollPage = 0;
@@ -2926,7 +2942,11 @@ void CWTFPropertyGridCtrl::OnDraw(CDC* pDCSrc)
 	CMemDC memDC(*pDCSrc, this);
 	CDC* pDC = &memDC.GetDC();
 
-	m_clrGray = RGB(128, 128, 128);//visualManager->GetPropertyGridGroupColor(this);
+#if 0
+	m_clrGray = visualManager->GetPropertyGridGroupColor(this);
+#else
+	m_clrGray = RGB(128, 128, 128);
+#endif
 
 	CRect rectClient;
 	GetClientRect(rectClient);
@@ -5541,7 +5561,7 @@ HRESULT CWTFPropertyGridCtrl::get_accState(VARIANT varChild, VARIANT *pvarState)
 	pvarState->vt = VT_I4;
 	pvarState->lVal = STATE_SYSTEM_FOCUSABLE;
 	pvarState->lVal |= STATE_SYSTEM_SELECTABLE;
-	
+
 	if (m_pAccProp != NULL)
 	{
 		if (m_pAccProp->IsSelected())
@@ -5674,7 +5694,7 @@ HRESULT CWTFPropertyGridCtrl::accHitTest(long  xLeft, long yTop, VARIANT *pvarCh
 
 LRESULT CWTFPropertyGridCtrl::OnInitControl(WPARAM wParam, LPARAM lParam)
 {
-#if 0
+#if 1
 	DWORD dwSize = (DWORD)wParam;
 	BYTE* pbInitData = (BYTE*)lParam;
 

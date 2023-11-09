@@ -23,6 +23,7 @@
 #include <C3ScriptableImpl.h>
 #include <C3PhysicalImpl.h>
 #include <C3SoundPlayerImpl.h>
+#include <C3EnvironmentModifierImpl.h>
 
 #include <C3ResourceImpl.h>
 
@@ -165,6 +166,7 @@ void SystemImpl::Release()
 		UNREGISTER_COMPONENTTYPE(ParticleEmitter, m_Factory);
 		UNREGISTER_COMPONENTTYPE(Scriptable, m_Factory);
 		UNREGISTER_COMPONENTTYPE(Physical, m_Factory);
+		UNREGISTER_COMPONENTTYPE(EnvironmentModifier, m_Factory);
 		// *************************************************
 
 		delete m_Factory;
@@ -291,6 +293,7 @@ Factory *SystemImpl::GetFactory()
 		REGISTER_COMPONENTTYPE(ParticleEmitter, m_Factory);
 		REGISTER_COMPONENTTYPE(Scriptable, m_Factory);
 		REGISTER_COMPONENTTYPE(Physical, m_Factory);
+		REGISTER_COMPONENTTYPE(EnvironmentModifier, m_Factory);
 		// *************************************************
 	}
 
