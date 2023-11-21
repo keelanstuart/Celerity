@@ -19,12 +19,12 @@ void main()
 	vec4 tex = texture(uSamplerDiffuse, fTex0);
 	tex *= fColor0;
 
-	oDefDiffuseMetalness = vec4(0, 0, 0, 1);
+	oDefDiffuseMetalness = tex;
 
 	oDefNormalAmbOcc = vec4(1, 1, 1, 0);
 
 	oDefPosDepth = fPosDepth;
 
 	// encode roughness as emissive.a
-	oDefEmissiveRoughness = vec4(tex.rgb, 1);
+	oDefEmissiveRoughness = vec4(0, 0, 0, 0);
 }

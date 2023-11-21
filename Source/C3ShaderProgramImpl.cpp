@@ -38,7 +38,7 @@ ShaderProgramImpl::~ShaderProgramImpl()
 			if (!m_Comp[i])
 				continue;
 
-			m_Rend->gl.DetachShader(m_glID, (ShaderComponentImpl &)*m_Comp[i]);
+			//m_Rend->gl.DetachShader(m_glID, (ShaderComponentImpl &)*m_Comp[i]);
 			m_Comp[i] = nullptr;
 		}
 

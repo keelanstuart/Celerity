@@ -238,10 +238,13 @@ namespace c3
 		/// Initializes the Renderer
 		virtual bool Initialize(HWND hwnd, props::TFlags64 flags) = NULL;
 
+		// Returns true if the Renderer has been successfully initialized
 		virtual bool Initialized() = NULL;
 
+		// Flushes all accumulated errors to the console with a header message that you may provide
 		virtual void FlushErrors(const TCHAR *msgformat, ...) = NULL;
 
+		// Call this if you are done using the Renderer or need to reset / re-initialize. It is called automatically when shutting down Celerity otherwise
 		virtual void Shutdown() = NULL;
 
 		// Each time Present is called, this is incremented by 1
@@ -367,6 +370,7 @@ namespace c3
 
 		virtual bool DrawIndexedPrimitives(PrimType type, size_t offset = -1, size_t count = -1) = NULL;
 
+		// Sets the current projection matrix - kind of a clearing house for shaders to pull from
 		virtual void SetProjectionMatrix(const glm::fmat4x4 *m) = NULL;
 		virtual void SetViewMatrix(const glm::fmat4x4 *m) = NULL;
 		virtual void SetWorldMatrix(const glm::fmat4x4 *m) = NULL;

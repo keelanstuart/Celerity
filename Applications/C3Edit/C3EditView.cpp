@@ -1311,13 +1311,26 @@ void C3EditView::OnUpdateEditDelete(CCmdUI *pCmdUI)
 
 void C3EditView::OnEditDelete()
 {
-	for (auto o : m_Selected)
+	C3EditDoc *pDoc = GetDocument();
+
+	if (!IsSelected(pDoc->m_RootObj))
 	{
-		c3::Object *po = o->GetParent();
-		if (po)
-			po->RemoveChild(o, true);
-		else
-			o->Release();
+		for (auto o : m_Selected)
+		{
+			c3::Object *po = o->GetParent();
+			if (po)
+				po->RemoveChild(o, true);
+			else
+				o->Release();
+		}
+	}
+	else
+	{
+		while (size_t i = pDoc->m_RootObj->GetNumChildren())
+		{
+			i--;
+			pDoc->m_RootObj->RemoveChild(pDoc->m_RootObj->GetChild(i), true);
+		}
 	}
 
 	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
@@ -1336,8 +1349,11 @@ void C3EditView::OnEditDuplicate()
 {
 	for (auto o : m_Selected)
 	{
-		theApp.m_C3->GetFactory()->Build(o);
+		c3::Object *pdo = theApp.m_C3->GetFactory()->Build(o);
+		pdo->SetParent(o->GetParent());
 	}
+
+	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
 }
 
 

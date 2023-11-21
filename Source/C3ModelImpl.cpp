@@ -9,6 +9,7 @@
 #include <C3ModelImpl.h>
 #include <C3Resource.h>
 #include <C3MaterialImpl.h>
+#include <C3MeshImpl.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/Exporter.hpp>
@@ -604,7 +605,7 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 	if (!sourcename)
 		sourcename = _T("");
 
-	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+	if (!scene || (scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE) || !scene->mRootNode)
 		return nullptr;
 
 	RendererImpl *pr = (RendererImpl *)(psys->GetRenderer());
@@ -663,7 +664,7 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 
 		TCHAR difftexpath[MAX_PATH], texpathtemp[MAX_PATH];
 
-		props::TFlags64 rf = 0; //c3::ResourceManager::RESFLAG(c3::ResourceManager::DEMANDLOAD);
+		props::TFlags64 rf = RESF_DEMANDLOAD;
 
 		if (true == (has_difftex = (paim->GetTextureCount(aiTextureType_DIFFUSE) > 0)))
 			paim->GetTexture(aiTextureType_DIFFUSE, 0, &aipath);
@@ -694,47 +695,24 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 						texidx = 0;
 				}
 
-				int w, h, c;
-				stbi_uc *data = stbi_load_from_memory((const stbi_uc *)(scene->mTextures[texidx]->pcData),
-													  scene->mTextures[texidx]->mWidth, &w, &h, &c, 0);
-				if (data)
+				const ResourceType *ptexrestype = psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D"));
+				c3::Texture2D *pt = nullptr;
+				ptexrestype->ReadFromMemory(psys, (const BYTE *)scene->mTextures[texidx]->pcData, scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
+				if (pt)
 				{
-					c3::Texture2D *pt = psys->GetRenderer()->CreateTexture2D(w, h, (c3::Renderer::TextureType)(c3::Renderer::TextureType::U8_1CH + c - 1));
-					if (pt)
-					{
-						uint8_t *buf;
-						Texture2D::SLockInfo li;
-						if ((pt->Lock((void **)&buf, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS) == Texture2D::RETURNCODE::RET_OK) && buf)
-						{
-							int src_ofs = w * c;
-							unsigned char *src = data + (w * h * c) - src_ofs;
+					GUID guid;
+					CoCreateGuid(&guid);
 
-							for (size_t y = 0; y < h; y++)
-							{
-								memcpy(buf, src, w * c);
-								src -= src_ofs;
-								buf += src_ofs;
-							}
-
-							pt->Unlock();
-						}
-
-						GUID guid;
-						CoCreateGuid(&guid);
-
-						tstring texname = sourcename;
-						texname += _T(":texture[");
-						texname += textmp;
-						texname += _T("]");
-						pt->SetName(texname.c_str());
-						pmtl->SetTexture(t, pt);
-						psys->GetResourceManager()->GetResource(texname.c_str(),
-																RESF_CREATEENTRYONLY,
-																psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D")),
-																pt);
-					}
-
-					free(data);
+					tstring texname = sourcename;
+					texname += _T(":texture[");
+					texname += textmp;
+					texname += _T("]");
+					pt->SetName(texname.c_str());
+					pmtl->SetTexture(t, pt);
+					psys->GetResourceManager()->GetResource(texname.c_str(),
+															RESF_CREATEENTRYONLY,
+															psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D")),
+															pt);
 				}
 			}
 			else
@@ -833,10 +811,11 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 
 	TMeshIndexMap mim;
 
-	glm::fvec3 vmin(FLT_MAX, FLT_MAX, FLT_MAX), vmax(-FLT_MAX, -FLT_MAX, -FLT_MAX);
+	glm::fvec3 vmin_model(FLT_MAX, FLT_MAX, FLT_MAX), vmax_model(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 
 	for (size_t i = 0; i < scene->mNumMeshes; i++)
 	{
+		glm::fvec3 vmin(FLT_MAX, FLT_MAX, FLT_MAX), vmax(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 		Mesh *pm = psys->GetRenderer()->CreateMesh();
 
 		VertexBuffer *pvb = psys->GetRenderer()->CreateVertexBuffer();
@@ -934,26 +913,13 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 
 				aiVector3D *pmd_3f = nullptr;
 				aiColor4D *pmd_c = nullptr;
+				bool do_bounds = false;
 
 				switch (vcd[ci].m_Usage)
 				{
 					case VertexBuffer::ComponentDescription::EUsage::VU_POSITION:
 						pmd_3f = scene->mMeshes[i]->mVertices;
-
-						if (pmd_3f->x < vmin.x)
-							vmin.x = pmd_3f->x;
-						if (pmd_3f->y < vmin.y)
-							vmin.y = pmd_3f->y;
-						if (pmd_3f->z < vmin.z)
-							vmin.z = pmd_3f->z;
-
-						if (pmd_3f->x > vmax.x)
-							vmax.x = pmd_3f->x;
-						if (pmd_3f->y > vmax.y)
-							vmax.y = pmd_3f->y;
-						if (pmd_3f->z > vmax.z)
-							vmax.z = pmd_3f->z;
-
+						do_bounds = true;
 						break;
 
 					case VertexBuffer::ComponentDescription::EUsage::VU_NORMAL:
@@ -990,6 +956,23 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 						// this may seem wrong because you could have texture coordinates with 2 components...
 						// but only the relevant ones are copied, based on the count defined by the vertex component
 						memcpy(pv, &pmd_3f[j], sizeof(float) * vcd[ci].m_Count);
+
+						if (do_bounds)
+						{
+							if (pmd_3f[j].x < vmin.x)
+								vmin.x = pmd_3f[j].x;
+							if (pmd_3f[j].y < vmin.y)
+								vmin.y = pmd_3f[j].y;
+							if (pmd_3f[j].z < vmin.z)
+								vmin.z = pmd_3f[j].z;
+
+							if (pmd_3f[j].x > vmax.x)
+								vmax.x = pmd_3f[j].x;
+							if (pmd_3f[j].y > vmax.y)
+								vmax.y = pmd_3f[j].y;
+							if (pmd_3f[j].z > vmax.z)
+								vmax.z = pmd_3f[j].z;
+						}
 
 						pv += vsz;
 					}
@@ -1060,10 +1043,26 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 
 			pib->Unlock();
 			pm->AttachIndexBuffer(pib);
+
+			((MeshImpl *)pm)->SetBounds(vmin, vmax);
+
+			if (vmin.x < vmin_model.x)
+				vmin_model.x = vmin.x;
+			if (vmin.y < vmin_model.y)
+				vmin_model.y = vmin.y;
+			if (vmin.z < vmin_model.z)
+				vmin_model.z = vmin.z;
+
+			if (vmax.x > vmax_model.x)
+				vmax_model.x = vmax.x;
+			if (vmax.y > vmax_model.y)
+				vmax_model.y = vmax.y;
+			if (vmax.z > vmax_model.z)
+				vmax_model.z = vmax.z;
 		}
 	}
 
-	pmi->SetBounds(vmin, vmax);
+	pmi->SetBounds(vmin_model, vmax_model);
 
 #if 0
 	int upAxis = 0;

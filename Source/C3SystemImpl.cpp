@@ -96,12 +96,6 @@ SystemImpl::SystemImpl()
 
 SystemImpl::~SystemImpl()
 {
-	if (m_Log)
-	{
-		delete m_Log;
-		m_Log = nullptr;
-	}
-
 	if (m_InputManager)
 	{
 		delete m_InputManager;
@@ -118,6 +112,12 @@ SystemImpl::~SystemImpl()
 	{
 		delete m_SoundPlayer;
 		m_SoundPlayer = nullptr;
+	}
+
+	if (m_Log)
+	{
+		delete m_Log;
+		m_Log = nullptr;
 	}
 }
 
@@ -382,6 +382,23 @@ void SystemImpl::UpdateTime()
 
 	if (m_ActionMapper)
 		m_ActionMapper->Update();
+
+	if (m_SoundPlayer)
+	{
+		// The registered camera is the listener
+		Object *pcam = m_GlobalObjectRegistry.GetRegisteredObject(GlobalObjectRegistry::OD_CAMERA);
+		if (pcam)
+		{
+			Positionable *ppc = (Positionable *)(pcam->FindComponent(Positionable::Type()));
+			if (ppc)
+			{
+				m_SoundPlayer->SetListenerPos(ppc->GetPosVec());
+				m_SoundPlayer->SetListenerDir(ppc->GetFacingVector());
+			}
+		}
+
+		m_SoundPlayer->Update(m_ElapsedTime);
+	}
 
 	m_Environment.Update(m_ElapsedTime);
 }

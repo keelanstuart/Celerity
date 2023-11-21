@@ -122,10 +122,14 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 			{
 				size_t cache_sz = _msize(m_Cache);
 				if (cache_sz != (sz * numverts))
+				{
 					free(m_Cache);
+					m_Cache = nullptr;
+				}
 			}
 
-			m_Cache = malloc(sz * numverts);
+			if (!m_Cache)
+				m_Cache = malloc(sz * numverts);
 		}
 	}
 

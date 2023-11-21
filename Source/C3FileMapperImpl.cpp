@@ -223,12 +223,18 @@ bool FileMapperImpl::FindFile(const TCHAR *filename, TCHAR *fullpath, size_t ful
 	if (!filename || !(*filename))
 		return false;
 
+	if (PathFileExists(filename))
+	{
+		if (fullpath)
+			_tcsncpy_s(fullpath, MAX_PATH, filename, fullpathlen);
+
+		return true;
+	}
+
 	TCHAR internal_fullpath[MAX_PATH];
 	internal_fullpath[0] = '\0';
 
 	const TCHAR *ext = _tcsrchr(filename, '.');
-
-	bool found = false;
 
 	if (ext)
 	{
@@ -259,14 +265,6 @@ bool FileMapperImpl::FindFile(const TCHAR *filename, TCHAR *fullpath, size_t ful
 				return true;
 			}
 		}
-	}
-
-	if (PathFileExists(filename))
-	{
-		if (fullpath)
-			_tcsncpy_s(fullpath, MAX_PATH, filename, fullpathlen);
-
-		return true;
 	}
 
 	if (fullpath && (fullpathlen > 0))

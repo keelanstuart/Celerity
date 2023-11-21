@@ -58,7 +58,7 @@ namespace c3
 		// NOTE: there are two pools for double-bufferring so that if there are resource dependencies (e.g., textures loaded by models)
 		// they can keep render blocking to a minimum
 		pool::IThreadPool *m_TaskPool[2];
-		size_t m_ActiveTaskPool;
+		std::atomic<size_t> m_ActiveTaskPool;
 
 		glm::fmat4x4 m_ident;
 

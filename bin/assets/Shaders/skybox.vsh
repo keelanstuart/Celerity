@@ -18,7 +18,7 @@ void main()
 	vec4 wpos = vec4(vPos, 1.0);
 	vec4 zpos = uMatrixMVP * wpos;
 	gl_Position = zpos;
-	fPosDepth = vec4(vec4(uMatrixM * wpos).xyz, 1.0);
+	fPosDepth = vec4(vec4(uMatrixM * wpos).xy, 1.0, 1.0);
 	fColor0 = uColorDiffuse;
 
 	fTex0 = vec2(vTex0.x, vTex0.y);

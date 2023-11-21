@@ -7,6 +7,7 @@
 #include "pch.h"
 
 #include <C3SoundPlayerImpl.h>
+#include <C3Log.h>
 
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
@@ -20,6 +21,8 @@
 using namespace c3;
 
 
+#define LOG_AUDIO_CALLS			TRUE
+
 
 SoundPlayerImpl::SoundPlayerImpl(System *system)
 {
@@ -29,9 +32,8 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 	m_CD_DevId = 0;
 	m_CD_PausePos = 0;
 
-	m_Volume[ST_SFX] = 1;
-	m_Volume[ST_MUSIC] = 1;
-	m_Volume[ST_CD] = 1;
+	for (size_t i = 0; i < SOUND_TYPE::SOUND_TYPES; i++)
+		m_Volume[i] = 1;
 
 	m_ListenerPos.x = 0;
 	m_ListenerPos.y = 0;
@@ -45,18 +47,34 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 	m_ListenerMaxRadius = 100.0f;
 
 	m_ResManConfig = ma_resource_manager_config_init();
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_resource_manager_config_init();\n"));
+#endif
+
 	m_ResManConfig.decodedFormat = SOUND_FORMAT_DEFAULT;
 	m_ResManConfig.decodedChannels = SOUND_CHANNELS_DEFAULT;				
 	m_ResManConfig.decodedSampleRate = SOUND_RATE_DEFAULT;
+	m_ResManConfig.flags |= MA_RESOURCE_MANAGER_FLAG_NO_THREADING;
 
 	ma_resource_manager_init(&m_ResManConfig, &m_ResMan);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_resource_manager_init(&m_ResManConfig, &m_ResMan);\n"));
+#endif
 
-	ma_context_init(nullptr, 0, nullptr, &m_Context);
+	ma_context_config ccfg = ma_context_config_init();
+	ma_context_init(nullptr, 0, &ccfg, &m_Context);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_context_init(nullptr, 0, nullptr, &m_Context);\n"));
+#endif
 
 	m_pDeviceInfo = nullptr;
 	m_DeviceCount = 0;
 
 	ma_context_get_devices(&m_Context, &m_pDeviceInfo, &m_DeviceCount, nullptr, nullptr);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_context_get_devices(&m_Context, &m_pDeviceInfo, &m_DeviceCount, nullptr, nullptr);\n"));
+#endif
+
 	m_DeviceName.resize(m_DeviceCount);
 	m_DefaultDevice = 0;
 	for (size_t i = 0; i < m_DeviceCount; i++)
@@ -68,6 +86,12 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 		if (m_pDeviceInfo[i].isDefault)
 			m_DefaultDevice = i;
 	}
+
+	for (size_t i = 0; i < m_Channels.size(); i++)
+	{
+		m_Channels[i].alive = false;
+		m_Channels[i].loop_count = 0;
+	}
 }
 
 
@@ -76,8 +100,14 @@ SoundPlayerImpl::~SoundPlayerImpl()
 	Shutdown();
 
 	ma_context_uninit(&m_Context);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_context_uninit(&m_Context);\n"));
+#endif
 
 	ma_resource_manager_uninit(&m_ResMan);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_resource_manager_uninit(&m_ResMan);\n"));
+#endif
 }
 
 
@@ -107,12 +137,30 @@ bool SoundPlayerImpl::Initialize(size_t devidx)
 	m_DeviceConfig.playback.format   = SOUND_FORMAT_DEFAULT;
 	m_DeviceConfig.playback.channels = SOUND_CHANNELS_DEFAULT;
 	m_DeviceConfig.sampleRate        = SOUND_RATE_DEFAULT;
-	m_DeviceConfig.dataCallback      = nullptr;
 	m_DeviceConfig.pUserData         = this;
+	m_DeviceConfig.dataCallback      = [](ma_device *pdev, void *pout, const void *pin, ma_uint32 frame)
+	{
+		//(void)pin;
 
+		/*
+		Since we're managing the underlying device ourselves, we need to read from the engine directly.
+		To do this we need access to the ma_engine object which we passed in to the user data. One
+		advantage of this is that you could do your own audio processing in addition to the engine's
+		standard processing.
+		*/
+		SoundPlayerImpl *_this = (SoundPlayerImpl *)pdev->pUserData;
+		//ma_engine_read_pcm_frames(&(_this->m_Engine), pout, frame, NULL);
+	};
+
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
 	m_pSys->GetLog()->Print(_T("Initializing SoundPlayer... "));
+#endif
 
-	ma_result ir = ma_device_init(NULL, &m_DeviceConfig, &m_Device);
+	ma_result ir = ma_device_init(&m_Context, &m_DeviceConfig, &m_Device);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_device_init(&m_Context, &m_DeviceConfig, &m_Device);\n"));
+#endif
+
 	m_bInitialized = (ir == MA_SUCCESS);
 
 	switch (ir)
@@ -128,36 +176,87 @@ bool SoundPlayerImpl::Initialize(size_t devidx)
 
 	if (m_bInitialized)
 	{
-		ma_device_start(&m_Device);
-
 		ma_engine_config ecfg;
 		ecfg = ma_engine_config_init();
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_engine_config_init();\n"));
+#endif
+
 		ecfg.pDevice = &m_Device;
 		ecfg.listenerCount = 1;
 
-		for (size_t i = 0; i < SOUND_TYPES; i++)
+		ma_engine_init(&ecfg, &m_Engine);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_engine_init(&ecfg, &m_Engine);\n"));
+#endif
+
+		ma_engine_listener_set_world_up(&m_Engine, 0, 0, 0, 1);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_engine_listener_set_world_up(&m_Engine, 0, 0, 0, 1);\n"));
+#endif
+
+		ma_engine_listener_set_cone(&m_Engine, 0, glm::radians(80.0f), glm::radians(120.f), 0.75f);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_engine_listener_set_cone(&m_Engine, 0, glm::radians(80.0f), glm::radians(120.f), 0.75f);\n"));
+#endif
+
+		ma_sound_group_config grpcfg[SOUND_TYPE::SOUND_TYPES];
+		for (size_t i = 0; i < SOUND_TYPE::SOUND_TYPES; i++)
+			grpcfg[i] = ma_sound_group_config_init();
+
+		for (size_t i = 0; i < SOUND_TYPE::SOUND_TYPES; i++)
 		{
-			ma_engine_init(nullptr, &m_Engine[i]);
+			ma_sound_group_init(&m_Engine, 0, nullptr, &m_Group[i]);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+			m_pSys->GetLog()->Print(_T("ma_sound_group_init(&m_Engine, 0, nullptr, &m_Group[i]);\n"));
+#endif
+
+			// disable spatialization for everything except sound effects
+			ma_sound_group_set_spatialization_enabled(&m_Group[i], (i == SOUND_TYPE::ST_SFX) ? true : false);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+			m_pSys->GetLog()->Print(_T("ma_sound_group_set_spatialization_enabled(&m_Group[i], (i == SOUND_TYPE::ST_SFX) ? true : false);\n"));
+#endif
 		}
 
-		ma_engine_listener_set_world_up(&m_Engine[ST_SFX], 0, 0, 0, 1);
-		ma_engine_listener_set_cone(&m_Engine[ST_SFX], 0, glm::radians(80.0f), glm::radians(120.f), 0.75f);
+		ma_device_start(&m_Device);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_device_start(&m_Device);\n"));
+#endif
 
 		return true;
 	}
 
 	return false;
 }
-	
+
+
+bool SoundPlayerImpl::Initialized()
+{
+	return m_bInitialized;
+}
+
 	
 void SoundPlayerImpl::Shutdown()
 {
+	Stop();
+
 	if (m_bInitialized)
 	{
-		for (size_t i = 0; i < SOUND_TYPES; i++)
-			ma_engine_uninit(&m_Engine[i]);
+		for (size_t i = 0; i < m_Channels.size(); i++)
+		{
+			if (m_Channels[i].alive)
+				ma_sound_uninit(&m_Channels[i].sound);
+		}
+
+		ma_engine_uninit(&m_Engine);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_engine_uninit(&m_Engine);\n"));
+#endif
 
 		ma_device_uninit(&m_Device);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_device_uninit(&m_Device);\n"));
+#endif
 
 		m_bInitialized = false;
 	}
@@ -176,8 +275,6 @@ void SoundPlayerImpl::SetListenerPos(const glm::fvec3 *lpos)
 		m_ListenerPos.y = 0;
 		m_ListenerPos.z = 0;
 	}
-
-	ma_engine_listener_set_position(&m_Engine[ST_SFX], 0, m_ListenerPos.x, m_ListenerPos.y, m_ListenerPos.z);
 }
 
 
@@ -210,8 +307,6 @@ void SoundPlayerImpl::SetListenerDir(const glm::fvec3 *ldir)
 	m_ListenerDir.z = 0;
 
 	m_ListenerDir = glm::normalize(m_ListenerDir);
-
-	ma_engine_listener_set_direction(&m_Engine[ST_SFX], 0, m_ListenerDir.x, m_ListenerDir.y, m_ListenerDir.z);
 }
 
 
@@ -240,25 +335,38 @@ void SoundPlayerImpl::Update(float elapsed_seconds)
 	if (!m_bInitialized)
 		return;
 
-	ma_engine_listener_set_position(&m_Engine[ST_SFX], 0, m_ListenerPos.x, m_ListenerPos.y, m_ListenerPos.z);
-	ma_engine_listener_set_direction(&m_Engine[ST_SFX], 0, m_ListenerDir.x, m_ListenerDir.y, m_ListenerDir.z);
+	ma_engine_listener_set_position(&m_Engine, 0, m_ListenerPos.x, m_ListenerPos.y, m_ListenerPos.z);
+	//m_pSys->GetLog()->Print(_T("ma_engine_listener_set_position(&m_Engine, 0, m_ListenerPos.x, m_ListenerPos.y, m_ListenerPos.z);\n"));
+
+	ma_engine_listener_set_direction(&m_Engine, 0, m_ListenerDir.x, m_ListenerDir.y, m_ListenerDir.z);
+	//m_pSys->GetLog()->Print(_T("ma_engine_listener_set_direction(&m_Engine, 0, m_ListenerDir.x, m_ListenerDir.y, m_ListenerDir.z);\n"));
 }
 
 
-SoundPlayer::HCHANNEL SoundPlayerImpl::Play(HSAMPLE hs, float volume, float pitchmult, size_t loopcount, const glm::fvec3 *pos)
+SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, float volume, float pitchmult, size_t loopcount, const glm::fvec3 *pos)
 {
 	if (!m_bInitialized)
 		return INVALID_HCHANNEL;
 
+	if (!pres || (pres->GetType() != &SoundResourceType::self) || (pres->GetStatus() != Resource::RS_LOADED))
+		return INVALID_HSAMPLE;
+
+	const ma_sound *hs = (const ma_sound *)pres->GetData();
+	if (!hs)
+		return INVALID_HSAMPLE;
+
 	TChannelArray::iterator chit = m_Channels.begin();
 	for (; chit != m_Channels.end(); chit++)
 	{
-		if (!chit->first)
+		// any sound that is no loger queued for play can be replaced
+		if (!chit->alive)
 		{
-			ma_sound tmp;
-			ma_sound_init_copy(&m_Engine[ST_SFX], (const ma_sound *)hs, 0, nullptr, &tmp);
-			chit->second = tmp;
-			chit->first = loopcount;
+			ma_sound_init_copy(&m_Engine, hs, 0, &m_Group[sndtype], &chit->sound);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+			m_pSys->GetLog()->Print(_T("ma_sound_init_copy(&m_Engine, hs, 0, &m_Group[sndtype], &chit->sound);\n"));
+#endif
+			chit->loop_count = loopcount;
+			chit->alive = true;
 			break;
 		}
 	}
@@ -267,27 +375,63 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(HSAMPLE hs, float volume, float pitc
 		return INVALID_HCHANNEL;
 
 	HCHANNEL hc = (HCHANNEL)std::distance(m_Channels.begin(), chit);
-	ma_sound *ps = &chit->second;
+	ma_sound *ps = &chit->sound;
 
-	ma_sound_set_volume(ps, volume * m_Volume[ST_SFX]);
+	ma_sound_set_volume(ps, volume);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_sound_set_volume(ps, %0.2f);\n"), volume);
+#endif
+
 	ma_sound_set_looping(ps, (loopcount == LOOP_INFINITE) ? 1 : 0);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_sound_set_looping(ps, %s);\n"), (loopcount == LOOP_INFINITE) ? _T("true") : _T("false"));
+#endif
+
 	ma_sound_set_position(ps, pos ? pos->x : 0, pos ? pos->y : 0, pos ? pos->z : 0);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_sound_set_position(ps, pos ? pos->x : 0, pos ? pos->y : 0, pos ? pos->z : 0);\n"));
+#endif
+
 	ma_sound_set_pitch(ps, pitchmult);
-	ps->pEndCallbackUserData = &chit->first;
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_sound_set_pitch(ps, %0.2f);\n"), pitchmult);
+#endif
+
+	ps->pEndCallbackUserData = &*chit;
 	ps->endCallback = [](void *userdata, ma_sound *psound)
 	{
-		size_t *count = (size_t *)userdata;
+		TChannel *pch = (TChannel *)userdata;
 
-		if (*count > 0)
+		// if we're looping this sound, then check the loop count and restart play if it's greater than 0
+		if (pch->loop_count > 0)
 		{
-			*count--;
+			if (pch->loop_count != LOOP_INFINITE)
+				pch->loop_count--;
 
-			if (*count)
-				ma_sound_start(psound);
+			if (pch->loop_count)
+			{
+				ma_sound_seek_to_pcm_frame(&(pch->sound), 0);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+				//m_pSys->GetLog()->Print(_T("LOOPING: ma_sound_seek_to_pcm_frame(&(pch->sound), 0);\n"));
+#endif
+
+				ma_sound_start(&(pch->sound));
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+				//m_pSys->GetLog()->Print(_T("LOOPING: ma_sound_start(&(pch->sound));\n"));
+#endif
+			}
+			else
+			{
+				ma_sound_uninit(&pch->sound);
+				pch->alive = false;
+			}
 		}
 	};
 
 	ma_sound_start(ps);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_sound_start(ps);\n"));
+#endif
 
 	return hc;
 }
@@ -310,11 +454,21 @@ void SoundPlayerImpl::Stop(HCHANNEL hc)
 		return;
 
 	TChannelArray::iterator chit = m_Channels.begin() + hc;
-	ma_sound *ps = &chit->second;
 
-	ma_sound_stop(ps);
+	if (chit->alive)
+	{
+		ma_sound_stop(&chit->sound);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_sound_stop(ps);\n"));
+#endif
 
-	chit->first = 0;
+		ma_sound_uninit(&chit->sound);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_sound_uninit(&chit->sound);\n"));
+#endif
+
+		chit->alive = false;
+	}
 }
 
 
@@ -335,9 +489,16 @@ void SoundPlayerImpl::Pause(HCHANNEL hc)
 		return;
 
 	TChannelArray::iterator chit = m_Channels.begin() + hc;
-	ma_sound *ps = &chit->second;
 
-	ma_sound_stop(ps);
+	if (chit->alive)
+	{
+		ma_sound *ps = &chit->sound;
+
+		ma_sound_stop(ps);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_sound_stop(ps);\n"));
+#endif
+	}
 }
 
 
@@ -348,6 +509,9 @@ void SoundPlayerImpl::Resume(HCHANNEL hc)
 
 	if (hc == SOUND_ALL)
 	{
+		for (size_t i = 0; i < m_Channels.size(); i++)
+			Resume((HCHANNEL)i);
+
 		return;
 	}
 
@@ -355,10 +519,14 @@ void SoundPlayerImpl::Resume(HCHANNEL hc)
 		return;
 
 	TChannelArray::iterator chit = m_Channels.begin() + hc;
-	ma_sound *ps = &chit->second;
 
-	if (chit->first)
-		ma_sound_start(ps);
+	if (chit->alive)
+	{
+		ma_sound_start(&chit->sound);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+		m_pSys->GetLog()->Print(_T("ma_sound_start(ps);\n"));
+#endif
+	}
 }
 
 
@@ -371,9 +539,11 @@ SoundPlayer::PLAY_STATUS SoundPlayerImpl::Status(HCHANNEL hc) const
 		return SoundPlayer::PLAY_STATUS::PS_ERROR;
 
 	TChannelArray::const_iterator chit = m_Channels.cbegin() + hc;
-	const ma_sound *ps = &chit->second;
 
-	if (!chit->first || ma_sound_at_end(ps))
+	if (!chit->alive)
+		return SoundPlayer::PLAY_STATUS::PS_STOPPED;
+
+	if (ma_sound_at_end(&chit->sound))
 		return SoundPlayer::PLAY_STATUS::PS_STOPPED;
 
 	return SoundPlayer::PLAY_STATUS::PS_PLAYING;
@@ -406,9 +576,12 @@ void SoundPlayerImpl::SetVolume(SOUND_TYPE type, float volume)
 		switch (type)
 		{
 			case ST_SFX:
-				break;
-
 			case ST_MUSIC:
+			case ST_DIALOG:
+				ma_sound_group_set_volume(&m_Group[type], m_Volume[type]);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+				m_pSys->GetLog()->Print(_T("ma_sound_group_set_volume(&m_Group[type], %0.2f);\n"), m_Volume[type]);
+#endif
 				break;
 
 			case ST_CD:
@@ -434,12 +607,16 @@ void SoundPlayerImpl::SetChannelVolume(HCHANNEL hc, float volume)
 	if (hc >= m_Channels.size())
 		return;
 
+	TChannelArray::iterator chit = m_Channels.begin() + hc;
+	if (!chit->alive)
+		return;
+
 	float tmpvol = std::min<float>(std::max<float>(0, volume), 1);
 
-	TChannelArray::iterator chit = m_Channels.begin() + hc;
-	ma_sound *ps = &chit->second;
-
-	ma_sound_set_volume(ps, tmpvol * m_Volume[ST_SFX]);
+	ma_sound_set_volume(&chit->sound, tmpvol * m_Volume[ST_SFX]);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_sound_set_volume(ps, %0.2f);\n"), tmpvol * m_Volume[ST_SFX]);
+#endif
 }
 
 
@@ -452,9 +629,14 @@ void SoundPlayerImpl::SetChannelPos(HCHANNEL hc, const glm::fvec3 *pos)
 		return;
 
 	TChannelArray::iterator chit = m_Channels.begin() + hc;
-	ma_sound *ps = &chit->second;
 
-	ma_sound_set_position(ps, pos ? pos->x : 0, pos ? pos->y : 0, pos ? pos->z : 0);
+	if (!chit->alive)
+		return;
+
+	ma_sound_set_position(&chit->sound, pos ? pos->x : 0, pos ? pos->y : 0, pos ? pos->z : 0);
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	m_pSys->GetLog()->Print(_T("ma_sound_set_position(ps, pos ? pos->x : 0, pos ? pos->y : 0, pos ? pos->z : 0);\n"));
+#endif
 }
 
 
@@ -716,18 +898,27 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromFile(c3::System *p
 	{
 		SoundPlayerImpl *sp = (SoundPlayerImpl *)psys->GetSoundPlayer();
 
-		ma_sound *sound = (ma_sound *)malloc(sizeof(ma_sound));
+		ma_sound *psound = (ma_sound *)malloc(sizeof(ma_sound));
+
 #if UNICODE
-		if (ma_sound_init_from_file_w(sp->GetSfxEngine(), filename, 0, nullptr, nullptr, sound) != MA_SUCCESS)
+		if (ma_sound_init_from_file_w(&(sp->m_Engine), filename, MA_SOUND_FLAG_DECODE, nullptr, nullptr, psound) != MA_SUCCESS)
 #else
-		if (ma_sound_init_from_file(sp->GetSfxEngine(), filename, 0, nullptr, nullptr, sound) != MA_SUCCESS)
+		if (ma_sound_init_from_file(&(sp->m_Engine), filename, MA_SOUND_FLAG_DECODE, nullptr, nullptr, psound) != MA_SUCCESS)
 #endif
 		{
-			free(sound);
-			sound = nullptr;
+			free(psound);
+			psound = nullptr;
 		}
 
-		*returned_data = sound;
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+#if UNICODE
+		psys->GetLog()->Print(_T("ma_sound_init_from_file_w(&m_Engine, filename, MA_SOUND_FLAG_DECODE, nullptr, nullptr, psound)\n"));
+#else
+		psys->GetLog()->Print(_T("ma_sound_init_from_file(&m_Engine, filename, MA_SOUND_FLAG_DECODE, nullptr, nullptr, psound)\n"));
+#endif
+#endif
+
+		*returned_data = psound;
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;
 	}
@@ -740,14 +931,19 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromMemory(c3::System 
 {
 	SoundPlayerImpl *sp = (SoundPlayerImpl *)psys->GetSoundPlayer();
 
-	ma_sound *sound = (ma_sound *)malloc(sizeof(ma_sound));
-	if (ma_sound_init_from_data_source(sp->GetSfxEngine(), (ma_data_source *)buffer, 0, nullptr, sound) != MA_SUCCESS)
+	ma_sound *psound = (ma_sound *)malloc(sizeof(ma_sound));
+
+	//if (ma_sound_init_ex(sp->GetSfxEngine(), ) != MS_SUCCESS)
+	if (ma_sound_init_from_data_source(&(sp->m_Engine), (ma_data_source *)buffer, MA_SOUND_FLAG_DECODE, nullptr, psound) != MA_SUCCESS)
 	{
-		free(sound);
-		sound = nullptr;
+		free(psound);
+		psound = nullptr;
 	}
-	
-	*returned_data = sound;
+#if defined(LOG_AUDIO_CALLS) && LOG_AUDIO_CALLS
+	psys->GetLog()->Print(_T("ma_sound_init_from_data_source(sp->GetSfxEngine(), (ma_data_source *)buffer, 0, nullptr, psound)\n"));
+#endif
+
+	*returned_data = psound;
 	if (!*returned_data)
 		return ResourceType::LoadResult::LR_ERROR;
 
@@ -764,6 +960,7 @@ bool RESOURCETYPENAME(Sound)::WriteToFile(c3::System *psys, const TCHAR *filenam
 void RESOURCETYPENAME(Sound)::Unload(void *data) const
 {
 	ma_sound_uninit((ma_sound *)data);
+
 	free(data);
 	data = nullptr;
 }

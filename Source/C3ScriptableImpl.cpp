@@ -119,6 +119,7 @@ void jcRegisterObject(CScriptVar *c, void *userdata);
 void jcAdjustQuat(CScriptVar *c, void *userdata);
 void jcQuatToEuler(CScriptVar *c, void *userdata);
 void jcEulerToQuat(CScriptVar *c, void *userdata);
+void jcPlaySound(CScriptVar *c, void *userdata);
 
 void ScriptableImpl::ResetJS()
 {
@@ -133,25 +134,26 @@ void ScriptableImpl::ResetJS()
 	registerFunctions(m_JS);
 	registerMathFunctions(m_JS);
 
-	m_JS->AddNative(_T("function GetNumChildren(hrootobj)"),						jcGetNumChildren, psys);
-	m_JS->AddNative(_T("function GetChild(hrootobj, idx)"),							jcGetChild, psys);
-	m_JS->AddNative(_T("function FindObjByGUID(hrootobj, guid, recursive)"),		jcFindObjByGUID, psys);
-	m_JS->AddNative(_T("function FindFirstObjByName(hrootobj, name, recursive)"),	jcFindFirstObjByName, psys);
-	m_JS->AddNative(_T("function Log(text)"),										jcLog, psys);
-	m_JS->AddNative(_T("function FindProperty(hobj, name)"),						jcFindProperty, psys);
-	m_JS->AddNative(_T("function GetPropertyValue(hprop)"),							jcGetPropertyValue, psys);
-	m_JS->AddNative(_T("function SetPropertyValue(hprop, val)"),					jcSetPropertyValue, psys);
-	m_JS->AddNative(_T("function CreateObject(protoname, hparentobj)"),				jcCreateObject, psys);
-	m_JS->AddNative(_T("function DeleteObject(hobj)"),								jcDeleteObject, psys);
-	m_JS->AddNative(_T("function GetParent(hobj)"),									jcGetParent, psys);
-	m_JS->AddNative(_T("function SetParent(hobj, hnewparentobj)"),					jcSetParent, psys);
-	m_JS->AddNative(_T("function SetObjectName(hobj, newname)"),					jcSetObjectName, psys);
-	m_JS->AddNative(_T("function LoadObject(hobj, filename)"),						jcLoadObject, psys);
-	m_JS->AddNative(_T("function GetRegisteredObject(designation)"),				jcGetRegisteredObject, psys);
-	m_JS->AddNative(_T("function RegisterObject(designation, hobj)"),				jcRegisterObject, psys);
-	m_JS->AddNative(_T("function AdjustQuat(quat, axis, angle)"),					jcAdjustQuat, psys);
-	m_JS->AddNative(_T("function EulerToQuat(euler)"),								jcEulerToQuat, psys);
-	m_JS->AddNative(_T("function QuatToEuler(quat)"),								jcQuatToEuler, psys);
+	m_JS->AddNative(_T("function GetNumChildren(hrootobj)"),							jcGetNumChildren, psys);
+	m_JS->AddNative(_T("function GetChild(hrootobj, idx)"),								jcGetChild, psys);
+	m_JS->AddNative(_T("function FindObjByGUID(hrootobj, guid, recursive)"),			jcFindObjByGUID, psys);
+	m_JS->AddNative(_T("function FindFirstObjByName(hrootobj, name, recursive)"),		jcFindFirstObjByName, psys);
+	m_JS->AddNative(_T("function Log(text)"),											jcLog, psys);
+	m_JS->AddNative(_T("function FindProperty(hobj, name)"),							jcFindProperty, psys);
+	m_JS->AddNative(_T("function GetPropertyValue(hprop)"),								jcGetPropertyValue, psys);
+	m_JS->AddNative(_T("function SetPropertyValue(hprop, val)"),						jcSetPropertyValue, psys);
+	m_JS->AddNative(_T("function CreateObject(protoname, hparentobj)"),					jcCreateObject, psys);
+	m_JS->AddNative(_T("function DeleteObject(hobj)"),									jcDeleteObject, psys);
+	m_JS->AddNative(_T("function GetParent(hobj)"),										jcGetParent, psys);
+	m_JS->AddNative(_T("function SetParent(hobj, hnewparentobj)"),						jcSetParent, psys);
+	m_JS->AddNative(_T("function SetObjectName(hobj, newname)"),						jcSetObjectName, psys);
+	m_JS->AddNative(_T("function LoadObject(hobj, filename)"),							jcLoadObject, psys);
+	m_JS->AddNative(_T("function GetRegisteredObject(designation)"),					jcGetRegisteredObject, psys);
+	m_JS->AddNative(_T("function RegisterObject(designation, hobj)"),					jcRegisterObject, psys);
+	m_JS->AddNative(_T("function AdjustQuat(quat, axis, angle)"),						jcAdjustQuat, psys);
+	m_JS->AddNative(_T("function EulerToQuat(euler)"),									jcEulerToQuat, psys);
+	m_JS->AddNative(_T("function QuatToEuler(quat)"),									jcQuatToEuler, psys);
+	m_JS->AddNative(_T("function PlaySound(filename, volmod, pitchmod, loop, pos)"),	jcPlaySound, psys);
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -1078,4 +1080,42 @@ void jcQuatToEuler(CScriptVar *c, void *userdata)
 	prx->SetFloat(glm::degrees(c3::math::GetPitch(&q)));
 	pry->SetFloat(glm::degrees(c3::math::GetRoll(&q)));
 	prz->SetFloat(glm::degrees(c3::math::GetYaw(&q)));
+}
+
+
+//m_JS->AddNative(_T("function PlaySound(filename, volmod, pitchmod, loop, pos)"),			jcPlaySound, psys);
+void jcPlaySound(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	CScriptVar *pfilename = c->GetParameter(_T("filename"));
+	if (!pfilename)
+		return;
+
+	CScriptVar *pvolmod = c->GetParameter(_T("volmod"));
+	CScriptVar *ppitchmod = c->GetParameter(_T("pitchmod"));
+	CScriptVar *ploop = c->GetParameter(_T("loop"));
+
+	glm::fvec3 pos(0, 0, 0);
+	CScriptVar *ppos = c->GetParameter(_T("pos"));
+	if (ppos)
+	{
+		CScriptVarLink *px = ppos->FindChild(_T("x"));
+		if (px)	pos.x = px->m_Var->GetFloat();
+
+		CScriptVarLink *py = ppos->FindChild(_T("y"));
+		if (py)	pos.y = py->m_Var->GetFloat();
+
+		CScriptVarLink *pz = ppos->FindChild(_T("z"));
+		if (pz)	pos.z = pz->m_Var->GetFloat();
+	}
+
+	Resource *pres = psys->GetResourceManager()->GetResource(pfilename->GetString(), RESF_DEMANDLOAD);
+
+	ret->SetInt((int64_t)(psys->GetSoundPlayer()->Play(pres, SoundPlayer::SOUND_TYPE::ST_SFX, pvolmod ? pvolmod->GetFloat() : 0, ppitchmod ? ppitchmod->GetFloat() : 0, ploop ? ploop->GetInt() : 1, &pos)));
 }

@@ -1066,7 +1066,6 @@
         <powerprops:property_set>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">2417.glb</powerprops:property>
-            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">664915.750000,-3312785.750000,-5402887.000000</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{4A2D0682-FBE0-4085-AA5F-0E7C2CCFDE39}" name="urban_sky" group="Skybox" flags="131075">

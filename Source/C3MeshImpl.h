@@ -41,6 +41,8 @@ namespace c3
 
 		virtual const BoundingBox *GetBounds();
 
+		void SetBounds(const glm::fvec3 &vmin, const glm::fvec3 &vmax);
+
 		virtual RETURNCODE Draw(Renderer::PrimType type) const;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,

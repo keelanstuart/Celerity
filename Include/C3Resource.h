@@ -120,6 +120,7 @@ namespace c3
 		{																																					\
 		public:																																				\
 			static RESOURCETYPENAME(resource_class) self;																									\
+			static bool IsMyType(c3::ResourceType *pt) { return (pt == &RESOURCETYPENAME(resource_class)::self); }											\
 			static void Register(c3::ResourceManager *resman) {																								\
 				if (resman) { resman->RegisterResourceType(&self); } }																						\
 			static void Unregister(c3::ResourceManager *resman) {																							\

@@ -325,9 +325,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		{
 			TCHAR *tmp;
 			CONVERT_MBCS2TCS(message, tmp);
-			psys->GetLog()->Print(_T("\n"));
-			psys->GetLog()->Print(tmp);
-			psys->GetLog()->Print(_T("\n"));
+			psys->GetLog()->Print(_T("\n[GL] DEBUG: %s\n"), tmp);
 		}
 	}, m_pSys);
 
@@ -1557,14 +1555,10 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 		glid = (c3::FrameBufferImpl &)*pfb;
 
 	if (flags.IsSet(UFBFLAG_FINISHLAST))
-	{
-#if defined(NEEDS_GLFINISH)
 		gl.Finish();
-#endif
 
-		for (uint64_t s = 0; s < 32; s++)
+	for (uint64_t s = 0; s < 32; s++)
 			UseTexture(s, nullptr);
-	}
 
 	if (flags.IsSet(UFBFLAG_UPDATEVIEWPORT))
 	{
@@ -1690,7 +1684,7 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 	static Texture *ptexcache[32] = {0};
 	static uint32_t samplercache[32] = {0};
 
-	if (texflags != samplercache[texunit])
+	if (ptex && (texflags != samplercache[texunit]))
 	{
 		GLuint sampid;
 
@@ -1753,7 +1747,6 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 		}
 
 		gl.BindSampler((GLuint)texunit, sampid);
-		//FlushErrors(_T(""));
 
 		samplercache[texunit] = texflags;
 	}
@@ -1806,8 +1799,11 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 
 	ptexcache[texunit] = ptex;
 
-	gl.ActiveTexture(texunitidlu[texunit]);
-	gl.BindTexture(textype, ptex ? glid : 0);
+	if (ptex)
+	{
+		gl.ActiveTexture(texunitidlu[texunit]);
+		gl.BindTexture(textype, ptex ? glid : 0);
+	}
 }
 
 

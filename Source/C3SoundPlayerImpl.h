@@ -34,6 +34,8 @@ namespace c3
 
 		virtual bool Initialize(size_t devidx = DEFAULT_DEVICE);
 
+		virtual bool Initialized();
+
 		virtual void Shutdown();
 
 		virtual void SetListenerPos(const glm::fvec3 *lpos);
@@ -48,7 +50,7 @@ namespace c3
 
 		virtual void Update(float elapsed_seconds = 0.0f);
 
-		virtual HCHANNEL Play(HSAMPLE hs, float volume = 1.0f, float pitchmult = 1.0f, size_t loopcount = 1, const glm::fvec3 *pos = nullptr);
+		virtual HCHANNEL Play(Resource *pres, SOUND_TYPE sndtype = SOUND_TYPE::ST_SFX, float volume = 1.0f, float pitchmult = 1.0f, size_t loopcount = 1, const glm::fvec3 *pos = nullptr);
 
 		virtual void Stop(HCHANNEL hc = SOUND_ALL);
 
@@ -65,8 +67,6 @@ namespace c3
 		virtual void SetChannelVolume(HCHANNEL hc, float volume);
 
 		virtual void SetChannelPos(HCHANNEL hc, const glm::fvec3 *pos = nullptr);
-
-		virtual ma_engine *GetSfxEngine() { return &m_Engine[ST_SFX]; }
 
 	protected:
 
@@ -91,9 +91,11 @@ namespace c3
 		ma_device_info* m_pDeviceInfo;
 		std::vector<tstring> m_DeviceName;
 		ma_uint32 m_DeviceCount;
-		ma_engine m_Engine[SOUND_TYPES];
+		ma_engine m_Engine;
+		ma_sound_group m_Group[SOUND_TYPE::SOUND_TYPES];
 
-		typedef std::array<std::pair<size_t, ma_sound>, MA_MAX_CHANNELS> TChannelArray;
+		using TChannel = struct { bool alive; size_t loop_count; ma_sound sound; };
+		using TChannelArray = std::array<TChannel, MA_MAX_CHANNELS>;
 		TChannelArray m_Channels;
 
 		float m_Volume[SOUND_TYPES];
@@ -111,6 +113,7 @@ namespace c3
 
 	};
 
+	// The data type stored by this resource is an HSOUND
 	DEFINE_RESOURCETYPE(Sound, 0, GUID({0x9178daa1, 0xd5f5, 0x40ef, { 0xa0, 0x5d, 0x3a, 0xa, 0x98, 0xec, 0xf4, 0x81 }}), "Sounds", "Sound Files", "wav;mp3;flac", "wav");
 
 };

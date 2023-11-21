@@ -16,6 +16,7 @@ RenderMethodImpl::PassImpl::PassImpl()
 {
 	m_ShaderProg = nullptr;
 	m_FrameBuffer = nullptr;
+	m_FrameBufferFlags = 0;
 }
 
 
@@ -76,7 +77,7 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 		if (!m_FrameBuffer)
 			m_FrameBuffer = prend->FindFrameBuffer((*m_FrameBufferName).c_str());
 
-		prend->UseFrameBuffer(m_FrameBuffer);
+		prend->UseFrameBuffer(m_FrameBuffer, m_FrameBufferFlags);
 	}
 
 	bool need_shader = false;
@@ -123,6 +124,7 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 	return ret;
 }
 
+
 void RenderMethodImpl::PassImpl::SetFrameBufferName(const TCHAR *name)
 {
 	m_FrameBufferName = std::make_optional<tstring>(name);
@@ -136,6 +138,18 @@ bool RenderMethodImpl::PassImpl::GetFrameBufferName(tstring &name) const
 
 	name = *m_FrameBufferName;
 	return true;
+}
+
+
+void RenderMethodImpl::PassImpl::SetFrameBufferFlags(props::TFlags64 flags)
+{
+	m_FrameBufferFlags = flags;
+}
+
+
+props::TFlags64 RenderMethodImpl::PassImpl::GetFrameBufferFlags() const
+{
+	return m_FrameBufferFlags;
 }
 
 
@@ -486,6 +500,49 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	if (name == _T("framebuffer"))
 	{
 		m_FrameBufferName = std::make_optional<tstring>(value);
+	}
+	else if (name == _T("framebuffer.flags"))
+	{
+		props::TFlags64 flags = 0;
+		m_FrameBufferFlags = flags;
+		if (v)
+		{
+			while (*v)
+			{
+				while (*v && !__iswcsym(*v))
+					v++;
+
+				TCHAR *vp = v + 1;
+				while (*vp && __iswcsym(*vp))
+					vp++;
+
+				if (*vp && (v != vp))
+				{
+					if (!_tcsnicmp(_T("clear_color"), v, vp - v))
+					{
+						m_FrameBufferFlags |= UFBFLAG_CLEARCOLOR;
+					}
+					else if (!_tcsnicmp(_T("clear_depth"), v, vp - v))
+					{
+						m_FrameBufferFlags |= UFBFLAG_CLEARDEPTH;
+					}
+					else if (!_tcsnicmp(_T("clear_stencil"), v, vp - v))
+					{
+						m_FrameBufferFlags |= UFBFLAG_CLEARSTENCIL;
+					}
+					else if (!_tcsnicmp(_T("finish_last"), v, vp - v))
+					{
+						m_FrameBufferFlags |= UFBFLAG_FINISHLAST;
+					}
+					else if (!_tcsnicmp(_T("update_viewport"), v, vp - v))
+					{
+						m_FrameBufferFlags |= UFBFLAG_UPDATEVIEWPORT;
+					}
+				}
+
+				v = vp;
+			}
+		}
 	}
 	else if (name == _T("shader.geometry"))
 	{

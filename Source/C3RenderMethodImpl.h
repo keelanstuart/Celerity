@@ -34,6 +34,7 @@ namespace c3
 			FrameBuffer *m_FrameBuffer;
 			std::optional<tstring> m_ShaderCompFilename[Renderer::ShaderComponentType::ST_NUMTYPES];
 			std::optional<tstring> m_FrameBufferName;
+			props::TFlags64 m_FrameBufferFlags;
 			std::optional<Renderer::BlendMode> m_BlendMode;
 			std::optional<Renderer::BlendEquation> m_BlendEq;
 			std::optional<Renderer::CullMode> m_CullMode;
@@ -51,6 +52,9 @@ namespace c3
 
 			virtual void SetFrameBufferName(const TCHAR *name);
 			virtual bool GetFrameBufferName(tstring &name) const;
+
+			virtual void SetFrameBufferFlags(props::TFlags64 flags);
+			virtual props::TFlags64 GetFrameBufferFlags() const;
 
 			virtual void SetShaderComponentFilename(Renderer::ShaderComponentType type, const TCHAR *filename);
 			virtual bool GetShaderComponentFilename(Renderer::ShaderComponentType type, tstring &filename) const;

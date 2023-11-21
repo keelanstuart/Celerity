@@ -38,7 +38,7 @@ namespace c3
 		typedef size_t HCHANNEL;
 
 		enum { INVALID_HSAMPLE = -1 };
-		enum { INVALID_HCHANNEL = -1 };
+		enum { INVALID_HCHANNEL = -2 };
 		enum { SOUND_ALL = -3 };
 		enum { DEFAULT_DEVICE = (size_t)-1 };
 		enum { LOOP_INFINITE = (size_t)-1 };
@@ -49,6 +49,8 @@ namespace c3
 		virtual const TCHAR *GetDeviceName(size_t devidx) const = NULL;
 
 		virtual bool Initialize(size_t devidx = (size_t)DEFAULT_DEVICE) = NULL;
+
+		virtual bool Initialized() = NULL;
 
 		virtual void Shutdown() = NULL;
 
@@ -64,7 +66,7 @@ namespace c3
 
 		virtual void Update(float elapsed_seconds = 0.0f) = NULL;
 
-		virtual HCHANNEL Play(HSAMPLE hs, float volume = 1.0f, float pitchmult = 1.0f, size_t loopcount = 1, const glm::fvec3 *pos = nullptr) = NULL;
+		virtual HCHANNEL Play(Resource *pres, SOUND_TYPE sndtype = SOUND_TYPE::ST_SFX, float volume = 1.0f, float pitchmult = 1.0f, size_t loopcount = 1, const glm::fvec3 *pos = nullptr) = NULL;
 
 		virtual void Stop(HCHANNEL hc = SOUND_ALL) = NULL;
 

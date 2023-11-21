@@ -44,6 +44,7 @@ COutputWnd::~COutputWnd()
 BEGIN_MESSAGE_MAP(COutputWnd, CDockablePane)
 	ON_WM_CREATE()
 	ON_WM_SIZE()
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 int COutputWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -121,3 +122,19 @@ void COutputWnd::UpdateFonts()
 	m_wndOutputDebug.SetFont(&afxGlobalData.fontRegular);
 }
 
+
+
+BOOL COutputWnd::DestroyWindow()
+{
+	theApp.m_C3->GetLog()->SetRedirectFunction(nullptr, nullptr);
+
+	return CDockablePane::DestroyWindow();
+}
+
+
+void COutputWnd::OnClose()
+{
+	theApp.m_C3->GetLog()->SetRedirectFunction(nullptr, nullptr);
+
+	CDockablePane::OnClose();
+}
