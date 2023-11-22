@@ -414,7 +414,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>GLM_LEFT_HANDED;GLM_FORCE_XYZW_ONLY;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_DEBUG;C3_EXPORTS;TINYXML2_EXPORT;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MA_DEBUG_OUTPUT;GLM_LEFT_HANDED;GLM_FORCE_XYZW_ONLY;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_DEBUG;C3_EXPORTS;TINYXML2_EXPORT;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
@@ -444,7 +444,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>GLM_LEFT_HANDED;GLM_FORCE_XYZW_ONLY;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_DEBUG;C3_EXPORTS;TINYXML2_EXPORT;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MA_DEBUG_OUTPUT;GLM_LEFT_HANDED;GLM_FORCE_XYZW_ONLY;_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_DEBUG;C3_EXPORTS;TINYXML2_EXPORT;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>

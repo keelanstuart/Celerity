@@ -96,24 +96,6 @@ SystemImpl::SystemImpl()
 
 SystemImpl::~SystemImpl()
 {
-	if (m_InputManager)
-	{
-		delete m_InputManager;
-		m_InputManager = nullptr;
-	}
-
-	if (m_ActionMapper)
-	{
-		delete m_ActionMapper;
-		m_ActionMapper = nullptr;
-	}
-
-	if (m_SoundPlayer)
-	{
-		delete m_SoundPlayer;
-		m_SoundPlayer = nullptr;
-	}
-
 	if (m_Log)
 	{
 		delete m_Log;
@@ -142,16 +124,34 @@ void SystemImpl::Release()
 		m_ResourceManager = nullptr;
 	}
 
-	if (m_FileMapper)
+	if (m_InputManager)
 	{
-		delete m_FileMapper;
-		m_FileMapper = nullptr;
+		delete m_InputManager;
+		m_InputManager = nullptr;
+	}
+
+	if (m_ActionMapper)
+	{
+		delete m_ActionMapper;
+		m_ActionMapper = nullptr;
+	}
+
+	if (m_SoundPlayer)
+	{
+		delete m_SoundPlayer;
+		m_SoundPlayer = nullptr;
 	}
 
 	if (m_Renderer)
 	{
 		delete m_Renderer;
 		m_Renderer = nullptr;
+	}
+
+	if (m_FileMapper)
+	{
+		delete m_FileMapper;
+		m_FileMapper = nullptr;
 	}
 
 	if (m_Factory)
