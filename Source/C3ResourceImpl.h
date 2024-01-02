@@ -8,6 +8,7 @@
 
 #include <C3Resource.h>
 
+
 namespace c3
 {
 	class ResourceImpl : public Resource
@@ -16,7 +17,6 @@ namespace c3
 
 	protected:
 
-#pragma pack(push, 1)
 		const ResourceType *m_pResType;
 		size_t m_RefCt;
 		tstring m_Filename;
@@ -25,7 +25,6 @@ namespace c3
 		Status m_Status;
 		props::TFlags32 m_AuxFlags;
 		uint32_t m_Aux;
-#pragma pack(pop)
 
 	public:
 
@@ -36,7 +35,6 @@ namespace c3
 		virtual ~ResourceImpl();
 
 		virtual Resource::Status GetStatus() const;
-		//virtual void SetStatus(Resource::Status status);
 
 		virtual const ResourceType *GetType() const;
 
@@ -45,7 +43,6 @@ namespace c3
 		virtual const TCHAR *GetOptions() const;
 
 		virtual void *GetData() const;
-		//virtual void SetData(void *data);
 
 		virtual void AddRef();
 

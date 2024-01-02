@@ -120,7 +120,7 @@ namespace c3
 		{																																					\
 		public:																																				\
 			static RESOURCETYPENAME(resource_class) self;																									\
-			static bool IsMyType(c3::ResourceType *pt) { return (pt == &RESOURCETYPENAME(resource_class)::self); }											\
+			static const c3::ResourceType *Type() { return (const c3::ResourceType *)&self; }																	\
 			static void Register(c3::ResourceManager *resman) {																								\
 				if (resman) { resman->RegisterResourceType(&self); } }																						\
 			static void Unregister(c3::ResourceManager *resman) {																							\
@@ -141,8 +141,10 @@ namespace c3
 	/// THIS GOES IN YOUR SOURCE
 	/// You'll still need to implement Read*, Write*, and Unload methods yourself
 	#define DECLARE_RESOURCETYPE(resource_class)																											\
-		RESOURCETYPENAME(resource_class) RESOURCETYPENAME(resource_class)::self									
+		RESOURCETYPENAME(resource_class) RESOURCETYPENAME(resource_class)::self
 
+	/// USE THIS TO COMPARE TYPES FOR LOADED RESOURCES
+	#define RESOURCETYPE(resource_class) (&(RESOURCETYPENAME(resource_class)::self))
 
 	/// DO THIS AFTER YOU CALL c3::System::Create OR WHEN YOUR PLUG-IN IS INITIALIZED
 	#define REGISTER_RESOURCETYPE(resource_class, resmanager)	RESOURCETYPENAME(resource_class)::Register(resmanager)

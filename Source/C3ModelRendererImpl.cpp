@@ -200,7 +200,7 @@ void ModelRendererImpl::Render(Object::RenderFlags flags)
 			mat = *m_pPos->GetTransformMatrix() * m_Mat * glm::scale(glm::identity<glm::fmat4x4>(), invscl);
 		}
 
-		pmod->Draw(&mat, !flags.IsSet(RF_LOCKMATERIAL), (Model::ModelInstanceData *)m_Inst);
+		pmod->Draw(&mat, !flags.IsSet(RF_LOCKMATERIAL), (Model::InstanceData *)m_Inst);
 	}
 }
 
@@ -311,9 +311,9 @@ const Model *ModelRendererImpl::GetModel() const
 }
 
 
-Model::ModelInstanceData *ModelRendererImpl::GetModelInstanceData()
+Model::InstanceData *ModelRendererImpl::GetModelInstanceData()
 {
-	return (Model::ModelInstanceData *)m_Inst;
+	return (Model::InstanceData *)m_Inst;
 }
 
 

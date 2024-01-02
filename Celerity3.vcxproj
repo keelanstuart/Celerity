@@ -28,6 +28,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\C3ActionMapperImpl.cpp" />
+    <ClCompile Include="Source\C3AnimationImpl.cpp" />
+    <ClCompile Include="Source\C3AnimatorImpl.cpp" />
+    <ClCompile Include="Source\C3AnimTrackImpl.cpp" />
     <ClCompile Include="Source\C3BoundingBoxImpl.cpp" />
     <ClCompile Include="Source\C3CameraImpl.cpp" />
     <ClCompile Include="Source\C3ConfigurationImpl.cpp" />
@@ -143,7 +146,9 @@
   <ItemGroup>
     <ClInclude Include="Include\C3.h" />
     <ClInclude Include="Include\C3ActionMapper.h" />
+    <ClInclude Include="Include\C3Animation.h" />
     <ClInclude Include="Include\C3Animator.h" />
+    <ClInclude Include="Include\C3AnimTrack.h" />
     <ClInclude Include="Include\C3BoundingBox.h" />
     <ClInclude Include="Include\C3Camera.h" />
     <ClInclude Include="Include\C3ColorDefs.h" />
@@ -199,6 +204,9 @@
     <ClInclude Include="Include\C3FlowGraph.h" />
     <ClInclude Include="Include\C3Zip.h" />
     <ClInclude Include="source\C3ActionMapperImpl.h" />
+    <ClInclude Include="Source\C3AnimationImpl.h" />
+    <ClInclude Include="Source\C3AnimatorImpl.h" />
+    <ClInclude Include="Source\C3AnimTrackImpl.h" />
     <ClInclude Include="Source\C3BoundingBoxImpl.h" />
     <ClInclude Include="Source\C3CameraImpl.h" />
     <ClInclude Include="Source\C3ConfigurationImpl.h" />
@@ -448,7 +456,7 @@
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -478,7 +486,7 @@
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <GenerateXMLDocumentationFiles>true</GenerateXMLDocumentationFiles>
     </ClCompile>
     <Link>
@@ -505,7 +513,7 @@
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -565,7 +573,7 @@
       <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>$(ProjectDir)Source</AdditionalIncludeDirectories>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>

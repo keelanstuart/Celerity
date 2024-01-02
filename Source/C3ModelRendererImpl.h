@@ -77,7 +77,7 @@ namespace c3
 
 		virtual const Model *GetModel() const;
 
-		virtual Model::ModelInstanceData *GetModelInstanceData();
+		virtual Model::InstanceData *GetModelInstanceData();
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;
 

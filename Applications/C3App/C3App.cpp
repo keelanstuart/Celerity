@@ -218,6 +218,10 @@ BOOL C3App::InitInstance()
 	resexts = m_Config->GetString(_T("resources.scripts.extensions"), _T("c3js"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
+	respaths = m_Config->GetString(_T("resources.animstates.paths"), _T("./;./assets;./assets/animations"));
+	resexts = m_Config->GetString(_T("resources.animstates.extensions"), _T("c3states"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
 	respaths = m_Config->GetString(_T("resources.levels.paths"), _T("./;./assets;./assets/levels"));
 	resexts = m_Config->GetString(_T("resources.levels.extensions"), _T("c3o"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
@@ -257,7 +261,18 @@ BOOL C3App::InitInstance()
 
 	theApp.m_C3->GetLog()->Print(_T(" done\n"));
 
-	theApp.m_C3->GetResourceManager()->RegisterZipArchive(_T("./assets/models/hexagons.zip"));
+	theApp.m_C3->GetLog()->Print(_T("Registering Resource Packages...\n"));
+	size_t numrespacks = m_Config->GetNumSubKeys(_T("resources.packfiles"));
+	for (size_t rpi = 0; rpi < numrespacks; rpi++)
+	{
+		TCHAR kn[256];
+		_stprintf_s(kn, _T("resources.packfiles.packfile#%zu"), rpi);
+
+		const TCHAR *zp = m_Config->GetString(kn, nullptr);
+		theApp.m_C3->GetLog()->Print(_T("\t%s\n"), zp);
+		theApp.m_C3->GetResourceManager()->RegisterZipArchive(zp);
+	}
+	theApp.m_C3->GetLog()->Print(_T("done.\n"));
 
 	theApp.m_C3->GetLog()->Print(_T("Loading Plugins..."));
 

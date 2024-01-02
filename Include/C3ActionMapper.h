@@ -18,12 +18,12 @@ namespace c3
 
 	public:
 
-		typedef enum ETriggerType
+		using TriggerType = enum ETriggerType
 		{
 			DOWN_CONTINUOUS = 0,	// keeps generating the event as long as the button is down
 			DOWN_DELTA,				// generates the event only when the button is first depressed
 			UP_DELTA,				// generates the event only when the button is released
-		} TriggerType;
+		};
 
 		// a callback you provide when your action is triggered. gives you the device, user number, which button, and that button's value
 		typedef bool (__cdecl *ACTION_CALLBACK_FUNC)(InputDevice *from_device, size_t user, InputDevice::VirtualButton button, float value, void *userdata);

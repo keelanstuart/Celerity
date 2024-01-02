@@ -27,6 +27,8 @@ ObjectImpl::ObjectImpl(SystemImpl *psys, GUID guid)
 
 ObjectImpl::~ObjectImpl()
 {
+	m_Props->SetChangeListener(nullptr);
+
 	for (const auto &it : m_Components)
 	{
 		it->GetType()->Destroy(it);

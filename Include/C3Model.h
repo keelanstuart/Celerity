@@ -7,6 +7,7 @@
 #pragma once
 
 #include <c3.h>
+#include <C3Animation.h>
 
 
 namespace c3
@@ -27,12 +28,14 @@ namespace c3
 		typedef size_t SubMeshIndex;
 
 		enum { NO_PARENT = -1 };
-		enum { INVALID_INDEX = -1 };
+		enum { INVALID_INDEX = -2 };
 
-		// ModelInstanceData lets you adjust the transform and the material when rendering an instance 
-		class ModelInstanceData
+		// InstanceData lets you adjust the transform and the material when rendering an instance 
+		class InstanceData
 		{
+
 		public:
+
 			virtual void Release() = NULL;
 
 			virtual const Model *GetSourceModel() = NULL;
@@ -42,6 +45,7 @@ namespace c3
 			virtual void SetTransform(NodeIndex idx, glm::fmat4x4 &mat) = NULL;
 
 			virtual Material *GetMaterial(NodeIndex nodeidx, MeshIndex meshidx) = NULL;
+
 		};
 
 		static C3_API Model *Create(Renderer *prend);
@@ -53,6 +57,8 @@ namespace c3
 		virtual void RemoveNode(NodeIndex nidx) = NULL;
 
 		virtual size_t GetNodeCount() const = NULL;
+
+		virtual bool FindNode(const TCHAR *name, NodeIndex *pidx = nullptr, bool case_sensitive = false) const = NULL;
 
 		virtual void SetNodeName(NodeIndex nidx, const TCHAR *name) = NULL;
 
@@ -88,10 +94,12 @@ namespace c3
 
 		virtual void GetBoundingSphere(glm::fvec3 *centroid = nullptr, float *radius = nullptr) const = NULL;
 
-		virtual void Draw(const glm::fmat4x4 *pmat = nullptr, bool allow_material_changes = true, const ModelInstanceData *instance_data = nullptr) const = NULL;
+		virtual void Draw(const glm::fmat4x4 *pmat = nullptr, bool allow_material_changes = true, const InstanceData *instance_data = nullptr) const = NULL;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, size_t *pMeshIndex,
 							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const = NULL;
+
+		virtual const Animation *GetDefaultAnim() const = NULL;
 
 	};
 

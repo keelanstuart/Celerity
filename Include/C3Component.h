@@ -92,39 +92,41 @@ namespace c3
 	/// This is the standard way of registering your Component
 	/// Do your own thing, but beware!
 
-#define COMPONENTTYPE(component_class) component_class##Type
+#define COMPONENTTYPE_NAME(component_class) component_class##Type
 
 /// THIS GOES IN YOUR HEADER
-#define DEFINE_COMPONENTTYPE(component_class, componentimpl_class, guid, name, description, flags)				\
-		class COMPONENTTYPE(component_class) : public c3::ComponentType											\
-		{																										\
-			friend class component_class;																		\
-			public:																								\
-			static COMPONENTTYPE(component_class) self;															\
-			static void Register(c3::Factory *factory) {														\
-				if (factory) { factory->RegisterComponentType(&self); } }										\
-			static void Unregister(c3::Factory *factory) {														\
-				if (factory) { factory->UnregisterComponentType(&self); } }										\
-			COMPONENTTYPE(component_class)() { }																\
-			virtual ~COMPONENTTYPE(component_class)() { }														\
-			virtual c3::Component *Build() const { return new componentimpl_class(); }							\
-			virtual void Destroy(c3::Component *pc) const { pc->Release(); }									\
-			virtual GUID GetGUID() const { return GUID(guid); }													\
-			virtual const TCHAR *GetName() const { return _T(name); }											\
-			virtual const TCHAR *GetDescription() const { return _T(description); }								\
-			virtual const props::TFlags64 GetFlags() const { return flags; }									\
+#define DEFINE_COMPONENTTYPE(component_class, componentimpl_class, guid, name, description, flags)							\
+		class COMPONENTTYPE_NAME(component_class) : public c3::ComponentType												\
+		{																													\
+			friend class component_class;																					\
+			public:																											\
+			static COMPONENTTYPE_NAME(component_class) self;																\
+			static void Register(c3::Factory *factory) {																	\
+				if (factory) { factory->RegisterComponentType(&self); } }													\
+			static void Unregister(c3::Factory *factory) {																	\
+				if (factory) { factory->UnregisterComponentType(&self); } }													\
+			COMPONENTTYPE_NAME(component_class)() { }																		\
+			virtual ~COMPONENTTYPE_NAME(component_class)() { }																\
+			virtual c3::Component *Build() const { return new componentimpl_class(); }										\
+			virtual void Destroy(c3::Component *pc) const { pc->Release(); }												\
+			virtual GUID GetGUID() const { return GUID(guid); }																\
+			virtual const TCHAR *GetName() const { return _T(name); }														\
+			virtual const TCHAR *GetDescription() const { return _T(description); }											\
+			virtual const props::TFlags64 GetFlags() const { return flags; }												\
 		}
+
+#define COMPONENTTYPE(component_class) (&(COMPONENTTYPE_NAME(component_class)::self))
 
 /// THIS GOES IN YOUR SOURCE
 #define DECLARE_COMPONENTTYPE(component_class, componentimpl_class)															\
-		COMPONENTTYPE(component_class) COMPONENTTYPE(component_class)::self;												\
-		const c3::ComponentType *componentimpl_class::GetType() const { return &COMPONENTTYPE(component_class)::self; }		\
-		const c3::ComponentType *component_class::Type() { return (const c3::ComponentType *)&COMPONENTTYPE(component_class)::self; }
+		COMPONENTTYPE_NAME(component_class) COMPONENTTYPE_NAME(component_class)::self;										\
+		const c3::ComponentType *componentimpl_class::GetType() const { return COMPONENTTYPE(component_class); }			\
+		const c3::ComponentType *component_class::Type() { return COMPONENTTYPE(component_class); }
 
-	/// DO THIS AFTER YOU CALL c3::System::Create OR WHEN YOUR PLUG-IN IS INITIALIZED
-#define REGISTER_COMPONENTTYPE(component_class, factory)	COMPONENTTYPE(component_class)::Register(factory)
+/// DO THIS AFTER YOU CALL c3::System::Create OR WHEN YOUR PLUG-IN IS INITIALIZED
+#define REGISTER_COMPONENTTYPE(component_class, factory)	COMPONENTTYPE_NAME(component_class)::Register(factory)
 
 /// DO THIS WHEN YOU UNLOAD YOUR PLUGIN OR BEFORE YOU CALL c3::System::Release
-#define UNREGISTER_COMPONENTTYPE(component_class, factory)	COMPONENTTYPE(component_class)::Unregister(factory)
+#define UNREGISTER_COMPONENTTYPE(component_class, factory)	COMPONENTTYPE_NAME(component_class)::Unregister(factory)
 
 };

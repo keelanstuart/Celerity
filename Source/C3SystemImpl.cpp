@@ -24,6 +24,8 @@
 #include <C3PhysicalImpl.h>
 #include <C3SoundPlayerImpl.h>
 #include <C3EnvironmentModifierImpl.h>
+#include <C3AnimationImpl.h>
+#include <C3AnimatorImpl.h>
 
 #include <C3ResourceImpl.h>
 
@@ -110,6 +112,8 @@ void SystemImpl::Release()
 	{
 		/// UNREGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES
 		// *************************************************
+		UNREGISTER_RESOURCETYPE(Animation, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(AnimStatesDesc, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(TextureCube, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(Texture3D, m_ResourceManager);
@@ -158,6 +162,7 @@ void SystemImpl::Release()
 	{
 		/// UNREGISTER NATIVE COMPONENTS BETWEEN THESE LINES
 		// *************************************************
+		UNREGISTER_COMPONENTTYPE(Animator, m_Factory);
 		UNREGISTER_COMPONENTTYPE(Positionable, m_Factory);
 		UNREGISTER_COMPONENTTYPE(Camera, m_Factory);
 		UNREGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);
@@ -210,6 +215,8 @@ ResourceManager *SystemImpl::GetResourceManager()
 
 		/// REGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES
 		// *************************************************
+		REGISTER_RESOURCETYPE(Animation, m_ResourceManager);
+		REGISTER_RESOURCETYPE(AnimStatesDesc, m_ResourceManager);
 		REGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
 		REGISTER_RESOURCETYPE(TextureCube, m_ResourceManager);
 		REGISTER_RESOURCETYPE(Texture3D, m_ResourceManager);
@@ -285,6 +292,7 @@ Factory *SystemImpl::GetFactory()
 
 		/// REGISTER NATIVE COMPONENTS BETWEEN THESE LINES
 		// *************************************************
+		REGISTER_COMPONENTTYPE(Animator, m_Factory);
 		REGISTER_COMPONENTTYPE(Positionable, m_Factory);
 		REGISTER_COMPONENTTYPE(Camera, m_Factory);
 		REGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);

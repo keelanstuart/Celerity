@@ -21,23 +21,23 @@ namespace c3
 
 		static const ComponentType *Type();
 
-		typedef enum EViewMode
+		using ViewMode = enum EViewMode
 		{
 			VM_POLAR = 0,
 			VM_LOOKAT,
 
 			VM_NUMMODES
 
-		} ViewMode;
+		};
 
-		typedef enum EProjectionMode
+		using ProjectionMode = enum EProjectionMode
 		{
 			PM_PERSPECTIVE = 0,
 			PM_ORTHOGRAPHIC,
 
 			PM_NUMMODES
 
-		} ProjectionMode;
+		};
 
 		virtual void SetViewMode(ViewMode mode) = NULL;
 		virtual ViewMode GetViewMode() = NULL;

@@ -70,9 +70,11 @@ namespace c3
 
 		MatrixStack *m_MatStack;
 
+		const Animation *m_DefaultAnim;
+
 	public:
 
-		class ModelInstanceDataImpl : Model::ModelInstanceData
+		class ModelInstanceDataImpl : Model::InstanceData
 		{
 		public:
 
@@ -82,6 +84,7 @@ namespace c3
 			{
 				glm::fmat4x4 mat;
 				std::vector<Material *> pmtl;
+				NodeIndex parent;
 			};
 			std::vector<NodeData> m_NodeData;
 
@@ -96,6 +99,7 @@ namespace c3
 			virtual void SetTransform(NodeIndex idx, glm::fmat4x4 &mat);
 
 			virtual Material *GetMaterial(NodeIndex nodeidx, MeshIndex meshidx);
+
 		};
 
 
@@ -105,13 +109,15 @@ namespace c3
 
 		virtual void Release();
 
-		virtual ModelInstanceData *CloneInstanceData();
+		virtual InstanceData *CloneInstanceData();
 
 		virtual NodeIndex AddNode();
 
 		virtual void RemoveNode(NodeIndex nidx);
 
 		virtual size_t GetNodeCount() const;
+
+		virtual bool FindNode(const TCHAR *name, NodeIndex *pidx = nullptr, bool case_sensitive = false) const;
 
 		virtual void SetNodeName(NodeIndex nidx, const TCHAR *name);
 
@@ -147,15 +153,19 @@ namespace c3
 
 		virtual void GetBoundingSphere(glm::fvec3 *centroid = nullptr, float *radius = nullptr) const;
 
-		virtual void Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const ModelInstanceData *inst = nullptr) const;
+		virtual void Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst = nullptr) const;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, size_t *pMeshIndex,
 							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;
 
+		virtual const Animation *GetDefaultAnim() const;
+
+		void SetDefaultAnim(const Animation *panim);
+
 		void SetBounds(glm::fvec3 &bmin, glm::fvec3 &bmax);
 
 	protected:
-		bool DrawNode(NodeIndex nodeidx, bool allow_material_changes, const ModelInstanceData *inst) const;
+		bool DrawNode(NodeIndex nodeidx, bool allow_material_changes, const InstanceData *inst) const;
 
 		bool IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats,
 						   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;

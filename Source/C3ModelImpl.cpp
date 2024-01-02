@@ -10,6 +10,8 @@
 #include <C3Resource.h>
 #include <C3MaterialImpl.h>
 #include <C3MeshImpl.h>
+#include <C3AnimationImpl.h>
+#include <C3Math.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/Exporter.hpp>
@@ -34,6 +36,7 @@ ModelImpl::ModelImpl(RendererImpl *prend)
 	m_pRend = prend;
 	m_MatStack = MatrixStack::Create();
 	m_Bounds = BoundingBox::Create();
+	m_DefaultAnim = nullptr;
 }
 
 
@@ -49,11 +52,11 @@ void ModelImpl::Release()
 }
 
 
-Model::ModelInstanceData *ModelImpl::CloneInstanceData()
+Model::InstanceData *ModelImpl::CloneInstanceData()
 {
 	ModelImpl::ModelInstanceDataImpl *ret = new ModelImpl::ModelInstanceDataImpl(this);
 
-	return (ModelInstanceData *)ret;
+	return (InstanceData *)ret;
 }
 
 
@@ -84,6 +87,25 @@ void ModelImpl::RemoveNode(NodeIndex nidx)
 size_t ModelImpl::GetNodeCount() const
 {
 	return m_Nodes.size();
+}
+
+
+bool ModelImpl::FindNode(const TCHAR *name, NodeIndex *pidx, bool case_sensitive) const
+{
+	std::function<int(const TCHAR *, const TCHAR *)> cmpfunc = case_sensitive ? _tcscmp : _tcsicmp;
+
+	for (size_t i = 0, maxi = m_Nodes.size(); i < maxi; i++)
+	{
+		if (!cmpfunc(m_Nodes[i]->name.c_str(), name))
+		{
+			if (pidx)
+				*pidx = (int)i;
+
+			return true;
+		}
+	}
+
+	return false;
 }
 
 
@@ -344,7 +366,7 @@ const BoundingBox *ModelImpl::GetBounds(BoundingBox *pbb) const
 }
 
 
-void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const ModelInstanceData *inst) const
+void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst) const
 {
 	if (inst && (((ModelInstanceDataImpl *)inst)->m_pSourceModel != this))
 		return;
@@ -364,15 +386,15 @@ void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, cons
 }
 
 
-bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const Model::ModelInstanceData *inst) const
+bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const Model::InstanceData *inst) const
 {
 	const SNodeInfo *pnode = m_Nodes[nodeidx];
 
 	// push the node's transform to build the hierarchy correctly
-	if (!inst)
-		m_MatStack->Push(&pnode->mat);
-	else
+	if (inst)
 		m_MatStack->Push(&(((ModelInstanceDataImpl *)inst)->m_NodeData[nodeidx].mat));
+	else
+		m_MatStack->Push(&pnode->mat);
 
 	glm::fmat4x4 m;
 
@@ -532,14 +554,20 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMat
 	if (!pn || !pm)
 		return;
 
-	Model::NodeIndex nidx = pm->AddNode();
-	nidxmap.insert(TNodeIndexMap::value_type(pn, nidx));
+	Model::NodeIndex nidx;
 
 	TCHAR *name;
 	CONVERT_MBCS2TCS(pn->mName.C_Str(), name);
 
+#if 0
+	if (pm->FindNode(name, &nidx, true))
+		return;
+#endif
+
+	nidx = pm->AddNode();
+	nidxmap.insert(TNodeIndexMap::value_type(pn, nidx));
+
 	pm->SetNodeName(nidx, name);
-	pm->SetParentNode(nidx, parent_nidx);
 
 	glm::fmat4x4 t;
 	if (pnxform)
@@ -555,21 +583,24 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMat
 
 	pm->SetTransform(nidx, &t);
 
-	for (size_t i = 0; i < pn->mNumChildren; i++)
-		AddModelNode(pm, nidx, pn->mChildren[i], &pn->mChildren[i]->mTransformation, nidxmap, midxmap);
-
 	for (size_t j = 0; j < pn->mNumMeshes; j++)
 	{
 		TMeshIndexMap::const_iterator cit = midxmap.find(size_t(pn->mMeshes[j]));
 		if (cit != midxmap.cend())
 			pm->AssignMeshToNode(nidx, cit->second);
 	}
+
+	pm->SetParentNode(nidx, parent_nidx);
+
+	for (size_t i = 0; i < pn->mNumChildren; i++)
+		AddModelNode(pm, nidx, pn->mChildren[i], &pn->mChildren[i]->mTransformation, nidxmap, midxmap);
 }
 
-inline unsigned int MakeImportFlags(const TCHAR *options)
+inline unsigned int MakeImportFlags(const TCHAR *options, bool &animation_only)
 {
+	animation_only = false;
+
 	unsigned int impflags = 0
-		//| aiProcess_FlipUVs
 		| aiProcess_Triangulate
 		| aiProcess_CalcTangentSpace
 		| aiProcess_ImproveCacheLocality
@@ -579,25 +610,35 @@ inline unsigned int MakeImportFlags(const TCHAR *options)
 		| aiProcess_JoinIdenticalVertices
 		| aiProcess_GenUVCoords
 		| aiProcess_FixInfacingNormals
+		| aiProcess_GenNormals
+		| aiProcess_LimitBoneWeights
+		| aiProcess_PopulateArmatureData
 		;
 
-	if (_tcsstr(options, _T("force_smooth_normals")))
+	if (options)
 	{
-		impflags |= aiProcess_GenSmoothNormals | aiProcess_ForceGenNormals;
-	}
-	else if (_tcsstr(options, _T("force_flat_normals")))
-	{
-		impflags |= aiProcess_GenNormals | aiProcess_ForceGenNormals;
-	}
-	else
-	{
-		impflags |= aiProcess_GenNormals;
+		tstring o = options;
+		std::transform(o.begin(), o.end(), o.begin(), tolower);
+
+		if (_tcsstr(o.c_str(), _T("force_smooth_normals")))
+		{
+			impflags &= ~aiProcess_GenNormals;
+			impflags |= aiProcess_GenSmoothNormals | aiProcess_ForceGenNormals;
+		}
+		else if (_tcsstr(o.c_str(), _T("force_flat_normals")))
+		{
+			impflags |= aiProcess_ForceGenNormals;
+		}
+		else if (_tcsstr(o.c_str(), _T("animation_only")))
+		{
+			animation_only = true;
+		}
 	}
 
 	return impflags;
 }
 
-inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *rootpath, const TCHAR *sourcename)
+ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *rootpath, const TCHAR *sourcename, bool animation_only)
 {
 	if (!rootpath)
 		rootpath = _T("");
@@ -613,6 +654,89 @@ inline ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHA
 
 	if (!pmi)
 		return nullptr;
+
+	if (scene->HasAnimations())
+	{
+		Animation *panim = Animation::Create();
+		if (panim)
+		{
+			pmi->SetDefaultAnim(panim);
+
+			for (size_t aidx = 0; aidx < scene->mNumAnimations; aidx++)
+			{
+				aiAnimation *pa = scene->mAnimations[aidx];
+				if (aidx > 1)
+				{
+					pr->GetSystem()->GetLog()->Print(_T("Warning: ImportModel found more than one animation.\n"));
+					break;
+				}
+
+				float ticks = (pa->mTicksPerSecond == 0) ? 30.0f : (float)pa->mTicksPerSecond;
+
+				for (unsigned int aci = 0; aci < pa->mNumChannels; aci++)
+				{
+					aiNodeAnim* pna = pa->mChannels[aci];
+
+					TCHAR *trackname;
+					CONVERT_MBCS2TCS(pna->mNodeName.C_Str(), trackname);
+					Animation::TrackIndex trackidx = panim->AddNewTrack(trackname);
+					if (trackidx < 0)
+						continue;
+
+					AnimTrack *ptrack = panim->GetTrack(trackidx);
+
+					for (size_t i = 0; i < pna->mNumPositionKeys; i++)
+					{
+						auto kv = pna->mPositionKeys[i].mValue;
+						glm::fvec3 pos(glm::fvec3(kv.x, kv.y, kv.z));
+						float t = (float)pna->mPositionKeys[i].mTime / ticks;
+
+						ptrack->AddPosKey(t, pos);
+					}
+
+					for (size_t i = 0; i < pna->mNumRotationKeys; i++)
+					{
+						auto kv = pna->mRotationKeys[i].mValue;
+						glm::fquat ori(kv.w, kv.x, kv.y, kv.z);
+
+#if 0
+						float y = math::GetYaw(&ori);
+						float p = math::GetPitch(&ori);
+						float r = math::GetRoll(&ori);
+						pr->GetSystem()->GetLog()->Print(_T("\n\tKey[%zu] : y=%0.3f  p=%0.3f  r=%0.3f"), i, y, p, r);
+#endif
+
+						float t = (float)pna->mRotationKeys[i].mTime / ticks;
+
+						ptrack->AddOriKey(t, ori);
+					}
+
+					for (size_t i = 0; i < pna->mNumScalingKeys; i++)
+					{
+						auto kv = pna->mScalingKeys[i].mValue;
+						glm::fvec3 scl(kv.x, kv.y, kv.z);
+						float t = (float)pna->mScalingKeys[i].mTime / ticks;
+
+						ptrack->AddSclKey(t, scl);
+					}
+
+					ptrack->SortKeys();
+				}
+			}
+
+			tstring animfilename = rootpath;
+			size_t extidx = animfilename.find_last_of(_T('.'), 0);
+			if (extidx < animfilename.size())
+			{
+				animfilename.replace(animfilename.begin() + extidx, animfilename.end(), _T(".c3anim"));
+
+				psys->GetResourceManager()->GetResource(animfilename.c_str(), RESF_CREATEENTRYONLY, RESOURCETYPE(Animation), panim);
+			}
+		}
+	}
+
+	if (animation_only)
+		return pmi;
 
 	std::vector<Material *> mtlvec;
 	mtlvec.reserve(scene->mNumMaterials);
@@ -1106,7 +1230,8 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 		std::string fn = s;
 
 		Assimp::Importer import;
-		const aiScene *scene = import.ReadFile(fn, MakeImportFlags(options));
+		bool animation_only = false;
+		const aiScene *scene = import.ReadFile(fn, MakeImportFlags(options, animation_only));
 		if (!scene)
 		{
 			TCHAR *err;
@@ -1128,7 +1253,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 				c++;
 			}
 
-			*returned_data = ImportModel(psys, scene, modbasepath, c);
+			*returned_data = ImportModel(psys, scene, modbasepath, c, animation_only);
 		}
 
 		if (!*returned_data)
@@ -1146,15 +1271,17 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System 
 		*returned_data = nullptr;
 
 		Assimp::Importer import;
-		const aiScene *scene = import.ReadFileFromMemory(buffer, buffer_length, MakeImportFlags(options));
+		bool animation_only = false;
+		const aiScene *scene = import.ReadFileFromMemory(buffer, buffer_length, MakeImportFlags(options, animation_only));
 
-		*returned_data = ImportModel(psys, scene, nullptr, nullptr);
+		*returned_data = ImportModel(psys, scene, nullptr, nullptr, animation_only);
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;
 	}
 
 	return ResourceType::LoadResult::LR_SUCCESS;
 }
+
 
 size_t ParentlessNodeCount(ModelImpl *pm)
 {
@@ -1292,4 +1419,16 @@ Material *ModelImpl::ModelInstanceDataImpl::GetMaterial(NodeIndex nodeidx, MeshI
 		return nullptr;
 
 	return m_NodeData[nodeidx].pmtl[meshidx];
+}
+
+
+const Animation *ModelImpl::GetDefaultAnim() const
+{
+	return m_DefaultAnim;
+}
+
+
+void ModelImpl::SetDefaultAnim(const Animation *panim)
+{
+	m_DefaultAnim = panim;
 }

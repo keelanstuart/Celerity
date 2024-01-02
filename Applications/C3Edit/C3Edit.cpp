@@ -239,6 +239,10 @@ BOOL C3EditApp::InitInstance()
 	resexts = m_Config->GetString(_T("resources.prototypes.extensions"), _T("c3protoa"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
+	respaths = m_Config->GetString(_T("resources.animstates.paths"), _T("./;./assets;./assets/animations"));
+	resexts = m_Config->GetString(_T("resources.animstates.extensions"), _T("c3states"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
 	respaths = m_Config->GetString(_T("resources.scripts.paths"), _T("./;./assets;./assets/scripts"));
 	resexts = m_Config->GetString(_T("resources.scripts.extensions"), _T("c3js"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));

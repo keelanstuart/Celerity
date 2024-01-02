@@ -1,0 +1,341 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C3Edit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C3EditDoc.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C3EditFrame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C3EditView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OutputWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PropertiesWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PropertyGrid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PrototypeView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ViewTree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfcolorbar.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfcolorbutton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfcolormenubutton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfcolorpopupmenu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfpropertygridctrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfpropertygridtooltipctrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfvslistbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EditPrototypeDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="wtfchecklistbox.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphEditorDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphView.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CodeEditCtrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScrollPanel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ScriptingWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjectsWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C3ObjectListCtrl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C3Edit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C3EditDoc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C3EditFrame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C3EditView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="framework.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OutputWnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="pch.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PropertiesWnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PropertyGrid.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PrototypeView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ViewTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfcolorbar.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfcolorbutton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfcolormenubutton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfcolorpopupmenu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfpropertygridctrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfpropertygridtooltipctrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfvslistbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EditPrototypeDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="wtfchecklistbox.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphEditorDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CodeEditCtrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScrollPanel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScriptingWnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectsWnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C3ObjectListCtrl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C3Edit.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="res\class_view.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\C3Edit.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\C3EditDoc.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\class_view_hc.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\classview.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\classview_hc.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\explorer.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\explorer_hc.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\file_view.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\file_view_hc.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\fileview.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\fileview_hc.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\info.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\menuimages.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\menuimages_hc.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\nav_large.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\nav_large_hc.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\output_wnd.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\output_wnd_hc.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\pages.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\pages_hc.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\pages_small.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\pages_small_hc.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\properties.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\properties_hc.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\properties_wnd.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\properties_wnd_hc.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\sort.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\sort_hc.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\toolbar_3dtools.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\Toolbar.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\toolbar_axes.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\Toolbar256.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\userimages.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\prototree.bmp" />
+    <Image Include="res\bitmap1.bmp" />
+    <Image Include="res\checkbox.bmp" />
+    <Image Include="res\scripting.bmp" />
+    <Image Include="res\scripting_hc.bmp" />
+    <Image Include="res\scripting_wnd.ico" />
+    <Image Include="res\scripting_wnd_hc.ico" />
+    <Image Include="res\icon1.ico" />
+    <Image Include="res\objects_wnd.ico" />
+    <Image Include="res\objects_wnd_hc.ico" />
+    <Image Include="res\toolbar_scripting.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C3Edit.reg" />
+    <None Include="res\C3Edit.rc2" />
+    <None Include="res\cursor_camrot.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cursor_move.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cursor_rotate.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cursor_scale.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cursor_select.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cursor_selminus.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cursor_selplus.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cursor_uniscale.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cursor_wand.cur">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\cursor_zoom.cur">
+      <Filter>Resources</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{ad581ee4-f121-43f4-9bab-470dc7504a1b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{dae5142b-f9f8-4d63-8d02-5c0a8c2cfc1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{25328d95-e5d8-4260-bbc3-f71e402b3161}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

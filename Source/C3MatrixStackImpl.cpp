@@ -29,6 +29,7 @@ void MatrixStackImpl::Release()
 
 void MatrixStackImpl::Push(const glm::fmat4x4 *m)
 {
+	// suppose you push m containing nullptr... your algorithm may then want to pop at some point - this will push identity so pop doesn't result in underflow later
 	static glm::fmat4x4 i;
 	if (!m)
 		m = &i;
@@ -39,8 +40,7 @@ void MatrixStackImpl::Push(const glm::fmat4x4 *m)
 
 bool MatrixStackImpl::Pop()
 {
-	//C3ASSERT(pre.size() == post.size());
-
+	// underflow
 	if (pre.size() <= 1)
 		return false;
 

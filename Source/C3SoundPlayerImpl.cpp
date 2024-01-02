@@ -49,7 +49,7 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 	m_ResManConfig.decodedFormat = SOUND_FORMAT_DEFAULT;
 	m_ResManConfig.decodedChannels = SOUND_CHANNELS_DEFAULT;				
 	m_ResManConfig.decodedSampleRate = SOUND_RATE_DEFAULT;
-	m_ResManConfig.flags |= MA_RESOURCE_MANAGER_FLAG_NO_THREADING;
+	m_ResManConfig.flags = MA_RESOURCE_MANAGER_FLAG_NO_THREADING;
 
 	ma_resource_manager_init(&m_ResManConfig, &m_ResMan);
 
@@ -275,6 +275,7 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 			ma_sound_init_copy(&m_Engine, hs, 0, &m_Group[sndtype], &chit->sound);
 			chit->loop_count = loopcount;
 			chit->alive = true;
+			chit->sound.ownsDataSource = false;
 			break;
 		}
 	}
@@ -764,9 +765,9 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromFile(c3::System *p
 		ma_sound *psound = (ma_sound *)malloc(sizeof(ma_sound));
 
 #if UNICODE
-		if (ma_sound_init_from_file_w(&(sp->m_Engine), filename, MA_SOUND_FLAG_DECODE, nullptr, nullptr, psound) != MA_SUCCESS)
+		if (ma_sound_init_from_file_w(&(sp->m_Engine), filename, MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT, nullptr, nullptr, psound) != MA_SUCCESS)
 #else
-		if (ma_sound_init_from_file(&(sp->m_Engine), filename, MA_SOUND_FLAG_DECODE, nullptr, nullptr, psound) != MA_SUCCESS)
+		if (ma_sound_init_from_file(&(sp->m_Engine), filename, MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT, nullptr, nullptr, psound) != MA_SUCCESS)
 #endif
 		{
 			free(psound);
@@ -788,8 +789,9 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromMemory(c3::System 
 
 	ma_sound *psound = (ma_sound *)malloc(sizeof(ma_sound));
 
+	uint32_t flags = MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT | MA_SOUND_FLAG_DECODE;
 	//if (ma_sound_init_ex(sp->GetSfxEngine(), ) != MS_SUCCESS)
-	if (ma_sound_init_from_data_source(&(sp->m_Engine), (ma_data_source *)buffer, MA_SOUND_FLAG_DECODE, nullptr, psound) != MA_SUCCESS)
+	if (ma_sound_init_from_data_source(&(sp->m_Engine), (ma_data_source *)buffer, flags, nullptr, psound) != MA_SUCCESS)
 	{
 		free(psound);
 		psound = nullptr;

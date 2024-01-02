@@ -224,7 +224,31 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromFile(c3:
 					CONVERT_MBCS2TCS(sc, tsc);
 					free(sc);
 
-					if (psh->CompileProgram(tsc) != ShaderComponent::RET_OK)
+					tstring preamble;
+					if (options)
+					{
+						const TCHAR *ops = options;
+						while (*ops)
+						{
+							while (_tcschr(_T("; \t"), *ops) && *ops)
+								ops++;
+
+							if (*ops)
+							{
+								preamble += _T("#define ");
+
+								const TCHAR *ope = ops + 1;
+								while (*ope && (*ope != _T(';')))
+									ope++;
+
+								while (ops != ope)
+									preamble += *(ops++);
+								preamble += _T("\n");
+							}
+						}
+					}
+
+					if (psh->CompileProgram(tsc, preamble.empty() ? nullptr : preamble.c_str()) != ShaderComponent::RET_OK)
 					{
 						psh->Release();
 						psh = nullptr;

@@ -55,8 +55,18 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 
 	Resource *pres = nullptr;
 
+	// don't transform the options so that they are lower case -- preserve them... important for shader compiler preprocessor directives, amongst others
 	tstring key = filename;
-	std::transform(key.begin(), key.end(), key.begin(), tolower);
+	size_t opts_ofs = key.find(_T('|'));
+	std::transform(key.begin(), (opts_ofs == tstring::npos) ? key.end() : key.begin() + opts_ofs, key.begin(), tolower);
+
+	tstring filename_only = key;
+	tstring opts;
+	if (opts_ofs != tstring::npos)
+	{
+		opts = key.c_str() + opts_ofs + 1;
+		filename_only.erase(opts_ofs, opts.length() + 1);
+	}
 
 	// the upper bound will be resmap.end() if either there are no matching entries or
 	// if the entry is the last in the map.
@@ -70,15 +80,6 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 
 	if (flags.IsSet(RESF_FINDENTRYONLY))
 		return pres;
-
-	tstring filename_only = key;
-	tstring opts;
-	size_t opts_ofs = key.find(_T('|'));
-	if (opts_ofs != tstring::npos)
-	{
-		opts = key.c_str() + opts_ofs + 1;
-		filename_only.erase(opts_ofs, opts.length() + 1);
-	}
 
 	bool only_create_entry = flags.IsSet(RESF_CREATEENTRYONLY);
 
