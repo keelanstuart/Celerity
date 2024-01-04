@@ -18,6 +18,7 @@
 #define _WIN32_WINNT 0x0A00
 
 #include <Windows.h>
+#include <shlwapi.h>
 
 #include <tchar.h>
 

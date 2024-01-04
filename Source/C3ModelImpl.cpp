@@ -687,15 +687,18 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 					for (size_t i = 0; i < pna->mNumPositionKeys; i++)
 					{
+						float t = (float)pna->mPositionKeys[i].mTime / ticks;
+
 						auto kv = pna->mPositionKeys[i].mValue;
 						glm::fvec3 pos(glm::fvec3(kv.x, kv.y, kv.z));
-						float t = (float)pna->mPositionKeys[i].mTime / ticks;
 
 						ptrack->AddPosKey(t, pos);
 					}
 
 					for (size_t i = 0; i < pna->mNumRotationKeys; i++)
 					{
+						float t = (float)pna->mRotationKeys[i].mTime / ticks;
+
 						auto kv = pna->mRotationKeys[i].mValue;
 						glm::fquat ori(kv.w, kv.x, kv.y, kv.z);
 
@@ -703,19 +706,18 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 						float y = math::GetYaw(&ori);
 						float p = math::GetPitch(&ori);
 						float r = math::GetRoll(&ori);
-						pr->GetSystem()->GetLog()->Print(_T("\n\tKey[%zu] : y=%0.3f  p=%0.3f  r=%0.3f"), i, y, p, r);
+						pr->GetSystem()->GetLog()->Print(_T("\n\tKey[%zu] %0.2fs : y=%0.2f  p=%0.2f  r=%0.2f"), i, y, p, r);
 #endif
-
-						float t = (float)pna->mRotationKeys[i].mTime / ticks;
 
 						ptrack->AddOriKey(t, ori);
 					}
 
 					for (size_t i = 0; i < pna->mNumScalingKeys; i++)
 					{
+						float t = (float)pna->mScalingKeys[i].mTime / ticks;
+
 						auto kv = pna->mScalingKeys[i].mValue;
 						glm::fvec3 scl(kv.x, kv.y, kv.z);
-						float t = (float)pna->mScalingKeys[i].mTime / ticks;
 
 						ptrack->AddSclKey(t, scl);
 					}

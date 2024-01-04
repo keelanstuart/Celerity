@@ -27,8 +27,6 @@ AnimatorImpl::AnimatorImpl()
 	m_CurAnimTime = m_LastAnimTime = 0.0f;
 	m_CurAnim = nullptr;
 
-	m_PosKeyIdx = m_OriKeyIdx = m_SclKeyIdx = AnimTrack::KEYINDEX_INVALID;
-
 	m_Flags = AF_FORCENEXT;
 
 	m_MatStack = MatrixStack::Create();
@@ -123,11 +121,14 @@ bool AnimatorImpl::Initialize(Object *pobject)
 	if (!props)
 		return false;
 
-	if (props::IProperty *pp = props->CreateProperty(_T("StateDefinitionsFile"), 'ST8F'))
+	props::IProperty *pp = props->GetPropertyById('ST8F');
+	if (!pp)
 	{
+		pp = props->CreateProperty(_T("StateDefinitionsFile"), 'ST8F');
 		pp->SetString(_T(""));
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
 	}
+	PropertyChanged(pp);
 
 	if (m_StateProp = props->CreateProperty(_T("State"), 'ST8'))
 	{
@@ -161,6 +162,9 @@ void AnimatorImpl::GenerateNodeToTrackMapping()
 	if (m_NodeToTrack.size() < nc)
 		m_NodeToTrack.resize(nc);
 
+	if (m_KeyIndices.size() < nc)
+		m_KeyIndices.resize(nc);
+
 	for (size_t n = 0; n < nc; n++)
 	{
 		const TCHAR *name = pm->GetNodeName(n);
@@ -168,80 +172,99 @@ void AnimatorImpl::GenerateNodeToTrackMapping()
 		Animation::TrackIndex ti = m_CurAnim->FindTrackByName(name);
 
 		m_NodeToTrack[n] = ti;
+
+		m_KeyIndices[n].m_Pos = AnimTrack::KEYINDEX_INVALID;
+		m_KeyIndices[n].m_Ori = AnimTrack::KEYINDEX_INVALID;
+		m_KeyIndices[n].m_Scl = AnimTrack::KEYINDEX_INVALID;
 	}
 }
 
 
-void AnimatorImpl::Update(float elapsed_time)
+void AnimatorImpl::SelectAnimation()
 {
-	ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(m_Owner->FindComponent(ModelRenderer::Type()));
-	if (!pmr)
-		return;
+	auto oldanim = m_CurAnim;
 
-	if (!m_CurAnim)
-	{
-		if (pmr && pmr->GetModel())
-		{
-			m_CurAnim = (Animation *)pmr->GetModel()->GetDefaultAnim();
-			GenerateNodeToTrackMapping();
-		}
-	}
-
-	m_LastAnimTime = m_CurAnimTime;
-
-	// advance the animation time by the time that's passed...
-	m_CurAnimTime += elapsed_time;
-
-	if ((m_CurState == m_LastState) || m_Flags.IsSet(AF_FORCENEXT))
-	{
-		if (m_CurAnim && (m_CurAnimTime > m_CurAnim->GetLength()))
-			m_CurAnimTime = 0.0f;
-
-		// If we've reached the end of the animation, then reset our time, and go to the next state...
-		if ((m_CurState != m_StateMap.end()) && (m_Flags.IsSet(AF_FORCENEXT)))
-		{
-			// save the last state and set the current one based on the "goto" state
-			m_LastState = m_CurState;
-			m_CurState = m_StateMap.find(m_CurState->second->m_GotoName);
-		}
-
-		m_Flags.Clear(AF_FORCENEXT);
-	}
-
-	// if the state the object is in isn't the state it was in the last time we were updated...
-	if ((m_CurState != m_LastState) && (m_CurState != m_StateMap.end()))
+	if (m_CurState != m_StateMap.end())
 	{
 		// Firgure out which random animation to play
 
 		// get the total weight of all animations in the state, then iteratively decerement that by the weights of individual animations until it's less than one of them
 		size_t animchoice = rand() % m_CurState->second->m_TotalWeight;
 
-		while (animchoice)
+		for (size_t i = 0, maxi = m_CurState->second->m_WeightedAnims.size(); i < maxi; i++)
 		{
-			for (size_t i = 0, maxi = m_CurState->second->m_WeightedAnims.size(); i < maxi; i++)
+			size_t w = m_CurState->second->m_WeightedAnims[i].m_Weight;
+			if (animchoice < w)
 			{
-				size_t w = m_CurState->second->m_WeightedAnims[i].m_Weight;
-				if (animchoice < w)
-				{
-					m_CurAnim = m_CurState->second->m_WeightedAnims[i].m_Anim;
-					GenerateNodeToTrackMapping();
-					break;
-				}
-
-				animchoice -= w;
+				m_CurAnim = m_CurState->second->m_WeightedAnims[i].m_Anim;
+				break;
 			}
-		}
 
-		m_CurAnimTime = 0.0f;
+			animchoice -= w;
+		}
 	}
 
-	if (m_CurAnim && (m_CurAnimTime != m_LastAnimTime))
+	if (!m_CurAnim)
 	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(m_Owner->FindComponent(ModelRenderer::Type()));
+		if (pmr)
+		{
+			const Model *pm = pmr->GetModel();
+			if (pm)
+				m_CurAnim = pm->GetDefaultAnim();
+		}
+	}
+
+	if (m_CurAnim != oldanim)
+		GenerateNodeToTrackMapping();
+}
+
+
+void AnimatorImpl::AdvanceState()
+{
+	// save the last state and set the current one based on the "goto" state
+	m_LastState = m_CurState;
+
+	if (m_LastState != m_StateMap.end())
+	{
+		m_CurState = m_StateMap.find(m_LastState->second->m_GotoName);
+
+		SelectAnimation();
+	}
+
+	m_CurAnimTime = 0;
+}
+
+
+void AnimatorImpl::Update(float elapsed_time)
+{
+	auto oldanim = m_CurAnim;
+
+	// store tha last animation time
+	m_LastAnimTime = m_CurAnimTime;
+
+	// advance the animation time by the time that's passed...
+	m_CurAnimTime += elapsed_time;
+
+	if (!m_CurAnim || (m_CurAnimTime > GetCurAnimLength()))
+	{
+		AdvanceState();
+
+		if (!m_CurAnim)
+			return;
+	}
+
+	if (m_CurAnim && ((m_CurAnimTime != m_LastAnimTime) || (m_CurAnim != oldanim)))
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(m_Owner->FindComponent(ModelRenderer::Type()));
 		const Model *pm = pmr->GetModel();
 		Model::InstanceData *pmid = pmr->GetModelInstanceData();
 
-		if (pmid)
+		if (pm && pmid)
 		{
+			if (m_NodeToTrack.size() != pm->GetNodeCount())
+				GenerateNodeToTrackMapping();
+
 			glm::fmat4x4 m, ident = glm::identity<glm::fmat4x4>();
 
 			for (size_t n = 0, maxn = pm->GetNodeCount(); n < maxn; n++)
@@ -257,9 +280,10 @@ void AnimatorImpl::Update(float elapsed_time)
 					if (const TCHAR *pnote = pat->GetNote(m_LastAnimTime, m_CurAnimTime))
 						ProcessNote(pnote);
 
-					glm::fvec3 apos = pat->GetPos(m_CurAnimTime, m_PosKeyIdx);
-					glm::fquat aori = pat->GetOri(m_CurAnimTime, m_OriKeyIdx);
-					glm::fvec3 ascl = pat->GetScl(m_CurAnimTime, m_SclKeyIdx);
+					AnimTrack::KeyIndex kip = AnimTrack::KEYINDEX_INVALID, kio = kip, kis = kio;
+					glm::fvec3 apos = pat->GetPos(m_CurAnimTime, kip);//m_KeyIndices[ti].m_Pos);
+					glm::fquat aori = pat->GetOri(m_CurAnimTime, kio);//m_KeyIndices[ti].m_Ori);
+					glm::fvec3 ascl = pat->GetScl(m_CurAnimTime, kis);//m_KeyIndices[ti].m_Scl);
 
 					m = glm::scale(glm::identity<glm::fmat4x4>(), ascl) * (glm::fmat4x4)(aori);
 
@@ -341,7 +365,7 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 						if (pname)
 						{
 							TCHAR *_name;
-							CONVERT_MBCS2TCS(pstate->Value(), _name);
+							CONVERT_MBCS2TCS(pname->Value(), _name);
 
 							std::pair<AnimStateMap::iterator, bool> emres = m_StateMap.insert(AnimStateMap::value_type(_name, new AnimStateInfo()));
 
@@ -395,6 +419,8 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 						pstate = pstate->NextSiblingElement("state");
 					}
 				}
+
+				SetCurrentState(m_StartState.c_str());
 			}
 			// load states
 			break;

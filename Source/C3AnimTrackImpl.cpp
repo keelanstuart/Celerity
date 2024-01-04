@@ -120,6 +120,9 @@ void AnimTrackImpl::DelPosKey(KeyIndex idx)
 
 glm::fvec3 AnimTrackImpl::GetPos(float time, KeyIndex &idx)
 {
+	if (m_PosKeys.empty())
+		return glm::fvec3(0, 0, 0);
+
 	PosKeyArray::iterator it, itn;
 
 	if ((size_t)idx > m_PosKeys.size())
@@ -203,6 +206,9 @@ void AnimTrackImpl::DelOriKey(KeyIndex idx)
 
 glm::fquat AnimTrackImpl::GetOri(float time, KeyIndex &idx)
 {
+	if (m_OriKeys.empty())
+		return glm::fquat(1, 0, 0, 0);
+
 	OriKeyArray::iterator it, itn;
 
 	if ((size_t)idx > m_OriKeys.size())
@@ -290,6 +296,9 @@ void AnimTrackImpl::DelSclKey(KeyIndex idx)
 
 glm::fvec3 AnimTrackImpl::GetScl(float time, KeyIndex &idx)
 {
+	if (m_SclKeys.empty())
+		return glm::fvec3(1, 1, 1);
+
 	SclKeyArray::iterator it, itn;
 
 	if ((size_t)idx > m_SclKeys.size())

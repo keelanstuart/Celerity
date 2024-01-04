@@ -135,6 +135,173 @@ void AnimationImpl::BuildNodeHierarchy()
 DECLARE_RESOURCETYPE(Animation);
 
 
+
+bool ReadPositionsFromXAF(AnimTrack *ptrack, tinyxml2::XMLElement *psamples, float time_scale)
+{
+	if (!psamples)
+		return false;
+
+	tinyxml2::XMLElement *elpval = psamples->FirstChildElement("PVal");
+	while (elpval)
+	{
+		const tinyxml2::XMLAttribute *attime = elpval->FindAttribute("t");
+		const tinyxml2::XMLAttribute *atv = elpval->FindAttribute("v");
+		if (attime && atv)
+		{
+			float t = attime->FloatValue() * time_scale;
+
+			glm::fvec3 p;
+			sscanf_s(atv->Value(), "%f %f %f", &p.x, &p.y, &p.z);
+
+			ptrack->AddPosKey(t, p);
+		}
+
+		elpval = elpval->NextSiblingElement("PVal");
+	}
+
+	return true;
+}
+
+
+bool ReadRotationsFromXAF(AnimTrack *ptrack, tinyxml2::XMLElement *psamples, float time_scale)
+{
+	if (!psamples)
+		return false;
+
+	tinyxml2::XMLElement *elrval = psamples->FirstChildElement("RVal");
+	while (elrval)
+	{
+		const tinyxml2::XMLAttribute *attime = elrval->FindAttribute("t");
+		const tinyxml2::XMLAttribute *atv = elrval->FindAttribute("v");
+		if (attime && atv)
+		{
+			float t = attime->FloatValue() * time_scale;
+
+			glm::fquat q;
+			sscanf_s(atv->Value(), "%f %f %f %f", &q.x, &q.y, &q.z, &q.w);
+
+			ptrack->AddOriKey(t, q);
+		}
+
+		elrval = elrval->NextSiblingElement("RVal");
+	}
+
+	return true;
+}
+
+
+bool ReadScalesFromXAF(AnimTrack *ptrack, tinyxml2::XMLElement *psamples, float time_scale)
+{
+	if (!psamples)
+		return false;
+
+	tinyxml2::XMLElement *elsval = psamples->FirstChildElement("SVal");
+	while (elsval)
+	{
+		const tinyxml2::XMLAttribute *attime = elsval->FindAttribute("t");
+		const tinyxml2::XMLAttribute *atv = elsval->FindAttribute("v");
+		if (attime && atv)
+		{
+			float t = attime->FloatValue() * time_scale;
+
+			glm::fvec3 s;
+			sscanf_s(atv->Value(), "%f %f %f", &s.x, &s.y, &s.z);
+
+			ptrack->AddSclKey(t, s);
+		}
+
+		elsval = elsval->NextSiblingElement("SVal");
+	}
+
+	return true;
+}
+
+
+bool ReadAnimFromXAF(Animation *panim, tinyxml2::XMLElement *xafdom)
+{
+	if (!xafdom)
+		return false;
+
+	tinyxml2::XMLElement *elroot = _stricmp(xafdom->Name(), "MaxAnimation") ? xafdom->FirstChildElement("MaxAnimation") : xafdom;
+
+	if (elroot)
+	{
+		float startTick = 0.0f;
+		float endTick = 0.0f;
+		float fps = 30.0f;
+		float tpf = 1.0f;
+
+		tinyxml2::XMLElement *sinode = xafdom->FirstChildElement("SceneInfo");
+		if (sinode)
+		{
+			const tinyxml2::XMLAttribute *atstart = sinode->FindAttribute("startTick");
+			if (atstart)
+				startTick = atstart->FloatValue();
+
+			const tinyxml2::XMLAttribute *atend = sinode->FindAttribute("endTick");
+			if (atend)
+				endTick = atend->FloatValue();
+
+			const tinyxml2::XMLAttribute *atfps = sinode->FindAttribute("frameRate");
+			if (atfps)
+				fps = atfps->FloatValue();
+
+			const tinyxml2::XMLAttribute *attpf = sinode->FindAttribute("ticksPerFrame");
+			if (attpf)
+				tpf = attpf->FloatValue();
+		}
+
+		tinyxml2::XMLElement *elnode = xafdom->FirstChildElement("Node");
+		while (elnode)
+		{
+			const tinyxml2::XMLAttribute *atname = elnode->FindAttribute("name");
+			const tinyxml2::XMLAttribute *atpar = elnode->FindAttribute("parentNode");
+			if (atname && atpar)
+			{
+				TCHAR *nodename, *parentname;
+				CONVERT_MBCS2TCS(atname->Value(), nodename);
+				CONVERT_MBCS2TCS(atpar->Value(), parentname);
+
+				Animation::TrackIndex ti = panim->AddNewTrack(nodename, panim->FindTrackByName(parentname));
+				AnimTrack *pt = panim->GetTrack(ti);
+				if (pt)
+				{
+					tinyxml2::XMLElement *elctl = elnode->FirstChildElement("Controller");
+					while (elctl)
+					{
+						const tinyxml2::XMLAttribute *atfilt = elctl->FindAttribute("filterType");
+						if (atfilt)
+						{
+							tinyxml2::XMLElement *elsamples = elctl->FirstChildElement("Samples");
+
+							if (!_stricmp(atfilt->Value(), "pos"))
+							{
+								ReadPositionsFromXAF(pt, elsamples, 1.0f / fps / tpf);
+							}
+							else if (!_stricmp(atfilt->Value(), "rot"))
+							{
+								ReadRotationsFromXAF(pt, elsamples, 1.0f / fps / tpf);
+							}
+							else if (!_stricmp(atfilt->Value(), "scl"))
+							{
+								ReadScalesFromXAF(pt, elsamples, 1.0f / fps / tpf);
+							}
+						}
+
+						elctl = elctl->NextSiblingElement("Controller");
+					}
+				}
+			}
+
+			elnode = elnode->NextSiblingElement("Node");
+		}
+
+		return true;
+	}
+
+	return false;
+}
+
 c3::ResourceType::LoadResult RESOURCETYPENAME(Animation)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	c3::ResourceType::LoadResult ret = c3::ResourceType::LR_ERROR;
@@ -142,6 +309,26 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Animation)::ReadFromFile(c3::Syste
 	if (returned_data)
 	{
 		*returned_data = nullptr;
+
+		const TCHAR *ext = PathFindExtension(filename);
+		if (!_tcsicmp(ext, _T(".xaf")))
+		{
+			char *s;
+			CONVERT_TCS2MBCS(filename, s);
+
+			tinyxml2::XMLDocument xafdoc;
+			if (xafdoc.LoadFile(s) == tinyxml2::XMLError::XML_SUCCESS)
+			{
+				Animation *panim = Animation::Create();
+				*returned_data = (void *)panim;
+
+				if (ReadAnimFromXAF(panim, xafdoc.RootElement()))
+				{
+					panim->SetName(filename);
+					ret = c3::ResourceType::LoadResult::LR_SUCCESS;
+				}
+			}
+		}
 	}
 
 	return ret;

@@ -71,11 +71,15 @@ namespace c3
 
 		void GenerateNodeToTrackMapping();
 
+		void SelectAnimation();
+
+		void AdvanceState();
+
 	protected:
 
 		Object *m_Owner;
 
-		Animation *m_CurAnim;
+		const Animation *m_CurAnim;
 
 		// m_CurAnimTime is the current time point in the active animation
 		float m_CurAnimTime;
@@ -109,7 +113,12 @@ namespace c3
 		tstring m_StartState;
 		AnimStateMap::iterator m_CurState;
 		AnimStateMap::iterator m_LastState;
-		AnimTrack::KeyIndex m_PosKeyIdx, m_OriKeyIdx, m_SclKeyIdx;
+
+		struct KeyIndices
+		{
+			AnimTrack::KeyIndex m_Pos, m_Ori, m_Scl;
+		};
+		std::vector<KeyIndices> m_KeyIndices;
 
 		props::TFlags64 m_Flags;
 
