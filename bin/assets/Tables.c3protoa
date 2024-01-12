@@ -1,0 +1,13 @@
+<prototypes>
+    <prototype guid="{B0F60C8C-2346-484B-A0D6-BE9986C9E3A7}" name="Table 1" group="Tables" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">tables/table.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">tables/table1.fbx</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.50,0.50,0.50</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

@@ -1,0 +1,35 @@
+<prototypes>
+    <prototype guid="{A698BC5D-52F1-4E30-9B16-1028D8B5B0DA}" name="Cardboard Box #1" group="Props" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">props/prop.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">props/cardboard_opened.fbx</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{B442966D-573D-4C71-B516-6E3A88D57FFC}" name="Cardboard Box #2" group="Props" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">props/prop.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">props/cardboard_closed.fbx</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{EB377817-EAAD-4500-8EFE-02EA035CC0C6}" name="Cardboard Tube #1" group="Props" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">props/prop.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">props/cardboard_tube.fbx</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

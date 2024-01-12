@@ -1,0 +1,262 @@
+<prototypes>
+    <prototype guid="{7070ED1F-B5BF-4A41-80FE-FFA5B764E45A}" name="Ambulance" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/ambulance.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{A77EEDA6-F996-441B-BDFA-E1E6FAD3FF04}" name="Delivery Truck" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/delivery.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{45632E61-A6CB-49DC-9C5A-DDA53EC3A085}" name="Tow Truck" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/deliveryFlat.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{FEA0ACCD-AF59-466C-BC40-5E84A1C4A143}" name="Firetruck" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/firetruck.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{461C80E7-69BA-424A-AFDF-4DA33ADDD8E2}" name="Garbage Truck" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/garbageTruck.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{AE8672A8-4BA9-4102-A694-8CEFD7F2B8E2}" name="Hatchback Sportscar" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/hatchbackSports.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{2D691DC9-35E9-4483-AAE5-D7F8090B62B6}" name="Police Cruiser" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/police.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{39039808-3A27-42CE-B1ED-7FB470C52A6C}" name="Racecar A" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/race.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{706C2D8A-0BC9-4F8D-9DBA-E25E8B73E1EF}" name="Racecar B" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/racefuture.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{10276601-7A45-489F-809B-19222F9CC562}" name="Sedan" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/sedan.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{938FE398-485D-43DE-B090-CBE5F037640E}" name="Sporty Sedan" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/sedanSports.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{6400915A-DABB-4A6C-8AC2-3A8086302C2F}" name="SUV" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/suv.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{89481480-50BC-4B69-8EAC-55B799E0BD1A}" name="Luxury SUV" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/suvLuxury.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{5A0293B7-D6C3-4A0B-84F9-910778D4816D}" name="Taxi" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/taxi.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{62292386-9EFF-48D0-AE61-C54D549C9F15}" name="Tractor" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/tractor.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{6E6BADDD-AD97-4EF7-8BF4-FC126297269A}" name="Police Tractor" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/tractorPolice.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{6CB27A26-7F51-49E3-9B03-1B292D40E0A7}" name="Compact Loader" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/tractorShovel.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{0A0086B8-BDAB-4E43-89DC-1728619E868C}" name="Truck" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/truck.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{ABA07F49-AF4C-41EF-BB56-B3ACF26007BE}" name="Flatbed Truck" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/truckFlat.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{E68C912E-F055-464B-9B62-FAAFD3771342}" name="Van" group="Vehicles" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,80.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">vehicles/vehicle.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">vehicles/van.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

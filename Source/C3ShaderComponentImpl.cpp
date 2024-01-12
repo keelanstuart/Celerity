@@ -88,7 +88,7 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 		m_CRC = Crc32::CalculateString(preamble, m_CRC);
 
 	size_t progidx = preamble ? 2 : 1;
-	char *ps[3] = {"#version 410\n", nullptr, nullptr};
+	char *ps[3] = {(char *)"#version 410\n", nullptr, nullptr};
 	CONVERT_TCS2MBCS(program, ps[progidx]);
 	if (preamble)
 	{

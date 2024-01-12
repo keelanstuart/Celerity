@@ -1,0 +1,13 @@
+<states startstate="idle">
+	<state name="idle" goto="idle">
+		<animation filename="" weight="10" />
+		<animation filename="idle_anim2.dae" weight="5" />
+		<animation filename="idle_anim3.dae" weight="1" />
+	</state>
+	<state name="walk" goto="idle">
+		<animation filename="walk_anim.dae" weight="1" />
+	</state>
+	<state name="jump" goto="idle">
+		<animation filename="jump_anim.dae" weight="1" />
+	</state>
+</states>

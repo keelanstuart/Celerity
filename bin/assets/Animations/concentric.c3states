@@ -1,0 +1,5 @@
+<states startstate="idle">
+	<state name="idle" goto="idle">
+		<animation filename="concentric.xaf" weight="1" />
+	</state>
+</states>

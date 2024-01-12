@@ -60,7 +60,7 @@ void c3::PublisherImpl::Unsubscribe(c3::Subscription **sub)
 		{
 			std::lock_guard<std::mutex> lock(m_mxSubs);
 
-			auto &it = std::find(m_Subs.begin(), m_Subs.end(), *sub);
+			const auto &it = std::find(m_Subs.begin(), m_Subs.end(), *sub);
 			if (it != m_Subs.end())
 				m_Subs.erase(it);
 		}

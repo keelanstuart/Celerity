@@ -347,22 +347,22 @@ void ConfigurationImpl::SetRect(const TCHAR *path, const RECT &val)
 			tinyxml2::XMLAttribute *pa = GetAttribute(pel, _T("left"));
 			if (pa)
 			{
-				pa->SetAttribute(val.left);
+				pa->SetAttribute((int)val.left);
 			}
 			pa = GetAttribute(pel, _T("top"));
 			if (pa)
 			{
-				pa->SetAttribute(val.top);
+				pa->SetAttribute((int)val.top);
 			}
 			pa = GetAttribute(pel, _T("right"));
 			if (pa)
 			{
-				pa->SetAttribute(val.right);
+				pa->SetAttribute((int)val.right);
 			}
 			pa = GetAttribute(pel, _T("bottom"));
 			if (pa)
 			{
-				pa->SetAttribute(val.bottom);
+				pa->SetAttribute((int)val.bottom);
 			}
 		}
 	}
@@ -429,12 +429,12 @@ void ConfigurationImpl::SetPoint(const TCHAR *path, const POINT &val)
 			tinyxml2::XMLAttribute *pa = GetAttribute(pel, _T("x"));
 			if (pa)
 			{
-				pa->SetAttribute(val.x);
+				pa->SetAttribute((int)val.x);
 			}
 			pa = GetAttribute(pel, _T("y"));
 			if (pa)
 			{
-				pa->SetAttribute(val.y);
+				pa->SetAttribute((int)val.y);
 			}
 		}
 	}

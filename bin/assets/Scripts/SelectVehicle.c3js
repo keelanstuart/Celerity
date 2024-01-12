@@ -1,0 +1,62 @@
+
+function update(elapsed_seconds)
+{
+}
+
+function init()
+{
+	var i, maxi = 0;
+	var vehicle = new Array();
+	var hpar = GetParent(self);
+
+	vehicle[maxi] = CreateObject("Ambulance",			hpar); maxi++;
+	vehicle[maxi] = CreateObject("Compact Loader",		hpar); maxi++;
+	vehicle[maxi] = CreateObject("Delivery Truck",		hpar); maxi++;
+	vehicle[maxi] = CreateObject("Firetruck",			hpar); maxi++;
+	vehicle[maxi] = CreateObject("Flatbed Truck",		hpar); maxi++;
+	vehicle[maxi] = CreateObject("Garbage Truck",		hpar); maxi++;
+	vehicle[maxi] = CreateObject("Hatchback Sportscar",	hpar); maxi++;
+	vehicle[maxi] = CreateObject("Luxury SUV",			hpar); maxi++;
+	vehicle[maxi] = CreateObject("Police Cruiser",		hpar); maxi++;
+	vehicle[maxi] = CreateObject("Police Tractor",		hpar); maxi++;
+	vehicle[maxi] = CreateObject("Racecar A",			hpar); maxi++;
+	vehicle[maxi] = CreateObject("Racecar B",			hpar); maxi++;
+	vehicle[maxi] = CreateObject("Sedan",				hpar); maxi++;
+	vehicle[maxi] = CreateObject("Sporty Sedan",		hpar); maxi++;
+	vehicle[maxi] = CreateObject("SUV",					hpar); maxi++;
+	vehicle[maxi] = CreateObject("Taxi",				hpar); maxi++;
+	vehicle[maxi] = CreateObject("Tow Truck",			hpar); maxi++;
+	vehicle[maxi] = CreateObject("Tractor",				hpar); maxi++;
+	vehicle[maxi] = CreateObject("Truck",				hpar); maxi++;
+	vehicle[maxi] = CreateObject("Van",					hpar); maxi++;
+
+	var ang = 0.0;
+	var ang_inc = Math.toRadians(360.0 / maxi);
+
+	for (i = 0; i < maxi; i++)
+	{
+		// cache property handles now so value access is cheaper later
+		var hpos = FindProperty(vehicle[i], "Position");
+		var hori = FindProperty(vehicle[i], "Orientation");
+		var hscl = FindProperty(vehicle[i], "Scale");
+		var hlup = FindProperty(vehicle[i], "Facing.Up");
+
+		var pos = GetPropertyValue(hpos);
+		pos.x = Math.cos(ang) * 18.0;
+		pos.y = Math.sin(ang) * 18.0;
+		pos.z = 0;
+		SetPropertyValue(hpos, pos);
+
+		var lup = GetPropertyValue(hlup);
+		var ori = GetPropertyValue(hori);
+		SetPropertyValue(hori, AdjustQuaternion(ori, lup, ang + Math.toRadians(90)));
+
+		var scl = GetPropertyValue(hscl);
+		scl.x = 0.1;
+		scl.y = 0.1;
+		scl.z = 0.1;
+		SetPropertyValue(hscl, scl);
+		
+		ang += ang_inc;
+	}
+}

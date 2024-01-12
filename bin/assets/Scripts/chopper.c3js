@@ -1,7 +1,10 @@
 var runtime;
-var hbullet[100];
-var bullet_idx = 0;
 var hpos;
+
+var Quat = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+
+var irotor;
+var rotor_ori = new Quat();
 
 var Facing = { forward: -1, right: -1, up: -1 };
 var hfacing = new Facing();
@@ -15,25 +18,16 @@ var tmpv4 = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
+
+	irotor = GetModelNodeIndex(self, "Rotor");
+	if (irotor >= 0)
+	{
+		rotor_ori = GetModelInstNodeOri(self, irotor);
+		rotor_ori.w += elapsed_seconds;
+		SetModelInstNodeOri(self, irotor, rotor_ori);
+	}
 }
 
-function fire_cannon()
-{
-	var hbpos = FindProperty(hbullet[bullet_idx], "Position");
-	var hbfacing = FindProperty(hbullet[bullet_idx], "Facing.Forward");
-	var hblvel = FindProperty(hbullet[bullet_idx], "LinearVelocity");
-
-	var facing = GetPropertyValue(hfacing.forward);
-
-	SetPropertyValue(hbpos, GetPropertyValue(hpos));
-
-	facing.x *= 10.0;
-	facing.y *= 10.0;
-	facing.z *= 10.0;
-	SetPropertyValue(hblvel, facing);
-
-	bullet_idx = (bullet_idx + 1) % 100;
-}
 
 function handle_input(action, value)
 {
@@ -107,7 +101,6 @@ function handle_input(action, value)
 	}
 	else if (action == "Fire 1")
 	{
-		fire_cannon();
 	}
 	else if (action == "Fire 2")
 	{
@@ -118,13 +111,9 @@ function init()
 {
 	runtime = 0.0;
 
-	for (int i = 0; i < 100; i++)
-		hbullet[i] = CreateObject("Pellet", GetParent(self));
-		
 	hpos = FindProperty(self, "Position");
 
 	hfacing.forward = FindProperty(self, "Facing.Forward");
 	hfacing.right = FindProperty(self, "Facing.Right");
 	hfacing.up = FindProperty(self, "Facing.Up");
-
 }

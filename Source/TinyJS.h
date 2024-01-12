@@ -134,7 +134,7 @@ class CScriptLex
 {
 protected:
 	typedef std::vector<CScriptLex> TScriptLexStore;
-	static CScriptLex::TScriptLexStore CScriptLex::s_Store;
+	static TScriptLexStore s_Store;
 
 public:
 	CScriptLex();

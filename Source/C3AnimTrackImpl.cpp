@@ -356,7 +356,7 @@ AnimTrack::KeyIndex AnimTrackImpl::AddNoteKey(float time, const TCHAR *note)
 const TCHAR *AnimTrackImpl::GetNoteKey(KeyIndex idx, float &time) const
 {
 	if (idx >= m_NoteKeys.size())
-		return false;
+		return nullptr;
 
 	time = m_NoteKeys[idx].first;
 

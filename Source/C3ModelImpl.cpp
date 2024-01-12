@@ -22,6 +22,7 @@
 
 #include <Shlwapi.h>
 
+
 using namespace c3;
 
 
@@ -638,6 +639,7 @@ inline unsigned int MakeImportFlags(const TCHAR *options, bool &animation_only)
 	return impflags;
 }
 
+
 ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *rootpath, const TCHAR *sourcename, bool animation_only)
 {
 	if (!rootpath)
@@ -654,6 +656,35 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 	if (!pmi)
 		return nullptr;
+
+	std::function<const TCHAR *(tstring &, const TCHAR *)> MakeTexFilename = [&sourcename](tstring &out, const TCHAR *idx) -> const TCHAR *
+	{
+		out += _T(":texture[");
+		out += idx;
+		out += _T("]");
+		return out.c_str();
+	};
+
+	if (scene->HasTextures())
+	{
+		for (unsigned int texidx = 0; texidx < scene->mNumTextures; texidx++)
+		{
+			TCHAR textmp[8];
+			_itot_s(texidx, textmp, 10);
+
+			c3::Texture2D *pt = nullptr;
+			Texture2DResourceType::Type()->ReadFromMemory(psys, (const BYTE *)scene->mTextures[texidx]->pcData, scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
+			if (pt)
+			{
+				tstring texname = sourcename;
+				pt->SetName(MakeTexFilename(texname, textmp));
+				psys->GetResourceManager()->GetResource(texname.c_str(),
+														RESF_CREATEENTRYONLY,
+														Texture2DResourceType::Type(),
+														pt);
+			}
+		}
+	}
 
 	if (scene->HasAnimations())
 	{
@@ -821,25 +852,11 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 						texidx = 0;
 				}
 
-				const ResourceType *ptexrestype = psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D"));
-				c3::Texture2D *pt = nullptr;
-				ptexrestype->ReadFromMemory(psys, (const BYTE *)scene->mTextures[texidx]->pcData, scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
-				if (pt)
-				{
-					GUID guid;
-					CoCreateGuid(&guid);
+				tstring texname = sourcename;
+				Resource *ptres = psys->GetResourceManager()->GetResource(MakeTexFilename(texname, textmp));
+				c3::Texture2D *pt = ptres ? dynamic_cast<Texture2D *>((Texture2D *)ptres->GetData()) : nullptr;
 
-					tstring texname = sourcename;
-					texname += _T(":texture[");
-					texname += textmp;
-					texname += _T("]");
-					pt->SetName(texname.c_str());
-					pmtl->SetTexture(t, pt);
-					psys->GetResourceManager()->GetResource(texname.c_str(),
-															RESF_CREATEENTRYONLY,
-															psys->GetResourceManager()->FindResourceTypeByName(_T("Texture2D")),
-															pt);
-				}
+				pmtl->SetTexture(t, pt);
 			}
 			else
 			{

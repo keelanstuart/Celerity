@@ -120,6 +120,14 @@ void jcAdjustQuat(CScriptVar *c, void *userdata);
 void jcQuatToEuler(CScriptVar *c, void *userdata);
 void jcEulerToQuat(CScriptVar *c, void *userdata);
 void jcPlaySound(CScriptVar *c, void *userdata);
+void jcGetModelNodeIndex(CScriptVar *c, void *userdata);
+void jcGetModelInstNodePos(CScriptVar *c, void *userdata);
+void jcGetModelInstNodeOri(CScriptVar *c, void *userdata);
+void jcGetModelInstNodeScl(CScriptVar *c, void *userdata);
+void jcSetModelInstNodePos(CScriptVar *c, void *userdata);
+void jcSetModelInstNodeOri(CScriptVar *c, void *userdata);
+void jcSetModelInstNodeScl(CScriptVar *c, void *userdata);
+
 
 void ScriptableImpl::ResetJS()
 {
@@ -154,6 +162,13 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function EulerToQuat(euler)"),									jcEulerToQuat, psys);
 	m_JS->AddNative(_T("function QuatToEuler(quat)"),									jcQuatToEuler, psys);
 	m_JS->AddNative(_T("function PlaySound(filename, volmod, pitchmod, loop, pos)"),	jcPlaySound, psys);
+	m_JS->AddNative(_T("function GetModelNodeIndex(hobj, nodename)"),					jcGetModelNodeIndex, psys);
+	m_JS->AddNative(_T("function GetModelInstNodePos(hobj, nodeidx)"),					jcGetModelInstNodePos, psys);
+	m_JS->AddNative(_T("function GetModelInstNodeOri(hobj, nodeidx)"),					jcGetModelInstNodeOri, psys);
+	m_JS->AddNative(_T("function GetModelInstNodeScl(hobj, nodeidx)"),					jcGetModelInstNodeScl, psys);
+	m_JS->AddNative(_T("function SetModelInstNodePos(hobj, nodeidx, pos)"),				jcSetModelInstNodePos, psys);
+	m_JS->AddNative(_T("function SetModelInstNodeOri(hobj, nodeidx, ori)"),				jcSetModelInstNodeOri, psys);
+	m_JS->AddNative(_T("function SetModelInstNodeScl(hobj, nodeidx, scl)"),				jcSetModelInstNodeScl, psys);
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -343,7 +358,7 @@ void jcFindObjByGUID(CScriptVar *c, void *userdata)
 	tstring guids = c->GetParameter(_T("guid"))->GetString();
 	bool recurse = c->GetParameter(_T("recursive"))->GetBool();
 
-	std::function<Object *(Object *, GUID, bool)> findObjByGuid = [&findObjByGuid] (Object *proot, GUID &sg, bool r) -> Object *
+	std::function<Object *(Object *, GUID &, bool)> findObjByGuid = [&findObjByGuid] (Object *proot, GUID &sg, bool r) -> Object *
 	{
 		if (!proot)
 			return nullptr;
@@ -1118,4 +1133,327 @@ void jcPlaySound(CScriptVar *c, void *userdata)
 	Resource *pres = psys->GetResourceManager()->GetResource(pfilename->GetString(), RESF_DEMANDLOAD);
 
 	ret->SetInt((int64_t)(psys->GetSoundPlayer()->Play(pres, SoundPlayer::SOUND_TYPE::ST_SFX, pvolmod ? pvolmod->GetFloat() : 0, ppitchmod ? ppitchmod->GetFloat() : 0, ploop ? ploop->GetInt() : 1, &pos)));
+}
+
+
+//m_JS->AddNative(_T("function GetModelNodeIndex(hobj, nodename)"),						jcGetModelNodeIndex, psys);
+void jcGetModelNodeIndex(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	Model::NodeIndex ni = Model::INVALID_INDEX;
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	tstring nodename = c->GetParameter(_T("nodename"))->GetString();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		if (pmr)
+		{
+			const Model *pm = pmr->GetModel();
+			if (pm)
+				pm->FindNode(nodename.c_str(), &ni);
+		}
+	}
+
+	ret->SetInt(ni);
+}
+
+
+//m_JS->AddNative(_T("function GetModelInstNodePos(hobj, nodeidx)"),						jcGetModelInstNodePos, psys);
+void jcGetModelInstNodePos(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	Model::NodeIndex ni = c->GetParameter(_T("nodeidx"))->GetInt();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		if (pmr)
+		{
+			glm::fmat4x4 t;
+			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			{
+				glm::fvec3 scl;
+				glm::fquat ori;
+				glm::fvec3 pos;
+				glm::fvec3 skew;
+				glm::fvec4 perspective;
+				glm::decompose(t, scl, ori, pos, skew, perspective);
+
+				CScriptVarLink *psvl;
+
+				psvl = ret->FindChildOrCreate(_T("x"));
+				psvl->m_Owned = true;
+				CScriptVar *prx = psvl->m_Var;
+
+				psvl = ret->FindChildOrCreate(_T("y"));
+				psvl->m_Owned = true;
+				CScriptVar *pry = psvl->m_Var;
+
+				psvl = ret->FindChildOrCreate(_T("z"));
+				psvl->m_Owned = true;
+				CScriptVar *prz = psvl->m_Var;
+
+				prx->SetFloat(pos.x);
+				pry->SetFloat(pos.y);
+				prz->SetFloat(pos.z);
+			}
+		}
+	}
+}
+
+
+//m_JS->AddNative(_T("function GetModelInstNodeOri(hobj, nodeidx)"),						jcGetModelInstNodeOri, psys);
+void jcGetModelInstNodeOri(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	Model::NodeIndex ni = c->GetParameter(_T("nodeidx"))->GetInt();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		if (pmr)
+		{
+			glm::fmat4x4 t;
+			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			{
+				glm::fvec3 scl;
+				glm::fquat ori;
+				glm::fvec3 pos;
+				glm::fvec3 skew;
+				glm::fvec4 perspective;
+				glm::decompose(t, scl, ori, pos, skew, perspective);
+
+				CScriptVarLink *psvl;
+
+				psvl = ret->FindChildOrCreate(_T("x"));
+				psvl->m_Owned = true;
+				CScriptVar *prx = psvl->m_Var;
+
+				psvl = ret->FindChildOrCreate(_T("y"));
+				psvl->m_Owned = true;
+				CScriptVar *pry = psvl->m_Var;
+
+				psvl = ret->FindChildOrCreate(_T("z"));
+				psvl->m_Owned = true;
+				CScriptVar *prz = psvl->m_Var;
+
+				psvl = ret->FindChildOrCreate(_T("w"));
+				psvl->m_Owned = true;
+				CScriptVar *prw = psvl->m_Var;
+
+				prx->SetFloat(ori.x);
+				pry->SetFloat(ori.y);
+				prz->SetFloat(ori.z);
+				prw->SetFloat(ori.w);
+			}
+		}
+	}
+}
+
+
+//m_JS->AddNative(_T("function GetModelInstNodeScl(hobj, nodeidx)"),						jcGetModelInstNodeScl, psys);
+void jcGetModelInstNodeScl(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	Model::NodeIndex ni = c->GetParameter(_T("nodeidx"))->GetInt();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		if (pmr)
+		{
+			glm::fmat4x4 t;
+			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			{
+				glm::fvec3 scl;
+				glm::fquat ori;
+				glm::fvec3 pos;
+				glm::fvec3 skew;
+				glm::fvec4 perspective;
+				glm::decompose(t, scl, ori, pos, skew, perspective);
+
+				CScriptVarLink *psvl;
+
+				psvl = ret->FindChildOrCreate(_T("x"));
+				psvl->m_Owned = true;
+				CScriptVar *prx = psvl->m_Var;
+
+				psvl = ret->FindChildOrCreate(_T("y"));
+				psvl->m_Owned = true;
+				CScriptVar *pry = psvl->m_Var;
+
+				psvl = ret->FindChildOrCreate(_T("z"));
+				psvl->m_Owned = true;
+				CScriptVar *prz = psvl->m_Var;
+
+				prx->SetFloat(scl.x);
+				pry->SetFloat(scl.y);
+				prz->SetFloat(scl.z);
+			}
+		}
+	}
+}
+
+
+//m_JS->AddNative(_T("function SetModelInstNodePos(hobj, nodeidx, pos)"),				jcSetModelInstNodePos, psys);
+void jcSetModelInstNodePos(CScriptVar *c, void *userdata)
+{
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	Model::NodeIndex ni = c->GetParameter(_T("nodeidx"))->GetInt();
+	CScriptVar *ppos = c->GetParameter(_T("pos"));
+	if (!ppos)
+		return;
+
+	CScriptVarLink *px = ppos->FindChild(_T("x"));
+	CScriptVarLink *py = ppos->FindChild(_T("y"));
+	CScriptVarLink *pz = ppos->FindChild(_T("z"));
+	if (!(px && py && pz))
+		return;
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		if (pmr)
+		{
+			glm::fmat4x4 t;
+			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			{
+				glm::fvec3 scl;
+				glm::fquat ori;
+				glm::fvec3 pos;
+				glm::fvec3 skew;
+				glm::fvec4 perspective;
+				glm::decompose(t, scl, ori, pos, skew, perspective);
+
+				pos.x = px->m_Var->GetFloat();
+				pos.y = py->m_Var->GetFloat();
+				pos.z = pz->m_Var->GetFloat();
+
+				t = glm::scale(glm::identity<glm::fmat4x4>(), scl) * (glm::fmat4x4)(ori);
+
+				// Then translate last... 
+				t = glm::translate(glm::identity<glm::fmat4x4>(), pos) * t;
+
+				pmr->GetModelInstanceData()->SetTransform(ni, t);
+			}
+		}
+	}
+}
+
+
+//m_JS->AddNative(_T("function SetModelInstNodeOri(hobj, nodeidx, Ori)"),				jcSetModelInstNodeOri, psys);
+void jcSetModelInstNodeOri(CScriptVar *c, void *userdata)
+{
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	Model::NodeIndex ni = c->GetParameter(_T("nodeidx"))->GetInt();
+	CScriptVar *pori = c->GetParameter(_T("ori"));
+	if (!pori)
+		return;
+
+	CScriptVarLink *px = pori->FindChild(_T("x"));
+	CScriptVarLink *py = pori->FindChild(_T("y"));
+	CScriptVarLink *pz = pori->FindChild(_T("z"));
+	CScriptVarLink *pw = pori->FindChild(_T("w"));
+	if (!(px && py && pz && pw))
+		return;
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		if (pmr)
+		{
+			glm::fmat4x4 t;
+			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			{
+				glm::fvec3 scl;
+				glm::fquat ori;
+				glm::fvec3 pos;
+				glm::fvec3 skew;
+				glm::fvec4 perspective;
+				glm::decompose(t, scl, ori, pos, skew, perspective);
+
+				ori.x = px->m_Var->GetFloat();
+				ori.y = py->m_Var->GetFloat();
+				ori.z = pz->m_Var->GetFloat();
+				ori.w = pw->m_Var->GetFloat();
+
+				t = glm::scale(glm::identity<glm::fmat4x4>(), scl) * (glm::fmat4x4)(ori);
+
+				// Then translate last... 
+				t = glm::translate(glm::identity<glm::fmat4x4>(), pos) * t;
+
+				pmr->GetModelInstanceData()->SetTransform(ni, t);
+			}
+		}
+	}
+}
+
+
+//m_JS->AddNative(_T("function SetModelInstNodeScl(hobj, nodeidx, scl)"),				jcSetModelInstNodeScl, psys);
+void jcSetModelInstNodeScl(CScriptVar *c, void *userdata)
+{
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	Model::NodeIndex ni = c->GetParameter(_T("nodeidx"))->GetInt();
+	CScriptVar *pscl = c->GetParameter(_T("scl"));
+	if (!pscl)
+		return;
+
+	CScriptVarLink *px = pscl->FindChild(_T("x"));
+	CScriptVarLink *py = pscl->FindChild(_T("y"));
+	CScriptVarLink *pz = pscl->FindChild(_T("z"));
+	if (!(px && py && pz))
+		return;
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		if (pmr)
+		{
+			glm::fmat4x4 t;
+			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			{
+				glm::fvec3 scl;
+				glm::fquat ori;
+				glm::fvec3 pos;
+				glm::fvec3 skew;
+				glm::fvec4 perspective;
+				glm::decompose(t, scl, ori, pos, skew, perspective);
+
+				scl.x = px->m_Var->GetFloat();
+				scl.y = py->m_Var->GetFloat();
+				scl.z = pz->m_Var->GetFloat();
+
+				t = glm::scale(glm::identity<glm::fmat4x4>(), scl) * (glm::fmat4x4)(ori);
+
+				// Then translate last... 
+				t = glm::translate(glm::identity<glm::fmat4x4>(), pos) * t;
+
+				pmr->GetModelInstanceData()->SetTransform(ni, t);
+			}
+		}
+	}
 }

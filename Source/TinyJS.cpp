@@ -1231,8 +1231,8 @@ const TCHAR *CScriptVar::GetString()
 {
 	/* Because we can't return a string that is generated on demand.
 	 * I should really just use char* :) */
-	static TCHAR *s_null = _T("null");
-	static TCHAR *s_undefined = _T("undefined");
+	static const TCHAR *s_null = _T("null");
+	static const TCHAR *s_undefined = _T("undefined");
 
 	tstringstream ss;
 
