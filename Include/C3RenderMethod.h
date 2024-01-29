@@ -54,6 +54,14 @@ namespace c3
 
 		public:
 
+			using ETechMode = enum
+			{
+				TECHMODE_NORMAL = 0,
+				TECHMODE_SKIN,
+
+				TECHMODE_NUMTYPES
+			};
+
 			// Sets the name of the Technique
 			virtual void SetName(const TCHAR *name) = NULL;
 
@@ -68,6 +76,8 @@ namespace c3
 
 			// Adds a Pass to this Technique
 			virtual Pass *AddPass() = NULL;
+
+			virtual void SetMode(ETechMode mode = TECHMODE_NORMAL) = NULL;
 
 			virtual bool Begin(size_t &passes) const = NULL;
 

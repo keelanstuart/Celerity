@@ -97,7 +97,14 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 			Resource *scres[Renderer::ShaderComponentType::ST_NUMTYPES] = {0};
 			for (size_t i = 0; i < Renderer::ShaderComponentType::ST_NUMTYPES; i++)
 				if (m_ShaderCompFilename[i].has_value())
-					scres[i] = prend->GetSystem()->GetResourceManager()->GetResource((m_ShaderCompFilename[i])->c_str(), RESF_DEMANDLOAD);
+				{
+					// THIS BUILDS A PATH THAT INCLUDES THE SHADER MODE (like "SKIN")
+					tstring path = (m_ShaderCompFilename[i])->c_str();
+					path += _T("|");
+					path += m_ShaderMode;
+
+					scres[i] = prend->GetSystem()->GetResourceManager()->GetResource(path.c_str(), RESF_DEMANDLOAD);
+				}
 
 			bool has_all_comps = true;
 			for (size_t i = 0; i < Renderer::ShaderComponentType::ST_NUMTYPES; i++)
@@ -274,6 +281,8 @@ bool RenderMethodImpl::PassImpl::GetFillMode(Renderer::FillMode &fillmode) const
 RenderMethodImpl::TechniqueImpl::TechniqueImpl(Renderer *prend)
 {
 	m_pRend = prend;
+	m_Mode = TECHMODE_NORMAL;
+	m_Passes.resize(TECHMODE_NUMTYPES);
 }
 
 
@@ -291,40 +300,46 @@ const TCHAR *RenderMethodImpl::TechniqueImpl::GetName() const
 
 size_t RenderMethodImpl::TechniqueImpl::GetNumPasses() const
 {
-	return m_Passes.size();
+	return m_Passes[m_Mode].size();
 }
 
 
 RenderMethod::Pass *RenderMethodImpl::TechniqueImpl::GetPass(size_t idx) const
 {
-	return (RenderMethod::Pass *)&m_Passes[idx];
+	return (RenderMethod::Pass *)&m_Passes[m_Mode][idx];
 }
 
 
 RenderMethod::Pass *RenderMethodImpl::TechniqueImpl::AddPass()
 {
-	RenderMethodImpl::PassImpl &ret = m_Passes.emplace_back();
+	RenderMethodImpl::PassImpl &ret = m_Passes[m_Mode].emplace_back();
 
 	return &ret;
 }
 
 
+void RenderMethodImpl::TechniqueImpl::SetMode(ETechMode mode)
+{
+	m_Mode = mode;
+}
+
+
 bool RenderMethodImpl::TechniqueImpl::Begin(size_t &passes) const
 {
-	if (m_Passes.empty())
+	if (m_Passes[m_Mode].empty())
 		return false;
 
-	passes = m_Passes.size();
+	passes = m_Passes[m_Mode].size();
 	return true;
 }
 
 
 Renderer::RenderStateOverrideFlags RenderMethodImpl::TechniqueImpl::ApplyPass(size_t idx) const
 {
-	if (idx >= m_Passes.size())
+	if (idx >= m_Passes[m_Mode].size())
 		return 0;
 
-	PassImpl &pr = (PassImpl &)m_Passes[idx];
+	PassImpl &pr = (PassImpl &)m_Passes[m_Mode][idx];
 	return pr.Apply(m_pRend);
 }
 
@@ -682,15 +697,30 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 }
 
 
+void RenderMethodImpl::PassImpl::SetShaderMode(const TCHAR *mode)
+{
+	m_ShaderMode = mode;
+}
+
+
 void RenderMethodImpl::LoadPass(TechniqueImpl *ptech, const tinyxml2::XMLElement *proot)
 {
-	RenderMethod::Pass *ppass = ptech->AddPass();
-	const tinyxml2::XMLElement *psel = proot->FirstChildElement("setting");
-	while (psel)
-	{
-		((RenderMethodImpl::PassImpl *)ppass)->LoadSetting(psel);
+	const TCHAR *techmode_names[RenderMethod::Technique::ETechMode::TECHMODE_NUMTYPES] = { _T(""), _T("SKIN") };
 
-		psel = psel->NextSiblingElement("setting");
+	for (size_t i = 0; i < RenderMethod::Technique::ETechMode::TECHMODE_NUMTYPES; i++)
+	{
+		ptech->SetMode((RenderMethod::Technique::ETechMode)i);
+
+		RenderMethodImpl::PassImpl *ppass = (RenderMethodImpl::PassImpl *)(ptech->AddPass());
+		ppass->SetShaderMode(techmode_names[i]);
+
+		const tinyxml2::XMLElement *psel = proot->FirstChildElement("setting");
+		while (psel)
+		{
+			((RenderMethodImpl::PassImpl *)ppass)->LoadSetting(psel);
+
+			psel = psel->NextSiblingElement("setting");
+		}
 	}
 }
 

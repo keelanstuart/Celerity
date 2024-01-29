@@ -1557,8 +1557,8 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 	if (flags.IsSet(UFBFLAG_FINISHLAST))
 		gl.Finish();
 
-	for (uint64_t s = 0; s < 32; s++)
-			UseTexture(s, nullptr);
+//	for (uint64_t s = 0; s < 32; s++)
+//		UseTexture(s, nullptr);
 
 	if (flags.IsSet(UFBFLAG_UPDATEVIEWPORT))
 	{
@@ -1980,6 +1980,9 @@ void RendererImpl::SetViewMatrix(const glm::fmat4x4 *m)
 
 void RendererImpl::SetWorldMatrix(const glm::fmat4x4 *m)
 {
+	if (!m)
+		m = &m_ident;
+
 	if (*m != m_world)
 	{
 		m_world = *m;
@@ -2135,6 +2138,18 @@ void RendererImpl::SetEyeDirection(const glm::fvec3* dir)
 		return;
 
 	m_eyedir = *dir;
+}
+
+
+void RendererImpl::SetModelInstanceData(const Model::InstanceData *pinstdata)
+{
+	m_pModelInstData = pinstdata;
+}
+
+
+const Model::InstanceData *RendererImpl::GetModelInstanceData()
+{
+	return m_pModelInstData;
 }
 
 

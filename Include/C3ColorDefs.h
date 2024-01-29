@@ -49,9 +49,10 @@ namespace c3
 			uint8_t r, g, b;
 		};
 
-		struct SRGBAColor
+		union SRGBAColor
 		{
-			uint8_t r, g, b, a;
+			struct { uint8_t r, g, b, a; };
+			uint32_t i;
 		};
 #pragma pack(pop)
 

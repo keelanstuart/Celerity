@@ -58,6 +58,9 @@ namespace c3
 			float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
 			const glm::fmat4x4 *pMat = nullptr) const = NULL;
 
+		// Returns true if the mesh is a skin
+		virtual bool IsSkin() const = NULL;
+
 	};
 
 };

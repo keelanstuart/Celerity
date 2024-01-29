@@ -553,8 +553,10 @@ void CWTFPropertyGridProperty::EnableSpinControl(BOOL bEnable, int nMin, int nMa
 	case VT_UINT:
 	case VT_I2:
 	case VT_I4:
+	case VT_I8:
 	case VT_UI2:
 	case VT_UI4:
+	case VT_UI8:
 		break;
 
 	default:
@@ -914,6 +916,7 @@ CString CWTFPropertyGridProperty::FormatProperty()
 		break;
 
 	case VT_I4:
+	case VT_I8:
 	case VT_INT:
 		strVal.Format(AFX_FORMAT_LONG, (long)var.lVal);
 		break;
@@ -929,8 +932,9 @@ CString CWTFPropertyGridProperty::FormatProperty()
 		strVal.Format(AFX_FORMAT_USHORT, var.uiVal);
 		break;
 
-	case VT_UINT:
 	case VT_UI4:
+	case VT_UI8:
+	case VT_UINT:
 		strVal.Format(AFX_FORMAT_ULONG, var.ulVal);
 		break;
 
@@ -1236,8 +1240,9 @@ BOOL CWTFPropertyGridProperty::TextToVar(const CString& strText)
 		m_varValue = (short) _ttoi(strVal);
 		return TRUE;
 
-	case VT_INT:
 	case VT_I4:
+	case VT_I8:
+	case VT_INT:
 		m_varValue = _ttol(strVal);
 		return TRUE;
 
@@ -1245,8 +1250,9 @@ BOOL CWTFPropertyGridProperty::TextToVar(const CString& strText)
 		m_varValue.uiVal = unsigned short(_ttoi(strVal));
 		return TRUE;
 
-	case VT_UINT:
 	case VT_UI4:
+	case VT_UI8:
+	case VT_UINT:
 #ifdef _UNICODE
 		m_varValue.ulVal = wcstoul(strText, NULL, 10);
 #else
@@ -1322,6 +1328,7 @@ BOOL CWTFPropertyGridProperty::IsValueChanged() const
 		return(short)var.iVal != (short)var1.iVal;
 
 	case VT_I4:
+	case VT_I8:
 	case VT_INT:
 		return(long)var.lVal != (long)var1.lVal;
 
@@ -1331,8 +1338,9 @@ BOOL CWTFPropertyGridProperty::IsValueChanged() const
 	case VT_UI2:
 		return var.uiVal != var1.uiVal;
 
-	case VT_UINT:
 	case VT_UI4:
+	case VT_UI8:
+	case VT_UINT:
 		return var.ulVal != var1.ulVal;
 
 	case VT_R4:
@@ -1478,8 +1486,10 @@ CWnd* CWTFPropertyGridProperty::CreateInPlaceEdit(CRect rectEdit, BOOL& bDefault
 	case VT_INT:
 	case VT_UINT:
 	case VT_I4:
+	case VT_I8:
 	case VT_UI2:
 	case VT_UI4:
+	case VT_UI8:
 	case VT_BOOL:
 		break;
 
@@ -1759,8 +1769,10 @@ BOOL CWTFPropertyGridProperty::OnSetCursor() const
 	case VT_INT:
 	case VT_UINT:
 	case VT_I4:
+	case VT_I8:
 	case VT_UI2:
 	case VT_UI4:
+	case VT_UI8:
 		SetCursor(AfxGetApp()->LoadStandardCursor(IDC_IBEAM));
 		return TRUE;
 	}
@@ -1795,8 +1807,10 @@ BOOL CWTFPropertyGridProperty::PushChar(UINT nChar)
 	case VT_INT:
 	case VT_UINT:
 	case VT_I4:
+	case VT_I8:
 	case VT_UI2:
 	case VT_UI4:
+	case VT_UI8:
 		if (m_bEnabled && m_bAllowEdit)
 		{
 			m_pWndInPlace->SetWindowText(_T(""));
@@ -1907,10 +1921,12 @@ HBRUSH CWTFPropertyGridProperty::OnCtlColor(CDC* pDC, UINT /*nCtlColor*/)
 	case VT_UI1:
 	case VT_I2:
 	case VT_I4:
+	case VT_I8:
 	case VT_INT:
 	case VT_UINT:
 	case VT_UI2:
 	case VT_UI4:
+	case VT_UI8:
 	case VT_BOOL:
 		if (!m_bEnabled || !m_bAllowEdit)
 		{
@@ -5462,7 +5478,7 @@ HRESULT CWTFPropertyGridCtrl::get_accName(VARIANT varChild, BSTR *pszName)
 		return E_INVALIDARG;
 	}
 
-	if ((varChild.vt == VT_I4) && (varChild.lVal == CHILDID_SELF))
+	if (((varChild.vt == VT_I4) || (varChild.vt == VT_I8) || (varChild.vt == VT_INT)) && (varChild.lVal == CHILDID_SELF))
 	{
 		CString strText;
 		GetWindowText(strText);
@@ -5488,7 +5504,7 @@ HRESULT CWTFPropertyGridCtrl::get_accName(VARIANT varChild, BSTR *pszName)
 
 HRESULT CWTFPropertyGridCtrl::get_accValue(VARIANT varChild, BSTR *pszValue)
 {
-	if ((varChild.vt == VT_I4) && (varChild.lVal == CHILDID_SELF))
+	if (((varChild.vt == VT_I4) || (varChild.vt == VT_I8) || (varChild.vt == VT_INT)) && (varChild.lVal == CHILDID_SELF))
 	{
 		return S_FALSE;
 	}
@@ -5509,12 +5525,12 @@ HRESULT CWTFPropertyGridCtrl::get_accValue(VARIANT varChild, BSTR *pszValue)
 
 HRESULT CWTFPropertyGridCtrl::get_accDescription(VARIANT varChild, BSTR *pszDescription)
 {
-	if (((varChild.vt != VT_I4) && (varChild.lVal != CHILDID_SELF)) || (NULL == pszDescription))
+	if ((((varChild.vt == VT_I4) || (varChild.vt == VT_I8) || (varChild.vt == VT_INT)) && (varChild.lVal == CHILDID_SELF)) || (NULL == pszDescription))
 	{
 		return E_INVALIDARG;
 	}
 
-	if ((varChild.vt == VT_I4) && (varChild.lVal == CHILDID_SELF))
+	if (((varChild.vt == VT_I4) || (varChild.vt == VT_I8) || (varChild.vt == VT_INT)) && (varChild.lVal == CHILDID_SELF))
 	{
 		*pszDescription = SysAllocString(L"PropertyList");
 		return S_OK;
@@ -5531,19 +5547,19 @@ HRESULT CWTFPropertyGridCtrl::get_accDescription(VARIANT varChild, BSTR *pszDesc
 
 HRESULT CWTFPropertyGridCtrl::get_accRole(VARIANT varChild, VARIANT *pvarRole)
 {
-	if (!pvarRole || ((varChild.vt != VT_I4) && (varChild.lVal != CHILDID_SELF)))
+	if (!pvarRole || (((varChild.vt == VT_I4) || (varChild.vt == VT_I8) || (varChild.vt == VT_INT)) && (varChild.lVal != CHILDID_SELF)))
 	{
 		return E_INVALIDARG;
 	}
 
-	if ((varChild.vt == VT_I4) && (varChild.lVal == CHILDID_SELF))
+	if (((varChild.vt == VT_I4) || (varChild.vt == VT_I8) || (varChild.vt == VT_INT)) && (varChild.lVal == CHILDID_SELF))
 	{
-		pvarRole->vt = VT_I4;
+		pvarRole->vt = varChild.vt;
 		pvarRole->lVal = ROLE_SYSTEM_LIST;
 		return S_OK;
 	}
 
-	pvarRole->vt = VT_I4;
+	pvarRole->vt = VT_INT;
 	pvarRole->lVal = ROLE_SYSTEM_ROW;
 
 	return S_OK;
@@ -5551,14 +5567,14 @@ HRESULT CWTFPropertyGridCtrl::get_accRole(VARIANT varChild, VARIANT *pvarRole)
 
 HRESULT CWTFPropertyGridCtrl::get_accState(VARIANT varChild, VARIANT *pvarState)
 {
-	if ((varChild.vt == VT_I4) && (varChild.lVal == CHILDID_SELF))
+	if (((varChild.vt == VT_I4) || (varChild.vt == VT_I8) || (varChild.vt == VT_INT)) && (varChild.lVal == CHILDID_SELF))
 	{
-		pvarState->vt = VT_I4;
+		pvarState->vt = varChild.vt;
 		pvarState->lVal = STATE_SYSTEM_NORMAL;
 		return S_OK;
 	}
 
-	pvarState->vt = VT_I4;
+	pvarState->vt = VT_INT;
 	pvarState->lVal = STATE_SYSTEM_FOCUSABLE;
 	pvarState->lVal |= STATE_SYSTEM_SELECTABLE;
 
@@ -5679,12 +5695,12 @@ HRESULT CWTFPropertyGridCtrl::accHitTest(long  xLeft, long yTop, VARIANT *pvarCh
 	if (pProp != NULL)
 	{
 		LPARAM lParam = MAKELPARAM((WORD)xLeft, (WORD)yTop);
-		pvarChild->vt = VT_I4;
+		pvarChild->vt = VT_INT;
 		pvarChild->lVal = (LONG)lParam;
 	}
 	else
 	{
-		pvarChild->vt = VT_I4;
+		pvarChild->vt = VT_INT;
 		pvarChild->lVal = CHILDID_SELF;
 	}
 

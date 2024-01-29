@@ -152,7 +152,7 @@ void ModelRendererImpl::Render(Object::RenderFlags flags)
 
 			// make new instance data for this new model
 			if (!m_Inst)
-				m_Inst = (ModelImpl::ModelInstanceDataImpl *)(((ModelImpl *)pmod)->CloneInstanceData());
+				m_Inst = (ModelImpl::InstanceDataImpl *)(((ModelImpl *)pmod)->CloneInstanceData());
 		}
 	}
 
@@ -176,10 +176,12 @@ void ModelRendererImpl::Render(Object::RenderFlags flags)
 				}
 			}
 		}
-		else
+
+		if (m_pMethod)
 		{
 			m_pMethod->SetActiveTechnique((flags.IsSet(RF_SHADOW) && m_pOwner->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G);
 			prend->UseRenderMethod(m_pMethod);
+			((RendererImpl *)prend)->SetModelInstanceData((const Model::InstanceData *)m_Inst);
 		}
 	}
 

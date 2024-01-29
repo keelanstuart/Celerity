@@ -1,51 +1,63 @@
+uniform mat4 uMatrixV;
+uniform mat4 uMatrixVP;
+uniform vec3 uEyePosition;
+
 layout (points) in;
+in vec3 gPos[];
+in float gSize[];
+in float gRoll[];
+in vec4 gColor0[];
+
 layout (triangle_strip, max_vertices = 4) out;
-   
-uniform mat4 gxl3d_ProjectionMatrix;
+out vec4 fPosDepth;
+out vec2 fTex0;
+out vec4 fColor0;
 
-uniform float uParticleparticle_size;
-
-in Vertex
+mat4 createRollMatrix(vec3 axis, float angle)
 {
-  vec4 color;
-  vec3 scl;
-  
-} vertex[];
+	float c = cos(angle);
+	float s = sin(angle);
+	float t = 1.0 - c;
+	float x = axis.x, y = axis.y, z = axis.z;
+	float tx = t * x, ty = t * y;
 
-out vec2 Vertex_UV;
-out vec4 Vertex_Color;
-   
+	return mat4(
+		tx * x + c,     tx * y - s * z, tx * z + s * y, 0.0,
+		tx * y + s * z, ty * y + c,     ty * z - s * x, 0.0,
+		tx * z - s * y, ty * z + s * x, t * z * z + c,  0.0,
+		0.0,            0.0,            0.0,            1.0
+		);
+}
+
 void main (void)
 {
-  vec4 P = gl_in[0].gl_Position;
+	// billboard
+	vec3 toCam = normalize(uEyePosition - gPos[0]);
+	vec3 up = vec3(uMatrixV[0][1], uMatrixV[1][1], uMatrixV[2][1]);
+	vec3 right = cross(toCam, up);
+	up = cross(right, toCam);
+	
+	// roll
+	mat4 matRoll = createRollMatrix(toCam, gRoll[0]);
 
-  // a: left-bottom 
-  vec2 va = P.xy + vec2(-0.5, -0.5) * particle_size;
-  gl_Position = gxl3d_ProjectionMatrix * vec4(va, P.zw);
-  Vertex_UV = vec2(0.0, 0.0);
-  Vertex_Color = vertex[0].color;
-  EmitVertex();  
-  
-  // b: left-top
-  vec2 vb = P.xy + vec2(-0.5, 0.5) * particle_size;
-  gl_Position = gxl3d_ProjectionMatrix * vec4(vb, P.zw);
-  Vertex_UV = vec2(0.0, 1.0);
-  Vertex_Color = vertex[0].color;
-  EmitVertex();  
-  
-  // d: right-bottom
-  vec2 vd = P.xy + vec2(0.5, -0.5) * particle_size;
-  gl_Position = gxl3d_ProjectionMatrix * vec4(vd, P.zw);
-  Vertex_UV = vec2(1.0, 0.0);
-  Vertex_Color = vertex[0].color;
-  EmitVertex();  
+	// lookup tables for quad corners and texture coords
+	vec2 ofs[4] = { vec2(-0.5, -0.5), vec2(-0.5, 0.5), vec2(0.5, -0.5), vec2(0.5, 0.5) };
+	vec2 uv[4] = { vec2(0.0, 0.0), vec2(0.0, 1.0), vec2(1.0, 0.0), vec2(1.0, 1.0) };
 
-  // c: right-top
-  vec2 vc = P.xy + vec2(0.5, 0.5) * particle_size;
-  gl_Position = gxl3d_ProjectionMatrix * vec4(vc, P.zw);
-  Vertex_UV = vec2(1.0, 1.0);
-  Vertex_Color = vertex[0].color;
-  EmitVertex();  
+	// generate quad verts
+	for (int i = 0; i < 4; ++i)
+	{
+		vec4 wpos = vec4(gPos[0] + ((right * ofs[i].x) + (up * ofs[i].y)) * gSize[0], 1.0);
+		vec4 zpos = uMatrixVP * vec4((matRoll * wpos).xyz, 1.0);
 
-  EndPrimitive();  
-}   
+		gl_Position = zpos;
+
+		fPosDepth = vec4(wpos.xyz, zpos.w);
+		fTex0 = uv[i];
+		fColor0 = gColor0[0];
+
+		EmitVertex();
+	}
+	
+	EndPrimitive();
+}

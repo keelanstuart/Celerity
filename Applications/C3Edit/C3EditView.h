@@ -62,37 +62,37 @@ protected:
 
 #define BLURTARGS	4
 
-	static c3::FrameBuffer *m_GBuf;
-	static c3::FrameBuffer *m_LCBuf;
-	static c3::FrameBuffer *m_AuxBuf;
-	static c3::FrameBuffer *m_SSBuf;
-	static std::vector<c3::Texture2D *> m_ColorTarg;
-	static c3::DepthBuffer *m_DepthTarg;
-	static c3::DepthBuffer *m_ShadowTarg;
-	static std::vector<c3::Texture2D *> m_BTex;
-	static std::vector<c3::FrameBuffer *> m_BBuf;
-	static c3::ShaderComponent *m_VS_resolve;
-	static c3::ShaderComponent *m_FS_resolve;
-	static c3::ShaderProgram *m_SP_resolve;
-	static c3::ShaderComponent *m_VS_blur;
-	static c3::ShaderComponent *m_FS_blur;
-	static c3::ShaderProgram *m_SP_blur;
-	static c3::ShaderComponent *m_VS_combine;
-	static c3::ShaderComponent *m_FS_combine;
-	static c3::ShaderProgram *m_SP_combine;
-	static c3::ShaderComponent *m_VS_bounds;
-	static c3::ShaderComponent *m_FS_bounds;
-	static c3::ShaderProgram *m_SP_bounds;
+	c3::FrameBuffer *m_GBuf;
+	c3::FrameBuffer *m_LCBuf;
+	c3::FrameBuffer *m_AuxBuf;
+	c3::FrameBuffer *m_SSBuf;
+	std::vector<c3::Texture2D *> m_ColorTarg;
+	c3::DepthBuffer *m_DepthTarg;
+	c3::DepthBuffer *m_ShadowTarg;
+	std::vector<c3::Texture2D *> m_BTex;
+	std::vector<c3::FrameBuffer *> m_BBuf;
+	c3::ShaderComponent *m_VS_resolve;
+	c3::ShaderComponent *m_FS_resolve;
+	c3::ShaderProgram *m_SP_resolve;
+	c3::ShaderComponent *m_VS_blur;
+	c3::ShaderComponent *m_FS_blur;
+	c3::ShaderProgram *m_SP_blur;
+	c3::ShaderComponent *m_VS_combine;
+	c3::ShaderComponent *m_FS_combine;
+	c3::ShaderProgram *m_SP_combine;
+	c3::ShaderComponent *m_VS_bounds;
+	c3::ShaderComponent *m_FS_bounds;
+	c3::ShaderProgram *m_SP_bounds;
 
-	static int32_t m_ulSunDir;
-	static int32_t m_ulSunColor;
-	static int32_t m_ulAmbientColor;
-	static glm::fvec3 m_SunDir;
-	static glm::fvec3 m_SunColor;
-	static glm::fvec3 m_AmbientColor;
-	static int32_t m_uBlurTex;
-	static int32_t m_uBlurScale;
-	static c3::MatrixStack *m_SelectionXforms;
+	int32_t m_ulSunDir;
+	int32_t m_ulSunColor;
+	int32_t m_ulAmbientColor;
+	glm::fvec3 m_SunDir;
+	glm::fvec3 m_SunColor;
+	glm::fvec3 m_AmbientColor;
+	int32_t m_uBlurTex;
+	int32_t m_uBlurScale;
+	c3::MatrixStack *m_SelectionXforms;
 
 	static RENDERDOC_API_1_4_0 *m_pRenderDoc;
 	bool m_RenderDocCaptureFrame;
@@ -106,8 +106,15 @@ protected:
 	glm::fvec3 m_BasePickVec;
 	c3::MatrixStack *m_PickMats;
 
+	float m_WindowsUIScale;
+
+
 // Generated message map functions
 protected:
+
+	void InitializeGraphics();
+	void HandleInput(c3::Positionable* pcampos);
+
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	DECLARE_MESSAGE_MAP()

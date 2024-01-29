@@ -55,7 +55,7 @@ void ModelImpl::Release()
 
 Model::InstanceData *ModelImpl::CloneInstanceData()
 {
-	ModelImpl::ModelInstanceDataImpl *ret = new ModelImpl::ModelInstanceDataImpl(this);
+	ModelImpl::InstanceDataImpl *ret = new ModelImpl::InstanceDataImpl(this);
 
 	return (InstanceData *)ret;
 }
@@ -369,7 +369,7 @@ const BoundingBox *ModelImpl::GetBounds(BoundingBox *pbb) const
 
 void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst) const
 {
-	if (inst && (((ModelInstanceDataImpl *)inst)->m_pSourceModel != this))
+	if (inst && (((InstanceDataImpl *)inst)->m_pSourceModel != this))
 		return;
 
 	if (pmat)
@@ -393,7 +393,7 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const M
 
 	// push the node's transform to build the hierarchy correctly
 	if (inst)
-		m_MatStack->Push(&(((ModelInstanceDataImpl *)inst)->m_NodeData[nodeidx].mat));
+		m_MatStack->Push(&(((InstanceDataImpl *)inst)->m_NodeMat[nodeidx]));
 	else
 		m_MatStack->Push(&pnode->mat);
 
@@ -414,7 +414,16 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const M
 			if (!inst)
 				m_pRend->UseMaterial(mesh->pmtl);
 			else
-				m_pRend->UseMaterial(((ModelInstanceDataImpl *)inst)->m_NodeData[nodeidx].pmtl[i]);
+				m_pRend->UseMaterial(((InstanceDataImpl *)inst)->m_NodeMtl[nodeidx][i]);
+		}
+
+		RenderMethod *prm = m_pRend->GetActiveRenderMethod();
+		if (prm)
+		{
+			if (mesh->pmesh->IsSkin())
+				prm->GetActiveTechnique()->SetMode(RenderMethod::Technique::TECHMODE_SKIN);
+			else
+				prm->GetActiveTechnique()->SetMode(RenderMethod::Technique::TECHMODE_NORMAL);
 		}
 
 		mesh->pmesh->Draw();
@@ -958,6 +967,8 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 	for (size_t i = 0; i < scene->mNumMeshes; i++)
 	{
+		aiMesh *impmesh = scene->mMeshes[i];
+
 		glm::fvec3 vmin(FLT_MAX, FLT_MAX, FLT_MAX), vmax(-FLT_MAX, -FLT_MAX, -FLT_MAX);
 		Mesh *pm = psys->GetRenderer()->CreateMesh();
 
@@ -968,7 +979,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 		if (midx == Model::INVALID_INDEX)
 			continue;
 
-		unsigned int mtlidx = scene->mMeshes[i]->mMaterialIndex;
+		unsigned int mtlidx = impmesh->mMaterialIndex;
 		pmi->SetMaterial(midx, (mtlidx < mtlvec.size()) ? mtlvec[mtlidx] : pr->GetWhiteMaterial());
 
 		// associate the aiMesh with a MeshIndex so we can attach it to the appropriate ModelIndex
@@ -979,7 +990,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 		size_t ci = 0;
 
-		if (scene->mMeshes[i]->HasPositions())
+		if (impmesh->HasPositions())
 		{
 			vcd[ci].m_Count = 3;
 			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
@@ -987,7 +998,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			ci++;
 		}
 
-		if (scene->mMeshes[i]->HasNormals())
+		if (impmesh->HasNormals())
 		{
 			vcd[ci].m_Count = 3;
 			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
@@ -995,7 +1006,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			ci++;
 		}
 
-		if (scene->mMeshes[i]->HasTangentsAndBitangents())
+		if (impmesh->HasTangentsAndBitangents())
 		{
 			vcd[ci].m_Count = 3;
 			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
@@ -1010,7 +1021,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 		for (unsigned int t = 0; t < 4; t++)
 		{
-			if (scene->mMeshes[i]->HasTextureCoords(t))
+			if (impmesh->HasTextureCoords(t))
 			{
 				vcd[ci].m_Count = scene->mMeshes[i]->mNumUVComponents[t];
 				vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
@@ -1023,7 +1034,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 		for (unsigned int c = 0; c < 4; c++)
 		{
-			if (scene->mMeshes[i]->HasVertexColors(c))
+			if (impmesh->HasVertexColors(c))
 			{
 				vcd[ci].m_Count = 4;
 				vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_U8;
@@ -1032,6 +1043,33 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			}
 			else
 				break;	// can't have vertex color set #2 without #1, right?
+		}
+
+		// "collect weights on all vertices. Quick and careless" --assimp sample viewer, probably
+		using TWeightVector = std::vector<aiVertexWeight>;
+		std::vector<TWeightVector> weights_per_vert;
+		if (impmesh->HasBones())
+		{
+			((MeshImpl *)pm)->MakeSkinned();
+
+			weights_per_vert.resize(impmesh->mNumVertices);
+
+			for (unsigned int a = 0; a < impmesh->mNumBones; a++)
+			{
+				const aiBone* bone = impmesh->mBones[a];
+				for (unsigned int b = 0; b < bone->mNumWeights; b++)
+					weights_per_vert[bone->mWeights[b].mVertexId].push_back(aiVertexWeight(a, bone->mWeights[b].mWeight));
+			}
+
+			vcd[ci].m_Count = 4;
+			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_U8;
+			vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_INDEX;
+			ci++;
+
+			vcd[ci].m_Count = 4;
+			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_F32;
+			vcd[ci].m_Usage = VertexBuffer::ComponentDescription::EUsage::VU_WEIGHT;
+			ci++;
 		}
 
 		vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_NONE;
@@ -1043,7 +1081,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			vsz += vcd[ci++].size();
 		}
 
-		size_t vct = scene->mMeshes[i]->mNumVertices;
+		size_t vct = impmesh->mNumVertices;
 
 		BYTE *vbuf;
 		if (pvb->Lock((void **)&vbuf, vct, vcd, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
@@ -1061,34 +1099,34 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 				switch (vcd[ci].m_Usage)
 				{
 					case VertexBuffer::ComponentDescription::EUsage::VU_POSITION:
-						pmd_3f = scene->mMeshes[i]->mVertices;
+						pmd_3f = impmesh->mVertices;
 						do_bounds = true;
 						break;
 
 					case VertexBuffer::ComponentDescription::EUsage::VU_NORMAL:
-						pmd_3f = scene->mMeshes[i]->mNormals;
+						pmd_3f = impmesh->mNormals;
 						break;
 
 					case VertexBuffer::ComponentDescription::EUsage::VU_BINORMAL:
-						pmd_3f = scene->mMeshes[i]->mBitangents;
+						pmd_3f = impmesh->mBitangents;
 						break;
 
 					case VertexBuffer::ComponentDescription::EUsage::VU_TANGENT:
-						pmd_3f = scene->mMeshes[i]->mTangents;
+						pmd_3f = impmesh->mTangents;
 						break;
 
 					case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD0:
 					case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD1:
 					case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD2:
 					case VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD3:
-						pmd_3f = scene->mMeshes[i]->mTextureCoords[(size_t)(vcd[ci].m_Usage - VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD0)];
+						pmd_3f = impmesh->mTextureCoords[(size_t)(vcd[ci].m_Usage - VertexBuffer::ComponentDescription::EUsage::VU_TEXCOORD0)];
 						break;
 
 					case VertexBuffer::ComponentDescription::EUsage::VU_COLOR0:
 					case VertexBuffer::ComponentDescription::EUsage::VU_COLOR1:
 					case VertexBuffer::ComponentDescription::EUsage::VU_COLOR2:
 					case VertexBuffer::ComponentDescription::EUsage::VU_COLOR3:
-						pmd_c = scene->mMeshes[i]->mColors[(size_t)(vcd[ci].m_Usage - VertexBuffer::ComponentDescription::EUsage::VU_COLOR0)];
+						pmd_c = impmesh->mColors[(size_t)(vcd[ci].m_Usage - VertexBuffer::ComponentDescription::EUsage::VU_COLOR0)];
 						break;
 				}
 
@@ -1135,6 +1173,42 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 						pv += vsz;
 					}
 				}
+				else if (vcd[ci].m_Usage == VertexBuffer::ComponentDescription::EUsage::VU_INDEX)
+				{
+					// it's bone indices...
+					for (size_t j = 0; j < vct; j++)
+					{
+						TWeightVector &vwv = weights_per_vert[j];
+
+						uint8_t bi[4] = { 0 };
+						for (size_t q = 0, maxq = std::min<size_t>(vwv.size(), 4); q < maxq; q++)
+						{
+							bi[q] = vwv[q].mVertexId;
+						}
+						memcpy(pv, bi, sizeof(uint8_t) * 4);
+
+						pv += vsz;
+					}
+				}
+				else if (vcd[ci].m_Usage == VertexBuffer::ComponentDescription::EUsage::VU_WEIGHT)
+				{
+					// it's bone weights...
+					for (size_t j = 0; j < vct; j++)
+					{
+						TWeightVector &vwv = weights_per_vert[j];
+
+						float bw[4] = { 0 };
+						for (size_t q = 0, maxq = std::min<size_t>(vwv.size(), 4); q < maxq; q++)
+						{
+							bw[q] = vwv[q].mWeight;
+						}
+						memcpy(pv, bw, sizeof(float) * 4);
+
+						pv += vsz;
+					}
+
+					pv += vsz;
+				}
 
 				ofs += vcd[ci].size();
 				ci++;
@@ -1145,15 +1219,15 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 		}
 
 		size_t numfaces = 0;
-		for (size_t k = 0; k < scene->mMeshes[i]->mNumFaces; k++)
+		for (size_t k = 0; k < impmesh->mNumFaces; k++)
 		{
-			aiFace pf = scene->mMeshes[i]->mFaces[k];
+			aiFace pf = impmesh->mFaces[k];
 			if (pf.mNumIndices == 3)
 				numfaces++;
 		}
 
 		BYTE *ibuf;
-		bool large_indices = (scene->mMeshes[i]->mNumVertices >= SHRT_MAX);
+		bool large_indices = (impmesh->mNumVertices >= SHRT_MAX);
 		if (pib->Lock((void **)&ibuf, numfaces * 3, large_indices ? IndexBuffer::EIndexSize::IS_32BIT : IndexBuffer::EIndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 		{
 			size_t ii = 0;
@@ -1162,7 +1236,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			{
 				for (size_t k = 0; k < numfaces; k++)
 				{
-					aiFace pf = scene->mMeshes[i]->mFaces[k];
+					aiFace pf = impmesh->mFaces[k];
 					if (pf.mNumIndices != 3)
 						continue;
 
@@ -1174,7 +1248,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			{
 				for (size_t k = 0; k < numfaces; k++)
 				{
-					aiFace pf = scene->mMeshes[i]->mFaces[k];
+					aiFace pf = impmesh->mFaces[k];
 					if (pf.mNumIndices != 3)
 						continue;
 
@@ -1374,50 +1448,52 @@ void RESOURCETYPENAME(Model)::Unload(void *data) const
 }
 
 
-ModelImpl::ModelInstanceDataImpl::ModelInstanceDataImpl(const Model *psource)
+ModelImpl::InstanceDataImpl::InstanceDataImpl(const Model *psource)
 {
 	assert(psource);
 
 	m_pSourceModel = (const ModelImpl *)psource;
 
 	NodeIndex maxi = psource->GetNodeCount();
-	m_NodeData.resize(maxi);
+	m_NodeMat.resize(maxi);
+	m_NodeMtl.resize(maxi);
+	m_NodeParent.resize(maxi);
 
 	for (NodeIndex i = 0; i < maxi; i++)
 	{
-		m_NodeData[i].mat = *psource->GetTransform(i);
+		m_NodeMat[i] = *psource->GetTransform(i);
 
 		MeshIndex maxj = psource->GetMeshCountOnNode(i);
 		if (maxj)
 		{
-			m_NodeData[i].pmtl.resize(maxj, nullptr);
+			m_NodeMtl[i].resize(maxj, nullptr);
 			for (MeshIndex j = 0; j < maxj; j++)
 			{
 				MeshIndex m = psource->GetMeshFromNode(i, j);
-				m_NodeData[i].pmtl[j] = ((ModelImpl *)psource)->m_pRend->GetMaterialManager()->CloneMaterial(psource->GetMaterial(m));
+				m_NodeMtl[i][j] = ((ModelImpl *)psource)->m_pRend->GetMaterialManager()->CloneMaterial(psource->GetMaterial(m));
 			}
 		}
 	}
 }
 
 
-void ModelImpl::ModelInstanceDataImpl::Release()
+void ModelImpl::InstanceDataImpl::Release()
 {
 	delete this;
 }
 
 
-const Model *ModelImpl::ModelInstanceDataImpl::GetSourceModel()
+const Model *ModelImpl::InstanceDataImpl::GetSourceModel()
 {
 	return m_pSourceModel;
 }
 
 
-bool ModelImpl::ModelInstanceDataImpl::GetTransform(NodeIndex idx, glm::fmat4x4 &mat)
+bool ModelImpl::InstanceDataImpl::GetTransform(NodeIndex idx, glm::fmat4x4 &mat)
 {
-	if (idx < m_NodeData.size())
+	if (idx < m_NodeMat.size())
 	{
-		mat = m_NodeData[idx].mat;
+		mat = m_NodeMat[idx];
 		return true;
 	}
 
@@ -1425,19 +1501,19 @@ bool ModelImpl::ModelInstanceDataImpl::GetTransform(NodeIndex idx, glm::fmat4x4 
 }
 
 
-void ModelImpl::ModelInstanceDataImpl::SetTransform(NodeIndex idx, glm::fmat4x4 &mat)
+void ModelImpl::InstanceDataImpl::SetTransform(NodeIndex idx, glm::fmat4x4 &mat)
 {
-	if (idx < m_NodeData.size())
-		m_NodeData[idx].mat = mat;
+	if (idx < m_NodeMat.size())
+		m_NodeMat[idx] = mat;
 }
 
 
-Material *ModelImpl::ModelInstanceDataImpl::GetMaterial(NodeIndex nodeidx, MeshIndex meshidx)
+Material *ModelImpl::InstanceDataImpl::GetMaterial(NodeIndex nodeidx, MeshIndex meshidx)
 {
-	if ((nodeidx >= m_NodeData.size()) || (meshidx >= m_pSourceModel->GetMeshCountOnNode(nodeidx)))
+	if ((nodeidx >= m_NodeMtl.size()) || (meshidx >= m_pSourceModel->GetMeshCountOnNode(nodeidx)))
 		return nullptr;
 
-	return m_NodeData[nodeidx].pmtl[meshidx];
+	return m_NodeMtl[nodeidx][meshidx];
 }
 
 

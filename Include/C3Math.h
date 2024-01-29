@@ -35,6 +35,8 @@ namespace c3
 		// Derives the rotation (in radians) about the Y axis, given an input quaternion
 		float C3_API GetRoll(const glm::fquat *q);
 
+		float C3_API RandomRange(float lo, float hi);
+
 	};
 
 };

@@ -4,8 +4,10 @@
 		<pass>
 			<setting name="depthmode"			value="readonly" />
 			<setting name="blendmode"			value="addalpha" />
-			<setting name="shader.vertex"		value="def-obj.vsh" />
-			<setting name="shader.fragment"		value="def-obj-light.fsh" />
+			<setting name="cullmode"			value="disabled" />
+			<setting name="shader.geometry"		value="def-part.gsh" />
+			<setting name="shader.vertex"		value="def-part.vsh" />
+			<setting name="shader.fragment"		value="def-part.fsh" />
 		</pass>
 	</technique>
 

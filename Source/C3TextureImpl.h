@@ -61,7 +61,7 @@ namespace c3
 
 	};
 
-	DEFINE_RESOURCETYPE(Texture2D, RTFLAG_RUNBYRENDERER, GUID({0xd9afb0b6, 0x8eea, 0x4bdc, { 0x97, 0x68, 0x4f, 0x3d, 0x55, 0x69, 0x35, 0x4c }}), "Texture2D", "Two-Dimensional Textures", "png;jpg;tga;bmp;gif;psd;hdr;pic;pnm;dds", "tga");
+	DEFINE_RESOURCETYPE(Texture2D, RTFLAG_RUNBYRENDERER, GUID({0xd9afb0b6, 0x8eea, 0x4bdc, { 0x97, 0x68, 0x4f, 0x3d, 0x55, 0x69, 0x35, 0x4c }}), "Texture2D", "Two-Dimensional Textures", "png;jpg;tga;bmp;gif;psd;hdr;pic;pnm;dds;tif;tiff", "tga");
 
 	class TextureCubeImpl : public TextureCube
 	{

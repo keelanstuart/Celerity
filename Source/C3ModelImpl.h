@@ -74,21 +74,17 @@ namespace c3
 
 	public:
 
-		class ModelInstanceDataImpl : Model::InstanceData
+		class InstanceDataImpl : Model::InstanceData
 		{
 		public:
 
 			const ModelImpl *m_pSourceModel;
 
-			struct NodeData
-			{
-				glm::fmat4x4 mat;
-				std::vector<Material *> pmtl;
-				NodeIndex parent;
-			};
-			std::vector<NodeData> m_NodeData;
+			std::vector<glm::fmat4x4> m_NodeMat;
+			std::vector<std::vector<Material *>> m_NodeMtl;
+			std::vector<NodeIndex> m_NodeParent;
 
-			ModelInstanceDataImpl(const Model *psource);
+			InstanceDataImpl(const Model *psource);
 
 			virtual void Release();
 

@@ -160,6 +160,8 @@ namespace c3
 
 		Material *m_ActiveMaterial;
 
+		const Model::InstanceData *m_pModelInstData;
+
 		DWORD m_RendThreadId;
 
 
@@ -313,6 +315,9 @@ namespace c3
 
 		virtual const glm::fvec3 *GetEyePosition(glm::fvec3 *pos = nullptr) const;
 		virtual const glm::fvec3 *GetEyeDirection(glm::fvec3 *dir = nullptr) const;
+
+		virtual const Model::InstanceData *RendererImpl::GetModelInstanceData();
+		virtual void SetModelInstanceData(const Model::InstanceData *pinstdata = nullptr);
 
 		virtual VertexBuffer *GetFullscreenPlaneVB();
 

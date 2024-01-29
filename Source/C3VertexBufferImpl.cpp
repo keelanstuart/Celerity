@@ -268,10 +268,28 @@ void VertexBufferImpl::ConfigureAttributes()
 			break;
 
 		bool is_color = (pcd->m_Usage >= VertexBuffer::ComponentDescription::Usage::VU_COLOR0) && (pcd->m_Usage <= VertexBuffer::ComponentDescription::Usage::VU_COLOR3);
-		bool is_byte = (pcd->m_Type >= VertexBuffer::ComponentDescription::VCT_U8) && (pcd->m_Type <= VertexBuffer::ComponentDescription::VCT_S8);
-		GLuint norm = (is_color && is_byte);
 
-		m_Rend->gl.VertexAttribPointer((GLuint)i, (GLint)pcd->m_Count, t[pcd->m_Type], norm, (GLsizei)vsz, (void *)vo);
+		switch (pcd->m_Type)
+		{
+			case VertexBuffer::ComponentDescription::VCT_F16:
+			case VertexBuffer::ComponentDescription::VCT_F32:
+			{
+				m_Rend->gl.VertexAttribPointer((GLuint)i, (GLint)pcd->m_Count, t[pcd->m_Type], false, (GLsizei)vsz, (void *)vo);
+				break;
+			}
+
+			case VertexBuffer::ComponentDescription::VCT_U8:
+			case VertexBuffer::ComponentDescription::VCT_S8:
+			case VertexBuffer::ComponentDescription::VCT_U32:
+			{
+				if (is_color)
+					m_Rend->gl.VertexAttribPointer((GLuint)i, (GLint)pcd->m_Count, t[pcd->m_Type], true, (GLsizei)vsz, (void *)vo);
+				else
+					m_Rend->gl.VertexAttribIPointer((GLuint)i, (GLint)pcd->m_Count, t[pcd->m_Type], (GLsizei)vsz, (void *)vo);
+				break;
+			}
+		}
+
 		m_Rend->gl.EnableVertexAttribArray((GLuint)i);
 
 		vo += pcd->size();

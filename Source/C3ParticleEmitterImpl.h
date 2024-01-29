@@ -9,11 +9,12 @@
 #include <C3.h>
 #include <C3ParticleEmitter.h>
 #include <deque>
+#include <queue>
 
 namespace c3
 {
 
-	class ParticleEmitterImpl : public ParticleEmitter, props::IPropertyChangeListener
+	class ParticleEmitterImpl : public ParticleEmitter, props::IPropertyChangeListener, props::IProperty::IEnumProvider
 	{
 
 	protected:
@@ -23,33 +24,41 @@ namespace c3
 		struct SParticle
 		{
 			glm::fvec3 pos;
-			glm::fvec3 vel;
-			glm::fvec3 acc;
 			float lifetime;
 			float time;
 			float roll;
+
+			glm::fvec3 vel;
+			glm::fvec3 acc;
+			float rvel;
+			float racc;
 			size_t texidx;
 		};
 
-		typedef std::vector<SParticle> TParticleArray;
-		typedef std::deque<c3::Texture2D *> TTextureArray;
+		using TParticleArray = std::vector<SParticle>;
+		using TIndexArray = std::vector<size_t>;
+		using TTextureArray = std::deque<c3::Texture2D *>;
 
-		typedef enum
+		using EmitterShape = enum
 		{
 			SPHERE,
 			RAY,
 			CONE,
 			CYLINDER,
 			PLANE
-		} EmitterShape;
+		};
 
 		TParticleArray m_Particles;
+		TIndexArray m_Active, m_Inactive;
+		VertexBuffer *m_Verts;
+		Material *m_pMaterial;
 
 		float m_Time;
+		float m_EmitTime;
 		
 		EmitterShape m_Shape;
 
-		size_t m_MaxParticles;		// maximum number of particles in system
+		uint64_t m_MaxParticles;		// maximum number of particles in system
 
 		float m_EmitRateMin;		// minimum time between emitted particles
 		float m_EmitRateMax;		// maximum time between emitted particles
@@ -76,9 +85,10 @@ namespace c3
 
 		float m_InnerRadius;
 		float m_OuterRadius;
-		float m_ConeAngle;
 
-		TTextureArray m_Textures;	// textures to be applied to each particle
+		RenderMethod *m_pMethod;
+		size_t m_TechIdx_G, m_TechIdx_GS, m_TechIdx_S;
+		Texture2D *m_pTexture;
 
 		float m_Peak;				// percentage of particle lifetime that it reaches the "peak" values
 
@@ -107,6 +117,10 @@ namespace c3
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;
+
+		virtual size_t GetNumValues(const props::IProperty *pprop) const;
+
+		virtual const TCHAR *GetValue(const props::IProperty *pprop, size_t ordinal, TCHAR *buf = nullptr, size_t bufsize = 0) const;
 
 	};
 

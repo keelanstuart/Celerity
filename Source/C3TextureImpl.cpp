@@ -12,6 +12,7 @@
 #include <stb_image.h>
 #include <Shlwapi.h>
 #include <ddraw.h>
+#include <tiffio.h>
 
 
 using namespace c3;
@@ -273,19 +274,87 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::Syste
 	{
 		*returned_data = nullptr;
 
-		char *_filename;
-		CONVERT_TCS2MBCS(filename, _filename);
-
 		int width = 0;
 		int height = 0;
 		int numchannels = 0;
+		int bpp = 1;
 
-		if (stbi_info(_filename, &width, &height, &numchannels))
+		const TCHAR* ext = PathFindExtension(filename);
+
+		if (!_tcsicmp(ext, _T(".tif")) || !_tcsicmp(ext, _T(".tiff")))
 		{
-#if defined(TEX2D_REQUIRE_POW2) && TEX2D_REQUIRE_POW2
-			// only allow power of 2 dimensions......?
-			if (((width & (width - 1)) == 0) && ((height & (height - 1)) == 0))
+#ifdef UNICODE
+			TIFF* tif = TIFFOpenW(filename, "r");
+#else
+			char* _filename;
+			CONVERT_TCS2MBCS(filename, _filename);
+
+			TIFF* tif = TIFFOpen(_filename, "r");
 #endif
+			if (tif)
+			{
+				TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &width);
+				TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &height);
+				TIFFGetField(tif, TIFFTAG_SAMPLESPERPIXEL, &numchannels);
+				TIFFGetField(tif, TIFFTAG_BITSPERSAMPLE, &bpp);
+				bpp >>= 3;
+
+				int photomode;
+				TIFFGetField(tif, TIFFTAG_PHOTOMETRIC, &photomode);
+
+				Renderer::TextureType tt = Renderer::TextureType(Renderer::TextureType::U8_1CH + numchannels - 1);
+				Texture2D* ptex = nullptr;
+				uint8_t* dst = nullptr;
+				Texture2D::SLockInfo li;
+
+				c3::RendererImpl* pr = (c3::RendererImpl*)psys->GetRenderer();
+				ptex = pr->CreateTexture2D(width, height, tt, 0, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
+
+				if (ptex)
+				{
+					ptex->Lock((void**)&dst, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS);
+
+					if (dst)
+					{
+						if ((bpp == 1) && (numchannels == 4))
+						{
+							TIFFReadRGBAImage(tif, width, height, (uint32_t *)dst);
+						}
+						else
+						{
+							unsigned char* dst_row = dst;
+							int ofs = width * numchannels * bpp;
+
+							for (uint32_t y = 0; y < (unsigned int)height; y++)
+							{
+								TIFFReadScanline(tif, dst_row, y);
+								dst_row += ofs;
+							}
+						}
+
+						ptex->Unlock();
+
+						ptex->SetName(filename);
+
+						ret = ResourceType::LoadResult::LR_SUCCESS;
+					}
+				}
+
+				TIFFClose(tif);
+
+				*returned_data = ptex;
+			}
+		}
+		else if (!_tcsicmp(ext, _T(".dds")))
+		{
+			// load dds
+		}
+		else // all other formats are read by STB
+		{
+			char *_filename;
+			CONVERT_TCS2MBCS(filename, _filename);
+
+			if (stbi_info(_filename, &width, &height, &numchannels))
 			{
 				Renderer::TextureType tt = Renderer::TextureType(Renderer::TextureType::U8_1CH + numchannels - 1);
 				Texture2D *ptex = nullptr;
@@ -305,14 +374,14 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::Syste
 						if (src)
 						{
 							unsigned char *dst_row = dst;
-							int src_ofs = width * numchannels;
-							unsigned char *src_row = src + (width * height * numchannels) - src_ofs;
+							int ofs = width * numchannels * bpp;
+							unsigned char *src_row = src + (width * height * numchannels) - ofs;
 
 							for (size_t y = 0; y < height; y++)
 							{
 								memcpy(dst_row, src_row, width * numchannels);
-								src_row -= src_ofs;
-								dst_row += src_ofs;
+								src_row -= ofs;
+								dst_row += ofs;
 							}
 
 							ptex->Unlock();
@@ -328,12 +397,6 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Texture2D)::ReadFromFile(c3::Syste
 
 				*returned_data = ptex;
 			}
-#if defined(TEX2D_REQUIRE_POW2) && TEX2D_REQUIRE_POW2
-			else
-			{
-				psys->GetLog()->Print(_T("\nTexture2D: non-power-of-2 texture found ... not loading for safety reasons. (SIGH) \"%s\"\n"), filename);
-			}
-#endif
 		}
 	}
 

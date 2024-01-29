@@ -854,6 +854,7 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 					{
 						COLORREF c = ((CWTFPropertyGridColorProperty *)pProp)->GetColor();
 						p->SetInt(c);
+						break;
 					}
 
 					case props::IProperty::PA_DATE:

@@ -22,6 +22,7 @@ namespace c3
 		IndexBufferImpl *m_IB;
 		VertexBufferImpl *m_VB;
 		BoundingBox *m_pBounds;
+		bool m_IsSkin;
 
 	public:
 
@@ -48,6 +49,10 @@ namespace c3
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
 			float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
 			const glm::fmat4x4 *pMat = nullptr) const;
+
+		virtual bool IsSkin() const;
+
+		void MakeSkinned();
 
 	};
 

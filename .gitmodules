@@ -48,3 +48,6 @@
 	path = third-party/bullet3
 	url = https://github.com/keelanstuart/bullet3
 	branch = master
+[submodule "third-party/libtiff"]
+	path = third-party/libtiff
+	url = https://github.com/keelanstuart/libtiff

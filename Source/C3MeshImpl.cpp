@@ -18,6 +18,7 @@ MeshImpl::MeshImpl(RendererImpl *prend)
 	m_IB = nullptr;
 	m_VB = nullptr;
 	m_pBounds = nullptr;
+	m_IsSkin = false;
 
 	assert(m_pRend);
 }
@@ -327,4 +328,16 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 	}
 
 	return ret;
+}
+
+
+bool MeshImpl::IsSkin() const
+{
+	return m_IsSkin;
+}
+
+
+void MeshImpl::MakeSkinned()
+{
+	m_IsSkin = true;
 }

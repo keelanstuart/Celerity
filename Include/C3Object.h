@@ -64,6 +64,7 @@ namespace c3
 		#define RF_SHADOW			0x00000010					// Draw the shadow
 		#define RF_LIGHT			0x00000020					// Draw the light
 		#define RF_FORCE			0x00000040					// Force drawing
+		#define RF_AUXILIARY		0x00000080
 
 
 		/// Returns the Celerity System in which the Object exists

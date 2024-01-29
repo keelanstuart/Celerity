@@ -33,7 +33,7 @@ namespace c3
 		typedef std::pair<Model *, Resource *> TModOrRes;
 		TModOrRes m_Mod;
 
-		ModelImpl::ModelInstanceDataImpl *m_Inst;
+		ModelImpl::InstanceDataImpl *m_Inst;
 
 #define MRIF_REBUILDMATRIX		0x0001
 

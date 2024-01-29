@@ -9,11 +9,14 @@
 #include <C3ShaderProgramImpl.h>
 #include <C3ShaderComponentImpl.h>
 #include <C3TextureImpl.h>
+#include <C3ModelImpl.h>
 #include <C3CRC.h>
 
 
 using namespace c3;
 
+
+#define PROPASPECT_MODELINSTDATA		((props::IProperty::PROPERTY_ASPECT)(props::IProperty::PROPERTY_ASPECT::PA_FIRSTUSERASPECT + 1))
 
 //#define IMMEDIATE_UNIFORMS
 
@@ -308,27 +311,35 @@ void ShaderProgramImpl::CaptureUniforms()
 
 			case GL_FLOAT_MAT4:
 			{
-				props::TMat4x4F tmp;
-				p->SetMat4x4F(&tmp);
+				if (_tcsstr(n, _T("uMatrixBones")) != nullptr)
+				{
+					p->SetAspect(PROPASPECT_MODELINSTDATA);
+					p->SetInt(0);
+				}
+				else
+				{
+					props::TMat4x4F tmp;
+					p->SetMat4x4F(&tmp);
 
-				if (!_tcscmp(n, _T("uMatrixMVP")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWPROJECTION);
-				else if (!_tcscmp(n, _T("uMatrixM")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLD);
-				else if (!_tcscmp(n, _T("uMatrixV")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_VIEW);
-				else if (!_tcscmp(n, _T("uMatrixN")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_NORMALMAT);
-				else if (!_tcscmp(n, _T("uMatrixP")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_PROJECTION);
-				else if (!_tcscmp(n, _T("uMatrixMV")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEW);
-				else if (!_tcscmp(n, _T("uMatrixVP")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_VIEWPROJECTION);
-				else if (!_tcscmp(n, _T("uMatrixS")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUNSHADOWMAT);
-				else if (!_tcscmp(n, _T("uMatrixT")))
-					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TEXTUREMAT);
+					if (!_tcscmp(n, _T("uMatrixMVP")))
+						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWPROJECTION);
+					else if (!_tcscmp(n, _T("uMatrixM")))
+						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLD);
+					else if (!_tcscmp(n, _T("uMatrixV")))
+						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_VIEW);
+					else if (!_tcscmp(n, _T("uMatrixN")))
+						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_NORMALMAT);
+					else if (!_tcscmp(n, _T("uMatrixP")))
+						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_PROJECTION);
+					else if (!_tcscmp(n, _T("uMatrixMV")))
+						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEW);
+					else if (!_tcscmp(n, _T("uMatrixVP")))
+						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_VIEWPROJECTION);
+					else if (!_tcscmp(n, _T("uMatrixS")))
+						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUNSHADOWMAT);
+					else if (!_tcscmp(n, _T("uMatrixT")))
+						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TEXTUREMAT);
+				}
 
 				break;
 			}
@@ -402,6 +413,8 @@ void ShaderProgramImpl::CaptureUniforms()
 
 void ShaderProgramImpl::UpdateGlobalUniforms()
 {
+	const Material *mtl = m_Rend->GetActiveMaterial();
+
 	for (size_t i = 0, maxi = m_Uniforms->GetPropertyCount(); i < maxi; i++)
 	{
 		props::IProperty *p = m_Uniforms->GetProperty(i);
@@ -463,6 +476,26 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 				}	
 				break;
 
+			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
+				switch (p->GetAspect())
+				{
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_DIFFUSE:
+						if (mtl)
+							SetUniform4(p->GetID(), mtl->GetColor(Material::ColorComponentType::CCT_DIFFUSE));
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_SPECULAR:
+						if (mtl)
+							SetUniform4(p->GetID(), mtl->GetColor(Material::ColorComponentType::CCT_SPECULAR));
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_COLOR_EMISSIVE:
+						if (mtl)
+							SetUniform4(p->GetID(), mtl->GetColor(Material::ColorComponentType::CCT_EMISSIVE));
+						break;
+				}
+				break;
+					
 			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_MAT4X4:
 				switch (p->GetAspect())
 				{
@@ -503,6 +536,16 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 						break;
 				}
 				break;
+
+			// Handle other edge cases
+			default:
+				switch (p->GetAspect())
+				{
+					case PROPASPECT_MODELINSTDATA:
+						p->SetInt((int64_t)(m_Rend->GetModelInstanceData()));
+						break;
+				}
+				break;
 		}
 	}
 }
@@ -519,56 +562,66 @@ void ShaderProgramImpl::ApplyUniforms(bool update_globals)
 	for (size_t i = 0, maxi = m_Uniforms->GetPropertyCount(); i < maxi; i++)
 	{
 		props::IProperty *p = m_Uniforms->GetProperty(i);
-		switch (p->GetType())
+		if (p->GetAspect() == PROPASPECT_MODELINSTDATA)
 		{
-			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_MAT3X3:
-				m_Rend->gl.ProgramUniformMatrix3fv(m_glID, (GLint)p->GetID(), 1, GL_FALSE, (const GLfloat *)(p->AsMat3x3F()));
-				break;
+			// special case - this is an array of matrices
+			// todo: maybe make this more generic some day
+			const ModelImpl::InstanceDataImpl *pid = (const ModelImpl::InstanceDataImpl *)(p->AsInt());
+			m_Rend->gl.ProgramUniformMatrix4fv(m_glID, (GLint)p->GetID(), (GLsizei)(pid->m_NodeMat.size()), false, (const GLfloat *)(pid->m_NodeMat.data()));
+		}
+		else
+		{
+			switch (p->GetType())
+			{
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_MAT3X3:
+					m_Rend->gl.ProgramUniformMatrix3fv(m_glID, (GLint)p->GetID(), 1, GL_FALSE, (const GLfloat *)(p->AsMat3x3F()));
+					break;
 
-			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_MAT4X4:
-				m_Rend->gl.ProgramUniformMatrix4fv(m_glID, (GLint)p->GetID(), 1, GL_FALSE, (const GLfloat *)(p->AsMat4x4F()));
-				break;
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_MAT4X4:
+					m_Rend->gl.ProgramUniformMatrix4fv(m_glID, (GLint)p->GetID(), 1, GL_FALSE, (const GLfloat *)(p->AsMat4x4F()));
+					break;
 
-			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
-				m_Rend->gl.ProgramUniform4fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec4F());
-				break;
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
+					m_Rend->gl.ProgramUniform4fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec4F());
+					break;
 
-			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
-				m_Rend->gl.ProgramUniform3fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec3F());
-				break;
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
+					m_Rend->gl.ProgramUniform3fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec3F());
+					break;
 
-			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:
-				m_Rend->gl.ProgramUniform2fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec2F());
-				break;
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:
+					m_Rend->gl.ProgramUniform2fv(m_glID, (GLint)(GLint)p->GetID(), 1, (const GLfloat *)p->AsVec2F());
+					break;
 
-			case props::IProperty::PROPERTY_TYPE::PT_FLOAT:
-				m_Rend->gl.ProgramUniform1f(m_glID, (GLint)p->GetID(), p->AsFloat());
-				break;
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT:
+					m_Rend->gl.ProgramUniform1f(m_glID, (GLint)p->GetID(), p->AsFloat());
+					break;
 
-			case props::IProperty::PROPERTY_TYPE::PT_INT_V4:
-				switch (p->GetAspect())
-				{
-					// Vec4I = (uniform index, sampler, texture)
-					case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D:
+				case props::IProperty::PROPERTY_TYPE::PT_INT_V4:
+					switch (p->GetAspect())
 					{
-						GLint id = (GLint)p->AsVec4I()->x;
-						GLint texunit = (GLint)p->AsVec4I()->y;
-						Texture *tex = (Texture *)p->AsVec4I()->z;
-						props::TFlags32 texflags((uint32_t)p->AsVec4I()->w);
+						// Vec4I = (uniform index, sampler, texture)
+						case props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D:
+						{
+							GLint id = (GLint)p->AsVec4I()->x;
+							GLint texunit = (GLint)p->AsVec4I()->y;
+							Texture *tex = (Texture *)p->AsVec4I()->z;
+							props::TFlags32 texflags((uint32_t)p->AsVec4I()->w);
 
-						m_Rend->UseTexture(texunit, tex, texflags);
-						m_Rend->gl.ProgramUniform1i(m_glID, id, texunit);
-						break;
+							m_Rend->UseTexture(texunit, tex, texflags);
+							m_Rend->gl.ProgramUniform1i(m_glID, id, texunit);
+							break;
+						}
 					}
-				}
-				break;
+					break;
 
-			case props::IProperty::PROPERTY_TYPE::PT_INT:
-				m_Rend->gl.ProgramUniform1i(m_glID, (GLint)p->GetID(), (GLint)p->AsInt());
-				break;
+				case props::IProperty::PROPERTY_TYPE::PT_INT:
+					m_Rend->gl.ProgramUniform1i(m_glID, (GLint)p->GetID(), (GLint)p->AsInt());
+					break;
 
-			case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:
-				break;
+				case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:
+					break;
+			}
 		}
 	}
 }
@@ -699,7 +752,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromFile(c3::S
 
 							TCHAR *_sh;
 							CONVERT_MBCS2TCS(sh, _sh);
-							psc->CompileProgram(_sh);
+							psc->CompileProgram(_sh, options);
 						}
 
 						free(sh);

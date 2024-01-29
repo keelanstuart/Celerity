@@ -33,6 +33,7 @@ namespace c3
 			ShaderProgram *m_ShaderProg;
 			FrameBuffer *m_FrameBuffer;
 			std::optional<tstring> m_ShaderCompFilename[Renderer::ShaderComponentType::ST_NUMTYPES];
+			tstring m_ShaderMode;
 			std::optional<tstring> m_FrameBufferName;
 			props::TFlags64 m_FrameBufferFlags;
 			std::optional<Renderer::BlendMode> m_BlendMode;
@@ -49,6 +50,7 @@ namespace c3
 
 			Renderer::RenderStateOverrideFlags Apply(Renderer *prend);
 			bool LoadSetting(const tinyxml2::XMLElement *proot);
+			void SetShaderMode(const TCHAR *mode);
 
 			virtual void SetFrameBufferName(const TCHAR *name);
 			virtual bool GetFrameBufferName(tstring &name) const;
@@ -79,7 +81,9 @@ namespace c3
 			virtual bool GetFillMode(Renderer::FillMode &fillmode) const;
 
 		};
+
 		typedef std::vector<PassImpl> TPassVector;
+		typedef std::vector<TPassVector> TPassVectorsVector;
 
 		class TechniqueImpl : public RenderMethod::Technique
 		{
@@ -87,13 +91,16 @@ namespace c3
 		protected:
 			Renderer *m_pRend;
 			tstring m_Name;
-			TPassVector m_Passes;
+			
+			TPassVectorsVector m_Passes;
+			size_t m_Mode;
 
 		public:
 			TechniqueImpl(Renderer *prend);
 
 			virtual void SetName(const TCHAR *name);
 			virtual const TCHAR *GetName() const;
+			virtual void SetMode(ETechMode mode = TECHMODE_NORMAL);
 			virtual size_t GetNumPasses() const;
 			virtual Pass *GetPass(size_t idx) const;
 			virtual Pass *AddPass();

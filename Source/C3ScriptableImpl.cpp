@@ -1227,10 +1227,11 @@ void jcGetModelInstNodeOri(CScriptVar *c, void *userdata)
 	if (pobj)
 	{
 		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
-		if (pmr)
+		Model::InstanceData* pmid = pmr ? pmr->GetModelInstanceData() : nullptr;
+		if (pmid)
 		{
 			glm::fmat4x4 t;
-			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			if (pmid->GetTransform(ni, t))
 			{
 				glm::fvec3 scl;
 				glm::fquat ori;
@@ -1281,10 +1282,11 @@ void jcGetModelInstNodeScl(CScriptVar *c, void *userdata)
 	if (pobj)
 	{
 		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
-		if (pmr)
+		Model::InstanceData* pmid = pmr ? pmr->GetModelInstanceData() : nullptr;
+		if (pmid)
 		{
 			glm::fmat4x4 t;
-			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			if (pmid->GetTransform(ni, t))
 			{
 				glm::fvec3 scl;
 				glm::fquat ori;

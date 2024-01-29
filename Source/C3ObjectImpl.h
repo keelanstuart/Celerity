@@ -36,61 +36,61 @@ namespace c3
 
 		virtual ~ObjectImpl();
 
-		virtual System *GetSystem() const;
+		virtual System *GetSystem() const final;
 
-		virtual void Release();
+		virtual void Release() final;
 
-		virtual const TCHAR *GetName() const;
+		virtual const TCHAR *GetName() const final;
 
-		virtual void SetName(const TCHAR *name);
+		virtual void SetName(const TCHAR *name) final;
 
-		virtual GUID GetGuid() const;
+		virtual GUID GetGuid() const final;
 
-		virtual Object *GetParent() const;
+		virtual Object *GetParent() const final;
 
-		virtual void SetParent(Object *pparent);
+		virtual void SetParent(Object *pparent) final;
 
-		virtual size_t GetNumChildren() const;
+		virtual size_t GetNumChildren() const final;
 
-		virtual Object *GetChild(size_t index) const;
+		virtual Object *GetChild(size_t index) const final;
 
-		virtual void AddChild(Object *pchild);
+		virtual void AddChild(Object *pchild) final;
 
-		virtual void RemoveChild(Object *pchild, bool release = false);
+		virtual void RemoveChild(Object *pchild, bool release = false) final;
 
-		virtual props::TFlags64 &Flags();
+		virtual props::TFlags64 &Flags() final;
 
-		virtual props::IPropertySet *GetProperties();
+		virtual props::IPropertySet *GetProperties() final;
 
-		virtual size_t GetNumComponents() const;
+		virtual size_t GetNumComponents() const final;
 
-		virtual Component *GetComponent(size_t index) const;
+		virtual Component *GetComponent(size_t index) const final;
 
-		virtual Component *FindComponent(const ComponentType *pctype) const;
+		virtual Component *FindComponent(const ComponentType *pctype) const final;
 
-		virtual Component *AddComponent(const ComponentType *pctype, bool init = true);
+		virtual Component *AddComponent(const ComponentType *pctype, bool init = true) final;
 
-		virtual void RemoveComponent(Component *pcomponent);
+		virtual void RemoveComponent(Component *pcomponent) final;
 
-		virtual bool HasComponent(const ComponentType *pcomptype) const;
+		virtual bool HasComponent(const ComponentType *pcomptype) const final;
 
-		virtual void Update(float elapsed_time = 0.0f);
+		virtual void Update(float elapsed_time = 0.0f) final;
 
-		virtual bool Prerender(Object::RenderFlags flags);
+		virtual bool Prerender(Object::RenderFlags flags) final;
 
-		virtual bool Render(Object::RenderFlags flags);
+		virtual bool Render(Object::RenderFlags flags) final;
 
-		virtual void Postrender(Object::RenderFlags flags);
+		virtual void Postrender(Object::RenderFlags flags) final;
 
-		virtual bool Load(genio::IInputStream *is);
+		virtual bool Load(genio::IInputStream *is) final;
 
-		virtual bool Save(genio::IOutputStream *os, props::TFlags64 saveflags) const;
+		virtual bool Save(genio::IOutputStream *os, props::TFlags64 saveflags) const final;
 
-		virtual void PostLoad();
+		virtual void PostLoad() final;
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance = nullptr, Object **ppHitObj = nullptr, size_t child_depth = 0) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance = nullptr, Object **ppHitObj = nullptr, size_t child_depth = 0) const final;
 
-		virtual void PropertyChanged(const props::IProperty *pprop);
+		virtual void PropertyChanged(const props::IProperty *pprop) final;
 
 	};
 

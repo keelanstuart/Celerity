@@ -91,3 +91,9 @@ float c3::math::GetRoll(const glm::fquat *q)
 
 	return (float)atan(tanroll);
 }
+
+
+float c3::math::RandomRange(float lo, float hi)
+{
+	return ((float)rand() / (float)RAND_MAX) * (hi - lo) + lo;
+}
