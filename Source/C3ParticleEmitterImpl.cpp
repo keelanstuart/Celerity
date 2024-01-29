@@ -245,7 +245,14 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 			part.time = 0;
 			part.lifetime = math::RandomRange(m_ParticleLifeMin, m_ParticleLifeMax);
 
-			float radius = glm::radians(math::RandomRange(m_InnerRadius, m_OuterRadius));
+			float radius = math::RandomRange(m_InnerRadius, m_OuterRadius);
+
+			glm::fvec3 facing;
+			ppos->GetFacingVector(&facing);
+			glm::fvec3 right;
+			ppos->GetLocalRightVector(&right);
+			glm::fvec3 up;
+			ppos->GetLocalUpVector(&up);
 
 			switch (m_Shape)
 			{
@@ -262,10 +269,10 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 				case EmitterShape::CYLINDER:
 				{
 					float angle = math::RandomRange(0, glm::two_pi<float>());
-					part.vel = (*ppos->GetLocalRightVector() * cosf(angle)) + (*ppos->GetFacingVector() * sinf(angle));
+					part.vel = (right * cosf(angle)) + (facing * sinf(angle));
 
-					ppos->GetLocalUpVector(&part.pos);
-					part.pos *= ppos->GetSclZ();
+					part.pos = glm::fvec3(0, 0, 0);
+					part.pos += (up * ppos->GetSclZ());
 					part.pos += (part.vel * radius);
 					part.pos += epos;
 					break;
@@ -273,9 +280,10 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 
 				case EmitterShape::CONE:
 				{
-					float c = cosf(radius);
-					float angle = math::RandomRange(0, glm::two_pi<float>());
-					part.vel = (*ppos->GetFacingVector() * sinf(radius)) + (((*ppos->GetLocalRightVector() * sinf(angle)) + (*ppos->GetLocalUpVector() * cosf(angle))) * c);
+					float c = cosf(glm::radians(radius));
+					float hangle = math::RandomRange(-c, c);
+					float vangle = math::RandomRange(-c, c);
+					part.vel = facing + (right * sinf(hangle)) + (up * sinf(vangle));
 					part.pos = epos;
 					break;
 				}
@@ -283,13 +291,15 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 				case EmitterShape::PLANE:
 				{
 					ppos->GetLocalUpVector(&part.vel);
-					part.pos = epos + (*ppos->GetFacingVector() * math::RandomRange(-radius, radius)) + (*ppos->GetLocalRightVector() * math::RandomRange(-radius, radius));
+					part.pos = epos + (facing * math::RandomRange(-radius, radius)) + (right * math::RandomRange(-radius, radius));
+					break;
 				}
 
 				case EmitterShape::RAY:
 				{
-					ppos->GetFacingVector(&part.vel);
+					part.vel = facing;
 					part.pos = epos;
+					break;
 				}
 			}
 

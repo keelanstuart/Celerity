@@ -47,7 +47,7 @@ void main (void)
 	// generate quad verts
 	for (int i = 0; i < 4; ++i)
 	{
-		vec4 wpos = vec4(gPos[0] + ((right * ofs[i].x) + (up * ofs[i].y)) * gSize[0], 1.0);
+		vec4 wpos = vec4(gPos[0] + ((right * ofs[i].x) + (up * ofs[i].y)) * gSize[0], 0.0);
 		vec4 zpos = uMatrixVP * vec4((matRoll * wpos).xyz, 1.0);
 
 		gl_Position = zpos;
