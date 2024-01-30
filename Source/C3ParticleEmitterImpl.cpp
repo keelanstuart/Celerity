@@ -7,6 +7,7 @@
 #include "pch.h"
 
 #include <C3ParticleEmitterImpl.h>
+#include <C3EnvironmentModifierImpl.h>
 #include <C3Math.h>
 
 using namespace c3;
@@ -103,6 +104,9 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 
 	m_AccelerationMax = -0.01f;
 	propset->CreateReferenceProperty(_T("AccelerationMax"), 'PEax', &m_AccelerationMax, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
+
+	m_Gravity = 0.0f;
+	propset->CreateReferenceProperty(_T("Gravity"), 'PEgr', &m_Gravity, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
 
 	m_RollMin = -0.1f;
 	pp = propset->CreateReferenceProperty(_T("RollMin"), 'PErn', &m_RollMin, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
@@ -208,6 +212,11 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 
 	size_t pc = 0;
 
+	glm::fvec3 acc;
+	glm::fvec3 grav;
+	m_pOwner->GetSystem()->GetEnvironment()->GetGravity(&grav);
+	grav *= m_Gravity;
+
 	for (size_t a = 0; a < m_Active.size(); a++)
 	{
 		size_t i = m_Active[a];
@@ -222,8 +231,9 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 			continue;
 		}
 
+		acc = p.acc + grav;
 		p.pos += (p.vel * elapsed_time);
-		p.vel += (p.acc * elapsed_time);
+		p.vel += (acc * elapsed_time);
 		p.roll += (p.rvel * elapsed_time);
 		p.rvel += (p.racc * elapsed_time);
 	}
@@ -233,9 +243,9 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 		m_EmitTime -= elapsed_time;
 
 		// if we've lapsed our emission time and have inactive particles to use, then make one
-		if ((m_EmitTime <= 0.0f) && !m_Inactive.empty())
+		while ((m_EmitTime < 0.0f) && !m_Inactive.empty())
 		{
-			m_EmitTime = 1.0f / math::RandomRange(m_EmitRateMin, m_EmitRateMax);
+			m_EmitTime += 1.0f / math::RandomRange(m_EmitRateMin, m_EmitRateMax);
 
 			size_t i = m_Inactive.back();
 			m_Inactive.pop_back();
@@ -271,16 +281,15 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 					float angle = math::RandomRange(0, glm::two_pi<float>());
 					part.vel = (right * cosf(angle)) + (facing * sinf(angle));
 
-					part.pos = glm::fvec3(0, 0, 0);
-					part.pos += (up * ppos->GetSclZ());
+					part.pos = epos;
+					part.pos += math::RandomRange(0, ppos->GetSclZ()) * up;
 					part.pos += (part.vel * radius);
-					part.pos += epos;
 					break;
 				}
 
 				case EmitterShape::CONE:
 				{
-					float c = cosf(glm::radians(radius));
+					float c = glm::radians(radius);
 					float hangle = math::RandomRange(-c, c);
 					float vangle = math::RandomRange(-c, c);
 					part.vel = facing + (right * sinf(hangle)) + (up * sinf(vangle));

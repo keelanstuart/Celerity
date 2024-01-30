@@ -76,6 +76,12 @@ bool EnvironmentModifierImpl::Initialize(Object *pobject)
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_DIRECTION);
 		pp->SetVec3F(props::SVec3(-0.1f, -0.1f, -1.0f));
 	}
+
+	m_Gravity = glm::fvec3(0, 0, 0);
+	if (pp = ps->CreateReferenceProperty(_T("Gravity"), 'GRAV', &m_Gravity, props::IProperty::PT_FLOAT))
+	{
+		pp->SetVec3F(props::SVec3(-0.1f, -0.1f, -1.0f));
+	}
 #endif
 
 	return true;
@@ -161,6 +167,9 @@ void EnvironmentModifierImpl::Update(float elapsed_time)
 
 		if (pp = ps->GetPropertyById('eSND'))
 			penv->SetSunDirection(*((glm::fvec3 *)(pp->AsVec3F())));
+
+		if (pp = ps->GetPropertyById('GRAV'))
+			penv->SetGravity(m_Gravity);
 	}
 #endif
 

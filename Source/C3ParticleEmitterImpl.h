@@ -79,6 +79,8 @@ namespace c3
 		float m_PeakScale;			// peak particle size
 		float m_EndScale;			// ending particle size
 
+		float m_Gravity;			// a multiplier for environmental gravity
+
 		Color::SRGBAColor m_StartColor;		// starting particle color
 		Color::SRGBAColor m_PeakColor;		// peak particle color
 		Color::SRGBAColor m_EndColor;		// ending particle color

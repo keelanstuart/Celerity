@@ -26,6 +26,8 @@ namespace c3
 
 		bool m_bCameraInside;
 
+		glm::fvec3 m_Gravity;
+
 	public:
 
 		EnvironmentModifierImpl();
