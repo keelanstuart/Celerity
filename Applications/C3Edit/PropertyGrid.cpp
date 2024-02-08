@@ -451,6 +451,17 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 						break;
 				}
 
+				if (p->Flags().IsSet(props::IProperty::PROPFLAG(props::IProperty::MINMAX)))
+				{
+					xname = _T("Minimum");
+					yname = _T("Maximum");
+				}
+				else if (p->Flags().IsSet(props::IProperty::PROPFLAG(props::IProperty::INNEROUTER)))
+				{
+					xname = _T("Inner");
+					yname = _T("Outer");
+				}
+
 				pwp->AddSubItem(new CWTFPropertyGridProperty(xname, (LONG)(p->AsVec2I()->x), NULL, NULL, NULL, NULL, _T("0123456789-")));
 				pwp->AddSubItem(new CWTFPropertyGridProperty(yname, (LONG)(p->AsVec2I()->y), NULL, NULL, NULL, NULL, _T("0123456789-")));
 				if (p->GetType() >= props::IProperty::PROPERTY_TYPE::PT_INT_V3)
@@ -560,6 +571,18 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 							yname = _T("Declination");
 							break;
 					}
+
+					if (p->Flags().IsSet(props::IProperty::PROPFLAG(props::IProperty::MINMAX)))
+					{
+						xname = _T("Minimum");
+						yname = _T("Maximum");
+					}
+					else if (p->Flags().IsSet(props::IProperty::PROPFLAG(props::IProperty::INNEROUTER)))
+					{
+						xname = _T("Inner");
+						yname = _T("Outer");
+					}
+
 
 					pwp->AddSubItem(new CWTFPropertyGridProperty(xname, p->AsVec2F()->x, NULL, NULL, NULL, NULL, _T("0123456789.-")));
 					pwp->AddSubItem(new CWTFPropertyGridProperty(yname, p->AsVec2F()->y, NULL, NULL, NULL, NULL, _T("0123456789.-")));

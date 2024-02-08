@@ -92,8 +92,7 @@ void OmniLightImpl::Render(Object::RenderFlags flags)
 	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
 	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 
-	if (!m_SourceFB)
-		m_SourceFB = prend->FindFrameBuffer(_T("GBuffer"));
+	m_SourceFB = prend->FindFrameBuffer(_T("GBuffer"));
 
 	if (!m_SourceFB)
 		return;

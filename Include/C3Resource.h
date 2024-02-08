@@ -96,7 +96,7 @@ namespace c3
 		virtual LoadResult ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const = NULL;
 
 		/// Reads and returns a memory-based resource
-		virtual LoadResult ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const = NULL;
+		virtual LoadResult ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const = NULL;
 
 		/// Saves the resource to the given file
 		virtual bool WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const = NULL;
@@ -132,7 +132,7 @@ namespace c3
 			virtual const TCHAR *GetReadableExtensions() const { return _T(loadexts); }																		\
 			virtual const TCHAR *GetSavableExtensions() const { return _T(saveexts); }																		\
 			virtual c3::ResourceType::LoadResult ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const;	\
-			virtual c3::ResourceType::LoadResult ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const;	\
+			virtual c3::ResourceType::LoadResult ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const;	\
 			virtual bool WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const;														\
 			virtual void Unload(void *data) const;																											\
 		}

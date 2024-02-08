@@ -114,7 +114,7 @@ void ResourceImpl::AddRef()
 						size_t len = 0;
 						if (pzf->GetContent(zfi, &addr, &len))
 						{
-							r = m_pResType->ReadFromMemory(s_pSys, (const BYTE *)addr, len, m_Options.c_str(), &m_Data);
+							r = m_pResType->ReadFromMemory(s_pSys, m_Filename.c_str(), (const BYTE *)addr, len, m_Options.c_str(), &m_Data);
 						}
 						else
 						{

@@ -87,9 +87,7 @@ protected:
 	int32_t m_ulSunDir;
 	int32_t m_ulSunColor;
 	int32_t m_ulAmbientColor;
-	glm::fvec3 m_SunDir;
-	glm::fvec3 m_SunColor;
-	glm::fvec3 m_AmbientColor;
+
 	int32_t m_uBlurTex;
 	int32_t m_uBlurScale;
 	c3::MatrixStack *m_SelectionXforms;
@@ -113,6 +111,10 @@ protected:
 protected:
 
 	void InitializeGraphics();
+	void CreateSurfaces();
+	void DestroySurfaces();
+	void UpdateShaderSurfaces();
+
 	void HandleInput(c3::Positionable* pcampos);
 
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);

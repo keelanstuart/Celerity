@@ -164,6 +164,9 @@ namespace c3
 
 		DWORD m_RendThreadId;
 
+		using FontMap = std::map<uint32_t, Font *>;
+		FontMap m_FontMap;
+
 
 	public:
 
@@ -265,6 +268,7 @@ namespace c3
 
 		virtual FrameBuffer *CreateFrameBuffer(props::TFlags64 flags, const TCHAR *name);
 		virtual FrameBuffer *FindFrameBuffer(const TCHAR *name) const;
+		void RemoveFrameBuffer(const TCHAR *name);
 
 		virtual VertexBuffer *CreateVertexBuffer(props::TFlags64 flags);
 		virtual IndexBuffer *CreateIndexBuffer(props::TFlags64 flags);
@@ -354,6 +358,8 @@ namespace c3
 		virtual const Material *GetBlackMaterial();
 
 		virtual ShaderProgram *GetBoundsShader();
+
+		virtual Font *GetFont(const TCHAR *name, size_t size);
 
 	};
 

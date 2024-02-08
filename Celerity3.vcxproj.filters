@@ -231,6 +231,9 @@
     <ClCompile Include="Source\C3AnimTrackImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3FontImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -622,6 +625,18 @@
     </ClInclude>
     <ClInclude Include="Source\resource.h">
       <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Font.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3FontImpl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3InterfaceElementImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3InterfaceElement.h">
+      <Filter>Header Files\Public</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

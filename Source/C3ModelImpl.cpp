@@ -43,12 +43,14 @@ ModelImpl::ModelImpl(RendererImpl *prend)
 
 ModelImpl::~ModelImpl()
 {
-	m_MatStack->Release();
 }
 
 
 void ModelImpl::Release()
 {
+	C3_SAFERELEASE(m_MatStack);
+	C3_SAFERELEASE(m_Bounds);
+
 	delete this;
 }
 
@@ -681,16 +683,13 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			TCHAR textmp[8];
 			_itot_s(texidx, textmp, 10);
 
+			tstring texname = sourcename;
+			MakeTexFilename(texname, textmp);
 			c3::Texture2D *pt = nullptr;
-			Texture2DResourceType::Type()->ReadFromMemory(psys, (const BYTE *)scene->mTextures[texidx]->pcData, scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
+			Texture2DResourceType::Type()->ReadFromMemory(psys, texname.c_str(), (const BYTE *)scene->mTextures[texidx]->pcData, scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
 			if (pt)
 			{
-				tstring texname = sourcename;
-				pt->SetName(MakeTexFilename(texname, textmp));
-				psys->GetResourceManager()->GetResource(texname.c_str(),
-														RESF_CREATEENTRYONLY,
-														Texture2DResourceType::Type(),
-														pt);
+				psys->GetResourceManager()->GetResource(texname.c_str(), RESF_CREATEENTRYONLY, Texture2DResourceType::Type(), pt);
 			}
 		}
 	}
@@ -843,10 +842,11 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 		auto SetTextureFileName = [&](Material::TextureComponentType t, const char *s)
 		{
 			CONVERT_MBCS2TCS(s, textmp);
+			TCHAR idxstr[16];
 
 			if (scene->HasTextures())
 			{
-				size_t texidx = 0;
+				unsigned int texidx = 0;
 				if (*textmp == '*')
 				{
 					textmp++;
@@ -861,8 +861,10 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 						texidx = 0;
 				}
 
+				_itot_s(texidx, idxstr, 10);
+
 				tstring texname = sourcename;
-				Resource *ptres = psys->GetResourceManager()->GetResource(MakeTexFilename(texname, textmp));
+				Resource *ptres = psys->GetResourceManager()->GetResource(MakeTexFilename(texname, idxstr));
 				c3::Texture2D *pt = ptres ? dynamic_cast<Texture2D *>((Texture2D *)ptres->GetData()) : nullptr;
 
 				pmtl->SetTexture(t, pt);
@@ -1357,7 +1359,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
@@ -1367,7 +1369,18 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System 
 		bool animation_only = false;
 		const aiScene *scene = import.ReadFileFromMemory(buffer, buffer_length, MakeImportFlags(options, animation_only));
 
-		*returned_data = ImportModel(psys, scene, nullptr, nullptr, animation_only);
+		tstring sourcename;
+		if (!contextname || !*contextname)
+		{
+			sourcename.resize(64, _T('#'));
+			GUID g;
+			CoCreateGuid(&g);
+			_stprintf_s(sourcename.data(), sourcename.size(), _T("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}"), g.Data1, g.Data2, g.Data3,
+						g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
+			contextname = sourcename.c_str();
+		}
+
+		*returned_data = ImportModel(psys, scene, nullptr, contextname, animation_only);
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;
 	}

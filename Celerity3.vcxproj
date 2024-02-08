@@ -28,7 +28,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\C3ActionMapperImpl.cpp" />
-    <ClCompile Include="Source\C3AnimationImpl.cpp" />
+    <ClCompile Include="Source\C3AnimationImpl.cpp">
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</PreprocessToFile>
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Bootstrap|x64'">false</PreprocessToFile>
+      <PreprocessToFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</PreprocessToFile>
+    </ClCompile>
     <ClCompile Include="Source\C3AnimatorImpl.cpp" />
     <ClCompile Include="Source\C3AnimTrackImpl.cpp" />
     <ClCompile Include="Source\C3BoundingBoxImpl.cpp" />
@@ -41,6 +45,7 @@
     <ClCompile Include="Source\C3EnvironmentModifierImpl.cpp" />
     <ClCompile Include="Source\C3FactoryImpl.cpp" />
     <ClCompile Include="Source\C3FileMapperImpl.cpp" />
+    <ClCompile Include="Source\C3FontImpl.cpp" />
     <ClCompile Include="Source\C3FrameBufferImpl.cpp" />
     <ClCompile Include="Source\C3GlobalObjectRegistryImpl.cpp" />
     <ClCompile Include="Source\C3GuiImpl.cpp" />
@@ -162,12 +167,14 @@
     <ClInclude Include="Include\C3Component.h" />
     <ClInclude Include="Include\C3FileMapper.h" />
     <ClInclude Include="Include\C3FlowNode.h" />
+    <ClInclude Include="Include\C3Font.h" />
     <ClInclude Include="Include\C3FrameBuffer.h" />
     <ClInclude Include="Include\C3GlobalObjectRegistry.h" />
     <ClInclude Include="Include\C3Gui.h" />
     <ClInclude Include="Include\C3IndexBuffer.h" />
     <ClInclude Include="Include\C3InputDevice.h" />
     <ClInclude Include="Include\C3InputManager.h" />
+    <ClInclude Include="Include\C3InterfaceElement.h" />
     <ClInclude Include="Include\C3Log.h" />
     <ClInclude Include="Include\C3Material.h" />
     <ClInclude Include="Include\C3MaterialManager.h" />
@@ -215,6 +222,7 @@
     <ClInclude Include="Source\C3EnvironmentModifierImpl.h" />
     <ClInclude Include="Source\C3FactoryImpl.h" />
     <ClInclude Include="Source\C3FileMapperImpl.h" />
+    <ClInclude Include="Source\C3FontImpl.h" />
     <ClInclude Include="Source\C3FrameBufferImpl.h" />
     <ClInclude Include="Source\C3GlobalObjectRegistryImpl.h" />
     <ClInclude Include="Source\C3GuiImpl.h" />
@@ -222,6 +230,7 @@
     <ClInclude Include="Source\C3IndexBufferImpl.h" />
     <ClInclude Include="Source\C3InputDeviceImpl.h" />
     <ClInclude Include="Source\C3InputManagerImpl.h" />
+    <ClInclude Include="Source\C3InterfaceElementImpl.h" />
     <ClInclude Include="Source\C3LogImpl.h" />
     <ClInclude Include="Source\C3MaterialImpl.h" />
     <ClInclude Include="Source\C3MaterialManagerImpl.h" />

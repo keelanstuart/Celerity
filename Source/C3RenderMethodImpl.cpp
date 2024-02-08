@@ -749,7 +749,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromFile(c3::Sy
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{

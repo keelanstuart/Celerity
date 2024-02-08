@@ -30,7 +30,7 @@ ParticleEmitterImpl::~ParticleEmitterImpl()
 
 void ParticleEmitterImpl::Release()
 {
-
+	delete this;
 }
 
 
@@ -71,56 +71,47 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 		pp->SetInt(100);
 	}
 
-	m_EmitRateMin = 20.0f;
-	propset->CreateReferenceProperty(_T("EmitRateMin"), 'PEcn', &m_EmitRateMin, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
+	m_EmitRate.min = 15.0f;
+	m_EmitRate.max = 30.0f;
+	if (pp = propset->CreateReferenceProperty(_T("EmitRate"), 'PErt', &m_EmitRate, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2))
+	{
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::MINMAX));
+	}
 
-	m_EmitRateMax = 30.0f;
-	propset->CreateReferenceProperty(_T("EmitRateMax"), 'PEcx', &m_EmitRateMax, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
+	m_EmitSpeed.min = 0.0f;
+	m_EmitSpeed.max = 1.0f;
+	if (pp = propset->CreateReferenceProperty(_T("EmitSpeed"), 'PEsp', &m_EmitSpeed, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2))
+	{
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::MINMAX));
+	}
 
-	m_EmitSpeedMin = 0.5f;
-	propset->CreateReferenceProperty(_T("EmitSpeedMin"), 'PEsn', &m_EmitSpeedMin, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-
-	m_EmitSpeedMax = 1.25f;
-	propset->CreateReferenceProperty(_T("EmitSpeedMax"), 'PEsx', &m_EmitSpeedMax, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-
-	m_ParticleLifeMin = 1.75f;
-	pp = propset->CreateReferenceProperty(_T("ParticleLifeMin"), 'PEln', &m_ParticleLifeMin, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
+	m_ParticleLife.min = 1.0f;
+	m_ParticleLife.max = 2.0f;
+	pp = propset->CreateReferenceProperty(_T("ParticleLife"), 'PElf', &m_ParticleLife, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2);
 	if (pp)
 	{
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::MINMAX));
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS);
 		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
 
-	m_ParticleLifeMax = 2.0f;
-	pp = propset->CreateReferenceProperty(_T("ParticleLifeMax"), 'PElx', &m_ParticleLifeMax, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-	if (pp)
+	m_Acceleration.min = 0.0f;
+	m_Acceleration.max = 0.0f;
+	if (pp = propset->CreateReferenceProperty(_T("Acceleration"), 'PEac', &m_Acceleration, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2))
 	{
-		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS);
-		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::MINMAX));
 	}
-
-	m_AccelerationMin = -0.1f;
-	propset->CreateReferenceProperty(_T("AccelerationMin"), 'PEan', &m_AccelerationMin, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-
-	m_AccelerationMax = -0.01f;
-	propset->CreateReferenceProperty(_T("AccelerationMax"), 'PEax', &m_AccelerationMax, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
 
 	m_Gravity = 0.0f;
 	propset->CreateReferenceProperty(_T("Gravity"), 'PEgr', &m_Gravity, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
 
-	m_RollMin = -0.1f;
-	pp = propset->CreateReferenceProperty(_T("RollMin"), 'PErn', &m_RollMin, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
+	m_Roll.min = -10.0f;
+	m_Roll.max = 10.0f;
+	pp = propset->CreateReferenceProperty(_T("Roll"), 'PErl', &m_Roll, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2);
 	if (pp)
 	{
-		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD);
-		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
-	}
-
-	m_RollMax = 0.1f;
-	pp = propset->CreateReferenceProperty(_T("RollMax"), 'PErx', &m_RollMax, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-	if (pp)
-	{
-		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::MINMAX));
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG);
 		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
 
@@ -160,11 +151,12 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
 
-	m_InnerRadius = 2.0f;
-	propset->CreateReferenceProperty(_T("InnerRadius"), 'PEir', &m_InnerRadius, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-
-	m_OuterRadius = 2.0f;
-	propset->CreateReferenceProperty(_T("OuterRadius"), 'PEor', &m_OuterRadius, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
+	m_Radius.inner = 2.0f;
+	m_Radius.outer = 2.0f;
+	if (pp = propset->CreateReferenceProperty(_T("Radius"), 'PErd', &m_Radius, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2))
+	{
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::INNEROUTER));
+	}
 
 	pp = propset->CreateProperty(_T("Texture"), 'PEtx');
 	if (pp)
@@ -245,7 +237,7 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 		// if we've lapsed our emission time and have inactive particles to use, then make one
 		while ((m_EmitTime < 0.0f) && !m_Inactive.empty())
 		{
-			m_EmitTime += 1.0f / math::RandomRange(m_EmitRateMin, m_EmitRateMax);
+			m_EmitTime += 1.0f / math::RandomRange(m_EmitRate.min, m_EmitRate.max);
 
 			size_t i = m_Inactive.back();
 			m_Inactive.pop_back();
@@ -253,9 +245,9 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 			SParticle &part = m_Particles[i];
 
 			part.time = 0;
-			part.lifetime = math::RandomRange(m_ParticleLifeMin, m_ParticleLifeMax);
+			part.lifetime = math::RandomRange(m_ParticleLife.min, m_ParticleLife.max);
 
-			float radius = math::RandomRange(m_InnerRadius, m_OuterRadius);
+			float radius = math::RandomRange(m_Radius.inner, m_Radius.outer);
 
 			glm::fvec3 facing;
 			ppos->GetFacingVector(&facing);
@@ -313,13 +305,13 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 			}
 
 			// use the initial velocity as the acceleration, to be modified by the object-global 
-			part.acc = part.vel * math::RandomRange(m_AccelerationMin, m_AccelerationMax);
+			part.acc = part.vel * math::RandomRange(m_Acceleration.min, m_Acceleration.max);
 
-			float spd = math::RandomRange(m_EmitSpeedMin, m_EmitSpeedMax);
+			float spd = math::RandomRange(m_EmitSpeed.min, m_EmitSpeed.max);
 			part.vel *= spd;
 
 			part.roll = 0.0f;
-			part.rvel = glm::radians(math::RandomRange(m_RollMin, m_RollMax));
+			part.rvel = glm::radians(math::RandomRange(m_Roll.min, m_Roll.max));
 			part.racc = 0.0f; // TODO
 
 			m_Active.push_back(i);
@@ -374,7 +366,7 @@ void ParticleEmitterImpl::Render(Object::RenderFlags flags)
 			glm::fvec3 pos;
 			float scale;
 			float roll;
-			glm::uint8_t color[4];
+			Color::SRGBAColor color;
 		} *v;
 #pragma pack(pop)
 
@@ -395,20 +387,20 @@ void ParticleEmitterImpl::Render(Object::RenderFlags flags)
 					t = sinf(pct / m_Peak * glm::half_pi<float>());
 
 					v->scale = std::lerp(m_StartScale, m_PeakScale, t);
-					v->color[0] = (uint8_t)(std::lerp((float)m_StartColor.r, (float)m_PeakColor.r, t));
-					v->color[1] = (uint8_t)(std::lerp((float)m_StartColor.g, (float)m_PeakColor.g, t));
-					v->color[2] = (uint8_t)(std::lerp((float)m_StartColor.b, (float)m_PeakColor.b, t));
-					v->color[3] = (uint8_t)(std::lerp((float)m_StartColor.a, (float)m_PeakColor.a, t));
+					v->color.r = (uint8_t)(std::lerp((float)m_StartColor.r, (float)m_PeakColor.r, t));
+					v->color.g = (uint8_t)(std::lerp((float)m_StartColor.g, (float)m_PeakColor.g, t));
+					v->color.b = (uint8_t)(std::lerp((float)m_StartColor.b, (float)m_PeakColor.b, t));
+					v->color.a = (uint8_t)(std::lerp((float)m_StartColor.a, (float)m_PeakColor.a, t));
 				}
 				else
 				{
 					t = sinf(((pct - m_Peak) / t2) * glm::half_pi<float>());
 
 					v->scale = std::lerp(m_PeakScale, m_EndScale, t);
-					v->color[0] = (uint8_t)(std::lerp((float)m_PeakColor.r, (float)m_EndColor.r, t));
-					v->color[1] = (uint8_t)(std::lerp((float)m_PeakColor.g, (float)m_EndColor.g, t));
-					v->color[2] = (uint8_t)(std::lerp((float)m_PeakColor.b, (float)m_EndColor.b, t));
-					v->color[3] = (uint8_t)(std::lerp((float)m_PeakColor.a, (float)m_EndColor.a, t));
+					v->color.r = (uint8_t)(std::lerp((float)m_PeakColor.r, (float)m_EndColor.r, t));
+					v->color.g = (uint8_t)(std::lerp((float)m_PeakColor.g, (float)m_EndColor.g, t));
+					v->color.b = (uint8_t)(std::lerp((float)m_PeakColor.b, (float)m_EndColor.b, t));
+					v->color.a = (uint8_t)(std::lerp((float)m_PeakColor.a, (float)m_EndColor.a, t));
 				}
 
 				v++;

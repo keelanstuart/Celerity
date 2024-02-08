@@ -55,6 +55,7 @@
 #include <C3Log.h>
 #include <C3Screen.h>
 #include <C3ScreenManager.h>
+#include <C3Font.h>
 
 #include <C3Component.h>
 #include <C3Positionable.h>

@@ -77,11 +77,7 @@ bool EnvironmentModifierImpl::Initialize(Object *pobject)
 		pp->SetVec3F(props::SVec3(-0.1f, -0.1f, -1.0f));
 	}
 
-	m_Gravity = glm::fvec3(0, 0, 0);
-	if (pp = ps->CreateReferenceProperty(_T("Gravity"), 'GRAV', &m_Gravity, props::IProperty::PT_FLOAT))
-	{
-		pp->SetVec3F(props::SVec3(-0.1f, -0.1f, -1.0f));
-	}
+	pp = ps->CreateReferenceProperty(_T("Gravity"), 'GRAV', &m_Gravity, props::IProperty::PT_FLOAT_V3);
 #endif
 
 	return true;

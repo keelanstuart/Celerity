@@ -266,7 +266,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromFile(c3:
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	return ResourceType::LoadResult::LR_ERROR;
 }

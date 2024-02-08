@@ -45,7 +45,9 @@ namespace c3
 			RAY,
 			CONE,
 			CYLINDER,
-			PLANE
+			PLANE,
+
+			FORCE_64BIT = 0xFFFFFFFFFFFFFFFF
 		};
 
 		TParticleArray m_Particles;
@@ -60,20 +62,15 @@ namespace c3
 
 		uint64_t m_MaxParticles;		// maximum number of particles in system
 
-		float m_EmitRateMin;		// minimum time between emitted particles
-		float m_EmitRateMax;		// maximum time between emitted particles
+		props::TVec2F m_EmitRate;		// time between emitted particles (min / max)
 
-		float m_EmitSpeedMin;		// minimum initial particle speed
-		float m_EmitSpeedMax;		// maximum initial particle speed
+		props::TVec2F m_EmitSpeed;		// initial particle speed (min / max)
 
-		float m_ParticleLifeMin;	// minimum lifetime of a particle
-		float m_ParticleLifeMax;	// maximum lifetime of a particle
+		props::TVec2F m_ParticleLife;	// lifetime of a particle (min / max)
 
-		float m_AccelerationMin;	// minimum particle acceleration along emission vector
-		float m_AccelerationMax;	// maximum particle acceleration along emission vector
+		props::TVec2F m_Acceleration;	// particle acceleration along emission vector (min / max)
 
-		float m_RollMin;			// roll applied to each texture, in degrees/sec
-		float m_RollMax;			// roll applied to each texture, in degrees/sec
+		props::TVec2F m_Roll;			// roll applied to each texture, in degrees/sec (min / max)
 
 		float m_StartScale;			// starting particle size
 		float m_PeakScale;			// peak particle size
@@ -85,8 +82,7 @@ namespace c3
 		Color::SRGBAColor m_PeakColor;		// peak particle color
 		Color::SRGBAColor m_EndColor;		// ending particle color
 
-		float m_InnerRadius;
-		float m_OuterRadius;
+		props::TVec2F m_Radius;			// Inner / outer radius, means different things for different emitter shapes
 
 		RenderMethod *m_pMethod;
 		size_t m_TechIdx_G, m_TechIdx_GS, m_TechIdx_S;
@@ -94,7 +90,6 @@ namespace c3
 
 		float m_Peak;				// percentage of particle lifetime that it reaches the "peak" values
 
-		//bool m_Billboard;
 
 	public:
 

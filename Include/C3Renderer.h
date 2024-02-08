@@ -27,6 +27,7 @@ namespace c3
 	class MaterialManager;
 	class Material;
 	class RenderMethod;
+	class Font;
 
 	class Renderer
 	{
@@ -424,6 +425,8 @@ namespace c3
 		virtual const Material *GetBlackMaterial() = NULL;
 
 		virtual ShaderProgram *GetBoundsShader() = NULL;
+
+		virtual Font *GetFont(const TCHAR *name, size_t size = 10) = NULL;
 
 	};
 

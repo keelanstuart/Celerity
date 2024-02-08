@@ -18,6 +18,7 @@
 #include <C3SystemImpl.h>
 #include <C3CommonVertexDefs.h>
 #include <C3RenderMethodImpl.h>
+#include <C3FontImpl.h>
 
 #include "resource.h"
 
@@ -320,12 +321,21 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	// make use of opengl messages, log them
 	gl.DebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
 	{
-		c3::System* psys = (c3::System*)userParam;
-		if (message)
+		static size_t errct = 10;
+		if (errct)
 		{
-			TCHAR *tmp;
-			CONVERT_MBCS2TCS(message, tmp);
-			psys->GetLog()->Print(_T("\n[GL] DEBUG: %s\n"), tmp);
+			errct--;
+
+			c3::System* psys = (c3::System*)userParam;
+			if (message)
+			{
+				TCHAR *tmp;
+				CONVERT_MBCS2TCS(message, tmp);
+				psys->GetLog()->Print(_T("[GL] DEBUG: %s\n"), tmp);
+
+				if (!errct)
+					psys->GetLog()->Print(_T("\n[GL] Too many errors; error logging disabled.\n"), tmp);
+			}
 		}
 	}, m_pSys);
 
@@ -514,11 +524,11 @@ void RendererImpl::FlushErrors(const TCHAR *msgformat, ...)
 				va_start(marker, msgformat);
 				_vsntprintf_s(buf, PRINT_BUFSIZE - 1, msgformat, marker);
 
-				m_pSys->GetLog()->Print(_T("\n*** %s ***\n"));
+				m_pSys->GetLog()->Print(_T("\n*** %s ***\n"), buf);
 				wrotehdr = true;
 			}
 
-			m_pSys->GetLog()->Print(_T("\tOpenGL error: $d\n"), err);
+			m_pSys->GetLog()->Print(_T("\tOpenGL error: %d\n"), err);
 		}
 	}
 	while (err != GL_NO_ERROR);
@@ -542,6 +552,12 @@ void RendererImpl::Shutdown()
 	{
 		delete m_Gui;
 		m_Gui = nullptr;
+	}
+
+	for (auto sit : m_FontMap)
+	{
+		if (sit.second)
+			delete sit.second;
 	}
 
 	m_pSys->GetResourceManager()->ForAllResourcesDo(UnloadRenderResource, nullptr, RTFLAG_RUNBYRENDERER, ResourceManager::ResTypeFlagMode::RTFM_ANY);
@@ -1458,9 +1474,10 @@ FrameBuffer *RendererImpl::CreateFrameBuffer(props::TFlags64 createflags, const 
 	static TCHAR fbname[16];
 	if (!name)
 	{
-		_sctprintf(fbname, _T("fb%d"), fbidx);
+		_stprintf_s(fbname, _T("fb%d"), fbidx);
 		fbidx++;
 		name = fbname;
+		m_pSys->GetLog()->Print(_T("Anonymous FrameBuffer created as \"%s\"\n"), name);
 	}
 
 	FrameBuffer *ret = new FrameBufferImpl(this, name);
@@ -1482,6 +1499,12 @@ FrameBuffer *RendererImpl::FindFrameBuffer(const TCHAR *name) const
 		return it->second;
 
 	return nullptr;
+}
+
+
+void RendererImpl::RemoveFrameBuffer(const TCHAR *name)
+{
+	m_NameToFB.erase(name);
 }
 
 
@@ -3393,4 +3416,24 @@ ShaderProgram *RendererImpl::GetBoundsShader()
 	}
 
 	return m_spBounds;
+}
+
+
+Font *RendererImpl::GetFont(const TCHAR *name, size_t size)
+{
+	uint32_t key = Crc32::CalculateString(name);
+	key = Crc32::Calculate((const uint8_t *)&size, sizeof(size_t), key);
+
+	FontMap::iterator it = m_FontMap.find(key);
+	if (it == m_FontMap.end())
+	{
+		Font *f = new FontImpl(this, name, size);
+		if (f)
+			((FontImpl *)f)->Initialize();
+
+		std::pair<FontMap::iterator, bool> insret = m_FontMap.insert(FontMap::value_type(key, f));
+		it = insret.first;
+	}
+
+	return (it != m_FontMap.end()) ? it->second : nullptr;
 }

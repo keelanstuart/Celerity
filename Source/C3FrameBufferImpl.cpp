@@ -63,6 +63,8 @@ FrameBufferImpl::~FrameBufferImpl()
 
 void FrameBufferImpl::Release()
 {
+	m_Rend->RemoveFrameBuffer(m_Name.c_str());
+
 	delete this;
 }
 

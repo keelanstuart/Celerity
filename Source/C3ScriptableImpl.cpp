@@ -47,7 +47,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromFile(c3::System *
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data && buffer && buffer_length)
 	{

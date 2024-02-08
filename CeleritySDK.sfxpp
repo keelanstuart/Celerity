@@ -58,6 +58,19 @@
 <file2>
 
 <powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">\bin</powerprops:property>
+<powerprops:property id="EXCL" type="STRING"></powerprops:property>
+<powerprops:property id="NAME" type="STRING">C3ComponentGenerator.exe</powerprops:property>
+<powerprops:property id="PRES" type="STRING"></powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\C3ComponentGenerator.exe</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
+<file2>
+
+<powerprops:property_set>
 <powerprops:property id="DSTP" type="STRING">\include</powerprops:property>
 <powerprops:property id="EXCL" type="STRING"></powerprops:property>
 <powerprops:property id="NAME" type="STRING">*.h</powerprops:property>

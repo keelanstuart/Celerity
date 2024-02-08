@@ -335,7 +335,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Animation)::ReadFromFile(c3::Syste
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Animation)::ReadFromMemory(c3::System *psys, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(Animation)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	c3::ResourceType::LoadResult ret = c3::ResourceType::LR_ERROR;
 

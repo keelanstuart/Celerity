@@ -32,23 +32,9 @@ MeshImpl::~MeshImpl()
 
 void MeshImpl::Release()
 {
-	if (m_VB)
-	{
-		m_VB->Release();
-		m_VB = nullptr;
-	}
-
-	if (m_IB)
-	{
-		m_IB->Release();
-		m_IB = nullptr;
-	}
-
-	if (m_pBounds)
-	{
-		m_pBounds->Release();
-		m_pBounds = nullptr;
-	}
+	C3_SAFERELEASE(m_VB);
+	C3_SAFERELEASE(m_IB);
+	C3_SAFERELEASE(m_pBounds);
 
 	delete this;
 }

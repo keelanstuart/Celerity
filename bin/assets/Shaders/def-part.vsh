@@ -1,5 +1,3 @@
-//uniform vec4 uColorDiffuse;
-
 layout (location=0) in vec3 vPos;
 layout (location=1) in float vSize;
 layout (location=2) in float vRoll;
@@ -15,5 +13,5 @@ void main()
 	gPos = vPos;
 	gSize = vSize;
 	gRoll = vRoll;
-	gColor0 = vColor0;// * uColorDiffuse;
+	gColor0 = vColor0;
 }
