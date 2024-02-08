@@ -315,6 +315,19 @@
 
 </file2>
 
+<file2>
+
+<powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">\</powerprops:property>
+<powerprops:property id="EXCL" type="STRING">*.tlog;*.lastbuildstate;*.pdb;*.user;*.log;*.recipe;*.idb;*.obj;*.ilk;*.pch;*.iobj;*.ipdb</powerprops:property>
+<powerprops:property id="NAME" type="STRING">*</powerprops:property>
+<powerprops:property id="PRES" type="STRING"></powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Samples</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
 </files2>
 
 <scripts>
