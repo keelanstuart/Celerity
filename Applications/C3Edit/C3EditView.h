@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #pragma once
@@ -42,6 +42,8 @@ public:
 	void AdjustYawPitch(float yawadj, float pitchadj, bool redraw = true);
 
 	void SetAppropriateMouseCursor(UINT32 nFlags);
+
+	void CenterViewOnSelection();
 
 // Overrides
 public:
@@ -145,6 +147,11 @@ public:
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
     afx_msg void OnGraphDeleteNode();
     afx_msg void OnUpdateGraphDeleteNode(CCmdUI *pCmdUI);
+	afx_msg void OnEditCenterCamera();
+	afx_msg void OnUpdateEditCenterCamera(CCmdUI *pCmdUI);
+	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+	afx_msg void OnEditCameraSettings();
+	afx_msg void OnUpdateEditCameraSettings(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

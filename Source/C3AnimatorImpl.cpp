@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -127,6 +127,7 @@ bool AnimatorImpl::Initialize(Object *pobject)
 		pp = props->CreateProperty(_T("StateDefinitionsFile"), 'ST8F');
 		pp->SetString(_T(""));
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
 	PropertyChanged(pp);
 

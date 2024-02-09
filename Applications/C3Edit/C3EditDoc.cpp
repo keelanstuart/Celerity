@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -136,7 +136,7 @@ C3EditDoc::SPerViewInfo *C3EditDoc::GetPerViewInfo(HWND h)
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pvi.m_Camera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
-		pcam->SetFOV(glm::radians(70.0f));
+		pcam->SetFOV(65.0f);
 		pcam->SetViewMode(c3::Camera::ViewMode::VM_POLAR);
 		pcam->SetPolarDistance(1.0f);
 	}
@@ -356,32 +356,13 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 			if (is->BeginBlock('CAM0'))
 			{
-				SPerViewInfo pvi;
+				SPerViewInfo &pvi = m_PerViewInfo.begin()->second;
 
 				pvi.m_Camera = theApp.m_C3->GetFactory()->Build();
 				pvi.m_Camera->Load(is);
 
 				is->ReadFloat(pvi.yaw);
 				is->ReadFloat(pvi.pitch);
-
-				pvi.m_GUICamera = pf->Build(pvi.m_Camera);
-				CRect r(0, 0, 1000, 1000);
-				c3::Camera *pcam = dynamic_cast<c3::Camera *>(pvi.m_GUICamera->FindComponent(c3::Camera::Type()));
-				if (pcam)
-				{
-					pcam->SetProjectionMode(c3::Camera::EProjectionMode::PM_ORTHOGRAPHIC);
-					pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
-					pcam->SetViewMode(c3::Camera::EViewMode::VM_LOOKAT);
-				}
-
-				c3::Positionable *ppos = dynamic_cast<c3::Positionable *>(pvi.m_GUICamera->FindComponent(c3::Positionable::Type()));
-				if (ppos)
-				{
-					ppos->SetYawPitchRoll(0, glm::radians(-90.0f), 0);
-					ppos->SetPos((float)r.Width() / 2.0f, (float)r.Height() / 2.0f, 10.0f);
-				}
-
-				m_PerViewInfo.insert(TWndMappedObject::value_type(0, pvi));
 
 				is->EndBlock();
 			}

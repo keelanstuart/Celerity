@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -89,28 +89,30 @@ PluginManager::RETURNCODE PluginManagerImpl::DiscoverPlugins(const TCHAR *path, 
 			_tcsncpy_s(plugname, MAX_PATH, dir, MAX_PATH - 1);
 			_tcsncat_s(plugname, MAX_PATH, fd.cFileName, MAX_PATH - 1);
 
-			Plugin *tmp = new PluginImpl(plugname, m_pSys);
-
-			if (tmp->Loaded())
+			if (!PluginIsLoaded(plugname))
 			{
-				ret++;
+				Plugin *tmp = new PluginImpl(plugname, m_pSys);
 
-				m_Plugins.push_back(tmp);
-
-				if (auto_activate)
+				if (tmp->Loaded())
 				{
+					ret++;
+
+					m_Plugins.push_back(tmp);
+
+					if (auto_activate)
+					{
 #if 0
-					m_pSys->ThreadPool()->RunTask(ActivatePlugin, (LPVOID)tmp);
+						m_pSys->ThreadPool()->RunTask(ActivatePlugin, (LPVOID)tmp);
 #else
-					tmp->Activate();
+						tmp->Activate();
 #endif
+					}
+				}
+				else
+				{
+					delete tmp;
 				}
 			}
-			else
-			{
-				delete tmp;
-			}
-
 		}
 		while (FindNextFile(hfind, &fd));
 
@@ -157,16 +159,33 @@ void PluginManagerImpl::UnloadAllPlugins()
 }
 
 
-size_t PluginManagerImpl::GetNumPlugins()
+size_t PluginManagerImpl::GetNumPlugins() const
 {
 	return m_Plugins.size();
 }
 
 
-Plugin *PluginManagerImpl::GetPlugin(size_t idx)
+Plugin *PluginManagerImpl::GetPlugin(size_t idx) const
 {
 	if (idx < m_Plugins.size())
 		return m_Plugins[idx];
 
 	return nullptr;
+}
+
+
+bool PluginManagerImpl::PluginIsLoaded(const TCHAR *path, size_t *idx) const
+{
+	for (size_t i = 0, maxi = m_Plugins.size(); i < maxi; i++)
+	{
+		if (!_tcsicmp(m_Plugins[i]->GetFilename(), path))
+		{
+			if (idx)
+				*idx = i;
+
+			return true;
+		}
+	}
+
+	return false;
 }

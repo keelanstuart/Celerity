@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -14,7 +14,12 @@ using namespace c3;
 DECLARE_COMPONENTTYPE(EnvironmentModifier, EnvironmentModifierImpl);
 
 
-EnvironmentModifierImpl::EnvironmentModifierImpl()
+EnvironmentModifierImpl::EnvironmentModifierImpl() :
+	m_Gravity(0.0f, 0.0f, -9.8f),
+	m_BackgroundColor(Color::fBlack),
+	m_AmbColor(Color::fDarkGrey),
+	m_SunColor(Color::fNaturalSunlight),
+	m_SunDir(glm::normalize(glm::fvec3(0.2, 0.1, -0.7)))
 {
 	m_pPos = nullptr;
 }
@@ -52,33 +57,19 @@ bool EnvironmentModifierImpl::Initialize(Object *pobject)
 
 	props::IProperty *pp;
 
-	if ((pp = ps->GetPropertyById('eBGC')) || (pp = ps->CreateProperty(_T("uBackgroundColor"), 'eBGC')))
-	{
-		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
-		pp->SetVec4F(*(props::TVec4F *)&Color::fBlack);
-	}
+	if (pp = ps->CreateReferenceProperty(_T("uBackgroundColor"), 'eBGC', &m_BackgroundColor, props::IProperty::PT_FLOAT_V3))
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB);
 
-#if 1
-	if ((pp = ps->GetPropertyById('eAMB')) || (pp = ps->CreateProperty(_T("uAmbientColor"), 'eAMB')))
-	{
+	if (pp = ps->CreateReferenceProperty(_T("uAmbientColor"), 'eAMB', &m_AmbColor, props::IProperty::PT_FLOAT_V3))
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR);
-		pp->SetVec3F(props::SVec3(0.1f, 0.1f, 0.1f));
-	}
 
-	if ((pp = ps->GetPropertyById('eSNC')) || (pp = ps->CreateProperty(_T("uSunColor"), 'eSNC')))
-	{
+	if (pp = ps->CreateReferenceProperty(_T("uSunColor"), 'eSNC', &m_SunColor, props::IProperty::PT_FLOAT_V3))
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR);
-		pp->SetVec3F(props::SVec3(1.0f, 0.97f, 0.92f));
-	}
 
-	if ((pp = ps->GetPropertyById('eSND')) || (pp = ps->CreateProperty(_T("uSunDirection"), 'eSND')))
-	{
+	if (pp = ps->CreateReferenceProperty(_T("uSunDirection"), 'eSND', &m_SunDir, props::IProperty::PT_FLOAT_V3))
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_DIRECTION);
-		pp->SetVec3F(props::SVec3(-0.1f, -0.1f, -1.0f));
-	}
 
 	pp = ps->CreateReferenceProperty(_T("Gravity"), 'GRAV', &m_Gravity, props::IProperty::PT_FLOAT_V3);
-#endif
 
 	return true;
 }
@@ -115,59 +106,16 @@ void EnvironmentModifierImpl::Update(float elapsed_time)
 		apply = (i >= 6);
 	}
 
-	Environment *penv = m_pOwner->GetSystem()->GetEnvironment();
-	props::IPropertySet *ps = m_pOwner->GetProperties();
-
-#if 0
-	if (apply && !m_bCameraInside)
-	{
-		props::IProperty *pp;
-		if (pp = ps->GetPropertyById('eAMB'))
-			penv->PushAmbientColor(*((glm::fvec3 *)(pp->AsVec3F())));
-
-		if (pp = ps->GetPropertyById('eBGC'))
-			penv->PushBackgroundColor(*((glm::fvec4 *)(pp->AsVec4F())));
-
-		if (pp = ps->GetPropertyById('eSNC'))
-			penv->PushSunColor(*((glm::fvec3 *)(pp->AsVec3F())));
-
-		if (pp = ps->GetPropertyById('eSND'))
-			penv->PushSunDirection(*((glm::fvec3 *)(pp->AsVec3F())));
-	}
-	else if (!apply && m_bCameraInside)
-	{
-		if (ps->GetPropertyById('eAMB'))
-			penv->PopAmbientColor();
-
-		if (ps->GetPropertyById('eBGC'))
-			penv->PopBackgroundColor();
-
-		if (ps->GetPropertyById('eSNC'))
-			penv->PopSunColor();
-
-		if (ps->GetPropertyById('eSND'))
-			penv->PopSunDirection();
-	}
-#else
 	if (apply)
 	{
-		props::IProperty *pp;
-		if (pp = ps->GetPropertyById('eAMB'))
-			penv->SetAmbientColor(*((glm::fvec3 *)(pp->AsVec3F())));
+		Environment *penv = m_pOwner->GetSystem()->GetEnvironment();
 
-		if (pp = ps->GetPropertyById('eBGC'))
-			penv->SetBackgroundColor(*((glm::fvec4 *)(pp->AsVec4F())));
-
-		if (pp = ps->GetPropertyById('eSNC'))
-			penv->SetSunColor(*((glm::fvec3 *)(pp->AsVec3F())));
-
-		if (pp = ps->GetPropertyById('eSND'))
-			penv->SetSunDirection(*((glm::fvec3 *)(pp->AsVec3F())));
-
-		if (pp = ps->GetPropertyById('GRAV'))
-			penv->SetGravity(m_Gravity);
+		penv->SetAmbientColor(m_AmbColor);
+		penv->SetBackgroundColor(m_BackgroundColor);
+		penv->SetSunColor(m_SunColor);
+		penv->SetSunDirection(m_SunDir);
+		penv->SetGravity(m_Gravity);
 	}
-#endif
 
 	m_bCameraInside = apply;
 }

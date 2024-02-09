@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -686,10 +686,10 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			tstring texname = sourcename;
 			MakeTexFilename(texname, textmp);
 			c3::Texture2D *pt = nullptr;
-			Texture2DResourceType::Type()->ReadFromMemory(psys, texname.c_str(), (const BYTE *)scene->mTextures[texidx]->pcData, scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
+			DefaultTexture2DResourceType::Type()->ReadFromMemory(psys, texname.c_str(), (const BYTE *)scene->mTextures[texidx]->pcData, scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
 			if (pt)
 			{
-				psys->GetResourceManager()->GetResource(texname.c_str(), RESF_CREATEENTRYONLY, Texture2DResourceType::Type(), pt);
+				psys->GetResourceManager()->GetResource(texname.c_str(), RESF_CREATEENTRYONLY, DefaultTexture2DResourceType::Type(), pt);
 			}
 		}
 	}

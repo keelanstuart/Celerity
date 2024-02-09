@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -32,14 +32,6 @@ CameraImpl::CameraImpl()
 	m_farclip = 1400.0f;
 
 	m_orbitdist = 10.0f;
-
-	m_pviewmode = nullptr;
-	m_pprojpmode = nullptr;
-	m_pdim = nullptr;
-	m_pfov = nullptr;
-	m_porbitdist = nullptr;
-	m_pnearclip = nullptr;
-	m_pfarclip = nullptr;
 
 	m_Flags.SetAll(CAMFLAG_REBUILDMATRICES);
 }
@@ -74,13 +66,33 @@ bool CameraImpl::Initialize(Object *pobject)
 	if (!props)
 		return false;
 
-	m_pviewmode = props->CreateReferenceProperty(_T("ViewMode"), 'C:VM', &m_viewmode, props::IProperty::PT_INT);
-	m_pprojpmode = props->CreateReferenceProperty(_T("ProjectionMode"), 'C:PM', &m_projmode, props::IProperty::PT_INT);
-	m_pdim = props->CreateReferenceProperty(_T("Dimensions(Orthographic)"), 'C:DM', &m_dim, props::IProperty::PT_FLOAT_V2);
-	m_pfov = props->CreateReferenceProperty(_T("FOV(Perspective)"), 'C:FV', &m_fov, props::IProperty::PT_FLOAT);
-	m_porbitdist = props->CreateReferenceProperty(_T("OrbitDistance(Polar)"), 'C:OD', &m_orbitdist, props::IProperty::PT_FLOAT);
-	m_pnearclip = props->CreateReferenceProperty(_T("NearClip"), 'C:NC', &m_nearclip, props::IProperty::PT_FLOAT);
-	m_pfarclip = props->CreateReferenceProperty(_T("FarClip"), 'C:FC', &m_farclip, props::IProperty::PT_FLOAT);
+	props::IProperty *pp;
+
+	pp = props->CreateProperty(_T("ViewMode"), 'C:VM');
+	if (pp)
+	{
+		pp->SetEnumProvider(this);
+		pp->SetEnumVal(m_viewmode);
+	}
+
+	pp = props->CreateProperty(_T("ProjectionMode"), 'C:PM');
+	if (pp)
+	{
+		pp->SetEnumProvider(this);
+		pp->SetEnumVal(m_projmode);
+	}
+
+	pp = props->CreateReferenceProperty(_T("Dimensions(Orthographic)"), 'C:DM', &m_dim, props::IProperty::PT_FLOAT_V2);
+
+	pp = props->CreateReferenceProperty(_T("FOV(Perspective)"), 'C:FV', &m_fov, props::IProperty::PT_FLOAT);
+	if (pp)
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG);
+
+	pp = props->CreateReferenceProperty(_T("OrbitDistance(Polar)"), 'C:OD', &m_orbitdist, props::IProperty::PT_FLOAT);
+
+	pp = props->CreateReferenceProperty(_T("NearClip"), 'C:NC', &m_nearclip, props::IProperty::PT_FLOAT);
+
+	pp = props->CreateReferenceProperty(_T("FarClip"), 'C:FC', &m_farclip, props::IProperty::PT_FLOAT);
 
 	return true;
 }
@@ -129,12 +141,15 @@ void CameraImpl::Update(float elapsed_time)
 		{
 			default:
 			case PM_PERSPECTIVE:
-				m_proj = glm::perspectiveFov(m_fov, m_dim.x, m_dim.y, m_nearclip, m_farclip);
+				m_proj = glm::perspectiveFov(glm::radians(m_fov), m_dim.x, m_dim.y, m_nearclip, m_farclip);
 				break;
 
 			case PM_ORTHOGRAPHIC:
-				m_proj = glm::ortho(0.0f, m_dim.x, 0.0f, m_dim.y, m_nearclip, m_farclip);
+			{
+				glm::fvec2 halfdim = (m_dim + m_orbitdist) / 2.0f;
+				m_proj = glm::ortho(m_eyepos.x - halfdim.x, m_eyepos.x + halfdim.x, m_eyepos.y - halfdim.y, m_eyepos.y + halfdim.y, m_nearclip, m_farclip);
 				break;
+			}
 		}
 
 		m_Flags.Clear(CAMFLAG_REBUILDMATRICES);
@@ -149,12 +164,6 @@ bool CameraImpl::Prerender(Object::RenderFlags flags)
 
 
 void CameraImpl::Render(Object::RenderFlags flags)
-{
-
-}
-
-
-void CameraImpl::PropertyChanged(const props::IProperty *pprop)
 {
 
 }
@@ -328,4 +337,83 @@ const glm::fmat4x4 *CameraImpl::GetProjectionMatrix(glm::fmat4x4 *mat)
 bool CameraImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
 {
 	return false;
+}
+
+
+void CameraImpl::PropertyChanged(const props::IProperty *pprop)
+{
+	props::FOURCHARCODE fcc = pprop->GetID();
+
+	switch (fcc)
+	{
+		case 'C:VM':
+			m_viewmode = (ViewMode)pprop->AsInt();
+			if (pprop->GetType() != props::IProperty::PT_ENUM)
+			{
+				((props::IProperty *)pprop)->SetEnumProvider(this);
+				((props::IProperty *)pprop)->SetEnumVal(m_viewmode);
+			}
+			break;
+
+		case 'C:PM':
+			m_projmode = (ProjectionMode)pprop->AsInt();
+			if (pprop->GetType() != props::IProperty::PT_ENUM)
+			{
+				((props::IProperty *)pprop)->SetEnumProvider(this);
+				((props::IProperty *)pprop)->SetEnumVal(m_projmode);
+			}
+			break;
+
+		default:
+			break;
+	}
+
+	m_Flags.Set(CAMFLAG_REBUILDMATRICES);
+}
+
+
+std::vector<tstring> ViewModeNames ={_T("Polar"), _T("Look At")};
+std::vector<tstring> ProjModeNames ={_T("Perspective"), _T("Orthographic")};
+
+size_t CameraImpl::GetNumValues(const props::IProperty *pprop) const
+{
+	if (pprop)
+	{
+		switch (pprop->GetID())
+		{
+			case 'C:VM':
+				return ViewModeNames.size();
+				break;
+
+			case 'C:PM':
+				return ProjModeNames.size();
+				break;
+		}
+	}
+
+	return 0;
+}
+
+
+const TCHAR *CameraImpl::GetValue(const props::IProperty *pprop, size_t ordinal, TCHAR *buf, size_t bufsize) const
+{
+	if (pprop)
+	{
+		switch (pprop->GetID())
+		{
+			case 'C:VM':
+				if (buf && (bufsize >= ((ViewModeNames[ordinal].length() + 1) * sizeof(TCHAR))))
+					_tcscpy_s(buf, bufsize, ViewModeNames[ordinal].c_str());
+				return ViewModeNames[ordinal].c_str();
+				break;
+
+			case 'C:PM':
+				if (buf && (bufsize >= ((ProjModeNames[ordinal].length() + 1) * sizeof(TCHAR))))
+					_tcscpy_s(buf, bufsize, ProjModeNames[ordinal].c_str());
+				return ProjModeNames[ordinal].c_str();
+				break;
+		}
+	}
+
+	return nullptr;
 }

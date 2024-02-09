@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #pragma once
@@ -61,7 +61,7 @@ namespace c3
 
 	};
 
-	DEFINE_RESOURCETYPE(Texture2D, RTFLAG_RUNBYRENDERER, GUID({0xd9afb0b6, 0x8eea, 0x4bdc, { 0x97, 0x68, 0x4f, 0x3d, 0x55, 0x69, 0x35, 0x4c }}), "Texture2D", "Two-Dimensional Textures", "png;jpg;tga;bmp;gif;psd;hdr;pic;pnm;dds;tif;tiff", "tga");
+	DEFINE_RESOURCETYPE(DefaultTexture2D, RTFLAG_RUNBYRENDERER, GUID({0xd9afb0b6, 0x8eea, 0x4bdc, { 0x97, 0x68, 0x4f, 0x3d, 0x55, 0x69, 0x35, 0x4c }}), "Texture2D", "Two-Dimensional Textures", "png;jpg;tga;bmp;gif;psd;hdr;pic;pnm;dds;tif;tiff", "tga");
 
 	class TextureCubeImpl : public TextureCube
 	{
@@ -113,7 +113,7 @@ namespace c3
 
 	};
 
-	DEFINE_RESOURCETYPE(TextureCube, RTFLAG_RUNBYRENDERER, GUID({0xf46f85a2, 0x45da, 0x4fc1, {0x81, 0x4a, 0xee, 0x9a, 0x67, 0xc4, 0x3e, 0x9f}}), "TextureCube", "Cube Textures", "dds", "dds");
+	DEFINE_RESOURCETYPE(DefaultTextureCube, RTFLAG_RUNBYRENDERER, GUID({0xf46f85a2, 0x45da, 0x4fc1, {0x81, 0x4a, 0xee, 0x9a, 0x67, 0xc4, 0x3e, 0x9f}}), "TextureCube", "Cube Textures", "dds", "dds");
 
 	class Texture3DImpl : public Texture3D
 	{
@@ -162,6 +162,6 @@ namespace c3
 
 	};
 
-	DEFINE_RESOURCETYPE(Texture3D, RTFLAG_RUNBYRENDERER, GUID({0x93927dc6, 0xe335, 0x4728, {0x87, 0x55, 0x36, 0x7c, 0xc9, 0xc, 0x34, 0x3d}}), "Texture3D", "Volumetric Textures", "dds", "dds");
+	DEFINE_RESOURCETYPE(DefaultTexture3D, RTFLAG_RUNBYRENDERER, GUID({0x93927dc6, 0xe335, 0x4728, {0x87, 0x55, 0x36, 0x7c, 0xc9, 0xc, 0x34, 0x3d}}), "Texture3D", "Volumetric Textures", "dds", "dds");
 
 };

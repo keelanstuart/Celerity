@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -14,7 +14,7 @@ CELERITYPLUGIN_SHORTNAME("CelerityExamplePlugin");
 CELERITYPLUGIN_AUTHOR("Keelan Stuart");
 CELERITYPLUGIN_WEBSITE("https://github.com/keelanstuart/Celerity");
 CELERITYPLUGIN_DESC("A simple plug-in for Celerity 3.x that demonstrates how to implement your own Component and Resource types");
-CELERITYPLUGIN_COPYRIGHT("Copyright © 2001-2023, Keelan Stuart");
+CELERITYPLUGIN_COPYRIGHT("Copyright © 2001-2024, Keelan Stuart");
 CELERITYPLUGIN_VERSION(1);
 CELERITYPLUGIN_CELERITYVERSION();
 
@@ -24,7 +24,7 @@ CELERITYPLUGIN_CELERITYVERSION();
 // code, so this it is essential for "good behavior" that you use these appropriately.
 
 CELERITYPLUGIN_ONACTIVATE_BEGIN()
-	psys->GetLog()->Print(_T("Activating C3SamplePlugin!"));
+	psys->GetLog()->Print(_T("Activating C3SamplePlugin!\n"));
 
 	// Register Component and Resource types
 
@@ -32,7 +32,7 @@ CELERITYPLUGIN_ONACTIVATE_BEGIN()
 CELERITYPLUGIN_ONACTIVATE_END()
 
 CELERITYPLUGIN_ONDEACTIVATE_BEGIN()
-	psys->GetLog()->Print(_T("Deactivating C3SamplePlugin!"));
+	psys->GetLog()->Print(_T("Deactivating C3SamplePlugin!\n"));
 
 	// Unregister Component and Resource types
 

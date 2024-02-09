@@ -46,6 +46,7 @@ protected:
 public:
 	virtual void OnPropertyChanged(CWTFPropertyGridProperty* pProp);
 
+    afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 };
 
 

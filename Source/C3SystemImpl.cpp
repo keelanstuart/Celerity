@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -114,9 +114,9 @@ void SystemImpl::Release()
 		// *************************************************
 		UNREGISTER_RESOURCETYPE(Animation, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(AnimStatesDesc, m_ResourceManager);
-		UNREGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
-		UNREGISTER_RESOURCETYPE(TextureCube, m_ResourceManager);
-		UNREGISTER_RESOURCETYPE(Texture3D, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(DefaultTexture2D, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(DefaultTextureCube, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(DefaultTexture3D, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(Model, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(RenderMethod, m_ResourceManager);
@@ -217,9 +217,9 @@ ResourceManager *SystemImpl::GetResourceManager()
 		// *************************************************
 		REGISTER_RESOURCETYPE(Animation, m_ResourceManager);
 		REGISTER_RESOURCETYPE(AnimStatesDesc, m_ResourceManager);
-		REGISTER_RESOURCETYPE(Texture2D, m_ResourceManager);
-		REGISTER_RESOURCETYPE(TextureCube, m_ResourceManager);
-		REGISTER_RESOURCETYPE(Texture3D, m_ResourceManager);
+		REGISTER_RESOURCETYPE(DefaultTexture2D, m_ResourceManager);
+		REGISTER_RESOURCETYPE(DefaultTextureCube, m_ResourceManager);
+		REGISTER_RESOURCETYPE(DefaultTexture3D, m_ResourceManager);
 		REGISTER_RESOURCETYPE(Model, m_ResourceManager);
 		REGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
 		REGISTER_RESOURCETYPE(RenderMethod, m_ResourceManager);

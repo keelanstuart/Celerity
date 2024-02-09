@@ -173,13 +173,16 @@
 #define ID_CLEAR                        32788
 #define ID_EDIT_GROUP                   32794
 #define ID_EDIT_UNGROUP                 32795
+#define ID_EDIT_CENTERCAMERAON          32796
+#define ID_Menu                         32797
+#define ID_EDIT_CAMERASETTINGS          32798
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        327
-#define _APS_NEXT_COMMAND_VALUE         32796
+#define _APS_NEXT_COMMAND_VALUE         32799
 #define _APS_NEXT_CONTROL_VALUE         1009
 #define _APS_NEXT_SYMED_VALUE           339
 #endif

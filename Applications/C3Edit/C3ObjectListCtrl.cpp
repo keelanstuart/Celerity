@@ -44,6 +44,19 @@ BEGIN_MESSAGE_MAP(C3ObjectListCtrl, CListCtrl)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_NOTIFY_REFLECT(NM_CLICK, &C3ObjectListCtrl::OnNMClick)
+	ON_WM_CONTEXTMENU()
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, &C3ObjectListCtrl::OnUpdateEditDelete)
+	ON_COMMAND(ID_EDIT_DELETE, &C3ObjectListCtrl::OnEditDelete)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_DUPLICATE, &C3ObjectListCtrl::OnUpdateEditDuplicate)
+	ON_COMMAND(ID_EDIT_DUPLICATE, &C3ObjectListCtrl::OnEditDuplicate)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_GROUP, &C3ObjectListCtrl::OnUpdateEditGroup)
+	ON_COMMAND(ID_EDIT_GROUP, &C3ObjectListCtrl::OnEditGroup)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_UNGROUP, &C3ObjectListCtrl::OnUpdateEditUngroup)
+	ON_COMMAND(ID_EDIT_UNGROUP, &C3ObjectListCtrl::OnEditUngroup)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CENTERCAMERAON, &C3ObjectListCtrl::OnUpdateEditCenterCamera)
+	ON_COMMAND(ID_EDIT_CENTERCAMERAON, &C3ObjectListCtrl::OnEditCenterCamera)
+	ON_WM_KEYUP()
+	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
 
@@ -308,9 +321,8 @@ void C3ObjectListCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
 
 void C3ObjectListCtrl::OnRButtonUp(UINT nFlags, CPoint point)
 {
-	// TODO: Add your message handler code here and/or call default
-
-	CListCtrl::OnRButtonUp(nFlags, point);
+	ClientToScreen(&point);
+	OnContextMenu(this, point);
 }
 
 
@@ -355,4 +367,163 @@ void C3ObjectListCtrl::OnNMClick(NMHDR *pNMHDR, LRESULT *pResult)
 	UpdateData();
 
 	*pResult = 0;
+}
+
+
+void C3ObjectListCtrl::OnContextMenu(CWnd *pWnd, CPoint point)
+{
+#ifndef SHARED_HANDLERS
+	theApp.GetContextMenuManager()->ShowPopupMenu(IDR_POPUP_EDIT, point.x, point.y, this, TRUE);
+#endif
+}
+
+void C3ObjectListCtrl::OnUpdateEditDelete(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditDelete(pCmdUI);
+}
+
+
+void C3ObjectListCtrl::OnEditDelete()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditDelete();
+}
+
+
+void C3ObjectListCtrl::OnUpdateEditDuplicate(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditDuplicate(pCmdUI);
+}
+
+
+void C3ObjectListCtrl::OnEditDuplicate()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditDuplicate();
+}
+
+
+void C3ObjectListCtrl::OnUpdateEditGroup(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditGroup(pCmdUI);
+}
+
+
+void C3ObjectListCtrl::OnEditGroup()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditGroup();
+}
+
+
+void C3ObjectListCtrl::OnUpdateEditUngroup(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditUngroup(pCmdUI);
+}
+
+
+void C3ObjectListCtrl::OnEditUngroup()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditUngroup();
+}
+
+
+void C3ObjectListCtrl::OnUpdateEditCenterCamera(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditCenterCamera(pCmdUI);
+}
+
+
+void C3ObjectListCtrl::OnEditCenterCamera()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditCenterCamera();
+}
+
+
+void C3ObjectListCtrl::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	switch (nChar)
+	{
+		case VK_ESCAPE:
+			pv->SetFocus();
+			break;
+
+		default:
+			break;
+	}
+
+	CListCtrl::OnKeyUp(nChar, nRepCnt, nFlags);
+}
+
+
+void C3ObjectListCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	switch (nChar)
+	{
+		case _T('C'):
+			pv->OnEditCenterCamera();
+			break;
+
+		default:
+			break;
+	}
+
+	CListCtrl::OnKeyDown(nChar, nRepCnt, nFlags);
 }

@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #pragma once
@@ -32,9 +32,11 @@ namespace c3
 
 		virtual void UnloadAllPlugins();
 
-		virtual size_t GetNumPlugins();
+		virtual size_t GetNumPlugins() const;
 
-		virtual Plugin *GetPlugin(size_t idx);
+		virtual Plugin *GetPlugin(size_t idx) const;
+
+		virtual bool PluginIsLoaded(const TCHAR *path, size_t *idx = nullptr) const;
 
 	};
 

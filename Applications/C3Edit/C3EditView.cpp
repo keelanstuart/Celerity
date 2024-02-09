@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -53,6 +53,11 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_WM_KEYUP()
 	ON_COMMAND(ID_GRAPH_DELETENODE, &C3EditView::OnGraphDeleteNode)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_DELETENODE, &C3EditView::OnUpdateGraphDeleteNode)
+	ON_COMMAND(ID_EDIT_CENTERCAMERAON, &C3EditView::OnEditCenterCamera)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CENTERCAMERAON, &C3EditView::OnUpdateEditCenterCamera)
+	ON_WM_KEYDOWN()
+	ON_COMMAND(ID_EDIT_CAMERASETTINGS, &C3EditView::OnEditCameraSettings)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CAMERASETTINGS, &C3EditView::OnUpdateEditCameraSettings)
 END_MESSAGE_MAP()
 
 
@@ -341,7 +346,7 @@ void C3EditView::OnDraw(CDC *pDC)
 	CRect r;
 	GetClientRect(r);
 
-	pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
+	//pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
 
 	theApp.m_C3->UpdateTime();
 	float dt = pDoc->m_Paused ? 0.0f : (pDoc->m_TimeWarp * theApp.m_C3->GetElapsedTime());
@@ -687,19 +692,8 @@ void C3EditView::HandleInput(c3::Positionable *pcampos)
 		AdjustYawPitch((ldr - ldl) * 4, (ldu - ldd) * 4, false);
 
 	bool center = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::LETTER_C);
-	if (center &&
-		!m_Selected.empty())
-	{
-		glm::fvec3 cpos;
-		for (TObjectArray::const_iterator it = m_Selected.cbegin(); it != m_Selected.cend(); it++)
-		{
-			c3::Positionable* psopos = dynamic_cast<c3::Positionable*>((*it)->FindComponent(c3::Positionable::Type()));
-			if (psopos)
-				cpos += *(psopos->GetPosVec());
-		}
-		cpos /= (float)m_Selected.size();
-		pcampos->SetPosVec(&cpos);
-	}
+	if (center)
+		CenterViewOnSelection();
 
 	if (theApp.m_C3->GetInputManager()->ButtonReleased(c3::InputDevice::VirtualButton::DEBUGBUTTON))
 		m_ShowDebug ^= true;
@@ -1576,4 +1570,92 @@ void C3EditView::OnGraphDeleteNode()
 void C3EditView::OnUpdateGraphDeleteNode(CCmdUI *pCmdUI)
 {
 	// TODO: Add your command update UI handler code here
+}
+
+
+void C3EditView::CenterViewOnSelection()
+{
+	C3EditDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+	if (!pDoc)
+		return;
+
+	if (!pDoc->m_RootObj)
+		return;
+
+	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+
+	c3::Object *camobj = pvi->m_Camera;
+	c3::Positionable *pcampos = camobj ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
+
+	if (!m_Selected.empty())
+	{
+		glm::fvec3 cpos;
+		for (TObjectArray::const_iterator it = m_Selected.cbegin(); it != m_Selected.cend(); it++)
+		{
+			c3::Positionable* psopos = dynamic_cast<c3::Positionable*>((*it)->FindComponent(c3::Positionable::Type()));
+			if (psopos)
+				cpos += *(psopos->GetPosVec());
+		}
+		cpos /= (float)m_Selected.size();
+		pcampos->SetPosVec(&cpos);
+	}
+}
+
+void C3EditView::OnEditCenterCamera()
+{
+	CenterViewOnSelection();
+}
+
+
+void C3EditView::OnUpdateEditCenterCamera(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(!m_Selected.empty());
+}
+
+
+void C3EditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	C3EditFrame *pmf = (C3EditFrame *)theApp.GetMainWnd();
+	switch (nChar)
+	{
+		case VK_OEM_MINUS:
+		case VK_SUBTRACT:
+		{
+			float spd = theApp.m_Config->GetFloat(_T("environment.movement.speed"), 1.0f);
+			theApp.m_Config->SetFloat(_T("environment.movement.speed"), std::max<float>(spd - 1.0f, 1.0f));
+			break;
+		}
+
+		case VK_OEM_PLUS:
+		case VK_ADD:
+		{
+			float spd = theApp.m_Config->GetFloat(_T("environment.movement.speed"), 1.0f);
+			theApp.m_Config->SetFloat(_T("environment.movement.speed"), spd + 1.0f);
+			break;
+		}
+	}
+
+	CView::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+
+void C3EditView::OnEditCameraSettings()
+{
+	C3EditDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+	if (!pDoc)
+		return;
+
+	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+
+	c3::Object *camobj = pvi->m_Camera;
+
+	theApp.SetActiveObject(camobj, false, _T("Camera"));
+}
+
+
+void C3EditView::OnUpdateEditCameraSettings(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
 }

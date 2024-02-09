@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #pragma once
@@ -40,10 +40,13 @@ namespace c3
 		virtual void UnloadAllPlugins() = NULL;
 
 		/// Returns the number of plug-ins that were successfully loaded
-		virtual size_t GetNumPlugins() = NULL;
+		virtual size_t GetNumPlugins() const = NULL;
 
 		/// Returns an interface to a plug-in, given its index
-		virtual Plugin *GetPlugin(size_t idx) = NULL;
+		virtual Plugin *GetPlugin(size_t idx) const = NULL;
+
+		/// Returns true if a plug-in is already loaded, optionally tells you what index it is
+		virtual bool PluginIsLoaded(const TCHAR *path, size_t *idx = nullptr) const = NULL;
 
 	};
 

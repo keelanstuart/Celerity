@@ -1,5 +1,5 @@
 /*
-	Copyright © 2013-2023, Keelan Stuart (hereafter referenced as AUTHOR). All Rights Reserved.
+	Copyright © 2013-2024, Keelan Stuart (hereafter referenced as AUTHOR). All Rights Reserved.
 	Permission to use, copy, modify, and distribute this software is hereby granted, without fee and without a signed licensing agreement,
 	provided that the above copyright notice appears in all copies, modifications, and distributions.
 	Furthermore, AUTHOR assumes no responsibility for any damages caused either directly or indirectly by the use of this software, nor vouches for
@@ -14,6 +14,10 @@
 
 #include "pch.h"
 #include "PropertyGrid.h"
+#include "C3EditFrame.h"
+#include "C3EditDoc.h"
+#include "C3Edit.h"
+#include "C3EditView.h"
 
 // CPropertyGrid
 
@@ -624,6 +628,7 @@ void CPropertyGrid::OnClickButton(CPoint point)
 }
 
 BEGIN_MESSAGE_MAP(CPropertyGrid, CWTFPropertyGridCtrl)
+	ON_WM_KEYUP()
 END_MESSAGE_MAP()
 
 
@@ -1125,4 +1130,25 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 	}
 
 	//theApp.GetActiveDocument()->SetModifiedFlag();
+}
+
+
+void CPropertyGrid::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	switch (nChar)
+	{
+		case VK_ESCAPE:
+			pv->SetFocus();
+			break;
+
+		default:
+			break;
+	}
+
+	CWTFPropertyGridCtrl::OnKeyUp(nChar, nRepCnt, nFlags);
 }

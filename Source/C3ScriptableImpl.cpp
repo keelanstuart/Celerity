@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -196,6 +196,7 @@ bool ScriptableImpl::Initialize(Object *pobject)
 	if (!psrc)
 	{
 		psrc = propset->CreateProperty(_T("SourceFile"), 'SRCF');
+		psrc->SetString(_T(""));
 		psrc->SetAspect(props::IProperty::PA_FILENAME);
 		psrc->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}

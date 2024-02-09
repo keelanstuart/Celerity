@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #pragma once
@@ -26,7 +26,9 @@ namespace c3
 			VM_POLAR = 0,
 			VM_LOOKAT,
 
-			VM_NUMMODES
+			VM_NUMMODES,
+
+			VM_FORCE64BIT = 0xFFFFFFFFFFFFFFFF
 
 		};
 
@@ -35,7 +37,9 @@ namespace c3
 			PM_PERSPECTIVE = 0,
 			PM_ORTHOGRAPHIC,
 
-			PM_NUMMODES
+			PM_NUMMODES,
+
+			PM_FORCE64BIT = 0xFFFFFFFFFFFFFFFF
 
 		};
 

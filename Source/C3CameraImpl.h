@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #pragma once
@@ -13,7 +13,7 @@
 namespace c3
 {
 
-	class CameraImpl : public Camera, props::IPropertyChangeListener
+	class CameraImpl : public Camera, props::IPropertyChangeListener, props::IProperty::IEnumProvider
 	{
 
 	protected:
@@ -21,26 +21,20 @@ namespace c3
 
 		glm::fmat4x4 m_proj, m_view;
 
-		props::IProperty *m_pviewmode;
-		uint64_t m_viewmode;
+		ViewMode m_viewmode;
 
-		props::IProperty *m_pprojpmode;
-		uint64_t m_projmode;
+		ProjectionMode m_projmode;
 
-		props::IProperty *m_pdim;
 		glm::fvec2 m_dim;
 
-		props::IProperty *m_pfov;
 		float m_fov;
 
-		props::IProperty *m_pnearclip;
 		float m_nearclip;
 
-		props::IProperty *m_pfarclip;
 		float m_farclip;
 
 		glm::fvec3 m_eyepos, m_targpos;
-		props::IProperty *m_porbitdist;
+
 		float m_orbitdist;
 
 		Positionable *m_pcpos;
@@ -67,8 +61,6 @@ namespace c3
 
 		virtual void Render(Object::RenderFlags flags);
 
-		virtual void PropertyChanged(const props::IProperty *pprop);
-
 		virtual void SetViewMode(ViewMode mode);
 		virtual ViewMode GetViewMode();
 
@@ -94,6 +86,12 @@ namespace c3
 		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *mat);
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;
+
+		virtual void PropertyChanged(const props::IProperty *pprop);
+
+		virtual size_t GetNumValues(const props::IProperty *pprop) const;
+
+		virtual const TCHAR *GetValue(const props::IProperty *pprop, size_t ordinal, TCHAR *buf = nullptr, size_t bufsize = 0) const;
 
 	};
 

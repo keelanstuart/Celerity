@@ -18,7 +18,7 @@
 <powerprops:property id="OFSF" type="ENUM">None,Build Date,Version:1</powerprops:property>
 <powerprops:property id="OPMD" type="ENUM">Self-Extracting Executable,Executable With External Data:0</powerprops:property>
 <powerprops:property id="OUTP" type="STRING">Celerity3DemoSetup.exe</powerprops:property>
-<powerprops:property id="VCPY" type="STRING">Copyright (c) 2001-2023, Keelan Stuart</powerprops:property>
+<powerprops:property id="VCPY" type="STRING">Copyright (c) 2001-2024, Keelan Stuart</powerprops:property>
 <powerprops:property id="VDSC" type="STRING"></powerprops:property>
 <powerprops:property id="VERS" type="STRING"></powerprops:property>
 <powerprops:property id="VPRD" type="STRING"></powerprops:property>

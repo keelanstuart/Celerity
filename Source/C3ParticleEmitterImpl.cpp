@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2023, Keelan Stuart
+// Copyright © 2001-2024, Keelan Stuart
 
 
 #include "pch.h"
@@ -211,11 +211,16 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 
 	for (size_t a = 0; a < m_Active.size(); a++)
 	{
-		size_t i = m_Active[a];
-		SParticle &p = m_Particles[i];
+		SParticle *p = nullptr;
 
-		p.time += elapsed_time;
-		if (p.time >= p.lifetime)
+		size_t i = m_Active[a];
+		if (i < m_Particles.size())
+			p = &m_Particles[i];
+
+		if (p)
+			p->time += elapsed_time;
+
+		if (!p || (p->time >= p->lifetime))
 		{
 			m_Inactive.push_back(i);
 			m_Active.erase(m_Active.begin() + a);
@@ -223,11 +228,11 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 			continue;
 		}
 
-		acc = p.acc + grav;
-		p.pos += (p.vel * elapsed_time);
-		p.vel += (acc * elapsed_time);
-		p.roll += (p.rvel * elapsed_time);
-		p.rvel += (p.racc * elapsed_time);
+		acc = p->acc + grav;
+		p->pos += (p->vel * elapsed_time);
+		p->vel += (acc * elapsed_time);
+		p->roll += (p->rvel * elapsed_time);
+		p->rvel += (p->racc * elapsed_time);
 	}
 
 	if (!m_pOwner->Flags().IsSet(OF_KILL))
@@ -264,7 +269,7 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 					part.vel = glm::normalize(glm::fvec3(math::RandomRange(-1.0f, 1.0f), math::RandomRange(-1.0f, 1.0f), math::RandomRange(-1.0f, 1.0f)));
 
 					// set the emission origin
-					part.pos = epos;
+					part.pos = epos + (part.vel * radius);
 					break;
 				}
 
@@ -410,6 +415,8 @@ void ParticleEmitterImpl::Render(Object::RenderFlags flags)
 		}
 	}
 
+	auto poldmethod = pr->GetActiveRenderMethod();
+
 	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
 
 	if (!flags.IsSet(RF_LOCKSHADER))
@@ -463,6 +470,8 @@ void ParticleEmitterImpl::Render(Object::RenderFlags flags)
 		pr->UseMaterial(m_pMaterial);
 		pr->DrawPrimitives(c3::Renderer::EPrimType::POINTLIST, m_Active.size());
 	}
+
+	pr->UseRenderMethod(poldmethod);
 }
 
 
