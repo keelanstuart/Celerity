@@ -7,9 +7,11 @@ To start developing, load the main Celerity solution in Visual Studio and build 
 
 Pull requests are welcome.
 
-![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20240128.png)
+![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20230128.png)
 
-![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20240209.png)
+![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20230209.png)
+
+![image](https://github.com/keelanstuart/Celerity/blob/master/screen_ed_20230209.png)
 
 ![image](https://github.com/keelanstuart/Celerity/blob/master/screen_ed_20240209.png)
 
@@ -17,7 +19,13 @@ Videos:
 <br>
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=RB7WNeSvIYw
 " target="_blank"><img src="http://img.youtube.com/vi/RB7WNeSvIYw/0.jpg" 
-alt="Manipulating lights in C3Edit" width="240" height="180" border="10" /></a>
+alt="Light Manipulation" width="240" height="180" border="10" /></a>
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=P6HyNWIeEA8
+" target="_blank"><img src="http://img.youtube.com/vi/P6HyNWIeEA8/0.jpg" 
+alt="Simple Particles" width="240" height="180" border="10" /></a>
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=QzydaeRiJyw
+" target="_blank"><img src="http://img.youtube.com/vi/QzydaeRiJyw/0.jpg" 
+alt="Simple Animation" width="240" height="180" border="10" /></a>
 
 ______________________________________________
 
