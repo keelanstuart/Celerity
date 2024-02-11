@@ -116,6 +116,8 @@ void jcSetObjectName(CScriptVar *c, void *userdata);
 void jcLoadObject(CScriptVar *c, void *userdata);
 void jcGetRegisteredObject(CScriptVar *c, void *userdata);
 void jcRegisterObject(CScriptVar *c, void *userdata);
+void jcIsObjFlagSet(CScriptVar *c, void *userdata);
+void jcSetObjFlag(CScriptVar *c, void *userdata);
 void jcAdjustQuat(CScriptVar *c, void *userdata);
 void jcQuatToEuler(CScriptVar *c, void *userdata);
 void jcEulerToQuat(CScriptVar *c, void *userdata);
@@ -158,6 +160,10 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function LoadObject(hobj, filename)"),							jcLoadObject, psys);
 	m_JS->AddNative(_T("function GetRegisteredObject(designation)"),					jcGetRegisteredObject, psys);
 	m_JS->AddNative(_T("function RegisterObject(designation, hobj)"),					jcRegisterObject, psys);
+	m_JS->AddNative(_T("function IsObjFlagSet(hobj, flagname)"),						jcIsObjFlagSet, psys);
+	m_JS->AddNative(_T("function SetObjFlag(hobj, flagname, val)"),						jcSetObjFlag, psys);
+	m_JS->AddNative(_T("function IsObjFlagSet(hobj, flagname)"),						jcIsObjFlagSet, psys);
+	m_JS->AddNative(_T("function SetObjFlag(hobj, flagname, val)"),						jcSetObjFlag, psys);
 	m_JS->AddNative(_T("function AdjustQuat(quat, axis, angle)"),						jcAdjustQuat, psys);
 	m_JS->AddNative(_T("function EulerToQuat(euler)"),									jcEulerToQuat, psys);
 	m_JS->AddNative(_T("function QuatToEuler(quat)"),									jcQuatToEuler, psys);
@@ -297,9 +303,6 @@ void ScriptableImpl::Execute(const TCHAR *pcmd, ...)
 
 	va_list marker;
 	va_start(marker, pcmd);
-
-//	if (!m_Continue)
-		//return;
 
 	int sz = _vsctprintf(pcmd, marker);
 	if (sz > (int)execbuf.capacity())
@@ -928,6 +931,94 @@ void jcRegisterObject(CScriptVar *c, void *userdata)
 		{
 			psys->GetGlobalObjectRegistry()->RegisterObject((GlobalObjectRegistry::ObjectDesignation)i, (Object *)hobj);
 			return;
+		}
+	}
+}
+
+
+// corresponds to the flags defined in Object
+std::vector<const TCHAR *> gObjFlagName =
+{
+	_T("UPDATE"),
+	_T("DRAW"),		
+	_T("DRAWINEDITOR"),
+	_T("POSCHANGED"),
+	_T("ORICHANGED"),		
+	_T("SCLCHANGED"),
+	_T("KILL"),	
+	_T("TEMPORARY"),
+	_T("CHECKCOLLISIONS"),
+	_T("TRACKCAMX"),
+	_T("TRACKCAMY"),
+	_T("TRACKCAMZ"),
+	_T("TRACKCAMLITERAL"),
+	_T("BILLBOARD"),
+	_T("CHILDRENDIRTY"),
+	_T("PARENTDIRTY"),
+	_T("LIGHT"),
+	_T("CASTSHADOW"),
+	_T("NOMODELSCALE")
+};
+
+
+//m_JS->AddNative(_T("function IsObjFlagSet(hobj, flagname)"),			jcIsObjFlagSet, psys);
+void jcIsObjFlagSet(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	CScriptVar *phobj = c->GetParameter(_T("hobj"));
+	CScriptVar *pflagname = c->GetParameter(_T("flagname"));
+	if (!phobj || !pflagname)
+		return;
+
+	Object *pobj = dynamic_cast<Object *>((Object *)phobj->GetInt());
+	if (pobj)
+	{
+		uint64_t flag = 1;
+		for (auto s : gObjFlagName)
+		{
+			if (!_tcsicmp(pflagname->GetString(), s))
+				break;
+
+			flag <<= 1;
+		}
+
+		ret->SetInt(pobj->Flags().IsSet(flag) ? 1 : 0);
+		return;
+	}
+
+	ret->SetInt(0);
+}
+
+
+//m_JS->AddNative(_T("function SetObjFlag(hobj, flagname, val)"),			jcSetObjFlag, psys);
+void jcSetObjFlag(CScriptVar *c, void *userdata)
+{
+	CScriptVar *phobj = c->GetParameter(_T("hobj"));
+	CScriptVar *pflagname = c->GetParameter(_T("flagname"));
+	CScriptVar *pval = c->GetParameter(_T("val"));
+	if (!phobj || !pflagname || !pval)
+		return;
+
+	Object *pobj = dynamic_cast<Object *>((Object *)phobj->GetInt());
+	if (pobj)
+	{
+		uint64_t flag = 1;
+		for (auto s : gObjFlagName)
+		{
+			if (!_tcsicmp(pflagname->GetString(), s))
+			{
+				if (!(pval->GetInt()))
+					pobj->Flags().Clear(flag);
+				else
+					pobj->Flags().Set(flag);
+
+				break;
+			}
+
+			flag <<= 1;
 		}
 	}
 }

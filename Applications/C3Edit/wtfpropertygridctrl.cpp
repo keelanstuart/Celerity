@@ -57,15 +57,15 @@ IMPLEMENT_DYNAMIC(CWTFPropertyGridProperty, CObject)
 #define AFX_FORMAT_FLOAT  _T("%f")
 #define AFX_FORMAT_DOUBLE _T("%lf")
 
-CWTFPropertyGridProperty::CWTFPropertyGridProperty(const CString& strName, const COleVariant& varValue, LPCTSTR lpszDescr, DWORD_PTR dwData, LPCTSTR lpszEditMask, LPCTSTR lpszEditTemplate, LPCTSTR lpszValidChars)
-	:	m_strName(strName),
-		m_varValue(varValue),
-		m_varValueOrig(varValue),
-		m_strDescr(lpszDescr == NULL ? _T("") : lpszDescr),
-		m_strEditMask(lpszEditMask == NULL ? _T("") : lpszEditMask),
-		m_strEditTempl(lpszEditTemplate == NULL ? _T("") : lpszEditTemplate),
-		m_strValidChars(lpszValidChars == NULL ? _T("") : lpszValidChars),
-		m_dwData(dwData)
+CWTFPropertyGridProperty::CWTFPropertyGridProperty(const CString& strName, const COleVariant& varValue, LPCTSTR lpszDescr, DWORD_PTR dwData, LPCTSTR lpszEditMask, LPCTSTR lpszEditTemplate, LPCTSTR lpszValidChars) :
+	m_strName(strName),
+	m_varValue(varValue),
+	m_varValueOrig(varValue),
+	m_strDescr(lpszDescr == NULL ? _T("") : lpszDescr),
+	m_strEditMask(lpszEditMask == NULL ? _T("") : lpszEditMask),
+	m_strEditTempl(lpszEditTemplate == NULL ? _T("") : lpszEditTemplate),
+	m_strValidChars(lpszValidChars == NULL ? _T("") : lpszValidChars),
+	m_dwData(dwData)
 {
 	m_bGroup = FALSE;
 	m_bIsValueList = FALSE;
@@ -79,10 +79,10 @@ CWTFPropertyGridProperty::CWTFPropertyGridProperty(const CString& strName, const
 	}
 }
 
-CWTFPropertyGridProperty::CWTFPropertyGridProperty(const CString& strGroupName, DWORD_PTR dwData, BOOL bIsValueList)
-	:	m_strName(strGroupName),
-		m_dwData(dwData),
-		m_bIsValueList(bIsValueList)
+CWTFPropertyGridProperty::CWTFPropertyGridProperty(const CString& strGroupName, DWORD_PTR dwData, BOOL bIsValueList) :
+	m_strName(strGroupName),
+	m_dwData(dwData),
+	m_bIsValueList(bIsValueList)
 {
 	m_bGroup = TRUE;
 
@@ -96,28 +96,28 @@ void CWTFPropertyGridProperty::SetFlags()
 
 	switch (m_varValue.vt)
 	{
-	case VT_BSTR:
-	case VT_R4:
-	case VT_R8:
-	case VT_UI1:
-	case VT_I2:
-	case VT_I4:
-	case VT_I8:
-	case VT_INT:
-	case VT_UINT:
-	case VT_UI2:
-	case VT_UI4:
-		break;
+		case VT_BSTR:
+		case VT_R4:
+		case VT_R8:
+		case VT_UI1:
+		case VT_I2:
+		case VT_I4:
+		case VT_I8:
+		case VT_INT:
+		case VT_UINT:
+		case VT_UI2:
+		case VT_UI4:
+			break;
 
-	case VT_DATE:
-		break;
+		case VT_DATE:
+			break;
 
-	case VT_BOOL:
-		m_dwFlags = AFX_PROP_HAS_LIST;
-		break;
+		case VT_BOOL:
+			m_dwFlags = AFX_PROP_HAS_LIST;
+			break;
 
-	default:
-		break;
+		default:
+			break;
 	}
 }
 
@@ -603,17 +603,19 @@ void CWTFPropertyGridProperty::SetName(LPCTSTR lpszName, BOOL bRedraw)
 	}
 }
 
-void CWTFPropertyGridProperty::SetValue(const COleVariant& varValue)
+void CWTFPropertyGridProperty::UpdateValue(const COleVariant& varValue)
 {
 	ASSERT_VALID(this);
 
-#if 0
-	if (m_varValue.vt != VT_EMPTY && m_varValue.vt != varValue.vt)
-	{
-		ASSERT(FALSE);
+	if (m_varValue == varValue)
 		return;
-	}
-#endif
+
+	SetValue(varValue);
+}
+
+void CWTFPropertyGridProperty::SetValue(const COleVariant& varValue)
+{
+	ASSERT_VALID(this);
 
 	BOOL bInPlaceEdit = m_bInPlaceEdit;
 	if (bInPlaceEdit)
@@ -884,7 +886,6 @@ CString CWTFPropertyGridProperty::FormatProperty()
 
 	if (m_bIsValueList)
 	{
-#if 1
 		for (POSITION pos = m_lstSubItems.GetHeadPosition(); pos != NULL;)
 		{
 			CWTFPropertyGridProperty* pProp = m_lstSubItems.GetNext(pos);
@@ -898,9 +899,6 @@ CString CWTFPropertyGridProperty::FormatProperty()
 				strVal += _T(' ');
 			}
 		}
-#else
-		strVal = _T("");
-#endif
 
 		return strVal;
 	}
@@ -940,7 +938,7 @@ CString CWTFPropertyGridProperty::FormatProperty()
 
 	case VT_R4:
 	{
-		strVal.Format(AFX_FORMAT_FLOAT, (float)var.fltVal);
+		strVal.Format(_T("%0.4f") /* AFX_FORMAT_FLOAT */, (float)var.fltVal);
 
 		// trim insignificant 0's from the end of the string
 		int d = strVal.Find(_T('.')) + 1;
@@ -2300,6 +2298,9 @@ CString CWTFPropertyGridColorProperty::FormatProperty()
 void CWTFPropertyGridColorProperty::SetColor(COLORREF color)
 {
 	ASSERT_VALID(this);
+
+	if ((m_Color == color) && (m_varValue == (LONG)color))
+		return;
 
 	m_Color = color;
 	m_varValue = (LONG) color;

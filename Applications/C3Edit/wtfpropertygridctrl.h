@@ -161,6 +161,7 @@ public:
 
 	virtual const COleVariant& GetValue() const { return m_varValue; }
 	virtual void SetValue(const COleVariant& varValue);
+	virtual void UpdateValue(const COleVariant &varValue);
 
 	const COleVariant& GetOriginalValue() const { return m_varValueOrig; }
 	virtual void SetOriginalValue(const COleVariant& varValue);

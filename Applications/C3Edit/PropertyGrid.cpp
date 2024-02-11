@@ -665,7 +665,7 @@ void CPropertyGrid::UpdateCurrentProperties()
 			{
 				case props::IProperty::PROPERTY_TYPE::PT_STRING:
 				{
-					pgp->SetValue(p->AsString());
+					pgp->UpdateValue(p->AsString());
 					break;
 				}
 
@@ -684,7 +684,7 @@ void CPropertyGrid::UpdateCurrentProperties()
 						case props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR:
 
 						default:
-							pgp->SetValue(p->AsInt());
+							pgp->UpdateValue(p->AsInt());
 							break;
 					}
 					break;
@@ -692,7 +692,7 @@ void CPropertyGrid::UpdateCurrentProperties()
 
 				case props::IProperty::PROPERTY_TYPE::PT_FLOAT:
 				{
-					pgp->SetValue(p->AsFloat());
+					pgp->UpdateValue(p->AsFloat());
 					break;
 				}
 
@@ -700,44 +700,44 @@ void CPropertyGrid::UpdateCurrentProperties()
 				{
 					TCHAR guidstr[64];
 					p->AsString(guidstr);
-					pgp->SetValue(guidstr);
+					pgp->UpdateValue(guidstr);
 					break;
 				}
 
 				case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:
 				{
-					pgp->SetValue((long)(p->AsBool()));
+					pgp->UpdateValue((long)(p->AsBool()));
 					break;
 				}
 
 				case props::IProperty::PROPERTY_TYPE::PT_INT_V2:
 				{
-					pgp->GetSubItem(0)->SetValue(p->AsVec2I()->x);
-					pgp->GetSubItem(1)->SetValue(p->AsVec2I()->y);
+					pgp->GetSubItem(0)->UpdateValue(p->AsVec2I()->x);
+					pgp->GetSubItem(1)->UpdateValue(p->AsVec2I()->y);
 					break;
 				}
 
 				case props::IProperty::PROPERTY_TYPE::PT_INT_V3:
 				{
-					pgp->GetSubItem(0)->SetValue(p->AsVec3I()->x);
-					pgp->GetSubItem(1)->SetValue(p->AsVec3I()->y);
-					pgp->GetSubItem(2)->SetValue(p->AsVec3I()->z);
+					pgp->GetSubItem(0)->UpdateValue(p->AsVec3I()->x);
+					pgp->GetSubItem(1)->UpdateValue(p->AsVec3I()->y);
+					pgp->GetSubItem(2)->UpdateValue(p->AsVec3I()->z);
 					break;
 				}
 
 				case props::IProperty::PROPERTY_TYPE::PT_INT_V4:
 				{
-					pgp->GetSubItem(0)->SetValue(p->AsVec4I()->x);
-					pgp->GetSubItem(1)->SetValue(p->AsVec4I()->y);
-					pgp->GetSubItem(2)->SetValue(p->AsVec4I()->z);
-					pgp->GetSubItem(3)->SetValue(p->AsVec4I()->w);
+					pgp->GetSubItem(0)->UpdateValue(p->AsVec4I()->x);
+					pgp->GetSubItem(1)->UpdateValue(p->AsVec4I()->y);
+					pgp->GetSubItem(2)->UpdateValue(p->AsVec4I()->z);
+					pgp->GetSubItem(3)->UpdateValue(p->AsVec4I()->w);
 					break;
 				}
 
 				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:
 				{
-					pgp->GetSubItem(0)->SetValue(p->AsVec2F()->x);
-					pgp->GetSubItem(1)->SetValue(p->AsVec2F()->y);
+					pgp->GetSubItem(0)->UpdateValue(p->AsVec2F()->x);
+					pgp->GetSubItem(1)->UpdateValue(p->AsVec2F()->y);
 					break;
 				}
 
@@ -746,9 +746,9 @@ void CPropertyGrid::UpdateCurrentProperties()
 					switch (p->GetAspect())
 					{
 						case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG:
-							pgp->GetSubItem(0)->SetValue(glm::degrees(p->AsVec3F()->x));
-							pgp->GetSubItem(1)->SetValue(glm::degrees(p->AsVec3F()->y));
-							pgp->GetSubItem(2)->SetValue(glm::degrees(p->AsVec3F()->z));
+							pgp->GetSubItem(0)->UpdateValue(glm::degrees(p->AsVec3F()->x));
+							pgp->GetSubItem(1)->UpdateValue(glm::degrees(p->AsVec3F()->y));
+							pgp->GetSubItem(2)->UpdateValue(glm::degrees(p->AsVec3F()->z));
 							break;
 
 						case props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB:
@@ -767,9 +767,9 @@ void CPropertyGrid::UpdateCurrentProperties()
 						}
 
 						default:
-							pgp->GetSubItem(0)->SetValue(p->AsVec3F()->x);
-							pgp->GetSubItem(1)->SetValue(p->AsVec3F()->y);
-							pgp->GetSubItem(2)->SetValue(p->AsVec3F()->z);
+							pgp->GetSubItem(0)->UpdateValue(p->AsVec3F()->x);
+							pgp->GetSubItem(1)->UpdateValue(p->AsVec3F()->y);
+							pgp->GetSubItem(2)->UpdateValue(p->AsVec3F()->z);
 							break;
 					}
 					break;
@@ -794,9 +794,9 @@ void CPropertyGrid::UpdateCurrentProperties()
 							if (_z == -0.0f)
 								_z = 0.0f;
 
-							pgp->GetSubItem(0)->SetValue(_x);
-							pgp->GetSubItem(1)->SetValue(_y);
-							pgp->GetSubItem(2)->SetValue(_z);
+							pgp->GetSubItem(0)->UpdateValue(_x);
+							pgp->GetSubItem(1)->UpdateValue(_y);
+							pgp->GetSubItem(2)->UpdateValue(_z);
 							break;
 						}
 
@@ -817,10 +817,10 @@ void CPropertyGrid::UpdateCurrentProperties()
 						}
 
 						default:
-							pgp->GetSubItem(0)->SetValue(p->AsVec4F()->x);
-							pgp->GetSubItem(1)->SetValue(p->AsVec4F()->y);
-							pgp->GetSubItem(2)->SetValue(p->AsVec4F()->z);
-							pgp->GetSubItem(3)->SetValue(p->AsVec4F()->w);
+							pgp->GetSubItem(0)->UpdateValue(p->AsVec4F()->x);
+							pgp->GetSubItem(1)->UpdateValue(p->AsVec4F()->y);
+							pgp->GetSubItem(2)->UpdateValue(p->AsVec4F()->z);
+							pgp->GetSubItem(3)->UpdateValue(p->AsVec4F()->w);
 							break;
 					}
 					break;
@@ -828,7 +828,7 @@ void CPropertyGrid::UpdateCurrentProperties()
 
 				case props::IProperty::PROPERTY_TYPE::PT_ENUM:
 				{
-					pgp->SetValue(p->GetEnumString(p->AsInt()));
+					pgp->UpdateValue(p->GetEnumString(p->AsInt()));
 					break;
 				}
 			}
