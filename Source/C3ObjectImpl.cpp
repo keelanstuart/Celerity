@@ -256,55 +256,20 @@ void ObjectImpl::Update(float elapsed_time)
 }
 
 
-bool ObjectImpl::Prerender(Object::RenderFlags flags)
+bool ObjectImpl::Render(Object::RenderFlags flags, int draworder)
 {
-#if 0
-/*
-	if (flags.IsSet(RF_FORCE) || (flags.IsSet(RF_EDITORDRAW) && m_Flags.IsSet(OF_DRAWINEDITOR)))
-		return true;
-
-	if (!m_Flags.IsSet(OF_DRAW))
-		return false;
-
-	if (flags.IsSet(RF_LIGHT) && !m_Flags.IsSet(OF_LIGHT))
-		return false;
-*/
-	// TODO: port visibility culling
-
-	for (const auto it : m_Components)
-		if (it->Prerender(this, flags))
-			return true;
-
-	return false;
-#else
-	return true;
-#endif
-}
-
-
-bool ObjectImpl::Render(Object::RenderFlags flags)
-{
-	if (!Prerender(flags))
-		return false;
-
 	for (const auto &it : m_Components)
 	{
-		it->Render(flags);
+		if (it->Prerender(flags, draworder))
+			it->Render(flags);
 	}
 
 	for (auto child : m_Children)
 	{
-		child->Render(flags);
+		child->Render(flags, draworder);
 	}
 
-	Postrender(flags);
-
 	return true;
-}
-
-
-void ObjectImpl::Postrender(Object::RenderFlags flags)
-{
 }
 
 

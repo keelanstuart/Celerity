@@ -54,7 +54,7 @@
 		</pass>
 	</technique>
 
-	<technique name="l">
+	<technique name="l" draworder="2">
 		<pass>
 			<setting name="shader.vertex"		value="def-omnilight.vsh" />
 			<setting name="shader.fragment"		value="def-omnilight.fsh" />

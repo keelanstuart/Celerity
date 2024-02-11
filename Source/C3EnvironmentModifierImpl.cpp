@@ -121,21 +121,14 @@ void EnvironmentModifierImpl::Update(float elapsed_time)
 }
 
 
-bool EnvironmentModifierImpl::Prerender(Object::RenderFlags flags)
+bool EnvironmentModifierImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
-	if (flags.IsSet(RF_FORCE))
-		return true;
-
-	if (!m_pOwner->Flags().IsSet(OF_DRAW))
-		return false;
-
-	return true;
+	return false;
 }
 
 
 void EnvironmentModifierImpl::Render(Object::RenderFlags flags)
 {
-	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 }
 
 

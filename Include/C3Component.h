@@ -41,7 +41,7 @@ namespace c3
 
 		/// Called by the Object that owns the Component during it's own Prerender
 		/// If any Component Prerender succeeds, Object::Render is called
-		virtual bool Prerender(Object::RenderFlags flags) = NULL;
+		virtual bool Prerender(Object::RenderFlags flags, int draworder = 0) = NULL;
 
 		/// Called by the Object that owns the Component during it's own Render
 		virtual void Render(Object::RenderFlags flags) = NULL;

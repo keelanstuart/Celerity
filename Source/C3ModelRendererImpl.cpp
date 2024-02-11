@@ -110,19 +110,42 @@ void ModelRendererImpl::Update(float elapsed_time)
 }
 
 
-bool ModelRendererImpl::Prerender(Object::RenderFlags flags)
+bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
+	if (!m_pMethod)
+	{
+		ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
+
+		props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('C3RM');
+		if (prm)
+		{
+			c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("std.c3rm"), RESF_DEMANDLOAD);
+			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
+			{
+				m_pMethod = (RenderMethod *)(pres->GetData());
+
+				m_pMethod->FindTechnique(_T("g"), m_TechIdx_G);
+				m_pMethod->FindTechnique(_T("s"), m_TechIdx_S);
+				m_pMethod->FindTechnique(_T("g+s"), m_TechIdx_GS);
+			}
+		}
+	}
+
 	if (flags.IsSet(RF_FORCE))
 		return true;
 
 	if (flags.IsSet(RF_LIGHT))
 		return false;
 
-	if (flags.IsSet(RF_EDITORDRAW) && m_pOwner->Flags().IsSet(OF_DRAWINEDITOR))
-		return true;
+	RenderMethod::Technique *ptech = m_pMethod ? m_pMethod->GetTechnique((flags.IsSet(RF_SHADOW) && m_pOwner->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G) : nullptr;
+	if (!ptech || (draworder == ptech->GetDrawOrder()))
+	{
+		if (m_pOwner->Flags().IsSet(OF_DRAW))
+			return true;
 
-	if (m_pOwner->Flags().IsSet(OF_DRAW))
-		return true;
+		if (flags.IsSet(RF_EDITORDRAW) && m_pOwner->Flags().IsSet(OF_DRAWINEDITOR))
+			return true;
+	}
 
 	return false;
 }
@@ -130,9 +153,6 @@ bool ModelRendererImpl::Prerender(Object::RenderFlags flags)
 
 void ModelRendererImpl::Render(Object::RenderFlags flags)
 {
-	if (!Prerender(flags))
-		return;
-
 	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 
 	Model *pmod = nullptr;
@@ -156,37 +176,15 @@ void ModelRendererImpl::Render(Object::RenderFlags flags)
 		}
 	}
 
-	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
-
-	if (!flags.IsSet(RF_LOCKSHADER))
+	if (pmod)
 	{
-		if (!m_pMethod)
-		{
-			props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('C3RM');
-			if (prm)
-			{
-				c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("std.c3rm"), RESF_DEMANDLOAD);
-				if (pres && (pres->GetStatus() == Resource::RS_LOADED))
-				{
-					m_pMethod = (RenderMethod *)(pres->GetData());
-
-					m_pMethod->FindTechnique(_T("g"), m_TechIdx_G);
-					m_pMethod->FindTechnique(_T("s"), m_TechIdx_S);
-					m_pMethod->FindTechnique(_T("g+s"), m_TechIdx_GS);
-				}
-			}
-		}
-
-		if (m_pMethod)
+		if (!flags.IsSet(RF_LOCKSHADER) && m_pMethod)
 		{
 			m_pMethod->SetActiveTechnique((flags.IsSet(RF_SHADOW) && m_pOwner->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G);
 			prend->UseRenderMethod(m_pMethod);
 			((RendererImpl *)prend)->SetModelInstanceData((const Model::InstanceData *)m_Inst);
 		}
-	}
 
-	if (pmod)
-	{
 		glm::fmat4x4 mat;
 
 		// Handle the case where we don't want models scaling... like lights...

@@ -90,7 +90,6 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *pparent
 	{
 		o->SetName(pobject->GetName());
 		o->Flags().SetAll(pobject->Flags());
-		o->GetProperties()->AppendPropertySet(pobject->GetProperties());
 
 		for (size_t i = 0, maxi = pobject->GetNumComponents(); i < maxi; i++)
 		{
@@ -109,6 +108,8 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *pparent
 
 			pc->Initialize(o);
 		}
+
+		o->GetProperties()->AppendPropertySet(pobject->GetProperties());
 	}
 
 	o->PostLoad();

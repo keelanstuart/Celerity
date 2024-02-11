@@ -19,9 +19,13 @@ namespace c3
 	class RenderMethodImpl : public RenderMethod
 	{
 
+		friend class RenderMethod;
+
 	protected:
 		Renderer *m_pRend;
 
+		using DrawOrderCountMap = std::map<int, size_t>;
+		static DrawOrderCountMap s_DrawOrders;
 
 	public:
 
@@ -94,6 +98,8 @@ namespace c3
 			
 			TPassVectorsVector m_Passes;
 			size_t m_Mode;
+			std::optional<int> m_DrawOrder;
+
 
 		public:
 			TechniqueImpl(Renderer *prend);
@@ -107,7 +113,11 @@ namespace c3
 			virtual bool Begin(size_t &passes) const;
 			virtual Renderer::RenderStateOverrideFlags ApplyPass(size_t idx) const;
 			virtual void End() const;
+			virtual void SetDrawOrder(int order);
+			virtual int GetDrawOrder() const;
+
 		};
+
 		typedef std::vector<TechniqueImpl> TTechniqueVector;
 
 	protected:

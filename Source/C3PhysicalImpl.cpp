@@ -124,7 +124,7 @@ void PhysicalImpl::Update(float elapsed_time)
 }
 
 
-bool PhysicalImpl::Prerender(Object::RenderFlags flags)
+bool PhysicalImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
 	return false;
 }

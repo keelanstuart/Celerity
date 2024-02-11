@@ -76,11 +76,7 @@ namespace c3
 
 		virtual void Update(float elapsed_time = 0.0f) final;
 
-		virtual bool Prerender(Object::RenderFlags flags) final;
-
-		virtual bool Render(Object::RenderFlags flags) final;
-
-		virtual void Postrender(Object::RenderFlags flags) final;
+		virtual bool Render(Object::RenderFlags flags, int draworder) final;
 
 		virtual bool Load(genio::IInputStream *is) final;
 

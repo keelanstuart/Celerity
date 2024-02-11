@@ -17,6 +17,9 @@ Pull requests are welcome.
 
 Videos:
 <br>
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=CBt5-uMS4ak
+" target="_blank"><img src="http://img.youtube.com/vi/CBt5-uMS4ak/0.jpg" 
+alt="Warehouse Flythrough" width="240" height="180" border="10" /></a>
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=RB7WNeSvIYw
 " target="_blank"><img src="http://img.youtube.com/vi/RB7WNeSvIYw/0.jpg" 
 alt="Light Manipulation" width="240" height="180" border="10" /></a>
@@ -26,7 +29,6 @@ alt="Simple Particles" width="240" height="180" border="10" /></a>
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=QzydaeRiJyw
 " target="_blank"><img src="http://img.youtube.com/vi/QzydaeRiJyw/0.jpg" 
 alt="Simple Animation" width="240" height="180" border="10" /></a>
-
 ______________________________________________
 
 Some background...

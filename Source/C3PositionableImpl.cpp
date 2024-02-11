@@ -179,8 +179,9 @@ void PositionableImpl::Update(float elapsed_time)
 }
 
 
-bool PositionableImpl::Prerender(Object::RenderFlags flags)
+bool PositionableImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
+#if 0
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 	pr->SetWorldMatrix(&m_Mat);
 
@@ -191,6 +192,9 @@ bool PositionableImpl::Prerender(Object::RenderFlags flags)
 		return false;
 
 	return true;
+#else
+	return false;
+#endif
 }
 
 

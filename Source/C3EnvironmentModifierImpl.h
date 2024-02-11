@@ -48,7 +48,7 @@ namespace c3
 
 		virtual void Update(float elapsed_time = 0.0f);
 
-		virtual bool Prerender(Object::RenderFlags flags);
+		virtual bool Prerender(Object::RenderFlags flags, int draworder);
 
 		virtual void Render(Object::RenderFlags flags);
 

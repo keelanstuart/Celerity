@@ -442,19 +442,28 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
 			prend->SetTextureTransformMatrix(nullptr);
-			pDoc->m_RootObj->Render(RF_EDITORDRAW);
+			c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+			{
+				pDoc->m_RootObj->Render(RF_EDITORDRAW, order);
+			});
 
 			// Shadow pass
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 			prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
-			pDoc->m_RootObj->Render(RF_SHADOW);
+			c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+			{
+				pDoc->m_RootObj->Render(RF_SHADOW, order);
+			});
 
 			// Lighting pass(es)
 			prend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 			prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-			pDoc->m_RootObj->Render(RF_LIGHT);
+			c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+			{
+				pDoc->m_RootObj->Render(RF_LIGHT, order);
+			});
 
 			// clear the render method and material
 			prend->UseRenderMethod();

@@ -157,7 +157,7 @@ void CameraImpl::Update(float elapsed_time)
 }
 
 
-bool CameraImpl::Prerender(Object::RenderFlags flags)
+bool CameraImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
 	return false;
 }

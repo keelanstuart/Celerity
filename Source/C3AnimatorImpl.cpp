@@ -303,9 +303,9 @@ void AnimatorImpl::Update(float elapsed_time)
 }
 
 
-bool AnimatorImpl::Prerender(Object::RenderFlags flags)
+bool AnimatorImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
-	return true;
+	return false;
 }
 
 

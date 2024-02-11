@@ -325,29 +325,47 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 }
 
 
-bool ParticleEmitterImpl::Prerender(Object::RenderFlags flags)
+bool ParticleEmitterImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
-	if (flags.IsSet(RF_FORCE))
-		return true;
+	if (!m_pMethod)
+	{
+		props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('PErm');
+		if (pmethod)
+		{
+			ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
 
-	if (!m_pOwner->Flags().IsSet(OF_DRAW))
+			c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("particles.c3rm"), RESF_DEMANDLOAD);
+			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
+			{
+				m_pMethod = (RenderMethod *)(pres->GetData());
+
+				m_pMethod->FindTechnique(_T("g"), m_TechIdx_G);
+			}
+		}
+	}
+
+	if (flags.IsSet(RF_SHADOW))
 		return false;
 
-	return true;
+	if (flags.IsSet(RF_LIGHT))
+		return false;
+
+	if (flags.IsSet(RF_AUXILIARY))
+		return false;
+
+	RenderMethod::Technique *ptech = m_pMethod ? m_pMethod->GetTechnique(m_TechIdx_G) : nullptr;
+	if (!ptech || (draworder == ptech->GetDrawOrder()))
+	{
+		if (m_pOwner->Flags().IsSet(OF_DRAW))
+			return true;
+	}
+
+	return false;
 }
 
 
 void ParticleEmitterImpl::Render(Object::RenderFlags flags)
 {
-	if (flags.IsSet(RF_SHADOW))
-		return;
-
-	if (flags.IsSet(RF_LIGHT))
-		return;
-
-	if (flags.IsSet(RF_AUXILIARY))
-		return;
-
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 
 	if (!m_Verts)
@@ -421,21 +439,6 @@ void ParticleEmitterImpl::Render(Object::RenderFlags flags)
 
 	if (!flags.IsSet(RF_LOCKSHADER))
 	{
-		if (!m_pMethod)
-		{
-			props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('PErm');
-			if (prm)
-			{
-				c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("particles.c3rm"), RESF_DEMANDLOAD);
-				if (pres && (pres->GetStatus() == Resource::RS_LOADED))
-				{
-					m_pMethod = (RenderMethod *)(pres->GetData());
-
-					m_pMethod->FindTechnique(_T("g"), m_TechIdx_G);
-				}
-			}
-		}
-
 		if (m_pMethod)
 		{
 			m_pMethod->SetActiveTechnique(m_TechIdx_G);

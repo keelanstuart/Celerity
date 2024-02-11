@@ -8,6 +8,7 @@
 
 #include <C3.h>
 #include <C3Renderer.h>
+#include <functional>
 
 namespace c3
 {
@@ -16,6 +17,9 @@ namespace c3
 	{
 
 	public:
+
+		using OrderedDrawFunction = std::function<void(int)>;
+		static void C3_API ForEachOrderedDrawDo(OrderedDrawFunction func);
 
 		class Pass
 		{
@@ -77,13 +81,26 @@ namespace c3
 			// Adds a Pass to this Technique
 			virtual Pass *AddPass() = NULL;
 
+			// Normal or, for the time being, skin mode
 			virtual void SetMode(ETechMode mode = TECHMODE_NORMAL) = NULL;
 
+			// Called when starting the technique. Tells you how many passes there are.
 			virtual bool Begin(size_t &passes) const = NULL;
 
+			// Applies the render settings for the given pass, typically in a loop run after Begin
 			virtual Renderer::RenderStateOverrideFlags ApplyPass(size_t idx) const = NULL;
 
+			// Called at the end of the technique
 			virtual void End() const = NULL;
+
+			// Sets the draw order for things rendered with this technique
+			virtual void SetDrawOrder(int order) = NULL;
+
+			// Gets the draw order for this technique. The default is 0. Higher numbers draw later, after other stuff.
+			// You need to handle this in your Component's PreRender function.
+			// TODO: improve this maybe?
+			virtual int GetDrawOrder() const = NULL;
+
 		};
 
 		virtual void Release() = NULL;

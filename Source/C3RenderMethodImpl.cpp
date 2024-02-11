@@ -12,6 +12,33 @@
 using namespace c3;
 
 
+RenderMethodImpl::DrawOrderCountMap RenderMethodImpl::s_DrawOrders;
+void RenderMethod::ForEachOrderedDrawDo(RenderMethod::OrderedDrawFunction func)
+{
+	auto it = RenderMethodImpl::s_DrawOrders.begin();
+
+	if (!RenderMethodImpl::s_DrawOrders.empty())
+	{
+		while (it->first < 0)
+		{
+			func(it->first);
+			it++;
+		}
+	}
+
+	func(0);	// 0 should never be in the list itself
+
+	if (!RenderMethodImpl::s_DrawOrders.empty())
+	{
+		while (it != RenderMethodImpl::s_DrawOrders.end())
+		{
+			func(it->first);
+			it++;
+		}
+	}
+}
+
+
 RenderMethodImpl::PassImpl::PassImpl()
 {
 	m_ShaderProg = nullptr;
@@ -350,6 +377,42 @@ void RenderMethodImpl::TechniqueImpl::End() const
 }
 
 
+void RenderMethodImpl::TechniqueImpl::SetDrawOrder(int order)
+{
+	if (m_DrawOrder.value_or(0) != order)
+	{
+		if (m_DrawOrder.has_value() && *m_DrawOrder)
+		{
+			auto it = s_DrawOrders.find(*m_DrawOrder);
+			if (it != s_DrawOrders.end())
+			{
+				if (it->second)
+					it->second--;
+
+				if (!it->second)
+					s_DrawOrders.erase(it);
+			}
+		}
+	}
+
+	if (order)
+	{
+		m_DrawOrder = order;
+		std::pair<RenderMethodImpl::DrawOrderCountMap::iterator, bool> insret = RenderMethodImpl::s_DrawOrders.insert(RenderMethodImpl::DrawOrderCountMap::value_type(order, 1));
+		if (!insret.second)
+			insret.first->second++;
+	}
+	else
+		m_DrawOrder.reset();
+}
+
+
+int RenderMethodImpl::TechniqueImpl::GetDrawOrder() const
+{
+	return m_DrawOrder.value_or(0);
+}
+
+
 RenderMethodImpl::RenderMethodImpl(Renderer *prend)
 {
 	m_pRend = prend;
@@ -470,6 +533,12 @@ void RenderMethodImpl::LoadTechnique(const tinyxml2::XMLElement *proot)
 		CONVERT_MBCS2TCS(paname->Value(), n);
 
 		m_Techniques.back().SetName(n);
+	}
+
+	const tinyxml2::XMLAttribute *porder = proot->FindAttribute("draworder");
+	if (porder)
+	{
+		m_Techniques.back().SetDrawOrder(porder->IntValue());
 	}
 
 	const tinyxml2::XMLElement *ppel = proot->FirstChildElement("pass");

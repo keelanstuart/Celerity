@@ -231,9 +231,9 @@ void ScriptableImpl::Update(float elapsed_time)
 }
 
 
-bool ScriptableImpl::Prerender(Object::RenderFlags flags)
+bool ScriptableImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
-	return true;
+	return false;
 }
 
 

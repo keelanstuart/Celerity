@@ -75,10 +75,59 @@ void OmniLightImpl::Update(float elapsed_time)
 }
 
 
-bool OmniLightImpl::Prerender(Object::RenderFlags flags)
+bool OmniLightImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
-	if (m_pOwner->Flags().IsSet(OF_LIGHT) && flags.IsSet(RF_LIGHT))
-		return true;
+	if (!m_pMethod)
+	{
+		props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('C3RM');
+		if (pmethod)
+		{
+			c3::Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(pmethod ? pmethod->AsString() : _T("std.c3rm"));
+			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
+			{
+				m_pMethod = (RenderMethod *)(pres->GetData());
+
+				if (m_pMethod->FindTechnique(_T("l"), m_TechIdx_L))
+				{
+					RenderMethod::Technique *pt = m_pMethod->GetTechnique(m_TechIdx_L);
+					RenderMethod::Pass *pp = pt ? pt->GetPass(0) : nullptr;
+
+					if (pt)
+						pt->ApplyPass(0);
+
+					ShaderProgram *ps = pp ? pp->GetShader() : nullptr;
+					if (ps)
+					{
+						m_uniColor = ps->GetUniformLocation(_T("uLightColor"));
+						m_uniPos = ps->GetUniformLocation(_T("uLightPos"));
+						m_uniRadius = ps->GetUniformLocation(_T("uLightRadius"));
+						m_uniScreenSize = ps->GetUniformLocation(_T("uScreenSize"));
+						m_uniSampDiff = ps->GetUniformLocation(_T("uSamplerDiffuseMetalness"));
+						m_uniSampNorm = ps->GetUniformLocation(_T("uSamplerNormalAmbOcc"));
+						m_uniSampPosDepth = ps->GetUniformLocation(_T("uSamplerPosDepth"));
+						m_uniSampEmisRough = ps->GetUniformLocation(_T("uSamplerEmissionRoughness"));
+						m_uniTexAtten = ps->GetUniformLocation(_T("uSamplerAttenuation"));
+					}
+				}
+			}
+		}
+	}
+
+	if (!flags.IsSet(RF_LIGHT))
+		return false;
+
+	if (flags.IsSet(RF_SHADOW))
+		return false;
+
+	if (flags.IsSet(RF_AUXILIARY))
+		return false;
+
+	RenderMethod::Technique *ptech = m_pMethod ? m_pMethod->GetTechnique(m_TechIdx_L) : nullptr;
+	if (!ptech || (draworder == ptech->GetDrawOrder()))
+	{
+		if (m_pOwner->Flags().IsSet(OF_LIGHT) && flags.IsSet(RF_LIGHT))
+			return true;
+	}
 
 	return false;
 }
@@ -86,10 +135,6 @@ bool OmniLightImpl::Prerender(Object::RenderFlags flags)
 
 void OmniLightImpl::Render(Object::RenderFlags flags)
 {
-	if (!Prerender(flags))
-		return;
-
-	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
 	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 
 	m_SourceFB = prend->FindFrameBuffer(_T("GBuffer"));
@@ -99,47 +144,7 @@ void OmniLightImpl::Render(Object::RenderFlags flags)
 
 	if (!flags.IsSet(RF_LOCKSHADER))
 	{
-		if (!m_Material)
-		{
-			//m_Material = prend->GetMaterialManager()->CreateMaterial();
-		}
-
-		if (!m_pMethod)
-		{
-			props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('C3RM');
-			if (prm)
-			{
-				c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("std.c3rm"));
-				if (pres && (pres->GetStatus() == Resource::RS_LOADED))
-				{
-					m_pMethod = (RenderMethod *)(pres->GetData());
-
-					if (m_pMethod->FindTechnique(_T("l"), m_TechIdx_L))
-					{
-						RenderMethod::Technique *pt = m_pMethod->GetTechnique(m_TechIdx_L);
-						RenderMethod::Pass *pp = pt ? pt->GetPass(0) : nullptr;
-
-						if (pt)
-							pt->ApplyPass(0);
-
-						ShaderProgram *ps = pp ? pp->GetShader() : nullptr;
-						if (ps)
-						{
-							m_uniColor = ps->GetUniformLocation(_T("uLightColor"));
-							m_uniPos = ps->GetUniformLocation(_T("uLightPos"));
-							m_uniRadius = ps->GetUniformLocation(_T("uLightRadius"));
-							m_uniScreenSize = ps->GetUniformLocation(_T("uScreenSize"));
-							m_uniSampDiff = ps->GetUniformLocation(_T("uSamplerDiffuseMetalness"));
-							m_uniSampNorm = ps->GetUniformLocation(_T("uSamplerNormalAmbOcc"));
-							m_uniSampPosDepth = ps->GetUniformLocation(_T("uSamplerPosDepth"));
-							m_uniSampEmisRough = ps->GetUniformLocation(_T("uSamplerEmissionRoughness"));
-							m_uniTexAtten = ps->GetUniformLocation(_T("uSamplerAttenuation"));
-						}
-					}
-				}
-			}
-		}
-		else
+		if (m_pMethod)
 		{
 			prend->UseMaterial(m_Material);
 			prend->UseRenderMethod(m_pMethod);
@@ -185,31 +190,16 @@ void OmniLightImpl::Render(Object::RenderFlags flags)
 
 	if (isinside)
 	{
-#if 1
 		prend->SetCullMode(c3::Renderer::CullMode::CM_FRONT);
 		prend->SetDepthTest(Renderer::Test::DT_ALWAYS);
-#else
-		m_Material->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERFRONT));
-		m_Material->SetDepthTest(Renderer::Test::DT_ALWAYS);
-#endif
 	}
 	else
 	{
-#if 1
 		prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
 		prend->SetDepthTest(c3::Renderer::Test::DT_LESSEREQUAL);
-#else
-		m_Material->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_RENDERBACK));
-		m_Material->SetDepthTest(c3::Renderer::Test::DT_LESSEREQUAL);
-#endif
 	}
 
 	prend->GetCubeMesh()->Draw();
-
-	if (flags.IsSet(RF_EDITORDRAW))
-	{
-		// TODO: draw indicator for light volume
-	}
 }
 
 

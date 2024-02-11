@@ -82,15 +82,24 @@ void QuadTerrainImpl::Update(float elapsed_time)
 }
 
 
-bool QuadTerrainImpl::Prerender(Object::RenderFlags flags)
+bool QuadTerrainImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
 	if (flags.IsSet(RF_FORCE))
 		return true;
 
-	if (!m_pOwner->Flags().IsSet(OF_DRAW))
+	if (flags.IsSet(RF_LIGHT))
 		return false;
 
-	return true;
+	//if (!m_pMethod || (draworder == m_pMethod->GetActiveTechnique()->GetDrawOrder()))
+	{
+		if (m_pOwner->Flags().IsSet(OF_DRAW))
+			return true;
+
+		if (flags.IsSet(RF_EDITORDRAW) && m_pOwner->Flags().IsSet(OF_DRAWINEDITOR))
+			return true;
+	}
+
+	return false;
 }
 
 

@@ -127,14 +127,8 @@ namespace c3
 		/// Updates the object by the given amount of elapsed time (in seconds)
 		virtual void Update(float elapsed_time = 0.0f) = NULL;
 
-		/// Called prior to actually rendering the object; returns true if Render should be called, false if not
-		virtual bool Prerender(RenderFlags flags = 0) = NULL;
-
 		/// Called to render the object; returns true if Postrender should be called, false if not
-		virtual bool Render(RenderFlags flags = 0) = NULL;
-
-		/// Called after the object is rendered
-		virtual void Postrender(RenderFlags flags = 0) = NULL;
+		virtual bool Render(RenderFlags flags = 0, int draworder = 0) = NULL;
 
 		/// Loads the Object from a stream
 		virtual bool Load(genio::IInputStream *is) = NULL;
