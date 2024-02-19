@@ -138,7 +138,7 @@ bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
 		return false;
 
 	RenderMethod::Technique *ptech = m_pMethod ? m_pMethod->GetTechnique((flags.IsSet(RF_SHADOW) && m_pOwner->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G) : nullptr;
-	if (!ptech || (draworder == ptech->GetDrawOrder()))
+	if (ptech && (draworder == ptech->GetDrawOrder()))
 	{
 		if (m_pOwner->Flags().IsSet(OF_DRAW))
 			return true;

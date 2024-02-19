@@ -30,6 +30,45 @@ ParticleEmitterImpl::~ParticleEmitterImpl()
 
 void ParticleEmitterImpl::Release()
 {
+	props::IPropertySet *pps = m_pOwner->GetProperties();
+	props::IProperty *pp;
+	
+	pp = pps->GetPropertyById('PEsh');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PErt');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PEsp');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PElf');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PEac');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PEgr');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PErl');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PEss');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PEps');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PEes');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PErd');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('PEpp');
+	if (pp) pp->ExternalizeReference();
+
 	delete this;
 }
 
@@ -442,7 +481,6 @@ void ParticleEmitterImpl::Render(Object::RenderFlags flags)
 		if (m_pMethod)
 		{
 			m_pMethod->SetActiveTechnique(m_TechIdx_G);
-			m_pMethod->GetActiveTechnique()->SetMode(RenderMethod::Technique::TECHMODE_NORMAL);
 			pr->UseRenderMethod(m_pMethod);
 		}
 	}

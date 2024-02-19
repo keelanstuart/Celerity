@@ -52,9 +52,9 @@ namespace c3
 
 		virtual Prototype *FindPrototype(GUID guid);
 
-		virtual bool LoadPrototypes(genio::IInputStream *is);
+		virtual bool LoadPrototypes(genio::IInputStream *is, const TCHAR *source = nullptr);
 
-		virtual bool LoadPrototypes(const tinyxml2::XMLNode *proot);
+		virtual bool LoadPrototypes(const tinyxml2::XMLNode *proot, const TCHAR *source = nullptr);
 
 		virtual bool SavePrototypes(genio::IOutputStream *os, PROTO_SAVE_HUERISTIC_FUNCTION pshfunc = nullptr);
 

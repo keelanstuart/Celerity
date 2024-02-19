@@ -129,9 +129,6 @@
     <ClCompile Include="Source\C3SubscriptionImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\C3ShaderBuilderImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\C3MaterialManagerImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -207,7 +204,7 @@
     <ClCompile Include="Source\C3EnvironmentImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\C3Zip.cpp">
+    <ClCompile Include="Source\C3ZipImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\C3SoundPlayerImpl.cpp">
@@ -232,6 +229,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\C3FontImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3InterfaceElementImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -402,9 +402,6 @@
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3ResourceManagerImpl.h">
-      <Filter>Header Files\Private</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3ShaderBuilderImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3SubscriptionImpl.h">
@@ -584,7 +581,7 @@
     <ClInclude Include="Source\miniaudio.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
-    <ClInclude Include="Source\C3Zip.h">
+    <ClInclude Include="Source\C3ZipImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3SoundPlayerImpl.h">
@@ -601,9 +598,6 @@
     </ClInclude>
     <ClInclude Include="Source\C3ScreenManagerImpl.h">
       <Filter>Header Files\Private</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Zip.h">
-      <Filter>Header Files\Public</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3GuiImpl.h">
       <Filter>Header Files\Private</Filter>
@@ -626,17 +620,17 @@
     <ClInclude Include="Source\resource.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
-    <ClInclude Include="Include\C3Font.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Source\C3FontImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Source\C3InterfaceElementImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Include\C3InterfaceElement.h">
       <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Font.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3FontImpl.h">
+      <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

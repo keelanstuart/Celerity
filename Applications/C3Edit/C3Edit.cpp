@@ -251,15 +251,19 @@ BOOL C3EditApp::InitInstance()
 	resexts = m_Config->GetString(_T("resources.scripts.extensions"), _T("c3js"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
+	respaths = m_Config->GetString(_T("resources.sounds.paths"), _T("./;./assets;./assets/sounds"));
+	resexts = m_Config->GetString(_T("resources.sounds.extensions"), _T("wav;mp3;ogg"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
 	theApp.m_C3->GetLog()->Print(_T(" done.\n"));
 
 	c3::Factory *pf = m_C3->GetFactory();
 	if (!pf)
 		return FALSE;
 
-	theApp.m_C3->GetLog()->Print(_T("Loading Prototypes..."));
-
 	c3::Material::SetAlternateTextureFilenameFunc(AltTextureName);
+
+	theApp.m_C3->GetLog()->Print(_T("Loading Prototypes..."));
 
 	for (size_t q = 0; q < pfm->GetNumPaths(_T("c3protoa")); q++)
 	{
@@ -279,7 +283,7 @@ BOOL C3EditApp::InitInstance()
 				tpath.append(fd.cFileName);
 				CONVERT_TCS2MBCS(tpath.c_str(), p);
 				doc.LoadFile(p);
-				pf->LoadPrototypes(doc.RootElement());
+				pf->LoadPrototypes(doc.RootElement(), tpath.c_str());
 			}
 			while (FindNextFile(hff, &fd));
 

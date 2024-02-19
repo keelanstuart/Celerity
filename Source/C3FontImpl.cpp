@@ -7,9 +7,35 @@
 #include "pch.h"
 
 #include <C3FontImpl.h>
+#include <C3CommonVertexDefs.h>
 
 using namespace c3;
 
+
+
+void Font::ParseFontDescIntoLOGFONT(const TCHAR *fontdesc, LOGFONT &lf)
+{
+	memset(&lf, 0, sizeof(LOGFONT));
+
+	if (!fontdesc)
+		return;
+
+	TCHAR tmp[8];
+	const TCHAR *s = fontdesc;
+	TCHAR *d = lf.lfFaceName;
+
+	while (*s && (*s != _T('(')))
+		*(d++) = *(s++);
+
+	s++;
+	d = tmp;
+
+	while (*s && (*s != _T(')')))
+		*(d++) = *(s++);
+	*d = _T('\0');
+
+	lf.lfHeight = _ttoi(tmp);
+}
 
 
 FontImpl::FontImpl(Renderer *prend, const TCHAR *fontname, size_t fontsize)
@@ -241,9 +267,9 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 	if (!text || !*text)
 		return 0;
 
-	UINT32 length = 0;
+	size_t length = 0;
 	for (const TCHAR *c = text; *c != _T('\0'); c++)
-		if (std::isprint(*c))
+		if (std::isprint(*c) && !_istspace(*c))
 			length++;
 
 	float sx = 0;
@@ -254,25 +280,13 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 
 	tabwidth *= m_SpaceWidth;
 
-	constexpr VertexBuffer::ComponentDescription vd[] =
-	{
-		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 3, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
-		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
-
-		{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE},
-	};
-
-#pragma pack(push, 1)
-	struct STextVert
-	{
-		glm::fvec3 pos;
-		glm::fvec2 tex0;
-	} *v;
-#pragma pack(pop)
+	Vertex::ST1::s *v;
 
 	glm::fvec2 corg(0, 0);
 
-	if (pverts->Lock((void **)&v, length * 4, vd, VBLOCKFLAG_WRITE | VBLOCKFLAG_DYNAMIC))
+	size_t d = 0;
+
+	if (pverts->Lock((void **)&v, length * 6, Vertex::ST1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_DYNAMIC) == VertexBuffer::RETURNCODE::RET_OK)
 	{
 		while (*text)
 		{
@@ -291,65 +305,68 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 					break;
 				}
 
-				default:
+/*
+				case _T(' '):
 				{
-					auto it = m_GlyphInfo.find(*text);
-
-					if (it != m_GlyphInfo.end())
-					{
-						v->pos.x = corg.x + topshift;
-						v->pos.y = corg.y;
-						v->pos.z = 0.0f;
-						v->tex0.x = it->second.uv.ul.x;
-						v->tex0.y = it->second.uv.ul.y;
-
-						v++;
-						v->pos.x = corg.x;
-						v->pos.y = corg.y + it->second.h;
-						v->pos.z = 0.0f;
-						v->tex0.x = it->second.uv.ul.x;
-						v->tex0.y = it->second.uv.lr.y;
-
-						v++;
-						v->pos.x = corg.x + it->second.w + topshift;
-						v->pos.y = corg.y;
-						v->pos.z = 0.0f;
-						v->tex0.x = it->second.uv.lr.x;
-						v->tex0.y = it->second.uv.ul.y;
-
-						v++;
-						v->pos.x = corg.x;
-						v->pos.y = corg.y + it->second.h;
-						v->pos.z = 0.0f;
-						v->tex0.x = it->second.uv.ul.x;
-						v->tex0.y = it->second.uv.lr.y;
-
-						v++;
-						v->pos.x = corg.x + it->second.w;
-						v->pos.y = corg.y + it->second.h;
-						v->pos.z = 0.0f;
-						v->tex0.x = it->second.uv.lr.x;
-						v->tex0.y = it->second.uv.lr.y;
-
-						v++;
-						v->pos.x = corg.x + it->second.w + topshift;
-						v->pos.y = corg.y;
-						v->pos.z = 0.0f;
-						v->tex0.x = it->second.uv.lr.x;
-						v->tex0.y = it->second.uv.ul.y;
-
-						corg.x += it->second.w + m_Kerning;
-
-						length++;
-					}
-
-					text++;
+					corg.x += m_SpaceWidth;
+					break;
 				}
+*/
 
-				// Unlock and render the vertex buffer
-				pverts->Unlock();
+				default:
+					if (_istprint(*text))
+					{
+						auto it = m_GlyphInfo.find(*text);
+
+						if (it != m_GlyphInfo.end())
+						{
+							v->pos.x = corg.x + topshift;
+							v->pos.y = corg.y;
+							v->uv.x = it->second.uv.ul.x;
+							v->uv.y = it->second.uv.ul.y;
+							v++;
+
+							v->pos.x = corg.x;
+							v->pos.y = corg.y + it->second.h;
+							v->uv.x = it->second.uv.ul.x;
+							v->uv.y = it->second.uv.lr.y;
+							v++;
+
+							v->pos.x = corg.x + it->second.w + topshift;
+							v->pos.y = corg.y;
+							v->uv.x = it->second.uv.lr.x;
+							v->uv.y = it->second.uv.ul.y;
+							v++;
+
+							v->pos.x = corg.x;
+							v->pos.y = corg.y + it->second.h;
+							v->uv.x = it->second.uv.ul.x;
+							v->uv.y = it->second.uv.lr.y;
+							v++;
+
+							v->pos.x = corg.x + it->second.w;
+							v->pos.y = corg.y + it->second.h;
+							v->uv.x = it->second.uv.lr.x;
+							v->uv.y = it->second.uv.lr.y;
+							v++;
+
+							v->pos.x = corg.x + it->second.w + topshift;
+							v->pos.y = corg.y;
+							v->uv.x = it->second.uv.lr.x;
+							v->uv.y = it->second.uv.ul.y;
+							v++;
+
+							corg.x += it->second.w + m_Kerning;
+						}
+					}
+					break;
 			}
+
+			text++;
 		}
+
+		// Unlock and render the vertex buffer
+		pverts->Unlock();
 	}
 
 	return length;

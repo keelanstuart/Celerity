@@ -750,9 +750,32 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromFile(c3::S
 						{
 							ShaderComponent *psc = psys->GetRenderer()->CreateShaderComponent((Renderer::ShaderComponentType)sti);
 
+							tstring defines;
+							if (options && *options)
+							{
+								const TCHAR *o = options;
+								while (*o)
+								{
+									defines += _T("#define ");
+
+									TCHAR c;
+									while (((c = *o) != _T('\0')) && (c != _T('|')))
+									{
+										defines += c;
+										o++;
+									}
+
+									if (c == _T('|'))
+									{
+										defines += _T('\n');
+										o++;
+									}
+								}
+							}
+
 							TCHAR *_sh;
 							CONVERT_MBCS2TCS(sh, _sh);
-							psc->CompileProgram(_sh, options);
+							psc->CompileProgram(_sh, defines.empty() ? nullptr : defines.c_str());
 						}
 
 						free(sh);

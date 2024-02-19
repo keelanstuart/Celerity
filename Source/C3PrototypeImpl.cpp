@@ -13,11 +13,13 @@
 using namespace c3;
 
 
-PrototypeImpl::PrototypeImpl(System *psys, GUID guid)
+PrototypeImpl::PrototypeImpl(System *psys, GUID guid, const TCHAR *source)
 {
 	m_pSys = psys;
 	m_GUID = guid;
 	m_Flags.SetAll(OF_UPDATE | OF_DRAW);
+	if (source)
+		m_Source = source;
 
 	m_Props = props::IPropertySet::CreatePropertySet();
 }
@@ -129,4 +131,10 @@ const ComponentType *PrototypeImpl::GetComponent(size_t index)
 		return nullptr;
 
 	return m_Components[index];
+}
+
+
+const TCHAR *PrototypeImpl::GetSource() const
+{
+	return m_Source.c_str();
 }

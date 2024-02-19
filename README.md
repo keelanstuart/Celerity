@@ -7,13 +7,13 @@ To start developing, load the main Celerity solution in Visual Studio and build 
 
 Pull requests are welcome.
 
-![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20230128.png)
+![image](https://github.com/keelanstuart/Celerity/blob/master/Media/screen_20230128.png)
 
-![image](https://github.com/keelanstuart/Celerity/blob/master/screen_20230209.png)
+![image](https://github.com/keelanstuart/Celerity/blob/master/Media/screen_20230209.png)
 
-![image](https://github.com/keelanstuart/Celerity/blob/master/screen_ed_20230209.png)
+![image](https://github.com/keelanstuart/Celerity/blob/master/Media/screen_ed_20230209.png)
 
-![image](https://github.com/keelanstuart/Celerity/blob/master/screen_ed_20240209.png)
+![image](https://github.com/keelanstuart/Celerity/blob/master/Media/screen_ed_20240209.png)
 
 Videos:
 <br>

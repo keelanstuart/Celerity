@@ -11,8 +11,8 @@
 <powerprops:property id="DDST" type="STRING">%localappdata%\CeleritySDK</powerprops:property>
 <powerprops:property id="ENEX" type="BOOLEAN">yes</powerprops:property>
 <powerprops:property id="ICON" type="STRING">D:\temp\Celerity\Applications\C3App\res\C3App.ico</powerprops:property>
-<powerprops:property id="IMAG" type="STRING">D:\temp\Celerity\c3install.bmp</powerprops:property>
-<powerprops:property id="LICM" type="STRING">D:\temp\Celerity\LICENSE.html</powerprops:property>
+<powerprops:property id="IMAG" type="STRING">D:\temp\Celerity\INSTALL\c3install.bmp</powerprops:property>
+<powerprops:property id="LICM" type="STRING">D:\temp\Celerity\INSTALL\LICENSE.html</powerprops:property>
 <powerprops:property id="LNCH" type="STRING"></powerprops:property>
 <powerprops:property id="MXSZ" type="INT">-1</powerprops:property>
 <powerprops:property id="OFSF" type="ENUM">None,Build Date,Version:1</powerprops:property>
@@ -22,7 +22,7 @@
 <powerprops:property id="VDSC" type="STRING"></powerprops:property>
 <powerprops:property id="VERS" type="STRING"></powerprops:property>
 <powerprops:property id="VPRD" type="STRING"></powerprops:property>
-<powerprops:property id="WLCM" type="STRING">D:\temp\Celerity\SDKSetupWelcome.html</powerprops:property>
+<powerprops:property id="WLCM" type="STRING">D:\temp\Celerity\INSTALL\SDKSetupWelcome.html</powerprops:property>
 </powerprops:property_set>
 
 </settings2>

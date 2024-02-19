@@ -420,13 +420,7 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const M
 		}
 
 		RenderMethod *prm = m_pRend->GetActiveRenderMethod();
-		if (prm)
-		{
-			if (mesh->pmesh->IsSkin())
-				prm->GetActiveTechnique()->SetMode(RenderMethod::Technique::TECHMODE_SKIN);
-			else
-				prm->GetActiveTechnique()->SetMode(RenderMethod::Technique::TECHMODE_NORMAL);
-		}
+		// TODO: select here based on mesh type...?
 
 		mesh->pmesh->Draw();
 	}

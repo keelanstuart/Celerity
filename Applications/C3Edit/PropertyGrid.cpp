@@ -18,6 +18,7 @@
 #include "C3EditDoc.h"
 #include "C3Edit.h"
 #include "C3EditView.h"
+#include <C3Font.h>
 
 // CPropertyGrid
 
@@ -302,8 +303,10 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 
 					case props::IProperty::PROPERTY_ASPECT::PA_FONT_DESC:
 					{
-						//pwp = new CWTFPropertyGridFontProperty(propname, CString(p->AsString()), 0, _T("A Font"));
-						//break;
+						static LOGFONT lf;
+						c3::Font::ParseFontDescIntoLOGFONT((const TCHAR * const)p->AsString(), lf);
+						pwp = new CWTFPropertyGridFontProperty(propname, lf, CF_SCREENFONTS | CF_EFFECTS);
+						break;
 					}
 
 					default:

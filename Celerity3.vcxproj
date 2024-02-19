@@ -52,6 +52,7 @@
     <ClCompile Include="Source\C3IndexBufferImpl.cpp" />
     <ClCompile Include="Source\C3InputDeviceImpl.cpp" />
     <ClCompile Include="Source\C3InputManagerImpl.cpp" />
+    <ClCompile Include="Source\C3InterfaceElementImpl.cpp" />
     <ClCompile Include="Source\C3LogImpl.cpp" />
     <ClCompile Include="Source\C3MaterialImpl.cpp" />
     <ClCompile Include="Source\C3MaterialManagerImpl.cpp" />
@@ -75,7 +76,6 @@
     <ClCompile Include="Source\C3ResourceManagerImpl.cpp" />
     <ClCompile Include="Source\C3ScreenManagerImpl.cpp" />
     <ClCompile Include="source\C3ScriptableImpl.cpp" />
-    <ClCompile Include="Source\C3ShaderBuilderImpl.cpp" />
     <ClCompile Include="Source\C3ShaderComponentImpl.cpp" />
     <ClCompile Include="Source\C3ShaderProgramImpl.cpp" />
     <ClCompile Include="Source\C3SoundPlayerImpl.cpp" />
@@ -86,7 +86,7 @@
     <ClCompile Include="Source\C3VirtualJoystickImpl.cpp" />
     <ClCompile Include="Source\C3VirtualKeyboardImpl.cpp" />
     <ClCompile Include="Source\C3VirtualMouseImpl.cpp" />
-    <ClCompile Include="Source\C3Zip.cpp" />
+    <ClCompile Include="Source\C3ZipImpl.cpp" />
     <ClCompile Include="Source\dllmain.cpp" />
     <ClCompile Include="Source\gl_wrapper.cpp" />
     <ClCompile Include="$(SolutionDir)third-party\tinyxml2\tinyxml2.cpp">
@@ -209,7 +209,6 @@
     <ClInclude Include="Include\C3TString.h" />
     <ClInclude Include="Include\C3VertexBuffer.h" />
     <ClInclude Include="Include\C3FlowGraph.h" />
-    <ClInclude Include="Include\C3Zip.h" />
     <ClInclude Include="source\C3ActionMapperImpl.h" />
     <ClInclude Include="Source\C3AnimationImpl.h" />
     <ClInclude Include="Source\C3AnimatorImpl.h" />
@@ -254,7 +253,6 @@
     <ClInclude Include="Source\C3ResourceManagerImpl.h" />
     <ClInclude Include="Source\C3ScreenManagerImpl.h" />
     <ClInclude Include="source\C3ScriptableImpl.h" />
-    <ClInclude Include="Source\C3ShaderBuilderImpl.h" />
     <ClInclude Include="Source\C3ShaderProgramImpl.h" />
     <ClInclude Include="Source\C3ShaderComponentImpl.h" />
     <ClInclude Include="Source\C3SoundPlayerImpl.h" />
@@ -265,7 +263,7 @@
     <ClInclude Include="Source\C3VirtualJoystickImpl.h" />
     <ClInclude Include="Source\C3VirtualKeyboardImpl.h" />
     <ClInclude Include="Source\C3VirtualMouseImpl.h" />
-    <ClInclude Include="Source\C3Zip.h" />
+    <ClInclude Include="Source\C3ZipImpl.h" />
     <ClInclude Include="Source\gl.h" />
     <ClInclude Include="Source\glext.h" />
     <ClInclude Include="Source\gl_wrapper.h" />
@@ -353,27 +351,27 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="Debug.props" />
+    <Import Project="$(SolutionDir)Extras/Debug.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="Debug.props" />
+    <Import Project="$(SolutionDir)Extras/Debug.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="Debug.props" />
+    <Import Project="$(SolutionDir)Extras/Debug.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="Debug.props" />
+    <Import Project="$(SolutionDir)Extras/Debug.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="Release.props" />
+    <Import Project="$(SolutionDir)Extras/Release.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="Release.props" />
+    <Import Project="$(SolutionDir)Extras/Release.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

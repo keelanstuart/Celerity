@@ -400,6 +400,8 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	GetXYPlaneMesh();
 	GetXZPlaneMesh();
 	GetYZPlaneMesh();
+	GetGuiRectMesh();
+
 
 	c3::ResourceManager *rm = m_pSys->GetResourceManager();
 	const c3::ResourceType *rt;
@@ -487,6 +489,15 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		plane_model->AssignMeshToNode(ni, mi);
 		plane_model->SetMaterial(mi, GetWhiteMaterial());
 		rm->GetResource(_T("[xzplane.model]"), RESF_CREATEENTRYONLY, rt, plane_model);
+	}
+
+	{
+		c3::Model *plane_model = c3::Model::Create(this);
+		c3::Model::MeshIndex mi = plane_model->AddMesh(GetGuiRectMesh());
+		c3::Model::NodeIndex ni = plane_model->AddNode();
+		plane_model->AssignMeshToNode(ni, mi);
+		plane_model->SetMaterial(mi, GetWhiteMaterial());
+		rm->GetResource(_T("[guirect.model]"), RESF_CREATEENTRYONLY, rt, plane_model);
 	}
 
 	m_Gui = new GuiImpl(this);
@@ -616,6 +627,13 @@ void RendererImpl::Shutdown()
 		m_YZPlaneMesh->AttachVertexBuffer(nullptr);
 		m_YZPlaneMesh->Release();
 		m_YZPlaneMesh = nullptr;
+	}
+
+	if (m_GuiRectMesh)
+	{
+		m_GuiRectMesh->AttachVertexBuffer(nullptr);
+		m_GuiRectMesh->Release();
+		m_GuiRectMesh = nullptr;
 	}
 
 	if (m_PlanesVB)
@@ -2502,7 +2520,7 @@ VertexBuffer *RendererImpl::GetPlanesVB()
 	{
 		m_PlanesVB = CreateVertexBuffer(0);
 
-		static const Vertex::PNT1::s v[3 * 4] =
+		static const Vertex::PNT1::s v[4 * 4] =
 		{
 			// XY
 			{ { -1, -1,  0 }, {  0,  0,  1 }, {  0,  0 } },
@@ -2520,20 +2538,53 @@ VertexBuffer *RendererImpl::GetPlanesVB()
 			{ { -1,  0, -1 }, {  0,  1,  0 }, {  0,  0 } },
 			{ {  1,  0, -1 }, {  0,  1,  0 }, {  0,  1 } },
 			{ {  1,  0,  1 }, {  0,  1,  0 }, {  1,  1 } },
-			{ { -1,  0,  1 }, {  0,  1,  0 }, {  1,  0 } }
+			{ { -1,  0,  1 }, {  0,  1,  0 }, {  1,  0 } },
 
+			// GUI Rect (on the x/z plane)
+			{ { 0, 0, 0 }, { 0, 1, 0 }, { 0, 0 } },
+			{ { 0, 0, 1 }, { 0, 1, 0 }, { 0, 1 } },
+			{ { 1, 0, 1 }, { 0, 1, 0 }, { 1, 1 } },
+			{ { 1, 0, 0 }, { 0, 1, 0 }, { 1, 0 } }
 		};
 
 		void *buf;
-		if (m_PlanesVB->Lock(&buf, 3 * 4, Vertex::PNT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
+		if (m_PlanesVB->Lock(&buf, 4 * 4, Vertex::PNT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
 		{
-			memcpy(buf, v, sizeof(Vertex::PNT1::s) * 3 * 4);
+			memcpy(buf, v, sizeof(Vertex::PNT1::s) * 4 * 4);
 
 			m_PlanesVB->Unlock();
 		}
 	}
 
 	return m_PlanesVB;
+}
+
+
+VertexBuffer *RendererImpl::GetGuiVB()
+{
+	if (!m_GuiVB)
+	{
+		m_GuiVB = CreateVertexBuffer(0);
+
+		static const Vertex::ST1::s v[4] =
+		{
+			// GUI Rect (on the x/z plane)
+			{ { 0, 0 }, { 0, 0 } },
+			{ { 0, 1 }, { 0, 1 } },
+			{ { 1, 1 }, { 1, 1 } },
+			{ { 1, 0 }, { 1, 0 } }
+		};
+
+		void *buf;
+		if (m_GuiVB->Lock(&buf, 4 * 4, Vertex::PNT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
+		{
+			memcpy(buf, v, sizeof(Vertex::PNT1::s) * 4 * 4);
+
+			m_GuiVB->Unlock();
+		}
+	}
+
+	return m_GuiVB;
 }
 
 Mesh *RendererImpl::GetXYPlaneMesh()
@@ -2638,6 +2689,41 @@ Mesh *RendererImpl::GetXZPlaneMesh()
 	}
 
 	return m_XZPlaneMesh;
+}
+
+
+Mesh *RendererImpl::GetGuiRectMesh()
+{
+	if (!m_GuiRectMesh)
+	{
+		m_GuiRectMesh = CreateMesh();
+
+		m_GuiRectMesh->AttachVertexBuffer(GetGuiVB());
+
+		if (m_GuiVB)
+		{
+			IndexBuffer *pib = CreateIndexBuffer(0);
+			if (pib)
+			{
+				static const uint16_t i[2][3] =
+				{
+					 { 0, 1, 2 }, {  0, 2, 3  }
+				};
+
+				void *buf;
+				if (pib->Lock(&buf, 2 * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
+				{
+					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3);
+
+					pib->Unlock();
+				}
+
+				m_GuiRectMesh->AttachIndexBuffer(pib);
+			}
+		}
+	}
+
+	return m_GuiRectMesh;
 }
 
 

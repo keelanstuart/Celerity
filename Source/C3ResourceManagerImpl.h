@@ -7,7 +7,7 @@
 #pragma once
 
 #include <C3ResourceManager.h>
-#include <C3Zip.h>
+#include "C3ZipImpl.h"
 
 namespace c3
 {

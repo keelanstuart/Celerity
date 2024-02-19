@@ -8,17 +8,63 @@
 
 #include <C3.h>
 #include <C3InterfaceElement.h>
+#include <C3ScriptableImpl.h>
+#include <C3Math.h>
 
 namespace c3
 {
 
-	class InterfaceElementImpl : public InterfaceElement, props::IPropertyChangeListener
+	class InterfaceElementImpl : public InterfaceElement, props::IPropertyChangeListener, props::IProperty::IEnumProvider
 	{
 
 	protected:
 		Object *m_pOwner;
 
 		props::TFlags64 m_Flags;
+#define IEF_UPDATEIMAGE		0x0001
+#define IEF_UPDATETEXT		0x0002
+
+		using State = enum {
+			IS_NORMAL = 0,
+			IS_HOVER,
+			IS_DOWN,
+
+			IS_NUMSTATES
+		};
+		State m_State;
+
+		glm::fvec4 m_ImgColor[IS_NUMSTATES];
+		glm::fvec4 m_TextColor[IS_NUMSTATES];
+
+		Texture2D *m_pImage;
+		RenderMethod *m_pMethodImage;
+		RenderMethod *m_pMethodText;
+		Material *m_pTextMtl;
+		Material *m_pRectMtl;
+		VertexBuffer *m_pTextVB;
+		Font *m_pFont;
+
+		math::FRECT m_Rect;
+
+		using VerticalAlignment = enum
+		{
+			VA_TOP = 0,
+			VA_CENTER,
+			VA_BOTTOM,
+
+			VA_FORCE64BIT = 0xFFFFFFFFFFFFFFFF
+		};
+		VerticalAlignment m_VAlign;
+
+		using HorizontalAlignment = enum
+		{
+			HA_LEFT = 0,
+			HA_CENTER,
+			HA_RIGHT,
+
+			HA_FORCE64BIT = 0xFFFFFFFFFFFFFFFF
+		};
+		HorizontalAlignment m_HAlign;
 
 	public:
 
@@ -36,13 +82,17 @@ namespace c3
 
 		virtual void Update(float elapsed_time = 0.0f);
 
-		virtual bool Prerender(Object::RenderFlags flags);
+		virtual bool Prerender(Object::RenderFlags flags, int draworder);
 
 		virtual void Render(Object::RenderFlags rendflags);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;
+
+		virtual size_t GetNumValues(const props::IProperty *pprop) const;
+
+		virtual const TCHAR *GetValue(const props::IProperty *pprop, size_t ordinal, TCHAR *buf, size_t bufsize) const;
 
 	};
 

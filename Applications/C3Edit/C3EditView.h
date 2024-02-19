@@ -108,6 +108,7 @@ protected:
 
 	float m_WindowsUIScale;
 
+	c3::Object *m_pUICam;
 
 // Generated message map functions
 protected:

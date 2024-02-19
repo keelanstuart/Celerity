@@ -403,6 +403,7 @@ namespace c3
 		virtual Mesh *GetXYPlaneMesh() = NULL;
 		virtual Mesh *GetYZPlaneMesh() = NULL;
 		virtual Mesh *GetXZPlaneMesh() = NULL;
+		virtual Mesh *GetGuiRectMesh() = NULL;
 
 		virtual Mesh *GetHemisphereMesh() = NULL;
 		virtual Mesh *GetSphereMesh() = NULL;

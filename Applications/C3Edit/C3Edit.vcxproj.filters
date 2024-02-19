@@ -82,6 +82,9 @@
     <ClCompile Include="C3ObjectListCtrl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ResourcePathEditorDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C3Edit.h">
@@ -174,9 +177,9 @@
     <ClInclude Include="C3ObjectListCtrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="C3Edit.rc" />
+    <ClInclude Include="ResourcePathEditorDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\class_view.ico">
@@ -281,21 +284,38 @@
     <Image Include="res\userimages.bmp">
       <Filter>Resources</Filter>
     </Image>
-    <Image Include="res\prototree.bmp" />
-    <Image Include="res\bitmap1.bmp" />
-    <Image Include="res\checkbox.bmp" />
-    <Image Include="res\scripting.bmp" />
-    <Image Include="res\scripting_hc.bmp" />
-    <Image Include="res\scripting_wnd.ico" />
-    <Image Include="res\scripting_wnd_hc.ico" />
-    <Image Include="res\icon1.ico" />
-    <Image Include="res\objects_wnd.ico" />
-    <Image Include="res\objects_wnd_hc.ico" />
-    <Image Include="res\toolbar_scripting.bmp" />
+    <Image Include="res\checkbox.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\icon1.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\objects_wnd_hc.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\objects_wnd.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\prototree.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\scripting.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\scripting_hc.bmp">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\scripting_wnd.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\scripting_wnd_hc.ico">
+      <Filter>Resources</Filter>
+    </Image>
+    <Image Include="res\toolbar_scripting.bmp">
+      <Filter>Resources</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
-    <None Include="C3Edit.reg" />
-    <None Include="res\C3Edit.rc2" />
     <None Include="res\cursor_camrot.cur">
       <Filter>Resources</Filter>
     </None>
@@ -326,6 +346,12 @@
     <None Include="res\cursor_zoom.cur">
       <Filter>Resources</Filter>
     </None>
+    <None Include="C3Edit.reg">
+      <Filter>Resources</Filter>
+    </None>
+    <None Include="res\C3Edit.rc2">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resources">
@@ -337,5 +363,10 @@
     <Filter Include="Header Files">
       <UniqueIdentifier>{25328d95-e5d8-4260-bbc3-f71e402b3161}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C3Edit.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

@@ -87,7 +87,6 @@ namespace c3
 		};
 
 		typedef std::vector<PassImpl> TPassVector;
-		typedef std::vector<TPassVector> TPassVectorsVector;
 
 		class TechniqueImpl : public RenderMethod::Technique
 		{
@@ -96,7 +95,7 @@ namespace c3
 			Renderer *m_pRend;
 			tstring m_Name;
 			
-			TPassVectorsVector m_Passes;
+			TPassVector m_Passes;
 			size_t m_Mode;
 			std::optional<int> m_DrawOrder;
 
@@ -106,7 +105,6 @@ namespace c3
 
 			virtual void SetName(const TCHAR *name);
 			virtual const TCHAR *GetName() const;
-			virtual void SetMode(ETechMode mode = TECHMODE_NORMAL);
 			virtual size_t GetNumPasses() const;
 			virtual Pass *GetPass(size_t idx) const;
 			virtual Pass *AddPass();
@@ -154,12 +152,12 @@ namespace c3
 
 		virtual bool FindTechnique(const TCHAR *name, size_t &idx) const;
 
-		bool Load(const tinyxml2::XMLElement *proot);
+		bool Load(const tinyxml2::XMLElement *proot, const TCHAR *options);
 
 	private:
-		void LoadTechnique(const tinyxml2::XMLElement *proot);
+		void LoadTechnique(const tinyxml2::XMLElement *proot, const TCHAR *options);
 
-		void LoadPass(TechniqueImpl *ptech, const tinyxml2::XMLElement *proot);
+		void LoadPass(TechniqueImpl *ptech, const tinyxml2::XMLElement *proot, const TCHAR *options);
 
 	};
 

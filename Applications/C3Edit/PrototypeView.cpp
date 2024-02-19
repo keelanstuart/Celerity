@@ -17,6 +17,8 @@
 #include "C3Edit.h"
 #include "EditPrototypeDlg.h"
 #include <tinyxml2.h>
+#include "C3EditDoc.h"
+#include "C3EditView.h"
 
 
 #define IMGIDX_GROUP			2
@@ -483,6 +485,33 @@ void CPrototypeView::AdjustLayout()
 
 BOOL CPrototypeView::PreTranslateMessage(MSG* pMsg)
 {
+	if (pMsg->message == WM_KEYDOWN && ((pMsg->wParam == VK_RETURN) || (pMsg->wParam == VK_ESCAPE)))
+	{
+		if (m_hEditItem)
+		{
+			CTreeCtrl* pWndTree = (CTreeCtrl*)&m_wndPrototypeView;
+
+			if (pMsg->wParam == VK_ESCAPE)
+				pWndTree->GetEditControl()->SetWindowText(pWndTree->GetItemText(m_hEditItem));
+
+			// Cancel the edit by changing focus away from the edit control
+			SetFocus();
+
+			m_hEditItem = NULL;
+
+			return FALSE;
+		}
+		else if (pMsg->wParam == VK_ESCAPE)
+		{
+			C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+			C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+			POSITION vp = pdoc->GetFirstViewPosition();
+			C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+			pv->SetFocus();
+		}
+	}
+
 	return CDockablePane::PreTranslateMessage(pMsg);
 }
 
@@ -615,6 +644,8 @@ BOOL CPrototypeView::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT *pResult)
 				pWndTree->SetItem(pdi->item.hItem, TVIF_TEXT, name, 0, 0, 0, 0, 0);
 			}
 			m_hEditItem = 0;
+
+			*pResult = 0;
 			break;
 		}
 
@@ -622,6 +653,9 @@ BOOL CPrototypeView::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT *pResult)
 		{
 			LPNMTVDISPINFO pdi = (LPNMTVDISPINFO)lParam;
 			m_hEditItem = pdi->item.hItem;
+
+			*pResult = 0;
+			break;
 		}
 
 		default:

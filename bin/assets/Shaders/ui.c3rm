@@ -1,0 +1,13 @@
+<render_method name="ui">
+
+	<technique name="u">
+		<pass>
+			<setting name="blendmode"			value="alpha" />
+			<setting name="cullmode"			value="disabled" />
+			<setting name="depthmode"			value="disabled" />
+			<setting name="shader.vertex"		value="ui.vsh" />
+			<setting name="shader.fragment"		value="ui.fsh" />
+		</pass>
+	</technique>
+
+</render_method>

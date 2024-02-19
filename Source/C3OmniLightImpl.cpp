@@ -33,6 +33,12 @@ OmniLightImpl::~OmniLightImpl()
 
 void OmniLightImpl::Release()
 {
+	props::IPropertySet *pps = m_pOwner->GetProperties();
+	props::IProperty *pp;
+
+	pp = pps->GetPropertyById('LCLR');
+	if (pp) pp->ExternalizeReference();
+
 	delete this;
 }
 

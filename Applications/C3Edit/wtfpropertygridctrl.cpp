@@ -2547,15 +2547,7 @@ CString CWTFPropertyGridFontProperty::FormatProperty()
 	CString str;
 	CWindowDC dc(m_pWndList);
 
-	int nLogY = dc.GetDeviceCaps(LOGPIXELSY);
-	if (nLogY != 0)
-	{
-		str.Format( _T("%Ts(%i)"), m_lf.lfFaceName, MulDiv(72, -m_lf.lfHeight, nLogY));
-	}
-	else
-	{
-		str = m_lf.lfFaceName;
-	}
+	str.Format( _T("%Ts(%i)"), m_lf.lfFaceName, m_lf.lfHeight);
 
 	return str;
 }

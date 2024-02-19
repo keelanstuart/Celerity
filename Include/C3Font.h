@@ -25,6 +25,8 @@ namespace c3
 
 	public:
 
+		static void C3_API ParseFontDescIntoLOGFONT(const TCHAR *fontdesc, LOGFONT &lf);
+
 		// Draws the specified text to the given VertexBuffer.
 		// To actually draw the text on screen, set this Font's material (or use a clone), then call Renderer::DrawPrimitives(TRILIST)
 		// with this return value as the number of prims

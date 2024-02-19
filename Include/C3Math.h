@@ -14,6 +14,16 @@ namespace c3
 
 	namespace math
 	{
+		struct C3_API FRECT
+		{
+			float left;
+			float top;
+			float right;
+			float bottom;
+
+			inline float Width() { return fabs(right - left); }
+			inline float Height() { return fabs(bottom - top); }
+		};
 
 		/// Computes the hermite spline position at percent_traveled between points A and B, given tangent vectors through those points
 		/// Optionally computes the first and second derivatives

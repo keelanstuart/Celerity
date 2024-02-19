@@ -64,16 +64,23 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, 
 	if (flags.IsSet(IBLOCKFLAG_WRITE) && !numindices)
 		return RET_ZERO_ELEMENTS;
 
+	bool init = false;
+
 	if (flags.IsSet(IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE))
 	{
 		if (m_Cache)
 		{
 			size_t cache_sz = _msize(m_Cache);
 			if (cache_sz != (sz * numindices))
+			{
 				free(m_Cache);
+				m_Cache = nullptr;
+				init = true;
+			}
 		}
 
-		m_Cache = malloc(sz * numindices);
+		if (!m_Cache)
+			m_Cache = malloc(sz * numindices);
 	}
 
 	// if we want read-only access, then use the cache if one is available. this avoids a map/unmap
@@ -88,7 +95,6 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, 
 		}
 	}
 
-	bool init = false;
 	if (m_glID == NULL)
 	{
 		m_Rend->gl.GenBuffers(1, &m_glID);

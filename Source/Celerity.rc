@@ -7,8 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#define WINVER 0x0A00
-#define WS_EX_COMPOSITED 0x02000000L
+#define WINVER 0x0A00  // <--- make sure EX styles are all recognized
+#define WS_EX_COMPOSITED 0x02000000L // <--- still didn't work! argh!
 #include "winres.h"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -61,6 +61,15 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 END
 
+IDD_CResourcePathEditor DIALOG 0, 0, 320, 200
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,209,179,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,263,179,50,14
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -72,7 +81,14 @@ GUIDELINES DESIGNINFO
 BEGIN
     IDD_DIALOG_SPLASH, DIALOG
     BEGIN
-        MOCKUP, 1, 20, 0, 0, "c3splash2.bmp"
+    END
+
+    IDD_CResourcePathEditor, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 313
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 193
     END
 END
 #endif    // APSTUDIO_INVOKED

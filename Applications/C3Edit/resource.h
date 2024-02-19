@@ -121,6 +121,7 @@
 #define ID_TOOL_UNISCALE                328
 #define ID_TOOL_SCALE                   329
 #define ID_TOOL_WAND                    330
+#define IDD_EXTENSIONMAPPER             331
 #define IDD_GRAPHEDITOR                 332
 #define IDD_GRAPHNODE                   333
 #define ID_VIEW_SCRIPTINGWND            334
@@ -155,6 +156,9 @@
 #define IDC_NODEPROPERTIES              1005
 #define IDC_BUTTON_INPUT1               1006
 #define IDC_BUTTON_OUTPUT1              1007
+#define IDC_EXTLIST                     1010
+#define IDC_RESTYPECB                   1011
+#define IDC_PATHLIST                    1012
 #define ID_EDIT_TRIGGERRENDERDOCCAPTURE 32771
 #define ID_EDIT_DELETE                  32772
 #define ID_EDIT_DUPLICATE               32773
@@ -176,14 +180,15 @@
 #define ID_EDIT_CENTERCAMERAON          32796
 #define ID_Menu                         32797
 #define ID_EDIT_CAMERASETTINGS          32798
+#define ID_EDIT_RESOURCEPATHCONFIGURATION 32799
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        327
-#define _APS_NEXT_COMMAND_VALUE         32799
-#define _APS_NEXT_CONTROL_VALUE         1009
-#define _APS_NEXT_SYMED_VALUE           339
+#define _APS_NEXT_RESOURCE_VALUE        335
+#define _APS_NEXT_COMMAND_VALUE         32800
+#define _APS_NEXT_CONTROL_VALUE         1012
+#define _APS_NEXT_SYMED_VALUE           362
 #endif
 #endif

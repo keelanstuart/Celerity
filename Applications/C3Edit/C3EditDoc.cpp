@@ -65,11 +65,6 @@ C3EditDoc::~C3EditDoc()
 		m_RootObj = nullptr;
 	}
 
-	if (m_GUIRootObj)
-	{
-		m_GUIRootObj->Release();
-		m_GUIRootObj = nullptr;
-	}
 }
 
 BOOL C3EditDoc::OnNewDocument()
@@ -85,9 +80,6 @@ BOOL C3EditDoc::OnNewDocument()
 	m_RootObj->AddComponent(c3::Positionable::Type());
 	m_RootObj->AddComponent(c3::Scriptable::Type());
 	m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW | OF_EXPANDED);
-
-	m_GUIRootObj = pf->Build();
-	m_GUIRootObj->AddComponent(c3::Positionable::Type());
 
 	ResetViews();
 

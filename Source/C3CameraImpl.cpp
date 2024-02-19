@@ -45,6 +45,24 @@ CameraImpl::~CameraImpl()
 
 void CameraImpl::Release()
 {
+	props::IPropertySet *pps = m_pOwner->GetProperties();
+	props::IProperty *pp;
+
+	pp = pps->GetPropertyById('C:DM');
+	if (pp)	pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('C:FV');
+	if (pp)	pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('C:OD');
+	if (pp)	pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('C:NC');
+	if (pp)	pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('C:FC');
+	if (pp)	pp->ExternalizeReference();
+
 	delete this;
 }
 

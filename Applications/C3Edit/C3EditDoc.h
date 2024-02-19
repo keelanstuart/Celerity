@@ -24,7 +24,6 @@ public:
 	} SPerViewInfo;
 
 	c3::Object *m_RootObj;
-	c3::Object *m_GUIRootObj;
 
 	typedef std::map<HWND, SPerViewInfo> TWndMappedObject;
 	TWndMappedObject m_PerViewInfo;

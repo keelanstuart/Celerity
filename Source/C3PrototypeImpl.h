@@ -19,6 +19,7 @@ namespace c3
 		tstring m_Name;
 		tstring m_Group;
 		GUID m_GUID;
+		tstring m_Source;
 
 		props::TFlags64 m_Flags;
 
@@ -29,7 +30,7 @@ namespace c3
 
 	public:
 
-		PrototypeImpl(System *psys, GUID guid);
+		PrototypeImpl(System *psys, GUID guid, const TCHAR *source = nullptr);
 
 		virtual ~PrototypeImpl();
 
@@ -56,6 +57,8 @@ namespace c3
 		virtual size_t GetNumComponents();
 
 		virtual const ComponentType *GetComponent(size_t index);
+
+		virtual const TCHAR *GetSource() const;
 
 	};
 

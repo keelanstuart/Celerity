@@ -63,19 +63,19 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="Debug.props" />
+    <Import Project="$(SolutionDir)Extras\Debug.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="Release.props" />
+    <Import Project="$(SolutionDir)Extras\Release.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="Debug.props" />
+    <Import Project="$(SolutionDir)Extras\Debug.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="Release.props" />
+    <Import Project="$(SolutionDir)Extras\Release.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -239,6 +239,7 @@
     <ClInclude Include="PropertyGrid.h" />
     <ClInclude Include="PrototypeView.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="ResourcePathEditorDlg.h" />
     <ClInclude Include="ScriptingWnd.h" />
     <ClInclude Include="ScrollPanel.h" />
     <ClInclude Include="targetver.h" />
@@ -274,6 +275,7 @@
     <ClCompile Include="PropertiesWnd.cpp" />
     <ClCompile Include="PropertyGrid.cpp" />
     <ClCompile Include="PrototypeView.cpp" />
+    <ClCompile Include="ResourcePathEditorDlg.cpp" />
     <ClCompile Include="ScriptingWnd.cpp" />
     <ClCompile Include="ScrollPanel.cpp" />
     <ClCompile Include="ViewTree.cpp" />
@@ -304,7 +306,6 @@
     <ResourceCompile Include="C3Edit.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\bitmap1.bmp" />
     <Image Include="res\C3Edit.ico" />
     <Image Include="res\C3EditDoc.ico" />
     <Image Include="res\checkbox.bmp" />

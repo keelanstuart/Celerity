@@ -124,14 +124,7 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 			Resource *scres[Renderer::ShaderComponentType::ST_NUMTYPES] = {0};
 			for (size_t i = 0; i < Renderer::ShaderComponentType::ST_NUMTYPES; i++)
 				if (m_ShaderCompFilename[i].has_value())
-				{
-					// THIS BUILDS A PATH THAT INCLUDES THE SHADER MODE (like "SKIN")
-					tstring path = (m_ShaderCompFilename[i])->c_str();
-					path += _T("|");
-					path += m_ShaderMode;
-
-					scres[i] = prend->GetSystem()->GetResourceManager()->GetResource(path.c_str(), RESF_DEMANDLOAD);
-				}
+					scres[i] = prend->GetSystem()->GetResourceManager()->GetResource(m_ShaderCompFilename[i]->c_str(), RESF_DEMANDLOAD);
 
 			bool has_all_comps = true;
 			for (size_t i = 0; i < Renderer::ShaderComponentType::ST_NUMTYPES; i++)
@@ -308,8 +301,6 @@ bool RenderMethodImpl::PassImpl::GetFillMode(Renderer::FillMode &fillmode) const
 RenderMethodImpl::TechniqueImpl::TechniqueImpl(Renderer *prend)
 {
 	m_pRend = prend;
-	m_Mode = TECHMODE_NORMAL;
-	m_Passes.resize(TECHMODE_NUMTYPES);
 }
 
 
@@ -327,46 +318,40 @@ const TCHAR *RenderMethodImpl::TechniqueImpl::GetName() const
 
 size_t RenderMethodImpl::TechniqueImpl::GetNumPasses() const
 {
-	return m_Passes[m_Mode].size();
+	return m_Passes.size();
 }
 
 
 RenderMethod::Pass *RenderMethodImpl::TechniqueImpl::GetPass(size_t idx) const
 {
-	return (RenderMethod::Pass *)&m_Passes[m_Mode][idx];
+	return (RenderMethod::Pass *)&m_Passes[idx];
 }
 
 
 RenderMethod::Pass *RenderMethodImpl::TechniqueImpl::AddPass()
 {
-	RenderMethodImpl::PassImpl &ret = m_Passes[m_Mode].emplace_back();
+	RenderMethodImpl::PassImpl &ret = m_Passes.emplace_back();
 
 	return &ret;
 }
 
 
-void RenderMethodImpl::TechniqueImpl::SetMode(ETechMode mode)
-{
-	m_Mode = mode;
-}
-
-
 bool RenderMethodImpl::TechniqueImpl::Begin(size_t &passes) const
 {
-	if (m_Passes[m_Mode].empty())
+	if (m_Passes.empty())
 		return false;
 
-	passes = m_Passes[m_Mode].size();
+	passes = m_Passes.size();
 	return true;
 }
 
 
 Renderer::RenderStateOverrideFlags RenderMethodImpl::TechniqueImpl::ApplyPass(size_t idx) const
 {
-	if (idx >= m_Passes[m_Mode].size())
+	if (idx >= m_Passes.size())
 		return 0;
 
-	PassImpl &pr = (PassImpl &)m_Passes[m_Mode][idx];
+	PassImpl &pr = (PassImpl &)m_Passes[idx];
 	return pr.Apply(m_pRend);
 }
 
@@ -454,6 +439,9 @@ RenderMethod::Technique *RenderMethodImpl::AddTechnique()
 
 RenderMethod::Technique *RenderMethodImpl::GetTechnique(size_t idx) const
 {
+	if (idx >= m_Techniques.size())
+		return nullptr;
+
 	return (RenderMethod::Technique *)&m_Techniques[idx];
 }
 
@@ -494,7 +482,7 @@ bool RenderMethodImpl::SetActiveTechnique(size_t idx)
 }
 
 
-bool RenderMethodImpl::Load(const tinyxml2::XMLElement *proot)
+bool RenderMethodImpl::Load(const tinyxml2::XMLElement *proot, const TCHAR *options)
 {
 	if (!proot)
 		return false;
@@ -513,7 +501,7 @@ bool RenderMethodImpl::Load(const tinyxml2::XMLElement *proot)
 	const tinyxml2::XMLElement *ptel = proot->FirstChildElement("technique");
 	while (ptel)
 	{
-		LoadTechnique(ptel);
+		LoadTechnique(ptel, options);
 
 		ptel = ptel->NextSiblingElement("technique");
 	}
@@ -522,7 +510,7 @@ bool RenderMethodImpl::Load(const tinyxml2::XMLElement *proot)
 }
 
 
-void RenderMethodImpl::LoadTechnique(const tinyxml2::XMLElement *proot)
+void RenderMethodImpl::LoadTechnique(const tinyxml2::XMLElement *proot, const TCHAR *options)
 {
 	m_Techniques.push_back(TechniqueImpl(m_pRend));
 
@@ -532,7 +520,16 @@ void RenderMethodImpl::LoadTechnique(const tinyxml2::XMLElement *proot)
 		TCHAR *n;
 		CONVERT_MBCS2TCS(paname->Value(), n);
 
-		m_Techniques.back().SetName(n);
+		tstring name;
+		name.reserve(_tcslen(n) + ((options && *options) ? (1 + _tcslen(options)) : 0));
+		name = n;
+		if (options && *options)
+		{
+			name += _T('|');
+			name += options;
+		}
+
+		m_Techniques.back().SetName(name.c_str());
 	}
 
 	const tinyxml2::XMLAttribute *porder = proot->FindAttribute("draworder");
@@ -541,10 +538,20 @@ void RenderMethodImpl::LoadTechnique(const tinyxml2::XMLElement *proot)
 		m_Techniques.back().SetDrawOrder(porder->IntValue());
 	}
 
+	tstring techopts;
+	const tinyxml2::XMLAttribute *poptions = proot->FindAttribute("options");
+	if (poptions)
+	{
+		TCHAR *n;
+		CONVERT_MBCS2TCS(poptions->Value(), n);
+
+		techopts = n;
+	}
+
 	const tinyxml2::XMLElement *ppel = proot->FirstChildElement("pass");
 	while (ppel)
 	{
-		LoadPass(&(m_Techniques.back()), ppel);
+		LoadPass(&(m_Techniques.back()), ppel, techopts.c_str());
 
 		ppel = ppel->NextSiblingElement("pass");
 	}
@@ -555,7 +562,9 @@ bool RenderMethodImpl::FindTechnique(const TCHAR *name, size_t &idx) const
 {
 	for (idx = 0; idx < m_Techniques.size(); idx++)
 	{
-		if (!_tcsicmp(GetTechnique(idx)->GetName(), name))
+		auto pt = GetTechnique(idx);
+
+		if (!_tcsicmp(pt->GetName(), name))
 			return true;
 	}
 
@@ -772,24 +781,16 @@ void RenderMethodImpl::PassImpl::SetShaderMode(const TCHAR *mode)
 }
 
 
-void RenderMethodImpl::LoadPass(TechniqueImpl *ptech, const tinyxml2::XMLElement *proot)
+void RenderMethodImpl::LoadPass(TechniqueImpl *ptech, const tinyxml2::XMLElement *proot, const TCHAR *options)
 {
-	const TCHAR *techmode_names[RenderMethod::Technique::ETechMode::TECHMODE_NUMTYPES] = { _T(""), _T("SKIN") };
+	RenderMethodImpl::PassImpl *ppass = (RenderMethodImpl::PassImpl *)(ptech->AddPass());
 
-	for (size_t i = 0; i < RenderMethod::Technique::ETechMode::TECHMODE_NUMTYPES; i++)
+	const tinyxml2::XMLElement *psel = proot->FirstChildElement("setting");
+	while (psel)
 	{
-		ptech->SetMode((RenderMethod::Technique::ETechMode)i);
+		((RenderMethodImpl::PassImpl *)ppass)->LoadSetting(psel);
 
-		RenderMethodImpl::PassImpl *ppass = (RenderMethodImpl::PassImpl *)(ptech->AddPass());
-		ppass->SetShaderMode(techmode_names[i]);
-
-		const tinyxml2::XMLElement *psel = proot->FirstChildElement("setting");
-		while (psel)
-		{
-			((RenderMethodImpl::PassImpl *)ppass)->LoadSetting(psel);
-
-			psel = psel->NextSiblingElement("setting");
-		}
+		psel = psel->NextSiblingElement("setting");
 	}
 }
 
@@ -809,7 +810,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromFile(c3::Sy
 			return ResourceType::LoadResult::LR_ERROR;
 
 		RenderMethod *prm = psys->GetRenderer()->CreateRenderMethod();
-		((RenderMethodImpl *)prm)->Load(doc.FirstChildElement());
+		((RenderMethodImpl *)prm)->Load(doc.FirstChildElement(), options);
 
 		*returned_data = (void *)prm;
 	}
@@ -829,7 +830,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromMemory(c3::
 			return ResourceType::LoadResult::LR_ERROR;
 
 		RenderMethod *prm = psys->GetRenderer()->CreateRenderMethod();
-		((RenderMethodImpl *)prm)->Load(doc.FirstChildElement());
+		((RenderMethodImpl *)prm)->Load(doc.FirstChildElement(), options);
 
 		*returned_data = (void *)prm;
 	}

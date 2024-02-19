@@ -231,7 +231,7 @@ Prototype *FactoryImpl::FindPrototype(GUID guid)
 }
 
 
-bool FactoryImpl::LoadPrototypes(genio::IInputStream *is)
+bool FactoryImpl::LoadPrototypes(genio::IInputStream *is, const TCHAR *source)
 {
 	if (!is || !is->CanAccess())
 		return false;
@@ -244,7 +244,7 @@ bool FactoryImpl::LoadPrototypes(genio::IInputStream *is)
 			GUID guid;
 			is->Read(&guid, sizeof(GUID));
 
-			Prototype *p = new PrototypeImpl(m_pSys, guid);
+			Prototype *p = new PrototypeImpl(m_pSys, guid, source);
 			if (p)
 			{
 				uint32_t namelen;
@@ -303,7 +303,7 @@ bool FactoryImpl::LoadPrototypes(genio::IInputStream *is)
 }
 
 
-bool FactoryImpl::LoadPrototypes(const tinyxml2::XMLNode *proot)
+bool FactoryImpl::LoadPrototypes(const tinyxml2::XMLNode *proot, const TCHAR *source)
 {
 	if (!proot)
 		return false;
@@ -320,7 +320,7 @@ bool FactoryImpl::LoadPrototypes(const tinyxml2::XMLNode *proot)
 					 &guid.Data4[0], &guid.Data4[1], &guid.Data4[2], &guid.Data4[3], &guid.Data4[4], &guid.Data4[5], &guid.Data4[6], &guid.Data4[7]);
 		}
 
-		Prototype *pproto = new PrototypeImpl(m_pSys, guid);
+		Prototype *pproto = new PrototypeImpl(m_pSys, guid, source);
 
 		m_Prototypes.push_back(pproto);
 

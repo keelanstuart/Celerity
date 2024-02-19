@@ -11,6 +11,7 @@
 #include "C3EditDoc.h"
 #include "C3EditView.h"
 #include <shellscalingapi.h>
+#include "ResourcePathEditorDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -73,6 +74,7 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 
 	ON_WM_MOVE()
 	ON_WM_CLOSE()
+	ON_COMMAND(ID_EDIT_RESOURCEPATHCONFIGURATION, &C3EditFrame::OnEditResourcePathConfiguration)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -1031,4 +1033,11 @@ void C3EditFrame::OnClose()
 	//UnregisterScaleChangeEvent([in]  HANDLE    hEvent, [out] DWORD_PTR *pdwCookie);
 
 	CFrameWndEx::OnClose();
+}
+
+
+void C3EditFrame::OnEditResourcePathConfiguration()
+{
+	CResourcePathEditorDlg dlg;
+	dlg.DoModal();
 }

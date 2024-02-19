@@ -121,9 +121,11 @@ namespace c3
 
 		VertexBuffer *m_FSPlaneVB;
 		VertexBuffer *m_PlanesVB;
+		VertexBuffer *m_GuiVB;
 		Mesh *m_XYPlaneMesh;
 		Mesh *m_YZPlaneMesh;
 		Mesh *m_XZPlaneMesh;
+		Mesh *m_GuiRectMesh;
 
 		VertexBuffer *m_HemisphereVB;
 		Mesh *m_HemisphereMesh;
@@ -332,9 +334,11 @@ namespace c3
 		virtual Mesh *GetRefCubeMesh();
 
 		VertexBuffer *GetPlanesVB();
+		VertexBuffer *GetGuiVB();
 		virtual Mesh *GetXYPlaneMesh();
 		virtual Mesh *GetYZPlaneMesh();
 		virtual Mesh *GetXZPlaneMesh();
+		virtual Mesh *GetGuiRectMesh();
 
 		VertexBuffer *GetHemisphereVB();
 		virtual Mesh *GetHemisphereMesh();

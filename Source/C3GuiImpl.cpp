@@ -20,9 +20,6 @@ GuiImpl::GuiImpl(Renderer *prend)
 
 	m_ImGui = nullptr;
 	m_FontTex = nullptr;
-	m_Prog = nullptr;
-	m_VS = nullptr;
-	m_FS = nullptr;
 	m_VB = nullptr;
 	m_IB = nullptr;
 
@@ -40,29 +37,6 @@ GuiImpl::GuiImpl(Renderer *prend)
 
 	c3::ResourceManager *rm = prend->GetSystem()->GetResourceManager();
 
-	c3::Resource *pvsres = rm->GetResource(_T("ui.vsh"), RESF_DEMANDLOAD);
-	if (!pvsres)
-	{
-		prend->GetSystem()->GetLog()->Print(_T("GUI Missing VSH\n"));
-	}
-
-	c3::Resource *pfsres = rm->GetResource(_T("ui.fsh"), RESF_DEMANDLOAD);
-	if (!pfsres)
-	{
-		prend->GetSystem()->GetLog()->Print(_T("GUI Missing FSH\n"));
-	}
-
-	if (pfsres && pvsres)
-	{
-		m_VS = (c3::ShaderComponent *)(pvsres->GetData());
-		m_FS = (c3::ShaderComponent *)(pfsres->GetData());
-
-		m_Prog = m_pRend->CreateShaderProgram();
-		m_Prog->AttachShader(m_VS);
-		m_Prog->AttachShader(m_FS);
-		m_Prog->Link();
-	}
-
 	// Create buffers
 	m_VB = m_pRend->CreateVertexBuffer();
 	m_IB = m_pRend->CreateIndexBuffer();
@@ -73,7 +47,7 @@ GuiImpl::GuiImpl(Renderer *prend)
 	io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);   // Load as RGBA 32-bit (75% of the memory is wasted, but default font is so small) because it is more likely to be compatible with user's existing shaders. If your ImTextureId represent a higher-level concept than just a GL texture id, consider calling GetTexDataAsAlpha8() instead to save on GPU memory.
 
 	m_FontTex = m_pRend->CreateTexture2D(width, height, c3::Renderer::TextureType::U8_4CH, 1);
-	m_FontTex->SetName(_T("uSamplerDiffuse"));
+	m_FontTex->SetName(_T("imgui_font_texture"));
 	c3::Texture2D::SLockInfo li;
 	void *ubuf;
 	if (m_FontTex->Lock(&ubuf, li, 0) == c3::Texture::RETURNCODE::RET_OK)
@@ -84,35 +58,34 @@ GuiImpl::GuiImpl(Renderer *prend)
 
 	// Store our identifier
 	io.Fonts->TexID = (void *)m_FontTex;
+
+	m_Mtl = m_pRend->GetMaterialManager()->CreateMaterial();
+	m_Mtl->SetTexture(Material::TCT_DIFFUSE, m_FontTex);
+
+	m_Method = m_pRend->CreateRenderMethod();
+	m_Method->SetName(_T("DearIMGui Method"));
+	RenderMethod::Technique *ptech = m_Method->AddTechnique();
+	RenderMethod::Pass *ppass = ptech->AddPass();
+	m_Method->SetActiveTechnique(0);
+
+	ppass->SetBlendMode(Renderer::BlendMode::BM_ALPHA);
+	ppass->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
+	ppass->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
+	ppass->SetShaderComponentFilename(Renderer::ShaderComponentType::ST_VERTEX, _T("dearimgui.vsh"));
+	ppass->SetShaderComponentFilename(Renderer::ShaderComponentType::ST_FRAGMENT, _T("dearimgui.fsh"));
 }
 
 
 GuiImpl::~GuiImpl()
 {
-	if (m_FontTex)
-	{
-		ImGuiIO &io = ImGui::GetIO();
-		io.Fonts->TexID = 0;
-		m_FontTex->Release();
-	}
+	ImGuiIO &io = ImGui::GetIO();
+	io.Fonts->TexID = 0;
+	C3_SAFERELEASE(m_FontTex);
 
-	if (m_VB)
-	{
-		m_VB->Release();
-		m_VB = nullptr;
-	}
+	C3_SAFERELEASE(m_VB);
+	C3_SAFERELEASE(m_IB);
 
-	if (m_IB)
-	{
-		m_IB->Release();
-		m_IB = nullptr;
-	}
-
-	if (m_Prog)
-	{
-		m_Prog->Release();
-		m_Prog = nullptr;
-	}
+	C3_SAFERELEASE(m_Method);
 
 	ImGui::DestroyContext(m_ImGui);
 }
@@ -123,17 +96,6 @@ void GuiImpl::SetupRenderState(ImDrawData *draw_data, int fb_width, int fb_heigh
 	if (!m_pRend->Initialized())
 		return;
 
-	// Setup render state: alpha-blending enabled, no face culling, no depth testing, scissor enabled, polygon fill
-
-	m_pRend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
-	m_pRend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
-	m_pRend->SetBlendMode(Renderer::BlendMode::BM_ALPHA);
-
-#if 0
-	// Setup viewport, orthographic projection matrix
-	// Our visible imgui space lies from draw_data->DisplayPos (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayPos is (0,0) for single viewport apps.
-	g_imgui_sys->glViewport(0, 0, (GLsizei)fb_width, (GLsizei)fb_height);
-#endif
 	float L = draw_data->DisplayPos.x;
 	float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
 	float T = draw_data->DisplayPos.y;
@@ -147,9 +109,9 @@ void GuiImpl::SetupRenderState(ImDrawData *draw_data, int fb_width, int fb_heigh
 		{ (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
 	};
 
-	m_pRend->UseProgram(m_Prog);
+	m_pRend->UseRenderMethod(m_Method);
 	m_pRend->SetProjectionMatrix(&ortho_projection);
-	m_Prog->SetUniformTexture(m_FontTex);
+	m_pRend->UseMaterial(m_Mtl);
 
 	// Bind vertex/index buffers and setup attributes for ImDrawVert
 	m_pRend->UseVertexBuffer(m_VB);

@@ -108,6 +108,8 @@ C3EditView::~C3EditView()
 {
 	DestroySurfaces();
 
+	C3_SAFERELEASE(m_pUICam);
+
 	C3_SAFERELEASE(m_SSBuf);
 	C3_SAFERELEASE(m_ShadowTarg);
 
@@ -315,6 +317,25 @@ void C3EditView::OnInitialUpdate()
 
 	m_SelectionXforms = c3::MatrixStack::Create();
 
+	m_pUICam = theApp.m_C3->GetFactory()->Build();
+	m_pUICam->SetName(_T("GUI Camera"));
+	c3::Positionable *puicampos = dynamic_cast<c3::Positionable *>(m_pUICam->AddComponent(c3::Positionable::Type()));
+	c3::Camera *puicam = dynamic_cast<c3::Camera *>(m_pUICam->AddComponent(c3::Camera::Type()));
+
+	CRect r;
+	GetClientRect(r);
+
+	if (puicam)
+	{
+		puicam->SetProjectionMode(c3::Camera::EProjectionMode::PM_ORTHOGRAPHIC);
+		puicam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
+	}
+
+	if (puicampos)
+	{
+		puicampos->AdjustPos(0, -1, 0);
+	}
+
 	SetTimer('DRAW', 17, nullptr);
 	SetTimer('PICK', 500, nullptr);
 	SetTimer('PROP', 1000, nullptr);
@@ -467,7 +488,6 @@ void C3EditView::OnDraw(CDC *pDC)
 
 			// clear the render method and material
 			prend->UseRenderMethod();
-			prend->GetActiveRenderMethod()->GetActiveTechnique()->SetMode(c3::RenderMethod::Technique::TECHMODE_NORMAL);
 			prend->UseMaterial();
 
 			// Selection hilighting
@@ -522,7 +542,7 @@ void C3EditView::OnDraw(CDC *pDC)
 				glm::fvec3 eyedir = glm::normalize(*puicam->GetTargetPos() - *(puicam->GetEyePos()));
 				prend->SetEyeDirection(&eyedir);
 			}
-			pDoc->m_GUIRootObj->Render();
+			pDoc->m_RootObj->Render(RF_GUI);
 
 			c3::Gui *pgui = prend->GetGui();
 

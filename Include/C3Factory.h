@@ -54,10 +54,10 @@ namespace c3
 		virtual Prototype *FindPrototype(GUID guid) = NULL;
 
 		/// Loads one or more Prototypes from a stream
-		virtual bool LoadPrototypes(genio::IInputStream *is) = NULL;
+		virtual bool LoadPrototypes(genio::IInputStream *is, const TCHAR *source = nullptr) = NULL;
 
 		/// Loads one or more Prototypes from a tinyxml2 root node
-		virtual bool LoadPrototypes(const tinyxml2::XMLNode *proot) = NULL;
+		virtual bool LoadPrototypes(const tinyxml2::XMLNode *proot, const TCHAR *source = nullptr) = NULL;
 
 		/// You can determine which Prototypes you want to save by implementing a PROTO_SAVE_HUERISTIC_FUNCTION
 		/// and passing it to SavePrototypes. Simply return true if the Prototype should be stored, false otherwise.

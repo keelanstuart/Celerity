@@ -88,7 +88,9 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 	if (!buffer)
 		return RET_NULL_BUFFER;
 
-	size_t sz = m_VertSize;
+	bool init = (m_NumVerts != numverts);
+
+	m_NumVerts = numverts;
 
 	if (flags.IsSet(VBLOCKFLAG_WRITE))
 	{
@@ -100,7 +102,7 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 
 		if (!IdenticalComponents(components, m_Components))
 		{
-			sz = 0;
+			size_t sz = 0;
 			m_Components.clear();
 
 			const ComponentDescription *c = components;
@@ -114,6 +116,11 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 
 			if (!sz)
 				return RET_BAD_VERTEX_DESCRIPTION;
+
+			if (m_VertSize != sz)
+				init = true;
+
+			m_VertSize = sz;
 		}
 
 		if (flags.IsSet(VBLOCKFLAG_CACHE))
@@ -121,15 +128,16 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 			if (m_Cache)
 			{
 				size_t cache_sz = _msize(m_Cache);
-				if (cache_sz != (sz * numverts))
+				if (cache_sz != (m_VertSize * m_NumVerts))
 				{
 					free(m_Cache);
 					m_Cache = nullptr;
+					init = true;
 				}
 			}
 
 			if (!m_Cache)
-				m_Cache = malloc(sz * numverts);
+				m_Cache = malloc(m_VertSize * m_NumVerts);
 		}
 	}
 
@@ -159,8 +167,6 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 	if (update_now && !user_buffer)
 		return RET_UPDATENOW_NEEDS_USERBUFFER;
 
-	bool init = false;
-
 	if (m_VBglID == NULL)
 	{
 		m_Rend->gl.GenBuffers(1, &m_VBglID);
@@ -178,16 +184,13 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 	else if (flags.IsSet(VBLOCKFLAG_WRITE))
 		mode = GL_WRITE_ONLY;
 
-	m_VertSize = sz;
-	m_NumVerts = numverts;
-
 	// bind the buffer
 	m_Rend->UseVertexBuffer(this);
 
 	if (init || update_now)
 	{
 		// make sure that it is allocated
-		m_Rend->gl.BufferData(GL_ARRAY_BUFFER, sz * numverts, user_buffer ? *buffer : nullptr, flags.IsSet(VBLOCKFLAG_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		m_Rend->gl.BufferData(GL_ARRAY_BUFFER, m_VertSize * m_NumVerts, user_buffer ? *buffer : nullptr, flags.IsSet(VBLOCKFLAG_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 		if (update_now)
 		{
 			ConfigureAttributes();

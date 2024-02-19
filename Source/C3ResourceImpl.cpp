@@ -8,7 +8,7 @@
 
 #include <C3ResourceImpl.h>
 #include <C3ResourceManagerImpl.h>
-#include <C3Zip.h>
+#include "C3ZipImpl.h"
 
 
 using namespace c3;

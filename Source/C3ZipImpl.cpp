@@ -6,7 +6,7 @@
 
 #include "pch.h"
 
-#include <C3Zip.h>
+#include "C3ZipImpl.h"
 #include <corecrt_io.h>
 
 using namespace c3;

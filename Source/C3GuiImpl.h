@@ -19,10 +19,9 @@ namespace c3
 	protected:
 		Renderer *m_pRend;
 		ImGuiContext *m_ImGui;
+		RenderMethod *m_Method;
+		Material *m_Mtl;
 		Texture2D *m_FontTex;// g_imgui_texptr;
-		ShaderProgram *m_Prog;// g_imgui_spptr;
-		ShaderComponent *m_VS;// g_imgui_vsptr;
-		ShaderComponent *m_FS;// g_imgui_fsptr;
 		VertexBuffer *m_VB;// g_imgui_vbptr;
 		IndexBuffer *m_IB;// g_imgui_ibptr;
 

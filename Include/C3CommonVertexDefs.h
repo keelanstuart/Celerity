@@ -28,6 +28,7 @@ namespace c3
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
 			};
 
+#pragma pack(push, 1)
 			typedef struct _s
 			{
 				glm::fvec3 pos;
@@ -36,6 +37,7 @@ namespace c3
 				glm::fvec3 binorm;
 				glm::fvec2 uv;
 			} s;
+#pragma pack(pop)
 		};
 
 		/// Position / Normal / 1x Texture Coords
@@ -50,12 +52,14 @@ namespace c3
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
 			};
 
+#pragma pack(push, 1)
 			typedef struct _s
 			{
 				glm::fvec3 pos;
 				glm::fvec3 norm;
 				glm::fvec2 uv;
 			} s;
+#pragma pack(pop)
 		};
 
 		/// Pre-transformed Position / 1x Texture Coords
@@ -69,11 +73,33 @@ namespace c3
 				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
 			};
 
+#pragma pack(push, 1)
 			typedef struct _s
 			{
 				glm::fvec4 pos;
 				glm::fvec2 uv;
 			} s;
+#pragma pack(pop)
+		};
+
+		/// Screen position / 1x Texture Coords
+		namespace ST1
+		{
+			constexpr VertexBuffer::ComponentDescription d[] =
+			{
+				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_POSITION},
+				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_F32, 2, c3::VertexBuffer::ComponentDescription::Usage::VU_TEXCOORD0},
+
+				{c3::VertexBuffer::ComponentDescription::ComponentType::VCT_NONE, 0, c3::VertexBuffer::ComponentDescription::Usage::VU_NONE} // terminator
+			};
+
+#pragma pack(push, 1)
+			typedef struct _s
+			{
+				glm::fvec2 pos;
+				glm::fvec2 uv;
+			} s;
+#pragma pack(pop)
 		};
 	};
 };

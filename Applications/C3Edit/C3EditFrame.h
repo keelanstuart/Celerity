@@ -143,6 +143,7 @@ protected:
 public:
 	afx_msg void OnMove(int x, int y);
 	afx_msg void OnClose();
+    afx_msg void OnEditResourcePathConfiguration();
 };
 
 

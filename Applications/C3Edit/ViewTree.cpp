@@ -10,6 +10,7 @@
 #include "C3Edit.h"
 #include "C3EditDoc.h"
 #include "C3EditFrame.h"
+#include "C3EditView.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -38,27 +39,14 @@ END_MESSAGE_MAP()
 
 BOOL CViewTree::OnNotify(WPARAM wParam, LPARAM lParam, LRESULT* pResult)
 {
-	BOOL bRes = CTreeCtrl::OnNotify(wParam, lParam, pResult);
-
 	NMHDR* pNMHDR = (NMHDR*)lParam;
 	ASSERT(pNMHDR != nullptr);
 
 #pragma warning(suppress : 26454)
-	if (pNMHDR)
-	{
-		switch (pNMHDR->code)
-		{
-			case TTN_SHOW:
-				if (GetToolTips() != nullptr)
-					GetToolTips()->SetWindowPos(&wndTop, -1, -1, -1, -1, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSIZE);
-				break;
+	if (pNMHDR && (pNMHDR->code == TTN_SHOW) && (GetToolTips() != nullptr))
+		GetToolTips()->SetWindowPos(&wndTop, -1, -1, -1, -1, SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSIZE);
 
-			case NM_DBLCLK:
-				break;
-		}
-	}
-
-	return bRes;
+	return CTreeCtrl::OnNotify(wParam, lParam, pResult);
 }
 
 

@@ -62,6 +62,9 @@ namespace c3
 		/// Returns the Component at the given index
 		virtual const ComponentType *GetComponent(size_t index) = NULL;
 
+		/// Returns the file from whence the Prototype was loaded
+		virtual const TCHAR *GetSource() const = NULL;
+
 	};
 
 };
