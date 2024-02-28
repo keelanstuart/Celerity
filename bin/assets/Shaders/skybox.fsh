@@ -1,3 +1,4 @@
+uniform vec4 uColorDiffuse;
 uniform sampler2D uSamplerDiffuse;
 uniform sampler2D uSamplerNormal;
 uniform sampler2D uSamplerEmissive;
@@ -7,24 +8,20 @@ uniform float uAlphaPass;
 
 in vec4 fPosDepth;
 in vec2 fTex0;
-in vec4 fColor0;
 
 layout (location=0) out vec4 oDefDiffuseMetalness;
-layout (location=1) out vec4 oDefNormalAmbOcc;
-layout (location=2) out vec4 oDefPosDepth;
-layout (location=3) out vec4 oDefEmissiveRoughness;
 
 void main()
 {
-	vec4 tex = texture(uSamplerDiffuse, fTex0);
-	tex *= fColor0;
+/*
+	vec3 to_pix = normalize(fPosDepth.xyz);
+
+	float u = dot(vec3(1, 0, 0), to_pix);
+	float v = dot(vec3(0, 1, 0), to_pix);
+	vec2 uv = vec2(u, v) * 0.5 + 0.5;
+*/
+
+	vec4 tex = texture(uSamplerDiffuse, fTex0) * uColorDiffuse;
 
 	oDefDiffuseMetalness = tex;
-
-	oDefNormalAmbOcc = vec4(1, 1, 1, 0);
-
-	oDefPosDepth = fPosDepth;
-
-	// encode roughness as emissive.a
-	oDefEmissiveRoughness = vec4(0, 0, 0, 0);
 }

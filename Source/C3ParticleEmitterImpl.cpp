@@ -32,7 +32,7 @@ void ParticleEmitterImpl::Release()
 {
 	props::IPropertySet *pps = m_pOwner->GetProperties();
 	props::IProperty *pp;
-	
+
 	pp = pps->GetPropertyById('PEsh');
 	if (pp) pp->ExternalizeReference();
 

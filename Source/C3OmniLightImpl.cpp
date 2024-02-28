@@ -155,6 +155,7 @@ void OmniLightImpl::Render(Object::RenderFlags flags)
 			prend->UseMaterial(m_Material);
 			prend->UseRenderMethod(m_pMethod);
 			m_pMethod->SetActiveTechnique(m_TechIdx_L);
+			prend->SetWindingOrder(Renderer::WindingOrder::WO_CW);
 
 			glm::vec2 ss;
 			ss.x = (float)m_SourceFB->GetDepthTarget()->Width();

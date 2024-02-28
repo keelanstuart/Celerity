@@ -50,6 +50,8 @@ namespace c3
 
 		virtual void SetColor(ColorComponentType comptype, const glm::fvec4 *pcolor);
 
+		virtual void SetColor(ColorComponentType comptype, Color::SRGBAColor color);
+
 		virtual const glm::fvec4 *GetColor(ColorComponentType comptype, glm::fvec4 *pcolor = nullptr) const;
 
 		virtual void SetTexture(TextureComponentType comptype, Texture *ptex);

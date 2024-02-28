@@ -22,6 +22,12 @@ EnvironmentModifierImpl::EnvironmentModifierImpl() :
 	m_SunDir(glm::normalize(glm::fvec3(0.2, 0.1, -0.7)))
 {
 	m_pPos = nullptr;
+
+	m_LastFrameNum = 0;
+	m_pSkyTexture = nullptr;
+	m_pSkyMethod = nullptr;
+	m_pSkyMtl = nullptr;
+	m_pSkyModel = nullptr;
 }
 
 
@@ -70,6 +76,18 @@ bool EnvironmentModifierImpl::Initialize(Object *pobject)
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_DIRECTION);
 
 	pp = ps->CreateReferenceProperty(_T("Gravity"), 'GRAV', &m_Gravity, props::IProperty::PT_FLOAT_V3);
+
+	if (pp = ps->CreateProperty(_T("Sky.Texture"), 'SkTx'))
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
+		pp->SetString(_T("circular_sky.tga"));
+	}
+
+	if (pp = ps->CreateProperty(_T("Sky.RenderMethod"), 'SkRm'))
+	{
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
+		pp->SetString(_T("skybox.c3rm"));
+	}
 
 	return true;
 }
@@ -123,18 +141,111 @@ void EnvironmentModifierImpl::Update(float elapsed_time)
 
 bool EnvironmentModifierImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
+	size_t curframe = m_pOwner->GetSystem()->GetRenderer()->GetCurrentFrameNumber();
+	if (m_LastFrameNum != curframe)
+	{
+		m_LastFrameNum = curframe;
+		return true;
+	}
+
 	return false;
 }
 
 
 void EnvironmentModifierImpl::Render(Object::RenderFlags flags)
 {
+	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
+	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
+
+	if (!m_pSkyTexture)
+	{
+		props::IProperty *pp = m_pOwner->GetProperties()->GetPropertyById('SkTx');
+		const TCHAR *s = pp ? pp->AsString() : _T("");
+
+		Resource *pres = prm->GetResource(pp->AsString(), RESF_DEMANDLOAD);
+		if (pres && (pres->GetStatus() == Resource::Status::RS_LOADED))
+		{
+			m_pSkyTexture = dynamic_cast<Texture2D *>((Texture2D *)(pres->GetData()));
+			if (!m_pSkyTexture)
+				m_pSkyTexture = pr->GetWhiteTexture();
+
+		}
+	}
+
+	if (!m_pSkyMtl)
+		m_pSkyMtl = pr->GetMaterialManager()->CreateMaterial();
+
+	if (!m_pSkyMethod)
+	{
+		props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('SkRm');
+		if (pmethod)
+		{
+			c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("skybox.c3rm"), RESF_DEMANDLOAD);
+			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
+				m_pSkyMethod = (RenderMethod *)(pres->GetData());
+		}
+	}
+
+	if (!m_pSkyModel)
+	{
+		Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("[hemisphere.model]"));
+		m_pSkyModel = (Model *)pres->GetData();
+	}
+
+	if (m_pSkyModel && m_pSkyTexture && m_pSkyMethod && m_pSkyMtl)
+	{
+		Renderer::BlendMode oldbm = pr->GetBlendMode();
+		Renderer::DepthMode olddm = pr->GetDepthMode();
+		Renderer::CullMode oldcm = pr->GetCullMode();
+
+		m_pSkyMethod->SetActiveTechnique(0);
+
+		glm::fvec4 c = glm::fvec4(m_SunColor.x, m_SunColor.y, m_SunColor.z, 1.0f);
+		m_pSkyMtl->SetColor(Material::CCT_DIFFUSE, &c);
+		m_pSkyMtl->SetTexture(Material::TCT_DIFFUSE, m_pSkyTexture);
+
+		glm::fmat4x4 mat;
+		Object *pcamobj = m_pOwner->GetSystem()->GetGlobalObjectRegistry()->GetRegisteredObject(GlobalObjectRegistry::OD_CAMERA);
+		if (pcamobj)
+		{
+			Camera *pcamcomp = dynamic_cast<Camera *>(pcamobj->FindComponent(Camera::Type()));
+			if (pcamcomp)
+			{
+				// use the eye point position
+				glm::fvec3 pos;
+				pcamcomp->GetEyePos(&pos);
+				mat = glm::translate(pos);
+			}
+		}
+
+		pr->SetWorldMatrix(&mat);
+
+		pr->UseRenderMethod(m_pSkyMethod);
+		pr->UseMaterial(m_pSkyMtl);
+		m_pSkyModel->Draw(&mat, false);
+
+		pr->SetBlendMode(oldbm);
+		pr->SetDepthMode(olddm);
+		pr->SetCullMode(oldcm);
+	}
 }
 
 
 void EnvironmentModifierImpl::PropertyChanged(const props::IProperty *pprop)
 {
-	assert(pprop);
+	if (!pprop)
+		return;
+
+	switch (pprop->GetID())
+	{
+		case 'SkTx':
+			m_pSkyTexture = nullptr;
+			break;
+
+		case 'SkRm':
+			m_pSkyMethod = nullptr;
+			break;
+	}
 }
 
 

@@ -100,6 +100,12 @@ void MaterialImpl::SetColor(ColorComponentType comptype, const glm::fvec4 *pcolo
 }
 
 
+void MaterialImpl::SetColor(ColorComponentType comptype, Color::SRGBAColor color)
+{
+	Color::ConvertIntToVec(color, (props::TVec4F &)m_color[comptype]);
+}
+
+
 const glm::fvec4 *MaterialImpl::GetColor(ColorComponentType comptype, glm::fvec4 *pcolor) const
 {
 	if (!pcolor)

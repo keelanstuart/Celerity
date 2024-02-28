@@ -333,6 +333,8 @@ void ShaderProgramImpl::CaptureUniforms()
 						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_PROJECTION);
 					else if (!_tcscmp(n, _T("uMatrixMV")))
 						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEW);
+					else if (!_tcscmp(n, _T("uMatrixMP")))
+						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_WORLDPROJECTION);
 					else if (!_tcscmp(n, _T("uMatrixVP")))
 						p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_VIEWPROJECTION);
 					else if (!_tcscmp(n, _T("uMatrixS")))
@@ -517,6 +519,10 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 
 					case props::IProperty::PROPERTY_ASPECT::PA_VIEWPROJECTION:
 						SetUniformMatrix(p->GetID(), m_Rend->GetViewProjectionMatrix());
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_WORLDPROJECTION:
+						SetUniformMatrix(p->GetID(), m_Rend->GetWorldProjectionMatrix());
 						break;
 
 					case props::IProperty::PROPERTY_ASPECT::PA_WORLDVIEWPROJECTION:

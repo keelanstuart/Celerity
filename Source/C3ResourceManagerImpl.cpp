@@ -68,6 +68,7 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 		filename_only.erase(opts_ofs, opts.length() + 1);
 	}
 
+#if 0
 	// the upper bound will be resmap.end() if either there are no matching entries or
 	// if the entry is the last in the map.
 	TResourceMap::const_iterator e = m_ResMap.upper_bound(key);
@@ -77,6 +78,15 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 		if (flags.IsSet(RESF_FINDENTRYONLY) || ((pres->GetStatus() == Resource::RS_LOADED) && (!pres->GetType() || (pres->GetType() == restype))))
 			return pres;
 	}
+#else
+	TResourceMap::const_iterator e = m_ResMap.find(key);
+	if (e != m_ResMap.end())
+	{
+		pres = e->second;
+		if (flags.IsSet(RESF_FINDENTRYONLY) || ((pres->GetStatus() == Resource::RS_LOADED) && (!pres->GetType() || (pres->GetType() == restype))))
+			return pres;
+	}
+#endif
 
 	if (flags.IsSet(RESF_FINDENTRYONLY))
 		return pres;

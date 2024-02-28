@@ -33,18 +33,30 @@ namespace c3
 		};
 		State m_State;
 
-		glm::fvec4 m_ImgColor[IS_NUMSTATES];
-		glm::fvec4 m_TextColor[IS_NUMSTATES];
+		Color::SRGBAColor m_ImgColor[IS_NUMSTATES];
+		Color::SRGBAColor m_TextColor[IS_NUMSTATES];
 
 		Texture2D *m_pImage;
 		RenderMethod *m_pMethodImage;
+		size_t m_TechImage;
 		RenderMethod *m_pMethodText;
+		size_t m_TechText;
 		Material *m_pTextMtl;
-		Material *m_pRectMtl;
+		Material *m_pImgMtl;
 		VertexBuffer *m_pTextVB;
 		Font *m_pFont;
+		size_t m_TextQuads;
+		props::TVec2F m_Dims;
 
 		math::FRECT m_Rect;
+
+		using ImageMode = enum
+		{
+			IM_STRETCH = 0,
+			IM_WRAPPROPORTIONAL,
+
+			IM_FORCE64BIT = 0xFFFFFFFFFFFFFFFF
+		};
 
 		using VerticalAlignment = enum
 		{

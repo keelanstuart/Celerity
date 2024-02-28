@@ -9,6 +9,7 @@
 #include <C3.h>
 #include <C3Texture.h>
 #include <C3Resource.h>
+#include <C3ColorDefs.h>
 
 namespace c3
 {
@@ -59,6 +60,9 @@ namespace c3
 
 		/// Sets the given material component color
 		virtual void SetColor(ColorComponentType comptype, const glm::fvec4 *pcolor) = NULL;
+
+		/// Sets the given material component color
+		virtual void SetColor(ColorComponentType comptype, Color::SRGBAColor color) = NULL;
 
 		/// GetColor returns the given component color
 		virtual const glm::fvec4 *GetColor(ColorComponentType comptype, glm::fvec4 *pcolor = nullptr) const = NULL;

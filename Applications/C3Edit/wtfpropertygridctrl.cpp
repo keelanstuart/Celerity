@@ -2512,6 +2512,9 @@ void CWTFPropertyGridFontProperty::OnClickButton(CPoint /*point*/)
 	if (dlg.DoModal() == IDOK)
 	{
 		dlg.GetCurrentFont(&m_lf);
+
+		m_lf.lfHeight = MulDiv(72, -m_lf.lfHeight, 96);
+
 		m_Color = dlg.GetColor();
 
 		if (memcmp(&lfPrev, &m_lf, sizeof(lfPrev) - sizeof(lfPrev.lfFaceName)) || _tcscmp( lfPrev.lfFaceName, m_lf.lfFaceName) || nColorPrev != m_Color)

@@ -60,6 +60,50 @@ namespace c3
 #define RGBA(r, g, b, a)		((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)|(((DWORD)(BYTE)(a))<<24)))
 #endif
 
+#define RED(c)					(c & 0xff)
+#define GREEN(c)				((c >> 8) & 0xff)
+#define BLUE(c)					((c >> 16) & 0xff)
+#define ALPHA(c)				((c >> 24) & 0xff)
+
+		inline void ConvertIntToVec(SRGBAColor ic, props::TVec4F &vc)
+		{
+			vc.r = (float)(ic.r) / 255.0f;
+			vc.g = (float)(ic.g) / 255.0f;
+			vc.b = (float)(ic.b) / 255.0f;
+			vc.a = (float)(ic.a) / 255.0f;
+		}
+
+		inline void ConvertIntToVec(SRGBColor ic, props::TVec3F &vc)
+		{
+			vc.r = (float)(ic.r) / 255.0f;
+			vc.g = (float)(ic.g) / 255.0f;
+			vc.b = (float)(ic.b) / 255.0f;
+		}
+
+		inline SRGBAColor ConvertVecToInt(props::TVec4F &vc)
+		{
+			SRGBAColor ret;
+
+			ret.r = (uint8_t)(std::min(std::max(0.0f, vc.r), 1.0f) * 255.0f);
+			ret.g = (uint8_t)(std::min(std::max(0.0f, vc.g), 1.0f) * 255.0f);
+			ret.b = (uint8_t)(std::min(std::max(0.0f, vc.b), 1.0f) * 255.0f);
+			ret.a = (uint8_t)(std::min(std::max(0.0f, vc.a), 1.0f) * 255.0f);
+
+			return ret;
+		}
+
+		inline SRGBColor ConvertVecToInt(props::TVec3F &vc)
+		{
+			SRGBColor ret;
+
+			ret.r = (uint8_t)(std::min(std::max(0.0f, vc.r), 1.0f) * 255.0f);
+			ret.g = (uint8_t)(std::min(std::max(0.0f, vc.g), 1.0f) * 255.0f);
+			ret.b = (uint8_t)(std::min(std::max(0.0f, vc.b), 1.0f) * 255.0f);
+
+			return ret;
+		}
+
+
 		constexpr SRGBAColor iWhite = {255, 255, 255, 255};
 		constexpr SRGBAColor iWhiteTT = {255, 255, 255, 192};		// white, three-quarter transparency
 		constexpr SRGBAColor iWhiteHT = {255, 255, 255, 128};		// white, half transparency

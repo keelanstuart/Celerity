@@ -21,10 +21,11 @@ namespace c3
 	#define MATRIXUPDATE_WORLDVIEW			0x02
 	#define MATRIXUPDATE_VIEWPROJ			0x04
 	#define MATRIXUPDATE_NORMAL				0x08
+	#define MATRIXUPDATE_WORLDPROJ			0x10
 
-	#define MATRIXUPDATE_WORLD				(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_WORLDVIEW | MATRIXUPDATE_NORMAL)
+	#define MATRIXUPDATE_WORLD				(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_WORLDVIEW | MATRIXUPDATE_NORMAL | MATRIXUPDATE_WORLDPROJ)
 	#define MATRIXUPDATE_VIEW				(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_VIEWPROJ | MATRIXUPDATE_NORMAL)
-	#define MATRIXUPDATE_PROJ				(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_VIEWPROJ)
+	#define MATRIXUPDATE_PROJ				(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_VIEWPROJ | MATRIXUPDATE_WORLDPROJ)
 	#define MATRIXUPDATE_ALL				(MATRIXUPDATE_WORLD | MATRIXUPDATE_VIEW | MATRIXUPDATE_PROJ)
 
 
@@ -63,7 +64,7 @@ namespace c3
 		glm::fmat4x4 m_ident;
 
 		glm::fvec3 m_eyepos, m_eyedir;
-		glm::fmat4x4 m_proj, m_view, m_world, m_worldview, m_normal, m_viewproj, m_worldviewproj, m_sunshadow, m_texturetransform;
+		glm::fmat4x4 m_proj, m_view, m_world, m_worldview, m_normal, m_viewproj, m_worldviewproj, m_sunshadow, m_texturetransform, m_worldproj;
 		props::TFlags32 m_matupflags;
 
 		glm::fvec4 m_clearColor;
@@ -121,7 +122,6 @@ namespace c3
 
 		VertexBuffer *m_FSPlaneVB;
 		VertexBuffer *m_PlanesVB;
-		VertexBuffer *m_GuiVB;
 		Mesh *m_XYPlaneMesh;
 		Mesh *m_YZPlaneMesh;
 		Mesh *m_XZPlaneMesh;
@@ -151,7 +151,7 @@ namespace c3
 
 		size_t m_VertsPerFrame, m_IndicesPerFrame, m_TrisPerFrame, m_LinesPerFrame, m_PointsPerFrame;
 
-		typedef std::map<uint32_t, GLuint> TTexFlagsToSamplerMap;
+		typedef std::unordered_map<uint32_t, GLuint> TTexFlagsToSamplerMap;
 		TTexFlagsToSamplerMap m_TexFlagsToSampler;
 
 		typedef std::map<tstring, FrameBuffer *> TNameToFrameBufferMap;
@@ -313,6 +313,7 @@ namespace c3
 		virtual const glm::fmat4x4 *GetNormalMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr);
+		virtual const glm::fmat4x4 *GetWorldProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetSunShadowMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetTextureTransformMatrix(glm::fmat4x4 *m = nullptr);
 
@@ -334,7 +335,6 @@ namespace c3
 		virtual Mesh *GetRefCubeMesh();
 
 		VertexBuffer *GetPlanesVB();
-		VertexBuffer *GetGuiVB();
 		virtual Mesh *GetXYPlaneMesh();
 		virtual Mesh *GetYZPlaneMesh();
 		virtual Mesh *GetXZPlaneMesh();

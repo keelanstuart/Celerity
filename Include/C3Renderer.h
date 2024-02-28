@@ -384,6 +384,7 @@ namespace c3
 		virtual const glm::fmat4x4 *GetWorldViewMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetNormalMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
+		virtual const glm::fmat4x4 *GetWorldProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetWorldViewProjectionMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetSunShadowMatrix(glm::fmat4x4 *m = nullptr) = NULL;
 		virtual const glm::fmat4x4 *GetTextureTransformMatrix(glm::fmat4x4 *m = nullptr) = NULL;

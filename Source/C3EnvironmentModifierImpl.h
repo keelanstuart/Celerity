@@ -32,6 +32,12 @@ namespace c3
 		glm::fvec3 m_SunDir;
 		glm::fvec3 m_Gravity;
 
+		size_t m_LastFrameNum;
+		Texture2D *m_pSkyTexture;
+		RenderMethod *m_pSkyMethod;
+		Material *m_pSkyMtl;
+		Model *m_pSkyModel;
+
 	public:
 
 		EnvironmentModifierImpl();

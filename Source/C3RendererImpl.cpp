@@ -104,6 +104,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_XZPlaneMesh = nullptr;
 	m_YZPlaneMesh = nullptr;
 
+	m_GuiRectMesh = nullptr;
+
 	m_HemisphereVB = nullptr;
 	m_HemisphereMesh = nullptr;
 	m_SphereMesh = nullptr;
@@ -589,11 +591,7 @@ void RendererImpl::Shutdown()
 		m_CubeMesh = nullptr;
 	}
 
-	if (m_CubeVB)
-	{
-		m_CubeVB->Release();
-		m_CubeVB = nullptr;
-	}
+	C3_SAFERELEASE(m_CubeVB);
 
 	if (m_RefCubeMesh)
 	{
@@ -602,11 +600,7 @@ void RendererImpl::Shutdown()
 		m_RefCubeMesh = nullptr;
 	}
 
-	if (m_RefCubeVB)
-	{
-		m_RefCubeVB->Release();
-		m_RefCubeVB = nullptr;
-	}
+	C3_SAFERELEASE(m_RefCubeVB);
 
 	if (m_XYPlaneMesh)
 	{
@@ -629,24 +623,10 @@ void RendererImpl::Shutdown()
 		m_YZPlaneMesh = nullptr;
 	}
 
-	if (m_GuiRectMesh)
-	{
-		m_GuiRectMesh->AttachVertexBuffer(nullptr);
-		m_GuiRectMesh->Release();
-		m_GuiRectMesh = nullptr;
-	}
+	C3_SAFERELEASE(m_GuiRectMesh);
 
-	if (m_PlanesVB)
-	{
-		m_PlanesVB->Release();
-		m_PlanesVB = nullptr;
-	}
-
-	if (m_FSPlaneVB)
-	{
-		m_FSPlaneVB->Release();
-		m_FSPlaneVB = nullptr;
-	}
+	C3_SAFERELEASE(m_PlanesVB);
+	C3_SAFERELEASE(m_FSPlaneVB);
 
 	if (m_HemisphereMesh)
 	{
@@ -655,11 +635,7 @@ void RendererImpl::Shutdown()
 		m_HemisphereMesh = nullptr;
 	}
 
-	if (m_SphereMesh)
-	{
-		m_SphereMesh->Release();
-		m_SphereMesh = nullptr;
-	}
+	C3_SAFERELEASE(m_SphereMesh);
 
 	if (m_MatMan)
 	{
@@ -2128,6 +2104,22 @@ const glm::fmat4x4 *RendererImpl::GetViewProjectionMatrix(glm::fmat4x4 *m)
 }
 
 
+const glm::fmat4x4 *RendererImpl::GetWorldProjectionMatrix(glm::fmat4x4 *m)
+{
+	if (m_matupflags.AnySet(MATRIXUPDATE_WORLDPROJ))
+	{
+		m_worldproj = m_proj * m_world;
+		m_matupflags.Clear(MATRIXUPDATE_WORLDPROJ);
+	}
+
+	if (!m)
+		return &m_worldproj;
+
+	*m = m_worldproj;
+	return m;
+}
+
+
 const glm::fmat4x4 *RendererImpl::GetWorldViewProjectionMatrix(glm::fmat4x4 *m)
 {
 	if (m_matupflags.AnySet(MATRIXUPDATE_WORLDVIEWPROJ))
@@ -2520,7 +2512,7 @@ VertexBuffer *RendererImpl::GetPlanesVB()
 	{
 		m_PlanesVB = CreateVertexBuffer(0);
 
-		static const Vertex::PNT1::s v[4 * 4] =
+		static const Vertex::PNT1::s v[3 * 4] =
 		{
 			// XY
 			{ { -1, -1,  0 }, {  0,  0,  1 }, {  0,  0 } },
@@ -2538,19 +2530,13 @@ VertexBuffer *RendererImpl::GetPlanesVB()
 			{ { -1,  0, -1 }, {  0,  1,  0 }, {  0,  0 } },
 			{ {  1,  0, -1 }, {  0,  1,  0 }, {  0,  1 } },
 			{ {  1,  0,  1 }, {  0,  1,  0 }, {  1,  1 } },
-			{ { -1,  0,  1 }, {  0,  1,  0 }, {  1,  0 } },
-
-			// GUI Rect (on the x/z plane)
-			{ { 0, 0, 0 }, { 0, 1, 0 }, { 0, 0 } },
-			{ { 0, 0, 1 }, { 0, 1, 0 }, { 0, 1 } },
-			{ { 1, 0, 1 }, { 0, 1, 0 }, { 1, 1 } },
-			{ { 1, 0, 0 }, { 0, 1, 0 }, { 1, 0 } }
+			{ { -1,  0,  1 }, {  0,  1,  0 }, {  1,  0 } }
 		};
 
 		void *buf;
-		if (m_PlanesVB->Lock(&buf, 4 * 4, Vertex::PNT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
+		if (m_PlanesVB->Lock(&buf, 3 * 4, Vertex::PNT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
 		{
-			memcpy(buf, v, sizeof(Vertex::PNT1::s) * 4 * 4);
+			memcpy(buf, v, sizeof(Vertex::PNT1::s) * 3 * 4);
 
 			m_PlanesVB->Unlock();
 		}
@@ -2559,33 +2545,6 @@ VertexBuffer *RendererImpl::GetPlanesVB()
 	return m_PlanesVB;
 }
 
-
-VertexBuffer *RendererImpl::GetGuiVB()
-{
-	if (!m_GuiVB)
-	{
-		m_GuiVB = CreateVertexBuffer(0);
-
-		static const Vertex::ST1::s v[4] =
-		{
-			// GUI Rect (on the x/z plane)
-			{ { 0, 0 }, { 0, 0 } },
-			{ { 0, 1 }, { 0, 1 } },
-			{ { 1, 1 }, { 1, 1 } },
-			{ { 1, 0 }, { 1, 0 } }
-		};
-
-		void *buf;
-		if (m_GuiVB->Lock(&buf, 4 * 4, Vertex::PNT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
-		{
-			memcpy(buf, v, sizeof(Vertex::PNT1::s) * 4 * 4);
-
-			m_GuiVB->Unlock();
-		}
-	}
-
-	return m_GuiVB;
-}
 
 Mesh *RendererImpl::GetXYPlaneMesh()
 {
@@ -2698,29 +2657,46 @@ Mesh *RendererImpl::GetGuiRectMesh()
 	{
 		m_GuiRectMesh = CreateMesh();
 
-		m_GuiRectMesh->AttachVertexBuffer(GetGuiVB());
+		void *buf;
 
-		if (m_GuiVB)
+		VertexBuffer *pvb = CreateVertexBuffer(0);
+		if (pvb)
 		{
-			IndexBuffer *pib = CreateIndexBuffer(0);
-			if (pib)
+			static const Vertex::ST1::s v[4] =
 			{
-				static const uint16_t i[2][3] =
-				{
-					 { 0, 1, 2 }, {  0, 2, 3  }
-				};
+				// GUI Rect (on the x/z plane)
+				{ { 0, 0 }, { 0, 0 } },
+				{ { 0, 1 }, { 0, 1 } },
+				{ { 1, 1 }, { 1, 1 } },
+				{ { 1, 0 }, { 1, 0 } }
+			};
 
-				void *buf;
-				if (pib->Lock(&buf, 2 * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
-				{
-					memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3);
+			if (pvb->Lock(&buf, 4, Vertex::ST1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
+			{
+				memcpy(buf, v, sizeof(Vertex::ST1::s) * 4);
 
-					pib->Unlock();
-				}
-
-				m_GuiRectMesh->AttachIndexBuffer(pib);
+				pvb->Unlock();
 			}
 		}
+
+		IndexBuffer *pib = CreateIndexBuffer(0);
+		if (pib)
+		{
+			static const uint16_t i[2][3] =
+			{
+				 { 0, 1, 2 }, {  0, 2, 3  }
+			};
+
+			if (pib->Lock(&buf, 2 * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
+			{
+				memcpy(buf, i[0], sizeof(uint16_t) * 2 * 3);
+
+				pib->Unlock();
+			}
+		}
+
+		m_GuiRectMesh->AttachVertexBuffer(pvb);
+		m_GuiRectMesh->AttachIndexBuffer(pib);
 	}
 
 	return m_GuiRectMesh;

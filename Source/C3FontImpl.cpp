@@ -305,13 +305,11 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 					break;
 				}
 
-/*
 				case _T(' '):
 				{
 					corg.x += m_SpaceWidth;
 					break;
 				}
-*/
 
 				default:
 					if (_istprint(*text))

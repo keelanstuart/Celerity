@@ -17,21 +17,17 @@ DECLARE_COMPONENTTYPE(InterfaceElement, InterfaceElementImpl);
 
 InterfaceElementImpl::InterfaceElementImpl()
 {
-	m_ImgColor[IS_NORMAL] = Color::fWhite;
-	m_ImgColor[IS_HOVER] = Color::fLightGrey;
-	m_ImgColor[IS_DOWN] = Color::fGrey;
-
-	m_TextColor[IS_NORMAL] = Color::fLightGrey;
-	m_TextColor[IS_HOVER] = Color::fWhite;
-	m_TextColor[IS_DOWN] = Color::fGrey;
-
-	m_pRectMtl = m_pTextMtl = nullptr;
+	m_pImgMtl = m_pTextMtl = nullptr;
 	m_State = IS_NORMAL;
 
 	m_pTextVB = nullptr;
 
 	m_pMethodImage = m_pMethodText = nullptr;
+	m_TechText = m_TechImage = 0;
 	m_pFont = nullptr;
+
+	m_Dims.x = 100.0f;
+	m_Dims.y = 75.0f;
 }
 
 
@@ -43,6 +39,18 @@ InterfaceElementImpl::~InterfaceElementImpl()
 
 void InterfaceElementImpl::Release()
 {
+	props::IPropertySet *pps = m_pOwner->GetProperties();
+	props::IProperty *pp;
+
+	pp = pps->GetPropertyById('ITva');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('ITha');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('ITMi');
+	if (pp) pp->ExternalizeReference();
+
 	delete this;
 }
 
@@ -64,6 +72,13 @@ bool InterfaceElementImpl::Initialize(Object *pobject)
 
 	props::IProperty *pp;
 
+	pp = ps->CreateProperty(_T("Dimensions"), 'DIMS');
+	if (pp)
+	{
+		pp->SetVec2F(m_Dims);
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_DIMENSIONS);
+	}
+
 	if (pp = ps->CreateProperty(_T("Image"), 'IImg'))
 	{
 		pp->SetString(_T(""));
@@ -72,18 +87,39 @@ bool InterfaceElementImpl::Initialize(Object *pobject)
 
 	if (pp = ps->CreateProperty(_T("Image.RenderMethod"), 'IIrm'))
 	{
-		pp->SetString(_T(""));
+		pp->SetString(_T("ui.c3rm"));
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
 	}
 
-	if (pp = ps->CreateReferenceProperty(_T("Image.Color.Normal"), 'INCi', &m_ImgColor[IS_NORMAL], props::IProperty::PT_FLOAT_V4))
+	m_ImgColor[IS_NORMAL] = Color::iWhite;
+	if (pp = ps->CreateProperty(_T("Image.Color.Normal"), 'INCi'))
+	{
+		pp->SetInt(m_ImgColor[IS_NORMAL].i);
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
-	if (pp = ps->CreateReferenceProperty(_T("Image.Color.Hover"), 'IHCi', &m_ImgColor[IS_HOVER], props::IProperty::PT_FLOAT_V4))
+	m_ImgColor[IS_HOVER] = Color::iLightGrey;
+	if (pp = ps->CreateProperty(_T("Image.Color.Hover"), 'IHCi'))
+	{
+		pp->SetInt(m_ImgColor[IS_HOVER].i);
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
-	if (pp = ps->CreateReferenceProperty(_T("Image.Color.Down"), 'IDCi', &m_ImgColor[IS_DOWN], props::IProperty::PT_FLOAT_V4))
+	m_ImgColor[IS_DOWN] = Color::iGrey;
+	if (pp = ps->CreateProperty(_T("Image.Color.Down"), 'IDCi'))
+	{
+		pp->SetInt(m_ImgColor[IS_DOWN].i);
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
+
+	if (pp = ps->CreateProperty(_T("Image.Mode"), 'ITMi'))
+	{
+		pp->SetEnumProvider(this);
+		pp->SetEnumVal(m_VAlign);
+	}
 
 
 	if (pp = ps->CreateProperty(_T("Text"), 'ITxt'))
@@ -99,7 +135,7 @@ bool InterfaceElementImpl::Initialize(Object *pobject)
 
 	if (pp = ps->CreateProperty(_T("Text.RenderMethod"), 'ITrm'))
 	{
-		pp->SetString(_T(""));
+		pp->SetString(_T("ui.c3rm"));
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
 	}
 
@@ -115,14 +151,29 @@ bool InterfaceElementImpl::Initialize(Object *pobject)
 		pp->SetEnumVal(m_HAlign);
 	}
 
-	if (pp = ps->CreateReferenceProperty(_T("Text.Color.Normal"), 'INCt', &m_TextColor[IS_NORMAL], props::IProperty::PT_FLOAT_V4))
+	m_TextColor[IS_NORMAL] = Color::iLightGrey;
+	if (pp = ps->CreateProperty(_T("Text.Color.Normal"), 'INCt'))
+	{
+		pp->SetInt(m_TextColor[IS_NORMAL].i);
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
-	if (pp = ps->CreateReferenceProperty(_T("Text.Color.Hover"), 'IHCt', &m_TextColor[IS_HOVER], props::IProperty::PT_FLOAT_V4))
+	m_TextColor[IS_HOVER] = Color::iWhite;
+	if (pp = ps->CreateProperty(_T("Text.Color.Hover"), 'IHCt'))
+	{
+		pp->SetInt(m_TextColor[IS_HOVER].i);
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
-	if (pp = ps->CreateReferenceProperty(_T("Text.Color.Down"), 'IDCt', &m_TextColor[IS_DOWN], props::IProperty::PT_FLOAT_V4))
+	m_TextColor[IS_DOWN] = Color::iGrey;
+	if (pp = ps->CreateProperty(_T("Text.Color.Down"), 'IDCt'))
+	{
+		pp->SetInt(m_TextColor[IS_DOWN].i);
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+	}
 
 	return true;
 }
@@ -184,7 +235,7 @@ void InterfaceElementImpl::Update(float elapsed_time)
 
 bool InterfaceElementImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
-	if (0 && !flags.IsSet(RF_GUI))
+	if (!flags.IsSet(RF_GUI))
 		return false;
 
 	return true;
@@ -207,8 +258,8 @@ void InterfaceElementImpl::Render(Object::RenderFlags flags)
 				if (!m_pImage)
 					m_pImage = pr->GetWhiteTexture();
 
-				m_Flags.Clear(IEF_UPDATEIMAGE);
 			}
+			m_Flags.Clear(IEF_UPDATEIMAGE);
 		}
 	}
 
@@ -230,7 +281,7 @@ void InterfaceElementImpl::Render(Object::RenderFlags flags)
 			m_pTextVB = pr->CreateVertexBuffer();
 
 		if (m_pTextVB)
-			m_pFont->RenderText(s, m_pTextVB);
+			m_TextQuads = m_pFont->RenderText(s, m_pTextVB);
 
 		m_Flags.Clear(IEF_UPDATETEXT);
 	}
@@ -239,17 +290,17 @@ void InterfaceElementImpl::Render(Object::RenderFlags flags)
 		m_pTextMtl = pr->GetMaterialManager()->CreateMaterial();
 	if (m_pTextMtl)
 	{
-		m_pTextMtl->SetColor(Material::CCT_DIFFUSE, &m_TextColor[m_State]);
+		m_pTextMtl->SetColor(Material::CCT_DIFFUSE, m_TextColor[m_State]);
 		if (m_pFont)
 			m_pTextMtl->SetTexture(Material::TCT_DIFFUSE, m_pFont->GetMaterial()->GetTexture(Material::TCT_DIFFUSE));
 	}
 
-	if (!m_pRectMtl)
-		m_pRectMtl = pr->GetMaterialManager()->CreateMaterial();
-	if (m_pRectMtl)
+	if (!m_pImgMtl)
+		m_pImgMtl = pr->GetMaterialManager()->CreateMaterial();
+	if (m_pImgMtl)
 	{
-		m_pRectMtl->SetColor(Material::CCT_DIFFUSE, &m_ImgColor[m_State]);
-		m_pRectMtl->SetTexture(Material::TCT_DIFFUSE, m_pImage ? m_pImage : pr->GetWhiteTexture());
+		m_pImgMtl->SetColor(Material::CCT_DIFFUSE, m_ImgColor[m_State]);
+		m_pImgMtl->SetTexture(Material::TCT_DIFFUSE, m_pImage ? m_pImage : pr->GetWhiteTexture());
 	}
 
 	if (!m_pMethodImage)
@@ -262,7 +313,7 @@ void InterfaceElementImpl::Render(Object::RenderFlags flags)
 				m_pMethodImage = (RenderMethod *)(pres->GetData());
 
 			if (m_pMethodImage)
-				m_pMethodImage->SetActiveTechnique(0);
+				m_pMethodImage->FindTechnique(_T("image"), m_TechImage);
 		}
 	}
 
@@ -276,7 +327,7 @@ void InterfaceElementImpl::Render(Object::RenderFlags flags)
 				m_pMethodText = (RenderMethod *)(pres->GetData());
 
 			if (m_pMethodText)
-				m_pMethodText->SetActiveTechnique(0);
+				m_pMethodImage->FindTechnique(_T("text"), m_TechText);
 		}
 	}
 
@@ -294,23 +345,27 @@ void InterfaceElementImpl::Render(Object::RenderFlags flags)
 		float B = (float)vr.bottom;
 		glm::fmat4x4 ortho_projection =
 		{
-			{ 2.0f/(R-L),   0.0f,         0.0f,   0.0f },
+			{ 2.0f/(L-R),   0.0f,         0.0f,   0.0f },
 			{ 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
 			{ 0.0f,         0.0f,        -1.0f,   0.0f },
-			{ (R+L)/(R-L),  (T+B)/(B-T),  0.0f,   1.0f },
+			{ (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
 		};
 
+		m_pMethodImage->SetActiveTechnique(m_TechImage);
 		pr->UseRenderMethod(m_pMethodImage);
 		pr->SetProjectionMatrix(&ortho_projection);
-		pr->UseMaterial(m_pRectMtl);
-		pmod->Draw(ppos->GetTransformMatrix());
+		pr->UseMaterial(m_pImgMtl);
+		glm::fmat4x4 mat = *ppos->GetTransformMatrix() * glm::scale(glm::fvec3(m_Dims.x, 1.0f, m_Dims.y));
+		pmod->Draw(&mat, false);
 
 		if (m_pTextVB && *s && m_pFont)
 		{
+			m_pMethodImage->SetActiveTechnique(m_TechText);
 			pr->UseRenderMethod(m_pMethodText);
 			pr->UseMaterial(m_pTextMtl);
 			pr->UseVertexBuffer(m_pTextVB);
-			pr->DrawPrimitives(Renderer::PrimType::TRILIST, _tcslen(s) * 6);
+			pr->SetWorldMatrix(ppos->GetTransformMatrix());
+			pr->DrawPrimitives(Renderer::PrimType::TRILIST, m_TextQuads * 6);
 		}
 	}
 }
@@ -348,6 +403,40 @@ void InterfaceElementImpl::PropertyChanged(const props::IProperty *pprop)
 
 		case 'ITha':
 			m_HAlign = (HorizontalAlignment)pprop->AsInt();
+			break;
+
+		case 'INCi':
+			m_ImgColor[IS_NORMAL].i = (uint32_t)pprop->AsInt();
+			m_ImgColor[IS_NORMAL].a = 255;
+			break;
+
+		case 'IHCi':
+			m_ImgColor[IS_HOVER].i = (uint32_t)pprop->AsInt();
+			m_ImgColor[IS_HOVER].a = 255;
+			break;
+
+		case 'IDCi':
+			m_ImgColor[IS_DOWN].i = (uint32_t)pprop->AsInt();
+			m_ImgColor[IS_DOWN].a = 255;
+			break;
+
+		case 'INCt':
+			m_TextColor[IS_NORMAL].i = (uint32_t)pprop->AsInt();
+			m_TextColor[IS_NORMAL].a = 255;
+			break;
+
+		case 'IHCt':
+			m_TextColor[IS_HOVER].i = (uint32_t)pprop->AsInt();
+			m_TextColor[IS_HOVER].a = 255;
+			break;
+
+		case 'IDCt':
+			m_TextColor[IS_DOWN].i = (uint32_t)pprop->AsInt();
+			m_TextColor[IS_DOWN].a = 255;
+			break;
+
+		case 'DIMS':
+			pprop->AsVec2F(&m_Dims);
 			break;
 	}
 }
@@ -395,6 +484,7 @@ bool InterfaceElementImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *
 
 std::vector<tstring> HorizontalAlignmentNames ={_T("Left"), _T("Center"), _T("Right")};
 std::vector<tstring> VerticalAlignmentNames ={_T("Top"), _T("Center"), _T("Bottom")};
+std::vector<tstring> ImageModeNames ={_T("Stretch"), _T("Wrap")};
 
 size_t InterfaceElementImpl::GetNumValues(const props::IProperty *pprop) const
 {
@@ -408,6 +498,10 @@ size_t InterfaceElementImpl::GetNumValues(const props::IProperty *pprop) const
 
 			case 'ITha':
 				return HorizontalAlignmentNames.size();
+				break;
+
+			case 'ITMi':
+				return ImageModeNames.size();
 				break;
 		}
 	}
@@ -432,6 +526,12 @@ const TCHAR *InterfaceElementImpl::GetValue(const props::IProperty *pprop, size_
 				if (buf && (bufsize >= ((HorizontalAlignmentNames[ordinal].length() + 1) * sizeof(TCHAR))))
 					_tcscpy_s(buf, bufsize, HorizontalAlignmentNames[ordinal].c_str());
 				return HorizontalAlignmentNames[ordinal].c_str();
+				break;
+
+			case 'ITMi':
+				if (buf && (bufsize >= ((ImageModeNames[ordinal].length() + 1) * sizeof(TCHAR))))
+					_tcscpy_s(buf, bufsize, ImageModeNames[ordinal].c_str());
+				return ImageModeNames[ordinal].c_str();
 				break;
 		}
 	}
