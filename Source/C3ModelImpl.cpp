@@ -420,7 +420,6 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const M
 		}
 
 		RenderMethod *prm = m_pRend->GetActiveRenderMethod();
-		// TODO: select here based on mesh type...?
 
 		mesh->pmesh->Draw();
 	}

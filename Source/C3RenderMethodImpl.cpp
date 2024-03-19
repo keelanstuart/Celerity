@@ -44,6 +44,7 @@ RenderMethodImpl::PassImpl::PassImpl()
 	m_ShaderProg = nullptr;
 	m_FrameBuffer = nullptr;
 	m_FrameBufferFlags = 0;
+	m_pOwner = nullptr;
 }
 
 
@@ -298,9 +299,9 @@ bool RenderMethodImpl::PassImpl::GetFillMode(Renderer::FillMode &fillmode) const
 }
 
 
-RenderMethodImpl::TechniqueImpl::TechniqueImpl(Renderer *prend)
+RenderMethodImpl::TechniqueImpl::TechniqueImpl(RenderMethodImpl *powner)
 {
-	m_pRend = prend;
+	m_pOwner = powner;
 }
 
 
@@ -331,6 +332,7 @@ RenderMethod::Pass *RenderMethodImpl::TechniqueImpl::GetPass(size_t idx) const
 RenderMethod::Pass *RenderMethodImpl::TechniqueImpl::AddPass()
 {
 	RenderMethodImpl::PassImpl &ret = m_Passes.emplace_back();
+	ret.m_pOwner = m_pOwner;
 
 	return &ret;
 }
@@ -352,7 +354,7 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::TechniqueImpl::ApplyPass(si
 		return 0;
 
 	PassImpl &pr = (PassImpl &)m_Passes[idx];
-	return pr.Apply(m_pRend);
+	return pr.Apply(((RenderMethodImpl *)m_pOwner)->m_pRend);
 }
 
 
@@ -405,6 +407,18 @@ RenderMethodImpl::RenderMethodImpl(Renderer *prend)
 }
 
 
+const TCHAR *RenderMethodImpl::GetShaderMode()
+{
+	return m_ShaderMode.c_str();
+}
+
+
+void RenderMethodImpl::SetShaderMode(const TCHAR *mode)
+{
+	m_ShaderMode = mode;
+}
+
+
 RenderMethodImpl::~RenderMethodImpl()
 {
 }
@@ -430,7 +444,7 @@ const TCHAR *RenderMethodImpl::GetName() const
 
 RenderMethod::Technique *RenderMethodImpl::AddTechnique()
 {
-	TechniqueImpl t(m_pRend);
+	TechniqueImpl t(this);
 	m_Techniques.push_back(t);
 
 	return &(m_Techniques.back());
@@ -512,7 +526,7 @@ bool RenderMethodImpl::Load(const tinyxml2::XMLElement *proot, const TCHAR *opti
 
 void RenderMethodImpl::LoadTechnique(const tinyxml2::XMLElement *proot, const TCHAR *options)
 {
-	m_Techniques.push_back(TechniqueImpl(m_pRend));
+	m_Techniques.push_back(TechniqueImpl(this));
 
 	const tinyxml2::XMLAttribute *paname = proot->FindAttribute("name");
 	if (paname)
@@ -521,13 +535,7 @@ void RenderMethodImpl::LoadTechnique(const tinyxml2::XMLElement *proot, const TC
 		CONVERT_MBCS2TCS(paname->Value(), n);
 
 		tstring name;
-		name.reserve(_tcslen(n) + ((options && *options) ? (1 + _tcslen(options)) : 0));
 		name = n;
-		if (options && *options)
-		{
-			name += _T('|');
-			name += options;
-		}
 
 		m_Techniques.back().SetName(name.c_str());
 	}
@@ -590,6 +598,17 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	CONVERT_MBCS2TCS(pavalue->Value(), v);
 	tstring value = v;
 
+	auto SetShaderToLoad = [&](Renderer::ShaderComponentType shtype, const TCHAR *filename)
+	{
+		tstring modval = filename;
+		if (m_pOwner->GetShaderMode())
+		{
+			modval += _T("|");
+			modval += m_pOwner->GetShaderMode();
+		}
+		m_ShaderCompFilename[shtype] = std::make_optional<tstring>(modval);
+	};
+
 	if (name == _T("framebuffer"))
 	{
 		m_FrameBufferName = std::make_optional<tstring>(value);
@@ -639,23 +658,23 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	}
 	else if (name == _T("shader.geometry"))
 	{
-		m_ShaderCompFilename[Renderer::ShaderComponentType::ST_GEOMETRY] = std::make_optional<tstring>(value);
+		SetShaderToLoad(Renderer::ShaderComponentType::ST_GEOMETRY, value.c_str());
 	}
 	else if (name == _T("shader.vertex"))
 	{
-		m_ShaderCompFilename[Renderer::ShaderComponentType::ST_VERTEX] = std::make_optional<tstring>(value);
+		SetShaderToLoad(Renderer::ShaderComponentType::ST_VERTEX, value.c_str());
 	}
 	else if (name == _T("shader.fragment"))
 	{
-		m_ShaderCompFilename[Renderer::ShaderComponentType::ST_FRAGMENT] = std::make_optional<tstring>(value);
+		SetShaderToLoad(Renderer::ShaderComponentType::ST_FRAGMENT, value.c_str());
 	}
 	else if (name == _T("shader.tesseval"))
 	{
-		m_ShaderCompFilename[Renderer::ShaderComponentType::ST_TESSEVAL] = std::make_optional<tstring>(value);
+		SetShaderToLoad(Renderer::ShaderComponentType::ST_TESSEVAL, value.c_str());
 	}
 	else if (name == _T("shader.tesscontrol"))
 	{
-		m_ShaderCompFilename[Renderer::ShaderComponentType::ST_TESSCONTROL] = std::make_optional<tstring>(value);
+		SetShaderToLoad(Renderer::ShaderComponentType::ST_TESSCONTROL, value.c_str());
 	}
 	else if (name == _T("blendmode"))
 	{
@@ -775,12 +794,6 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 }
 
 
-void RenderMethodImpl::PassImpl::SetShaderMode(const TCHAR *mode)
-{
-	m_ShaderMode = mode;
-}
-
-
 void RenderMethodImpl::LoadPass(TechniqueImpl *ptech, const tinyxml2::XMLElement *proot, const TCHAR *options)
 {
 	RenderMethodImpl::PassImpl *ppass = (RenderMethodImpl::PassImpl *)(ptech->AddPass());
@@ -810,6 +823,9 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromFile(c3::Sy
 			return ResourceType::LoadResult::LR_ERROR;
 
 		RenderMethod *prm = psys->GetRenderer()->CreateRenderMethod();
+
+		((RenderMethodImpl *)prm)->SetShaderMode(options);
+
 		((RenderMethodImpl *)prm)->Load(doc.FirstChildElement(), options);
 
 		*returned_data = (void *)prm;
@@ -830,6 +846,9 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromMemory(c3::
 			return ResourceType::LoadResult::LR_ERROR;
 
 		RenderMethod *prm = psys->GetRenderer()->CreateRenderMethod();
+
+		((RenderMethodImpl *)prm)->SetShaderMode(options);
+
 		((RenderMethodImpl *)prm)->Load(doc.FirstChildElement(), options);
 
 		*returned_data = (void *)prm;

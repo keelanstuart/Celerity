@@ -109,12 +109,23 @@ namespace c3
 		// Adds a Technique to this RenderMethod
 		virtual Technique *AddTechnique() = NULL;
 
+		// Gets the index of the active technique (the technique used when this method is active and things are rendered)
 		virtual bool GetActiveTechniqueIndex(size_t &idx) const = NULL;
+
+		// Gets the active technique (the technique used when this method is active and things are rendered)
 		virtual Technique *GetActiveTechnique() const = NULL;
 
+		// Sets the active technique by index (the technique used when this method is active and things are rendered)
 		virtual bool SetActiveTechnique(size_t idx) = NULL;
 
+		// Finds a Technique by name
 		virtual bool FindTechnique(const TCHAR *name, size_t &idx) const = NULL;
+
+		// Gets the shader mode (the "options" value passed when loading shaders for this render method)
+		virtual const TCHAR *GetShaderMode() = NULL;
+
+		// Sets the shader mode (the "options" value passed when loading shaders for this render method)
+		virtual void SetShaderMode(const TCHAR *mode) = NULL;
 
 	};
 

@@ -94,7 +94,7 @@ void ResourceImpl::AddRef()
 	{
 		if (m_pResType)
 		{
-			s_pSys->GetLog()->Print(_T("Loading \"%s\"... "), m_Filename.c_str());
+			s_pSys->GetLog()->Print(_T("Loading \"%s\"%s%s%s... "), m_Filename.c_str(), m_Options.empty() ? _T("") : _T(" ("), m_Options.c_str(), m_Options.empty() ? _T("") : _T(")"));
 
 			m_Status = Resource::Status::RS_LOADING;
 			ResourceType::LoadResult r;

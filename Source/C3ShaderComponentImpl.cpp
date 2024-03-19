@@ -242,7 +242,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromFile(c3:
 									ope++;
 
 								while (ops != ope)
-									preamble += *(ops++);
+									preamble += std::toupper(*(ops++));
 								preamble += _T("\n");
 							}
 						}

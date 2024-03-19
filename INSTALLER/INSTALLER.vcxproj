@@ -157,7 +157,7 @@
       <Message>Building SDK Installer...</Message>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>"$(SFXPACKAGER)" -b "$(SolutionDir)CeleritySDK.sfxpp"
+      <Command>"$(SFXPACKAGER)" -b "$(SolutionDir)INSTALLER\CeleritySDK.sfxpp"
 </Command>
     </PostBuildEvent>
     <PostBuildEvent>

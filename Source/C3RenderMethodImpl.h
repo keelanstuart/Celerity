@@ -31,13 +31,13 @@ namespace c3
 
 		class PassImpl : public RenderMethod::Pass
 		{
+			friend class RenderMethodImpl;
 
 		protected:
 
 			ShaderProgram *m_ShaderProg;
 			FrameBuffer *m_FrameBuffer;
 			std::optional<tstring> m_ShaderCompFilename[Renderer::ShaderComponentType::ST_NUMTYPES];
-			tstring m_ShaderMode;
 			std::optional<tstring> m_FrameBufferName;
 			props::TFlags64 m_FrameBufferFlags;
 			std::optional<Renderer::BlendMode> m_BlendMode;
@@ -46,6 +46,7 @@ namespace c3
 			std::optional<Renderer::WindingOrder> m_WindingOrder;
 			std::optional<Renderer::DepthMode> m_DepthMode;
 			std::optional<Renderer::FillMode> m_FillMode;
+			RenderMethod *m_pOwner;
 
 		public:
 			PassImpl();
@@ -54,7 +55,6 @@ namespace c3
 
 			Renderer::RenderStateOverrideFlags Apply(Renderer *prend);
 			bool LoadSetting(const tinyxml2::XMLElement *proot);
-			void SetShaderMode(const TCHAR *mode);
 
 			virtual void SetFrameBufferName(const TCHAR *name);
 			virtual bool GetFrameBufferName(tstring &name) const;
@@ -90,9 +90,10 @@ namespace c3
 
 		class TechniqueImpl : public RenderMethod::Technique
 		{
+			friend class RenderMethodImpl;
 
 		protected:
-			Renderer *m_pRend;
+			RenderMethodImpl *m_pOwner;
 			tstring m_Name;
 			
 			TPassVector m_Passes;
@@ -101,7 +102,7 @@ namespace c3
 
 
 		public:
-			TechniqueImpl(Renderer *prend);
+			TechniqueImpl(RenderMethodImpl *powner);
 
 			virtual void SetName(const TCHAR *name);
 			virtual const TCHAR *GetName() const;
@@ -116,12 +117,15 @@ namespace c3
 
 		};
 
+		friend class TechniqueImpl;
+
 		typedef std::vector<TechniqueImpl> TTechniqueVector;
 
 	protected:
 		TTechniqueVector m_Techniques;
 		tstring m_Name;
 		size_t m_ActiveTech;
+		tstring m_ShaderMode;
 
 	public:
 		RenderMethodImpl(Renderer *prend);
@@ -153,6 +157,12 @@ namespace c3
 		virtual bool FindTechnique(const TCHAR *name, size_t &idx) const;
 
 		bool Load(const tinyxml2::XMLElement *proot, const TCHAR *options);
+
+		// Gets the shader mode (the "options" value passed when loading shaders for this render method)
+		virtual const TCHAR *GetShaderMode();
+
+		// Sets the shader mode (the "options" value passed when loading shaders for this render method)
+		virtual void SetShaderMode(const TCHAR *mode);
 
 	private:
 		void LoadTechnique(const tinyxml2::XMLElement *proot, const TCHAR *options);
