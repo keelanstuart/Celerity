@@ -123,12 +123,16 @@ void jcQuatToEuler(CScriptVar *c, void *userdata);
 void jcEulerToQuat(CScriptVar *c, void *userdata);
 void jcPlaySound(CScriptVar *c, void *userdata);
 void jcGetModelNodeIndex(CScriptVar *c, void *userdata);
+void jcGetModelNodeCount(CScriptVar *c, void *userdata);
 void jcGetModelInstNodePos(CScriptVar *c, void *userdata);
 void jcGetModelInstNodeOri(CScriptVar *c, void *userdata);
 void jcGetModelInstNodeScl(CScriptVar *c, void *userdata);
 void jcSetModelInstNodePos(CScriptVar *c, void *userdata);
 void jcSetModelInstNodeOri(CScriptVar *c, void *userdata);
 void jcSetModelInstNodeScl(CScriptVar *c, void *userdata);
+void jcGetModelNodeName(CScriptVar *c, void *userdata);
+void jcSetModelNodeVisibility(CScriptVar *c, void *userdata);
+void jcSetModelNodeCollisions(CScriptVar *c, void *userdata);
 
 
 void ScriptableImpl::ResetJS()
@@ -169,12 +173,16 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function QuatToEuler(quat)"),									jcQuatToEuler, psys);
 	m_JS->AddNative(_T("function PlaySound(filename, volmod, pitchmod, loop, pos)"),	jcPlaySound, psys);
 	m_JS->AddNative(_T("function GetModelNodeIndex(hobj, nodename)"),					jcGetModelNodeIndex, psys);
+	m_JS->AddNative(_T("function GetModelNodeCount(hobj)"),								jcGetModelNodeCount, psys);
 	m_JS->AddNative(_T("function GetModelInstNodePos(hobj, nodeidx)"),					jcGetModelInstNodePos, psys);
 	m_JS->AddNative(_T("function GetModelInstNodeOri(hobj, nodeidx)"),					jcGetModelInstNodeOri, psys);
 	m_JS->AddNative(_T("function GetModelInstNodeScl(hobj, nodeidx)"),					jcGetModelInstNodeScl, psys);
 	m_JS->AddNative(_T("function SetModelInstNodePos(hobj, nodeidx, pos)"),				jcSetModelInstNodePos, psys);
 	m_JS->AddNative(_T("function SetModelInstNodeOri(hobj, nodeidx, ori)"),				jcSetModelInstNodeOri, psys);
 	m_JS->AddNative(_T("function SetModelInstNodeScl(hobj, nodeidx, scl)"),				jcSetModelInstNodeScl, psys);
+	m_JS->AddNative(_T("function GetModelNodeName(hobj, nodeidx)"),						jcGetModelNodeName, psys);
+	m_JS->AddNative(_T("function SetModelNodeVisibility(hobj, nodeidx, b)"),			jcSetModelNodeVisibility, psys);
+	m_JS->AddNative(_T("function SetModelNodeCollisions(hobj, nodeidx, b)"),			jcSetModelNodeCollisions, psys);
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -1256,6 +1264,34 @@ void jcGetModelNodeIndex(CScriptVar *c, void *userdata)
 }
 
 
+//m_JS->AddNative(_T("function GetModelNodeCount(hobj)"),							jcGetModelNodeCount, psys);
+void jcGetModelNodeCount(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		if (pmr)
+		{
+			const Model *pm = pmr->GetModel();
+			if (pm)
+			{
+				ret->SetInt(pm->GetNodeCount());
+				return;
+			}
+		}
+	}
+
+	ret->SetInt(0);
+}
+
+
 //m_JS->AddNative(_T("function GetModelInstNodePos(hobj, nodeidx)"),						jcGetModelInstNodePos, psys);
 void jcGetModelInstNodePos(CScriptVar *c, void *userdata)
 {
@@ -1549,5 +1585,74 @@ void jcSetModelInstNodeScl(CScriptVar *c, void *userdata)
 				pmr->GetModelInstanceData()->SetTransform(ni, t);
 			}
 		}
+	}
+}
+
+
+// m_JS->AddNative(_T("function GetModelNodeName(hobj, nodeidx)"), jcGetModelNodeName, psys);
+void jcGetModelNodeName(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	Model::NodeIndex ni = c->GetParameter(_T("nodeidx"))->GetInt();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		const Model *pm = pmr->GetModel();
+
+		if (pm)
+		{
+			const TCHAR *s = pm->GetNodeName(ni);
+			if (s)
+			{
+				ret->SetString(s);
+				return;
+			}
+		}
+	}
+
+	ret->SetUndefined();
+}
+
+
+// m_JS->AddNative(_T("function SetModelNodeVisibility(hobj, nodeidx, b)"), jcSetModelNodeVisibility, psys);
+void jcSetModelNodeVisibility(CScriptVar *c, void *userdata)
+{
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	Model::NodeIndex ni = c->GetParameter(_T("nodeidx"))->GetInt();
+	bool b = c->GetParameter(_T("b"))->GetBool();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		Model *pm = (Model *)pmr->GetModel();
+
+		if (pm)
+			pm->NodeVisibility(ni, std::make_optional<bool>(b));
+	}
+}
+
+
+// m_JS->AddNative(_T("function SetModelNodeCollisions(hobj, nodeidx, b)"), jcSetModelNodeCollisions, psys);
+void jcSetModelNodeCollisions(CScriptVar *c, void *userdata)
+{
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	Model::NodeIndex ni = c->GetParameter(_T("nodeidx"))->GetInt();
+	bool b = c->GetParameter(_T("b"))->GetBool();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+		Model *pm = (Model *)pmr->GetModel();
+
+		if (pm)
+			pm->NodeCollidability(ni, std::make_optional<bool>(b));
 	}
 }

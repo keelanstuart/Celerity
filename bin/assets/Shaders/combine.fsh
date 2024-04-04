@@ -16,6 +16,15 @@ in vec2 fTex0;
 
 layout (location=0) out vec4 oColor;
 
+vec3 acquireAdjacentNormal(sampler2D samp, vec2 uv, vec2 ofs, vec3 def)
+{
+	vec3 t = texture(samp, uv + ofs).rgb;
+	if (t == vec3(0, 0, 0))
+		return def;
+
+	return normalize(t - 0.5 * 2.0);
+}
+
 void main()
 {
 	vec4 texNormalAmbOcc = texture(uSamplerNormalAmbOcc, fTex0);
@@ -23,7 +32,26 @@ void main()
 	if (texNormalAmbOcc.rgb == vec3(0, 0, 0))
 		discard;
 	
-	vec3 norm = normalize((normalize(texNormalAmbOcc.rgb) - 0.5) * 2.0);
+	vec3 norm = normalize(texNormalAmbOcc.rgb - 0.5 * 2.0);
+
+#if 0
+	vec2 texofs = 1.0 / textureSize(uSamplerNormalAmbOcc, 0);
+	
+	vec3 n_n = acquireAdjacentNormal(uSamplerNormalAmbOcc, fTex0, vec2(0, -texofs.y), norm);
+	vec3 n_s = acquireAdjacentNormal(uSamplerNormalAmbOcc, fTex0, vec2(0, texofs.y), norm);
+	vec3 n_e = acquireAdjacentNormal(uSamplerNormalAmbOcc, fTex0, vec2(texofs.x, 0), norm);
+	vec3 n_w = acquireAdjacentNormal(uSamplerNormalAmbOcc, fTex0, vec2(-texofs.x, 0), norm);
+	vec3 n_ne = acquireAdjacentNormal(uSamplerNormalAmbOcc, fTex0, vec2(texofs.x, -texofs.y), norm);
+	vec3 n_nw = acquireAdjacentNormal(uSamplerNormalAmbOcc, fTex0, vec2(-texofs.x, -texofs.y), norm);
+	vec3 n_se = acquireAdjacentNormal(uSamplerNormalAmbOcc, fTex0, vec2(texofs.x, texofs.y), norm);
+	vec3 n_sw = acquireAdjacentNormal(uSamplerNormalAmbOcc, fTex0, vec2(-texofs.x, texofs.y), norm);
+
+	float d_n_s = -clamp(dot(n_n, n_s), -1, 0);
+	float d_e_w = -clamp(dot(n_e, n_w), -1, 0);
+	float d_ne_sw = -clamp(dot(n_ne, n_sw), -1, 0);
+	float d_nw_se = -clamp(dot(n_nw, n_se), -1, 0);
+	float aot = 1.0 - (d_n_s * d_e_w * d_ne_sw * d_nw_se);
+#endif
 	
 	vec3 sunlight = normalize(-uSunDirection);
 	float NdotL = max(dot(norm, sunlight), 0.0);
@@ -39,6 +67,11 @@ void main()
 	vec3 emissive = texEmissiveRoughness.rgb;
 	float metalness = texDiffuseMetalness.a;
 	float roughness = texEmissiveRoughness.a;
+	
+#if 0
+	diffuse *= aot;
+	ambient *= aot;
+#endif
 	
 	vec3 view = normalize(texPositionDepth - uEyePosition);
 	vec3 refl = normalize(-reflect(-sunlight, norm));

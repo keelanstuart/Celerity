@@ -15,8 +15,12 @@
 #define IDS_OBJECTS_WND                 127
 #define IDR_MAINFRAME                   128
 #define IDR_MAINFRAME_256               129
+#define IDS_RESOURCESPY_MENU            129
 #define IDR_C3EditTYPE                  130
+#define ID_RESOURCESPY_RELOAD           130
 #define ID_WINDOW_MANAGER               131
+#define IDS_TOOLBAR_RESOURCESPY         131
+#define IDS_RESOURCESPY_WND             132
 #define ID_VIEW_FILEVIEW                133
 #define ID_VIEW_PROTOVIEW               134
 #define ID_PROPERTIES                   135
@@ -126,12 +130,15 @@
 #define IDD_GRAPHNODE                   333
 #define ID_VIEW_SCRIPTINGWND            334
 #define IDS_SCRIPTING_WND               335
+#define IDI_RESOURCESPY_WND             335
 #define IDI_SCRIPTING_WND               336
 #define IDI_SCRIPTING_WND_HC            337
 #define ID_SCRIPT_UPDATE                339
 #define ID_SCRIPT_ASSIGN                340
+#define IDI_RESOURCESPY_WND_HC          340
 #define ID_SCRIPT_RUN                   341
 #define IDS_SCRIPT_UPDATE               342
+#define IDR_POPUP_RESOURCESPY           342
 #define IDS_SCRIPT_ASSIGN               343
 #define IDS_SCRIPT_RUN                  344
 #define IDS_POPUP_GRAPH                 345
@@ -143,12 +150,14 @@
 #define IDR_PROTOTREE                   351
 #define IDB_CHECKBOX                    352
 #define IDR_POPUP_GRAPH                 353
+#define IDR_TOOLBAR_RESOURCESPY         353
 #define IDI_OBJECTS_WND                 354
 #define IDI_OBJECTS_WND_HC              355
 #define IDR_POPUP_SCRIPTING             356
 #define ID_VIEW_OBJECTSWND              357
 #define ID_SCRIPTEDITOR_STATUS_NAME     358
 #define ID_SCRIPTEDITOR_STATUS_ROWCOL   359
+#define ID_VIEW_RESOURCESPYWND          362
 #define IDC_PROPERTIES                  1000
 #define IDC_COMPONENTS                  1001
 #define IDC_NAME                        1002
@@ -181,14 +190,23 @@
 #define ID_Menu                         32797
 #define ID_EDIT_CAMERASETTINGS          32798
 #define ID_EDIT_RESOURCEPATHCONFIGURATION 32799
+#define ID_RELOAD                       32800
+#define ID_RELOAD_RELOAD                32801
+#define ID_RESOURCE_OPENCONTAININGFOLDER 32802
+#define ID_RESOURCE_OPEN                32803
+#define ID_RESOURCESPY_OPEN             32804
+#define ID_RESOURCESPY_OPENFOLDER       32805
+#define ID_RESOURCE_OPENFOLDER          32806
+#define ID_RESOURCE_RELOAD              32807
+#define ID_RESOURCE_PROPERTIES          32808
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        335
-#define _APS_NEXT_COMMAND_VALUE         32800
+#define _APS_NEXT_RESOURCE_VALUE        343
+#define _APS_NEXT_COMMAND_VALUE         32809
 #define _APS_NEXT_CONTROL_VALUE         1012
-#define _APS_NEXT_SYMED_VALUE           362
+#define _APS_NEXT_SYMED_VALUE           363
 #endif
 #endif

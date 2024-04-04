@@ -8,6 +8,7 @@
 
 #include <c3.h>
 #include <C3Animation.h>
+#include <optional>
 
 
 namespace c3
@@ -23,12 +24,15 @@ namespace c3
 
 	public: 
 
-		typedef size_t NodeIndex;
-		typedef size_t MeshIndex;
-		typedef size_t SubMeshIndex;
+		using NodeIndex = size_t;
+		using MeshIndex = size_t;
+		using SubMeshIndex = size_t;
 
 		enum { NO_PARENT = -1 };
 		enum { INVALID_INDEX = -2 };
+
+		// Used by ProcessNodes. Takes a NodeIndex. Return true to keep going, false to stop
+		using ProcessNodesFunc = std::function<bool(NodeIndex)>;
 
 		// InstanceData lets you adjust the transform and the material when rendering an instance 
 		class InstanceData
@@ -63,6 +67,10 @@ namespace c3
 		virtual void SetNodeName(NodeIndex nidx, const TCHAR *name) = NULL;
 
 		virtual const TCHAR *GetNodeName(NodeIndex nidx) const = NULL;
+
+		virtual bool NodeVisibility(NodeIndex nidx, std::optional<bool> visible = std::nullopt) = NULL;
+
+		virtual bool NodeCollidability(NodeIndex nidx, std::optional<bool> collide = std::nullopt) = NULL;
 
 		virtual void SetTransform(NodeIndex nidx, const glm::fmat4x4 *pmat) = NULL;
 
@@ -100,6 +108,9 @@ namespace c3
 							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const = NULL;
 
 		virtual const Animation *GetDefaultAnim() const = NULL;
+
+		// Goes over all nodes and runs your code on them
+		virtual void ProcessNodes(ProcessNodesFunc func) = NULL;
 
 	};
 

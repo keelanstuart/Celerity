@@ -371,6 +371,8 @@ namespace c3
 
 		virtual bool DrawIndexedPrimitives(PrimType type, size_t offset = -1, size_t count = -1) = NULL;
 
+		virtual const BoundingBox *GetClipFrustum() = NULL;
+
 		// Sets the current projection matrix - kind of a clearing house for shaders to pull from
 		virtual void SetProjectionMatrix(const glm::fmat4x4 *m) = NULL;
 		virtual void SetViewMatrix(const glm::fmat4x4 *m) = NULL;

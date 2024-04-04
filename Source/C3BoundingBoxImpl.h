@@ -83,56 +83,54 @@ namespace c3
 			};
 		};
 
+		struct Plane
+		{
+			glm::fvec3 point;
+			glm::fvec3 normal;
+		};
+
 		BoundingBoxImpl();
+		BoundingBoxImpl(const BoundingBox *other);
 		virtual ~BoundingBoxImpl();
 
 		virtual void Release();
 
 		virtual void SetFromBounds(const BoundingBox *box);
 
-		virtual void SetOrigin(float x, float y, float z);
-		virtual void SetOrigin(const glm::fvec3 *org);
-		virtual const glm::fvec3 *GetOrigin(glm::fvec3 *org = nullptr) const;
-
-		virtual void SetExtents(float x, float y, float z);
-		virtual void SetExtents(const glm::fvec3 *ext);
-		virtual const glm::fvec3 *GetExtents(glm::fvec3 *ext = nullptr) const;
+		virtual void SetExtents(const glm::fvec3 *min_bounds, const glm::fvec3 *max_bounds);
 
 		virtual void SetAsFrustum(const glm::fmat4x4 *viewmat, const glm::fmat4x4 *projmat, const RECT *viewport);
 
 		virtual void Align(const glm::fmat4x4 *matrix);
 
-		virtual bool IsPointInside(const glm::fvec3 *ppt);
-		virtual bool IsBoxInside(const BoundingBox *pbox);
-		virtual bool IsSphereInside(const glm::fvec3 *centroid, float radius);
+		virtual bool IsPointInside(const glm::fvec3 *ppt) const;
+		virtual bool IsBoxInside(const BoundingBox *pbox) const;
+		virtual bool IsSphereInside(const glm::fvec3 *centroid, float radius) const;
 
-		virtual bool CheckCollision(const glm::fvec3 *raypos, const glm::fvec3 *rayvec, float *dist = nullptr);
+		virtual bool CheckCollision(const glm::fvec3 *raypos, const glm::fvec3 *rayvec, float *dist = nullptr) const;
 
 		// this will adjust the current bounding box by pbox's aligned bounds
 		virtual void IncludeBounds(const BoundingBox *pbox);
 
 		virtual const uint16_t *GetIndices() const;
 		virtual const glm::fvec3 *GetCorners() const;
-
-		const glm::fvec4 *GetFace(FACE::eFACE f) const;
+		virtual const glm::fvec3 *GetAlignedCorners() const;
 
 	protected:
 
-		glm::fvec4 m_Face[FACE::NUMFACES];				// a plane representing each of the six faces
-		glm::fvec3 m_Corner[CORNER::NUMCORNERS];				// a point in space representing each of the eight corners
+		Plane m_Face[FACE::NUMFACES];								// planes representing each of the six faces
 
-		glm::fvec3 m_vRange_Unaligned[3];
-		glm::fvec3 m_vOrg_Unaligned;
-
-		glm::fvec3 m_vRange_Aligned[3];
-		glm::fvec3 m_vOrg_Aligned;
+		glm::fvec3 m_Corner[CORNER::NUMCORNERS];					// points in space representing each of the eight aligned corners
+		glm::fvec3 m_Corner_Unaligned[CORNER::NUMCORNERS];			// points in space representing each of the eight unaligned corners
 
 		// this is packed as bytes, with the type being 16-bit
 		// integers so that this can be passed directly to the
 		// rendering API as indices for drawing the box as lines.
 	#pragma pack(push, 1)
-		static uint16_t m_Edge[EDGE::NUMEDGES][2];		// a line segment representing each of the twelve edges
+		static uint16_t s_Edge[EDGE::NUMEDGES][2];		// a line segment representing each of the twelve edges
 	#pragma pack(pop)
+		float m_EdgeLen[EDGE::NUMEDGES];
+		glm::fvec3 m_EdgeDir[EDGE::NUMEDGES];
 
 		bool m_bNeedsAlignment;
 	};

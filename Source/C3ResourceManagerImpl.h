@@ -8,6 +8,7 @@
 
 #include <C3ResourceManager.h>
 #include "C3ZipImpl.h"
+#include <atomic>
 
 namespace c3
 {
@@ -17,6 +18,7 @@ namespace c3
 
 	protected:
 		System *m_pSys;
+		std::atomic<uint64_t> m_LastFrameChanged;
 
 		typedef std::map<tstring, Resource *, std::less<tstring>> TResourceMap;
 		TResourceMap m_ResMap;
@@ -27,15 +29,13 @@ namespace c3
 		typedef std::deque<const ResourceType *> TResourceTypeArray;
 		TResourceTypeArray m_ResTypes;
 
-		//typedef std::map<GUID, const ResourceType *> TResourceTypeMap;
-		//TResourceTypeMap m_ResTypesMap;
-
 		typedef std::multimap<tstring, const ResourceType *> TExtToResourceTypeMap;
 		TExtToResourceTypeMap m_ExtResTypeMap;
 
 		typedef std::map<uint16_t, std::pair<tstring, ZipFile *>> TZipFileRegistry;
 		TZipFileRegistry m_ZipFileRegistry;
 
+		friend class ResourceImpl;
 
 	public:
 
@@ -72,6 +72,14 @@ namespace c3
 		const ZipFile *GetZipFile(uint16_t zipid) const;
 
 		virtual bool FindZippedFile(const TCHAR *filename, TCHAR *fullpath, size_t fullpathlen);
+
+		virtual size_t GetNumResources();
+
+		virtual Resource *GetResourceByIndex(size_t index);
+
+		virtual uint64_t GetLastFrameChanged();
+
+		void UpdateLastFrameChanged();
 
 	};
 

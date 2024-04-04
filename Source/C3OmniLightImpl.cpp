@@ -115,6 +115,11 @@ bool OmniLightImpl::Prerender(Object::RenderFlags flags, int draworder)
 						m_uniTexAtten = ps->GetUniformLocation(_T("uSamplerAttenuation"));
 					}
 				}
+				else
+				{
+					m_TechIdx_L = -1;
+					m_pOwner->GetSystem()->GetLog()->Print(_T("ERROR: \"l\" (light) technique not found in %s!\n"), pres->GetFilename());
+				}
 			}
 		}
 	}
@@ -126,6 +131,9 @@ bool OmniLightImpl::Prerender(Object::RenderFlags flags, int draworder)
 		return false;
 
 	if (flags.IsSet(RF_AUXILIARY))
+		return false;
+
+	if (m_TechIdx_L == -1)
 		return false;
 
 	RenderMethod::Technique *ptech = m_pMethod ? m_pMethod->GetTechnique(m_TechIdx_L) : nullptr;
@@ -189,8 +197,8 @@ void OmniLightImpl::Render(Object::RenderFlags flags)
 		}
 	}
 
-	m_Bounds.SetOrigin(-1, -1, -1);
-	m_Bounds.SetExtents(2.0f, 2.0f, 2.0f);
+	glm::fvec3 minb(-1, -1, -1), maxb(1, 1, 1);
+	m_Bounds.SetExtents(&minb, &maxb);
 	m_Bounds.Align(m_pPos->GetTransformMatrix());
 
 	bool isinside = m_Bounds.IsPointInside(prend->GetEyePosition());

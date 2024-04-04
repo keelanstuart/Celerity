@@ -18,6 +18,8 @@ using namespace c3;
 ResourceManagerImpl::ResourceManagerImpl(System *psys)
 {
 	m_pSys = psys;
+	m_LastFrameChanged = 0;
+
 }
 
 
@@ -136,6 +138,8 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 		{
 			m_ResMap.insert(TResourceMap::value_type(key, pres));
 			m_ResByTypeMap.insert(TResourceByTypeMap::value_type(restype, pres));
+
+			UpdateLastFrameChanged();
 		}
 	}
 
@@ -337,6 +341,8 @@ void ResourceManagerImpl::Reset()
 		while (pres->GetStatus() == Resource::Status::RS_LOADED)
 			pres->DelRef();
 	}
+
+	UpdateLastFrameChanged();
 }
 
 
@@ -442,4 +448,34 @@ bool ResourceManagerImpl::FindZippedFile(const TCHAR *filename, TCHAR *fullpath,
 		*fullpath = _T('\0');
 
 	return false;
+}
+
+
+size_t ResourceManagerImpl::GetNumResources()
+{
+	return m_ResMap.size();
+}
+
+
+Resource *ResourceManagerImpl::GetResourceByIndex(size_t index)
+{
+	TResourceMap::const_iterator it = m_ResMap.cbegin();
+	while (index-- && (it != m_ResMap.cend()))
+		it++;
+
+	if (it != m_ResMap.cend())
+		return it->second;
+
+	return nullptr;
+}
+
+
+uint64_t ResourceManagerImpl::GetLastFrameChanged()
+{
+	return m_LastFrameChanged;
+}
+
+void ResourceManagerImpl::UpdateLastFrameChanged()
+{
+	m_LastFrameChanged.fetch_add(1, std::memory_order_relaxed);
 }

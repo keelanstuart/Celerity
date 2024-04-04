@@ -4608,7 +4608,7 @@ LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR</Name_array>
       <node id="Tube01" name="Tube01">
         <translate sid="translate">0.178300 0.195695 0.000000</translate>
         <rotate sid="jointOrientX">1 0 0 -90.000000</rotate>
-        <rotate sid="rotateX">1 0 0 0.000000</rotate>
+        <rotate sid="rotateZ">0 0 1 0.000000</rotate>
         <instance_geometry url="#Tube01-lib">
           <bind_material>
             <technique_common>
@@ -4617,7 +4617,7 @@ LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR</Name_array>
           </bind_material>
         </instance_geometry>
         <node id="Tube02" name="Tube02">
-          <rotate sid="rotateZ">0 0 1 0.000000</rotate>
+          <rotate sid="rotateX">1 0 0 0.000000</rotate>
           <instance_geometry url="#Tube02-lib">
             <bind_material>
               <technique_common>
@@ -4626,7 +4626,7 @@ LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR</Name_array>
             </bind_material>
           </instance_geometry>
           <node id="Tube03" name="Tube03">
-            <rotate sid="rotateZ">0 0 1 0.000000</rotate>
+            <rotate sid="rotateX">1 0 0 0.000000</rotate>
             <instance_geometry url="#Tube03-lib">
               <bind_material>
                 <technique_common>
@@ -4635,7 +4635,7 @@ LINEAR LINEAR LINEAR LINEAR LINEAR LINEAR</Name_array>
               </bind_material>
             </instance_geometry>
             <node id="Tube04" name="Tube04">
-              <rotate sid="rotateX">1 0 0 0.000000</rotate>
+              <rotate sid="rotateZ">0 0 1 0.000000</rotate>
               <instance_geometry url="#Tube04-lib">
                 <bind_material>
                   <technique_common>

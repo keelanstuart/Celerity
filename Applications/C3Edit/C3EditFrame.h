@@ -9,6 +9,7 @@
 #include "OutputWnd.h"
 #include "PropertiesWnd.h"
 #include "ScriptingWnd.h"
+#include "ResourceSpyWnd.h"
 #include "ObjectsWnd.h"
 #include "Resource.h"
 #include "C3Edit.h"
@@ -76,6 +77,7 @@ public:  // control bar embedded members
 	CPrototypeView    m_wndProtoView;
 	CPropertiesWnd    m_wndProperties;
 	CScriptingWnd     m_wndScripting;
+	CResourceSpyWnd     m_wndResourceSpy;
 	CObjectWnd        m_wndObjects;
 	CMFCShellTreeCtrl m_wndTree;
 	CMFCCaptionBar    m_wndCaptionBar;
@@ -124,6 +126,8 @@ protected:
 	afx_msg void OnUpdateViewCaptionBar(CCmdUI* pCmdUI);
 	afx_msg void OnViewScriptingWindow();
 	afx_msg void OnUpdateViewScriptingWindow(CCmdUI* pCmdUI);
+	afx_msg void OnViewResourceSpyWindow();
+	afx_msg void OnUpdateViewResourceSpyWindow(CCmdUI* pCmdUI);
 	afx_msg void OnViewObjectsWindow();
 	afx_msg void OnUpdateViewObjectsWindow(CCmdUI* pCmdUI);
 	afx_msg void OnOptions();
@@ -135,6 +139,10 @@ protected:
 	afx_msg void OnRunScript();
 	afx_msg void OnUpdateUpdateScript(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateScript();
+
+	afx_msg void OnUpdateReloadResource(CCmdUI *pCmdUI);
+	afx_msg void OnReloadResource();
+
 	DECLARE_MESSAGE_MAP()
 
 	BOOL CreateDockingWindows();

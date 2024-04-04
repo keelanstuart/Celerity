@@ -1,0 +1,47 @@
+var runtime;
+
+var tmp = 0.0;
+var tmpv2 = { x: 0.0, y: 0.0 };
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+var tmpv4 = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+var setup = false;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	if (setup == false)
+	{
+		var maxi = GetModelNodeCount(self);
+		if (maxi > 0)
+		{
+			var i;
+			for (i = 0; i < maxi; i++)
+			{
+				var nodename = GetModelNodeName(self, i);
+
+				if (nodename.indexOf("collider") == 0)
+				{
+					// hide all colliders and check collisions against them...
+					SetModelNodeVisibility(self, i, false);
+					SetModelNodeCollisions(self, i, true);
+				}
+				else
+				{
+					// show all other objects, but don't check collisions for them
+					SetModelNodeVisibility(self, i, true);
+					SetModelNodeCollisions(self, i, false);
+				}
+			}
+
+			setup = true;
+		}
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	// cache property handles now so value access is cheaper later
+}

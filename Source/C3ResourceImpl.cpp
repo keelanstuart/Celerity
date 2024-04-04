@@ -142,6 +142,8 @@ void ResourceImpl::AddRef()
 					s_pSys->GetLog()->Print(_T("ok\n"));
 					break;
 			}
+
+			((ResourceManagerImpl *)s_pSys->GetResourceManager())->UpdateLastFrameChanged();
 		}
 	}
 
@@ -162,6 +164,8 @@ void ResourceImpl::DelRef()
 				m_pResType->Unload(m_Data);
 				m_Data = nullptr;
 				m_Status = Resource::Status::RS_NONE;
+
+				((ResourceManagerImpl *)s_pSys->GetResourceManager())->UpdateLastFrameChanged();
 			}
 		}
 	}

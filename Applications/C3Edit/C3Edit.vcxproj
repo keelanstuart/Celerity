@@ -226,6 +226,7 @@
     <ClInclude Include="C3EditFrame.h" />
     <ClInclude Include="C3EditView.h" />
     <ClInclude Include="C3ObjectListCtrl.h" />
+    <ClInclude Include="C3ResourceSpyListCtrl.h" />
     <ClInclude Include="CodeEditCtrl.h" />
     <ClInclude Include="EditPrototypeDlg.h" />
     <ClInclude Include="framework.h" />
@@ -240,6 +241,7 @@
     <ClInclude Include="PrototypeView.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ResourcePathEditorDlg.h" />
+    <ClInclude Include="ResourceSpyWnd.h" />
     <ClInclude Include="ScriptingWnd.h" />
     <ClInclude Include="ScrollPanel.h" />
     <ClInclude Include="targetver.h" />
@@ -259,6 +261,7 @@
     <ClCompile Include="C3EditFrame.cpp" />
     <ClCompile Include="C3EditView.cpp" />
     <ClCompile Include="C3ObjectListCtrl.cpp" />
+    <ClCompile Include="C3ResourceSpyListCtrl.cpp" />
     <ClCompile Include="CodeEditCtrl.cpp" />
     <ClCompile Include="EditPrototypeDlg.cpp" />
     <ClCompile Include="GraphEditorDlg.cpp" />
@@ -276,6 +279,7 @@
     <ClCompile Include="PropertyGrid.cpp" />
     <ClCompile Include="PrototypeView.cpp" />
     <ClCompile Include="ResourcePathEditorDlg.cpp" />
+    <ClCompile Include="ResourceSpyWnd.cpp" />
     <ClCompile Include="ScriptingWnd.cpp" />
     <ClCompile Include="ScrollPanel.cpp" />
     <ClCompile Include="ViewTree.cpp" />
@@ -320,6 +324,7 @@
     <Image Include="res\file_view.ico" />
     <Image Include="res\file_view_hc.ico" />
     <Image Include="res\icon1.ico" />
+    <Image Include="res\icon2.ico" />
     <Image Include="res\info.bmp" />
     <Image Include="res\menuimages.bmp" />
     <Image Include="res\menuimages_hc.bmp" />
@@ -338,6 +343,8 @@
     <Image Include="res\properties_wnd.ico" />
     <Image Include="res\properties_wnd_hc.ico" />
     <Image Include="res\prototree.bmp" />
+    <Image Include="res\resspy_wnd.ico" />
+    <Image Include="res\resspy_wnd_hc.ico" />
     <Image Include="res\scripting.bmp" />
     <Image Include="res\scripting_hc.bmp" />
     <Image Include="res\scripting_wnd.ico" />
@@ -348,6 +355,7 @@
     <Image Include="res\Toolbar256.bmp" />
     <Image Include="res\toolbar_3dtools.bmp" />
     <Image Include="res\toolbar_axes.bmp" />
+    <Image Include="res\toolbar_resspy.bmp" />
     <Image Include="res\toolbar_scripting.bmp" />
     <Image Include="res\userimages.bmp" />
   </ItemGroup>

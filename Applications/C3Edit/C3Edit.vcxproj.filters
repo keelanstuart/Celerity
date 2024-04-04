@@ -85,6 +85,10 @@
     <ClCompile Include="ResourcePathEditorDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ResourceSpyWnd.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="C3ResourceSpyListCtrl.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C3Edit.h">
@@ -180,6 +184,10 @@
     <ClInclude Include="ResourcePathEditorDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ResourceSpyWnd.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C3ResourceSpyListCtrl.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\class_view.ico">
@@ -314,6 +322,10 @@
     <Image Include="res\toolbar_scripting.bmp">
       <Filter>Resources</Filter>
     </Image>
+    <Image Include="res\resspy_wnd.ico" />
+    <Image Include="res\icon2.ico" />
+    <Image Include="res\resspy_wnd_hc.ico" />
+    <Image Include="res\toolbar_resspy.bmp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\cursor_camrot.cur">

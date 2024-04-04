@@ -28,7 +28,7 @@ CameraImpl::CameraImpl()
 	m_fov = 68.0f;
 	m_eyepos = glm::vec3(0, 0, 0);
 	m_targpos = glm::vec3(0, 0, 0);
-	m_nearclip = 0.01f;
+	m_nearclip = 0.1f;
 	m_farclip = 1400.0f;
 
 	m_orbitdist = 10.0f;

@@ -37,6 +37,7 @@ ModelImpl::ModelImpl(RendererImpl *prend)
 	m_pRend = prend;
 	m_MatStack = MatrixStack::Create();
 	m_Bounds = BoundingBox::Create();
+	m_ScratchBounds = BoundingBox::Create();
 	m_DefaultAnim = nullptr;
 }
 
@@ -50,6 +51,7 @@ void ModelImpl::Release()
 {
 	C3_SAFERELEASE(m_MatStack);
 	C3_SAFERELEASE(m_Bounds);
+	C3_SAFERELEASE(m_ScratchBounds);
 
 	delete this;
 }
@@ -66,6 +68,7 @@ Model::InstanceData *ModelImpl::CloneInstanceData()
 Model::NodeIndex ModelImpl::AddNode()
 {
 	SNodeInfo *pni = new SNodeInfo();
+	pni->flags.Set(NodeFlag::VISIBLE | NodeFlag::COLLIDE);
 
 	NodeIndex ret = m_Nodes.size();
 	m_Nodes.push_back(pni);
@@ -133,6 +136,52 @@ const TCHAR *ModelImpl::GetNodeName(NodeIndex nidx) const
 	}
 
 	return nullptr;
+}
+
+
+bool ModelImpl::NodeVisibility(NodeIndex nidx, std::optional<bool> visible)
+{
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+		{
+			if (visible.has_value())
+			{
+				if (*visible)
+					node->flags.Set(NodeFlag::VISIBLE);
+				else
+					node->flags.Clear(NodeFlag::VISIBLE);
+			}
+
+			return node->flags.IsSet(NodeFlag::VISIBLE);
+		}
+	}
+
+	return false;
+}
+
+
+bool ModelImpl::NodeCollidability(NodeIndex nidx, std::optional<bool> collide)
+{
+	if (nidx < m_Nodes.size())
+	{
+		SNodeInfo *node = m_Nodes[nidx];
+		if (node)
+		{
+			if (collide.has_value())
+			{
+				if (*collide)
+					node->flags.Set(NodeFlag::COLLIDE);
+				else
+					node->flags.Clear(NodeFlag::COLLIDE);
+			}
+
+			return node->flags.IsSet(NodeFlag::COLLIDE);
+		}
+	}
+
+	return false;
 }
 
 
@@ -393,6 +442,9 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const M
 {
 	const SNodeInfo *pnode = m_Nodes[nodeidx];
 
+	if (!pnode || !pnode->flags.IsSet(NodeFlag::VISIBLE))
+		return false;
+
 	// push the node's transform to build the hierarchy correctly
 	if (inst)
 		m_MatStack->Push(&(((InstanceDataImpl *)inst)->m_NodeMat[nodeidx]));
@@ -478,7 +530,7 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, Ma
 bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats,
 				   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
 {
-	if (!pnode)
+	if (!pnode || !pnode->flags.IsSet(NodeFlag::COLLIDE))
 		return false;
 
 	bool ret = false;
@@ -531,13 +583,9 @@ bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, 
 
 void ModelImpl::SetBounds(glm::fvec3 &bmin, glm::fvec3 &bmax)
 {
-	m_Bounds->SetOrigin(&bmin);
-	m_Bounds->SetExtents(&bmax);
-
-	glm::fvec3 d = bmax - bmin;
-	m_BoundingRadius = glm::length(d) / 2.0f;
-	m_BoundingCentroid = d / 2.0f;
+	m_Bounds->SetExtents(&bmin, &bmax);
 }
+
 
 void ModelImpl::GetBoundingSphere(glm::fvec3 *centroid, float *radius) const
 {
@@ -733,13 +781,6 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 						auto kv = pna->mRotationKeys[i].mValue;
 						glm::fquat ori(kv.w, kv.x, kv.y, kv.z);
-
-#if 0
-						float y = math::GetYaw(&ori);
-						float p = math::GetPitch(&ori);
-						float r = math::GetRoll(&ori);
-						pr->GetSystem()->GetLog()->Print(_T("\n\tKey[%zu] %0.2fs : y=%0.2f  p=%0.2f  r=%0.2f"), i, y, p, r);
-#endif
 
 						ptrack->AddOriKey(t, ori);
 					}
@@ -1532,4 +1573,15 @@ const Animation *ModelImpl::GetDefaultAnim() const
 void ModelImpl::SetDefaultAnim(const Animation *panim)
 {
 	m_DefaultAnim = panim;
+}
+
+void ModelImpl::ProcessNodes(ProcessNodesFunc func)
+{
+	assert(func != nullptr);
+
+	for (NodeIndex i = 0, maxi = m_Nodes.size(); i < maxi; i++)
+	{
+		if (!func(i))
+			break;
+	}
 }

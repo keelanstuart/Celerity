@@ -94,7 +94,7 @@ namespace c3
 
 			struct WeightedAnim
 			{
-				Animation *m_Anim;
+				const Animation *m_Anim;
 				size_t m_Weight;
 			};
 
@@ -107,7 +107,7 @@ namespace c3
 		using AnimStateMap = std::map<tstring, AnimStateInfo *>;
 		AnimStateMap m_StateMap;
 
-		void ResetStates();
+		void ResetStates(bool add_default);
 
 		props::IProperty *m_StateProp;
 		tstring m_StartState;

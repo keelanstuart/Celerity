@@ -24,6 +24,7 @@ namespace c3
 		enum RETURNCODE
 		{
 			RET_OK = 0,
+			RET_NOTVISIBLE,
 			RET_NULLBUFFER,
 			RET_FAILED,
 		};
@@ -44,7 +45,7 @@ namespace c3
 		virtual IndexBuffer *GetIndexBuffer() const = NULL;
 
 		// Returns the BoundingBox that represents the extents of the geometry referenced by the Mesh
-		virtual const BoundingBox *GetBounds() = NULL;
+		virtual const BoundingBox *GetBounds() const = NULL;
 
 		// Renders the Mesh
 		virtual RETURNCODE Draw(Renderer::PrimType type = Renderer::PrimType::TRILIST) const = NULL;

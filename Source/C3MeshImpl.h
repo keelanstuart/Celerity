@@ -22,6 +22,8 @@ namespace c3
 		IndexBufferImpl *m_IB;
 		VertexBufferImpl *m_VB;
 		BoundingBox *m_pBounds;
+		glm::fvec3 m_BoundingCentroid;
+		float m_BoundingRadius;
 		bool m_IsSkin;
 
 	public:
@@ -40,7 +42,9 @@ namespace c3
 
 		virtual IndexBuffer *GetIndexBuffer() const;
 
-		virtual const BoundingBox *GetBounds();
+		virtual const BoundingBox *GetBounds() const;
+
+		void ComputeBounds();
 
 		void SetBounds(const glm::fvec3 &vmin, const glm::fvec3 &vmax);
 

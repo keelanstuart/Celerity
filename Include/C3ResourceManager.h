@@ -75,6 +75,12 @@ namespace c3
 
 		virtual bool FindZippedFile(const TCHAR *filename, TCHAR *fullpath, size_t fullpathlen) = NULL;
 
+		virtual size_t GetNumResources() = NULL;
+
+		virtual Resource *GetResourceByIndex(size_t index) = NULL;
+
+		virtual uint64_t GetLastFrameChanged() = NULL;
+
 	};
 
 };

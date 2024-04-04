@@ -7,6 +7,7 @@
 #include "pch.h"
 
 #include <C3MeshImpl.h>
+#include <C3BoundingBoxImpl.h>
 
 
 using namespace c3;
@@ -64,7 +65,18 @@ IndexBuffer *MeshImpl::GetIndexBuffer() const
 }
 
 
-const BoundingBox *MeshImpl::GetBounds()
+const BoundingBox *MeshImpl::GetBounds() const
+{
+	// I know this is "questionable", since this is a const function... but we're not changing
+	// the real data here, so I don't feel too bad about it.
+	if (!m_pBounds)
+		((MeshImpl *)this)->ComputeBounds();
+
+	return m_pBounds;
+}
+
+
+void MeshImpl::ComputeBounds()
 {
 	if (m_VB)
 	{
@@ -81,7 +93,7 @@ const BoundingBox *MeshImpl::GetBounds()
 			if (m_IB)
 			{
 				void *ibuf = nullptr;
-				if (m_IB->Lock(&ibuf, -1, IndexBuffer::IndexSize::IS_NONE, IBLOCKFLAG_READ))
+				if (m_IB->Lock(&ibuf, -1, IndexBuffer::IndexSize::IS_NONE, IBLOCKFLAG_READ) == IndexBuffer::RETURNCODE::RET_OK)
 				{
 					switch (m_IB->GetIndexSize())
 					{
@@ -191,8 +203,6 @@ const BoundingBox *MeshImpl::GetBounds()
 			SetBounds(minb, maxb);
 		}
 	}
-
-	return m_pBounds;
 }
 
 
@@ -201,13 +211,24 @@ void MeshImpl::SetBounds(const glm::fvec3 &vmin, const glm::fvec3 &vmax)
 	if (!m_pBounds)
 		m_pBounds = BoundingBox::Create();
 
-	m_pBounds->SetOrigin(&vmin);
-	m_pBounds->SetExtents(&vmax);
+	m_pBounds->SetExtents(&vmin, &vmax);
 }
 
 
 Mesh::RETURNCODE MeshImpl::Draw(Renderer::PrimType type) const
 {
+	if (m_pBounds)
+	{
+		glm::fmat4x4 m;
+		m_pRend->GetWorldMatrix(&m);
+
+		BoundingBoxImpl bb(m_pBounds);
+		bb.Align(&m);
+
+		if (!m_pRend->GetClipFrustum()->IsBoxInside(&bb))
+			return Mesh::RETURNCODE::RET_NOTVISIBLE;
+	}
+
 	if (m_VB)
 	{
 		m_pRend->UseVertexBuffer(m_VB);

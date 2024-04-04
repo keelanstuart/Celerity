@@ -144,6 +144,9 @@ void CScriptingWnd::OnSetFocus(CWnd *pOldWnd)
 
 bool CScriptingWnd::ImmediateScriptEmpty()
 {
+	if (!m_wndCodeEditorImm.GetSafeHwnd())
+		return true;
+
 	CString s;
 	m_wndCodeEditorImm.GetWindowText(s);
 

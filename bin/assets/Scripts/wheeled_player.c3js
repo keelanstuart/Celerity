@@ -1,0 +1,149 @@
+var runtime;
+
+var Facing = { forward: -1, right: -1, up: -1 };
+
+var hfacing = new Facing();
+var hpos;
+var hori;
+
+var dir = { x: 0.0, y: 0.0, z: 0.0 };
+dir.x = 0.0;
+dir.y = 0.0;
+dir.z = 0.0;
+
+var rot = { x: 0.0, y: 0.0, z: 0.0 };
+rot.x = 0.0;
+rot.y = 0.0;
+rot.z = 0.0;
+
+var tmp = 0.0;
+var tmpv2 = { x: 0.0, y: 0.0 };
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+var tmpv4 = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+
+var hlvel;
+var hrvel;
+
+var speed = 0.0;
+var top_speed = 4.0;
+var top_speed_reverse = 1.0;
+var acceleration = 0.3;
+var acceleration_reverse = 0.1;
+var braking = 0.9;
+var coasting_deceleration = 0.01;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	dir = GetPropertyValue(hfacing.forward);
+	dir.x = dir.x * speed;
+	dir.y = dir.y * speed;
+	dir.z = dir.z * speed;
+	SetPropertyValue(hlvel, dir);
+	
+	var speed_positive = false;
+	if (speed > 0)
+		speed_positive = true;
+
+	speed -= coasting_deceleration;
+
+	// handle speed zero crossings
+	if ((speed < 0) && (speed_positive == true))
+		speed = 0;
+}
+
+function handle_input(action, value)
+{
+	//Log("input: " + action + ": " + value + "\n");
+
+	if (action == "Look Down")
+	{
+		//tmpv3 = GetPropertyValue(hrvel);
+		//tmpv3.x -= Math.toRadians(value * 5.0);
+		//SetPropertyValue(hrvel, tmpv3);
+	}
+
+	else if (action == "Look Up")
+	{
+		//tmpv3 = GetPropertyValue(hrvel);
+		//tmpv3.x += Math.toRadians(value * 5.0);
+		//SetPropertyValue(hrvel, tmpv3);
+	}
+
+	else if (action == "Look Left")
+	{
+		tmpv3 = GetPropertyValue(hrvel);
+		tmpv3.z -= Math.toRadians(value * 5.0);
+		SetPropertyValue(hrvel, tmpv3);
+	}
+
+	else if (action == "Look Right")
+	{
+		tmpv3 = GetPropertyValue(hrvel);
+		tmpv3.z += Math.toRadians(value * 5.0);
+		SetPropertyValue(hrvel, tmpv3);
+	}
+
+	else if (action == "Run")
+	{
+		//speed_boost = value;
+	}
+
+	else if (action == "Move Forward")
+	{
+		speed += acceleration;
+		if (speed > top_speed)
+			speed = top_speed;
+	}
+
+	else if (action == "Move Backward")
+	{
+		if (speed > 0)
+		{
+			speed -= braking;
+			if (speed < 0)
+				speed = 0;
+		}	
+		else
+		{
+			speed -= acceleration_reverse;
+			if (speed < top_speed_reverse)
+				speed = top_speed_reverse;
+		}
+	}
+
+	else if (action == "Strafe Left")
+	{
+		tmpv3 = GetPropertyValue(hlvel);
+		SetPropertyValue(hlvel, tmpv3);
+	}
+
+	else if (action == "Strafe Right")
+	{
+		tmpv3 = GetPropertyValue(hlvel);
+		SetPropertyValue(hlvel, tmpv3);
+	}
+
+	else if (action == "Fire 1")
+	{
+	}
+
+	else if (action == "Fire 2")
+	{
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	// cache property handles now so value access is cheaper later
+	hpos = FindProperty(self, "Position");
+	hori = FindProperty(self, "Orientation");
+	hfacing.forward = FindProperty(self, "Facing.Forward");
+	hfacing.right = FindProperty(self, "Facing.Right");
+	hfacing.up = FindProperty(self, "Facing.Up");
+	hlvel = FindProperty(self, "LinearVelocity");
+	hrvel = FindProperty(self, "RotationalVelocity");
+}

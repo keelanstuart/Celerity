@@ -367,7 +367,7 @@ void C3EditView::OnDraw(CDC *pDC)
 	CRect r;
 	GetClientRect(r);
 
-	//pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
+	pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
 
 	theApp.m_C3->UpdateTime();
 	float dt = pDoc->m_Paused ? 0.0f : (pDoc->m_TimeWarp * theApp.m_C3->GetElapsedTime());
@@ -418,27 +418,6 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetEyeDirection(pcampos->GetFacingVector());
 		}
 
-		float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
-		float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
-		glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-800, 800, -800, 800, nearclip, farclip);
-		glm::fvec3 sunpos;
-		penv->GetSunDirection(&sunpos);
-		sunpos *= -700.0f;
-
-		glm::fvec3 campos;
-		pcam->GetEyePos(&campos);
-		//		sunpos += campos;
-		glm::fmat4x4 depthViewMatrix = glm::lookAt(sunpos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-		glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
-		prend->SetSunShadowMatrix(&depthMVP);
-
-		glm::mat4 biasmat(
-			0.5, 0.0, 0.0, 0.0,
-			0.0, 0.5, 0.0, 0.0,
-			0.0, 0.0, 0.5, 0.0,
-			0.5, 0.5, 0.5, 1.0
-		);
-
 		m_SP_combine->SetUniform3(m_ulAmbientColor, penv->GetAmbientColor());
 		m_SP_combine->SetUniform3(m_ulSunColor, penv->GetSunColor());
 		m_SP_combine->SetUniform3(m_ulSunDir, penv->GetSunDirection());
@@ -468,14 +447,6 @@ void C3EditView::OnDraw(CDC *pDC)
 				pDoc->m_RootObj->Render(RF_EDITORDRAW, order);
 			});
 
-			// Shadow pass
-			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
-			prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
-			c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
-			{
-				pDoc->m_RootObj->Render(RF_SHADOW, order);
-			});
-
 			// Lighting pass(es)
 			prend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
@@ -486,9 +457,45 @@ void C3EditView::OnDraw(CDC *pDC)
 				pDoc->m_RootObj->Render(RF_LIGHT, order);
 			});
 
+			// Shadow pass
+			{
+				// Set up our shadow transforms
+
+				float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
+				float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
+				glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-800, 800, -800, 800, nearclip, farclip);
+				glm::fvec3 sunpos;
+				penv->GetSunDirection(&sunpos);
+				sunpos *= -700.0f;
+
+				glm::fvec3 campos;
+				pcam->GetEyePos(&campos);
+				glm::fmat4x4 depthViewMatrix = glm::lookAt(sunpos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+				glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
+
+				prend->SetSunShadowMatrix(&depthMVP);
+				prend->SetViewMatrix(&depthViewMatrix);
+				prend->SetProjectionMatrix(&depthProjectionMatrix);
+			}
+
+			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
+			prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
+			c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+			{
+				pDoc->m_RootObj->Render(RF_SHADOW, order);
+			});
+
 			// clear the render method and material
 			prend->UseRenderMethod();
 			prend->UseMaterial();
+
+			if (pcam)
+			{
+				prend->SetViewMatrix(pcam->GetViewMatrix());
+				prend->SetProjectionMatrix(pcam->GetProjectionMatrix());
+				prend->SetEyePosition(pcam->GetEyePos());
+				prend->SetEyeDirection(pcampos->GetFacingVector());
+			}
 
 			// Selection hilighting
 			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
@@ -718,7 +725,7 @@ void C3EditView::HandleInput(c3::Positionable *pcampos)
 	float ldl = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGX, 1);
 	float ldr = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSX, 1);
 	if (ldu > 0 || ldd > 0 || ldl > 0 || ldr)
-		AdjustYawPitch((ldr - ldl) * 4, (ldu - ldd) * 4, false);
+		AdjustYawPitch((ldl - ldr) * 4, (ldu - ldd) * 4, false);
 
 	bool center = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::LETTER_C);
 	if (center)

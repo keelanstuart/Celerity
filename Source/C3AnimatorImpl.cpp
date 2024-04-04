@@ -38,7 +38,7 @@ AnimatorImpl::~AnimatorImpl()
 {
 	C3_SAFERELEASE(m_MatStack);
 
-	ResetStates();
+	ResetStates(false);
 }
 
 
@@ -185,6 +185,9 @@ void AnimatorImpl::SelectAnimation()
 {
 	auto oldanim = m_CurAnim;
 
+	if (m_CurState == m_StateMap.end())
+		m_CurState = m_StateMap.find(DEFAULT_ANIMSTATE);
+
 	if (m_CurState != m_StateMap.end())
 	{
 		// Firgure out which random animation to play
@@ -227,11 +230,12 @@ void AnimatorImpl::AdvanceState()
 	m_LastState = m_CurState;
 
 	if (m_LastState != m_StateMap.end())
-	{
 		m_CurState = m_StateMap.find(m_LastState->second->m_GotoName);
 
-		SelectAnimation();
-	}
+	if (m_CurState == m_StateMap.end())
+		m_CurState = m_StateMap.find(m_StartState.empty() ? DEFAULT_ANIMSTATE : m_StartState);
+
+	SelectAnimation();
 
 	m_CurAnimTime = 0;
 }
@@ -315,12 +319,23 @@ void AnimatorImpl::Render(Object::RenderFlags flags)
 }
 
 
-void AnimatorImpl::ResetStates()
+void AnimatorImpl::ResetStates(bool add_default)
 {
 	for (auto it : m_StateMap)
 		delete it.second;
 
 	m_StateMap.clear();
+
+	if (add_default)
+	{
+		std::pair<AnimStateMap::iterator, bool> emres = m_StateMap.insert(AnimStateMap::value_type(DEFAULT_ANIMSTATE, new AnimStateInfo()));
+		emres.first->second->m_GotoName = DEFAULT_ANIMSTATE;
+		emres.first->second->m_Name = DEFAULT_ANIMSTATE;
+		emres.first->second->m_TotalWeight = 1;
+		emres.first->second->m_WeightedAnims.emplace_back();
+		emres.first->second->m_WeightedAnims.back().m_Anim = nullptr;
+		emres.first->second->m_WeightedAnims.back().m_Weight = 1;
+	}
 
 	m_CurState = m_StateMap.end();
 	m_LastState = m_StateMap.end();
@@ -338,7 +353,7 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 			System *psys = m_Owner->GetSystem();
 			ResourceManager *prm = psys->GetResourceManager();
 
-			ResetStates();
+			ResetStates(true);
 
 			TCHAR filename[1024];
 			pprop->AsString(filename, 1023);

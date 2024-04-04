@@ -22,6 +22,7 @@ namespace c3
 	#define MATRIXUPDATE_VIEWPROJ			0x04
 	#define MATRIXUPDATE_NORMAL				0x08
 	#define MATRIXUPDATE_WORLDPROJ			0x10
+	#define MATRIXUPDATE_FRUSTUM			0x20
 
 	#define MATRIXUPDATE_WORLD				(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_WORLDVIEW | MATRIXUPDATE_NORMAL | MATRIXUPDATE_WORLDPROJ)
 	#define MATRIXUPDATE_VIEW				(MATRIXUPDATE_WORLDVIEWPROJ | MATRIXUPDATE_VIEWPROJ | MATRIXUPDATE_NORMAL)
@@ -169,6 +170,7 @@ namespace c3
 		using FontMap = std::map<uint32_t, Font *>;
 		FontMap m_FontMap;
 
+		BoundingBox *m_Frustum;
 
 	public:
 
@@ -299,6 +301,8 @@ namespace c3
 
 		virtual bool DrawPrimitives(PrimType type, size_t count = -1);
 		virtual bool DrawIndexedPrimitives(PrimType type, size_t offset = -1, size_t count = -1);
+
+		virtual const BoundingBox *GetClipFrustum();
 
 		virtual void SetProjectionMatrix(const glm::fmat4x4 *m);
 		virtual void SetViewMatrix(const glm::fmat4x4 *m);

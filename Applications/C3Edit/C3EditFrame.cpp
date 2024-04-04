@@ -32,6 +32,7 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_COMMAND(ID_VIEW_OUTPUTWND, &C3EditFrame::OnViewOutputWindow)
 	ON_COMMAND(ID_VIEW_PROPERTIESWND, &C3EditFrame::OnViewPropertiesWindow)
 	ON_COMMAND(ID_VIEW_SCRIPTINGWND, &C3EditFrame::OnViewScriptingWindow)
+	ON_COMMAND(ID_VIEW_RESOURCESPYWND, &C3EditFrame::OnViewResourceSpyWindow)
 	ON_COMMAND(ID_VIEW_OBJECTSWND, &C3EditFrame::OnViewObjectsWindow)
 
 	ON_UPDATE_COMMAND_UI(ID_VIEW_CAPTION_BAR, &C3EditFrame::OnUpdateViewCaptionBar)
@@ -39,6 +40,7 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_OUTPUTWND, &C3EditFrame::OnUpdateViewOutputWindow)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_PROPERTIESWND, &C3EditFrame::OnUpdateViewPropertiesWindow)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_SCRIPTINGWND, &C3EditFrame::OnUpdateViewScriptingWindow)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_RESOURCESPYWND, &C3EditFrame::OnUpdateViewResourceSpyWindow)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_OBJECTSWND, &C3EditFrame::OnUpdateViewObjectsWindow)
 
 	ON_WM_SETTINGCHANGE()
@@ -71,6 +73,9 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_ASSIGN, &C3EditFrame::OnUpdateAssignScript)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUN, &C3EditFrame::OnUpdateRunScript)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_UPDATE, &C3EditFrame::OnUpdateUpdateScript)
+
+	ON_COMMAND(ID_RESOURCESPY_RELOAD, &C3EditFrame::OnReloadResource)
+	ON_UPDATE_COMMAND_UI(ID_RESOURCESPY_RELOAD, &C3EditFrame::OnUpdateReloadResource)
 
 	ON_WM_MOVE()
 	ON_WM_CLOSE()
@@ -195,7 +200,6 @@ int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	DockPane(&m_wnd3DToolBar);
 	DockPane(&m_wndScriptingToolBar);
 
-
 	// enable Visual Studio 2005 style docking window behavior
 	CDockingManager::SetDockingMode(DT_SMART);
 	// enable Visual Studio 2005 style docking window auto-hide behavior
@@ -235,6 +239,9 @@ int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_wndObjects.EnableDocking(CBRS_ALIGN_ANY);
 	DockPane(&m_wndObjects);
+
+	m_wndResourceSpy.EnableDocking(CBRS_ALIGN_ANY);
+	DockPane(&m_wndResourceSpy);
 
 	// set the visual manager used to draw all user interface elements
 	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerOffice2007));
@@ -313,6 +320,16 @@ BOOL C3EditFrame::CreateDockingWindows()
 		return FALSE; // failed to create
 	}
 
+	// Create scripting window
+	CString strResourceSpyWnd;
+	bNameValid = strResourceSpyWnd.LoadString(IDS_RESOURCESPY_WND);
+	ASSERT(bNameValid);
+	if (!m_wndResourceSpy.Create(strResourceSpyWnd, this, CRect(0, 0, 200, 200), TRUE, ID_VIEW_RESOURCESPYWND, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | CBRS_RIGHT | CBRS_FLOAT_MULTI))
+	{
+		TRACE0("Failed to create Resource Spy window\n");
+		return FALSE; // failed to create
+	}
+
 	// Create objects window
 	CString strObjectsWnd;
 	bNameValid = strObjectsWnd.LoadString(IDS_OBJECTS_WND);
@@ -340,6 +357,9 @@ void C3EditFrame::SetDockingWindowIcons(BOOL bHiColorIcons)
 
 	HICON hScriptingBarIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_SCRIPTING_WND_HC : IDI_SCRIPTING_WND), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
 	m_wndScripting.SetIcon(hScriptingBarIcon, FALSE);
+
+	HICON hResourceSpyBarIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_RESOURCESPY_WND_HC : IDI_RESOURCESPY_WND), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
+	m_wndResourceSpy.SetIcon(hResourceSpyBarIcon, FALSE);
 
 	HICON hObjectsBarIcon = (HICON) ::LoadImage(::AfxGetResourceHandle(), MAKEINTRESOURCE(bHiColorIcons ? IDI_OBJECTS_WND_HC : IDI_OBJECTS_WND), IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0);
 	m_wndObjects.SetIcon(hObjectsBarIcon, FALSE);
@@ -485,6 +505,20 @@ void C3EditFrame::OnViewScriptingWindow()
 }
 
 void C3EditFrame::OnUpdateViewScriptingWindow(CCmdUI* pCmdUI)
+{
+	pCmdUI->Enable(TRUE);
+}
+
+
+void C3EditFrame::OnViewResourceSpyWindow()
+{
+	// Show or activate the pane, depending on current state.  The
+	// pane can only be closed via the [x] button on the pane frame.
+	m_wndResourceSpy.ShowPane(TRUE, FALSE, TRUE);
+	m_wndResourceSpy.SetFocus();
+}
+
+void C3EditFrame::OnUpdateViewResourceSpyWindow(CCmdUI* pCmdUI)
 {
 	pCmdUI->Enable(TRUE);
 }
@@ -991,6 +1025,16 @@ void C3EditFrame::OnUpdateScript()
 			po->PropertyChanged(pp);
 		}
 	}
+}
+
+void C3EditFrame::OnUpdateReloadResource(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(FALSE);// !m_wndResourceSpy.SomethingIsSelected());
+}
+
+void C3EditFrame::OnReloadResource()
+{
+
 }
 
 

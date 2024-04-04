@@ -151,6 +151,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	RenderMethod::Technique *pt = m_DefaultRenderMethod->AddTechnique();
 	m_DefaultRenderMethod->SetActiveTechnique(0);
 	pt->AddPass();
+
+	m_Frustum = BoundingBox::Create();
 }
 
 
@@ -160,6 +162,8 @@ RendererImpl::~RendererImpl()
 	m_TaskPool[1]->Release();
 
 	Shutdown();
+
+	m_Frustum->Release();
 
 	CloseHandle(m_event_shutdown);
 }
@@ -724,6 +728,8 @@ void RendererImpl::SetViewport(const RECT *viewport)
 	{
 		m_Gui->SetDisplaySize((float)w, (float)h);
 	}
+
+	m_matupflags.Set(MATRIXUPDATE_FRUSTUM);
 }
 
 
@@ -1974,13 +1980,23 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 	return true;
 }
 
+const BoundingBox *RendererImpl::GetClipFrustum()
+{
+	if (m_matupflags.IsSet(MATRIXUPDATE_FRUSTUM))
+	{
+		m_Frustum->SetAsFrustum(&m_view, &m_proj, &m_Viewport);
+		m_matupflags.Clear(MATRIXUPDATE_FRUSTUM);
+	}
+
+	return m_Frustum;
+}
 
 void RendererImpl::SetProjectionMatrix(const glm::fmat4x4 *m)
 {
 	if (*m != m_proj)
 	{
 		m_proj = *m;
-		m_matupflags.Set(MATRIXUPDATE_PROJ);
+		m_matupflags.Set(MATRIXUPDATE_PROJ | MATRIXUPDATE_FRUSTUM);
 	}
 }
 
@@ -1990,7 +2006,7 @@ void RendererImpl::SetViewMatrix(const glm::fmat4x4 *m)
 	if (*m != m_view)
 	{
 		m_view = *m;
-		m_matupflags.Set(MATRIXUPDATE_VIEW);
+		m_matupflags.Set(MATRIXUPDATE_VIEW | MATRIXUPDATE_FRUSTUM);
 	}
 }
 
@@ -2498,6 +2514,7 @@ Mesh *RendererImpl::GetRefCubeMesh()
 				}
 
 				m_RefCubeMesh->AttachIndexBuffer(pib);
+				m_RefCubeMesh->GetBounds();
 			}
 		}
 	}

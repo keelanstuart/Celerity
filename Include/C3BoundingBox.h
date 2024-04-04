@@ -22,29 +22,24 @@ namespace c3
 
 		virtual void SetFromBounds(const BoundingBox *box) = NULL;
 
-		virtual void SetOrigin(float x, float y, float z) = NULL;
-		virtual void SetOrigin(const glm::fvec3 *org) = NULL;
-		virtual const glm::fvec3 *GetOrigin(glm::fvec3 *org = nullptr) const = NULL;
-
-		virtual void SetExtents(float x, float y, float z) = NULL;
-		virtual void SetExtents(const glm::fvec3 *ext) = NULL;
-		virtual const glm::fvec3 *GetExtents(glm::fvec3 *ext = nullptr) const = NULL;
+		virtual void SetExtents(const glm::fvec3 *min_bounds, const glm::fvec3 *max_bounds) = NULL;
 
 		virtual void SetAsFrustum(const glm::fmat4x4 *viewmat, const glm::fmat4x4 *projmat, const RECT *viewport) = NULL;
 
 		virtual void Align(const glm::fmat4x4 *matrix) = NULL;
 
-		virtual bool IsPointInside(const glm::fvec3 *ppt) = NULL;
-		virtual bool IsBoxInside(const BoundingBox *pbox) = NULL;
-		virtual bool IsSphereInside(const glm::fvec3 *centroid, float radius) = NULL;
+		virtual bool IsPointInside(const glm::fvec3 *ppt) const = NULL;
+		virtual bool IsBoxInside(const BoundingBox *pbox) const = NULL;
+		virtual bool IsSphereInside(const glm::fvec3 *centroid, float radius) const = NULL;
 
-		virtual bool CheckCollision(const glm::fvec3 *raypos, const glm::fvec3 *rayvec, float *dist = nullptr) = NULL;
+		virtual bool CheckCollision(const glm::fvec3 *raypos, const glm::fvec3 *rayvec, float *dist = nullptr) const = NULL;
 
 		// this will adjust the current bounding box by pbox's aligned bounds
 		virtual void IncludeBounds(const BoundingBox *pbox) = NULL;
 
 		virtual const uint16_t *GetIndices() const = NULL;
 		virtual const glm::fvec3 *GetCorners() const = NULL;
+		virtual const glm::fvec3 *GetAlignedCorners() const = NULL;
 	};
 
 };

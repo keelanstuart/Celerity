@@ -34,7 +34,13 @@ namespace c3
 
 		} SMeshInfo;
 
-		typedef struct sNodeInfo
+		using NodeFlag = enum
+		{
+			VISIBLE = 0x0001,
+			COLLIDE = 0x0002,
+		};
+
+		using SNodeInfo = struct sNodeInfo
 		{
 			sNodeInfo()
 			{
@@ -50,10 +56,11 @@ namespace c3
 			TMeshIndexArray meshes;
 
 			tstring name;
+			props::TFlags64 flags;
 
 			glm::fmat4x4 mat;
 
-		} SNodeInfo;
+		};
 
 		typedef std::vector<SNodeInfo *> TNodeInfoArray;
 		TNodeInfoArray m_Nodes;
@@ -64,7 +71,7 @@ namespace c3
 		typedef std::vector<Material *> TMaterialArray;
 		TMaterialArray m_Materials;
 
-		BoundingBox *m_Bounds;
+		BoundingBox *m_Bounds, *m_ScratchBounds;
 		glm::fvec3 m_BoundingCentroid;
 		float m_BoundingRadius;
 
@@ -119,6 +126,10 @@ namespace c3
 
 		virtual const TCHAR *GetNodeName(NodeIndex nidx) const;
 
+		virtual bool NodeVisibility(NodeIndex nidx, std::optional<bool> visible = std::nullopt);
+
+		virtual bool NodeCollidability(NodeIndex nidx, std::optional<bool> collide = std::nullopt);
+
 		virtual void SetTransform(NodeIndex nidx, const glm::fmat4x4 *pmat);
 
 		virtual const glm::fmat4x4 *GetTransform(NodeIndex nidx, glm::fmat4x4 *pmat) const;
@@ -155,6 +166,8 @@ namespace c3
 							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;
 
 		virtual const Animation *GetDefaultAnim() const;
+
+		virtual void ProcessNodes(ProcessNodesFunc func);
 
 		void SetDefaultAnim(const Animation *panim);
 
