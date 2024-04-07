@@ -582,3 +582,26 @@ void C3EditApp::OnViewGrapheditor()
 {
 	CGraphEditorDlg *pged = CGraphEditorDlg::DoModeless(this->GetMainWnd());
 }
+
+
+void C3EditApp::PushUndo(SUndoInfo::UNDOTYPE type, const tstring &data)
+{
+	m_Undo.emplace_back();
+	m_Undo.back();
+}
+
+
+void C3EditApp::PopUndo()
+{
+	if (m_Undo.empty())
+		return;
+#if 0
+	switch (m_Undo.back().type)
+	{
+		case SUndoInfo::UNDOTYPE::ADD_COMPONENT:
+			break;
+	}
+#endif
+	m_Redo.push_back(m_Undo.back());
+	m_Undo.pop_back();
+}

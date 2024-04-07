@@ -29,6 +29,7 @@ namespace c3
 
 		RenderMethod *m_pMethod;
 		size_t m_TechIdx_G, m_TechIdx_GS, m_TechIdx_S;
+		std::optional<size_t> m_TechIdx_Override;
 
 		typedef std::pair<Model *, Resource *> TModOrRes;
 		TModOrRes m_Mod;

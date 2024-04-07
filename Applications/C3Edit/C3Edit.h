@@ -56,6 +56,33 @@ public:
 		CT_NUMCAMERATYPES
 	} CameraType;
 
+	struct SUndoInfo
+	{
+		struct UNDOTYPE
+		{
+			enum
+			{
+				ADD_OBJECT,
+				DELETE_OBJECT,
+				ADD_COMPONENT,
+				DELETE_COMPONENT,
+				SET_FLAG,
+				CLEAR_FLAG,
+				CHANGE_PROPERTY,
+			};
+		};
+
+		UNDOTYPE type;
+		tstring cmd;
+	};
+
+	using TUndoInfoDeque = std::deque<SUndoInfo>;
+
+	TUndoInfoDeque m_Undo, m_Redo;
+
+	void PushUndo(SUndoInfo::UNDOTYPE type, const tstring &data);
+	void PopUndo();
+
 	C3EditApp() noexcept;
 
 protected:

@@ -115,6 +115,7 @@ bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
 	if (!m_pMethod)
 	{
 		ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
+		m_TechIdx_Override.reset();
 
 		props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('C3RM');
 		if (prm)
@@ -123,6 +124,28 @@ bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
 			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
 			{
 				m_pMethod = (RenderMethod *)(pres->GetData());
+
+				if (props::IProperty *pp = m_pOwner->GetProperties()->GetPropertyById('C3RT'))
+				{
+					size_t t;
+					switch (pp->GetType())
+					{
+						case props::IProperty::PROPERTY_TYPE::PT_INT:
+						{
+							t = pp->AsInt();
+							if (t < m_pMethod->GetNumTechniques())
+								*m_TechIdx_Override = t;
+							break;
+						}
+
+						case props::IProperty::PROPERTY_TYPE::PT_STRING:
+						{
+							if (m_pMethod->FindTechnique(pp->AsString(), t))
+								*m_TechIdx_Override = t;
+							break;
+						}
+					}
+				}
 
 				m_pMethod->FindTechnique(_T("g"), m_TechIdx_G);
 				m_pMethod->FindTechnique(_T("s"), m_TechIdx_S);
@@ -137,7 +160,13 @@ bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
 	if (flags.IsSet(RF_LIGHT))
 		return false;
 
-	RenderMethod::Technique *ptech = m_pMethod ? m_pMethod->GetTechnique((flags.IsSet(RF_SHADOW) && m_pOwner->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G) : nullptr;
+	size_t t;
+	if (m_TechIdx_Override.has_value())
+		t = *m_TechIdx_Override;
+	else
+		t = (flags.IsSet(RF_SHADOW) && m_pOwner->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G;
+
+	RenderMethod::Technique *ptech = m_pMethod ? m_pMethod->GetTechnique(t) : nullptr;
 	if (ptech && (draworder == ptech->GetDrawOrder()))
 	{
 		if (m_pOwner->Flags().IsSet(OF_DRAW))
@@ -180,7 +209,13 @@ void ModelRendererImpl::Render(Object::RenderFlags flags)
 	{
 		if (!flags.IsSet(RF_LOCKSHADER) && m_pMethod)
 		{
-			m_pMethod->SetActiveTechnique((flags.IsSet(RF_SHADOW) && m_pOwner->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G);
+			size_t t;
+			if (m_TechIdx_Override.has_value())
+				t = *m_TechIdx_Override;
+			else
+				t = (flags.IsSet(RF_SHADOW) && m_pOwner->Flags().IsSet(OF_CASTSHADOW)) ? m_TechIdx_S : m_TechIdx_G;
+
+			m_pMethod->SetActiveTechnique(t);
 			prend->UseRenderMethod(m_pMethod);
 			((RendererImpl *)prend)->SetModelInstanceData((const Model::InstanceData *)m_Inst);
 		}
@@ -215,6 +250,8 @@ void ModelRendererImpl::PropertyChanged(const props::IProperty *pprop)
 
 	switch (pprop->GetID())
 	{
+		case 'C3RT':
+			// a change of override technique will also clear the RenderMethod
 		case 'C3RM':
 			m_pMethod = nullptr;
 			break;

@@ -448,7 +448,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			});
 
 			// Lighting pass(es)
-			prend->UseFrameBuffer(m_LCBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
+			prend->UseFrameBuffer(m_LCBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 			prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
@@ -476,14 +476,14 @@ void C3EditView::OnDraw(CDC *pDC)
 				prend->SetSunShadowMatrix(&depthMVP);
 				prend->SetViewMatrix(&depthViewMatrix);
 				prend->SetProjectionMatrix(&depthProjectionMatrix);
-			}
 
-			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
-			prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
-			c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
-			{
-				pDoc->m_RootObj->Render(RF_SHADOW, order);
-			});
+				prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
+				prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
+				c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+				{
+					pDoc->m_RootObj->Render(RF_SHADOW, order);
+				});
+			}
 
 			// clear the render method and material
 			prend->UseRenderMethod();
@@ -498,7 +498,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			}
 
 			// Selection hilighting
-			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT);
+			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 			prend->UseProgram(m_SP_bounds);
 
@@ -511,7 +511,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			}
 
 			// Resolve
-			prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_FINISHLAST | UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH);
+			prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH); // | UFBFLAG_FINISHLAST);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			prend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
@@ -522,7 +522,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			float bs = 2.0f;
 			for (int b = 0; b < BLURTARGS - 1; b++)
 			{
-				prend->UseFrameBuffer(m_BBuf[b + 1], UFBFLAG_FINISHLAST);
+				prend->UseFrameBuffer(m_BBuf[b + 1], 0); // UFBFLAG_FINISHLAST);
 				prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				prend->UseProgram(m_SP_blur);
 				m_SP_blur->SetUniformTexture(m_BTex[b], m_uBlurTex);
@@ -532,7 +532,7 @@ void C3EditView::OnDraw(CDC *pDC)
 				bs *= 2.0f;
 			}
 
-			prend->UseFrameBuffer(nullptr, UFBFLAG_FINISHLAST);
+			prend->UseFrameBuffer(nullptr, 0); // UFBFLAG_FINISHLAST);
 			prend->UseProgram(m_SP_resolve);
 			glm::fmat4x4 revmat = glm::scale(glm::fvec3(-1, 1, 1));
 			prend->SetTextureTransformMatrix(&revmat);

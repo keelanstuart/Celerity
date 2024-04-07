@@ -57,6 +57,7 @@ BEGIN_MESSAGE_MAP(C3ObjectListCtrl, CListCtrl)
 	ON_COMMAND(ID_EDIT_CENTERCAMERAON, &C3ObjectListCtrl::OnEditCenterCamera)
 	ON_WM_KEYUP()
 	ON_WM_KEYDOWN()
+	ON_NOTIFY_REFLECT(LVN_BEGINDRAG, &C3ObjectListCtrl::OnLvnBegindrag)
 END_MESSAGE_MAP()
 
 
@@ -526,4 +527,11 @@ void C3ObjectListCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	}
 
 	CListCtrl::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+
+void C3ObjectListCtrl::OnLvnBegindrag(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMLISTVIEW pNMLV = reinterpret_cast<LPNMLISTVIEW>(pNMHDR);
+	*pResult = 0;
 }
