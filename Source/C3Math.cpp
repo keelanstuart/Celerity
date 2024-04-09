@@ -8,6 +8,15 @@
 
 #include <C3Math.h>
 
+// Hermite Spline function...
+// s is in the range of [0..1]
+// ap is the start point (when s == 0, p == ap)
+// at is the start direction vector
+// bp is the end point (when s == 1, p == bp)
+// bt is the end direction vector
+// p is the output of the function
+// pd is an optional output - first derivative of the function
+// pdd is an optional output - second derivative of the function
 void c3::math::Hermite(float s, glm::fvec3 &ap, glm::fvec3 &at, glm::fvec3 &bp, glm::fvec3 &bt, glm::fvec3 &p, glm::fvec3 *pd, glm::fvec3 *pdd)
 {
 	// There are some values which can be computed once for all equations here...
