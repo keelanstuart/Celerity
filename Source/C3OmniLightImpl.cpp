@@ -23,6 +23,7 @@ OmniLightImpl::OmniLightImpl()
 	m_Color = Color::fWhite;
 	m_Material = nullptr;
 	m_pOwner = nullptr;
+	m_LightAttenuation = 1.0f;
 }
 
 
@@ -37,6 +38,9 @@ void OmniLightImpl::Release()
 	props::IProperty *pp;
 
 	pp = pps->GetPropertyById('LCLR');
+	if (pp) pp->ExternalizeReference();
+
+	pp = pps->GetPropertyById('LATN');
 	if (pp) pp->ExternalizeReference();
 
 	delete this;
@@ -69,6 +73,8 @@ bool OmniLightImpl::Initialize(Object *pobject)
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB);
 		pp->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
+
+	pp = props->CreateReferenceProperty(_T("LightAttenuation"), 'LATN', &m_LightAttenuation, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
 
 	return true;
 }
@@ -113,6 +119,7 @@ bool OmniLightImpl::Prerender(Object::RenderFlags flags, int draworder)
 						m_uniSampPosDepth = ps->GetUniformLocation(_T("uSamplerPosDepth"));
 						m_uniSampEmisRough = ps->GetUniformLocation(_T("uSamplerEmissionRoughness"));
 						m_uniTexAtten = ps->GetUniformLocation(_T("uSamplerAttenuation"));
+						m_uniAtten = ps->GetUniformLocation(_T("uAttenuation"));
 					}
 				}
 				else
@@ -123,9 +130,6 @@ bool OmniLightImpl::Prerender(Object::RenderFlags flags, int draworder)
 			}
 		}
 	}
-
-	if (!flags.IsSet(RF_LIGHT))
-		return false;
 
 	if (flags.IsSet(RF_SHADOW))
 		return false;
@@ -179,6 +183,7 @@ void OmniLightImpl::Render(Object::RenderFlags flags)
 				ps->SetUniform3(m_uniColor, &m_Color);
 
 				ps->SetUniform3(m_uniPos, (const glm::fvec3 *)ppos->AsVec3F());
+				ps->SetUniform1(m_uniAtten, m_LightAttenuation);
 				ps->SetUniform1(m_uniRadius, scl);
 				ps->SetUniform2(m_uniScreenSize, &ss);
 				ps->SetUniformTexture(m_SourceFB->GetColorTargetByName(_T("uSamplerDiffuseMetalness")), m_uniSampDiff);
@@ -197,11 +202,10 @@ void OmniLightImpl::Render(Object::RenderFlags flags)
 		}
 	}
 
-	glm::fvec3 minb(-1, -1, -1), maxb(1, 1, 1);
-	m_Bounds.SetExtents(&minb, &maxb);
-	m_Bounds.Align(m_pPos->GetTransformMatrix());
 
-	bool isinside = m_Bounds.IsPointInside(prend->GetEyePosition());
+	BoundingBoxImpl bb(prend->GetCubeMesh()->GetBounds());
+	bb.Align(prend->GetWorldMatrix());
+	bool isinside = bb.IsPointInside(prend->GetEyePosition());
 
 	if (isinside)
 	{

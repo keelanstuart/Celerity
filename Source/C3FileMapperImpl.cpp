@@ -9,6 +9,7 @@
 #include <C3FileMapperImpl.h>
 #include <C3ResourceManagerImpl.h>
 #include <Shlwapi.h>
+#include <filesystem>
 
 
 using namespace c3;
@@ -231,7 +232,8 @@ bool FileMapperImpl::FindFile(const TCHAR *filename, TCHAR *fullpath, size_t ful
 		return true;
 	}
 
-	TCHAR internal_fullpath[MAX_PATH];
+	TCHAR internal_relativepath[MAX_PATH], internal_fullpath[MAX_PATH];
+	internal_relativepath[0] = '\0';
 	internal_fullpath[0] = '\0';
 
 	const TCHAR *ext = _tcsrchr(filename, '.');
@@ -243,19 +245,21 @@ bool FileMapperImpl::FindFile(const TCHAR *filename, TCHAR *fullpath, size_t ful
 		TExtToPathMap::const_iterator e = m_mapExts.upper_bound(ext);
 		for (TExtToPathMap::const_iterator i = m_mapExts.lower_bound(ext); i != e; i++)
 		{
-			_tcsncpy_s(internal_fullpath, i->second.c_str(), MAX_PATH - 1);
+			_tcsncpy_s(internal_relativepath, i->second.c_str(), MAX_PATH - 1);
 
 			size_t plen = i->second.length();
 
-			if (plen && (internal_fullpath[plen - 1] != '\\'))
+			if (plen && (internal_relativepath[plen - 1] != '\\'))
 			{
-				if (internal_fullpath[plen - 1] == '/')
-					internal_fullpath[plen - 1] = '\\';
+				if (internal_relativepath[plen - 1] == '/')
+					internal_relativepath[plen - 1] = '\\';
 				else
-					_tcsncat_s(internal_fullpath, _T("\\"), MAX_PATH - 1);
+					_tcsncat_s(internal_relativepath, _T("\\"), MAX_PATH - 1);
 			}
 
-			_tcsncat_s(internal_fullpath, filename, MAX_PATH - 1);
+			_tcsncat_s(internal_relativepath, filename, MAX_PATH - 1);
+			TCHAR *n;
+			DWORD len = GetFullPathName(internal_relativepath, MAX_PATH - 1, internal_fullpath, &n);
 
 			if (PathFileExists(internal_fullpath))
 			{

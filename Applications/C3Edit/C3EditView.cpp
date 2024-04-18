@@ -15,6 +15,7 @@
 #include "C3EditFrame.h"
 #include "C3EditDoc.h"
 #include "C3EditView.h"
+#include "resource.h"
 
 #include <C3Gui.h>
 #include <C3RenderMethod.h>
@@ -58,6 +59,8 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_WM_KEYDOWN()
 	ON_COMMAND(ID_EDIT_CAMERASETTINGS, &C3EditView::OnEditCameraSettings)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CAMERASETTINGS, &C3EditView::OnUpdateEditCameraSettings)
+	ON_UPDATE_COMMAND_UI(ID_VIEW_HOVERINFORMATION, &C3EditView::OnUpdateViewHoverInformation)
+	ON_COMMAND(ID_VIEW_HOVERINFORMATION, &C3EditView::OnViewHoverInformation)
 END_MESSAGE_MAP()
 
 
@@ -99,6 +102,8 @@ C3EditView::C3EditView() noexcept
 	m_ulAmbientColor = -1;
 	m_uBlurTex = -1;
 	m_uBlurScale = -1;
+
+	m_pHoverObj = nullptr;
 
 	m_ShowDebug = false;
 }
@@ -369,6 +374,8 @@ void C3EditView::OnDraw(CDC *pDC)
 
 	pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
 
+	uint32_t renderflags = theApp.m_Config->GetBool(_T("environment.editordraw"), true) ? RF_EDITORDRAW : 0;
+
 	theApp.m_C3->UpdateTime();
 	float dt = pDoc->m_Paused ? 0.0f : (pDoc->m_TimeWarp * theApp.m_C3->GetElapsedTime());
 
@@ -402,8 +409,6 @@ void C3EditView::OnDraw(CDC *pDC)
 		if (pvi->m_Camera)
 			pvi->m_Camera->Update(dt);
 
-		pDoc->m_RootObj->Update(dt);
-
 		if (pDoc->m_Brush)
 			pDoc->m_Brush->Update(dt);
 
@@ -422,7 +427,7 @@ void C3EditView::OnDraw(CDC *pDC)
 		m_SP_combine->SetUniform3(m_ulSunColor, penv->GetSunColor());
 		m_SP_combine->SetUniform3(m_ulSunDir, penv->GetSunDirection());
 
-		pDoc->m_RootObj->Update(dt);
+		pDoc->m_RootObj->Update(theApp.m_Config->GetBool(_T("environment.advancetime"), true) ? dt : 0);
 
 		if (prend->BeginScene(BSFLAG_SHOWGUI))
 		{
@@ -444,7 +449,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetTextureTransformMatrix(nullptr);
 			c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 			{
-				pDoc->m_RootObj->Render(RF_EDITORDRAW, order);
+				pDoc->m_RootObj->Render(renderflags, order);
 			});
 
 			// Lighting pass(es)
@@ -454,7 +459,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 			{
-				pDoc->m_RootObj->Render(RF_LIGHT, order);
+				pDoc->m_RootObj->Render(renderflags | RF_LIGHT, order);
 			});
 
 			// Shadow pass
@@ -481,7 +486,7 @@ void C3EditView::OnDraw(CDC *pDC)
 				prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
 				c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 				{
-					pDoc->m_RootObj->Render(RF_SHADOW, order);
+					pDoc->m_RootObj->Render(renderflags | RF_SHADOW, order);
 				});
 			}
 
@@ -1014,7 +1019,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 		for (size_t i = 0; i < GetNumSelected(); i++)
 		{
 			c3::Object *obj = GetSelection(i);
-			if (!obj)
+			if (!obj || obj->Flags().IsSet(OF_LOCKED))
 				continue;
 
 			c3::Positionable *pos = dynamic_cast<c3::Positionable *>(obj->FindComponent(c3::Positionable::Type()));
@@ -1134,8 +1139,11 @@ void C3EditView::OnTimer(UINT_PTR nIDEvent)
 			break;
 
 		case 'PICK':
-			//m_pHoverObj = Pick(m_MousePos);
-			//UpdateStatusMessage(m_pHoverObj);
+			if (theApp.m_Config->GetBool(_T("environment.hoverinfo"), false))
+			{
+				m_pHoverObj = Pick(m_MousePos);
+				UpdateStatusMessage(m_pHoverObj);
+			}
 			break;
 
 		case 'PROP':
@@ -1694,4 +1702,20 @@ void C3EditView::OnEditCameraSettings()
 void C3EditView::OnUpdateEditCameraSettings(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable();
+}
+
+
+void C3EditView::OnUpdateViewHoverInformation(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+
+	bool b = theApp.m_Config->GetBool(_T("environment.hoverinfo"), false);
+	pCmdUI->SetCheck(b);
+}
+
+
+void C3EditView::OnViewHoverInformation()
+{
+	bool b = !theApp.m_Config->GetBool(_T("environment.hoverinfo"), false);
+	theApp.m_Config->SetBool(_T("environment.hoverinfo"), b);
 }

@@ -9,6 +9,7 @@ uniform float uLightRadius;
 uniform vec2 uScreenSize;
 uniform vec3 uEyePosition;
 uniform vec3 uEyeDirection;
+uniform float uAttenuation;
 
 layout (location=0) out vec3 oColor;
 
@@ -30,6 +31,7 @@ void main()
 
 	vec2 attenuv = vec2(1.0 - (dist / uLightRadius), 0);
 	vec3 lightstrength = texture(uSamplerAttenuation, attenuv).xyz;
+	lightstrength *= uAttenuation;
 
 	float ndl = clamp(dot(pnorm, normalize(tolight)), 0, 1);
 

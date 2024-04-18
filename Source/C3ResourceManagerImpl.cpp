@@ -350,7 +350,7 @@ bool ResourceManagerImpl::RegisterZipArchive(const TCHAR *filename)
 {
 	bool ret = false;
 
-	if (filename)
+	if (filename && PathFileExists(filename))
 	{
 		ZipFile *pzf = new ZipFile();
 		if (pzf)

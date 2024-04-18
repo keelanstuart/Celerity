@@ -199,13 +199,37 @@
 #define ID_RESOURCE_OPENFOLDER          32806
 #define ID_RESOURCE_RELOAD              32807
 #define ID_RESOURCE_PROPERTIES          32808
+#define ID_VIEW_HOVERINFORMATION        32809
+#define ID_APP_ADVANCETIME              32810
+#define ID_APP_EDITORDRAW               32811
+#define ID_BUTTON32813                  32813
+#define ID_VIEW_CAMERASETTINGS          32814
+#define ID__OBJECTLIST                  32815
+#define ID__PROPERTIES                  32816
+#define ID__DEBUGOUTPUT                 32817
+#define ID__RESOURCESPY                 32818
+#define ID__SCRIPTEDITOR                32819
+#define ID__PROTOTYPELIST               32820
+#define ID_TOOLBARSANDDOCKINGWINDOWS_DEBUG 32821
+#define ID_TOOLBARSANDDOCKINGWINDOWS_PROPERTIES 32822
+#define ID_TOOLBARSANDDOCKINGWINDOWS_OBJECTS 32823
+#define ID_TOOLBARSANDDOCKINGWINDOWS_PROTOTYPES 32824
+#define ID_TOOLBARSANDDOCKINGWINDOWS_SCRIPTEDITOR 32825
+#define ID_TOOLBARSANDDOCKINGWINDOWS_RESOURCESPY 32826
+#define ID_DOCK_DEBUG                   32827
+#define ID_DOCK_PROPERTIES              32828
+#define ID_DOCK_OBJECTS                 32829
+#define ID_DOCK_PROTOTYPES              32830
+#define ID_DOCK_SCRIPT                  32831
+#define ID_DOCK_SCRIPTS                 32832
+#define ID_DOCK_RESOURCES               32833
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        343
-#define _APS_NEXT_COMMAND_VALUE         32809
+#define _APS_NEXT_COMMAND_VALUE         32834
 #define _APS_NEXT_CONTROL_VALUE         1012
 #define _APS_NEXT_SYMED_VALUE           363
 #endif

@@ -6,11 +6,14 @@ in vec2 fTex0;
 in vec4 fColor0;
 
 layout (location=0) out vec4 oDefDiffuseMetalness;
+layout (location=3) out vec4 oDefEmissionRoughness;
+
 
 void main()
 {
-	vec4 texDiffuse = texture(uSamplerDiffuse, fTex0);
-	texDiffuse *= fColor0;
+	vec4 tex = texture(uSamplerDiffuse, fTex0);
+	tex *= fColor0;
 
-	oDefDiffuseMetalness = texDiffuse;
+	oDefDiffuseMetalness = tex;
+	oDefEmissionRoughness = tex;
 }

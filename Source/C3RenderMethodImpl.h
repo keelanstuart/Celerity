@@ -100,6 +100,13 @@ namespace c3
 			size_t m_Mode;
 			std::optional<int> m_DrawOrder;
 
+			Renderer::RenderStateOverrideFlags m_OldState;
+			Renderer::BlendMode m_OldBlendMode;
+			Renderer::BlendEquation m_OldBlendEq;
+			Renderer::CullMode m_OldCullMode;
+			Renderer::WindingOrder m_OldWindingOrder;
+			Renderer::DepthMode m_OldDepthMode;
+			Renderer::FillMode m_OldFillMode;
 
 		public:
 			TechniqueImpl(RenderMethodImpl *powner);
@@ -109,9 +116,9 @@ namespace c3
 			virtual size_t GetNumPasses() const;
 			virtual Pass *GetPass(size_t idx) const;
 			virtual Pass *AddPass();
-			virtual bool Begin(size_t &passes) const;
-			virtual Renderer::RenderStateOverrideFlags ApplyPass(size_t idx) const;
-			virtual void End() const;
+			virtual bool Begin(size_t &passes);
+			virtual Renderer::RenderStateOverrideFlags ApplyPass(size_t idx);
+			virtual void End();
 			virtual void SetDrawOrder(int order);
 			virtual int GetDrawOrder() const;
 
@@ -163,6 +170,8 @@ namespace c3
 
 		// Sets the shader mode (the "options" value passed when loading shaders for this render method)
 		virtual void SetShaderMode(const TCHAR *mode);
+
+		void RestoreStates(Renderer *prend);
 
 	private:
 		void LoadTechnique(const tinyxml2::XMLElement *proot, const TCHAR *options);

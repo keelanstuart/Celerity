@@ -260,6 +260,18 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 	if (!pMat)
 		pMat = &identMat;
 
+	if (m_pBounds)
+	{
+		glm::fmat4x4 m;
+		m_pRend->GetWorldMatrix(&m);
+
+		BoundingBoxImpl bb(m_pBounds);
+		bb.Align(pMat);
+
+		if (!bb.CheckCollision(pRayPos, pRayDir))
+			return false;
+	}
+
 	bool ret = false;
 
 	BYTE *pvb = nullptr;

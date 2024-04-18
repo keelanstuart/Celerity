@@ -51,6 +51,7 @@ namespace c3
 		#define OF_LIGHT			0x00010000					// Indicates that the object emits light
 		#define OF_CASTSHADOW		0x00020000					// Indicates that the object casts a shadow
 		#define OF_NOMODELSCALE		0x00040000					// Affects only ModelRenderer; does not scale the model
+		#define OF_LOCKED			0x00080000					// Don't allow changes in the editor
 
 		#define OF_EXPANDED			0x10000000					// A flag for tools, indicates that the child objects should be displayed
 

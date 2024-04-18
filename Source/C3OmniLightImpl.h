@@ -24,6 +24,7 @@ namespace c3
 		size_t m_TechIdx_L;
 		FrameBuffer *m_SourceFB;
 		glm::fvec3 m_Color;
+		float m_LightAttenuation;
 		int32_t m_uniPos;
 		int32_t m_uniRadius;
 		int32_t m_uniColor;
@@ -33,6 +34,7 @@ namespace c3
 		int32_t m_uniSampPosDepth;
 		int32_t m_uniSampEmisRough;
 		int32_t m_uniTexAtten;
+		int32_t m_uniAtten;
 		BoundingBoxImpl m_Bounds;
 		Resource *m_TexAttenRes;
 		Material *m_Material;

@@ -12,6 +12,7 @@
 #include <C3MeshImpl.h>
 #include <C3AnimationImpl.h>
 #include <C3Math.h>
+#include <C3BoundingBoxImpl.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/Exporter.hpp>
@@ -499,6 +500,12 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, Ma
 	float d = FLT_MAX;
 
 	float mindist = FLT_MAX;
+
+	BoundingBoxImpl bb(m_Bounds);
+	bb.Align(mats->Top());
+
+	if (!bb.CheckCollision(pRayPos, pRayDir))
+		return false;
 
 	for (size_t ni = 0, max_ni = m_Nodes.size(); ni < max_ni; ni++)
 	{

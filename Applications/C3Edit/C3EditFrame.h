@@ -77,7 +77,7 @@ public:  // control bar embedded members
 	CPrototypeView    m_wndProtoView;
 	CPropertiesWnd    m_wndProperties;
 	CScriptingWnd     m_wndScripting;
-	CResourceSpyWnd     m_wndResourceSpy;
+	CResourceSpyWnd	  m_wndResourceSpy;
 	CObjectWnd        m_wndObjects;
 	CMFCShellTreeCtrl m_wndTree;
 	CMFCCaptionBar    m_wndCaptionBar;
@@ -152,6 +152,22 @@ public:
 	afx_msg void OnMove(int x, int y);
 	afx_msg void OnClose();
     afx_msg void OnEditResourcePathConfiguration();
+    afx_msg void OnUpdateAppAdvanceTime(CCmdUI *pCmdUI);
+    afx_msg void OnAppAdvanceTime();
+    afx_msg void OnUpdateAppEditorDraw(CCmdUI *pCmdUI);
+    afx_msg void OnAppEditorDraw();
+    afx_msg void OnDockDebug();
+    afx_msg void OnUpdateDockDebug(CCmdUI *pCmdUI);
+    afx_msg void OnDockObjects();
+    afx_msg void OnUpdateDockObjects(CCmdUI *pCmdUI);
+    afx_msg void OnDockProperties();
+    afx_msg void OnUpdateDockProperties(CCmdUI *pCmdUI);
+    afx_msg void OnDockPrototypes();
+    afx_msg void OnUpdateDockPrototypes(CCmdUI *pCmdUI);
+    afx_msg void OnDockResources();
+    afx_msg void OnUpdateDockResources(CCmdUI *pCmdUI);
+    afx_msg void OnDockScripts();
+    afx_msg void OnUpdateDockScripts(CCmdUI *pCmdUI);
 };
 
 

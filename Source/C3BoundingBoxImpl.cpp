@@ -66,9 +66,10 @@ void PlaneFromPoints(const glm::fvec3 &p1, const glm::fvec3 &p2, const glm::fvec
 
 float PlaneDotCoord(const BoundingBoxImpl::Plane &plane, const glm::fvec3 &point)
 {
-	glm::fvec3 n = point - plane.point;
-	n = glm::normalize(n);
-	return glm::dot(n, plane.normal);
+	glm::fvec3 v = point - plane.point;
+	glm::fvec3 n = glm::normalize(v);
+	float d = glm::dot(n, plane.normal);
+	return d;
 }
 
 
@@ -205,7 +206,7 @@ void BoundingBoxImpl::SetAsFrustum(const glm::fmat4x4 *viewmat, const glm::fmat4
 
 	PlaneFromPoints(m_Corner[CORNER::xyz], m_Corner[CORNER::xYz], m_Corner[CORNER::xyZ], m_Face[FACE::MINX]);		// Left
 	PlaneFromPoints(m_Corner[CORNER::Xyz], m_Corner[CORNER::XyZ], m_Corner[CORNER::XYz], m_Face[FACE::MAXX]);		// Right
-	PlaneFromPoints(m_Corner[CORNER::xyz], m_Corner[CORNER::xyZ], m_Corner[CORNER::XyZ], m_Face[FACE::MINY]);		// Bottom
+	PlaneFromPoints(m_Corner[CORNER::xyz], m_Corner[CORNER::xyZ], m_Corner[CORNER::Xyz], m_Face[FACE::MINY]);		// Bottom
 	PlaneFromPoints(m_Corner[CORNER::xYz], m_Corner[CORNER::XYz], m_Corner[CORNER::xYZ], m_Face[FACE::MAXY]);		// Top
 	PlaneFromPoints(m_Corner[CORNER::xyz], m_Corner[CORNER::Xyz], m_Corner[CORNER::xYz], m_Face[FACE::MINZ]);		// Near
 	PlaneFromPoints(m_Corner[CORNER::xyZ], m_Corner[CORNER::xYZ], m_Corner[CORNER::XyZ], m_Face[FACE::MAXZ]);		// Far
@@ -233,16 +234,16 @@ void BoundingBoxImpl::Align(const glm::fmat4x4 *matrix)
 		memcpy(m_Corner, m_Corner_Unaligned, sizeof(glm::fvec3) * CORNER::NUMCORNERS);
 	}
 
-	PlaneFromPoints(m_Corner[CORNER::xyz], m_Corner[CORNER::xYz], m_Corner[CORNER::xyZ], m_Face[FACE::MINX]);		// Left
+	PlaneFromPoints(m_Corner[CORNER::xyz], m_Corner[CORNER::xyZ], m_Corner[CORNER::xYz], m_Face[FACE::MINX]);		// Left
 	PlaneFromPoints(m_Corner[CORNER::Xyz], m_Corner[CORNER::XYz], m_Corner[CORNER::XyZ], m_Face[FACE::MAXX]);		// Right
-	PlaneFromPoints(m_Corner[CORNER::xyz], m_Corner[CORNER::XyZ], m_Corner[CORNER::xyZ], m_Face[FACE::MINY]);		// Bottom
-	PlaneFromPoints(m_Corner[CORNER::xYz], m_Corner[CORNER::XYz], m_Corner[CORNER::xYZ], m_Face[FACE::MAXY]);		// Top
-	PlaneFromPoints(m_Corner[CORNER::xyz], m_Corner[CORNER::Xyz], m_Corner[CORNER::xYz], m_Face[FACE::MINZ]);		// Near
-	PlaneFromPoints(m_Corner[CORNER::xyZ], m_Corner[CORNER::xYZ], m_Corner[CORNER::XyZ], m_Face[FACE::MAXZ]);		// Far
+	PlaneFromPoints(m_Corner[CORNER::xyz], m_Corner[CORNER::Xyz], m_Corner[CORNER::xyZ], m_Face[FACE::MINY]);		// Bottom
+	PlaneFromPoints(m_Corner[CORNER::xYz], m_Corner[CORNER::xYZ], m_Corner[CORNER::XYz], m_Face[FACE::MAXY]);		// Top
+	PlaneFromPoints(m_Corner[CORNER::xyz], m_Corner[CORNER::xYz], m_Corner[CORNER::Xyz], m_Face[FACE::MINZ]);		// Near
+	PlaneFromPoints(m_Corner[CORNER::xyZ], m_Corner[CORNER::XyZ], m_Corner[CORNER::xYZ], m_Face[FACE::MAXZ]);		// Far
 
 	for (size_t i = 0; i < EDGE::NUMEDGES; i++)
 	{
-		m_EdgeDir[i] = m_Corner[BoundingBoxImpl::s_Edge[i][1]] - m_Corner[BoundingBoxImpl::s_Edge[i][0]];
+		m_EdgeDir[i] = m_Corner[s_Edge[i][1]] - m_Corner[s_Edge[i][0]];
 		m_EdgeLen[i] = glm::length(m_EdgeDir[i]);
 		m_EdgeDir[i] = glm::normalize(m_EdgeDir[i]);
 	}
@@ -259,7 +260,7 @@ bool BoundingBoxImpl::IsPointInside(const glm::fvec3 *ppt) const
 	// Go through each plane and see if the point is inside it
 	for (size_t i = 0; i < FACE::NUMFACES; i++)
 	{
-		if (PlaneDotCoord(m_Face[i], *ppt) < 0)
+		if (PlaneDotCoord(m_Face[i], *ppt) > 0)
 			return false;
 	}
 

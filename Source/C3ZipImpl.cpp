@@ -144,7 +144,7 @@ void ZipFile::Clear()
 
 bool ZipFile::Open(const TCHAR *filename, props::TFlags32 openflags)
 {
-	bool ret = true;
+	bool ret = false;
 
 	// Make sure zipfile is currently closed
 	Close();
@@ -177,7 +177,6 @@ bool ZipFile::Open(const TCHAR *filename, props::TFlags32 openflags)
 	else
 	{
 		m_Error = ZIPERR_BADOPENFLAGS;
-		ret = false;
 	}
 
 	// Clear opening flag

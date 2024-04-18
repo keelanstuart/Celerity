@@ -16,8 +16,8 @@
 IMPLEMENT_DYNAMIC(C3ObjectListCtrl, CListCtrl)
 
 
-#define ICON_COUNT		2
-#define ICON_SIZE		17
+#define ICON_COUNT		3
+#define ICON_SIZE		15
 
 
 C3ObjectListCtrl::C3ObjectListCtrl()
@@ -136,8 +136,12 @@ void C3ObjectListCtrl::DrawItem(LPDRAWITEMSTRUCT pdi)
 	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
 	const c3::Object *pobj = ((CObjectWnd *)GetParent())->GetItemByIndex(pdoc->m_RootObj, pdi->itemID);
 
+	props::TFlags64 ofl = 0;
+	if (pobj)
+		ofl = ((c3::Object *)pobj)->Flags();
+
 	// Get object name
-	const TCHAR *name = pdi->itemID ? pobj->GetName() : pdoc->GetTitle();
+	const TCHAR *name = pobj ? (pdi->itemID ? pobj->GetName() : pdoc->GetTitle()) : _T("ERROR");
 	INT namelen = (INT)_tcslen(name);
 
 	// Get object GUID
@@ -198,7 +202,7 @@ void C3ObjectListCtrl::DrawItem(LPDRAWITEMSTRUCT pdi)
 	Gdiplus::PointF pt;
 	Gdiplus::RectF tnr;
 
-	TCHAR *exps = ((c3::Object *)pobj)->Flags().IsSet(OF_EXPANDED) ? _T("6") : _T("4");
+	TCHAR *exps = ofl.IsSet(OF_EXPANDED) ? _T("6") : _T("4");
 	gr.MeasureString(_T("4"), 1, &f_sym1, Gdiplus::PointF(0.0, 0.0), &tnr);
 	Gdiplus::REAL expw = tnr.Width;
 
@@ -224,18 +228,26 @@ void C3ObjectListCtrl::DrawItem(LPDRAWITEMSTRUCT pdi)
 	gr.DrawString(gs, gslen, &f_guid, pt, issel ? &br_text_seldark : &br_text_dark);
 
 
-	gr.MeasureString(_T("N"), 1, &f_sym1, Gdiplus::PointF(0.0, 0.0), &tnr);
-	Gdiplus::REAL widw = tnr.Width;
+	Gdiplus::REAL widw = 0;
 
 	// DRAW VISIBILITY WIDGET
-	pt.X = (Gdiplus::REAL)(rcol[1].left);
-	pt.Y = (Gdiplus::REAL)(rcol[1].CenterPoint().y) - (Gdiplus::REAL)(tnr.Height / 2.0) - (Gdiplus::REAL)(tnr.Height / 3.0);
-	gr.DrawString(_T("N"), 1, &f_sym1, pt, ((c3::Object *)pobj)->Flags().IsSet(OF_DRAW) ? &br_sym : &br_sym_lo);
+	gr.MeasureString(_T("N"), 1, &f_sym1, Gdiplus::PointF(0.0, 0.0), &tnr);
+	pt.X = (Gdiplus::REAL)(rcol[1].left) + (ICON_SIZE * 0);
+	pt.Y = (Gdiplus::REAL)(rcol[1].CenterPoint().y) - (Gdiplus::REAL)(tnr.Height / 2.0);
+	gr.DrawString(_T("N"), 1, &f_sym1, pt, ofl.IsSet(OF_DRAW) ? &br_sym : &br_sym_lo);
 
 	// DRAW UPDATE WIDGET
-	pt.X = (Gdiplus::REAL)(rcol[1].left + (widw * 2 / 3) + 2);
-	pt.Y = (Gdiplus::REAL)(rcol[1].CenterPoint().y) - (Gdiplus::REAL)(tnr.Height / 2.0) - (Gdiplus::REAL)(tnr.Height / 3.0);
-	gr.DrawString(_T("6"), 1, &f_sym2, pt, ((c3::Object *)pobj)->Flags().IsSet(OF_UPDATE) ? &br_sym : &br_sym_lo);
+	gr.MeasureString(_T("6"), 1, &f_sym2, Gdiplus::PointF(0.0, 0.0), &tnr);
+	pt.X = (Gdiplus::REAL)(rcol[1].left) + (ICON_SIZE * 1) + 4;
+	pt.Y = (Gdiplus::REAL)(rcol[1].CenterPoint().y) - (Gdiplus::REAL)(tnr.Height / 2.0) + 2;
+	gr.DrawString(_T("6"), 1, &f_sym2, pt, ofl.IsSet(OF_UPDATE) ? &br_sym : &br_sym_lo);
+
+	// DRAW UPDATE WIDGET
+	gr.MeasureString(_T("Ï"), 1, &f_sym1, Gdiplus::PointF(0.0, 0.0), &tnr);
+	pt.X = (Gdiplus::REAL)(rcol[1].left) + (ICON_SIZE * 2) - 2;
+	pt.Y = (Gdiplus::REAL)(rcol[1].CenterPoint().y) - (Gdiplus::REAL)(tnr.Height / 2.0) - 2;
+	gr.DrawString(_T("Ï"), 1, &f_sym1, pt, ofl.IsSet(OF_LOCKED) ? &br_sym : &br_sym_lo);
+
 }
 
 void C3ObjectListCtrl::OnPaint()

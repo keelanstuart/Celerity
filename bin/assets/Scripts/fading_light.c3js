@@ -1,25 +1,17 @@
-var hscl;
-var basescl;
-var scl;
 var runtime;
+var hatten;
 var s;
 
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 
-	s = Math.sin(runtime) / 2.0 + 0.5;
-	scl.x = basescl.x * s;
-	scl.y = basescl.y * s;
-	scl.z = basescl.z * s;
-
-	SetPropertyValue(hscl, scl);
+	s = Math.sin(runtime * 7.0) / 2.0 + 0.5;
+	SetPropertyValue(hatten, s * 8.0);
 }
 
 function init()
 {
 	runtime = 0.0;
-	hscl = FindProperty(self, "Scale");
-	basescl = GetPropertyValue(hscl);
-	scl = basescl;
+	hatten = FindProperty(self, "LightAttenuation");
 }

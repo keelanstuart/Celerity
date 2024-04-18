@@ -153,6 +153,8 @@ public:
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnEditCameraSettings();
 	afx_msg void OnUpdateEditCameraSettings(CCmdUI *pCmdUI);
+    afx_msg void OnUpdateViewHoverInformation(CCmdUI *pCmdUI);
+    afx_msg void OnViewHoverInformation();
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

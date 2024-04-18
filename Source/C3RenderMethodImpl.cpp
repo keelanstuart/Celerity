@@ -338,29 +338,57 @@ RenderMethod::Pass *RenderMethodImpl::TechniqueImpl::AddPass()
 }
 
 
-bool RenderMethodImpl::TechniqueImpl::Begin(size_t &passes) const
+bool RenderMethodImpl::TechniqueImpl::Begin(size_t &passes)
 {
 	if (m_Passes.empty())
 		return false;
+
+	m_OldState = 0;
+	m_OldBlendMode = m_pOwner->m_pRend->GetBlendMode();
+	m_OldBlendEq = m_pOwner->m_pRend->GetBlendEquation();
+	m_OldCullMode = m_pOwner->m_pRend->GetCullMode();
+	m_OldWindingOrder = m_pOwner->m_pRend->GetWindingOrder();
+	m_OldDepthMode = m_pOwner->m_pRend->GetDepthMode();
+	m_OldFillMode = m_pOwner->m_pRend->GetFillMode();
 
 	passes = m_Passes.size();
 	return true;
 }
 
 
-Renderer::RenderStateOverrideFlags RenderMethodImpl::TechniqueImpl::ApplyPass(size_t idx) const
+Renderer::RenderStateOverrideFlags RenderMethodImpl::TechniqueImpl::ApplyPass(size_t idx)
 {
 	if (idx >= m_Passes.size())
 		return 0;
 
 	PassImpl &pr = (PassImpl &)m_Passes[idx];
-	return pr.Apply(((RenderMethodImpl *)m_pOwner)->m_pRend);
+
+	Renderer::RenderStateOverrideFlags changed_states = pr.Apply(((RenderMethodImpl *)m_pOwner)->m_pRend);
+	m_OldState |= changed_states;
+
+	return changed_states;
 }
 
 
-void RenderMethodImpl::TechniqueImpl::End() const
+void RenderMethodImpl::TechniqueImpl::End()
 {
+	if (m_OldState.IsSet(RSOF_BLENDMODE))
+		m_pOwner->m_pRend->SetBlendMode(m_OldBlendMode);
 
+	if (m_OldState.IsSet(RSOF_BLENDEQ))
+		m_pOwner->m_pRend->SetBlendEquation(m_OldBlendEq);
+
+	if (m_OldState.IsSet(RSOF_CULLMODE))
+		m_pOwner->m_pRend->SetCullMode(m_OldCullMode);
+
+	if (m_OldState.IsSet(RSOF_WINDINGORDER))
+		m_pOwner->m_pRend->SetWindingOrder(m_OldWindingOrder);
+
+	if (m_OldState.IsSet(RSOF_DEPTHMODE))
+		m_pOwner->m_pRend->SetDepthMode(m_OldDepthMode);
+
+	if (m_OldState.IsSet(RSOF_FILLMODE))
+		m_pOwner->m_pRend->SetFillMode(m_OldFillMode);
 }
 
 

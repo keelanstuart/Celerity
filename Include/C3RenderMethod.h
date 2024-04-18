@@ -74,13 +74,13 @@ namespace c3
 			virtual Pass *AddPass() = NULL;
 
 			// Called when starting the technique. Tells you how many passes there are.
-			virtual bool Begin(size_t &passes) const = NULL;
+			virtual bool Begin(size_t &passes) = NULL;
 
 			// Applies the render settings for the given pass, typically in a loop run after Begin
-			virtual Renderer::RenderStateOverrideFlags ApplyPass(size_t idx) const = NULL;
+			virtual Renderer::RenderStateOverrideFlags ApplyPass(size_t idx) = NULL;
 
 			// Called at the end of the technique
-			virtual void End() const = NULL;
+			virtual void End() = NULL;
 
 			// Sets the draw order for things rendered with this technique
 			virtual void SetDrawOrder(int order) = NULL;

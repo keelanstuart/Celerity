@@ -80,6 +80,22 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_WM_MOVE()
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_EDIT_RESOURCEPATHCONFIGURATION, &C3EditFrame::OnEditResourcePathConfiguration)
+    ON_UPDATE_COMMAND_UI(ID_APP_ADVANCETIME, &C3EditFrame::OnUpdateAppAdvanceTime)
+	ON_COMMAND(ID_APP_ADVANCETIME, &C3EditFrame::OnAppAdvanceTime)
+	ON_UPDATE_COMMAND_UI(ID_APP_EDITORDRAW, &C3EditFrame::OnUpdateAppEditorDraw)
+	ON_COMMAND(ID_APP_EDITORDRAW, &C3EditFrame::OnAppEditorDraw)
+	ON_COMMAND(ID_DOCK_DEBUG, &C3EditFrame::OnDockDebug)
+	ON_UPDATE_COMMAND_UI(ID_DOCK_DEBUG, &C3EditFrame::OnUpdateDockDebug)
+	ON_COMMAND(ID_DOCK_OBJECTS, &C3EditFrame::OnDockObjects)
+	ON_UPDATE_COMMAND_UI(ID_DOCK_OBJECTS, &C3EditFrame::OnUpdateDockObjects)
+	ON_COMMAND(ID_DOCK_PROPERTIES, &C3EditFrame::OnDockProperties)
+	ON_UPDATE_COMMAND_UI(ID_DOCK_PROPERTIES, &C3EditFrame::OnUpdateDockProperties)
+	ON_COMMAND(ID_DOCK_PROTOTYPES, &C3EditFrame::OnDockPrototypes)
+	ON_UPDATE_COMMAND_UI(ID_DOCK_PROTOTYPES, &C3EditFrame::OnUpdateDockPrototypes)
+	ON_COMMAND(ID_DOCK_RESOURCES, &C3EditFrame::OnDockResources)
+	ON_UPDATE_COMMAND_UI(ID_DOCK_RESOURCES, &C3EditFrame::OnUpdateDockResources)
+	ON_COMMAND(ID_DOCK_SCRIPTS, &C3EditFrame::OnDockScripts)
+	ON_UPDATE_COMMAND_UI(ID_DOCK_SCRIPTS, &C3EditFrame::OnUpdateDockScripts)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -1084,4 +1100,114 @@ void C3EditFrame::OnEditResourcePathConfiguration()
 {
 	CResourcePathEditorDlg dlg;
 	dlg.DoModal();
+}
+
+
+void C3EditFrame::OnUpdateAppAdvanceTime(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+
+	bool b = theApp.m_Config->GetBool(_T("environment.advancetime"), true);
+	pCmdUI->SetCheck(b);
+}
+
+
+void C3EditFrame::OnAppAdvanceTime()
+{
+	bool b = theApp.m_Config->GetBool(_T("environment.advancetime"), true);
+	theApp.m_Config->SetBool(_T("environment.advancetime"), !b);
+}
+
+
+void C3EditFrame::OnUpdateAppEditorDraw(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+
+	bool b = theApp.m_Config->GetBool(_T("environment.editordraw"), true);
+	pCmdUI->SetCheck(b);
+}
+
+
+void C3EditFrame::OnAppEditorDraw()
+{
+	bool b = theApp.m_Config->GetBool(_T("environment.editordraw"), true);
+	theApp.m_Config->SetBool(_T("environment.editordraw"), !b);
+}
+
+
+void C3EditFrame::OnDockDebug()
+{
+	m_wndOutput.ShowPane(!m_wndOutput.IsPaneVisible(), FALSE, FALSE);
+}
+
+
+void C3EditFrame::OnUpdateDockDebug(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+	pCmdUI->SetCheck(m_wndOutput.IsPaneVisible());
+}
+
+
+void C3EditFrame::OnDockObjects()
+{
+	m_wndObjects.ShowPane(!m_wndObjects.IsPaneVisible(), FALSE, FALSE);
+}
+
+
+void C3EditFrame::OnUpdateDockObjects(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+	pCmdUI->SetCheck(m_wndObjects.IsPaneVisible());
+}
+
+
+void C3EditFrame::OnDockProperties()
+{
+	m_wndProperties.ShowPane(!m_wndProperties.IsPaneVisible(), FALSE, FALSE);
+}
+
+
+void C3EditFrame::OnUpdateDockProperties(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+	pCmdUI->SetCheck(m_wndProperties.IsPaneVisible());
+}
+
+
+void C3EditFrame::OnDockPrototypes()
+{
+	m_wndProtoView.ShowPane(!m_wndProtoView.IsPaneVisible(), FALSE, FALSE);
+}
+
+
+void C3EditFrame::OnUpdateDockPrototypes(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+	pCmdUI->SetCheck(m_wndProtoView.IsPaneVisible());
+}
+
+
+void C3EditFrame::OnDockResources()
+{
+	m_wndResourceSpy.ShowPane(!m_wndResourceSpy.IsPaneVisible(), FALSE, FALSE);
+}
+
+
+void C3EditFrame::OnUpdateDockResources(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+	pCmdUI->SetCheck(m_wndResourceSpy.IsPaneVisible());
+}
+
+
+void C3EditFrame::OnDockScripts()
+{
+	m_wndScripting.ShowPane(!m_wndScripting.IsPaneVisible(), FALSE, FALSE);
+}
+
+
+void C3EditFrame::OnUpdateDockScripts(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+	pCmdUI->SetCheck(m_wndScripting.IsPaneVisible());
 }

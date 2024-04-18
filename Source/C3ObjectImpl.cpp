@@ -258,23 +258,27 @@ void ObjectImpl::Update(float elapsed_time)
 
 bool ObjectImpl::Render(Object::RenderFlags flags, int draworder)
 {
-	if (!(m_Flags.IsSet(OF_DRAW) || (flags.IsSet(RF_EDITORDRAW) && m_Flags.IsSet(OF_DRAWINEDITOR)))
-		|| (flags.IsSet(RF_SHADOW) && !m_Flags.IsSet(OF_CASTSHADOW))
-		|| (flags.IsSet(RF_LIGHT) && !m_Flags.IsSet(OF_LIGHT)))
-		return false;
-
-	for (const auto &it : m_Components)
+	if (m_Flags.IsSet(OF_DRAW)
+		|| (flags.IsSet(RF_EDITORDRAW) && m_Flags.IsSet(OF_DRAWINEDITOR))
+		|| (flags.IsSet(RF_SHADOW) && m_Flags.IsSet(OF_CASTSHADOW))
+		|| (flags.IsSet(RF_LIGHT) && m_Flags.IsSet(OF_LIGHT)))
 	{
-		if (it->Prerender(flags, draworder))
-			it->Render(flags);
+		for (const auto &it : m_Components)
+		{
+			if (it->Prerender(flags, draworder))
+				it->Render(flags);
+		}
+
+		for (auto child : m_Children)
+		{
+			child->Render(flags, draworder);
+		}
+
+		return true;
 	}
 
-	for (auto child : m_Children)
-	{
-		child->Render(flags, draworder);
-	}
+	return false;
 
-	return true;
 }
 
 
