@@ -228,6 +228,7 @@
     <ClInclude Include="C3ObjectListCtrl.h" />
     <ClInclude Include="C3ResourceSpyListCtrl.h" />
     <ClInclude Include="CodeEditCtrl.h" />
+    <ClInclude Include="CreatePropertyDlg.h" />
     <ClInclude Include="EditPrototypeDlg.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GraphEditorDlg.h" />
@@ -263,6 +264,7 @@
     <ClCompile Include="C3ObjectListCtrl.cpp" />
     <ClCompile Include="C3ResourceSpyListCtrl.cpp" />
     <ClCompile Include="CodeEditCtrl.cpp" />
+    <ClCompile Include="CreatePropertyDlg.cpp" />
     <ClCompile Include="EditPrototypeDlg.cpp" />
     <ClCompile Include="GraphEditorDlg.cpp" />
     <ClCompile Include="GraphNode.cpp" />

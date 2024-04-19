@@ -970,7 +970,7 @@
             <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
             <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.010000,0.010000,0.010000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.050000,0.050000,0.050000</powerprops:property>
         </powerprops:property_set>
     </prototype>
     <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3D}" name="FadingLight" group="Lights" flags="73733">
@@ -985,7 +985,7 @@
             <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
             <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.010000,0.010000,0.010000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.050000,0.050000,0.050000</powerprops:property>
             <powerprops:property id="SRCF" name="SourceFile" type="STRING">fading_light.c3js</powerprops:property>
             <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.066700</powerprops:property>
         </powerprops:property_set>
@@ -1002,7 +1002,7 @@
             <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
             <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.010000,0.010000,0.010000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.050000,0.050000,0.050000</powerprops:property>
             <powerprops:property id="SRCF" name="SourceFile" type="STRING">flickering_light.c3js</powerprops:property>
             <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.066700</powerprops:property>
         </powerprops:property_set>
@@ -1019,7 +1019,7 @@
             <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">LightAtten.png</powerprops:property>
             <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">Geosphere.fbx</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.010000,0.010000,0.010000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.050000,0.050000,0.050000</powerprops:property>
             <powerprops:property id="SRCF" name="SourceFile" type="STRING">strobing_light.c3js</powerprops:property>
             <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.066700</powerprops:property>
         </powerprops:property_set>

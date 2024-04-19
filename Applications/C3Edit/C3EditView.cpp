@@ -840,7 +840,11 @@ c3::Object *C3EditView::Pick(POINT p) const
 
 	ComputePickRay(p, pickpos, pickray);
 
-	pDoc->m_RootObj->Intersect(&pickpos, &pickray, m_SelectionXforms, nullptr, &ret, 1);
+	props::TFlags64 flagmask = OF_DRAW;
+	if (uint32_t renderflags = theApp.m_Config->GetBool(_T("environment.editordraw"), true))
+		flagmask |= OF_DRAWINEDITOR;
+
+	pDoc->m_RootObj->Intersect(&pickpos, &pickray, m_SelectionXforms, nullptr, &ret, flagmask, 1);
 
 	return ret;
 }

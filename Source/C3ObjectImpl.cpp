@@ -406,9 +406,12 @@ void ObjectImpl::PostLoad()
 }
 
 
-bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance, Object **ppHitObj, size_t child_depth) const
+bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance, Object **ppHitObj, props::TFlags64 flagmask, size_t child_depth) const
 {
 	if (!pRayPos || !pRayDir || !mats)
+		return false;
+
+	if (!m_Flags.AnySet(flagmask))
 		return false;
 
 	float tmpdist;
@@ -459,7 +462,7 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, M
 		Object *hitobj = nullptr;
 		for (auto child : m_Children)
 		{
-			ret |= child->Intersect(pRayPos, pRayDir, mats, pDistance, &hitobj, child_depth - 1);
+			ret |= child->Intersect(pRayPos, pRayDir, mats, pDistance, &hitobj, flagmask, child_depth - 1);
 		}
 
 		if (ppHitObj)

@@ -41,7 +41,9 @@
 #define ID_VIEW_PROPERTIESWND           150
 #define ID_SORTPROPERTIES               151
 #define ID_PROPERTIES1                  152
+#define ID_PROPS_TOGGLEHIDDEN           152
 #define ID_PROPERTIES2                  153
+#define ID_PROPS_ADD                    153
 #define ID_EXPAND_ALL                   154
 #define IDS_FILE_VIEW                   155
 #define IDS_CLASS_VIEW                  156
@@ -141,6 +143,7 @@
 #define IDR_POPUP_RESOURCESPY           342
 #define IDS_SCRIPT_ASSIGN               343
 #define IDS_SCRIPT_RUN                  344
+#define IDD_CREATEPROPERTY              344
 #define IDS_POPUP_GRAPH                 345
 #define IDS_SCRIPTEDITOR_STATUS_NAME    346
 #define IDS_SCRIPTEDITOR_STATUS_ROWCOL  347
@@ -168,6 +171,10 @@
 #define IDC_EXTLIST                     1010
 #define IDC_RESTYPECB                   1011
 #define IDC_PATHLIST                    1012
+#define IDC_EDIT_PROPNAME               1012
+#define IDC_EDIT_PROPFCC                1013
+#define IDC_COMBO_PROPTYPE              1014
+#define IDC_COMBO_PROPASPECT            1015
 #define ID_EDIT_TRIGGERRENDERDOCCAPTURE 32771
 #define ID_EDIT_DELETE                  32772
 #define ID_EDIT_DUPLICATE               32773
@@ -223,14 +230,19 @@
 #define ID_DOCK_SCRIPT                  32831
 #define ID_DOCK_SCRIPTS                 32832
 #define ID_DOCK_RESOURCES               32833
+#define ID_PROPS_DELETE                 32835
+#define ID_HELP_SDKDOCUMENTATION        32836
+#define ID_HELP_SDKDOCS                 32837
+#define ID_HELP_COMPONENTGENERATOR      32838
+#define ID_HELP_GENCOMPONENT            32839
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        343
-#define _APS_NEXT_COMMAND_VALUE         32834
-#define _APS_NEXT_CONTROL_VALUE         1012
-#define _APS_NEXT_SYMED_VALUE           363
+#define _APS_NEXT_RESOURCE_VALUE        346
+#define _APS_NEXT_COMMAND_VALUE         32840
+#define _APS_NEXT_CONTROL_VALUE         1015
+#define _APS_NEXT_SYMED_VALUE           364
 #endif
 #endif

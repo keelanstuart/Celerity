@@ -80,10 +80,10 @@ protected:
 	afx_msg void OnUpdateExpandAllProperties(CCmdUI* pCmdUI);
 	afx_msg void OnSortProperties();
 	afx_msg void OnUpdateSortProperties(CCmdUI* pCmdUI);
-	afx_msg void OnProperties1();
-	afx_msg void OnUpdateProperties1(CCmdUI* pCmdUI);
-	afx_msg void OnProperties2();
-	afx_msg void OnUpdateProperties2(CCmdUI* pCmdUI);
+//	afx_msg void OnProperties1();
+//	afx_msg void OnUpdateProperties1(CCmdUI* pCmdUI);
+//	afx_msg void OnProperties2();
+//	afx_msg void OnUpdateProperties2(CCmdUI* pCmdUI);
 	afx_msg void OnSetFocus(CWnd* pOldWnd);
 	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
 	afx_msg LRESULT OnCtlcolorlistbox(WPARAM wParam, LPARAM lParam);
@@ -98,5 +98,11 @@ protected:
 public:
 	afx_msg HBRUSH OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor);
 	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
+    afx_msg void OnPropsToggleHidden();
+    afx_msg void OnUpdatePropsToggleHidden(CCmdUI *pCmdUI);
+    afx_msg void OnPropsAdd();
+    afx_msg void OnUpdatePropsAdd(CCmdUI *pCmdUI);
+    afx_msg void OnPropsDelete();
+    afx_msg void OnUpdatePropsDelete(CCmdUI *pCmdUI);
 };
 

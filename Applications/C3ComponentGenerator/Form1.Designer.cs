@@ -149,9 +149,9 @@
             this.CelerityCoreCheck.AutoSize = true;
             this.CelerityCoreCheck.Location = new System.Drawing.Point(15, 212);
             this.CelerityCoreCheck.Name = "CelerityCoreCheck";
-            this.CelerityCoreCheck.Size = new System.Drawing.Size(85, 17);
+            this.CelerityCoreCheck.Size = new System.Drawing.Size(255, 17);
             this.CelerityCoreCheck.TabIndex = 9;
-            this.CelerityCoreCheck.Text = "Celerity Core";
+            this.CelerityCoreCheck.Text = "Celerity Core (for internal SDK-level Components)";
             this.CelerityCoreCheck.UseVisualStyleBackColor = true;
             // 
             // ComponentGeneratorForm

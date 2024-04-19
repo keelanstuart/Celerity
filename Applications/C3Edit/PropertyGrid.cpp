@@ -173,20 +173,20 @@ CWTFPropertyGridProperty *CPropertyGrid::FindItemByID(props::FOURCHARCODE id, CW
 }
 
 
-void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DESCRIPTION_CB prop_desc, FILE_FILTER_CB file_filter, bool reset)
+void CPropertyGrid::SetActiveProperties(props::IPropertySet *pprops, PROPERTY_DESCRIPTION_CB prop_desc, FILE_FILTER_CB file_filter, bool reset)
 {
 	if (reset)
 	{
-		if (props == m_Props)
+		if (pprops == m_Props)
 			return;
 
 		if (m_Props)
 			RemoveAll();
 
-		m_Props = props;
+		m_Props = pprops;
 	}
 
-	if (!props)
+	if (!pprops)
 	{
 		AdjustLayout();
 		RedrawWindow();
@@ -196,11 +196,12 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *props, PROPERTY_DES
 	TCHAR tempname[256];
 	SetGroupNameFullWidth(TRUE, FALSE);
 
-	for (size_t i = 0, maxi = m_Props ? props->GetPropertyCount() : 0; i < maxi; i++)
+	for (size_t i = 0, maxi = m_Props ? pprops->GetPropertyCount() : 0; i < maxi; i++)
 	{
-		props::IProperty *p = props->GetProperty(i);
+		props::IProperty *p = pprops->GetProperty(i);
 		if (p->Flags().IsSet(props::IProperty::PROPFLAG(props::IProperty::HIDDEN)))
-			continue;
+			if (!theApp.m_Config->GetBool(_T("properties.showhidden"), false))
+				continue;
 
 		CWTFPropertyGridProperty *pwp = nullptr, *parent_prop = nullptr;
 

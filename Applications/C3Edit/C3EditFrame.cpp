@@ -96,6 +96,10 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_DOCK_RESOURCES, &C3EditFrame::OnUpdateDockResources)
 	ON_COMMAND(ID_DOCK_SCRIPTS, &C3EditFrame::OnDockScripts)
 	ON_UPDATE_COMMAND_UI(ID_DOCK_SCRIPTS, &C3EditFrame::OnUpdateDockScripts)
+	ON_COMMAND(ID_HELP_SDKDOCS, &C3EditFrame::OnHelpSdkDocs)
+	ON_UPDATE_COMMAND_UI(ID_HELP_SDKDOCS, &C3EditFrame::OnUpdateHelpSdkDocs)
+	ON_COMMAND(ID_HELP_GENCOMPONENT, &C3EditFrame::OnHelpGenComponent)
+	ON_UPDATE_COMMAND_UI(ID_HELP_GENCOMPONENT, &C3EditFrame::OnUpdateHelpGenComponent)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -1210,4 +1214,28 @@ void C3EditFrame::OnUpdateDockScripts(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable();
 	pCmdUI->SetCheck(m_wndScripting.IsPaneVisible());
+}
+
+
+void C3EditFrame::OnHelpSdkDocs()
+{
+	ShellExecute(NULL, _T("open"), _T("..\\Docs\\html\\index.html"), NULL, NULL, SW_SHOW);
+}
+
+
+void C3EditFrame::OnUpdateHelpSdkDocs(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+}
+
+
+void C3EditFrame::OnHelpGenComponent()
+{
+	ShellExecute(NULL, _T("open"), _T(".\\C3ComponentGenerator.exe"), NULL, NULL, SW_SHOW);
+}
+
+
+void C3EditFrame::OnUpdateHelpGenComponent(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
 }

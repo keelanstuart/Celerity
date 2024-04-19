@@ -168,6 +168,10 @@ public:
     afx_msg void OnUpdateDockResources(CCmdUI *pCmdUI);
     afx_msg void OnDockScripts();
     afx_msg void OnUpdateDockScripts(CCmdUI *pCmdUI);
+	afx_msg void OnHelpSdkDocs();
+	afx_msg void OnUpdateHelpSdkDocs(CCmdUI *pCmdUI);
+	afx_msg void OnHelpGenComponent();
+	afx_msg void OnUpdateHelpGenComponent(CCmdUI *pCmdUI);
 };
 
 

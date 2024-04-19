@@ -12,6 +12,7 @@
 #include "C3EditFrame.h"
 #include "C3Edit.h"
 #include <gdiplus.h>
+#include "CreatePropertyDlg.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -52,10 +53,10 @@ BEGIN_MESSAGE_MAP(CPropertiesWnd, CDockablePane)
 	ON_UPDATE_COMMAND_UI(ID_EXPAND_ALL, OnUpdateExpandAllProperties)
 	ON_COMMAND(ID_SORTPROPERTIES, OnSortProperties)
 	ON_UPDATE_COMMAND_UI(ID_SORTPROPERTIES, OnUpdateSortProperties)
-	ON_COMMAND(ID_PROPERTIES1, OnProperties1)
-	ON_UPDATE_COMMAND_UI(ID_PROPERTIES1, OnUpdateProperties1)
-	ON_COMMAND(ID_PROPERTIES2, OnProperties2)
-	ON_UPDATE_COMMAND_UI(ID_PROPERTIES2, OnUpdateProperties2)
+//	ON_COMMAND(ID_PROPERTIES1, OnProperties1)
+//	ON_UPDATE_COMMAND_UI(ID_PROPERTIES1, OnUpdateProperties1)
+//	ON_COMMAND(ID_PROPERTIES2, OnProperties2)
+//	ON_UPDATE_COMMAND_UI(ID_PROPERTIES2, OnUpdateProperties2)
 	ON_WM_SETFOCUS()
 	ON_WM_SETTINGCHANGE()
 	ON_WM_CTLCOLOR()
@@ -64,6 +65,12 @@ BEGIN_MESSAGE_MAP(CPropertiesWnd, CDockablePane)
 	ON_CLBN_CHKCHANGE(PWID_FLAGLIST, OnCheckChangeFlags)
 	ON_CLBN_CHKCHANGE(PWID_COMPLIST, OnCheckChangeComponents)
 	ON_EN_CHANGE(PWID_EDITNAME, OnChangeName)
+	ON_COMMAND(ID_PROPS_TOGGLEHIDDEN, &CPropertiesWnd::OnPropsToggleHidden)
+	ON_UPDATE_COMMAND_UI(ID_PROPS_TOGGLEHIDDEN, &CPropertiesWnd::OnUpdatePropsToggleHidden)
+	ON_COMMAND(ID_PROPS_ADD, &CPropertiesWnd::OnPropsAdd)
+	ON_UPDATE_COMMAND_UI(ID_PROPS_ADD, &CPropertiesWnd::OnUpdatePropsAdd)
+	ON_COMMAND(ID_PROPS_DELETE, &CPropertiesWnd::OnPropsDelete)
+	ON_UPDATE_COMMAND_UI(ID_PROPS_DELETE, &CPropertiesWnd::OnUpdatePropsDelete)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -189,25 +196,25 @@ void CPropertiesWnd::OnUpdateSortProperties(CCmdUI* pCmdUI)
 	pCmdUI->SetCheck(m_wndPropList.IsAlphabeticMode());
 }
 
-void CPropertiesWnd::OnProperties1()
-{
+//void CPropertiesWnd::OnProperties1()
+//{
 	// TODO: Add your command handler code here
-}
+//}
 
-void CPropertiesWnd::OnUpdateProperties1(CCmdUI* /*pCmdUI*/)
-{
+//void CPropertiesWnd::OnUpdateProperties1(CCmdUI* /*pCmdUI*/)
+//{
 	// TODO: Add your command update UI handler code here
-}
+//}
 
-void CPropertiesWnd::OnProperties2()
-{
+//void CPropertiesWnd::OnProperties2()
+//{
 	// TODO: Add your command handler code here
-}
+//}
 
-void CPropertiesWnd::OnUpdateProperties2(CCmdUI* /*pCmdUI*/)
-{
+//void CPropertiesWnd::OnUpdateProperties2(CCmdUI* /*pCmdUI*/)
+//{
 	// TODO: Add your command update UI handler code here
-}
+//}
 
 void CPropertiesWnd::InitPropList()
 {
@@ -233,13 +240,13 @@ void CPropertiesWnd::SetActivePrototype(c3::Prototype *pproto)
 {
 	m_pObj = nullptr;
 	m_pProto = pproto;
-	m_pProps = nullptr;
+	m_pProps = m_pProto ? m_pProto->GetProperties() : nullptr;
 
 	m_wndNameEdit.SetWindowText(m_pProto ? m_pProto->GetName() : _T(""));
 
 	if (m_wndPropList.GetSafeHwnd())
 	{
-		m_wndPropList.SetActiveProperties(m_pProto ? m_pProto->GetProperties() : nullptr);
+		m_wndPropList.SetActiveProperties(m_pProps);
 	}
 
 	FillOutFlags();
@@ -252,13 +259,13 @@ void CPropertiesWnd::SetActiveObject(c3::Object *pobj)
 {
 	m_pObj = pobj;
 	m_pProto = nullptr;
-	m_pProps = nullptr;
+	m_pProps = m_pObj ? m_pObj->GetProperties() : nullptr;
 
 	m_wndNameEdit.SetWindowText(m_pObj ? m_pObj->GetName() : _T(""));
 
 	if (m_wndPropList.GetSafeHwnd())
 	{
-		m_wndPropList.SetActiveProperties(m_pObj ? m_pObj->GetProperties() : nullptr);
+		m_wndPropList.SetActiveProperties(m_pProps);
 	}
 
 	FillOutFlags();
@@ -505,4 +512,72 @@ void CPropertiesWnd::UpdateCurrentProperties()
 
 		LeaveCriticalSection(&m_PropLock);
 	}
+}
+
+
+void CPropertiesWnd::OnPropsToggleHidden()
+{
+	theApp.m_Config->SetBool(_T("properties.showhidden"), !theApp.m_Config->GetBool(_T("properties.showhidden"), false));
+
+	m_RebuildProps = true;
+	UpdateCurrentProperties();
+}
+
+
+void CPropertiesWnd::OnUpdatePropsToggleHidden(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+	pCmdUI->SetCheck(theApp.m_Config->GetBool(_T("properties.showhidden"), false));
+}
+
+
+void CPropertiesWnd::OnPropsAdd()
+{
+	CCreatePropertyDlg cpd(m_pProps);
+	if (cpd.DoModal() == IDOK)
+	{
+		m_RebuildProps = true;
+		UpdateCurrentProperties();
+	}
+}
+
+
+void CPropertiesWnd::OnUpdatePropsAdd(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(m_pProps != nullptr);
+}
+
+
+void CPropertiesWnd::OnPropsDelete()
+{
+	auto psel = m_wndPropList.GetCurSel();
+	if (!psel)
+		return;
+
+	props::FOURCHARCODE id = (props::FOURCHARCODE)psel->GetData();
+	props::IProperty *pp = m_pProps->GetPropertyById(id);
+	if (pp->Flags().IsSet(props::IProperty::PROPFLAG(props::IProperty::EPropFlag::RESERVED2)))
+	{
+		MessageBox(_T("This is a reference property and cannot be deleted!"), _T("Alert"), MB_OK);
+	}
+	else if (pp->Flags().IsSet(props::IProperty::PROPFLAG(props::IProperty::EPropFlag::REQUIRED)))
+	{
+		MessageBox(_T("This is property is required and cannot be deleted!"), _T("Alert"), MB_OK);
+	}
+	else
+	{
+		if (MessageBox(_T("Are you sure you want to delete this property?"), _T("Delete Property?"), MB_YESNO) == IDYES)
+		{
+			m_pProps->DeletePropertyById(id);
+
+			m_RebuildProps = true;
+			UpdateCurrentProperties();
+		}
+	}
+}
+
+
+void CPropertiesWnd::OnUpdatePropsDelete(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable((m_wndPropList.GetCurSel() != nullptr) ? true : false);
 }

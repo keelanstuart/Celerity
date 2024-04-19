@@ -588,7 +588,7 @@ void C3EditApp::OnViewGrapheditor()
 void C3EditApp::PushUndo(SUndoInfo::UNDOTYPE type, const tstring &data)
 {
 	m_Undo.emplace_back();
-	m_Undo.back();
+	//m_Undo.back();
 }
 
 
