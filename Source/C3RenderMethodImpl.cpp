@@ -155,6 +155,12 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 
 void RenderMethodImpl::PassImpl::SetFrameBufferName(const TCHAR *name)
 {
+	if (!name)
+	{
+		m_FrameBufferName.reset();
+		return;
+	}
+
 	m_FrameBufferName = std::make_optional<tstring>(name);
 }
 
@@ -166,6 +172,12 @@ bool RenderMethodImpl::PassImpl::GetFrameBufferName(tstring &name) const
 
 	name = *m_FrameBufferName;
 	return true;
+}
+
+
+void RenderMethodImpl::PassImpl::InvalidateFrameBuffer()
+{
+	m_FrameBuffer = nullptr;
 }
 
 

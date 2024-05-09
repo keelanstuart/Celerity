@@ -8,6 +8,7 @@
 
 #include <C3.h>
 #include <C3DepthBuffer.h>
+#include <C3Publisher.h>
 
 
 namespace c3

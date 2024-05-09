@@ -28,6 +28,7 @@ namespace c3
 
 			virtual void SetFrameBufferName(const TCHAR *name) = NULL;
 			virtual bool GetFrameBufferName(tstring &name) const = NULL;
+			virtual void InvalidateFrameBuffer() = NULL;
 
 			virtual void SetShaderComponentFilename(Renderer::ShaderComponentType type, const TCHAR *filename) = NULL;
 			virtual bool GetShaderComponentFilename(Renderer::ShaderComponentType type, tstring &filename) const = NULL;

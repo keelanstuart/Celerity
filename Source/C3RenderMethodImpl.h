@@ -58,6 +58,7 @@ namespace c3
 
 			virtual void SetFrameBufferName(const TCHAR *name);
 			virtual bool GetFrameBufferName(tstring &name) const;
+			virtual void InvalidateFrameBuffer();
 
 			virtual void SetFrameBufferFlags(props::TFlags64 flags);
 			virtual props::TFlags64 GetFrameBufferFlags() const;
