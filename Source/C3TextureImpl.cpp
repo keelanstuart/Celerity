@@ -90,7 +90,7 @@ void Texture2DImpl::Release()
 
 void Texture2DImpl::SetName(const TCHAR *name)
 {
-	m_Name = name;
+	m_Name = name ? name : _T("");
 }
 
 
@@ -433,6 +433,8 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTexture2D)::ReadFromMemory(
 
 				if (ptex)
 				{
+					ptex->SetName(contextname);
+
 					ptex->Lock((void **)&dst, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_GENMIPS);
 
 					if (dst)

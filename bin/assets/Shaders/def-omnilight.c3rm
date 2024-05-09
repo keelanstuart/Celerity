@@ -1,0 +1,19 @@
+<render_method name="standard">
+
+	<technique name="g">
+		<pass>
+			<setting name="cullmode"			value="none" />
+			<setting name="fillmode"			value="wire" />
+			<setting name="shader.vertex"		value="def-omnilight.vsh" />
+			<setting name="shader.fragment"		value="def-widget.fsh" />
+		</pass>
+	</technique>
+
+	<technique name="l" draworder="2">
+		<pass>
+			<setting name="shader.vertex"		value="def-omnilight.vsh" />
+			<setting name="shader.fragment"		value="def-omnilight.fsh" />
+		</pass>
+	</technique>
+
+</render_method>

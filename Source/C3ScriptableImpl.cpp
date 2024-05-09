@@ -90,7 +90,14 @@ ScriptableImpl::~ScriptableImpl()
 
 void ScriptableImpl::Release()
 {
+	if (m_JS)
+	{
+		if (m_JS->GetScriptVariable(_T("free")))
+			Execute(_T("free();"));
 
+		delete m_JS;
+		m_JS = nullptr;
+	}
 }
 
 
@@ -133,12 +140,22 @@ void jcSetModelInstNodeScl(CScriptVar *c, void *userdata);
 void jcGetModelNodeName(CScriptVar *c, void *userdata);
 void jcSetModelNodeVisibility(CScriptVar *c, void *userdata);
 void jcSetModelNodeCollisions(CScriptVar *c, void *userdata);
+void jcCreateCollisionResults(CScriptVar *c, void *userdata);
+void jcFreeCollisionResults(CScriptVar *c, void *userdata);
+void jcCheckCollisions(CScriptVar *c, void *userdata);
 
 
 void ScriptableImpl::ResetJS()
 {
 	if (m_JS)
+	{
+		if (m_JS->GetScriptVariable(_T("free")))
+			Execute(_T("free();"));
+
 		delete m_JS;
+		m_JS = nullptr;
+	}
+
 	m_JS = new CTinyJS();
 
 	System *psys = m_pOwner->GetSystem();
@@ -152,26 +169,37 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function GetChild(hrootobj, idx)"),								jcGetChild, psys);
 	m_JS->AddNative(_T("function FindObjByGUID(hrootobj, guid, recursive)"),			jcFindObjByGUID, psys);
 	m_JS->AddNative(_T("function FindFirstObjByName(hrootobj, name, recursive)"),		jcFindFirstObjByName, psys);
+
 	m_JS->AddNative(_T("function Log(text)"),											jcLog, psys);
+
 	m_JS->AddNative(_T("function FindProperty(hobj, name)"),							jcFindProperty, psys);
 	m_JS->AddNative(_T("function GetPropertyValue(hprop)"),								jcGetPropertyValue, psys);
 	m_JS->AddNative(_T("function SetPropertyValue(hprop, val)"),						jcSetPropertyValue, psys);
+
 	m_JS->AddNative(_T("function CreateObject(protoname, hparentobj)"),					jcCreateObject, psys);
 	m_JS->AddNative(_T("function DeleteObject(hobj)"),									jcDeleteObject, psys);
+
 	m_JS->AddNative(_T("function GetParent(hobj)"),										jcGetParent, psys);
 	m_JS->AddNative(_T("function SetParent(hobj, hnewparentobj)"),						jcSetParent, psys);
+
 	m_JS->AddNative(_T("function SetObjectName(hobj, newname)"),						jcSetObjectName, psys);
+
 	m_JS->AddNative(_T("function LoadObject(hobj, filename)"),							jcLoadObject, psys);
+
 	m_JS->AddNative(_T("function GetRegisteredObject(designation)"),					jcGetRegisteredObject, psys);
 	m_JS->AddNative(_T("function RegisterObject(designation, hobj)"),					jcRegisterObject, psys);
+
 	m_JS->AddNative(_T("function IsObjFlagSet(hobj, flagname)"),						jcIsObjFlagSet, psys);
 	m_JS->AddNative(_T("function SetObjFlag(hobj, flagname, val)"),						jcSetObjFlag, psys);
 	m_JS->AddNative(_T("function IsObjFlagSet(hobj, flagname)"),						jcIsObjFlagSet, psys);
 	m_JS->AddNative(_T("function SetObjFlag(hobj, flagname, val)"),						jcSetObjFlag, psys);
+
 	m_JS->AddNative(_T("function AdjustQuat(quat, axis, angle)"),						jcAdjustQuat, psys);
 	m_JS->AddNative(_T("function EulerToQuat(euler)"),									jcEulerToQuat, psys);
 	m_JS->AddNative(_T("function QuatToEuler(quat)"),									jcQuatToEuler, psys);
+
 	m_JS->AddNative(_T("function PlaySound(filename, volmod, pitchmod, loop, pos)"),	jcPlaySound, psys);
+
 	m_JS->AddNative(_T("function GetModelNodeIndex(hobj, nodename)"),					jcGetModelNodeIndex, psys);
 	m_JS->AddNative(_T("function GetModelNodeCount(hobj)"),								jcGetModelNodeCount, psys);
 	m_JS->AddNative(_T("function GetModelInstNodePos(hobj, nodeidx)"),					jcGetModelInstNodePos, psys);
@@ -183,6 +211,10 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function GetModelNodeName(hobj, nodeidx)"),						jcGetModelNodeName, psys);
 	m_JS->AddNative(_T("function SetModelNodeVisibility(hobj, nodeidx, b)"),			jcSetModelNodeVisibility, psys);
 	m_JS->AddNative(_T("function SetModelNodeCollisions(hobj, nodeidx, b)"),			jcSetModelNodeCollisions, psys);
+
+	m_JS->AddNative(_T("function CreateCollisionResults()"),							jcCreateCollisionResults, psys);
+	m_JS->AddNative(_T("function FreeCollisionResults(colres)"),						jcFreeCollisionResults, psys);
+	m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir)"),			jcCheckCollisions, psys);
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -224,7 +256,7 @@ void ScriptableImpl::Update(float elapsed_time)
 	if (!m_Continue)
 		return;
 
-	//if (m_JS->GetScriptVariable(_T("update")))
+	if (m_bHasUpdate)
 	{
 		m_UpdateTime -= elapsed_time;
 
@@ -295,7 +327,12 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 	}
 
 	if (needs_init)
-		Execute(_T("init();"));
+	{
+		if (m_JS->GetScriptVariable(_T("init")))
+			Execute(_T("init();"));
+
+		m_bHasUpdate = m_JS->GetScriptVariable(_T("update")) ? true : false;
+	}
 }
 
 
@@ -1654,5 +1691,114 @@ void jcSetModelNodeCollisions(CScriptVar *c, void *userdata)
 
 		if (pm)
 			pm->NodeCollidability(ni, std::make_optional<bool>(b));
+	}
+}
+
+
+// m_JS->AddNative(_T("function SetModelNodeCollisions()"), jcCreateCollisionResults, psys);
+void jcCreateCollisionResults(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	ret->FindChildOrCreate(_T("distance"));
+	ret->FindChildOrCreate(_T("hobj"));
+	CScriptVarLink *pf = ret->FindChildOrCreate(_T("found"));
+	CScriptVarLink *pmatsvar = ret->FindChildOrCreate(_T("PRIVATE_mats"));
+
+	MatrixStack *mats = MatrixStack::Create();
+
+	pf->m_Var->SetInt(0);
+	pmatsvar->m_Var->SetInt((int64_t)mats);
+}
+
+
+// m_JS->AddNative(_T("function FreeCollisionResults(collision_results)"), jcFreeCollisionResults, psys);
+void jcFreeCollisionResults(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pres = c->GetParameter(_T("collision_results"));
+
+	CScriptVarLink *pmatsvar = pres->FindChild(_T("PRIVATE_mats"));
+	if (!pmatsvar)
+		return;
+
+	MatrixStack *pmats = (MatrixStack *)(pmatsvar->m_Var->GetInt());
+	if (pmats)
+	{
+		pmats->Release();
+		pmats = nullptr;
+	}
+}
+
+
+// m_JS->AddNative(_T("function CheckCollisions(, nodeidx, b)"), jcSetModelNodeCollisions, psys);
+void jcCheckCollisions(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVarLink *ret_dist = ret->FindChild(_T("distance"));
+	CScriptVarLink *ret_hobj = ret->FindChild(_T("hobj"));
+	CScriptVarLink *ret_found = ret->FindChild(_T("found"));
+	CScriptVarLink *ret_mats = ret->FindChild(_T("PRIVATE_mats"));
+	if (!(ret_dist && ret_hobj && ret_mats && ret_found))
+	{
+		psys->GetLog()->Print(_T("JS ERROR: you must call CreateCollisionResults before calling CheckCollisions!\n"));
+		return;
+	}
+
+	ret_found->m_Var->SetInt(0);
+
+	CScriptVar *phrootobj = c->GetParameter(_T("hrootobj"));
+	CScriptVar *praypos = c->GetParameter(_T("raypos"));
+	CScriptVar *praydir = c->GetParameter(_T("raydir"));
+
+	if (!(phrootobj && praypos && praydir))
+		return;
+
+	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
+	Object *prootobj = dynamic_cast<Object *>((Object *)hrootobj);
+
+	glm::fvec3 raypos, raydir;
+
+	{
+		CScriptVarLink *px = praypos->FindChild(_T("x"));
+		CScriptVarLink *py = praypos->FindChild(_T("y"));
+		CScriptVarLink *pz = praypos->FindChild(_T("z"));
+		if (!(px && py && pz))
+			return;
+
+		raypos.x = px->m_Var->GetFloat();
+		raypos.y = py->m_Var->GetFloat();
+		raypos.z = pz->m_Var->GetFloat();
+	}
+
+	{
+		CScriptVarLink *px = praydir->FindChild(_T("x"));
+		CScriptVarLink *py = praydir->FindChild(_T("y"));
+		CScriptVarLink *pz = praydir->FindChild(_T("z"));
+		if (!(px && py && pz))
+			return;
+
+		raydir.x = px->m_Var->GetFloat();
+		raydir.y = py->m_Var->GetFloat();
+		raydir.z = pz->m_Var->GetFloat();
+	}
+
+	if (prootobj)
+	{
+		Object *obj = nullptr;
+		float dist = FLT_MAX;
+		if (prootobj->Intersect(&raypos, &raydir, (MatrixStack *)(ret_mats->m_Var->GetInt()), &dist, &obj, OF_CHECKCOLLISIONS, 1))
+		{
+			ret_found->m_Var->SetInt(1);
+			ret_hobj->m_Var->SetInt((int64_t)obj);
+			ret_dist->m_Var->SetFloat(dist);
+		}
 	}
 }

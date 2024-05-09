@@ -91,6 +91,9 @@ namespace c3
 
 		BoundingBoxImpl();
 		BoundingBoxImpl(const BoundingBox *other);
+
+		BoundingBoxImpl & operator =(const BoundingBoxImpl &other);
+
 		virtual ~BoundingBoxImpl();
 
 		virtual void Release();

@@ -122,6 +122,14 @@ BoundingBoxImpl::BoundingBoxImpl(const BoundingBox *other)
 	m_bNeedsAlignment = true;
 }
 
+BoundingBoxImpl & BoundingBoxImpl::operator =(const BoundingBoxImpl &other)
+{
+	memcpy(&m_Corner_Unaligned, other.m_Corner_Unaligned, sizeof(glm::fvec3) * CORNER::NUMCORNERS);
+	memcpy(&m_Corner, other.m_Corner, sizeof(glm::fvec3) * CORNER::NUMCORNERS);
+
+	m_bNeedsAlignment = true;
+	return *this;
+}
 
 BoundingBoxImpl::~BoundingBoxImpl()
 {

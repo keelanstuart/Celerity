@@ -9,9 +9,6 @@
 #include "renderdoc_app.h"
 #include <PowerProps.h>
 
-#define BLURTARGS	4
-
-
 // C3Dlg dialog
 class C3Dlg : public CDialog
 {
@@ -26,8 +23,8 @@ protected:
 	std::vector<c3::Texture2D *> m_ColorTarg;
 	c3::DepthBuffer *m_DepthTarg;
 	c3::DepthBuffer *m_ShadowTarg;
-	c3::Texture2D *m_BTex[BLURTARGS];
-	c3::FrameBuffer *m_BBuf[BLURTARGS];
+	std::vector<c3::Texture2D *> m_BTex;
+	std::vector<c3::FrameBuffer *> m_BBuf;
 	c3::ShaderComponent *m_VS_resolve;
 	c3::ShaderComponent *m_FS_resolve;
 	c3::ShaderProgram *m_SP_resolve;
@@ -46,7 +43,6 @@ protected:
 
 	c3::Factory *m_Factory;
 	c3::Object *m_WorldRoot;
-	c3::Object *m_SkyboxRoot;
 	c3::Object *m_GUIRoot;
 	c3::Object *m_CameraRoot, *m_CameraArm, *m_Camera;
 	c3::Object *m_GUICamera;
@@ -58,6 +54,8 @@ protected:
 	bool m_bCapturedFirstFrame;
 
 	bool m_bMouseCursorEnabled;
+
+	float m_WindowsUIScale;
 
 	static bool __cdecl DeviceConnected(c3::InputDevice *device, bool conn, void *userdata);
 
@@ -81,10 +79,17 @@ protected:
 
 	void RegisterAction(const TCHAR *name, c3::ActionMapper::ETriggerType tt, float delay);
 
+	void DestroySurfaces();
+
+	void CreateSurfaces();
+
+	void InitializeGraphics();
 
 // Implementation
 protected:
 	HICON m_hIcon;
+
+	void UpdateShaderSurfaces();
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();

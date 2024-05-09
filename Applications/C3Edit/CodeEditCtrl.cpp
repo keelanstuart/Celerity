@@ -156,6 +156,15 @@ BOOL CCodeEditCtrl::PreTranslateMessage(MSG *pMsg)
 
 	switch (pMsg->message)
 	{
+		case WM_KEYDOWN:
+		{
+			if (pMsg->wParam == VK_TAB)
+			{
+				ReplaceSel(_T("\t"));
+				return TRUE;
+			}
+		}
+
 		case WM_CUT:
 			Cut();
 			break;

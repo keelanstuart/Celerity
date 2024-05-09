@@ -53,6 +53,9 @@ namespace c3
 		/// Fills out a complete FrameBuffer based on the descriptions of a target
 		virtual RETURNCODE Setup(size_t numtargs, const TargetDesc *ptargdescs, DepthBuffer *pdb, RECT &r) = NULL;
 
+		/// Tears down the FrameBuffer if it has been Setup
+		virtual RETURNCODE Teardown() = NULL;
+
 		/// Attaches a texture target to the given position
 		virtual RETURNCODE AttachColorTarget(Texture2D *target, size_t position) = NULL;
 

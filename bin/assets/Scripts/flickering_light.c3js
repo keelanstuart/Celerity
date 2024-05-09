@@ -1,25 +1,40 @@
 var runtime;
 var hatten;
 var s, t;
-var off_time;
+var special_time = 0.0;
+var lo, hi;
 
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 
-	if (off_time > 0)
+	if (special_time > 0)
 	{
-		off_time -= elapsed_seconds;
-		s = Math.random(0.2, 0.3);
+		special_time -= elapsed_seconds;
 	}
 	else
 	{
-		s = Math.random(0.9, 1.0);
-		t = Math.random(0, 500);
-		if (t < 2)
-			off_time = Math.random(0.1, 0.8);
+		t = Math.random(0, 800);
+		if (t < 4) // go dark
+		{
+			special_time = Math.random(0.1, 1.8);
+			lo = 0.2;
+			hi = 0.3;
+		}
+		else if (t < 5) // go bright
+		{
+			special_time = Math.random(0.05, 0.15);
+			lo = 2.0;
+			hi = 2.1;
+		}
+		else // normal
+		{
+			lo = 0.95;
+			hi = 1.05;
+		}
 	}
 
+	s = Math.random(lo, hi);
 	SetPropertyValue(hatten, s);
 }
 

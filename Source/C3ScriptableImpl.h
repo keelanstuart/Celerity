@@ -21,6 +21,7 @@ namespace c3
 
 		CTinyJS *m_JS;
 		tstring m_Code;
+		bool m_bHasUpdate;
 		float m_UpdateRate;
 		float m_UpdateTime;
 

@@ -12,7 +12,7 @@
 namespace c3
 {
 
-	class BoundingBox
+	class C3_API BoundingBox
 	{
 
 	public:

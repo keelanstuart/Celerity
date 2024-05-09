@@ -2736,9 +2736,11 @@ CScriptVar *CTinyJS::GetScriptVariable(const TCHAR *path)
 		if (p)
 			*((TCHAR *)p) = _T('.');
 
-		path = p + 1;
-
 		var = varl ? varl->m_Var : nullptr;
+		if (!p)
+			break;
+
+		path = p + 1;
 	}
 
 	return var;

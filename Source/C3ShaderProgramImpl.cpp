@@ -18,7 +18,6 @@ using namespace c3;
 
 #define PROPASPECT_MODELINSTDATA		((props::IProperty::PROPERTY_ASPECT)(props::IProperty::PROPERTY_ASPECT::PA_FIRSTUSERASPECT + 1))
 
-//#define IMMEDIATE_UNIFORMS
 
 ShaderProgramImpl::ShaderProgramImpl(RendererImpl *prend)
 {
@@ -41,7 +40,6 @@ ShaderProgramImpl::~ShaderProgramImpl()
 			if (!m_Comp[i])
 				continue;
 
-			//m_Rend->gl.DetachShader(m_glID, (ShaderComponentImpl &)*m_Comp[i]);
 			m_Comp[i] = nullptr;
 		}
 
@@ -160,10 +158,6 @@ bool ShaderProgramImpl::SetUniformMatrix(int32_t location, const glm::fmat4x4 *m
 
 	p->SetMat4x4F((const props::TMat4x4F *)mat);
 
-#ifdef IMMEDIATE_UNIFORMS
-	m_Rend->gl.ProgramUniformMatrix4fv(m_glID, (GLint)location, 1, GL_FALSE, (const GLfloat *)mat);
-#endif
-
 	return true;
 }
 
@@ -178,10 +172,6 @@ bool ShaderProgramImpl::SetUniform1(int32_t location, float f)
 		return false;
 
 	p->SetFloat(f);
-
-#ifdef IMMEDIATE_UNIFORMS
-	m_Rend->gl.ProgramUniform1f(m_glID, (GLint)location, f);
-#endif
 
 	return true;
 }
@@ -198,10 +188,6 @@ bool ShaderProgramImpl::SetUniform2(int32_t location, const glm::fvec2 *v2)
 
 	p->SetVec2F(*(const props::TVec2F *)v2);
 
-#ifdef IMMEDIATE_UNIFORMS
-	m_Rend->gl.ProgramUniform2fv(m_glID, (GLint)location, 1, (const GLfloat *)v2);
-#endif
-
 	return true;
 }
 
@@ -217,10 +203,6 @@ bool ShaderProgramImpl::SetUniform3(int32_t location, const glm::fvec3 *v3)
 
 	p->SetVec3F(*(const props::TVec3F *)v3);
 
-#ifdef IMMEDIATE_UNIFORMS
-	m_Rend->gl.ProgramUniform3fv(m_glID, (GLint)location, 1, (const GLfloat *)v3);
-#endif
-
 	return true;
 }
 
@@ -235,10 +217,6 @@ bool ShaderProgramImpl::SetUniform4(int32_t location, const glm::fvec4 *v4)
 		return false;
 
 	p->SetVec4F(*(const props::TVec4F *)v4);
-
-#ifdef IMMEDIATE_UNIFORMS
-	m_Rend->gl.ProgramUniform4fv(m_glID, (GLint)location, 1, (const GLfloat *)v4);
-#endif
 
 	return true;
 }
@@ -260,14 +238,9 @@ bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_
 		texunit = (int32_t)p->AsVec4I()->y;
 
 	// Vec3I = (uniform index, texunit, texture, texflags)
+	p->SetVec4I(props::TVec4I(p->AsVec4I()->x, texunit, (int64_t)tex, texflags));
 	p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D);
 	p->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
-	p->SetVec4I(props::TVec4I(p->AsVec4I()->x, texunit, (int64_t)tex, texflags));
-
-#ifdef IMMEDIATE_UNIFORMS
-	m_Rend->UseTexture(texunit, tex);
-	m_Rend->gl.ProgramUniform1i(m_glID, (GLint)location, (GLint)texunit);
-#endif
 
 	return true;
 }
@@ -296,9 +269,15 @@ void ShaderProgramImpl::CaptureUniforms()
 
 		GLuint location = m_Rend->gl.GetUniformLocation(m_glID, name);
 
-		TCHAR *n;
-		CONVERT_MBCS2TCS(name, n);
-		props::IProperty *p = m_Uniforms->CreateProperty(n, location);
+		std::function<props::IProperty *(const char *mbcs, GLuint)> create_mbcs_property = [&](const char *mbcs, GLuint i)
+		{
+			TCHAR *t;
+			CONVERT_MBCS2TCS(mbcs, t);
+			return m_Uniforms->CreateProperty(t, i);
+		};
+
+		props::IProperty *p = create_mbcs_property(name, location);
+		const TCHAR *n = p->GetName();
 
 		switch (type)
 		{
@@ -408,6 +387,8 @@ void ShaderProgramImpl::CaptureUniforms()
 			// Vec4I = (uniform index, sampler, texture, texture flags)
 			case GL_SAMPLER_2D:
 				p->SetVec4I(props::TVec4I(location, sampleridx++, (int64_t)(m_Rend->GetBlackTexture()), TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR));
+				p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D);
+				p->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 				break;
 		}
 	}
@@ -560,10 +541,6 @@ void ShaderProgramImpl::ApplyUniforms(bool update_globals)
 {
 	if (update_globals)
 		UpdateGlobalUniforms();
-
-#ifdef IMMEDIATE_UNIFORMS
-	return;
-#endif
 
 	for (size_t i = 0, maxi = m_Uniforms->GetPropertyCount(); i < maxi; i++)
 	{

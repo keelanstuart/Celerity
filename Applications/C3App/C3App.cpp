@@ -26,6 +26,7 @@ C3App::C3App()
 {
 	m_C3 = nullptr;
 	m_Config = nullptr;
+	m_StartScript = _T("c3demo.c3js");
 }
 
 
@@ -151,6 +152,21 @@ BOOL C3App::InitInstance()
 #endif
 
 	CWinApp::InitInstance();
+
+	int argc = 0;
+
+	// Parse the command line into arguments
+	LPTSTR *argv = CommandLineToArgvW(m_lpCmdLine, &argc);
+	if (argv)
+	{
+		if (argc > 1)
+		{
+			m_StartScript = argv[1];
+		}
+
+		// Free memory allocated by CommandLineToArgvW
+		LocalFree(argv);
+	}
 
 	srand(GetTickCount());
 

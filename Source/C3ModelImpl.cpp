@@ -492,6 +492,7 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const M
 	return true;
 }
 
+// TODO: add a way to pass the normal of the face we collided with throughout the collision pipeline
 bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, size_t *pMeshIndex,
 							float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
 {
@@ -656,9 +657,10 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMat
 		AddModelNode(pm, nidx, pn->mChildren[i], &pn->mChildren[i]->mTransformation, nidxmap, midxmap);
 }
 
-inline unsigned int MakeImportFlags(const TCHAR *options, bool &animation_only)
+inline unsigned int MakeImportFlags(const TCHAR *options, bool &animation_only, bool &keep_rootxform)
 {
 	animation_only = false;
+	keep_rootxform = false;
 
 	unsigned int impflags = 0
 		| aiProcess_Triangulate
@@ -689,9 +691,15 @@ inline unsigned int MakeImportFlags(const TCHAR *options, bool &animation_only)
 		{
 			impflags |= aiProcess_ForceGenNormals;
 		}
-		else if (_tcsstr(o.c_str(), _T("animation_only")))
+
+		if (_tcsstr(o.c_str(), _T("animation_only")))
 		{
 			animation_only = true;
+		}
+
+		if (_tcsstr(o.c_str(), _T("keep_rootxform")))
+		{
+			keep_rootxform = true;
 		}
 	}
 
@@ -699,7 +707,7 @@ inline unsigned int MakeImportFlags(const TCHAR *options, bool &animation_only)
 }
 
 
-ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *rootpath, const TCHAR *sourcename, bool animation_only)
+ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *rootpath, const TCHAR *sourcename, bool animation_only, bool keep_rootxform)
 {
 	if (!rootpath)
 		rootpath = _T("");
@@ -734,6 +742,8 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			tstring texname = sourcename;
 			MakeTexFilename(texname, textmp);
 			c3::Texture2D *pt = nullptr;
+
+			pr->GetSystem()->GetLog()->Print(_T("Embedded \"%s\"... "), texname.c_str());
 			DefaultTexture2DResourceType::Type()->ReadFromMemory(psys, texname.c_str(), (const BYTE *)scene->mTextures[texidx]->pcData, scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
 			if (pt)
 			{
@@ -1177,26 +1187,20 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 				{
 					for (size_t j = 0; j < vct; j++)
 					{
+						if (do_bounds)
+						{
+							vmin.x = std::min<float>(pmd_3f[j].x, vmin.x);
+							vmin.y = std::min<float>(pmd_3f[j].y, vmin.y);
+							vmin.z = std::min<float>(pmd_3f[j].z, vmin.z);
+
+							vmax.x = std::max<float>(pmd_3f[j].x, vmax.x);
+							vmax.y = std::max<float>(pmd_3f[j].y, vmax.y);
+							vmax.z = std::max<float>(pmd_3f[j].z, vmax.z);
+						}
+
 						// this may seem wrong because you could have texture coordinates with 2 components...
 						// but only the relevant ones are copied, based on the count defined by the vertex component
 						memcpy(pv, &pmd_3f[j], sizeof(float) * vcd[ci].m_Count);
-
-						if (do_bounds)
-						{
-							if (pmd_3f[j].x < vmin.x)
-								vmin.x = pmd_3f[j].x;
-							if (pmd_3f[j].y < vmin.y)
-								vmin.y = pmd_3f[j].y;
-							if (pmd_3f[j].z < vmin.z)
-								vmin.z = pmd_3f[j].z;
-
-							if (pmd_3f[j].x > vmax.x)
-								vmax.x = pmd_3f[j].x;
-							if (pmd_3f[j].y > vmax.y)
-								vmax.y = pmd_3f[j].y;
-							if (pmd_3f[j].z > vmax.z)
-								vmax.z = pmd_3f[j].z;
-						}
 
 						pv += vsz;
 					}
@@ -1306,19 +1310,8 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 			((MeshImpl *)pm)->SetBounds(vmin, vmax);
 
-			if (vmin.x < vmin_model.x)
-				vmin_model.x = vmin.x;
-			if (vmin.y < vmin_model.y)
-				vmin_model.y = vmin.y;
-			if (vmin.z < vmin_model.z)
-				vmin_model.z = vmin.z;
-
-			if (vmax.x > vmax_model.x)
-				vmax_model.x = vmax.x;
-			if (vmax.y > vmax_model.y)
-				vmax_model.y = vmax.y;
-			if (vmax.z > vmax_model.z)
-				vmax_model.z = vmax.z;
+			vmin_model = glm::min(vmin_model, vmin);
+			vmax_model = glm::max(vmax_model, vmax);
 		}
 	}
 
@@ -1350,7 +1343,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 #endif
 
 	TNodeIndexMap nim;
-	AddModelNode(pmi, Model::NO_PARENT, scene->mRootNode, nullptr, nim, mim);
+	AddModelNode(pmi, Model::NO_PARENT, scene->mRootNode, keep_rootxform ? &scene->mRootNode->mTransformation : nullptr, nim, mim);
 
 	return pmi;
 }
@@ -1367,7 +1360,8 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 
 		Assimp::Importer import;
 		bool animation_only = false;
-		const aiScene *scene = import.ReadFile(fn, MakeImportFlags(options, animation_only));
+		bool keep_rootxform = false;
+		const aiScene *scene = import.ReadFile(fn, MakeImportFlags(options, animation_only, keep_rootxform));
 		if (!scene)
 		{
 			TCHAR *err;
@@ -1389,7 +1383,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 				c++;
 			}
 
-			*returned_data = ImportModel(psys, scene, modbasepath, c, animation_only);
+			*returned_data = ImportModel(psys, scene, modbasepath, c, animation_only, keep_rootxform);
 		}
 
 		if (!*returned_data)
@@ -1406,9 +1400,15 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System 
 	{
 		*returned_data = nullptr;
 
+		char *ctx;
+		CONVERT_TCS2MBCS(contextname, ctx);
+
 		Assimp::Importer import;
 		bool animation_only = false;
-		const aiScene *scene = import.ReadFileFromMemory(buffer, buffer_length, MakeImportFlags(options, animation_only));
+		bool keep_rootxform = false;
+		const aiScene *scene = import.ReadFileFromMemory(buffer, buffer_length, MakeImportFlags(options, animation_only, keep_rootxform), ctx);
+		if (!scene)
+			psys->GetLog()->Print(_T("ModelResourceType::ReadFromMemory Error importing: %s\n"), import.GetErrorString());
 
 		tstring sourcename;
 		if (!contextname || !*contextname)
@@ -1421,7 +1421,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System 
 			contextname = sourcename.c_str();
 		}
 
-		*returned_data = ImportModel(psys, scene, nullptr, contextname, animation_only);
+		*returned_data = ImportModel(psys, scene, nullptr, contextname, animation_only, keep_rootxform);
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;
 	}

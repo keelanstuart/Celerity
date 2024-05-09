@@ -77,7 +77,6 @@ C3EditView::C3EditView() noexcept
 	m_LCBuf = nullptr;
 	m_AuxBuf = nullptr;
 	m_SSBuf = nullptr;
-	m_ColorTarg = { };
 	m_DepthTarg = nullptr;
 	m_ShadowTarg = nullptr;
 	m_BTex = { };
@@ -140,10 +139,6 @@ void C3EditView::DestroySurfaces()
 	C3_SAFERELEASE(m_LCBuf);
 
 	C3_SAFERELEASE(m_AuxBuf);
-
-	for (auto p : m_ColorTarg)
-		C3_SAFERELEASE(p);
-	m_ColorTarg.clear();
 
 	C3_SAFERELEASE(m_DepthTarg);
 
@@ -729,7 +724,7 @@ void C3EditView::HandleInput(c3::Positionable *pcampos)
 	float ldd = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSY, 1);
 	float ldl = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGX, 1);
 	float ldr = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSX, 1);
-	if (ldu > 0 || ldd > 0 || ldl > 0 || ldr)
+	if (ldu != 0 || ldd != 0 || ldl != 0 || ldr != 0)
 		AdjustYawPitch((ldl - ldr) * 4, (ldu - ldd) * 4, false);
 
 	bool center = theApp.m_C3->GetInputManager()->ButtonPressed(c3::InputDevice::VirtualButton::LETTER_C);
@@ -781,6 +776,7 @@ C3EditDoc* C3EditView::GetDocument() const // non-debug version is inline
 void C3EditView::OnDestroy()
 {
 	KillTimer('DRAW');
+	KillTimer('SIZE');
 	KillTimer('PICK');
 	KillTimer('PROP');
 

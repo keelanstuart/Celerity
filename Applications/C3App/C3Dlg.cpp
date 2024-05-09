@@ -4,6 +4,7 @@
 
 #include "pch.h"
 #include "framework.h"
+
 #include "C3App.h"
 #include "C3Dlg.h"
 #include "afxdialogex.h"
@@ -27,7 +28,6 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_Rend = nullptr;
 	m_GBuf = nullptr;
 	m_LCBuf = nullptr;
-	memset(m_BBuf, 0, sizeof(c3::FrameBuffer *) * BLURTARGS);
 	m_FS_combine = m_VS_combine = nullptr;
 	m_SP_combine = nullptr;
 	m_FS_resolve = m_VS_resolve = nullptr;
@@ -111,7 +111,233 @@ void C3Dlg::RegisterAction(const TCHAR *name, c3::ActionMapper::ETriggerType tt,
 };
 
 
-// C3Dlg message handlers
+void C3Dlg::DestroySurfaces()
+{
+	C3_SAFERELEASE(m_GBuf);
+
+	C3_SAFERELEASE(m_LCBuf);
+
+	for (auto p : m_ColorTarg)
+		C3_SAFERELEASE(p);
+	m_ColorTarg.clear();
+
+	C3_SAFERELEASE(m_DepthTarg);
+
+	for (auto p : m_BBuf)
+		C3_SAFERELEASE(p);
+	m_BBuf.clear();
+
+	for (auto p : m_BTex)
+		C3_SAFERELEASE(p);
+	m_BTex.clear();
+}
+
+
+void C3Dlg::CreateSurfaces()
+{
+	c3::Renderer *prend = theApp.m_C3->GetRenderer();
+	assert(prend);
+
+	CRect r;
+	GetClientRect(r);
+
+	size_t w = (size_t)((float)r.Width() / m_WindowsUIScale);
+	size_t h = (size_t)((float)r.Height() / m_WindowsUIScale);
+
+	if (!m_DepthTarg)
+		m_DepthTarg = prend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
+
+	bool gbok;
+
+	c3::FrameBuffer::TargetDesc GBufTargData[] =
+	{
+		{ _T("uSamplerDiffuseMetalness"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },	// diffuse color (rgb) and metalness (a)
+		{ _T("uSamplerNormalAmbOcc"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },		// fragment normal (rgb) and ambient occlusion (a)
+		{ _T("uSamplerPosDepth"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },			// fragment position in world space (rgb) and dpeth in screen space (a)
+		{ _T("uSamplerEmissionRoughness"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET }	// emission color (rgb) and roughness (a)
+	};
+
+	theApp.m_C3->GetLog()->Print(_T("Creating G-buffer... "));
+	if (!m_GBuf)
+		m_GBuf = prend->CreateFrameBuffer(0, _T("GBuffer"));
+	if (m_GBuf)
+		gbok = m_GBuf->Setup(_countof(GBufTargData), GBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+	size_t maxc = theApp.m_Config->GetInt(_T("graphics.blurcount"), 4);
+	for (size_t c = 0; c < maxc; c++)
+	{
+		m_BTex.push_back(prend->CreateTexture2D(w, h, c3::Renderer::TextureType::U8_3CH, 0, TEXCREATEFLAG_RENDERTARGET));
+		m_BBuf.push_back(prend->CreateFrameBuffer());
+		m_BBuf[c]->AttachDepthTarget(m_DepthTarg);
+		m_BBuf[c]->AttachColorTarget(m_BTex[c], 0);
+		m_BBuf[c]->Seal();
+		w /= 2;
+		h /= 2;
+	}
+
+	c3::FrameBuffer::TargetDesc LCBufTargData[] =
+	{
+		{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },
+	};
+
+	theApp.m_C3->GetLog()->Print(_T("Creating light combine buffer... "));
+	if (!m_LCBuf)
+		m_LCBuf = prend->CreateFrameBuffer(0, _T("LightCombine"));
+	if (m_LCBuf)
+		gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+	CRect auxr = r;
+
+	c3::FrameBuffer::TargetDesc AuxBufTargData[] =
+	{
+		{ _T("uSamplerAuxiliary"), c3::Renderer::TextureType::U8_3CH, TEXCREATEFLAG_RENDERTARGET },
+	};
+
+	UpdateShaderSurfaces();
+}
+
+
+void C3Dlg::UpdateShaderSurfaces()
+{
+	c3::Renderer *prend = theApp.m_C3->GetRenderer();
+	assert(prend);
+
+	int32_t ut;
+
+	if (m_SP_resolve)
+	{
+		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip0"));
+		m_SP_resolve->SetUniformTexture(m_BTex[0], ut);
+
+		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip1"));
+		m_SP_resolve->SetUniformTexture(m_BTex[1], ut);
+
+#if (BLURTARGS > 2)
+		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2"));
+		m_SP_resolve->SetUniformTexture(m_BTex[2], ut);
+#endif
+
+#if (BLURTARGS > 3)
+		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip3"));
+		m_SP_resolve->SetUniformTexture(m_BTex[3], ut);
+#endif
+
+		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerPosDepth"));
+		m_SP_resolve->SetUniformTexture(m_GBuf->GetColorTargetByName(_T("uSamplerPosDepth")), ut);
+	}
+
+	if (m_SP_combine)
+	{
+		uint32_t i;
+		int32_t ul;
+		for (i = 0; i < m_GBuf->GetNumColorTargets(); i++)
+		{
+			c3::Texture2D* pt = m_GBuf->GetColorTarget(i);
+			ul = m_SP_combine->GetUniformLocation(pt->GetName());
+			m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : prend->GetBlackTexture());
+		}
+
+		for (i = 0; i < m_LCBuf->GetNumColorTargets(); i++)
+		{
+			c3::Texture2D* pt = m_LCBuf->GetColorTarget(i);
+			ul = m_SP_combine->GetUniformLocation(pt->GetName());
+			m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : prend->GetBlackTexture());
+		}
+
+		ul = m_SP_combine->GetUniformLocation(_T("uSamplerShadow"));
+		if (ul >= 0)
+			m_SP_combine->SetUniformTexture((c3::Texture*)m_ShadowTarg, ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+	}
+}
+
+
+void C3Dlg::InitializeGraphics()
+{
+	m_Rend = theApp.m_C3->GetRenderer();
+	assert(m_Rend);
+
+		// Compensate for screen scaling in Windows 10+
+	m_WindowsUIScale = GetDC()->GetDeviceCaps(LOGPIXELSX) / 96.0f;
+	if ((m_WindowsUIScale > 1.0f) && (m_WindowsUIScale < 1.1f))
+		m_WindowsUIScale = 1.0f;
+
+	theApp.m_C3->GetLog()->Print(_T("Initializing Renderer... "));
+
+	if (m_Rend->Initialize(GetSafeHwnd(), 0))
+	{
+		bool gbok;
+
+		CreateSurfaces();
+
+		m_Rend->GetFont(_T("Arial"), 16);
+
+		c3::ResourceManager* rm = theApp.m_C3->GetResourceManager();
+
+		m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
+
+		theApp.m_C3->GetLog()->Print(_T("Creating shadow buffer... "));
+
+		if (!m_ShadowTarg)
+			m_ShadowTarg = m_Rend->CreateDepthBuffer(2048, 2048, c3::Renderer::DepthType::F32_SHADOW);
+
+		if (!m_SSBuf)
+			m_SSBuf = m_Rend->CreateFrameBuffer(0, _T("Shadow"));
+		if (m_SSBuf)
+			m_SSBuf->AttachDepthTarget(m_ShadowTarg);
+		gbok = m_SSBuf->Seal() == c3::FrameBuffer::RETURNCODE::RET_OK;
+		theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+		m_VS_blur = (c3::ShaderComponent*)((rm->GetResource(_T("blur.vsh"), RESF_DEMANDLOAD))->GetData());
+		m_FS_blur = (c3::ShaderComponent*)((rm->GetResource(_T("blur.fsh"), RESF_DEMANDLOAD))->GetData());
+		if (!m_SP_blur)
+			m_SP_blur = m_Rend->CreateShaderProgram();
+		if (m_SP_blur)
+		{
+			m_SP_blur->AttachShader(m_VS_blur);
+			m_SP_blur->AttachShader(m_FS_blur);
+			if (m_SP_blur->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
+			{
+				m_uBlurTex = m_SP_blur->GetUniformLocation(_T("uSamplerUpRes"));
+				m_uBlurScale = m_SP_blur->GetUniformLocation(_T("uBlurScale"));
+			}
+		}
+
+		m_VS_resolve = (c3::ShaderComponent*)((rm->GetResource(_T("resolve.vsh"), RESF_DEMANDLOAD))->GetData());
+		m_FS_resolve = (c3::ShaderComponent*)((rm->GetResource(_T("resolve.fsh"), RESF_DEMANDLOAD))->GetData());
+		if (!m_SP_resolve)
+			m_SP_resolve = m_Rend->CreateShaderProgram();
+		if (m_SP_resolve)
+		{
+			m_SP_resolve->AttachShader(m_VS_resolve);
+			m_SP_resolve->AttachShader(m_FS_resolve);
+			if (m_SP_resolve->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
+			{
+				int32_t ut;
+
+				ut = m_SP_resolve->GetUniformLocation(_T("uFocusDist"));
+				m_SP_resolve->SetUniform1(ut, 0.1f);
+
+				ut = m_SP_resolve->GetUniformLocation(_T("uFocusFalloff"));
+				m_SP_resolve->SetUniform1(ut, 0.0f);
+			}
+		}
+
+		m_VS_combine = (c3::ShaderComponent*)((rm->GetResource(_T("combine.vsh"), RESF_DEMANDLOAD))->GetData());
+		m_FS_combine = (c3::ShaderComponent*)((rm->GetResource(_T("combine.fsh"), RESF_DEMANDLOAD))->GetData());
+		if (!m_SP_combine)
+			m_SP_combine = m_Rend->CreateShaderProgram();
+		if (m_SP_combine)
+		{
+			m_SP_combine->AttachShader(m_VS_combine);
+			m_SP_combine->AttachShader(m_FS_combine);
+		}
+
+		UpdateShaderSurfaces();
+	}
+}
+
 
 BOOL C3Dlg::OnInitDialog()
 {
@@ -120,14 +346,6 @@ BOOL C3Dlg::OnInitDialog()
 	theApp.m_C3->SetOwner(GetSafeHwnd());
 
 	theApp.m_C3->GetSoundPlayer()->Initialize();
-
-	// At init, on windows
-	if (HMODULE mod = GetModuleHandle(_T("C:/Program Files/RenderDoc/renderdoc.dll")))
-	{
-		pRENDERDOC_GetAPI RENDERDOC_GetAPI = (pRENDERDOC_GetAPI)GetProcAddress(mod, "RENDERDOC_GetAPI");
-		int ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_4_2, (void **)&m_pRDoc);
-		//MessageBox(_T("RenderDoc detected -- click OK to capture frame 0"), _T("C3App"), MB_OK);
-	}
 
 	DWM_BLURBEHIND bb;
 	bb.dwFlags = DWM_BB_ENABLE | DWM_BB_TRANSITIONONMAXIMIZED | DWM_BB_BLURREGION;
@@ -183,156 +401,13 @@ BOOL C3Dlg::OnInitDialog()
 	}
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
-	theApp.m_C3->GetLog()->Print(_T("Creating Renderer... "));
-	m_Rend = theApp.m_C3->GetRenderer();
-	if (!m_Rend)
-	{
-		theApp.m_C3->GetLog()->Print(_T("failed\n"));
-		exit(-1);
-	}
-	theApp.m_C3->GetLog()->Print(_T("ok\n"));
-
-	theApp.m_C3->GetLog()->Print(_T("Initializing Renderer... "));
-	m_Rend->SetClearColor(&c3::Color::fBlack);
-	CRect r;
-	GetClientRect(r);
-	if (!m_Rend->Initialize(GetSafeHwnd(), 0))
-	{
-		theApp.m_C3->GetLog()->Print(_T("failed\n"));
-		exit(-2);
-	}
-	theApp.m_C3->GetLog()->Print(_T("ok\n"));
+	InitializeGraphics();
 
 	m_Rend->SetAlphaCoverage(0.5f, false);
-
-	// To start a frame capture, call StartFrameCapture.
-	// You can specify NULL, NULL for the device to capture on if you have only one device and
-	// either no windows at all or only one window, and it will capture from that device.
-	// See the documentation below for a longer explanation
-	if (m_pRDoc)
-		m_pRDoc->StartFrameCapture(NULL, NULL);
 
 	c3::ResourceManager *rm = theApp.m_C3->GetResourceManager();
 
 	m_Rend->FlushErrors(_T("%s %d"), __FILEW__, __LINE__);
-
-	size_t w = r.Width();
-	size_t h = r.Height();
-
-	m_DepthTarg = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
-	m_ShadowTarg = m_Rend->CreateDepthBuffer(4096, 4096, c3::Renderer::DepthType::F32_SHADOW);
-
-	bool gbok = false;
-
-	theApp.m_C3->GetLog()->Print(_T("Creating G-buffer... "));
-	m_GBuf = m_Rend->CreateFrameBuffer(0, _T("GBuffer"));
-	gbok = m_GBuf->Setup(_countof(GBufTargData), GBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
-	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
-
-	for (size_t c = 0; c < BLURTARGS; c++)
-	{
-		m_BTex[c] = m_Rend->CreateTexture2D(w, h, c3::Renderer::TextureType::U8_3CH, 0, TEXCREATEFLAG_RENDERTARGET);
-		m_BBuf[c] = m_Rend->CreateFrameBuffer();
-		m_BBuf[c]->AttachDepthTarget(m_DepthTarg);
-		m_BBuf[c]->AttachColorTarget(m_BTex[c], 0);
-		m_BBuf[c]->Seal();
-		w /= 2;
-		h /= 2;
-	}
-
-	theApp.m_C3->GetLog()->Print(_T("Creating light combine buffer... "));
-	m_LCBuf = m_Rend->CreateFrameBuffer(0, _T("LightCombine"));
-	gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
-	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
-
-	theApp.m_C3->GetLog()->Print(_T("Creating shadow buffer(s)... "));
-	m_SSBuf = m_Rend->CreateFrameBuffer(0, _T("Shadow"));
-	m_SSBuf->AttachDepthTarget(m_ShadowTarg);
-	gbok = m_SSBuf->Seal() == c3::FrameBuffer::RETURNCODE::RET_OK;
-	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
-
-	m_VS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.vsh"), RESF_DEMANDLOAD))->GetData());
-	m_FS_blur = (c3::ShaderComponent *)((rm->GetResource(_T("blur.fsh"), RESF_DEMANDLOAD))->GetData());
-	m_SP_blur = m_Rend->CreateShaderProgram();
-	if (m_SP_blur)
-	{
-		m_SP_blur->AttachShader(m_VS_blur);
-		m_SP_blur->AttachShader(m_FS_blur);
-		if (m_SP_blur->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
-		{
-			m_uBlurTex = m_SP_blur->GetUniformLocation(_T("uSamplerUpRes"));
-			m_uBlurScale = m_SP_blur->GetUniformLocation(_T("uBlurScale"));
-		}
-	}
-
-	m_VS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.vsh"), RESF_DEMANDLOAD))->GetData());
-	m_FS_resolve = (c3::ShaderComponent *)((rm->GetResource(_T("resolve.fsh"), RESF_DEMANDLOAD))->GetData());
-	m_SP_resolve = m_Rend->CreateShaderProgram();
-	if (m_SP_resolve)
-	{
-		m_SP_resolve->AttachShader(m_VS_resolve);
-		m_SP_resolve->AttachShader(m_FS_resolve);
-		if (m_SP_resolve->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
-		{
-			int32_t ut;
-
-			ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip0"));
-			m_SP_resolve->SetUniformTexture(m_BTex[0], ut);
-
-			ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip1"));
-			m_SP_resolve->SetUniformTexture(m_BTex[1], ut);
-
-#if (BLURTARGS > 2)
-			ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2"));
-			m_SP_resolve->SetUniformTexture(m_BTex[2], ut);
-#endif
-
-#if (BLURTARGS > 3)
-			ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip3"));
-			m_SP_resolve->SetUniformTexture(m_BTex[3], ut);
-#endif
-
-			ut = m_SP_resolve->GetUniformLocation(_T("uSamplerPosDepth"));
-			m_SP_resolve->SetUniformTexture(m_GBuf->GetColorTargetByName(_T("uSamplerPosDepth")), ut);
-
-			ut = m_SP_resolve->GetUniformLocation(_T("uFocusDist"));
-			m_SP_resolve->SetUniform1(ut, 0.1f);
-
-			ut = m_SP_resolve->GetUniformLocation(_T("uFocusFalloff"));
-			m_SP_resolve->SetUniform1(ut, 0.0f);
-		}
-	}
-
-	m_VS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.vsh"), RESF_DEMANDLOAD))->GetData());
-	m_FS_combine = (c3::ShaderComponent *)((rm->GetResource(_T("combine.fsh"), RESF_DEMANDLOAD))->GetData());
-	m_SP_combine = m_Rend->CreateShaderProgram();
-	if (m_SP_combine)
-	{
-		m_SP_combine->AttachShader(m_VS_combine);
-		m_SP_combine->AttachShader(m_FS_combine);
-		if (m_SP_combine->Link() == c3::ShaderProgram::RETURNCODE::RET_OK)
-		{
-			uint32_t i;
-			int32_t ul;
-			for (i = 0; i < m_GBuf->GetNumColorTargets(); i++)
-			{
-				c3::Texture2D *pt = m_GBuf->GetColorTarget(i);
-				ul = m_SP_combine->GetUniformLocation(pt->GetName());
-				m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : m_Rend->GetBlackTexture());
-			}
-
-			for (i = 0; i < m_LCBuf->GetNumColorTargets(); i++)
-			{
-				c3::Texture2D* pt = m_LCBuf->GetColorTarget(i);
-				ul = m_SP_combine->GetUniformLocation(pt->GetName());
-				m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : m_Rend->GetBlackTexture());
-			}
-
-			ul = m_SP_combine->GetUniformLocation(_T("uSamplerShadow"));
-			if (ul >= 0)
-				m_SP_combine->SetUniformTexture((c3::Texture *)m_ShadowTarg, ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
-		}
-	}
 
 	m_WorldRoot = m_Factory->Build();
 	m_WorldRoot->AddComponent(c3::Positionable::Type());
@@ -345,7 +420,7 @@ BOOL C3Dlg::OnInitDialog()
 	m_GUIRoot->AddComponent(c3::Positionable::Type());
 	m_GUIRoot->AddComponent(c3::Scriptable::Type());
 	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_GUI_ROOT, m_GUIRoot);
-	theApp.m_C3->GetLog()->Print(_T("World root created and registered\n"));
+	theApp.m_C3->GetLog()->Print(_T("GUI root created and registered\n"));
 
 	m_CameraRoot = m_Factory->Build();
 	m_CameraRoot->SetName(_T("CameraRoot"));
@@ -390,7 +465,6 @@ BOOL C3Dlg::OnInitDialog()
 	{
 		puicam->SetProjectionMode(c3::Camera::EProjectionMode::PM_ORTHOGRAPHIC);
 		puicam->SetPolarDistance(10.0f);
-		puicam->SetOrthoDimensions((float)w, (float)h);
 	}
 
 	if (puicampos)
@@ -405,43 +479,11 @@ BOOL C3Dlg::OnInitDialog()
 	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_GUI_CAMERA, m_GUICamera);
 	theApp.m_C3->GetLog()->Print(_T("Camera hierarchy created and registered\n"));
 
-	{
-		c3::Material *refmtl = m_Rend->GetMaterialManager()->CreateMaterial();
-		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, m_Rend->GetBlackTexture());
-		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_EMISSIVE, (c3::Texture *)rm->GetResource(_T("space1.jpg"), RESF_DEMANDLOAD)->GetData());
-		refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
-		c3::Model *sphere = c3::Model::Create(m_Rend);
-		c3::Model::MeshIndex mi = sphere->AddMesh(m_Rend->GetSphereMesh());
-		c3::Model::NodeIndex ni = sphere->AddNode();
-		sphere->AssignMeshToNode(ni, mi);
-		sphere->SetMaterial(mi, refmtl);
-		const c3::ResourceType *rt = rm->FindResourceTypeByName(_T("Model"));
-		rm->GetResource(_T("[spacesphere.model]"), RESF_CREATEENTRYONLY, rt, sphere);
-	}
-
-	m_SkyboxRoot = m_Factory->Build();
-	m_SkyboxRoot->SetName(_T("Skybox"));
-	m_SkyboxRoot->GetProperties()->CreateProperty(_T("Model"), 'MODF')->SetString(_T("[spacesphere.model]"));
-	m_SkyboxRoot->GetProperties()->CreateProperty(_T("RenderMethod"), 'C3RM')->SetString(_T("std.c3rm"));
-	m_SkyboxRoot->AddComponent(c3::Scriptable::Type());
-	c3::Positionable *ppos = (c3::Positionable *)m_SkyboxRoot->AddComponent(c3::Positionable::Type());
-	ppos->SetScl(-1000.0f, -1000.0f, -1000.0f);
-	m_SkyboxRoot->AddComponent(c3::ModelRenderer::Type());
-	m_SkyboxRoot->Flags().SetAll(OF_UPDATE | OF_DRAW | OF_DRAWINEDITOR | OF_TRACKCAMX | OF_TRACKCAMY | OF_TRACKCAMZ | OF_TRACKCAMLITERAL);
-	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_SKYBOXROOT, m_SkyboxRoot);
-	theApp.m_C3->GetLog()->Print(_T("Skybox created and registered\n"));
-
 	props::IProperty *psp = m_WorldRoot->GetProperties()->GetPropertyById('SRCF');
 	if (psp)
-		psp->SetString(_T("c3demo.c3js"));
-
-	psp = m_CameraRoot->GetProperties()->GetPropertyById('SRCF');
-	if (psp)
-		psp->SetString(_T("Camera.c3js"));
-
-	psp = m_SkyboxRoot->GetProperties()->GetPropertyById('SRCF');
-	if (psp)
-		psp->SetString(_T("Skybox.c3js"));
+	{
+		psp->SetString(theApp.m_StartScript.c_str());
+	}
 
 	m_DrawTimerId = SetTimer('DRAW', 33, nullptr);
 
@@ -514,7 +556,9 @@ void C3Dlg::OnPaint()
 		glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
 		m_Rend->SetSunShadowMatrix(&depthMVP);
 
-		m_SkyboxRoot->Update(dt);
+		c3::Object *skybox_root = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_SKYBOXROOT);
+		if (skybox_root)
+			skybox_root->Update(dt);
 		m_WorldRoot->Update(dt);
 		m_GUIRoot->Update(dt);
 
@@ -527,7 +571,8 @@ void C3Dlg::OnPaint()
 			m_Rend->SetAlphaPassRange(254.9f / 255.0f);
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
-			m_SkyboxRoot->Render();
+			if (skybox_root)
+				skybox_root->Render();
 			m_WorldRoot->Render();
 
 			// Shadow pass
@@ -557,7 +602,8 @@ void C3Dlg::OnPaint()
 			m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
 			float bs = 2.0f;
-			for (int b = 0; b < BLURTARGS - 1; b++)
+			int maxb = (int)m_BBuf.size() - 1;
+			for (int b = 0; b < maxb; b++)
 			{
 				m_Rend->UseFrameBuffer(m_BBuf[b + 1], UFBFLAG_FINISHLAST);
 				m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
@@ -648,12 +694,6 @@ void C3Dlg::Cleanup()
 		m_CameraRoot->Release();
 	}
 	m_CameraRoot = m_CameraArm = m_Camera = nullptr;
-
-	if (m_SkyboxRoot)
-	{
-		m_SkyboxRoot->Release();
-		m_SkyboxRoot = nullptr;
-	}
 
 	if (m_SP_combine)
 	{

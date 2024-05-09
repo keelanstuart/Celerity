@@ -125,6 +125,21 @@ bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
 			{
 				m_pMethod = (RenderMethod *)(pres->GetData());
 
+				std::function<void(size_t)> _SetTechIdx = [&](size_t tidx)
+				{
+					if (tidx < m_pMethod->GetNumTechniques())
+					{
+						if (m_TechIdx_Override.has_value())
+							*m_TechIdx_Override = tidx;
+						else
+							m_TechIdx_Override = std::make_optional<size_t>(tidx);
+					}
+					else
+					{
+						m_TechIdx_Override.reset();
+					}
+				};
+
 				if (props::IProperty *pp = m_pOwner->GetProperties()->GetPropertyById('C3RT'))
 				{
 					size_t t;
@@ -133,15 +148,15 @@ bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
 						case props::IProperty::PROPERTY_TYPE::PT_INT:
 						{
 							t = pp->AsInt();
-							if (t < m_pMethod->GetNumTechniques())
-								*m_TechIdx_Override = t;
+							_SetTechIdx(t);
 							break;
 						}
 
 						case props::IProperty::PROPERTY_TYPE::PT_STRING:
 						{
-							if (m_pMethod->FindTechnique(pp->AsString(), t))
-								*m_TechIdx_Override = t;
+							t = -1;
+							m_pMethod->FindTechnique(pp->AsString(), t);
+							_SetTechIdx(t);
 							break;
 						}
 					}

@@ -76,8 +76,8 @@ BOOL CResourcePathEditorDlg::OnInitDialog()
 	m_LastSel = (int)theApp.m_Config->GetInt(_T("gui.resource_path_editor.selection"), 0);
 	pcb->SetCurSel(m_LastSel);
 
-	UpdateExtList(cfg_exts.front().c_str());
-	UpdatePathList(cfg_paths.front().c_str());
+	UpdateExtList(cfg_exts[m_LastSel].c_str());
+	UpdatePathList(cfg_paths[m_LastSel].c_str());
 
 	return TRUE;  // return TRUE unless you set the focus to a control
     // EXCEPTION: OCX Property Pages should return FALSE

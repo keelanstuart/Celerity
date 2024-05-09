@@ -23,6 +23,7 @@ namespace c3
 		GLuint m_glID;
 
 		DepthBuffer *m_DepthTarget;
+		bool m_OwnsDepth;
 		float m_ClearDepth;
 		int8_t m_ClearStencil;
 
@@ -62,6 +63,7 @@ namespace c3
 		{
 			Texture2D *tex;
 			UClearColor clearcolor;
+			bool owns;
 		} STargetData;
 
 		typedef std::vector<STargetData> TColorTargetArray;
@@ -83,6 +85,8 @@ namespace c3
 		virtual const TCHAR *GetName() const;
 
 		virtual RETURNCODE Setup(size_t numtargs, const TargetDesc *ptargdescs, DepthBuffer *pdb, RECT &r);
+
+		virtual RETURNCODE Teardown();
 
 		virtual RETURNCODE AttachColorTarget(Texture2D *target, size_t position);
 

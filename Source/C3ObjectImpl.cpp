@@ -39,6 +39,7 @@ ObjectImpl::~ObjectImpl()
 	{
 		child->Release();
 	}
+//	m_Children.clear();
 
 	if (m_Props)
 	{
@@ -424,7 +425,6 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, M
 	bool ret = false;
 
 	Positionable *ppos = (Positionable *)((ObjectImpl *)this)->FindComponent(Positionable::Type());
-	OmniLight *plight = (OmniLight *)((ObjectImpl *)this)->FindComponent(OmniLight::Type());
 
 	if (ppos)
 	{

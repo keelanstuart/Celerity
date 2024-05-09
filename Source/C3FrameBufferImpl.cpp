@@ -64,6 +64,7 @@ FrameBufferImpl::~FrameBufferImpl()
 void FrameBufferImpl::Release()
 {
 	m_Rend->RemoveFrameBuffer(m_Name.c_str());
+	Teardown();
 
 	delete this;
 }
@@ -80,6 +81,7 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Setup(size_t numtargs, const TargetDesc
 	size_t w = r.right - r.left;
 	size_t h = r.bottom - r.top;
 
+	m_OwnsDepth = (pdb == nullptr);
 	if (!pdb)
 		pdb = m_Rend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS, 0);
 
@@ -124,10 +126,33 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Setup(size_t numtargs, const TargetDesc
 		if (ret != RETURNCODE::RET_OK)
 			return ret;
 
+		m_ColorTarget[i].owns = true;
+
 		pt->SetName(ptargdescs[i].name);
 	}
 
 	return Seal();
+}
+
+
+FrameBuffer::RETURNCODE FrameBufferImpl::Teardown()
+{
+	if (m_OwnsDepth)
+	{
+		C3_SAFERELEASE(m_DepthTarget);
+	}
+
+	for (size_t i = 0; i < m_ColorTarget.size(); i++)
+	{
+		if (m_ColorTarget[i].owns)
+		{
+			C3_SAFERELEASE(m_ColorTarget[i].tex);
+		}
+	}
+
+	m_ColorTarget.clear();
+
+	return FrameBuffer::RETURNCODE::RET_OK;
 }
 
 
@@ -142,6 +167,7 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachColorTarget(Texture2D *target, si
 
 		m_ColorTarget[position].tex = target;
 		m_ColorTarget[position].clearcolor.pu = 0;
+		m_ColorTarget[position].owns = false;
 
 		if (target)
 		{

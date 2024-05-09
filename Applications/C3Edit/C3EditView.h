@@ -68,7 +68,6 @@ protected:
 	c3::FrameBuffer *m_LCBuf;
 	c3::FrameBuffer *m_AuxBuf;
 	c3::FrameBuffer *m_SSBuf;
-	std::vector<c3::Texture2D *> m_ColorTarg;
 	c3::DepthBuffer *m_DepthTarg;
 	c3::DepthBuffer *m_ShadowTarg;
 	std::vector<c3::Texture2D *> m_BTex;

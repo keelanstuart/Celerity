@@ -24,6 +24,7 @@ public:
 	c3::System *m_C3;
 	c3::Configuration *m_Config;
 	tstring m_AppDataRoot;
+	tstring m_StartScript;
 
 public:
 	C3App();

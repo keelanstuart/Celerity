@@ -74,7 +74,7 @@ DepthBufferImpl::DepthBufferImpl(RendererImpl* prend, size_t width, size_t heigh
 			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 			prend->gl.TexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-			prend->UseTexture(0, nullptr);
+			//prend->UseTexture(0, nullptr);
 
 		}
 
