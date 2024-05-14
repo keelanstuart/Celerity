@@ -707,14 +707,14 @@ SORT_BRIEF_DOCS        = NO
 # detailed member documentation.
 # The default value is: NO.
 
-SORT_MEMBERS_CTORS_1ST = NO
+SORT_MEMBERS_CTORS_1ST = YES
 
 # If the SORT_GROUP_NAMES tag is set to YES then doxygen will sort the hierarchy
 # of group names into alphabetical order. If set to NO the group names will
 # appear in their defined order.
 # The default value is: NO.
 
-SORT_GROUP_NAMES       = NO
+SORT_GROUP_NAMES       = YES
 
 # If the SORT_BY_SCOPE_NAME tag is set to YES, the class list will be sorted by
 # fully-qualified names, including namespaces. If set to NO, the class list will
@@ -724,7 +724,7 @@ SORT_GROUP_NAMES       = NO
 # list.
 # The default value is: NO.
 
-SORT_BY_SCOPE_NAME     = NO
+SORT_BY_SCOPE_NAME     = YES
 
 # If the STRICT_PROTO_MATCHING option is enabled and doxygen fails to do proper
 # type resolution of all parameters of a function it will reject a match between
@@ -1591,14 +1591,14 @@ DOCSET_PUBLISHER_NAME  = Publisher
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-GENERATE_HTMLHELP      = NO
+GENERATE_HTMLHELP      = YES
 
 # The CHM_FILE tag can be used to specify the file name of the resulting .chm
 # file. You can add a path in front of the file if the result should not be
 # written to the html output directory.
 # This tag requires that the tag GENERATE_HTMLHELP is set to YES.
 
-CHM_FILE               =
+CHM_FILE               = D:\temp\Celerity\Docs\Celerity3.chm
 
 # The HHC_LOCATION tag can be used to specify the location (absolute path
 # including file name) of the HTML help compiler (hhc.exe). If non-empty,
@@ -1627,14 +1627,14 @@ CHM_INDEX_ENCODING     =
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTMLHELP is set to YES.
 
-BINARY_TOC             = NO
+BINARY_TOC             = YES
 
 # The TOC_EXPAND flag can be set to YES to add extra items for group members to
 # the table of contents of the HTML help documentation and to the tree view.
 # The default value is: NO.
 # This tag requires that the tag GENERATE_HTMLHELP is set to YES.
 
-TOC_EXPAND             = NO
+TOC_EXPAND             = YES
 
 # The SITEMAP_URL tag is used to specify the full URL of the place where the
 # generated documentation will be placed on the server by the user during the
