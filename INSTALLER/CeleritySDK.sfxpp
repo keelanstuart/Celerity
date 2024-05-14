@@ -33,7 +33,7 @@
 
 <powerprops:property_set>
 <powerprops:property id="DSTP" type="STRING">\bin</powerprops:property>
-<powerprops:property id="EXCL" type="STRING">gllibgen64.exe</powerprops:property>
+<powerprops:property id="EXCL" type="STRING">gllibgen64.exe;ModelViewer64.dll</powerprops:property>
 <powerprops:property id="NAME" type="STRING">*64.exe</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING">CreateStartMenuEntry();</powerprops:property>
@@ -201,19 +201,6 @@
 <file2>
 
 <powerprops:property_set>
-<powerprops:property id="DSTP" type="STRING">\extras</powerprops:property>
-<powerprops:property id="EXCL" type="STRING"></powerprops:property>
-<powerprops:property id="NAME" type="STRING">C3EditDefaults.reg</powerprops:property>
-<powerprops:property id="PRES" type="STRING"></powerprops:property>
-<powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Applications\C3Edit\C3EditDefaults.reg</powerprops:property>
-</powerprops:property_set>
-
-</file2>
-
-<file2>
-
-<powerprops:property_set>
 <powerprops:property id="DSTP" type="STRING">\lib</powerprops:property>
 <powerprops:property id="EXCL" type="STRING"></powerprops:property>
 <powerprops:property id="NAME" type="STRING">Celerity64.lib</powerprops:property>
@@ -281,10 +268,36 @@
 <powerprops:property_set>
 <powerprops:property id="DSTP" type="STRING">\extras</powerprops:property>
 <powerprops:property id="EXCL" type="STRING"></powerprops:property>
+<powerprops:property id="NAME" type="STRING">Celerity64.pdb</powerprops:property>
+<powerprops:property id="PRES" type="STRING"></powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\Celerity64.pdb</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
+<file2>
+
+<powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">\extras</powerprops:property>
+<powerprops:property id="EXCL" type="STRING"></powerprops:property>
 <powerprops:property id="NAME" type="STRING">*.props</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
 <powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\extras</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
+<file2>
+
+<powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">\extras</powerprops:property>
+<powerprops:property id="EXCL" type="STRING"></powerprops:property>
+<powerprops:property id="NAME" type="STRING">C3EditDefaults.reg</powerprops:property>
+<powerprops:property id="PRES" type="STRING"></powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Applications\C3Edit\C3EditDefaults.reg</powerprops:property>
 </powerprops:property_set>
 
 </file2>

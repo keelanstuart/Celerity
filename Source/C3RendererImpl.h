@@ -47,6 +47,9 @@ namespace c3
 		RECT m_Viewport;
 		float m_LastPresentTime;
 
+		static Texture *s_TexCache[32];
+		static uint32_t s_SamplerCache[32];
+
 		props::TFlags64 m_BeginSceneFlags;
 
 		size_t m_FrameNum;

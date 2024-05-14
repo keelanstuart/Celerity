@@ -17,7 +17,7 @@ namespace c3
 
 	public:
 
-		enum RETURNCODE
+		using RETURNCODE = enum
 		{
 			RET_OK = 0,
 			RET_ALREADY_LOCKED,

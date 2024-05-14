@@ -40,6 +40,7 @@ namespace c3
 			std::optional<tstring> m_ShaderCompFilename[Renderer::ShaderComponentType::ST_NUMTYPES];
 			std::optional<tstring> m_FrameBufferName;
 			props::TFlags64 m_FrameBufferFlags;
+			Renderer::RenderStateOverrideFlags m_StateRestorationMask;
 			std::optional<Renderer::BlendMode> m_BlendMode;
 			std::optional<Renderer::BlendEquation> m_BlendEq;
 			std::optional<Renderer::CullMode> m_CullMode;

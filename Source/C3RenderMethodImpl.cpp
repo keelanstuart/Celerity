@@ -45,6 +45,9 @@ RenderMethodImpl::PassImpl::PassImpl()
 	m_FrameBuffer = nullptr;
 	m_FrameBufferFlags = 0;
 	m_pOwner = nullptr;
+	m_StateRestorationMask.Set(-1);
+
+
 }
 
 
@@ -149,7 +152,7 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 			prend->UseProgram(m_ShaderProg);
 	}
 
-	return ret;
+	return ret & m_StateRestorationMask;
 }
 
 
@@ -634,6 +637,16 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	if (!pavalue)
 		return false;
 
+	const tinyxml2::XMLAttribute *papersist = proot->FindAttribute("persist");
+	bool persist = false;
+	if (papersist)
+	{
+		TCHAR *pp;
+		CONVERT_MBCS2TCS(papersist->Value(), pp);
+		if (!_tcsicmp(_T("yes"), pp) || !_tcsicmp(_T("1"), pp) || !_tcsicmp(_T("true"), pp))
+			persist = true;
+	}
+
 	TCHAR *v;
 	CONVERT_MBCS2TCS(pavalue->Value(), v);
 	tstring value = v;
@@ -718,6 +731,9 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	}
 	else if (name == _T("blendmode"))
 	{
+		if (persist)
+			m_StateRestorationMask.Clear(RSOF_BLENDMODE);
+
 		if (value == _T("add"))
 		{
 			m_BlendMode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ADD);
@@ -745,6 +761,9 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	}
 	else if (name == _T("blendeq"))
 	{
+		if (persist)
+			m_StateRestorationMask.Clear(RSOF_BLENDEQ);
+
 		if (value == _T("add"))
 		{
 			m_BlendEq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_ADD);
@@ -768,6 +787,9 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	}
 	else if (name == _T("cullmode"))
 	{
+		if (persist)
+			m_StateRestorationMask.Clear(RSOF_CULLMODE);
+
 		if (value == _T("front"))
 		{
 			m_CullMode = std::make_optional<Renderer::CullMode>(Renderer::CullMode::CM_FRONT);
@@ -787,6 +809,9 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	}
 	else if (name == _T("windingorder"))
 	{
+		if (persist)
+			m_StateRestorationMask.Clear(RSOF_WINDINGORDER);
+
 		if (value == _T("cw"))
 		{
 			m_WindingOrder = std::make_optional<Renderer::WindingOrder>(Renderer::WindingOrder::WO_CW);
@@ -798,6 +823,9 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	}
 	else if (name == _T("depthmode"))
 	{
+		if (persist)
+			m_StateRestorationMask.Clear(RSOF_DEPTHMODE);
+
 		if (value == _T("readwrite"))
 		{
 			m_DepthMode = std::make_optional<Renderer::DepthMode>(Renderer::DepthMode::DM_READWRITE);
@@ -817,6 +845,9 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	}
 	else if (name == _T("fillmode"))
 	{
+		if (persist)
+			m_StateRestorationMask.Clear(RSOF_FILLMODE);
+
 		if (value == _T("fill"))
 		{
 			m_FillMode = std::make_optional<Renderer::FillMode>(Renderer::FillMode::FM_FILL);

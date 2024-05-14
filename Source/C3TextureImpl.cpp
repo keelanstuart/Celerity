@@ -244,7 +244,11 @@ Texture::RETURNCODE Texture2DImpl::Unlock()
 
 	Bind();
 	if (m_Type < Renderer::TextureType::DXT1)
-		m_Rend->gl.TexSubImage2D(GL_TEXTURE_2D, (GLint)m_LockMip, 0, 0, GLsizei(m_Width >> m_LockMip), GLsizei(m_Height >> m_LockMip), m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
+	{
+		GLenum fmt = m_Rend->GLFormat(m_Type);
+		GLenum type = m_Rend->GLType(m_Type);
+		m_Rend->gl.TexSubImage2D(GL_TEXTURE_2D, (GLint)m_LockMip, 0, 0, GLsizei(m_Width >> m_LockMip), GLsizei(m_Height >> m_LockMip), fmt, type, m_Buffer);
+	}
 	else
 	{
 		m_Rend->gl.CompressedTexSubImage2D(GL_TEXTURE_2D, (GLint)m_LockMip, 0, 0, GLsizei(m_Width >> m_LockMip), GLsizei(m_Height >> m_LockMip), m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);

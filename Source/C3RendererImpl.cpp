@@ -34,6 +34,9 @@ using namespace c3;
 const static GLenum testvals[Renderer::DT_NUMTESTS] = {GL_NEVER, GL_LESS, GL_LEQUAL, GL_EQUAL, GL_NOTEQUAL, GL_GEQUAL, GL_GREATER, GL_ALWAYS};
 const static GLenum stencilvals[Renderer::SO_NUMOPMODES] = {GL_KEEP, GL_ZERO, GL_REPLACE, GL_INCR, GL_INCR_WRAP, GL_DECR, GL_DECR_WRAP, GL_INVERT};
 
+Texture *RendererImpl::s_TexCache[32] = {0};
+uint32_t RendererImpl::s_SamplerCache[32] = {0};
+
 RendererImpl::RendererImpl(SystemImpl *psys)
 {
 	m_pSys = psys;
@@ -644,7 +647,7 @@ void RendererImpl::Shutdown()
 	if (m_MatMan)
 	{
 		delete m_MatMan;
-		m_MatMan;
+		m_MatMan = nullptr;
 	}
 
 	for (auto sit : m_TexFlagsToSampler)
@@ -1580,8 +1583,18 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 	if (flags.IsSet(UFBFLAG_FINISHLAST))
 		gl.Finish();
 
-//	for (uint64_t s = 0; s < 32; s++)
-//		UseTexture(s, nullptr);
+	if (pfb)
+	{
+		// Stop using any textures that we want to render to
+		for (size_t i = 0, maxi = pfb->GetNumColorTargets(); i < maxi; i++)
+		{
+			for (uint64_t s = 0; s < 32; s++)
+			{
+				if (s_TexCache[s] == pfb->GetColorTarget(i))
+					UseTexture(s, nullptr);
+			}
+		}
+	}
 
 	if (flags.IsSet(UFBFLAG_UPDATEVIEWPORT))
 	{
@@ -1704,10 +1717,7 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 		GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27, GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31
 	};
 
-	static Texture *ptexcache[32] = {0};
-	static uint32_t samplercache[32] = {0};
-
-	if (ptex && (texflags != samplercache[texunit]))
+	if (ptex && (texflags != s_SamplerCache[texunit]))
 	{
 		GLuint sampid;
 
@@ -1771,13 +1781,13 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 
 		gl.BindSampler((GLuint)texunit, sampid);
 
-		samplercache[texunit] = texflags;
+		s_SamplerCache[texunit] = texflags;
 	}
 
-	if (ptexcache[texunit] == ptex)
+	if (s_TexCache[texunit] == ptex)
 		return;
 
-	Texture *luptex = ptex ? ptex : ptexcache[texunit];
+	Texture *luptex = ptex ? ptex : s_TexCache[texunit];
 
 	GLuint glid = NULL;
 	GLenum textype;
@@ -1820,13 +1830,10 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 		glid = (GLuint)(c3::Texture2DImpl &)*tex2d;
 	}
 
-	ptexcache[texunit] = ptex;
+	s_TexCache[texunit] = ptex;
 
-	if (ptex)
-	{
-		gl.ActiveTexture(texunitidlu[texunit]);
-		gl.BindTexture(textype, ptex ? glid : 0);
-	}
+	gl.ActiveTexture(texunitidlu[texunit]);
+	gl.BindTexture(textype, ptex ? glid : 0);
 }
 
 
