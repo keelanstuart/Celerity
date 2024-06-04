@@ -35,6 +35,7 @@ END_MESSAGE_MAP()
 C3EditDoc::C3EditDoc() noexcept
 {
 	m_RootObj = nullptr;
+	m_OperationalRootObj = nullptr;
 	m_Brush = nullptr;
 	m_TimeWarp = 1.0f;
 	m_Paused = false;
@@ -47,24 +48,15 @@ C3EditDoc::C3EditDoc() noexcept
 
 C3EditDoc::~C3EditDoc()
 {
-	if (m_Brush)
-	{
-		m_Brush->Release();
-		m_Brush = nullptr;
-	}
-
 	for (auto it : m_PerViewInfo)
 	{
 		it.second.m_Camera->Release();
 		it.second.m_GUICamera->Release();
 	}
 
-	if (m_RootObj)
-	{
-		m_RootObj->Release();
-		m_RootObj = nullptr;
-	}
-
+	C3_SAFERELEASE(m_Brush);
+	C3_SAFERELEASE(m_RootObj);
+	m_OperationalRootObj = nullptr;
 }
 
 BOOL C3EditDoc::OnNewDocument()
@@ -80,6 +72,8 @@ BOOL C3EditDoc::OnNewDocument()
 	m_RootObj->AddComponent(c3::Positionable::Type());
 	m_RootObj->AddComponent(c3::Scriptable::Type());
 	m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW | OF_EXPANDED);
+
+	m_OperationalRootObj = m_RootObj;
 
 	ResetViews();
 
@@ -309,6 +303,7 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 		m_RootObj->AddComponent(c3::Positionable::Type());
 		m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW | OF_EXPANDED);
 	}
+	m_OperationalRootObj = m_RootObj;
 
 	genio::IInputStream *is = genio::IInputStream::Create();
 	if (!is || !is->Assign(lpszPathName) || !is->Open() || !is->CanAccess())
@@ -391,15 +386,186 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 void C3EditDoc::ResetViews()
 {
+	ClearSelection();
+
 	POSITION p = m_viewList.GetHeadPosition();
 	while (p)
 	{
 		C3EditView *pv = dynamic_cast<C3EditView *>((CView *)m_viewList.GetAt(p));
 		if (pv)
-			pv->ClearSelection();
+		{
+		}
 
 		m_viewList.GetNext(p);
 	}
 
-	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
+	theApp.UpdateObjectList();
+}
+
+
+void C3EditDoc::SetBrush(c3::Object *pobj)
+{
+	C3_SAFERELEASE(m_Brush);
+
+	m_Brush = pobj;
+}
+
+void C3EditDoc::SetBrush(const TCHAR *protoname)
+{
+	c3::Object *pobj = nullptr;
+	c3::Prototype *pp = theApp.m_C3->GetFactory()->FindPrototype(protoname);
+	if (pp)
+		theApp.m_C3->GetFactory()->Build(pp);
+
+	SetBrush(pobj);
+}
+
+
+void C3EditDoc::ClearSelection()
+{
+	m_Selected.clear();
+
+	theApp.SetActiveObject(nullptr);
+
+	C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
+	if (pef->GetSafeHwnd() && pef->m_wndObjects.GetSafeHwnd())
+		pef->m_wndObjects.UpdateContents();
+
+	theApp.UpdateObjectList();
+}
+
+
+bool C3EditDoc::IsSelected(const c3::Object *obj) const
+{
+	return (std::find(m_Selected.cbegin(), m_Selected.cend(), obj) != m_Selected.cend());
+}
+
+
+void C3EditDoc::AddToSelection(const c3::Object *obj)
+{
+	if (std::find(m_Selected.cbegin(), m_Selected.cend(), obj) == m_Selected.cend())
+		m_Selected.push_back((c3::Object *)obj);
+
+	if (m_Selected.size() == 1)
+	{
+		if (m_Selected[0])
+		{
+			theApp.SetActiveObject(m_Selected[0]);
+			props::IProperty *psrcf_prop = m_Selected[0]->GetProperties()->GetPropertyById('SRCF');
+			if (psrcf_prop)
+			{
+				c3::Resource *psrcf_res = theApp.m_C3->GetResourceManager()->GetResource(psrcf_prop->AsString(), RESF_DEMANDLOAD);
+				C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
+				if (pef->GetSafeHwnd() && pef->m_wndScripting.GetSafeHwnd())
+					pef->m_wndScripting.EditScriptResource(psrcf_res);
+			}
+		}
+		else
+			m_Selected.clear();
+	}
+
+	UpdateStatusMessage();
+	theApp.UpdateObjectList();
+}
+
+
+void C3EditDoc::RemoveFromSelection(const c3::Object *obj)
+{
+	TObjectArray::iterator it = std::find(m_Selected.begin(), m_Selected.end(), obj);
+	if (it != m_Selected.cend())
+		m_Selected.erase(it);
+
+	if (m_Selected.size() == 1)
+		theApp.SetActiveObject(m_Selected[0]);
+	else
+		theApp.SetActiveObject(nullptr);
+
+	UpdateStatusMessage();
+	theApp.UpdateObjectList();
+}
+
+
+size_t C3EditDoc::GetNumSelected()
+{
+	return m_Selected.size();
+}
+
+
+c3::Object *C3EditDoc::GetSelection(size_t index) const
+{
+	if (index >= m_Selected.size())
+		return nullptr;
+
+	return (c3::Object *)m_Selected.at(index);
+}
+
+
+void C3EditDoc::SortSelectionsByDescendingDepth()
+{
+	std::function<size_t(const c3::Object *)> _ObjectDepth = [](const c3::Object *po)
+	{
+		size_t ret = 0;
+		while (po)
+		{
+			po = po->GetParent();
+			ret++;
+		}
+		return ret;
+	};
+
+	std::sort(m_Selected.begin(), m_Selected.end(), [&](const c3::Object *a, const c3::Object *b) -> bool
+	{
+		return _ObjectDepth(a) > _ObjectDepth(b);
+	});
+}
+
+
+void C3EditDoc::DoForAllSelected(SelectionFunction func)
+{
+	for (auto o : m_Selected)
+	{
+		if (o)
+			func(o);
+	}
+}
+
+
+void C3EditDoc::DoForAllSelectedBreakable(SelectionFunctionBreakable func)
+{
+	for (auto o : m_Selected)
+	{
+		if (o && !func(o))
+			return;
+	}
+}
+
+
+void C3EditDoc::UpdateStatusMessage(const c3::Object *pobj)
+{
+	static TCHAR msgbuf[256];
+
+	size_t nums = GetNumSelected();
+	if ((nums == 1) || pobj)
+	{
+		if (!pobj)
+			pobj = GetSelection(0);
+
+		GUID g = pobj->GetGuid();
+		const TCHAR *n = pobj->GetName();
+
+		_stprintf_s(msgbuf, _T("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X} \"%s\""), g.Data1, g.Data2, g.Data3,
+					g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7], n ? n : _T(""));
+	}
+	else switch (nums)
+	{
+		case 0:
+			msgbuf[0] = _T('\0');
+			break;
+
+		default:
+			_stprintf_s(msgbuf, _T("%zu Objects Selected"), nums);
+			break;
+	}
+
+	theApp.UpdateStatusMessage(msgbuf);
 }

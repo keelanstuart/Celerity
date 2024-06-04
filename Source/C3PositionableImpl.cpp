@@ -97,6 +97,37 @@ bool PositionableImpl::Initialize(Object *pobject)
 }
 
 
+void PositionableImpl::UpdateTransformsAndVectors()
+{
+	if (m_Flags.AnySet(POSFLAG_REBUILDMATRIX))
+	{
+		// Scale, rotate, then translate
+		m_Mat = glm::translate(m_Pos) * ((glm::fmat4x4)(glm::normalize(m_Ori)) * glm::scale(m_Scl));
+
+		// Make a normal matrix
+		m_MatN = glm::inverseTranspose(m_Mat);
+
+		glm::fmat4x4 tmp = (glm::fmat4x4)m_Ori;
+
+		// Recalculate our facing vector in between...
+		m_Facing = glm::normalize(tmp * glm::vec4(0, 1, 0, 0));
+
+		// Recalculate our local up vector after that...
+		m_LocalUp = glm::normalize(tmp * glm::vec4(0, 0, 1, 0));
+
+		// Recalculate the local right vector
+		m_LocalRight = glm::normalize(tmp * glm::vec4(1, 0, 0, 0));
+
+		//m_Bounds.Align(&m_Mat);
+
+		m_Flags.Clear(POSFLAG_REBUILDMATRIX);
+		m_Flags.Set(POSFLAG_MATRIXCHANGED);
+	}
+	else
+		m_Flags.Clear(POSFLAG_MATRIXCHANGED);
+}
+
+
 void PositionableImpl::Update(float elapsed_time)
 {
 	// if this object should track the camera, then move it here
@@ -129,53 +160,7 @@ void PositionableImpl::Update(float elapsed_time)
 		}
 	}
 
-	Object *pparent = m_pOwner->GetParent();
-	Positionable *pparentpos = nullptr;
-	while (pparent)
-	{
-		if ((pparentpos = dynamic_cast<Positionable *>(pparent->FindComponent(Positionable::Type()))) != nullptr)
-			break;
-
-		pparent = pparent->GetParent();
-	}
-
-	// if any parent matrix changed, then update ours as well
-	if (pparentpos && pparentpos->Flags().AnySet(POSFLAG_MATRIXCHANGED))
-		m_Flags.Set(POSFLAG_REBUILDMATRIX);
-
-	if (m_Flags.AnySet(POSFLAG_REBUILDMATRIX))
-	{
-		// Scale, rotate, then translate
-		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * ((glm::fmat4x4)(glm::normalize(m_Ori)) * glm::scale(glm::identity<glm::fmat4x4>(), m_Scl));
-
-		// Make a normal matrix
-		m_MatN = glm::inverseTranspose(m_Mat);
-
-		glm::fmat4x4 tmp = (glm::fmat4x4)m_Ori;
-
-		if (pparentpos)
-		{
-			m_Mat = *(pparentpos->GetTransformMatrix()) * m_Mat;
-			m_MatN = *(pparentpos->GetTransformMatrixNormal()) * m_MatN;
-			tmp = *(pparentpos->GetTransformMatrixNormal()) * tmp;
-		}
-
-		// Recalculate our facing vector in between...
-		m_Facing = glm::normalize(tmp * glm::vec4(0, 1, 0, 0));
-
-		// Recalculate our local up vector after that...
-		m_LocalUp = glm::normalize(tmp * glm::vec4(0, 0, 1, 0));
-
-		// Recalculate the local right vector
-		m_LocalRight = glm::normalize(tmp * glm::vec4(1, 0, 0, 0));
-
-		//m_Bounds.Align(&m_Mat);
-
-		m_Flags.Clear(POSFLAG_REBUILDMATRIX);
-		m_Flags.Set(POSFLAG_MATRIXCHANGED);
-	}
-	else
-		m_Flags.Clear(POSFLAG_MATRIXCHANGED);
+	UpdateTransformsAndVectors();
 }
 
 
@@ -198,7 +183,7 @@ bool PositionableImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void PositionableImpl::Render(Object::RenderFlags flags)
+void PositionableImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 #if 0
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
@@ -326,7 +311,7 @@ void PositionableImpl::SetOri(float x, float y, float z, float w)
 {
 	if ((m_Ori.x != x) || (m_Ori.y != y) || (m_Ori.z != z) || (m_Ori.w != w))
 	{
-		m_Ori = glm::normalize(glm::fquat(x, y, z, w));
+		m_Ori = glm::normalize(glm::fquat(w, x, y, z));
 
 		m_Flags.Set(POSFLAG_ORICHANGED);
 	}
@@ -393,7 +378,7 @@ void PositionableImpl::AdjustYaw(float dy)
 
 	glm::fquat qy = glm::angleAxis(dy, m_LocalUp);
 
-	m_Ori = glm::normalize(qy * m_Ori);
+	m_Ori = (qy * m_Ori);
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -406,7 +391,7 @@ void PositionableImpl::AdjustYawFlat(float dy)
 
 	glm::fquat qy = glm::angleAxis(dy, glm::vec3(0, 0, 1));
 
-	m_Ori = glm::normalize(qy * m_Ori);
+	m_Ori = (qy * m_Ori);
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -419,7 +404,7 @@ void PositionableImpl::AdjustPitch(float dp)
 
 	glm::fquat qp = glm::angleAxis(dp, m_LocalRight);
 
-	m_Ori = glm::normalize(qp * m_Ori);
+	m_Ori = (qp * m_Ori);
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -432,7 +417,7 @@ void PositionableImpl::AdjustRoll(float dr)
 
 	glm::fquat qr = glm::angleAxis(dr, m_Facing);
 
-	m_Ori = glm::normalize(qr * m_Ori);
+	m_Ori = (qr * m_Ori);
 
 	m_Flags.Set(POSFLAG_ORICHANGED);
 }
@@ -576,6 +561,8 @@ void PositionableImpl::AdjustScl(float dx, float dy, float dz)
 
 const glm::fmat4x4 *PositionableImpl::GetTransformMatrix(glm::fmat4x4 *mat)
 {
+	UpdateTransformsAndVectors();
+
 	if (mat)
 	{
 		*mat = m_Mat;
@@ -588,6 +575,8 @@ const glm::fmat4x4 *PositionableImpl::GetTransformMatrix(glm::fmat4x4 *mat)
 
 const glm::fmat4x4 *PositionableImpl::GetTransformMatrixNormal(glm::fmat4x4 *matn)
 {
+	UpdateTransformsAndVectors();
+
 	if (matn)
 	{
 		*matn = m_MatN;
@@ -598,7 +587,7 @@ const glm::fmat4x4 *PositionableImpl::GetTransformMatrixNormal(glm::fmat4x4 *mat
 }
 
 
-bool PositionableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
+bool PositionableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	return false;
 }

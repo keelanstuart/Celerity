@@ -152,7 +152,7 @@ bool EnvironmentModifierImpl::Prerender(Object::RenderFlags flags, int draworder
 }
 
 
-void EnvironmentModifierImpl::Render(Object::RenderFlags flags)
+void EnvironmentModifierImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
@@ -160,17 +160,18 @@ void EnvironmentModifierImpl::Render(Object::RenderFlags flags)
 	if (!m_pSkyTexture)
 	{
 		props::IProperty *pp = m_pOwner->GetProperties()->GetPropertyById('SkTx');
-		const TCHAR *s = pp ? pp->AsString() : _T("");
-
-		Resource *pres = prm->GetResource(pp->AsString(), RESF_DEMANDLOAD);
-		if (pres && (pres->GetStatus() == Resource::Status::RS_LOADED))
+		if (pp)
 		{
-			m_pSkyTexture = dynamic_cast<Texture2D *>((Texture2D *)(pres->GetData()));
-			if (!m_pSkyTexture)
-				m_pSkyTexture = pr->GetWhiteTexture();
-
+			Resource *pres = prm->GetResource(pp->AsString(), RESF_DEMANDLOAD);
+			if (pres && (pres->GetStatus() == Resource::Status::RS_LOADED))
+			{
+				m_pSkyTexture = dynamic_cast<Texture2D *>((Texture2D *)(pres->GetData()));
+			}
 		}
 	}
+
+	if (!m_pSkyTexture)
+		m_pSkyTexture = pr->GetWhiteTexture();
 
 	if (!m_pSkyMtl)
 		m_pSkyMtl = pr->GetMaterialManager()->CreateMaterial();
@@ -188,7 +189,7 @@ void EnvironmentModifierImpl::Render(Object::RenderFlags flags)
 
 	if (!m_pSkyModel)
 	{
-		Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("[hemisphere.model]"));
+		Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("[hemisphere_lo.model]"));
 		m_pSkyModel = (Model *)pres->GetData();
 	}
 
@@ -249,7 +250,7 @@ void EnvironmentModifierImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool EnvironmentModifierImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
+bool EnvironmentModifierImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	return false;
 }

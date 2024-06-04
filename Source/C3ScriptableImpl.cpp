@@ -277,7 +277,7 @@ bool ScriptableImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void ScriptableImpl::Render(Object::RenderFlags flags)
+void ScriptableImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 
 }
@@ -336,7 +336,7 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool ScriptableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
+bool ScriptableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	return false;
 }
@@ -1705,12 +1705,8 @@ void jcCreateCollisionResults(CScriptVar *c, void *userdata)
 	ret->FindChildOrCreate(_T("distance"));
 	ret->FindChildOrCreate(_T("hobj"));
 	CScriptVarLink *pf = ret->FindChildOrCreate(_T("found"));
-	CScriptVarLink *pmatsvar = ret->FindChildOrCreate(_T("PRIVATE_mats"));
-
-	MatrixStack *mats = MatrixStack::Create();
 
 	pf->m_Var->SetInt(0);
-	pmatsvar->m_Var->SetInt((int64_t)mats);
 }
 
 
@@ -1718,17 +1714,6 @@ void jcCreateCollisionResults(CScriptVar *c, void *userdata)
 void jcFreeCollisionResults(CScriptVar *c, void *userdata)
 {
 	CScriptVar *pres = c->GetParameter(_T("collision_results"));
-
-	CScriptVarLink *pmatsvar = pres->FindChild(_T("PRIVATE_mats"));
-	if (!pmatsvar)
-		return;
-
-	MatrixStack *pmats = (MatrixStack *)(pmatsvar->m_Var->GetInt());
-	if (pmats)
-	{
-		pmats->Release();
-		pmats = nullptr;
-	}
 }
 
 
@@ -1745,8 +1730,7 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 	CScriptVarLink *ret_dist = ret->FindChild(_T("distance"));
 	CScriptVarLink *ret_hobj = ret->FindChild(_T("hobj"));
 	CScriptVarLink *ret_found = ret->FindChild(_T("found"));
-	CScriptVarLink *ret_mats = ret->FindChild(_T("PRIVATE_mats"));
-	if (!(ret_dist && ret_hobj && ret_mats && ret_found))
+	if (!(ret_dist && ret_hobj && ret_found))
 	{
 		psys->GetLog()->Print(_T("JS ERROR: you must call CreateCollisionResults before calling CheckCollisions!\n"));
 		return;
@@ -1794,7 +1778,7 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 	{
 		Object *obj = nullptr;
 		float dist = FLT_MAX;
-		if (prootobj->Intersect(&raypos, &raydir, (MatrixStack *)(ret_mats->m_Var->GetInt()), &dist, &obj, OF_CHECKCOLLISIONS, 1))
+		if (prootobj->Intersect(&raypos, &raydir, nullptr, &dist, &obj, OF_CHECKCOLLISIONS, 1))
 		{
 			ret_found->m_Var->SetInt(1);
 			ret_hobj->m_Var->SetInt((int64_t)obj);

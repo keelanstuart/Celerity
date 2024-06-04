@@ -20,7 +20,6 @@ ModelRendererImpl::ModelRendererImpl() : m_Pos(0, 0, 0), m_Ori(1, 0, 0, 0), m_Sc
 	m_pMethod = nullptr;
 	m_Mod = TModOrRes(nullptr, nullptr);
 	m_Mat = glm::identity<glm::fmat4x4>();
-	m_MatN = glm::inverseTranspose(m_Mat);
 	m_Inst = nullptr;
 
 	m_Flags.SetAll(MRIF_REBUILDMATRIX);
@@ -92,21 +91,6 @@ bool ModelRendererImpl::Initialize(Object *pobject)
 
 void ModelRendererImpl::Update(float elapsed_time)
 {
-	if (!m_pPos)
-		return;
-
-	if (m_Flags.IsSet(MRIF_REBUILDMATRIX))
-	{
-		// Scale first, then rotate...
-		m_Mat = glm::scale(glm::identity<glm::fmat4x4>(), m_Scl) * (glm::fmat4x4)(glm::normalize(m_Ori));
-
-		// Then translate last... 
-		m_Mat = glm::translate(glm::identity<glm::fmat4x4>(), m_Pos) * m_Mat;
-
-		m_MatN = glm::inverseTranspose(m_Mat);
-
-		m_Flags.Clear(MRIF_REBUILDMATRIX);
-	}
 }
 
 
@@ -195,7 +179,7 @@ bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void ModelRendererImpl::Render(Object::RenderFlags flags)
+void ModelRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 
@@ -235,20 +219,7 @@ void ModelRendererImpl::Render(Object::RenderFlags flags)
 			((RendererImpl *)prend)->SetModelInstanceData((const Model::InstanceData *)m_Inst);
 		}
 
-		glm::fmat4x4 mat;
-
-		// Handle the case where we don't want models scaling... like lights...
-		// they stay the same size in the user-interactable view
-		if (!(m_pOwner->Flags().IsSet(OF_NOMODELSCALE)))
-		{
-			mat = *m_pPos->GetTransformMatrix() * m_Mat;
-		}
-		else
-		{
-			glm::fvec3 invscl = 1.0f / *(m_pPos->GetScl());
-			
-			mat = *m_pPos->GetTransformMatrix() * m_Mat * glm::scale(glm::identity<glm::fmat4x4>(), invscl);
-		}
+		glm::fmat4x4 mat = *pmat * *GetMatrix();
 
 		pmod->Draw(&mat, !flags.IsSet(RF_LOCKMATERIAL), (Model::InstanceData *)m_Inst);
 	}
@@ -343,6 +314,13 @@ const glm::fvec3 *ModelRendererImpl::GetScl(glm::fvec3 *scl)
 
 const glm::fmat4x4 *ModelRendererImpl::GetMatrix(glm::fmat4x4 *mat) const
 {
+	if (m_Flags.IsSet(MRIF_REBUILDMATRIX))
+	{
+		m_Mat = glm::translate(m_Pos) * ((glm::fmat4x4)(glm::normalize(m_Ori)) * glm::scale(m_Scl));
+
+		m_Flags.Clear(MRIF_REBUILDMATRIX);
+	}
+
 	if (!mat)
 		return &m_Mat;
 
@@ -369,7 +347,7 @@ Model::InstanceData *ModelRendererImpl::GetModelInstanceData()
 }
 
 
-bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
+bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	bool ret = false;
 
@@ -377,14 +355,14 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 
 	if (pmod)
 	{
-		mats->Push(&m_Mat);
-
 		size_t meshidx;
 		float dist;
 		size_t faceidx;
 		glm::vec2 uv;
 
-		ret = pmod->Intersect(pRayPos, pRayDir, mats, &meshidx, &dist, &faceidx, &uv);
+		glm::fmat4x4 mat = pmat ? (*pmat * *GetMatrix()) : *GetMatrix();
+
+		ret = pmod->Intersect(pRayPos, pRayDir, &mat, &meshidx, &dist, &faceidx, &uv, (const Model::InstanceData *)m_Inst);
 		if (ret && pDistance)
 		{
 			if (dist < *pDistance)
@@ -392,8 +370,6 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 			else
 				ret = false;
 		}
-
-		mats->Pop();
 	}
 
 	return ret;

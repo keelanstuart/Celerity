@@ -201,6 +201,15 @@ namespace c3
 
 		} BlendEquation;
 
+		using EResLevel = enum
+		{
+			RL_LO = 0,
+			RL_MED,
+			RL_HI,
+
+			RL_RESCOUNT
+		};
+
 		// There is an interplay between RenderMethods and Materials. Since Materials are (or can be) data driven by Models,
 		// and because RenderMethods sit logically on top of them and because it is often desirable to make them override render states set
 		// by a Material, RenderMethod Passes will return a set of RenderStateOverrideFlags indicating which states have been overridden
@@ -408,8 +417,8 @@ namespace c3
 		virtual Mesh *GetXZPlaneMesh() = NULL;
 		virtual Mesh *GetGuiRectMesh() = NULL;
 
-		virtual Mesh *GetHemisphereMesh() = NULL;
-		virtual Mesh *GetSphereMesh() = NULL;
+		virtual Mesh *GetHemisphereMesh(EResLevel lvl = RL_LO) = NULL;
+		virtual Mesh *GetSphereMesh(EResLevel lvl = RL_LO) = NULL;
 
 		virtual Texture2D *GetBlackTexture() = NULL;
 		virtual Texture2D *GetGreyTexture() = NULL;

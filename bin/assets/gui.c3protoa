@@ -1,0 +1,31 @@
+<prototypes>
+    <prototype guid="{60AF6472-1254-42EF-A921-6E843EA4BC04}" name="Label" group="GUI" flags="3">
+        <components>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{2A1A3303-B99F-4F3B-B688-5D13F4AE77D0}" name="InterfaceElement"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4" aspect="QUATERNION">0.000000,0.000000,-0.000000,1.000000</powerprops:property>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="DIMS" name="Dimensions" type="FLOAT_V2" aspect="54">400.000000,35.000000</powerprops:property>
+            <powerprops:property id="IDCi" name="Image.Color.Down" type="INT" aspect="COLOR_RGBA">4286611584</powerprops:property>
+            <powerprops:property id="IDCt" name="Text.Color.Down" type="INT" aspect="COLOR_RGBA">4286611584</powerprops:property>
+            <powerprops:property id="IFnt" name="Font" type="STRING" aspect="FONT_DESC">Arial(16)</powerprops:property>
+            <powerprops:property id="IHCi" name="Image.Color.Hover" type="INT" aspect="COLOR_RGBA">4290822336</powerprops:property>
+            <powerprops:property id="IHCt" name="Text.Color.Hover" type="INT" aspect="COLOR_RGBA">4294967295</powerprops:property>
+            <powerprops:property id="IImg" name="Image" type="STRING" aspect="FILENAME">fade_right.tga</powerprops:property>
+            <powerprops:property id="IIrm" name="Image.RenderMethod" type="STRING" aspect="FILENAME">ui.c3rm</powerprops:property>
+            <powerprops:property id="INCi" name="Image.Color.Normal" type="INT" aspect="COLOR_RGBA">33023</powerprops:property>
+            <powerprops:property id="INCt" name="Text.Color.Normal" type="INT" aspect="COLOR_RGBA">15793151</powerprops:property>
+            <powerprops:property id="ITMi" name="Image.Mode" type="ENUM">Stretch,Wrap:0</powerprops:property>
+            <powerprops:property id="ITha" name="Text.HorizontalAlignment" type="ENUM">Left,Center,Right:0</powerprops:property>
+            <powerprops:property id="ITrm" name="Text.RenderMethod" type="STRING" aspect="FILENAME">ui.c3rm</powerprops:property>
+            <powerprops:property id="ITva" name="Text.VerticalAlignment" type="ENUM">Top,Center,Bottom:0</powerprops:property>
+            <powerprops:property id="ITxt" name="Text" type="STRING">Label Text</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING" aspect="FILENAME"/>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.033000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

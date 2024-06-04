@@ -33,7 +33,7 @@
 
 <powerprops:property_set>
 <powerprops:property id="DSTP" type="STRING">\bin</powerprops:property>
-<powerprops:property id="EXCL" type="STRING">gllibgen64.exe;ModelViewer64.dll</powerprops:property>
+<powerprops:property id="EXCL" type="STRING">gllibgen64.exe;ModelViewer64.exe</powerprops:property>
 <powerprops:property id="NAME" type="STRING">*64.exe</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING">CreateStartMenuEntry();</powerprops:property>
@@ -266,6 +266,32 @@
 <file2>
 
 <powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">\docs</powerprops:property>
+<powerprops:property id="EXCL" type="STRING"></powerprops:property>
+<powerprops:property id="NAME" type="STRING">Celerity3Docs.chm</powerprops:property>
+<powerprops:property id="PRES" type="STRING"></powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Docs\Celerity3Docs.chm</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
+<file2>
+
+<powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">\samples</powerprops:property>
+<powerprops:property id="EXCL" type="STRING">*.tlog;*.lastbuildstate;*.pdb;*.user;*.log;*.recipe;*.idb;*.obj;*.ilk;*.pch;*.iobj;*.ipdb</powerprops:property>
+<powerprops:property id="NAME" type="STRING">*</powerprops:property>
+<powerprops:property id="PRES" type="STRING"></powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Samples</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
+<file2>
+
+<powerprops:property_set>
 <powerprops:property id="DSTP" type="STRING">\extras</powerprops:property>
 <powerprops:property id="EXCL" type="STRING"></powerprops:property>
 <powerprops:property id="NAME" type="STRING">Celerity64.pdb</powerprops:property>
@@ -305,6 +331,19 @@
 <file2>
 
 <powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">\bin\assets</powerprops:property>
+<powerprops:property id="EXCL" type="STRING"></powerprops:property>
+<powerprops:property id="NAME" type="STRING">*.c3protoa</powerprops:property>
+<powerprops:property id="PRES" type="STRING"></powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
+<file2>
+
+<powerprops:property_set>
 <powerprops:property id="DSTP" type="STRING">\bin\assets\shaders</powerprops:property>
 <powerprops:property id="EXCL" type="STRING"></powerprops:property>
 <powerprops:property id="NAME" type="STRING">*</powerprops:property>
@@ -331,6 +370,19 @@
 <file2>
 
 <powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">\bin\assets\scripts</powerprops:property>
+<powerprops:property id="EXCL" type="STRING">*- Copy.*</powerprops:property>
+<powerprops:property id="NAME" type="STRING">*</powerprops:property>
+<powerprops:property id="PRES" type="STRING"></powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets\Scripts</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
+<file2>
+
+<powerprops:property_set>
 <powerprops:property id="DSTP" type="STRING">\bin\assets\models</powerprops:property>
 <powerprops:property id="EXCL" type="STRING"></powerprops:property>
 <powerprops:property id="NAME" type="STRING">CeleritySymbol.X</powerprops:property>
@@ -344,12 +396,12 @@
 <file2>
 
 <powerprops:property_set>
-<powerprops:property id="DSTP" type="STRING">\samples</powerprops:property>
-<powerprops:property id="EXCL" type="STRING">*.tlog;*.lastbuildstate;*.pdb;*.user;*.log;*.recipe;*.idb;*.obj;*.ilk;*.pch;*.iobj;*.ipdb</powerprops:property>
-<powerprops:property id="NAME" type="STRING">*</powerprops:property>
+<powerprops:property id="DSTP" type="STRING">\bin\assets\models</powerprops:property>
+<powerprops:property id="EXCL" type="STRING"></powerprops:property>
+<powerprops:property id="NAME" type="STRING">Vehicles.c3z</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Samples</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\TurboCarnage\Assets\Models\Vehicles.zip</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -357,12 +409,25 @@
 <file2>
 
 <powerprops:property_set>
-<powerprops:property id="DSTP" type="STRING">\docs</powerprops:property>
+<powerprops:property id="DSTP" type="STRING">\bin\assets\models</powerprops:property>
+<powerprops:property id="EXCL" type="STRING"></powerprops:property>
+<powerprops:property id="NAME" type="STRING">apache.3ds</powerprops:property>
+<powerprops:property id="PRES" type="STRING"></powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets\Models\apache.3ds</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
+<file2>
+
+<powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">\bin\assets\models\ship</powerprops:property>
 <powerprops:property id="EXCL" type="STRING"></powerprops:property>
 <powerprops:property id="NAME" type="STRING">*</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Docs</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets\Models\Ship</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -377,7 +442,7 @@
 
 <script type="postfile">function CreateStartMenuEntry(){	var ext_idx = FILENAME.indexOf(&quot;.exe&quot;);	var name_only = FILENAME.substring(0, ext_idx);	var link_path = &quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/&quot; + name_only + &quot;.lnk&quot;;		CreateShortcut(link_path, FILEPATH, &quot;&quot;, PATH, name_only, 1, FILEPATH, 0);	Echo(&quot;Created Start Menu shortcut for \&quot;&quot; + name_only + &quot;\&quot;.\n&quot;);}</script>
 
-<script type="postinstall">if (INSTALLOK == 1){	CreateShortcut(&quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/Celerity Documentation.lnk&quot;, BASEPATH + &quot;/Docs/html/index.html&quot;, &quot;&quot;, &quot;&quot;, &quot;Celerity SDK Documentation&quot;, 1, &quot;&quot;, 0);	Echo(&quot;Created Start Menu shortcut for HTML documentation.\n&quot;);	if (GetProperty(&quot;Use C3Edit Defaults (recommended)&quot;) == 1)	{		Echo(&quot;Registering C3Edit default settings...\n&quot;);		SpawnProcess(&quot;regedit&quot;, &quot;/S C3EditDefaults.reg&quot;, BASEPATH, 1);	}}</script>
+<script type="postinstall">if (INSTALLOK == 1){	CreateShortcut(&quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/Celerity Documentation.lnk&quot;, BASEPATH + &quot;/Docs/Celerity3Docs.chm&quot;, &quot;&quot;, &quot;&quot;, &quot;Celerity3 SDK Documentation&quot;, 1, &quot;&quot;, 0);	Echo(&quot;Created Start Menu shortcut for CHM documentation.\n&quot;);	if (GetProperty(&quot;Use C3Edit Defaults (recommended)&quot;) == 1)	{		Echo(&quot;Registering C3Edit default settings...\n&quot;);		SpawnProcess(&quot;regedit&quot;, &quot;/S C3EditDefaults.reg&quot;, BASEPATH, 1);	}}</script>
 
 </scripts>
 

@@ -39,7 +39,8 @@ ObjectImpl::~ObjectImpl()
 	{
 		child->Release();
 	}
-//	m_Children.clear();
+	if (m_pParent)
+		m_pParent->RemoveChild(this);
 
 	if (m_Props)
 	{
@@ -257,22 +258,41 @@ void ObjectImpl::Update(float elapsed_time)
 }
 
 
-bool ObjectImpl::Render(Object::RenderFlags flags, int draworder)
+bool ObjectImpl::Render(Object::RenderFlags flags, int draworder, const glm::fmat4x4 *pmat)
 {
+	// if no transform was provided, build it... this is important for things like selections in the editor
+	glm::fmat4x4 imat = {};
+	if (!pmat)
+	{
+		imat = glm::identity<glm::fmat4x4>();
+		Object *ppar = m_pParent;
+		while (ppar)
+		{
+			Positionable *ppos = (Positionable *)ppar->FindComponent(Positionable::Type());
+			if (ppos)
+				imat = *ppos->GetTransformMatrix() * imat;
+			ppar = ppar->GetParent();
+		}
+		pmat = &imat;
+	}
+
 	if (m_Flags.IsSet(OF_DRAW)
 		|| (flags.IsSet(RF_EDITORDRAW) && m_Flags.IsSet(OF_DRAWINEDITOR))
 		|| (flags.IsSet(RF_SHADOW) && m_Flags.IsSet(OF_CASTSHADOW))
 		|| (flags.IsSet(RF_LIGHT) && m_Flags.IsSet(OF_LIGHT)))
 	{
+		Positionable *ppos = (Positionable *)FindComponent(Positionable::Type());
+		glm::fmat4x4 mat = ppos ? (*pmat * *ppos->GetTransformMatrix()) : *pmat;
+
 		for (const auto &it : m_Components)
 		{
 			if (it->Prerender(flags, draworder))
-				it->Render(flags);
+				it->Render(flags, &mat);
 		}
 
 		for (auto child : m_Children)
 		{
-			child->Render(flags, draworder);
+			child->Render(flags, draworder, &mat);
 		}
 
 		return true;
@@ -327,7 +347,7 @@ bool ObjectImpl::Load(genio::IInputStream *is)
 
 			// read children
 			is->ReadUINT64(ct);
-			while (ct--)
+			for (size_t i = 0; i < ct; i++)
 			{
 				Object *obj = m_pSys->GetFactory()->Build();
 				if (obj)
@@ -407,70 +427,71 @@ void ObjectImpl::PostLoad()
 }
 
 
-bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance, Object **ppHitObj, props::TFlags64 flagmask, size_t child_depth) const
+bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, Object **ppHitObj, props::TFlags64 flagmask, size_t child_depth) const
 {
-	if (!pRayPos || !pRayDir || !mats)
+	if (!pRayPos || !pRayDir)
 		return false;
 
+	// If no transform was provided, build it from the parent hierarchy
+	glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	if (!pmat)
+	{
+		const Object *ppar = this;
+		while (ppar)
+		{
+			Positionable *ppos = dynamic_cast<Positionable *>(ppar->FindComponent(Positionable::Type()));
+			if (ppos)
+				imat = *ppos->GetTransformMatrix() * imat;
+			ppar = ppar->GetParent();
+		}
+		pmat = &imat;
+	}
+
+	// Check if the object passes the flag mask
 	if (!m_Flags.AnySet(flagmask))
 		return false;
 
-	float tmpdist;
+	// Initialize distance to the maximum possible value
+	float tmpdist = FLT_MAX;
 	if (!pDistance)
 	{
 		pDistance = &tmpdist;
-		tmpdist = FLT_MAX;
 	}
 
 	bool ret = false;
+	float dist = *pDistance;
 
-	Positionable *ppos = (Positionable *)((ObjectImpl *)this)->FindComponent(Positionable::Type());
+	// Get the object's positionable transform
+	Positionable *ppos = (Positionable *)FindComponent(Positionable::Type());
+	glm::fmat4x4 mat = ppos ? (*pmat * *(ppos->GetTransformMatrix())) : *pmat;
 
-	if (ppos)
-	{
-		glm::fmat4x4 t;
-		ppos->GetTransformMatrix(&t);
-
-		mats->Push(&t);
-	}
-
-	float dist = FLT_MAX;
+	// Check intersection with components
 	for (auto comp : m_Components)
 	{
-		if (comp->Intersect(pRayPos, pRayDir, mats, &dist))
+		float compDist = dist;
+		if (comp->Intersect(pRayPos, pRayDir, &mat, &compDist))
 		{
-			if (pDistance)
+			if (compDist < *pDistance)
 			{
-				if (dist < *pDistance)
-				{
-					*pDistance = dist;
-					if (ppHitObj)
-						*ppHitObj = (Object *)this;
-				}
+				*pDistance = compDist;
+				if (ppHitObj)
+					*ppHitObj = const_cast<Object *>(static_cast<const Object *>(this));
+				ret = true;
 			}
-			else if (ppHitObj)
-			{
-				*ppHitObj = (Object *)this;
-			}
-
-			ret = true;
 		}
 	}
 
+	// Check intersection with children
 	if (child_depth > 0)
 	{
-		Object *hitobj = nullptr;
 		for (auto child : m_Children)
 		{
-			ret |= child->Intersect(pRayPos, pRayDir, mats, pDistance, &hitobj, flagmask, child_depth - 1);
+			if (child->Intersect(pRayPos, pRayDir, &mat, pDistance, ppHitObj, flagmask, child_depth - 1))
+			{
+				ret = true;
+			}
 		}
-
-		if (ppHitObj)
-			*ppHitObj = hitobj;
 	}
-
-	if (ppos)
-		mats->Pop();
 
 	return ret;
 }

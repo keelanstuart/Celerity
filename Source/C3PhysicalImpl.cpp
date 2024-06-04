@@ -29,17 +29,24 @@ PhysicalImpl::PhysicalImpl()
 	m_pPositionable = nullptr;
 
 	m_Flags = 0;
+
+	//m_MotionState = new b3DefaultMotionState(b3Transform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
+	//m_RigidBody = new btRigidBody(1.0f, m_MotionState, m_CollShape.has_value() ? *m_CollShape : nullptr /* get the collision shape from a mesh */);
 }
 
 
 PhysicalImpl::~PhysicalImpl()
 {
+	//delete m_RigidBody;
+	//delete m_MotionState;
+	//if (m_CollShape.has_value())
+	//	delete *m_CollShape;
 }
 
 
 void PhysicalImpl::Release()
 {
-
+	delete this;
 }
 
 
@@ -60,7 +67,7 @@ bool PhysicalImpl::Initialize(Object *pobject)
 
 	props::IProperty *plvel = propset->CreateReferenceProperty(_T("LinearVelocity"), 'LVEL', &m_LinVel, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
 	props::IProperty *placc = propset->CreateReferenceProperty(_T("LinearAcceleration"), 'LACC', &m_LinAcc, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
-	props::IProperty *plvelff = propset->CreateReferenceProperty(_T("LinearSpeedFalloffFactor"), 'LSFF', &m_LinSpeedFalloff, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
+	props::IProperty *plvelff = propset->CreateReferenceProperty(_T("LinearSpeedFalloffFactor"), 'LSFF', &m_LinSpeedFalloff, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
 	props::IProperty *plspdmax = propset->CreateReferenceProperty(_T("MaxLinearSpeed"), 'MXLS', &m_maxLinSpeed, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
 
 	props::IProperty *prvel = propset->CreateReferenceProperty(_T("RotationalVelocity"), 'RVEL', &m_RotVel, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
@@ -92,6 +99,8 @@ bool PhysicalImpl::Initialize(Object *pobject)
 		prspdmax->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
 
+	props::IProperty *prmass = propset->CreateReferenceProperty(_T("Mass"), 'MASS', &m_Mass, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
+
 	return true;
 }
 
@@ -113,13 +122,21 @@ void PhysicalImpl::Update(float elapsed_time)
 		m_RotVel += m_RotAcc * elapsed_time;
 		m_RotVel = glm::min(glm::max(-m_maxRotSpeed, m_RotVel), m_maxRotSpeed);
 
-		m_DeltaPos.x = m_LinVel.x * elapsed_time;
-		m_DeltaPos.y = m_LinVel.y * elapsed_time;
-		m_DeltaPos.z = m_LinVel.z * elapsed_time;
+		glm::fvec3 f, r, u;
+		m_pPositionable->GetFacingVector(&f);
+		m_pPositionable->GetLocalRightVector(&r);
+		m_pPositionable->GetLocalUpVector(&u);
+
+		m_DeltaPos =  f * m_LinVel.y * elapsed_time;
+		m_DeltaPos += r * m_LinVel.x * elapsed_time;
+		m_DeltaPos += u * m_LinVel.z * elapsed_time;
+
 		m_pPositionable->AdjustPos(m_DeltaPos.x, m_DeltaPos.y, m_DeltaPos.z);
-		m_pPositionable->AdjustYaw(m_RotVel.z);
-		m_pPositionable->AdjustPitch(m_RotVel.x);
-		m_pPositionable->AdjustRoll(m_RotVel.y);
+		m_pPositionable->AdjustYaw(m_RotVel.z * elapsed_time);
+		m_pPositionable->AdjustPitch(m_RotVel.x * elapsed_time);
+		m_pPositionable->AdjustRoll(m_RotVel.y * elapsed_time);
+
+		//m_MotionState->setWorldTransform(m_pPositionable->GetTransformMatrix());
 	}
 }
 
@@ -130,7 +147,7 @@ bool PhysicalImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void PhysicalImpl::Render(Object::RenderFlags flags)
+void PhysicalImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 }
 
@@ -155,7 +172,7 @@ void PhysicalImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool PhysicalImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
+bool PhysicalImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	return false;
 }

@@ -10,6 +10,7 @@
 #include <C3Environment.h>
 #include <functional>
 
+
 namespace c3
 {
 
@@ -92,6 +93,7 @@ namespace c3
 	public:
 
 		EnvironmentImpl();
+		virtual ~EnvironmentImpl();
 
 		void Update(float elapsed_seconds);
 

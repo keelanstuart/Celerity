@@ -41,12 +41,20 @@ public:
 	afx_msg void OnEditDelete();
 	afx_msg void OnUpdateEditDuplicate(CCmdUI *pCmdUI);
 	afx_msg void OnEditDuplicate();
+	afx_msg void OnUpdateEditAssignRoot(CCmdUI *pCmdUI);
+	afx_msg void OnEditAssignRoot();
 	afx_msg void OnUpdateEditGroup(CCmdUI *pCmdUI);
 	afx_msg void OnEditGroup();
 	afx_msg void OnUpdateEditUngroup(CCmdUI *pCmdUI);
 	afx_msg void OnEditUngroup();
 	afx_msg void OnUpdateEditCenterCamera(CCmdUI *pCmdUI);
 	afx_msg void OnEditCenterCamera();
+	afx_msg void OnEditCopy();
+	afx_msg void OnUpdateEditCopy(CCmdUI *pCmdUI);
+	afx_msg void OnEditCut();
+	afx_msg void OnUpdateEditCut(CCmdUI *pCmdUI);
+	afx_msg void OnEditPaste();
+	afx_msg void OnUpdateEditPaste(CCmdUI *pCmdUI);
 
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);

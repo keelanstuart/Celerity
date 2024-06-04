@@ -75,8 +75,6 @@ namespace c3
 		glm::fvec3 m_BoundingCentroid;
 		float m_BoundingRadius;
 
-		MatrixStack *m_MatStack;
-
 		const Animation *m_DefaultAnim;
 
 	public:
@@ -162,8 +160,8 @@ namespace c3
 
 		virtual void Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst = nullptr) const;
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, size_t *pMeshIndex,
-							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, size_t *pMeshIndex,
+							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const InstanceData *inst) const;
 
 		virtual const Animation *GetDefaultAnim() const;
 
@@ -174,10 +172,10 @@ namespace c3
 		void SetBounds(glm::fvec3 &bmin, glm::fvec3 &bmax);
 
 	protected:
-		bool DrawNode(NodeIndex nodeidx, bool allow_material_changes, const InstanceData *inst) const;
+		bool DrawNode(NodeIndex nodeidx, const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst) const;
 
-		bool IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats,
-						   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const;
+		bool IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat,
+						   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const Model::InstanceData *inst) const;
 
 	};
 

@@ -109,9 +109,12 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 
 	m_GuiRectMesh = nullptr;
 
-	m_HemisphereVB = nullptr;
-	m_HemisphereMesh = nullptr;
-	m_SphereMesh = nullptr;
+	for (size_t i = 0; i < EResLevel::RL_RESCOUNT; i++)
+	{
+		m_HemisphereVB[i] = nullptr;
+		m_HemisphereMesh[i] = nullptr;
+		m_SphereMesh[i] = nullptr;
+	}
 
 	m_BlackTex = nullptr;
 	m_GreyTex = nullptr;
@@ -442,27 +445,39 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	}
 
 	{
+		TCHAR *hemispherename[EResLevel::RL_RESCOUNT] = {_T("[hemisphere_lo.model]"), _T("[hemisphere_med.model]"), _T("[hemisphere_hi.model]")};
+
 		c3::Material *refmtl = GetMaterialManager()->CreateMaterial();
 		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetGridTexture());
 		refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
-		c3::Model *hemisphere = c3::Model::Create(this);
-		c3::Model::MeshIndex mi = hemisphere->AddMesh(GetHemisphereMesh());
-		c3::Model::NodeIndex ni = hemisphere->AddNode();
-		hemisphere->AssignMeshToNode(ni, mi);
-		hemisphere->SetMaterial(mi, refmtl);
-		rm->GetResource(_T("[hemisphere.model]"), RESF_CREATEENTRYONLY, rt, hemisphere);
+
+		for (size_t i = 0; i < EResLevel::RL_RESCOUNT; i++)
+		{
+			c3::Model *hemisphere = c3::Model::Create(this);
+			c3::Model::MeshIndex mi = hemisphere->AddMesh(GetHemisphereMesh((EResLevel)i));
+			c3::Model::NodeIndex ni = hemisphere->AddNode();
+			hemisphere->AssignMeshToNode(ni, mi);
+			hemisphere->SetMaterial(mi, refmtl);
+			rm->GetResource(hemispherename[i], RESF_CREATEENTRYONLY, rt, hemisphere);
+		}
 	}
 
 	{
+		TCHAR *spherename[EResLevel::RL_RESCOUNT] = {_T("[sphere_lo.model]"), _T("[sphere_med.model]"), _T("[sphere_hi.model]")};
+
 		c3::Material *refmtl = GetMaterialManager()->CreateMaterial();
 		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetGridTexture());
 		refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
-		c3::Model *sphere = c3::Model::Create(this);
-		c3::Model::MeshIndex mi = sphere->AddMesh(GetSphereMesh());
-		c3::Model::NodeIndex ni = sphere->AddNode();
-		sphere->AssignMeshToNode(ni, mi);
-		sphere->SetMaterial(mi, refmtl);
-		rm->GetResource(_T("[sphere.model]"), RESF_CREATEENTRYONLY, rt, sphere);
+
+		for (size_t i = 0; i < EResLevel::RL_RESCOUNT; i++)
+		{
+			c3::Model *sphere = c3::Model::Create(this);
+			c3::Model::MeshIndex mi = sphere->AddMesh(GetSphereMesh((EResLevel)i));
+			c3::Model::NodeIndex ni = sphere->AddNode();
+			sphere->AssignMeshToNode(ni, mi);
+			sphere->SetMaterial(mi, refmtl);
+			rm->GetResource(spherename[i], RESF_CREATEENTRYONLY, rt, sphere);
+		}
 	}
 
 	{
@@ -635,14 +650,11 @@ void RendererImpl::Shutdown()
 	C3_SAFERELEASE(m_PlanesVB);
 	C3_SAFERELEASE(m_FSPlaneVB);
 
-	if (m_HemisphereMesh)
+	for (size_t i = 0; i < EResLevel::RL_RESCOUNT; i++)
 	{
-		m_HemisphereMesh->AttachVertexBuffer(nullptr);
-		m_HemisphereMesh->Release();
-		m_HemisphereMesh = nullptr;
+		C3_SAFERELEASE(m_HemisphereMesh[i]);
+		C3_SAFERELEASE(m_SphereMesh[i]);
 	}
-
-	C3_SAFERELEASE(m_SphereMesh);
 
 	if (m_MatMan)
 	{
@@ -2754,12 +2766,12 @@ VertexBuffer *RendererImpl::GetFullscreenPlaneVB()
 }
 
 
-size_t hemisphereSectorCount = 40;
-size_t hemisphereStackCount = 20;
+size_t hemisphereSectorCount[Renderer::EResLevel::RL_RESCOUNT] = {8, 16, 24};
+size_t hemisphereStackCount[Renderer::EResLevel::RL_RESCOUNT] = {4, 8, 12};
 
-VertexBuffer *RendererImpl::GetHemisphereVB()
+VertexBuffer *RendererImpl::GetHemisphereVB(EResLevel lvl)
 {
-	if (!m_HemisphereVB)
+	if (!m_HemisphereVB[lvl])
 	{
 		typedef std::vector<Vertex::PNYT1::s> TVertexArray;
 		TVertexArray verts;
@@ -2774,14 +2786,14 @@ VertexBuffer *RendererImpl::GetHemisphereVB()
 
 		verts.push_back(v);
 
-		glm::fmat4x4 mz = (glm::fmat4x4)glm::angleAxis(C3_PI * 2.0f / (float)hemisphereSectorCount, glm::fvec3(0.0f, 0.0f, 1.0f));
+		glm::fmat4x4 mz = (glm::fmat4x4)glm::angleAxis(C3_PI * 2.0f / (float)hemisphereSectorCount[lvl], glm::fvec3(0.0f, 0.0f, 1.0f));
 
-		for (size_t i = 1, maxi = hemisphereStackCount + 1; i < maxi; i++)
+		for (size_t i = 1, maxi = hemisphereStackCount[lvl] + 1; i < maxi; i++)
 		{
-			glm::fmat4x4 mx = (glm::fmat4x4)glm::angleAxis(C3_PI / 2.0f / (float)(hemisphereStackCount + 1) * i, glm::fvec3(0.0f, 1.0f, 0.0f));
+			glm::fmat4x4 mx = (glm::fmat4x4)glm::angleAxis(C3_PI / 2.0f / (float)(hemisphereStackCount[lvl] + 1) * i, glm::fvec3(0.0f, 1.0f, 0.0f));
 			n = glm::normalize(glm::fvec4(0, 0, 1, 0) * mx);
 
-			for (size_t j = 0, maxj = hemisphereSectorCount + 1; j < maxj; j++)
+			for (size_t j = 0, maxj = hemisphereSectorCount[lvl] + 1; j < maxj; j++)
 			{
 				v.norm = v.pos = n;
 				v.uv.x = (float)j;
@@ -2795,11 +2807,11 @@ VertexBuffer *RendererImpl::GetHemisphereVB()
 			v.uv.y = (float)i;
 		}
 
-		m_HemisphereVB = CreateVertexBuffer(0);
-		if (m_HemisphereVB)
+		m_HemisphereVB[lvl] = CreateVertexBuffer(0);
+		if (m_HemisphereVB[lvl])
 		{
 			Vertex::PNYT1::s *buf;
-			if ((m_HemisphereVB->Lock((void **)&buf, verts.size(), Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
+			if ((m_HemisphereVB[lvl]->Lock((void **)&buf, verts.size(), Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
 			{
 				for (const auto v : verts)
 				{
@@ -2807,36 +2819,36 @@ VertexBuffer *RendererImpl::GetHemisphereVB()
 					buf++;
 				}
 
-				m_HemisphereVB->Unlock();
+				m_HemisphereVB[lvl]->Unlock();
 			}
 		}
 	}
 
-	return m_HemisphereVB;
+	return m_HemisphereVB[lvl];
 }
 
 
-Mesh *RendererImpl::GetHemisphereMesh()
+Mesh *RendererImpl::GetHemisphereMesh(EResLevel lvl)
 {
-	if (!m_HemisphereMesh)
+	if (!m_HemisphereMesh[lvl])
 	{
-		m_HemisphereMesh = CreateMesh();
+		m_HemisphereMesh[lvl] = CreateMesh();
 
-		m_HemisphereMesh->AttachVertexBuffer(GetHemisphereVB());
+		m_HemisphereMesh[lvl]->AttachVertexBuffer(GetHemisphereVB(lvl));
 
-		if (m_HemisphereVB)
+		if (m_HemisphereVB[lvl])
 		{
 			IndexBuffer *pib = CreateIndexBuffer(0);
 			if (pib)
 			{
 				uint16_t *buf;
 
-				size_t ic_top = 3 * (hemisphereSectorCount + 1), ic = ic_top + (ic_top * hemisphereStackCount * 2);
+				size_t ic_top = 3 * (hemisphereSectorCount[lvl] + 1), ic = ic_top + (ic_top * hemisphereStackCount[lvl] * 2);
 
 				if (pib->Lock((void **)&buf, ic, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 				{
 					// Do the top slice first because it has only one triangle per sector
-					for (uint16_t i = 0, maxi = (uint16_t)(hemisphereSectorCount + 1); i < maxi; i++)
+					for (uint16_t i = 0, maxi = (uint16_t)(hemisphereSectorCount[lvl] + 1); i < maxi; i++)
 					{
 						*(buf++) = 0;
 						*(buf++) = i;
@@ -2844,12 +2856,12 @@ Mesh *RendererImpl::GetHemisphereMesh()
 					}
 
 					uint16_t ss = 1;
-					for (uint16_t i = 1, maxi = (uint16_t)(hemisphereStackCount + 1); i < maxi; i++)
+					for (uint16_t i = 1, maxi = (uint16_t)(hemisphereStackCount[lvl] + 1); i < maxi; i++)
 					{
-						for (uint16_t j = 0, maxj = (uint16_t)(hemisphereSectorCount + 1); j < maxj; j++)
+						for (uint16_t j = 0, maxj = (uint16_t)(hemisphereSectorCount[lvl] + 1); j < maxj; j++)
 						{
 							uint16_t a = ss;
-							uint16_t b = a + (uint16_t)hemisphereSectorCount;
+							uint16_t b = a + (uint16_t)hemisphereSectorCount[lvl];
 
 							*(buf++) = a;
 							*(buf++) = b;
@@ -2866,20 +2878,22 @@ Mesh *RendererImpl::GetHemisphereMesh()
 					pib->Unlock();
 				}
 
-				m_HemisphereMesh->AttachIndexBuffer(pib);
+				m_HemisphereMesh[lvl]->AttachIndexBuffer(pib);
 			}
 		}
 	}
 
-	return m_HemisphereMesh;
+	return m_HemisphereMesh[lvl];
 }
 
-Mesh *RendererImpl::GetSphereMesh()
+
+
+Mesh *RendererImpl::GetSphereMesh(EResLevel lvl)
 {
-	if (!m_SphereMesh)
+	if (!m_SphereMesh[lvl])
 	{
-		size_t sectors = hemisphereSectorCount;
-		size_t stacks = hemisphereStackCount * 2;
+		size_t sectors = hemisphereSectorCount[lvl];
+		size_t stacks = hemisphereStackCount[lvl] * 2;
 
 		typedef std::vector<Vertex::PNYT1::s> TVertexArray;
 		typedef std::vector<uint16_t> TIndexArray;
@@ -2956,10 +2970,10 @@ Mesh *RendererImpl::GetSphereMesh()
 			indices.push_back((uint16_t)k1);
 		}
 
-		m_SphereMesh = CreateMesh();
+		m_SphereMesh[lvl] = CreateMesh();
 
 		VertexBuffer *pvb = CreateVertexBuffer(0);
-		if (m_HemisphereVB)
+		if (m_HemisphereVB[lvl])
 		{
 			Vertex::PNYT1::s *buf;
 			if ((pvb->Lock((void **)&buf, vertices.size(), Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK) && buf)
@@ -2970,7 +2984,7 @@ Mesh *RendererImpl::GetSphereMesh()
 				pvb->Unlock();
 			}
 
-			m_SphereMesh->AttachVertexBuffer(pvb);
+			m_SphereMesh[lvl]->AttachVertexBuffer(pvb);
 		}
 
 		IndexBuffer *pib = CreateIndexBuffer(0);
@@ -2985,12 +2999,13 @@ Mesh *RendererImpl::GetSphereMesh()
 				pib->Unlock();
 			}
 
-			m_SphereMesh->AttachIndexBuffer(pib);
+			m_SphereMesh[lvl]->AttachIndexBuffer(pib);
 		}
 	}
 
-	return m_SphereMesh;
+	return m_SphereMesh[lvl];
 }
+
 
 Texture2D *RendererImpl::GetBlackTexture()
 {

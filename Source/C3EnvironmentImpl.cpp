@@ -40,6 +40,12 @@ EnvironmentImpl::EnvironmentImpl() :
 {
 }
 
+
+EnvironmentImpl::~EnvironmentImpl()
+{
+}
+
+
 void EnvironmentImpl::Update(float elapsed_seconds)
 {
 	m_Gravity.Update(elapsed_seconds);

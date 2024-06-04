@@ -25,7 +25,7 @@ namespace c3
 		glm::fvec3 m_Pos;
 		glm::fquat m_Ori;
 		glm::fvec3 m_Scl;
-		glm::fmat4x4 m_Mat, m_MatN;
+		mutable glm::fmat4x4 m_Mat;
 
 		RenderMethod *m_pMethod;
 		size_t m_TechIdx_G, m_TechIdx_GS, m_TechIdx_S;
@@ -38,7 +38,7 @@ namespace c3
 
 #define MRIF_REBUILDMATRIX		0x0001
 
-		props::TFlags64 m_Flags;
+		mutable props::TFlags64 m_Flags;
 
 	public:
 
@@ -58,7 +58,7 @@ namespace c3
 
 		virtual bool Prerender(Object::RenderFlags flags, int draworder);
 
-		virtual void Render(Object::RenderFlags flags);
+		virtual void Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat = nullptr);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
@@ -80,7 +80,7 @@ namespace c3
 
 		virtual Model::InstanceData *GetModelInstanceData();
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const;
 
 	};
 

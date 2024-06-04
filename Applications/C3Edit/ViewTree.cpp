@@ -12,6 +12,8 @@
 #include "C3EditFrame.h"
 #include "C3EditView.h"
 
+#include <C3Utility.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -32,6 +34,7 @@ CViewTree::~CViewTree()
 BEGIN_MESSAGE_MAP(CViewTree, CTreeCtrl)
 	ON_NOTIFY_REFLECT(NM_DBLCLK, &CViewTree::OnNMDblclk)
 	ON_WM_CTLCOLOR()
+	ON_WM_LBUTTONDOWN()
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
@@ -66,13 +69,26 @@ void CViewTree::OnNMDblclk(NMHDR *pNMHDR, LRESULT *pResult)
 		pcam->Update();
 
 		c3::Object *pobj = theApp.m_C3->GetFactory()->Build(pproto);
-		pdoc->m_RootObj->AddChild(pobj);
 
-		c3::Positionable *pobjpos = (c3::Positionable *)(pobj->FindComponent(c3::Positionable::Type()));
+		c3::Object *root = pdoc->m_OperationalRootObj ? pdoc->m_OperationalRootObj : pdoc->m_RootObj;
+		root->AddChild(pobj);
 
 		glm::fvec3 ct;
 		pcampos->GetTargetPos(&ct);
-		pobjpos->SetPosVec(&ct);
+
+		glm::fmat4x4 root_mat;
+		c3::util::ComputeFinalTransform(root, &root_mat);
+		glm::fvec3 pt = root_mat * glm::fvec4(0, 0, 0, 1);
+		ct -= pt;
+
+		c3::Positionable *pobjpos = (c3::Positionable *)(pobj->FindComponent(c3::Positionable::Type()));
+		if (pobjpos)
+			pobjpos->SetPosVec(&ct);
+
+		pfrm->GetActiveView()->SetFocus();
+
+		pdoc->ClearSelection();
+		pdoc->AddToSelection(pobj);
 
 		pdoc->SetModifiedFlag();
 
@@ -88,4 +104,25 @@ HBRUSH CViewTree::OnCtlColor(CDC *pDC, CWnd *pWnd, UINT nCtlColor)
 	HBRUSH hbr = CTreeCtrl::OnCtlColor(pDC, pWnd, nCtlColor);
 
 	return hbr;
+}
+
+
+void CViewTree::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	TVHITTESTINFO tvht;		// Hit test information. 
+	CPoint sp = point;
+
+	tvht.pt.x = point.x;
+	tvht.pt.y = point.y;
+	HTREEITEM hti = HitTest(&tvht);
+	if (hti)
+	{
+		c3::Prototype *pp = (c3::Prototype *)GetItemData(hti);
+		if (pp)
+		{
+			theApp.SetActivePrototype(pp);
+		}
+	}
+
+	CTreeCtrl::OnLButtonDown(nFlags, point);
 }

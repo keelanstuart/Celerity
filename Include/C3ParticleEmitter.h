@@ -22,58 +22,58 @@ namespace c3
 	/// 
 	/// Recognized Properties:
 	///		- 'PEsh' : "Shape"
-	///			ENUM(SPHERE, RAY, CONE, CYLINDER, PLANE) - The shape of the emitter, determines the emission vector
+	///			+ ENUM(SPHERE, RAY, CONE, CYLINDER, PLANE) - The shape of the emitter, determines the emission vector
 	///
 	///		- 'PErm' : "ParticleRenderMethod"
-	///			STRING ; FILENAME - the .c3rm render method file used for rendering the particles
+	///			+ STRING ; FILENAME - the .c3rm render method file used for rendering the particles
 	///
 	///		- 'PEmp' : "MaxParticles"
-	/// 		INT - The maximum number of particles at any instant
+	/// 		+ INT - The maximum number of particles at any instant
 	/// 
 	///		- 'PErt' : "EmitRate"
-	/// 		FVEC2 min/max - the minimum and maximum number of particles spawned per second
+	/// 		+ FVEC2 min/max - the minimum and maximum number of particles spawned per second
 	/// 
 	///		- 'PEsp' : "EmitSpeed"
-	/// 		FVEC2 min/max - the minimum and maximum velocity magnitude for newly-spawned particles along the emission vector
+	/// 		+ FVEC2 min/max - the minimum and maximum velocity magnitude for newly-spawned particles along the emission vector
 	/// 
 	///		- 'PElf' : "ParticleLife"
-	/// 		FVEC2 min/max - the minimum and maximum lifetime of particles in seconds
+	/// 		+ FVEC2 min/max - the minimum and maximum lifetime of particles in seconds
 	/// 
 	///		- 'PEac' : "Acceleration"
-	/// 		FVEC2 min/max - the minimum and maximum acceleration magnitude for newly-spawned particles 
+	/// 		+ FVEC2 min/max - the minimum and maximum acceleration magnitude for newly-spawned particles 
 	/// 
 	///		- 'PEgr' : "Gravity"
-	/// 		FLOAT - the amount that gravity affects particles
+	/// 		+ FLOAT - the amount that gravity affects particles
 	/// 
 	///		- 'PErl' : "Roll"
-	/// 		FVEC2 min/max - the minimum and maximum roll about the facing vector
+	/// 		+ FVEC2 min/max - the minimum and maximum roll about the facing vector
 	/// 
 	///		- 'PEss' : "StartScale"
-	/// 		FLOAT - the start scale for particles
+	/// 		+ FLOAT - the start scale for particles
 	/// 
 	///		- 'PEps' : "PeakScale"
-	/// 		FLOAT - the peak scale for particles
+	/// 		+ FLOAT - the peak scale for particles
 	/// 
 	///		- 'PEes' : "EndScale"
-	/// 		FLOAT - the end scale for particles
+	/// 		+ FLOAT - the end scale for particles
 	/// 
 	///		- 'PEsc' : "StartColor"
-	/// 		COLOR - The start color for particles
+	/// 		+ COLOR - The start color for particles
 	/// 
 	///		- 'PEpc' : "PeakColor"
-	/// 		COLOR - The peak color for particles
+	/// 		+ COLOR - The peak color for particles
 	/// 
 	///		- 'PEec' : "EndColor"
-	/// 		COLOR - The end color for particles
+	/// 		+ COLOR - The end color for particles
 	/// 
 	///		- 'PErd' : "Radius"
-	/// 		FVEC2 min/max - the minimum and maximum radius (meaning differs by shape)
+	/// 		+ FVEC2 min/max - the minimum and maximum radius (meaning differs by shape)
 	/// 
 	///		- 'PEtx' : "Texture"
-	/// 		STRING FILENAME - the texture filename for the texture applied to particles
+	/// 		+ STRING FILENAME - the texture filename for the texture applied to particles
 	/// 
 	///		- 'PEpp' : "Peak"
-	/// 		FLOAT - the percentage of a particle's lifetime that it reaches "peak"
+	/// 		+ FLOAT - the percentage of a particle's lifetime that it reaches "peak"
 	/// </summary>
 
 	class C3_API ParticleEmitter : public Component

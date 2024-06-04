@@ -313,7 +313,7 @@ bool AnimatorImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void AnimatorImpl::Render(Object::RenderFlags flags)
+void AnimatorImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 
 }
@@ -529,7 +529,7 @@ float AnimatorImpl::GetCurAnimTime() const
 }
 
 
-bool AnimatorImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
+bool AnimatorImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	return false;
 }

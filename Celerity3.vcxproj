@@ -82,6 +82,7 @@
     <ClCompile Include="Source\C3SubscriptionImpl.cpp" />
     <ClCompile Include="Source\C3SystemImpl.cpp" />
     <ClCompile Include="Source\C3TextureImpl.cpp" />
+    <ClCompile Include="Source\C3Utility.cpp" />
     <ClCompile Include="Source\C3VertexBufferImpl.cpp" />
     <ClCompile Include="Source\C3VirtualJoystickImpl.cpp" />
     <ClCompile Include="Source\C3VirtualKeyboardImpl.cpp" />
@@ -207,6 +208,7 @@
     <ClInclude Include="Include\C3System.h" />
     <ClInclude Include="Include\C3Texture.h" />
     <ClInclude Include="Include\C3TString.h" />
+    <ClInclude Include="include\C3Utility.h" />
     <ClInclude Include="Include\C3VertexBuffer.h" />
     <ClInclude Include="Include\C3FlowGraph.h" />
     <ClInclude Include="source\C3ActionMapperImpl.h" />
@@ -379,7 +381,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include;$(SolutionDir)third-party\libtiff\libtiff</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include;$(SolutionDir)third-party\libtiff\libtiff;$(SolutionDir)third-party\bullet3\src</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -396,7 +398,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include;$(SolutionDir)third-party\libtiff\libtiff</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include;$(SolutionDir)third-party\libtiff\libtiff;$(SolutionDir)third-party\bullet3\src</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Bootstrap|Win32'">
@@ -412,7 +414,7 @@
     <OutDir>$(SolutionDir)bin\</OutDir>
     <IntDir>$(ProjectDir)obj\$(Configuration)$(PlatformArchitecture)\</IntDir>
     <TargetName>$(ProjectName)$(PlatformArchitecture)$(ShortConfiguration)</TargetName>
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include;$(SolutionDir)third-party\libtiff\libtiff</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)Include;$(SolutionDir)Source;$(SolutionDir)third-party\GenIO\Include;$(SolutionDir)third-party\Pool\Include;$(SolutionDir)third-party\PowerProps\Include;$(SolutionDir)third-party\mqme\Include;$(SolutionDir)third-party\glm;$(SolutionDir)third-party\tinyxml2;$(SolutionDir)third-party\stb;$(SolutionDir)third-party\imgui;$(SolutionDir)third-party\assimp\include;$(SolutionDir)third-party\libtiff\libtiff;$(SolutionDir)third-party\bullet3\src</IncludePath>
     <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;$(SolutionDir)\lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -440,7 +442,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>shlwapi.lib;Shcore.lib;dinput8.lib;dxguid.lib;gdiplus.lib;Msimg32.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib;tiff$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;Shcore.lib;dinput8.lib;dxguid.lib;gdiplus.lib;Msimg32.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib;tiff$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Collision$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Common$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Dynamics$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Geometry$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3OpenCL_clew$(PlatformArchitecture)$(ShortConfiguration).lib;LinearMath$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <Profile>true</Profile>
     </Link>
@@ -501,7 +503,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
-      <AdditionalDependencies>shlwapi.lib;Shcore.lib;dinput8.lib;dxguid.lib;gdiplus.lib;Msimg32.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib;tiff$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;Shcore.lib;dinput8.lib;dxguid.lib;gdiplus.lib;Msimg32.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib;tiff$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Collision$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Common$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Dynamics$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Geometry$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3OpenCL_clew$(PlatformArchitecture)$(ShortConfiguration).lib;LinearMath$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>"$(SolutionDir)Bin\glLibGen64.exe" -class:"COpenGL" -basefile:"gl_wrapper" -outdir:"$(SolutionDir)Source" -ver:4.5 -glh:"$(CppWinRT_IncludePath)\..\um\gl\GL.h" -glexth:"https://www.khronos.org/registry/OpenGL/api/GL/glext.h" -wglexth:"https://www.khronos.org/registry/OpenGL/api/GL/wglext.h" -khrh:"https://www.khronos.org/registry/EGL/api/KHR/khrplatform.h" -pch -ext -logcb</Command>
@@ -557,7 +559,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <AdditionalDependencies>shlwapi.lib;Shcore.lib;dinput8.lib;dxguid.lib;gdiplus.lib;Msimg32.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib;tiff$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
+      <AdditionalDependencies>shlwapi.lib;Shcore.lib;dinput8.lib;dxguid.lib;gdiplus.lib;Msimg32.lib;winmm.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies);Pool$(PlatformArchitecture)$(ShortConfiguration).lib;GenIO$(PlatformArchitecture)$(ShortConfiguration).lib;PowerProps$(PlatformArchitecture)$(ShortConfiguration).lib;mqme$(PlatformArchitecture)$(ShortConfiguration).lib;assimp$(PlatformArchitecture)$(ShortConfiguration).lib;zlibstatic$(PlatformArchitecture)$(ShortConfiguration).lib;tiff$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Collision$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Common$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Dynamics$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3Geometry$(PlatformArchitecture)$(ShortConfiguration).lib;Bullet3OpenCL_clew$(PlatformArchitecture)$(ShortConfiguration).lib;LinearMath$(PlatformArchitecture)$(ShortConfiguration).lib</AdditionalDependencies>
       <ImportLibrary>$(SolutionDir)lib\$(TargetName).lib</ImportLibrary>
     </Link>
     <PreBuildEvent>

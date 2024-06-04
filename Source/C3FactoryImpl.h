@@ -36,7 +36,7 @@ namespace c3
 
 		virtual Object *Build(Prototype *pproto, GUID *override_guid = nullptr, Object *pparent = nullptr);
 
-		virtual Object *Build(Object *pobject, GUID *override_guid = nullptr, Object *pparent = nullptr);
+		virtual Object *Build(Object *pobject, GUID *override_guid = nullptr, Object *pparent = nullptr, bool build_children = false);
 
 		virtual Prototype *CreatePrototype(Prototype *pproto = nullptr);
 

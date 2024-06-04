@@ -9,6 +9,7 @@
 #include <C3ParticleEmitterImpl.h>
 #include <C3EnvironmentModifierImpl.h>
 #include <C3Math.h>
+#include <C3Utility.h>
 
 using namespace c3;
 
@@ -20,6 +21,7 @@ ParticleEmitterImpl::ParticleEmitterImpl()
 {
 	m_pMethod = nullptr;
 	m_pTexture = nullptr;
+	m_MaxParticles = 100;
 }
 
 
@@ -107,7 +109,7 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 	pp = propset->CreateProperty(_T("MaxParticles"), 'PEmp');
 	if (pp)
 	{
-		pp->SetInt(100);
+		pp->SetInt(m_MaxParticles);
 	}
 
 	m_EmitRate.min = 15.0f;
@@ -224,22 +226,15 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 	if (elapsed_time == 0)
 		return;
 
-	Positionable *ppos = (Positionable *)m_pOwner->FindComponent(Positionable::Type());
-	if (!ppos)
-		return;
+	glm::fmat4x4 mat = glm::identity<glm::fmat4x4>();
+	util::ComputeFinalTransform(m_pOwner, &mat);
 
-	glm::fvec3 epos;
-	glm::fvec3 edir;
-	if (ppos)
-	{
-		epos = *(ppos->GetPosVec());
-		edir = *(ppos->GetFacingVector());
-	}
-	else
-	{
-		epos = glm::fvec3(0, 0, 0);
-		edir = glm::fvec3(0, 0, 1);
-	}
+	glm::fvec3 epos = mat * glm::fvec4(glm::fvec3(0, 0, 0), 1);
+	glm::fvec3 facing = mat * glm::fvec4(glm::fvec3(0, 1, 0), 0);
+	glm::fvec3 right = mat * glm::fvec4(glm::fvec3(1, 0, 0), 0);
+	glm::fvec3 up = mat * glm::fvec4(glm::fvec3(0, 0, 1), 0);
+	glm::fvec3 vscl_up = mat * glm::fvec4(glm::fvec3(0, 0, 1), 1);
+	float scl_up = glm::length(vscl_up);
 
 	size_t pc = 0;
 
@@ -293,13 +288,6 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 
 			float radius = math::RandomRange(m_Radius.inner, m_Radius.outer);
 
-			glm::fvec3 facing;
-			ppos->GetFacingVector(&facing);
-			glm::fvec3 right;
-			ppos->GetLocalRightVector(&right);
-			glm::fvec3 up;
-			ppos->GetLocalUpVector(&up);
-
 			switch (m_Shape)
 			{
 				case EmitterShape::SPHERE:
@@ -318,7 +306,7 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 					part.vel = (right * cosf(angle)) + (facing * sinf(angle));
 
 					part.pos = epos;
-					part.pos += math::RandomRange(0, ppos->GetSclZ()) * up;
+					part.pos += math::RandomRange(0, scl_up) * up;
 					part.pos += (part.vel * radius);
 					break;
 				}
@@ -335,7 +323,7 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 
 				case EmitterShape::PLANE:
 				{
-					ppos->GetLocalUpVector(&part.vel);
+					part.vel = up;
 					part.pos = epos + (facing * math::RandomRange(-radius, radius)) + (right * math::RandomRange(-radius, radius));
 					break;
 				}
@@ -403,8 +391,14 @@ bool ParticleEmitterImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void ParticleEmitterImpl::Render(Object::RenderFlags flags)
+void ParticleEmitterImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
+	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	if (!pmat)
+		pmat = &imat;
+
+	//glm::fmat4x4 mat = 
+
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 
 	if (!m_Verts)
@@ -524,7 +518,8 @@ void ParticleEmitterImpl::PropertyChanged(const props::IProperty *pprop)
 	{
 		case 'PEmp':
 		{
-			m_MaxParticles = pprop->AsInt();
+			// Only 1-1000 particles
+			m_MaxParticles = std::max<int64_t>(std::min<int64_t>(1, pprop->AsInt()), 1000);
 			if (m_Particles.size() < m_MaxParticles)
 				m_Particles.resize(m_MaxParticles);
 			m_Active.clear();
@@ -551,6 +546,8 @@ void ParticleEmitterImpl::PropertyChanged(const props::IProperty *pprop)
 
 		case 'PEsh':
 		{
+			// NOTE: for any of these enum provider properties, reset this... sigh. Maybe come up with a better solution later.
+			((props::IProperty *)pprop)->SetEnumProvider(this);
 			m_Shape = (EmitterShape)pprop->AsInt();
 			break;
 		}
@@ -624,28 +621,34 @@ const TCHAR *ParticleEmitterImpl::GetValue(const props::IProperty *pprop, size_t
 }
 
 
-bool ParticleEmitterImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
+bool ParticleEmitterImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
+#if 0
+	if (!pRayPos || !pRayDir)
+		return false;
+
 	bool ret = false;
 
-	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
-	const Mesh *pm = prend->GetBoundsMesh();
+	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	if (!pmat)
+		pmat = &imat;
 
-	if (pm)
+	float dist;
+	glm::fvec3 pos = *pmat * glm::fvec4(0, 0, 0, 1);
+	glm::fvec3 vscl = *pmat * glm::fvec4(glm::normalize(glm::fvec3(m_Radius.max, m_Radius.max, m_Radius.max)), 0);
+	float scl = (vscl.x + vscl.y + vscl.z) / 3.0f;
+
+	ret = glm::intersectRaySphere(*pRayPos, *pRayDir, pos, scl, dist);
+	if (ret && pDistance)
 	{
-		float dist;
-		size_t faceidx;
-		glm::vec2 uv;
-
-		ret = pm->Intersect(pRayPos, pRayDir, &dist, &faceidx, &uv, mats->Top());
-		if (ret && pDistance)
-		{
-			if (dist < *pDistance)
-				*pDistance = dist;
-			else
-				ret = false;
-		}
+		if (dist < *pDistance)
+			*pDistance = dist;
+		else
+			ret = false;
 	}
 
 	return ret;
+#else
+	return false;
+#endif
 }

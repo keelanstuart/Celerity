@@ -235,13 +235,15 @@
 #define ID_HELP_SDKDOCS                 32837
 #define ID_HELP_COMPONENTGENERATOR      32838
 #define ID_HELP_GENCOMPONENT            32839
+#define ID_EDIT_ASSIGN                  32840
+#define ID_EDIT_ASSIGNROOT              32841
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        346
-#define _APS_NEXT_COMMAND_VALUE         32840
+#define _APS_NEXT_COMMAND_VALUE         32842
 #define _APS_NEXT_CONTROL_VALUE         1015
 #define _APS_NEXT_SYMED_VALUE           364
 #endif

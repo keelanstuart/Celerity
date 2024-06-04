@@ -181,7 +181,7 @@ bool CameraImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void CameraImpl::Render(Object::RenderFlags flags)
+void CameraImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 
 }
@@ -352,7 +352,7 @@ const glm::fmat4x4 *CameraImpl::GetProjectionMatrix(glm::fmat4x4 *mat)
 }
 
 
-bool CameraImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
+bool CameraImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	return false;
 }

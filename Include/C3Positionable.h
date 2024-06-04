@@ -12,12 +12,22 @@
 namespace c3
 {
 
-	#define POSFLAG_POSCHANGED			0x0001
-	#define POSFLAG_ORICHANGED			0x0002
-	#define POSFLAG_SCLCHANGED			0x0004
-
-	#define POSFLAG_REBUILDMATRIX		(POSFLAG_POSCHANGED | POSFLAG_ORICHANGED | POSFLAG_SCLCHANGED)
-	#define POSFLAG_MATRIXCHANGED		0x0008
+	/// <summary>
+	/// Positionable is a Component that allows you to place an Object spatially
+	///
+	/// Requires: none
+	/// 
+	/// Recognized Properties:
+	///		- 'POS' : "Position" 
+	///			+ FVEC3 - The translation of the Object away from it's parent
+	///
+	///		- 'ORI' : "Orientation" 
+	///			+ FVEC4 QUATERNION - The orientation of the Object relative to it's parent
+	/// 
+	///		- 'SCL' : "Scale" 
+	///			+ FVEC3 - The scale of the Object
+	///
+	/// </summary>
 
 	class C3_API Positionable : public Component
 	{
@@ -74,8 +84,13 @@ namespace c3
 		// adjust the roll (in radians)
 		virtual void AdjustRoll(float dr) = NULL;
 
+		// Gets the direction vector that "forward" for the Object. The identity facing vector is +Y
 		virtual const glm::fvec3 *GetFacingVector(glm::fvec3 *vec = nullptr) = NULL;
+
+		// Gets the direction vector that is "up" for the Object. The identity up vector is +Z
 		virtual const glm::fvec3 *GetLocalUpVector(glm::fvec3 *vec = nullptr) = NULL;
+
+		// Gets the direction vector that is "right" for the Object. The identity up vector is +X
 		virtual const glm::fvec3 *GetLocalRightVector(glm::fvec3 *vec = nullptr) = NULL;
 
 
@@ -103,7 +118,7 @@ namespace c3
 		virtual const glm::fmat4x4 *GetTransformMatrixNormal(glm::fmat4x4 *matn = nullptr) = NULL;
 
 		/// Casts a ray against the object
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const = NULL;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const = NULL;
 
 	};
 

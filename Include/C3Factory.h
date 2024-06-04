@@ -30,7 +30,7 @@ namespace c3
 		virtual Object *Build(Prototype *pproto = nullptr, GUID *override_guid = nullptr, Object *pparent = nullptr) = NULL;
 
 		/// Builds a new Object, optionally applying the attributes of an existing Object
-		virtual Object *Build(Object *pobject, GUID *override_guid = nullptr, Object *pparent = nullptr) = NULL;
+		virtual Object *Build(Object *pobject, GUID *override_guid = nullptr, Object *pparent = nullptr, bool build_children = false) = NULL;
 
 		/// Creates a new Prototype, optionally copying the attributes from an existing Prototype
 		virtual Prototype *CreatePrototype(Prototype *pproto = nullptr) = NULL;
@@ -61,7 +61,7 @@ namespace c3
 
 		/// You can determine which Prototypes you want to save by implementing a PROTO_SAVE_HUERISTIC_FUNCTION
 		/// and passing it to SavePrototypes. Simply return true if the Prototype should be stored, false otherwise.
-		typedef bool (__cdecl *PROTO_SAVE_HUERISTIC_FUNCTION)(Prototype *pproto);
+		using PROTO_SAVE_HUERISTIC_FUNCTION = std::function<bool(Prototype *)>;
 
 		/// Saves [maybe, given a hueristic - nullptr saves all] all Prototypes to a stream
 		virtual bool SavePrototypes(genio::IOutputStream *os, PROTO_SAVE_HUERISTIC_FUNCTION pshfunc = nullptr) = NULL;

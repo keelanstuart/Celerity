@@ -1,0 +1,28 @@
+<prototypes>
+    <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD6}" name="SCRIPT1_REFCUBE" group="Samples" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">test.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.016700</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD7}" name="SCRIPT2_REFCUBE" group="Samples" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">test2.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.016700</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

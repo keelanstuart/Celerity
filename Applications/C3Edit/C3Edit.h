@@ -104,6 +104,9 @@ public:
 	void SetActiveProperties(props::IPropertySet *props, bool readonly = false, const TCHAR *title = nullptr);
 	void SetActivePrototype(c3::Prototype *pproto, bool readonly = false, const TCHAR *title = nullptr);
 	void SetActiveObject(c3::Object *pobj, bool readonly = false, const TCHAR *title = nullptr);
+	void UpdateObjectList();
+	void UpdateStatusMessage(const TCHAR *msg = nullptr);
+
 	void RefreshActiveProperties();
 
 	virtual void PreLoadState();

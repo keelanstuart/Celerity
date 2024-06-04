@@ -988,10 +988,12 @@ void C3EditFrame::OnRunScript()
 	C3EditView *pSceneView = dynamic_cast<C3EditView *>(GetActiveView());
 	if (pSceneView)
 	{
+		C3EditDoc *pdoc = pSceneView->GetDocument();
+
 		CString s;
 		m_wndScripting.GetImmediateScript(s);
 
-		size_t maxi = pSceneView->GetNumSelected();
+		size_t maxi = pdoc->GetNumSelected();
 		if (!maxi)
 		{
 			c3::Scriptable *psc = (c3::Scriptable *)pSceneView->GetDocument()->m_RootObj->FindComponent(c3::Scriptable::Type());
@@ -1001,18 +1003,12 @@ void C3EditFrame::OnRunScript()
 			return;
 		}
 
-		for (size_t i = 0; i < maxi; i++)
+		pdoc->DoForAllSelected([&](c3::Object *pobj)
 		{
-			c3::Object *po = pSceneView->GetSelection(i);
-			if (!po)
-				continue;
-
-			c3::Scriptable *psc = (c3::Scriptable *)po->FindComponent(c3::Scriptable::Type());
-			if (!psc)
-				continue;
-
-			psc->Execute((LPCTSTR)s);
-		}
+			c3::Scriptable *psc = (c3::Scriptable *)pobj->FindComponent(c3::Scriptable::Type());
+			if (psc)
+				psc->Execute((LPCTSTR)s);
+		});
 	}
 }
 
@@ -1028,22 +1024,14 @@ void C3EditFrame::OnUpdateScript()
 	C3EditView *pSceneView = dynamic_cast<C3EditView *>(GetActiveView());
 	if (pSceneView)
 	{
-		size_t maxi = pSceneView->GetNumSelected();
-		if (!maxi)
-			return;
+		C3EditDoc *pdoc = pSceneView->GetDocument();
 
-		for (size_t i = 0; i < maxi; i++)
+		pdoc->DoForAllSelected([&](c3::Object *pobj)
 		{
-			c3::Object *po = pSceneView->GetSelection(i);
-			if (!po)
-				continue;
-
-			props::IProperty *pp = po->GetProperties()->GetPropertyById('SRCF');
-			if (!pp)
-				continue;
-
-			po->PropertyChanged(pp);
-		}
+			props::IProperty *pp = pobj->GetProperties()->GetPropertyById('SRCF');
+			if (pp)
+				pobj->PropertyChanged(pp);
+		});
 	}
 }
 
@@ -1239,3 +1227,4 @@ void C3EditFrame::OnUpdateHelpGenComponent(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable();
 }
+

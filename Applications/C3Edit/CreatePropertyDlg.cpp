@@ -122,9 +122,9 @@ void CCreatePropertyDlg::OnOK()
 	}
 
 	m_PropFCC = 0;
-	uint8_t *b = (uint8_t *)&m_PropFCC;
+	uint8_t *b = (uint8_t *)&m_PropFCC + 3;
 	for (size_t i = 0; (i < fcctmp.GetLength()) && (i < 4); i++)
-		*(b++) = (uint8_t)fcctmp[(int)i];
+		*(b--) = (uint8_t)fcctmp[(int)i];
 
 	m_PropType = (props::IProperty::PROPERTY_TYPE)m_wndComboType.GetItemData(m_wndComboType.GetCurSel());
 	m_PropAspect = (props::IProperty::PROPERTY_ASPECT)m_wndComboAspect.GetItemData(m_wndComboAspect.GetCurSel());

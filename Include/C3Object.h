@@ -50,7 +50,7 @@ namespace c3
 		#define OF_PARENTDIRTY		0x00008000					// Indicates that the parent has changed since the last update
 		#define OF_LIGHT			0x00010000					// Indicates that the object emits light
 		#define OF_CASTSHADOW		0x00020000					// Indicates that the object casts a shadow
-		#define OF_NOMODELSCALE		0x00040000					// Affects only ModelRenderer; does not scale the model
+		#define OF_NOMODELSCALE		0x00040000					// DEPRECATED; Affects only ModelRenderer; does not scale the model
 		#define OF_LOCKED			0x00080000					// Don't allow changes in the editor
 
 		#define OF_EXPANDED			0x10000000					// A flag for tools, indicates that the child objects should be displayed
@@ -130,7 +130,7 @@ namespace c3
 		virtual void Update(float elapsed_time = 0.0f) = NULL;
 
 		/// Called to render the object; returns true if Postrender should be called, false if not
-		virtual bool Render(RenderFlags flags = 0, int draworder = 0) = NULL;
+		virtual bool Render(RenderFlags flags = OF_DRAW | OF_DRAWINEDITOR | OF_LIGHT, int draworder = 0, const glm::fmat4x4 *pmat = nullptr) = NULL;
 
 		/// Loads the Object from a stream
 		virtual bool Load(genio::IInputStream *is) = NULL;
@@ -142,7 +142,7 @@ namespace c3
 		virtual void PostLoad() = NULL;
 
 		/// Casts a ray against the object
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance = nullptr, Object **ppHitObj = nullptr, props::TFlags64 flagmask = OF_DRAW, size_t child_depth = 0) const = NULL;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat = nullptr, float *pDistance = nullptr, Object **ppHitObj = nullptr, props::TFlags64 flagmask = OF_DRAW, size_t child_depth = 0) const = NULL;
 
 	};
 

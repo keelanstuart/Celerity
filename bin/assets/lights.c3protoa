@@ -1,0 +1,67 @@
+<prototypes>
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3C}" name="Light" group="Lights" flags="65541">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">def-omnilight.c3rm</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">[lineargradient.tex]</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[sphere_lo.model]</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3" aspect="COLOR_RGB">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="LATN" name="LightAttenuation" type="FLOAT">1.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3D}" name="FadingLight" group="Lights" flags="65541">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">def-omnilight.c3rm</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">[lineargradient.tex]</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[sphere_lo.model]</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3" aspect="COLOR_RGB">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="LATN" name="LightAttenuation" type="FLOAT">1.000000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">fading_light.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.066700</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3E}" name="FlickeringLight" group="Lights" flags="65541">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">def-omnilight.c3rm</powerprops:property>
+            <powerprops:property id="GRAD" name="AttenGradientTexture" type="STRING">[lineargradient.tex]</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[sphere_lo.model]</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3" aspect="COLOR_RGB">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="LATN" name="LightAttenuation" type="FLOAT">1.000000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">flickering_light.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.066700</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{95082539-71FB-4DBA-95CA-F56E09F7FB3F}" name="StrobingLight" group="Lights" flags="65541">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">def-omnilight.c3rm</powerprops:property>
+            <powerprops:property id="GRAD" name="GradientTexture" type="STRING">[lineargradient.tex]</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[sphere_lo.model]</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3" aspect="COLOR_RGB">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="LATN" name="LightAttenuation" type="FLOAT">1.000000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">strobing_light.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.066700</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

@@ -59,5 +59,6 @@ public:
 	virtual BOOL OnNotify(WPARAM wParam, LPARAM lParam, LRESULT *pResult);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
+    afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
 };
 

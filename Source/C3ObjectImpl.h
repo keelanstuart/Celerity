@@ -76,7 +76,7 @@ namespace c3
 
 		virtual void Update(float elapsed_time = 0.0f) final;
 
-		virtual bool Render(Object::RenderFlags flags, int draworder) final;
+		virtual bool Render(Object::RenderFlags flags, int draworder, const glm::fmat4x4 *pmat = nullptr) final;
 
 		virtual bool Load(genio::IInputStream *is) final;
 
@@ -84,7 +84,7 @@ namespace c3
 
 		virtual void PostLoad() final;
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance = nullptr, Object **ppHitObj = nullptr, props::TFlags64 flagmask = OF_DRAW, size_t child_depth = 0) const final;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance = nullptr, Object **ppHitObj = nullptr, props::TFlags64 flagmask = OF_DRAW, size_t child_depth = 0) const final;
 
 		virtual void PropertyChanged(const props::IProperty *pprop) final;
 

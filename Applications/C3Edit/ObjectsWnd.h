@@ -26,7 +26,7 @@ public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
 
 	size_t GetVisibleItemCount(const c3::Object *proot);
-	const c3::Object *GetItemByIndex(const c3::Object *proot, size_t index);
+	const c3::Object *GetItemByIndex(const c3::Object *proot, size_t index, size_t *depth = nullptr);
 
 	void UpdateContents();
 

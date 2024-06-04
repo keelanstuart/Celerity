@@ -36,7 +36,6 @@ Model *Model::Create(Renderer *prend)
 ModelImpl::ModelImpl(RendererImpl *prend)
 {
 	m_pRend = prend;
-	m_MatStack = MatrixStack::Create();
 	m_Bounds = BoundingBox::Create();
 	m_ScratchBounds = BoundingBox::Create();
 	m_DefaultAnim = nullptr;
@@ -50,7 +49,6 @@ ModelImpl::~ModelImpl()
 
 void ModelImpl::Release()
 {
-	C3_SAFERELEASE(m_MatStack);
 	C3_SAFERELEASE(m_Bounds);
 	C3_SAFERELEASE(m_ScratchBounds);
 
@@ -424,22 +422,20 @@ void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, cons
 	if (inst && (((InstanceDataImpl *)inst)->m_pSourceModel != this))
 		return;
 
-	if (pmat)
-		m_MatStack->Push(pmat);
+	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	if (!pmat)
+		pmat = &imat;
 
 	for (size_t i = 0, maxi = m_Nodes.size(); i < maxi; i++)
 	{
 		// from this point, only draw top-level nodes
 		if (m_Nodes[i]->parent == NO_PARENT)
-			DrawNode(i, allow_material_changes, inst);
+			DrawNode(i, pmat, allow_material_changes, inst);
 	}
-
-	if (pmat)
-		m_MatStack->Pop();
 }
 
 
-bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const Model::InstanceData *inst) const
+bool ModelImpl::DrawNode(NodeIndex nodeidx, const glm::fmat4x4 *pmat, bool allow_material_changes, const Model::InstanceData *inst) const
 {
 	const SNodeInfo *pnode = m_Nodes[nodeidx];
 
@@ -447,15 +443,10 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const M
 		return false;
 
 	// push the node's transform to build the hierarchy correctly
-	if (inst)
-		m_MatStack->Push(&(((InstanceDataImpl *)inst)->m_NodeMat[nodeidx]));
-	else
-		m_MatStack->Push(&pnode->mat);
-
-	glm::fmat4x4 m;
+	glm::fmat4x4 mat = *pmat * (inst ? ((InstanceDataImpl *)inst)->m_NodeMat[nodeidx] : pnode->mat);
 
 	// set up the world matrix to draw meshes at this node level
-	m_pRend->SetWorldMatrix(m_MatStack->Top(&m));
+	m_pRend->SetWorldMatrix(&mat);
 
 	MeshIndex maxi = pnode->meshes.size();
 	for (MeshIndex i = 0; i < maxi; i++)
@@ -483,18 +474,15 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, bool allow_material_changes, const M
 		assert(m_Nodes[pnode->children[c]] != nullptr);
 
 		// recursively draw each of the child nodes here
-		DrawNode(pnode->children[c], allow_material_changes, inst);
+		DrawNode(pnode->children[c], &mat, allow_material_changes, inst);
 	}
-
-	// pop the node's transform
-	m_MatStack->Pop();
 
 	return true;
 }
 
 // TODO: add a way to pass the normal of the face we collided with throughout the collision pipeline
-bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, size_t *pMeshIndex,
-							float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
+bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, size_t *pMeshIndex,
+							float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const InstanceData *inst) const
 {
 	bool ret = false;
 
@@ -502,22 +490,22 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, Ma
 
 	float mindist = FLT_MAX;
 
+	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	if (!pmat)
+		pmat = &imat;
+
 	BoundingBoxImpl bb(m_Bounds);
-	bb.Align(mats->Top());
+	bb.Align(pmat);
 
 	if (!bb.CheckCollision(pRayPos, pRayDir))
 		return false;
 
 	for (size_t ni = 0, max_ni = m_Nodes.size(); ni < max_ni; ni++)
 	{
-		const SNodeInfo *node = m_Nodes[ni];
-		if (!node)
-			continue;
-
 		// from this point, only draw top-level nodes
-		if (node->parent == NO_PARENT)
+		if (m_Nodes[ni]->parent == NO_PARENT)
 		{
-			ret = IntersectNode(node, pRayPos, pRayDir, mats, &d, pFaceIndex, pUV);
+			ret = IntersectNode(ni, pRayPos, pRayDir, pmat, &d, pFaceIndex, pUV, inst);
 
 			if (ret && (d < mindist))
 			{
@@ -535,16 +523,18 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, Ma
 	return ret;
 }
 
-bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats,
-				   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV) const
+bool ModelImpl::IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat,
+				   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const Model::InstanceData *inst) const
 {
+	const SNodeInfo *pnode = m_Nodes[nodeidx];
+
 	if (!pnode || !pnode->flags.IsSet(NodeFlag::COLLIDE))
 		return false;
 
 	bool ret = false;
 
 	// push the node's transform to build the hierarchy correctly
-	mats->Push(&pnode->mat);
+	glm::fmat4x4 mat = *pmat * (inst ? ((InstanceDataImpl *)inst)->m_NodeMat[nodeidx] : pnode->mat);
 
 	float tmpdist = FLT_MAX;
 	if (!pDistance)
@@ -559,7 +549,7 @@ bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, 
 			continue;
 
 		float tmpd = d;
-		if (mesh->pmesh->Intersect(pRayPos, pRayDir, &tmpd, pFaceIndex, pUV, mats->Top()))
+		if (mesh->pmesh->Intersect(pRayPos, pRayDir, &tmpd, pFaceIndex, pUV, &mat))
 		{
 			if (tmpd < d)
 				d = tmpd;
@@ -572,18 +562,11 @@ bool ModelImpl::IntersectNode(const SNodeInfo *pnode, const glm::vec3 *pRayPos, 
 		}
 	}
 
-	for (const auto &cit : pnode->children)
+	for (auto cit : pnode->children)
 	{
-		// recursively draw each of the child nodes here
-		const SNodeInfo *child = m_Nodes[cit];
-		if (!child)
-			continue;
-
-		ret |= IntersectNode(child, pRayPos, pRayDir, mats, pDistance, pFaceIndex, pUV);
+		// recursively intersect each of the child nodes here
+		ret |= IntersectNode(cit, pRayPos, pRayDir, &mat, pDistance, pFaceIndex, pUV, inst);
 	}
-
-	// pop the node's transform
-	mats->Pop();
 
 	return ret;
 }

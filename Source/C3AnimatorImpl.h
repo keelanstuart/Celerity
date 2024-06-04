@@ -43,7 +43,7 @@ namespace c3
 
 		virtual bool Prerender(Object::RenderFlags flags, int draworder);
 
-		virtual void Render(Object::RenderFlags flags);
+		virtual void Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
@@ -61,7 +61,7 @@ namespace c3
 
 		virtual float GetCurAnimTime() const;
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const;
 
 		virtual size_t GetNumValues(const props::IProperty *pprop) const;
 

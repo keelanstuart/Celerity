@@ -242,7 +242,7 @@ bool InterfaceElementImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void InterfaceElementImpl::Render(Object::RenderFlags flags)
+void InterfaceElementImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
@@ -257,7 +257,6 @@ void InterfaceElementImpl::Render(Object::RenderFlags flags)
 				m_pImage = dynamic_cast<Texture2D *>((Texture2D *)(pres->GetData()));
 				if (!m_pImage)
 					m_pImage = pr->GetWhiteTexture();
-
 			}
 			m_Flags.Clear(IEF_UPDATEIMAGE);
 		}
@@ -331,42 +330,42 @@ void InterfaceElementImpl::Render(Object::RenderFlags flags)
 		}
 	}
 
-	PositionableImpl *ppos = dynamic_cast<PositionableImpl *>(m_pOwner->FindComponent(Positionable::Type()));
-	if (ppos)
+	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	if (!pmat)
+		pmat = &imat;
+
+	Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("[guirect.model]"));
+	Model *pmod = (Model *)pres->GetData();
+
+	RECT vr;
+	pr->GetViewport(&vr);
+	float L = (float)vr.left;
+	float R = (float)vr.right;
+	float T = (float)vr.top;
+	float B = (float)vr.bottom;
+	glm::fmat4x4 ortho_projection =
 	{
-		Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("[guirect.model]"));
-		Model *pmod = (Model *)pres->GetData();
+		{ 2.0f/(L-R),   0.0f,         0.0f,   0.0f },
+		{ 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
+		{ 0.0f,         0.0f,        -1.0f,   0.0f },
+		{ (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
+	};
 
-		RECT vr;
-		pr->GetViewport(&vr);
-		float L = (float)vr.left;
-		float R = (float)vr.right;
-		float T = (float)vr.top;
-		float B = (float)vr.bottom;
-		glm::fmat4x4 ortho_projection =
-		{
-			{ 2.0f/(L-R),   0.0f,         0.0f,   0.0f },
-			{ 0.0f,         2.0f/(T-B),   0.0f,   0.0f },
-			{ 0.0f,         0.0f,        -1.0f,   0.0f },
-			{ (R+L)/(L-R),  (T+B)/(B-T),  0.0f,   1.0f },
-		};
+	m_pMethodImage->SetActiveTechnique(m_TechImage);
+	pr->UseRenderMethod(m_pMethodImage);
+	pr->SetProjectionMatrix(&ortho_projection);
+	pr->UseMaterial(m_pImgMtl);
+	glm::fmat4x4 mat = *pmat * glm::scale(glm::fvec3(m_Dims.x, 1.0f, m_Dims.y));
+	pmod->Draw(&mat, false);
 
-		m_pMethodImage->SetActiveTechnique(m_TechImage);
-		pr->UseRenderMethod(m_pMethodImage);
-		pr->SetProjectionMatrix(&ortho_projection);
-		pr->UseMaterial(m_pImgMtl);
-		glm::fmat4x4 mat = *ppos->GetTransformMatrix() * glm::scale(glm::fvec3(m_Dims.x, 1.0f, m_Dims.y));
-		pmod->Draw(&mat, false);
-
-		if (m_pTextVB && *s && m_pFont)
-		{
-			m_pMethodImage->SetActiveTechnique(m_TechText);
-			pr->UseRenderMethod(m_pMethodText);
-			pr->UseMaterial(m_pTextMtl);
-			pr->UseVertexBuffer(m_pTextVB);
-			pr->SetWorldMatrix(ppos->GetTransformMatrix());
-			pr->DrawPrimitives(Renderer::PrimType::TRILIST, m_TextQuads * 6);
-		}
+	if (m_pTextVB && *s && m_pFont)
+	{
+		m_pMethodImage->SetActiveTechnique(m_TechText);
+		pr->UseRenderMethod(m_pMethodText);
+		pr->UseMaterial(m_pTextMtl);
+		pr->UseVertexBuffer(m_pTextVB);
+		pr->SetWorldMatrix(pmat);
+		pr->DrawPrimitives(Renderer::PrimType::TRILIST, m_TextQuads * 6);
 	}
 }
 
@@ -442,19 +441,21 @@ void InterfaceElementImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool InterfaceElementImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
+bool InterfaceElementImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	if (!pRayPos || !pRayDir)
 		return false;
 
-	glm::fmat4x4 mat = mats ? *(mats->Top()) : glm::identity<glm::fmat4x4>();
+	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	if (!pmat)
+		pmat = &imat;
 
 	bool ret = false;
 
-	glm::fvec3 v_lt = mat * glm::vec4(m_Rect.left, m_Rect.top, 0, 1);
-	glm::fvec3 v_lb = mat * glm::vec4(m_Rect.left, m_Rect.bottom, 0, 1);
-	glm::fvec3 v_rb = mat * glm::vec4(m_Rect.right, m_Rect.bottom, 0, 1);
-	glm::fvec3 v_rt = mat * glm::vec4(m_Rect.right, m_Rect.top, 0, 1);
+	glm::fvec3 v_lt = *pmat * glm::vec4(m_Rect.left, m_Rect.top, 0, 1);
+	glm::fvec3 v_lb = *pmat * glm::vec4(m_Rect.left, m_Rect.bottom, 0, 1);
+	glm::fvec3 v_rb = *pmat * glm::vec4(m_Rect.right, m_Rect.bottom, 0, 1);
+	glm::fvec3 v_rt = *pmat * glm::vec4(m_Rect.right, m_Rect.top, 0, 1);
 
 	glm::vec2 luv;
 	float ldist;

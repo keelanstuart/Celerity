@@ -52,6 +52,7 @@ BEGIN_MESSAGE_MAP(CPrototypeView, CDockablePane)
 	ON_NOTIFY(TVN_SELCHANGED, PROTOTREE_ID, OnSelectionChanged)
 	ON_WM_LBUTTONUP()
 	ON_WM_MOUSEMOVE()
+	ON_WM_ACTIVATE()
 END_MESSAGE_MAP()
 
 
@@ -212,9 +213,53 @@ enum EPopupCommand
 	PC_IMPORT,
 	PC_SAVEAS,
 	PC_DUPLICATE,
-	PC_RENAME
+	PC_RENAME,
+	PC_CREATEABSORB,
+	PC_ABSORB
 };
 
+
+void Absorb(c3::Prototype *ptarg, c3::Object *psrc)
+{
+	if (!ptarg || !psrc)
+		return;
+
+	ptarg->GetProperties()->AppendPropertySet(psrc->GetProperties(), false);
+	ptarg->Flags().SetAll(psrc->Flags());
+	for (size_t i = 0; i < psrc->GetNumComponents(); i++)
+		ptarg->AddComponent(psrc->GetComponent(i)->GetType());
+}
+
+void ForEachTreeSubItemDo(CTreeCtrl* pTreeCtrl, HTREEITEM hRoot, std::function<void(c3::Prototype *)> func, bool procsiblings = false);
+
+void ForEachTreeSubItemDo(CTreeCtrl* pTreeCtrl, HTREEITEM hRoot, std::function<void(c3::Prototype *)> func, bool procsiblings)
+{
+	if (!pTreeCtrl || !hRoot || !func)
+		return;
+
+	HTREEITEM hItem = hRoot;
+
+	while (hItem)
+	{
+		// Get the item data
+		c3::Prototype *pp = (c3::Prototype *)pTreeCtrl->GetItemData(hItem);
+		if (pp)
+		{
+			// Call the user-provided function
+			func(pp);
+		}
+
+		// Recursively process child items
+		HTREEITEM hChild = pTreeCtrl->GetChildItem(hItem);
+		if (hChild)
+		{
+			ForEachTreeSubItemDo(pTreeCtrl, hChild, func, true);
+		}
+
+		// Move to the next sibling item
+		hItem = procsiblings ? pTreeCtrl->GetNextSiblingItem(hItem) : NULL;
+	}
+}
 
 void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 {
@@ -227,12 +272,16 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 		return;
 	}
 
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
 	c3::Factory *pfac = theApp.m_C3->GetFactory();
 
 	HMENU menu = ::CreatePopupMenu();
 	HMENU submenu = ::CreatePopupMenu();
 
 	MyAppendMenuItem(submenu, MFT_STRING, _T("Prototype"), true, 0, PC_CREATEPROTO);
+	if (pdoc->GetNumSelected() == 1)
+		MyAppendMenuItem(submenu, MFT_STRING, _T("Prototype (Absorb Selection)"), true, 0, PC_CREATEABSORB);
 	MyAppendMenuItem(submenu, MFT_STRING, _T("Group"), true, 0, PC_CREATEGROUP);
 
 	MyAppendMenuItem(menu, MFT_STRING, _T("New"), true, submenu);
@@ -240,6 +289,16 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 	MyAppendMenuItem(menu, MFT_STRING, _T("Save Prototypes As ..."), true, 0, PC_SAVEAS);
 
 	MyAppendMenuItem(menu, MFT_SEPARATOR);
+
+	std::function<bool(HTREEITEM)> IsGroupItem = [&](HTREEITEM testhti) -> bool
+	{
+		DWORD_PTR p = pWndTree->GetItemData(testhti);
+
+		if (p)
+			return false;
+
+		return true;
+	};
 
 	if (point != CPoint(-1, -1))
 	{
@@ -268,45 +327,63 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 		HTREEITEM hpi = hTreeItem;
 		if (!hpi || !pWndTree->GetParentItem(hpi))
 			hpi = pWndTree->GetRootItem();
-		else
+		else if (!IsGroupItem(hpi))
 			hpi = pWndTree->GetParentItem(hpi);
+
+		std::function<void(HTREEITEM, tstring &)> BuildGroupName = [&](HTREEITEM hitem, tstring &retname)
+		{
+			if (!IsGroupItem(hitem))
+				hitem = pWndTree->GetParentItem(hitem);
+
+			while (hitem && (hitem != pWndTree->GetRootItem()))
+			{
+				CString s = pWndTree->GetItemText(hitem);
+				if (!retname.empty())
+					retname.insert(retname.begin(), _T('/'));
+
+				retname.insert(0, s);
+				hitem = pWndTree->GetParentItem(hitem);
+			}
+		};
 
 		UINT ret = TrackPopupMenu(menu, TPM_NONOTIFY | TPM_RETURNCMD | TPM_LEFTALIGN, point.x, point.y, 0, GetSafeHwnd(), NULL);
 		switch (ret)
 		{
+			case PC_CREATEABSORB:
 			case PC_CREATEPROTO:
 			{
 				c3::Prototype *pcp = pfac->CreatePrototype();
 
-				TCHAR protoname[256];
-				GUID g = pcp->GetGUID();
-				_stprintf_s(protoname, _T("proto_%08x%04x%04x%02x%02x%02x%02x%02x%02x%02x%02x"), g.Data1, g.Data2, g.Data3,
-					g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
-				pcp->SetName(protoname);
-
-				tstring groupname;
-				if (pproto)
+				if (ret != PC_CREATEABSORB)
 				{
-					pcp->SetGroup(pproto->GetGroup());
+					TCHAR protoname[256];
+					GUID g = pcp->GetGUID();
+					_stprintf_s(protoname, _T("proto_%08x%04x%04x%02x%02x%02x%02x%02x%02x%02x%02x"), g.Data1, g.Data2, g.Data3,
+								g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
+					pcp->SetName(protoname);
 				}
 				else
 				{
-					HTREEITEM hi = hpi;
-					while (hi && pWndTree->GetParentItem(hi))
-					{
-						if (!groupname.empty())
-							groupname.insert(_T('/'), 0);
-
-						groupname = tstring((LPCTSTR)(pWndTree->GetItemText(hi))) + groupname;
-						pWndTree->Expand(hi, TVE_EXPAND);
-
-						hi = pWndTree->GetParentItem(hi);
-					}
+					pcp->SetName(pdoc->GetSelection(0)->GetName());
 				}
+
+				tstring groupname;
+				if (pproto)
+					groupname = pproto->GetGroup();
+				else
+					BuildGroupName(hpi, groupname);
+
+				pcp->SetGroup(groupname.c_str());
 
 				CString tmp = pcp->GetName();
 				HTREEITEM hitem = m_wndPrototypeView.InsertItem(tmp, IMGIDX_PROTOTYPE, IMGIDX_PROTOTYPE, hpi);
 				m_wndPrototypeView.SetItemData(hitem, (DWORD_PTR)pcp);
+
+				if (ret == PC_CREATEABSORB)
+					Absorb(pcp, pdoc->GetSelection(0));
+
+				pWndTree->EnsureVisible(hitem);
+				theApp.SetActivePrototype(pcp);
 
 				break;
 			}
@@ -339,6 +416,24 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 				filter += _T("|Celerity Prototypes (Binary)|*.c3protob");
 				filter += _T("|*.*|All Files (*.*)||");
 
+				tstring groupname;
+				BuildGroupName(hpi, groupname);
+
+				c3::Factory::PROTO_SAVE_HUERISTIC_FUNCTION GroupSaveFunc = [&](c3::Prototype *pp) -> bool
+				{
+					if (!_tcsicmp(groupname.c_str(), pp->GetGroup()))
+						return true;
+
+					return false;
+				};
+
+				c3::Factory::PROTO_SAVE_HUERISTIC_FUNCTION ProtoSaveFunc = [&](c3::Prototype *pp) -> bool
+				{
+					return (pp == pproto);
+				};
+
+				c3::Factory::PROTO_SAVE_HUERISTIC_FUNCTION ProtoSaveFilter = IsGroupItem(hpi) ? GroupSaveFunc : ProtoSaveFunc;
+
 				CFileDialog fd(FALSE, nullptr, nullptr, OFN_ENABLESIZING, filter.c_str(), nullptr, sizeof(OPENFILENAME));
 				if (fd.DoModal() == IDOK)
 				{
@@ -352,7 +447,7 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 								tinyxml2::XMLDocument protodoc;
 								tinyxml2::XMLElement *protoroot = protodoc.NewElement("prototypes");
 								protodoc.InsertEndChild(protoroot);
-								theApp.m_C3->GetFactory()->SavePrototypes(protoroot);
+								theApp.m_C3->GetFactory()->SavePrototypes(protoroot, ProtoSaveFilter);
 
 								char *fn;
 								CONVERT_TCS2MBCS(fd.GetPathName(), fn);
@@ -369,7 +464,7 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 									pos->Assign(fd.GetPathName());
 									if (pos->Open())
 									{
-										theApp.m_C3->GetFactory()->SavePrototypes(pos);
+										theApp.m_C3->GetFactory()->SavePrototypes(pos, ProtoSaveFilter);
 										pos->Close();
 									}
 
@@ -412,16 +507,7 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 						hpi = pWndTree->GetParentItem(hpi);
 
 					tstring groupname;
-					HTREEITEM htmp = hpi;
-					while (htmp && (htmp != pWndTree->GetRootItem()))
-					{
-						CString s = pWndTree->GetItemText(htmp);
-						if (!groupname.empty())
-							groupname.insert(groupname.begin(), _T('/'));
-
-						groupname.insert(0, s);
-						htmp = pWndTree->GetParentItem(htmp);
-					}
+					BuildGroupName(hpi, groupname);
 
 					POSITION fpos = fd.GetStartPosition();
 					while (fpos)
@@ -450,10 +536,21 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 
 			case PC_DELETE:
 			{
-				if (pproto)
+				bool d = false;
+				if (IsGroupItem(hTreeItem))
+					d = (MessageBox(_T("Do you really want to delete this group and all prototypes in it?"), _T("Confirm Group Deletion"), MB_YESNO) == IDYES);
+				else
+					d = (MessageBox(_T("Do you really want to delete this prototype?"), _T("Confirm Prototype Deletion"), MB_YESNO) == IDYES);
+
+				if (d)
 				{
+					ForEachTreeSubItemDo(pWndTree, hTreeItem, [&](c3::Prototype *pp)
+					{
+						pfac->RemovePrototype(pp);
+					});
+
+					theApp.SetActivePrototype(nullptr);
 					theApp.SetActiveProperties(nullptr);
-					pfac->RemovePrototype(pproto);
 					pWndTree->DeleteItem(hTreeItem);
 				}
 				break;
@@ -742,4 +839,10 @@ void CPrototypeView::OnMouseMove(UINT nFlags, CPoint point)
 	} 
 
 	CDockablePane::OnMouseMove(nFlags, point);
+}
+
+
+void CPrototypeView::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
+{
+	CDockablePane::OnActivate(nState, pWndOther, bMinimized);
 }

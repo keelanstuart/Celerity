@@ -45,16 +45,34 @@ BEGIN_MESSAGE_MAP(C3ObjectListCtrl, CListCtrl)
 	ON_WM_LBUTTONUP()
 	ON_NOTIFY_REFLECT(NM_CLICK, &C3ObjectListCtrl::OnNMClick)
 	ON_WM_CONTEXTMENU()
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, &C3ObjectListCtrl::OnUpdateEditDelete)
 	ON_COMMAND(ID_EDIT_DELETE, &C3ObjectListCtrl::OnEditDelete)
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DUPLICATE, &C3ObjectListCtrl::OnUpdateEditDuplicate)
 	ON_COMMAND(ID_EDIT_DUPLICATE, &C3ObjectListCtrl::OnEditDuplicate)
+
+	ON_UPDATE_COMMAND_UI(ID_EDIT_ASSIGNROOT, &C3ObjectListCtrl::OnUpdateEditAssignRoot)
+	ON_COMMAND(ID_EDIT_ASSIGNROOT, &C3ObjectListCtrl::OnEditAssignRoot)
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_GROUP, &C3ObjectListCtrl::OnUpdateEditGroup)
 	ON_COMMAND(ID_EDIT_GROUP, &C3ObjectListCtrl::OnEditGroup)
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNGROUP, &C3ObjectListCtrl::OnUpdateEditUngroup)
 	ON_COMMAND(ID_EDIT_UNGROUP, &C3ObjectListCtrl::OnEditUngroup)
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CENTERCAMERAON, &C3ObjectListCtrl::OnUpdateEditCenterCamera)
 	ON_COMMAND(ID_EDIT_CENTERCAMERAON, &C3ObjectListCtrl::OnEditCenterCamera)
+
+	ON_COMMAND(ID_EDIT_COPY, &C3ObjectListCtrl::OnEditCopy)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &C3ObjectListCtrl::OnUpdateEditCopy)
+
+	ON_COMMAND(ID_EDIT_CUT, &C3ObjectListCtrl::OnEditCut)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, &C3ObjectListCtrl::OnUpdateEditCut)
+
+	ON_COMMAND(ID_EDIT_PASTE, &C3ObjectListCtrl::OnEditPaste)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, &C3ObjectListCtrl::OnUpdateEditPaste)
+
 	ON_WM_KEYUP()
 	ON_WM_KEYDOWN()
 	ON_NOTIFY_REFLECT(LVN_BEGINDRAG, &C3ObjectListCtrl::OnLvnBegindrag)
@@ -135,10 +153,11 @@ void C3ObjectListCtrl::DrawItem(LPDRAWITEMSTRUCT pdi)
 	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
 	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
 	const c3::Object *pobj = ((CObjectWnd *)GetParent())->GetItemByIndex(pdoc->m_RootObj, pdi->itemID);
+	if (!pobj)
+		return;
 
 	props::TFlags64 ofl = 0;
-	if (pobj)
-		ofl = ((c3::Object *)pobj)->Flags();
+	ofl = ((c3::Object *)pobj)->Flags();
 
 	// Get object name
 	const TCHAR *name = pobj ? (pdi->itemID ? pobj->GetName() : pdoc->GetTitle()) : _T("ERROR");
@@ -162,6 +181,7 @@ void C3ObjectListCtrl::DrawItem(LPDRAWITEMSTRUCT pdi)
 	Gdiplus::SolidBrush br_sym(Gdiplus::Color(255, 192, 192, 192));
 	Gdiplus::SolidBrush br_sym_hi(Gdiplus::Color(255, 255, 255, 255));
 	Gdiplus::SolidBrush br_sym_lo(Gdiplus::Color(255, 0, 0, 0));
+	Gdiplus::Pen pen_oproot(Gdiplus::Color(128, 255, 255, 128), 2.0f);
 
 	CRect ritem = pdi->rcItem, rcol[2];
 
@@ -173,10 +193,7 @@ void C3ObjectListCtrl::DrawItem(LPDRAWITEMSTRUCT pdi)
 	while (ppar = ppar->GetParent())
 		od++;
 
-	POSITION vp = pdoc->GetFirstViewPosition();
-	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
-
-	bool issel = pv->IsSelected(pobj);
+	bool issel = pdoc->IsSelected(pobj);
 
 	if (issel)
 	{
@@ -186,6 +203,11 @@ void C3ObjectListCtrl::DrawItem(LPDRAWITEMSTRUCT pdi)
 	{
 		if (!(pdi->itemID & 1))
 			gr.FillRectangle(&br_bg, ritem.left, ritem.top, ritem.Width(), ritem.Height());
+	}
+
+	if (pdoc->m_OperationalRootObj == pobj)
+	{
+		gr.DrawRectangle(&pen_oproot, ritem.left + 1, ritem.top + 1, ritem.Width() - 2, ritem.Height() - 2);
 	}
 
 	Gdiplus::Font f_list(pdi->hDC);
@@ -334,6 +356,19 @@ void C3ObjectListCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
 
 void C3ObjectListCtrl::OnRButtonUp(UINT nFlags, CPoint point)
 {
+	int i = HitTest(point, 0);
+
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	const c3::Object *pobj = ((CObjectWnd *)GetParent())->GetItemByIndex(pdoc->m_RootObj, i);
+
+	if (!pdoc->IsSelected(pobj))
+	{
+		pdoc->ClearSelection();
+		pdoc->AddToSelection(pobj);
+		pfrm->UpdateObjectList();
+	}
+
 	ClientToScreen(&point);
 	OnContextMenu(this, point);
 }
@@ -366,15 +401,15 @@ void C3ObjectListCtrl::OnNMClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 	if (!(pNMItemActivate->uKeyFlags & LVKF_CONTROL))
 	{
-		pv->ClearSelection();
-		pv->AddToSelection(pobj);
+		pdoc->ClearSelection();
+		pdoc->AddToSelection(pobj);
 	}
 	else
 	{
-		if (pv->IsSelected(pobj))
-			pv->RemoveFromSelection(pobj);
+		if (pdoc->IsSelected(pobj))
+			pdoc->RemoveFromSelection(pobj);
 		else
-			pv->AddToSelection(pobj);
+			pdoc->AddToSelection(pobj);
 	}
 
 	UpdateData();
@@ -385,9 +420,23 @@ void C3ObjectListCtrl::OnNMClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 void C3ObjectListCtrl::OnContextMenu(CWnd *pWnd, CPoint point)
 {
-#ifndef SHARED_HANDLERS
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	CPoint cp = point;
+	ScreenToClient(&cp);
+	
+	int i = HitTest(cp, 0);
+
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	const c3::Object *pobj = ((CObjectWnd *)GetParent())->GetItemByIndex(pdoc->m_RootObj, i);
+
+	if (!pdoc->IsSelected(pobj))
+	{
+		pdoc->ClearSelection();
+		pdoc->AddToSelection(pobj);
+		pfrm->UpdateObjectList();
+	}
+
 	theApp.GetContextMenuManager()->ShowPopupMenu(IDR_POPUP_EDIT, point.x, point.y, this, TRUE);
-#endif
 }
 
 void C3ObjectListCtrl::OnUpdateEditDelete(CCmdUI *pCmdUI)
@@ -431,6 +480,28 @@ void C3ObjectListCtrl::OnEditDuplicate()
 	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
 
 	pv->OnEditDuplicate();
+}
+
+
+void C3ObjectListCtrl::OnUpdateEditAssignRoot(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditAssignRoot(pCmdUI);
+}
+
+
+void C3ObjectListCtrl::OnEditAssignRoot()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditAssignRoot();
 }
 
 
@@ -497,6 +568,72 @@ void C3ObjectListCtrl::OnEditCenterCamera()
 	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
 
 	pv->OnEditCenterCamera();
+}
+
+
+void C3ObjectListCtrl::OnUpdateEditCopy(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditCopy(pCmdUI);
+}
+
+
+void C3ObjectListCtrl::OnEditCopy()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditCopy();
+}
+
+
+void C3ObjectListCtrl::OnUpdateEditCut(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditCut(pCmdUI);
+}
+
+
+void C3ObjectListCtrl::OnEditCut()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditCut();
+}
+
+
+void C3ObjectListCtrl::OnUpdateEditPaste(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditPaste(pCmdUI);
+}
+
+
+void C3ObjectListCtrl::OnEditPaste()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditPaste();
 }
 
 

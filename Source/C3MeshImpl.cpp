@@ -260,75 +260,78 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 	if (!pMat)
 		pMat = &identMat;
 
+	// Inverse of the transformation matrix to transform the ray to local space
+	glm::fmat4x4 invMat = glm::inverse(*pMat);
+
+	// Transform ray position and direction to local space
+	glm::vec3 localRayPos = glm::vec3(invMat * glm::vec4(*pRayPos, 1.0f));
+	glm::vec3 localRayDir = glm::normalize(glm::vec3(invMat * glm::vec4(*pRayDir, 0.0f)));
+
+	// Check bounding box collision in local space if m_pBounds is valid
 	if (m_pBounds)
 	{
-		glm::fmat4x4 m;
-		m_pRend->GetWorldMatrix(&m);
-
 		BoundingBoxImpl bb(m_pBounds);
-		bb.Align(pMat);
-
-		if (!bb.CheckCollision(pRayPos, pRayDir))
+		bb.Align(&identMat);
+		if (!bb.CheckCollision(&localRayPos, &localRayDir))
 			return false;
 	}
 
 	bool ret = false;
 
 	BYTE *pvb = nullptr;
-	if (m_VB)
-		m_VB->Lock((void **)&pvb, 0, nullptr, VBLOCKFLAG_READ);
-
-	if (pvb)
+	if (m_VB && m_VB->Lock((void **)&pvb, 0, nullptr, VBLOCKFLAG_READ) == S_OK)
 	{
 		size_t vsz = m_VB->VertexSize();
 
 		uint16_t *pib = nullptr;
-		if (m_IB)
-			m_IB->Lock((void **)&pib, 0, IndexBuffer::IS_16BIT, IBLOCKFLAG_READ);
-
-		if (pib)
+		if (m_IB && m_IB->Lock((void **)&pib, 0, IndexBuffer::IS_16BIT, IBLOCKFLAG_READ) == S_OK)
 		{
-			float cdist, *pcdist = pDistance ? pDistance : &cdist;
-			*pcdist = FLT_MAX;
-
-			size_t cface, *pcface = pFaceIndex ? pFaceIndex : &cface;
-			*pcface = 0;
-
-			glm::vec2 cuv, *pcuv = pUV ? pUV : &cuv;
-			*pcuv = glm::vec2(0, 0);
+			float closestDistance = FLT_MAX;
+			size_t closestFace = 0;
+			glm::vec2 closestUV(0, 0);
 
 			for (size_t face = 0, max_face = m_IB->Count() / 3, i = 0; face < max_face; face++)
 			{
-				// assume the first element in the vertex is position
+				// Assume the first element in the vertex is position
 				glm::vec3 v[3];
 
-				v[0] = *pMat * glm::vec4(*(glm::vec3 *)(pvb + (vsz * pib[i++])), 1);
-				v[1] = *pMat * glm::vec4(*(glm::vec3 *)(pvb + (vsz * pib[i++])), 1);
-				v[2] = *pMat * glm::vec4(*(glm::vec3 *)(pvb + (vsz * pib[i++])), 1);
+				v[0] = *(glm::vec3 *)(pvb + (vsz * pib[i++]));
+				v[1] = *(glm::vec3 *)(pvb + (vsz * pib[i++]));
+				v[2] = *(glm::vec3 *)(pvb + (vsz * pib[i++]));
 
-				glm::vec2 luv;
-				float ldist;
+				glm::vec2 uv;
+				float distance;
 
-				// check for a collision
-				bool hit = glm::intersectRayTriangle(*pRayPos, *pRayDir, v[0], v[2], v[1], luv, ldist);
+				// Check for a collision using the local ray
+				bool hit = glm::intersectRayTriangle(localRayPos, localRayDir, v[0], v[1], v[2], uv, distance);
 
 				if (hit)
 				{
-					// get the nearest collision
-					if ((ldist >= 0) && (ldist < *pcdist))
+					// Transform distance back to the original coordinate space
+					glm::vec3 hitPoint = localRayPos + distance * localRayDir;
+					glm::vec3 transformedHitPoint = glm::vec3(*pMat * glm::vec4(hitPoint, 1.0f));
+					float worldDistance = glm::length(transformedHitPoint - *pRayPos);
+
+					// Get the nearest collision
+					if ((worldDistance >= 0) && (worldDistance < closestDistance))
 					{
-						if (pcdist)
-							*pcdist = ldist;
-
-						if (pcface)
-							*pcface = face;
-
-						if (pcuv)
-							*pcuv = luv;
+						closestDistance = worldDistance;
+						closestFace = face;
+						closestUV = uv;
+						ret = true;
 					}
-
-					ret = true;
 				}
+			}
+
+			// Update the output parameters if an intersection was found
+			if (ret)
+			{
+				if (pDistance)
+					*pDistance = closestDistance;
+				if (pFaceIndex)
+					*pFaceIndex = closestFace;
+				if (pUV)
+					*pUV = closestUV;
 			}
 
 			m_IB->Unlock();

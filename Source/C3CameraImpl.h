@@ -59,7 +59,7 @@ namespace c3
 
 		virtual bool Prerender(Object::RenderFlags flags, int draworder);
 
-		virtual void Render(Object::RenderFlags flags);
+		virtual void Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat);
 
 		virtual void SetViewMode(ViewMode mode);
 		virtual ViewMode GetViewMode();
@@ -85,7 +85,7 @@ namespace c3
 		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *mat);
 		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *mat);
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const;
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 

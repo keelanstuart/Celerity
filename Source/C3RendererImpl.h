@@ -131,10 +131,10 @@ namespace c3
 		Mesh *m_XZPlaneMesh;
 		Mesh *m_GuiRectMesh;
 
-		VertexBuffer *m_HemisphereVB;
-		Mesh *m_HemisphereMesh;
+		VertexBuffer *m_HemisphereVB[EResLevel::RL_RESCOUNT];
+		Mesh *m_HemisphereMesh[EResLevel::RL_RESCOUNT];
 
-		Mesh *m_SphereMesh;
+		Mesh *m_SphereMesh[EResLevel::RL_RESCOUNT];
 
 		Texture2D *m_BlackTex;
 		Texture2D *m_GreyTex;
@@ -347,9 +347,9 @@ namespace c3
 		virtual Mesh *GetXZPlaneMesh();
 		virtual Mesh *GetGuiRectMesh();
 
-		VertexBuffer *GetHemisphereVB();
-		virtual Mesh *GetHemisphereMesh();
-		virtual Mesh *GetSphereMesh();
+		VertexBuffer *GetHemisphereVB(EResLevel lvl = RL_LO);
+		virtual Mesh *GetHemisphereMesh(EResLevel lvl = RL_LO);
+		virtual Mesh *GetSphereMesh(EResLevel lvl = RL_LO);
 
 		virtual Texture2D *GetBlackTexture();
 		virtual Texture2D *GetGreyTexture();

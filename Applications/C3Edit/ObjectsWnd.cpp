@@ -167,29 +167,33 @@ size_t CObjectWnd::GetVisibleItemCount(const c3::Object *proot)
 {
 	assert(proot);
 
-	size_t ret = 0;
+	size_t ret = 1;
 
 	if (((c3::Object *)proot)->Flags().IsSet(OF_EXPANDED))
 		for (size_t i = 0, maxi = proot->GetNumChildren(); i < maxi; i++)
 			ret += GetVisibleItemCount(proot->GetChild(i));
 
-	return ret + 1;
+	return ret;
 }
 
-const c3::Object *CObjectWnd::GetItemByIndex(const c3::Object *proot, size_t index)
+const c3::Object *CObjectWnd::GetItemByIndex(const c3::Object *proot, size_t index, size_t *depth)
 {
 	assert(proot);
 
-	if (!index)
+	size_t d = 0;
+	if (!depth)
+		depth = &d;
+
+	if (*depth == index)
 		return proot;
 
-	index--;
+	(*depth)++;
 
 	if (((c3::Object *)proot)->Flags().IsSet(OF_EXPANDED))
 	{
-		for (size_t i = 0, maxi = proot->GetNumChildren(); i < maxi; i++, index--)
+		for (size_t i = 0, maxi = proot->GetNumChildren(); i < maxi; i++)
 		{
-			const c3::Object *o = GetItemByIndex(proot->GetChild(i), index);
+			const c3::Object *o = GetItemByIndex(proot->GetChild(i), index, depth);
 			if (o)
 				return o;
 		}
@@ -210,5 +214,10 @@ void CObjectWnd::UpdateContents()
 	}
 
 	size_t ct = GetVisibleItemCount(pdoc->m_RootObj);
+	if (m_ObjList.GetTopIndex() > ct)
+	{
+		m_ObjList.EnsureVisible(0, FALSE);
+	}
+
 	m_ObjList.SetItemCount((int)ct);
 }

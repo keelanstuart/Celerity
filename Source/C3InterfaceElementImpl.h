@@ -96,11 +96,11 @@ namespace c3
 
 		virtual bool Prerender(Object::RenderFlags flags, int draworder);
 
-		virtual void Render(Object::RenderFlags rendflags);
+		virtual void Render(Object::RenderFlags rendflags, const glm::fmat4x4 *pmat);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const;
 
 		virtual size_t GetNumValues(const props::IProperty *pprop) const;
 

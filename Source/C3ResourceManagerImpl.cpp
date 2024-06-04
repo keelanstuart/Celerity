@@ -348,21 +348,25 @@ void ResourceManagerImpl::Reset()
 
 bool ResourceManagerImpl::RegisterZipArchive(const TCHAR *filename)
 {
+	if (!filename)
+		return false;
+
 	bool ret = false;
 
-	if (filename && PathFileExists(filename))
+	TCHAR full_filename[MAX_PATH * 2];
+	if (m_pSys->GetFileMapper()->FindFile(filename, full_filename, MAX_PATH * 2))
 	{
 		ZipFile *pzf = new ZipFile();
 		if (pzf)
 		{
-			ret = pzf->Open(filename, ZIPOPEN_READ);
+			ret = pzf->Open(full_filename, ZIPOPEN_READ);
 			if (ret)
 			{
 				static uint16_t sZipId = 1;
 
 				m_ZipFileRegistry.insert(TZipFileRegistry::value_type(sZipId, TZipFileRegistry::mapped_type(filename, pzf)));
 
-				TCHAR *cfn = _tcsdup(filename);
+				TCHAR *cfn = _tcsdup(full_filename);
 				PathRemoveExtension(cfn);
 
 				TCHAR *dfn = PathFindFileName(cfn);

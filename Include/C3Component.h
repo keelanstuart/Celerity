@@ -44,13 +44,13 @@ namespace c3
 		virtual bool Prerender(Object::RenderFlags flags, int draworder = 0) = NULL;
 
 		/// Called by the Object that owns the Component during it's own Render
-		virtual void Render(Object::RenderFlags flags) = NULL;
+		virtual void Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat = nullptr) = NULL;
 
 		/// Called when a property on the owning Object has changed
 		virtual void PropertyChanged(const props::IProperty *pprop) = NULL;
 
 		/// Casts a ray against the component
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const = NULL;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat = nullptr, float *pdistance = nullptr) const = NULL;
 
 	};
 

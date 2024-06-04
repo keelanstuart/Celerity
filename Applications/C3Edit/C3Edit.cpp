@@ -256,6 +256,10 @@ BOOL C3EditApp::InitInstance()
 	resexts = m_Config->GetString(_T("resources.sounds.extensions"), _T("wav;mp3;ogg"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
+	respaths = m_Config->GetString(_T("resources.packfiles.paths"), _T("./;./assets;./assets/models;./assets/textures;./assets/shaders;./assets/scripts;./assets/animations;./assets/sounds;./assets/levels"));
+	resexts = m_Config->GetString(_T("resources.packfiles.extensions"), _T("zip;c3z"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
 	theApp.m_C3->GetLog()->Print(_T(" done.\n"));
 
 	c3::Factory *pf = m_C3->GetFactory();
@@ -302,6 +306,9 @@ BOOL C3EditApp::InitInstance()
 		_stprintf_s(kn, _T("resources.packfiles.packfile#%zu"), rpi);
 
 		const TCHAR *zp = m_Config->GetString(kn, nullptr);
+		if (!zp)
+			break;
+
 		theApp.m_C3->GetLog()->Print(_T("\t%s\n"), zp);
 		theApp.m_C3->GetResourceManager()->RegisterZipArchive(zp);
 	}
@@ -576,6 +583,22 @@ void C3EditApp::RefreshActiveProperties()
 {
 	if (m_pMainWnd && m_pMainWnd->GetSafeHwnd())
 		((C3EditFrame *)m_pMainWnd)->RefreshActiveProperties();
+}
+
+
+void C3EditApp::UpdateObjectList()
+{
+	C3EditFrame *pef = (C3EditFrame *)m_pMainWnd;
+	if (pef->GetSafeHwnd() && pef->m_wndObjects.GetSafeHwnd())
+		pef->m_wndObjects.UpdateContents();
+}
+
+
+void C3EditApp::UpdateStatusMessage(const TCHAR *msg)
+{
+	C3EditFrame *pef = (C3EditFrame *)m_pMainWnd;
+	if (pef->GetSafeHwnd() && pef->m_wndStatusBar.GetSafeHwnd())
+		pef->m_wndStatusBar.SetPaneText(0, msg);
 }
 
 

@@ -20,24 +20,12 @@ public:
 	C3EditDoc* GetDocument() const;
 
 protected:
-	typedef std::deque<c3::Object *> TObjectArray;
-	TObjectArray m_Selected;
 	bool m_ShowDebug;
 
 // Operations
 public:
-	void ClearSelection();
-	bool IsSelected(const c3::Object *obj) const;
-	void AddToSelection(const c3::Object *obj);
-	void RemoveFromSelection(const c3::Object *obj);
-	size_t GetNumSelected();
-	c3::Object *GetSelection(size_t index) const;
-
 	void ComputePickRay(POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const;
 	c3::Object *Pick(POINT p) const;
-
-	void UpdateStatusMessage(c3::Object *pobj = nullptr);
-	void UpdateObjectList();
 
 	void AdjustYawPitch(float yawadj, float pitchadj, bool redraw = true);
 
@@ -154,6 +142,14 @@ public:
 	afx_msg void OnUpdateEditCameraSettings(CCmdUI *pCmdUI);
     afx_msg void OnUpdateViewHoverInformation(CCmdUI *pCmdUI);
     afx_msg void OnViewHoverInformation();
+	afx_msg void OnEditCopy();
+	afx_msg void OnUpdateEditCopy(CCmdUI *pCmdUI);
+	afx_msg void OnEditCut();
+	afx_msg void OnUpdateEditCut(CCmdUI *pCmdUI);
+	afx_msg void OnEditPaste();
+	afx_msg void OnUpdateEditPaste(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateEditAssignRoot(CCmdUI *pCmdUI);
+	afx_msg void OnEditAssignRoot();
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

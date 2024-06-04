@@ -13,6 +13,48 @@
 namespace c3
 {
 
+	/// <summary>
+	/// Physical is a Component that allows motion simulation
+	///
+	/// Requires: none
+	/// 
+	/// Recognized Properties:
+	///		- 'POS' : "Position" 
+	///			+ FVEC3 - The translation of the Object away from it's parent
+	/// 
+	///		- 'LVEL' : "LinearVelocity"
+	///			+ FVEC3 - The velocity of the Object along a line
+	/// 
+	///		- 'LACC' : "LinearAcceleration"
+	///			+ FVEC3 - The acceleration of the Object along a line
+	/// 
+	///		- 'LSFF' : "LinearSpeedFalloffFactor"
+	///			+ FLOAT - Works similarly to friction; degrades the linear speed (scalar)
+	/// 
+	///		- 'MXLS' : "MaxLinearSpeed"
+	///			+ FLOAT - The maximum speed the Object can obtain
+	/// 
+	///		- 'RVEL' : "RotationalVelocity"
+	///			+ FVEC3 - The rotational velocity of the Object in radians
+	/// 
+	///		- 'DPOS' : "DeltaPosition"
+	///			+ FVEC3 - hidden; the amount that the Object moved in the last Update
+	/// 
+	///		- 'RACC' : "RotationalAcceleration"
+	///			+ FVEC3 - The rotational acceleration of the Object in radians
+	/// 
+	///		- 'RVFF' : "RotationalVelocityFalloffFactor"
+	///			+ FVEC3 - The amount that the rotational valocity degrades once acceleration is no longer applied
+	/// 
+	///		- 'MXRS' : "MaxRotationalSpeed"
+	///			+ FVEC3 - The maximum rotational speed that the Object can have (in radians)
+	/// 
+	///		- 'MASS' : "Mass"
+	///			+ float - The Object's mass
+	/// 
+	/// </summary>
+
+
 	class C3_API Physical : public Component
 	{
 

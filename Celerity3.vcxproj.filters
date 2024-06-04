@@ -234,6 +234,9 @@
     <ClCompile Include="Source\C3InterfaceElementImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3Utility.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -631,6 +634,9 @@
     </ClInclude>
     <ClInclude Include="Source\C3FontImpl.h">
       <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="include\C3Utility.h">
+      <Filter>Header Files\Public</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

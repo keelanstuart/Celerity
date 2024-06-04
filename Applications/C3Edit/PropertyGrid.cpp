@@ -537,7 +537,7 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *pprops, PROPERTY_DE
 					if (_y == -0.0f)
 						_y = 0.0f;
 
-					float _z = glm::degrees(glm::pitch(q));
+					float _z = glm::degrees(glm::roll(q));
 					if (_z == -0.0f)
 						_z = 0.0f;
 
@@ -1080,7 +1080,7 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 						float _y = glm::radians(pProp->GetSubItem(1)->GetValue().fltVal);
 						float _r = glm::radians(pProp->GetSubItem(2)->GetValue().fltVal);
 
-						glm::fquat q(glm::fvec3(_p, _y, _r));
+						glm::fquat q(glm::fvec3(_p, _y, -_r));
 						q = glm::normalize(q);
 
 						p->SetVec4F(props::TVec4F(q.x, q.y, q.z, q.w));

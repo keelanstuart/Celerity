@@ -24,6 +24,7 @@ public:
 	} SPerViewInfo;
 
 	c3::Object *m_RootObj;
+	c3::Object *m_OperationalRootObj;
 
 	typedef std::map<HWND, SPerViewInfo> TWndMappedObject;
 	TWndMappedObject m_PerViewInfo;
@@ -42,9 +43,31 @@ public:
 	glm::fvec4 m_FogColor;
 	float m_FogDensity;
 
+	typedef std::deque<c3::Object *> TObjectArray;
+	TObjectArray m_Selected;
+
 // Operations
 public:
 	SPerViewInfo *GetPerViewInfo(HWND h);
+
+	void SetBrush(c3::Object *pobj);
+	void SetBrush(const TCHAR *protoname);
+
+	void ClearSelection();
+	bool IsSelected(const c3::Object *obj) const;
+	void AddToSelection(const c3::Object *obj);
+	void RemoveFromSelection(const c3::Object *obj);
+	size_t GetNumSelected();
+	c3::Object *GetSelection(size_t index) const;
+
+	void SortSelectionsByDescendingDepth();
+	void UpdateStatusMessage(const c3::Object *pobj = nullptr);
+
+	using SelectionFunction = std::function< void(c3::Object *) >;
+	void DoForAllSelected(SelectionFunction func);
+
+	using SelectionFunctionBreakable = std::function< bool(c3::Object *) >;
+	void DoForAllSelectedBreakable(SelectionFunctionBreakable func);
 
 // Overrides
 public:

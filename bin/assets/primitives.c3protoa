@@ -1,0 +1,42 @@
+<prototypes>
+    <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD5}" name="REFCUBE" group="Primitives" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[refcube.model]</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{A2D15955-1C0D-4482-A10F-FC4A26C3DBD4}" name="XY Plane" group="Primitives" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[xyplane.model]</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{6C68DF76-92A3-4CBA-9E7A-384EE7B6EEB8}" name="YZ Plane" group="Primitives" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[yzplane.model]</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{461CB86E-C5CD-478B-91EC-A3081C15E8F6}" name="XZ Plane" group="Primitives" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">[xzplane.model]</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

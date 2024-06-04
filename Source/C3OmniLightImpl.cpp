@@ -16,7 +16,6 @@ DECLARE_COMPONENTTYPE(OmniLight, OmniLightImpl);
 
 OmniLightImpl::OmniLightImpl()
 {
-	m_pPos = nullptr;
 	m_SourceFB = nullptr;
 	m_TexAttenRes = nullptr;
 	m_pMethod = nullptr;
@@ -58,10 +57,6 @@ bool OmniLightImpl::Initialize(Object *pobject)
 	if (nullptr == (m_pOwner = pobject))
 		return false;
 
-	// get a positionable feature from the object -- and if we can't, don't proceed
-	if (nullptr == (m_pPos = dynamic_cast<PositionableImpl *>(pobject->FindComponent(Positionable::Type()))))
-		return false;
-
 	props::IPropertySet *props = pobject->GetProperties();
 	if (!props)
 		return false;
@@ -76,14 +71,23 @@ bool OmniLightImpl::Initialize(Object *pobject)
 
 	pp = props->CreateReferenceProperty(_T("LightAttenuation"), 'LATN', &m_LightAttenuation, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
 
+	pp = props->GetPropertyById('GRAD');
+	if (!pp)
+	{
+		pp = props->CreateProperty(_T("GradientTexture"), 'GRAD');
+		if (pp)
+		{
+			pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
+			pp->SetString(_T("[lineargradient.tex]"));
+		}
+	}
+
 	return true;
 }
 
 
 void OmniLightImpl::Update(float elapsed_time)
 {
-	if (!m_pPos)
-		return;
 }
 
 
@@ -151,12 +155,16 @@ bool OmniLightImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void OmniLightImpl::Render(Object::RenderFlags flags)
+void OmniLightImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
+	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	if (!pmat)
+		pmat = &imat;
+
 	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
+	prend->SetWorldMatrix(pmat);
 
 	m_SourceFB = prend->FindFrameBuffer(_T("GBuffer"));
-
 	if (!m_SourceFB)
 		return;
 
@@ -173,16 +181,16 @@ void OmniLightImpl::Render(Object::RenderFlags flags)
 			ss.x = (float)m_SourceFB->GetDepthTarget()->Width();
 			ss.y = (float)m_SourceFB->GetDepthTarget()->Height();
 
-			props::IProperty *ppos = m_pOwner->GetProperties()->GetPropertyById('POS');
-			props::IProperty *pscl = m_pOwner->GetProperties()->GetPropertyById('SCL');
-			float scl = pscl->AsVec3F()->x;
+			glm::fvec3 pos = *pmat * glm::fvec4(0, 0, 0, 1);
+			glm::fvec3 vscl = *pmat * glm::fvec4(glm::normalize(glm::fvec3(1, 0, 0)), 0);
+			float scl = glm::length(vscl);
 
 			ShaderProgram *ps = m_pMethod->GetTechnique(m_TechIdx_L)->GetPass(0)->GetShader();
 			if (ps)
 			{
 				ps->SetUniform3(m_uniColor, &m_Color);
 
-				ps->SetUniform3(m_uniPos, (const glm::fvec3 *)ppos->AsVec3F());
+				ps->SetUniform3(m_uniPos, &pos);
 				ps->SetUniform1(m_uniAtten, m_LightAttenuation);
 				ps->SetUniform1(m_uniRadius, scl);
 				ps->SetUniform2(m_uniScreenSize, &ss);
@@ -196,15 +204,12 @@ void OmniLightImpl::Render(Object::RenderFlags flags)
 					Texture2D *ptex = m_TexAttenRes ? (Texture2D *)(m_TexAttenRes->GetData()) : prend->GetLinearGradientTexture();
 					ps->SetUniformTexture(ptex ? ptex : prend->GetLinearGradientTexture(), m_uniTexAtten, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 				}
-
-				prend->SetWorldMatrix(m_pPos->GetTransformMatrix());
 			}
 		}
 	}
 
-
 	BoundingBoxImpl bb(prend->GetCubeMesh()->GetBounds());
-	bb.Align(prend->GetWorldMatrix());
+	bb.Align(pmat);
 	bool isinside = bb.IsPointInside(prend->GetEyePosition());
 
 	if (isinside)
@@ -254,7 +259,34 @@ void OmniLightImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool OmniLightImpl::Intersect(const glm::vec3 * pRayPos, const glm::vec3 * pRayDir, MatrixStack *mats, float *pDistance) const
+bool OmniLightImpl::Intersect(const glm::fvec3 *pRayPos, const glm::fvec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
+#if 1
+	if (!pRayPos || !pRayDir)
+		return false;
+
+	bool ret = false;
+
+	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	if (!pmat)
+		pmat = &imat;
+
+	float dist;
+	glm::fvec3 pos = *pmat * glm::fvec4(0, 0, 0, 1);
+	glm::fvec3 vscl = *pmat * glm::fvec4(glm::normalize(glm::fvec3(1, 1, 1)), 0);
+	float scl = (vscl.x + vscl.y + vscl.z) / 3.0f;
+
+	ret = glm::intersectRaySphere(*pRayPos, *pRayDir, pos, scl, dist);
+	if (ret && pDistance)
+	{
+		if (dist < *pDistance)
+			*pDistance = dist;
+		else
+			ret = false;
+	}
+
+	return ret;
+#else
 	return false;
+#endif
 }

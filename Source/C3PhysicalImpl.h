@@ -9,6 +9,7 @@
 #include <C3.h>
 #include <C3Physical.h>
 
+
 namespace c3
 {
 
@@ -28,6 +29,8 @@ namespace c3
 		glm::vec3 m_RotAcc;
 		glm::vec3 m_RotVelFalloff;
 		glm::vec3 m_maxRotSpeed;
+
+		float m_Mass;
 
 		props::TFlags64 m_Flags;
 
@@ -52,11 +55,11 @@ namespace c3
 
 		virtual bool Prerender(Object::RenderFlags flags, int draworder);
 
-		virtual void Render(Object::RenderFlags flags);
+		virtual void Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const;
 
 		// *** LINEAR VELOCITY FUNCTIONS *******************************
 

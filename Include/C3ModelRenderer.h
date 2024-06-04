@@ -13,7 +13,30 @@
 namespace c3
 {
 
-	// ModelRenderer is a Component that you can attach to an Object to make it render a Model when it's Draw function is called
+	/// <summary>
+	/// ModelRenderer is a Component that you can attach to an Object to make it render a Model when it's Draw function is called
+	///
+	/// Optional: Positionable
+	/// 
+	/// Recognized Properties:
+	///		- 'MODF' : "ModelFile" 
+	///			+ STRING FILENAME - The filename of the model to be rendered
+	///
+	///		- 'C3RM' : "RenderMethod" 
+	///			+ STRING FILENAME - The filename of the RenderMethod file used to render the model
+	/// 
+	///		- 'C3RT' : "RenderTechnique" 
+	///			+ INT - The index of a technique in the given RenderMethod
+	///
+	///		- 'MPOS' : "ModelPosition" 
+	///			+ FVEC3 - Provides a low-level, hidable way to offset a model, irrespective of it's Positionable-derived translation
+	///
+	///		- 'MORI' : "ModelOrientation"
+	///			+ FVEC4 QUATERNION - Provides a low-level, hidable way to rotate a model, irrespective of it's Positionable-derived orientation
+	///
+	///		- 'MSCL' : "ModelScale" 
+	///			+ FVEC3 - Provides a low-level, hidable way to scale a model, irrespective of it's Positionable-derived scaling
+	/// </summary>
 
 	class C3_API ModelRenderer : public Component
 	{

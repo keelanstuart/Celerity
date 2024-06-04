@@ -77,7 +77,7 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid, Object *ppare
 }
 
 
-Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *pparent)
+Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *pparent, bool build_children)
 {
 	GUID guid;
 	if (!override_guid)
@@ -110,6 +110,15 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *pparent
 		}
 
 		o->GetProperties()->AppendPropertySet(pobject->GetProperties());
+
+		if (build_children)
+		{
+			for (size_t i = 0, maxi = pobject->GetNumChildren(); i < maxi; i++)
+			{
+				Object *pchild = pobject->GetChild(i);
+				Build(pchild, nullptr, o);
+			}
+		}
 	}
 
 	o->PostLoad();

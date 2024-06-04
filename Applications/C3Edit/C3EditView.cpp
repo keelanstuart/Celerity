@@ -19,6 +19,7 @@
 
 #include <C3Gui.h>
 #include <C3RenderMethod.h>
+#include <C3Utility.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -43,24 +44,44 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_WM_LBUTTONDOWN()
 	ON_WM_LBUTTONUP()
 	ON_WM_SETFOCUS()
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DELETE, &C3EditView::OnUpdateEditDelete)
 	ON_COMMAND(ID_EDIT_DELETE, &C3EditView::OnEditDelete)
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DUPLICATE, &C3EditView::OnUpdateEditDuplicate)
 	ON_COMMAND(ID_EDIT_DUPLICATE, &C3EditView::OnEditDuplicate)
+
+	ON_UPDATE_COMMAND_UI(ID_EDIT_ASSIGNROOT, &C3EditView::OnUpdateEditAssignRoot)
+	ON_COMMAND(ID_EDIT_ASSIGNROOT, &C3EditView::OnEditAssignRoot)
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_GROUP, &C3EditView::OnUpdateEditGroup)
 	ON_COMMAND(ID_EDIT_GROUP, &C3EditView::OnEditGroup)
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNGROUP, &C3EditView::OnUpdateEditUngroup)
 	ON_COMMAND(ID_EDIT_UNGROUP, &C3EditView::OnEditUngroup)
+
 	ON_WM_KEYUP()
+
 	ON_COMMAND(ID_GRAPH_DELETENODE, &C3EditView::OnGraphDeleteNode)
 	ON_UPDATE_COMMAND_UI(ID_GRAPH_DELETENODE, &C3EditView::OnUpdateGraphDeleteNode)
+
 	ON_COMMAND(ID_EDIT_CENTERCAMERAON, &C3EditView::OnEditCenterCamera)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CENTERCAMERAON, &C3EditView::OnUpdateEditCenterCamera)
+
 	ON_WM_KEYDOWN()
 	ON_COMMAND(ID_EDIT_CAMERASETTINGS, &C3EditView::OnEditCameraSettings)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CAMERASETTINGS, &C3EditView::OnUpdateEditCameraSettings)
 	ON_UPDATE_COMMAND_UI(ID_VIEW_HOVERINFORMATION, &C3EditView::OnUpdateViewHoverInformation)
 	ON_COMMAND(ID_VIEW_HOVERINFORMATION, &C3EditView::OnViewHoverInformation)
+
+	ON_COMMAND(ID_EDIT_COPY, &C3EditView::OnEditCopy)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_COPY, &C3EditView::OnUpdateEditCopy)
+
+	ON_COMMAND(ID_EDIT_CUT, &C3EditView::OnEditCut)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_CUT, &C3EditView::OnUpdateEditCut)
+
+	ON_COMMAND(ID_EDIT_PASTE, &C3EditView::OnEditPaste)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, &C3EditView::OnUpdateEditPaste)
 END_MESSAGE_MAP()
 
 
@@ -388,7 +409,7 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		prend->SetViewport(r);
 
-		c3::Environment* penv = theApp.m_C3->GetEnvironment();
+		c3::Environment *penv = theApp.m_C3->GetEnvironment();
 		assert(penv);
 
 		glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 1.0f);
@@ -502,13 +523,10 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 			prend->UseProgram(m_SP_bounds);
 
-			typedef std::vector<c3::Positionable *> TPositionableVec;
-			TPositionableVec selpos;
-			for (auto sel : m_Selected)
+			pDoc->DoForAllSelected([&](c3::Object *pobj)
 			{
-				if (sel)
-					sel->Render(RF_FORCE | RF_LOCKSHADER | RF_LOCKMATERIAL | RF_AUXILIARY);
-			}
+				pobj->Render(RF_FORCE | RF_LOCKSHADER | RF_LOCKMATERIAL | RF_AUXILIARY);
+			});
 
 			// Resolve
 			prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH); // | UFBFLAG_FINISHLAST);
@@ -683,7 +701,7 @@ void C3EditView::InitializeGraphics()
 			m_pRenderDoc->EndFrameCapture(NULL, NULL);
 		}
 
-		UpdateStatusMessage();
+		theApp.UpdateStatusMessage(_T(""));
 	}
 }
 
@@ -840,7 +858,11 @@ c3::Object *C3EditView::Pick(POINT p) const
 	if (uint32_t renderflags = theApp.m_Config->GetBool(_T("environment.editordraw"), true))
 		flagmask |= OF_DRAWINEDITOR;
 
-	pDoc->m_RootObj->Intersect(&pickpos, &pickray, m_SelectionXforms, nullptr, &ret, flagmask, 1);
+	pDoc->m_RootObj->Intersect(&pickpos, &pickray, nullptr, nullptr, &ret, flagmask, -1);
+	while (ret && (ret->GetParent() != pDoc->m_OperationalRootObj))
+	{
+		ret = ret->GetParent();
+	}
 
 	return ret;
 }
@@ -972,10 +994,10 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	if ((nFlags & (MK_SHIFT | MK_MBUTTON | MK_LBUTTON)) && (this != GetCapture()))
 		SetCapture();
 
+#if 0
 	c3::ModelRenderer *pbr = pDoc->m_Brush ? dynamic_cast<c3::ModelRenderer *>(pDoc->m_Brush->FindComponent(c3::ModelRenderer::Type())) : nullptr;
 	c3::Positionable *pbp = pDoc->m_Brush ? dynamic_cast<c3::Positionable *>(pDoc->m_Brush->FindComponent(c3::Positionable::Type())) : nullptr;
 
-#if 0
 	if ((active_tool == C3EditApp::ToolType::TT_WAND) && pcam && pbr && pbp)
 	{
 		rayvec = glm::normalize(rayvec);
@@ -1016,9 +1038,9 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 		static glm::fvec3 xaxis(1, 0, 0), yaxis(0, 1, 0), zaxis(0, 0, 1);
 
-		for (size_t i = 0; i < GetNumSelected(); i++)
+		for (size_t i = 0, maxi = pDoc->GetNumSelected(); i < maxi; i++)
 		{
-			c3::Object *obj = GetSelection(i);
+			c3::Object *obj = pDoc->GetSelection(i);
 			if (!obj || obj->Flags().IsSet(OF_LOCKED))
 				continue;
 
@@ -1132,6 +1154,9 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 void C3EditView::OnTimer(UINT_PTR nIDEvent)
 {
+	C3EditDoc *pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
 	switch (nIDEvent)
 	{
 		case 'DRAW':
@@ -1142,7 +1167,7 @@ void C3EditView::OnTimer(UINT_PTR nIDEvent)
 			if (theApp.m_Config->GetBool(_T("environment.hoverinfo"), false))
 			{
 				m_pHoverObj = Pick(m_MousePos);
-				UpdateStatusMessage(m_pHoverObj);
+				pDoc->UpdateStatusMessage(m_pHoverObj);
 			}
 			break;
 
@@ -1173,45 +1198,6 @@ void C3EditView::OnTimer(UINT_PTR nIDEvent)
 	}
 
 	CView::OnTimer(nIDEvent);
-}
-
-void C3EditView::UpdateObjectList()
-{
-	C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
-	if (pef->GetSafeHwnd() && pef->m_wndObjects.GetSafeHwnd())
-		pef->m_wndObjects.UpdateContents();
-}
-
-void C3EditView::UpdateStatusMessage(c3::Object *pobj)
-{
-	static TCHAR msgbuf[256];
-
-	size_t nums = GetNumSelected();
-	if (nums || pobj)
-	{
-		if (!pobj)
-			pobj = GetSelection(0);
-
-		GUID g = pobj->GetGuid();
-		const TCHAR *n = pobj->GetName();
-
-		_stprintf_s(msgbuf, _T("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X} \"%s\""), g.Data1, g.Data2, g.Data3,
-					g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7], n ? n : _T(""));
-	}
-	else switch (nums)
-	{
-		case 0:
-			msgbuf[0] = _T('\0');
-			break;
-
-		default:
-			_stprintf_s(msgbuf, _T("%zu Objects Selected"), nums);
-			break;
-	}
-
-	C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
-	if (pef->GetSafeHwnd() && pef->m_wndStatusBar.GetSafeHwnd())
-		pef->m_wndStatusBar.SetPaneText(0, msgbuf);
 }
 
 
@@ -1250,82 +1236,6 @@ void C3EditView::OnSize(UINT nType, int cx, int cy)
 }
 
 
-void C3EditView::ClearSelection()
-{
-	m_Selected.clear();
-
-	theApp.SetActiveObject(nullptr);
-
-	UpdateStatusMessage();
-	UpdateObjectList();
-}
-
-
-bool C3EditView::IsSelected(const c3::Object *obj) const
-{
-	return (std::find(m_Selected.cbegin(), m_Selected.cend(), obj) != m_Selected.cend());
-}
-
-
-void C3EditView::AddToSelection(const c3::Object *obj)
-{
-	if (std::find(m_Selected.cbegin(), m_Selected.cend(), obj) == m_Selected.cend())
-		m_Selected.push_back((c3::Object *)obj);
-
-	if (m_Selected.size() == 1)
-	{
-		if (m_Selected[0])
-		{
-			theApp.SetActiveObject(m_Selected[0]);
-			props::IProperty *psrcf_prop = m_Selected[0]->GetProperties()->GetPropertyById('SRCF');
-			if (psrcf_prop)
-			{
-				c3::Resource *psrcf_res = theApp.m_C3->GetResourceManager()->GetResource(psrcf_prop->AsString(), RESF_DEMANDLOAD);
-				C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
-				if (pef->GetSafeHwnd() && pef->m_wndScripting.GetSafeHwnd())
-					pef->m_wndScripting.EditScriptResource(psrcf_res);
-			}
-		}
-		else
-			m_Selected.clear();
-	}
-
-	UpdateStatusMessage();
-	UpdateObjectList();
-}
-
-
-void C3EditView::RemoveFromSelection(const c3::Object *obj)
-{
-	TObjectArray::iterator it = std::find(m_Selected.begin(), m_Selected.end(), obj);
-	if (it != m_Selected.cend())
-		m_Selected.erase(it);
-
-	if (m_Selected.size() == 1)
-		theApp.SetActiveObject(m_Selected[0]);
-	else
-		theApp.SetActiveObject(nullptr);
-
-	UpdateStatusMessage();
-	UpdateObjectList();
-}
-
-
-size_t C3EditView::GetNumSelected()
-{
-	return m_Selected.size();
-}
-
-
-c3::Object *C3EditView::GetSelection(size_t index) const
-{
-	if (index >= m_Selected.size())
-		return nullptr;
-
-	return (c3::Object *)m_Selected.at(index);
-}
-
-
 void C3EditView::OnUpdateEditTriggerRenderDocCapture(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable((m_pRenderDoc != nullptr) ? TRUE : FALSE);
@@ -1342,6 +1252,9 @@ void C3EditView::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	CView::OnLButtonDown(nFlags, point);
 
+	C3EditDoc *pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+
 	// cache the pick ray so we can get a diff later
 	//ComputePickRay(point, m_BasePickPos, m_BasePickVec);
 	c3::Object *pickobj = Pick(point);
@@ -1350,24 +1263,26 @@ void C3EditView::OnLButtonDown(UINT nFlags, CPoint point)
 	{
 		if (nFlags & MK_CONTROL)
 		{
-			if (pickobj && IsSelected(pickobj))
-				RemoveFromSelection(pickobj);
+			if (pickobj && pDoc->IsSelected(pickobj))
+				pDoc->RemoveFromSelection(pickobj);
 			else
-				AddToSelection(pickobj);
+				pDoc->AddToSelection(pickobj);
 		}
-		else if (!IsSelected(pickobj))
+		else if (!pDoc->IsSelected(pickobj))
 		{
-			ClearSelection();
+			pDoc->ClearSelection();
 
 			if (pickobj)
-				AddToSelection(pickobj);
+				pDoc->AddToSelection(pickobj);
 		}
 	}
 	else
 	{
 		if (!(nFlags & MK_CONTROL))
-			ClearSelection();
+			pDoc->ClearSelection();
 	}
+
+	theApp.SetActiveObject(pickobj);
 
 	SetAppropriateMouseCursor(nFlags);
 
@@ -1435,6 +1350,10 @@ void C3EditView::SetAppropriateMouseCursor(UINT32 nFlags)
 			case C3EditApp::TT_SCALE:
 				hcur = theApp.LoadCursor(IDC_SCALE);
 				break;
+
+			case C3EditApp::TT_WAND:
+				hcur = theApp.LoadCursor(IDC_WAND);
+				break;
 		}
 	}
 
@@ -1444,7 +1363,9 @@ void C3EditView::SetAppropriateMouseCursor(UINT32 nFlags)
 
 void C3EditView::OnUpdateEditDelete(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(!m_Selected.empty() ? TRUE : FALSE);
+	C3EditDoc *pDoc = GetDocument();
+
+	pCmdUI->Enable(pDoc->GetNumSelected() ? TRUE : FALSE);
 }
 
 
@@ -1452,16 +1373,14 @@ void C3EditView::OnEditDelete()
 {
 	C3EditDoc *pDoc = GetDocument();
 
-	if (!IsSelected(pDoc->m_RootObj))
+	if (!pDoc->IsSelected(pDoc->m_RootObj))
 	{
-		for (auto o : m_Selected)
+		pDoc->SortSelectionsByDescendingDepth();
+
+		pDoc->DoForAllSelected([&](c3::Object *pobj)
 		{
-			c3::Object *po = o->GetParent();
-			if (po)
-				po->RemoveChild(o, true);
-			else
-				o->Release();
-		}
+			pobj->Release();
+		});
 	}
 	else
 	{
@@ -1474,23 +1393,79 @@ void C3EditView::OnEditDelete()
 
 	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
 
-	ClearSelection();
+	pDoc->ClearSelection();
+}
+
+
+bool ValidSelection_SameParent(C3EditDoc *pd)
+{
+	// To duplicate Objects, they all have to have the same parent
+
+	size_t maxi = pd ? pd->GetNumSelected() : 0;
+	bool b = maxi > 0;
+
+	if (maxi)
+	{
+		c3::Object *o = pd->GetSelection(0)->GetParent();
+		if (!o)
+		{
+			b = false;
+		}
+		else
+		{
+			pd->DoForAllSelectedBreakable([&](c3::Object *pobj)
+			{
+				if (pobj->GetParent() != o)
+				{
+					b = false;
+					return false;
+				}
+
+				return true;
+			});
+		}
+	}
+
+	return b;
+}
+
+
+bool ValidSelection_OnlyOne(C3EditDoc *pd)
+{
+	// Only allow 1 selection to be ungrouped -- and it can't be the root
+
+	size_t c = pd ? pd->GetNumSelected() : 0;
+	if (c != 1)
+		return false;
+
+	c3::Object *o = pd->GetSelection(0);
+	if (!o->GetParent())
+		return false;
+	
+	if (!o->GetNumChildren())
+		return false;
+
+	return true;
 }
 
 
 void C3EditView::OnUpdateEditDuplicate(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(!m_Selected.empty() ? TRUE : FALSE);
+	C3EditDoc* pDoc = GetDocument();
+
+	pCmdUI->Enable(ValidSelection_SameParent(pDoc));
 }
 
 
 void C3EditView::OnEditDuplicate()
 {
-	for (auto o : m_Selected)
+	C3EditDoc* pDoc = GetDocument();
+
+	pDoc->DoForAllSelected([&](c3::Object *pobj)
 	{
-		c3::Object *pdo = theApp.m_C3->GetFactory()->Build(o);
-		pdo->SetParent(o->GetParent());
-	}
+		c3::Object *pdo = theApp.m_C3->GetFactory()->Build(pobj);
+		pdo->SetParent(pobj->GetParent());
+	});
 
 	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
 }
@@ -1498,45 +1473,33 @@ void C3EditView::OnEditDuplicate()
 
 void C3EditView::OnUpdateEditGroup(CCmdUI *pCmdUI)
 {
-	bool b = !m_Selected.empty();
+	C3EditDoc* pDoc = GetDocument();
 
-	if (b)
-	{
-		c3::Object *pp = m_Selected[0]->GetParent();
-		if (!pp)
-		{
-			b = false;
-		}
-		else
-		{
-			for (auto o : m_Selected)
-			{
-				if (o->GetParent() != pp)
-				{
-					b = false;
-					break;
-				}
-			}
-		}
-	}
-
-	pCmdUI->Enable(b);
+	pCmdUI->Enable(ValidSelection_SameParent(pDoc));
 }
 
 
 void C3EditView::OnEditGroup()
 {
+	C3EditDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+	if (!pDoc)
+		return;
+
 	c3::Object *pg = theApp.m_C3->GetFactory()->Build();
 	if (pg)
 	{
 		pg->SetName(_T("Group"));
 		pg->Flags().Set(OF_UPDATE | OF_DRAW | OF_LIGHT | OF_CASTSHADOW | OF_CHECKCOLLISIONS | OF_EXPANDED);
-		pg->SetParent(m_Selected[0]->GetParent());
+		pg->SetParent(pDoc->GetSelection(0)->GetParent());
 
-		for (auto o : m_Selected)
+		pDoc->DoForAllSelected([&](c3::Object *pobj)
 		{
-			o->SetParent(pg);
-		}
+			pobj->SetParent(pg);
+		});
+
+		pDoc->ClearSelection();
+		pDoc->AddToSelection(pg);
 
 		((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
 	}
@@ -1545,21 +1508,32 @@ void C3EditView::OnEditGroup()
 
 void C3EditView::OnUpdateEditUngroup(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable((!m_Selected.empty() && (m_Selected.size() == 1) && m_Selected[0]->GetNumChildren()) ? TRUE : FALSE);
+	C3EditDoc* pDoc = GetDocument();
+
+	pCmdUI->Enable(ValidSelection_OnlyOne(pDoc));
 }
 
 
 void C3EditView::OnEditUngroup()
 {
-	c3::Object *pg = m_Selected[0];
+	C3EditDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+	if (!pDoc)
+		return;
+
+	c3::Object *pg = pDoc->GetSelection(0);
 	if (!pg->GetParent())
 		return;
 
+	pDoc->ClearSelection();
 	while (size_t i = pg->GetNumChildren())
 	{
 		c3::Object *o = pg->GetChild(i - 1);
 		o->SetParent(pg->GetParent());
+		pDoc->AddToSelection(o);
 	}
+
+	pg->Release();
 
 	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
 }
@@ -1599,6 +1573,10 @@ void C3EditView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		case _T('5'):
 			pmf->SetActiveTool(C3EditApp::TT_SCALE);
 			break;
+
+		case _T('6'):
+			pmf->SetActiveTool(C3EditApp::TT_WAND);
+			break;
 	}
 
 	CView::OnKeyUp(nChar, nRepCnt, nFlags);
@@ -1632,16 +1610,20 @@ void C3EditView::CenterViewOnSelection()
 	c3::Object *camobj = pvi->m_Camera;
 	c3::Positionable *pcampos = camobj ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
 
-	if (!m_Selected.empty())
+	glm::fvec3 cpos;
+	size_t ct = 0;
+	pDoc->DoForAllSelected([&](c3::Object *pobj)
 	{
-		glm::fvec3 cpos;
-		for (TObjectArray::const_iterator it = m_Selected.cbegin(); it != m_Selected.cend(); it++)
-		{
-			c3::Positionable* psopos = dynamic_cast<c3::Positionable*>((*it)->FindComponent(c3::Positionable::Type()));
-			if (psopos)
-				cpos += *(psopos->GetPosVec());
-		}
-		cpos /= (float)m_Selected.size();
+		glm::fmat4x4 root_mat;
+		c3::util::ComputeFinalTransform(pobj, &root_mat);
+		glm::fvec3 pt = root_mat * glm::fvec4(0, 0, 0, 1);
+		cpos += pt;
+		ct++;
+	});
+
+	if (ct)
+	{
+		cpos /= (float)ct;
 		pcampos->SetPosVec(&cpos);
 	}
 }
@@ -1654,7 +1636,9 @@ void C3EditView::OnEditCenterCamera()
 
 void C3EditView::OnUpdateEditCenterCamera(CCmdUI *pCmdUI)
 {
-	pCmdUI->Enable(!m_Selected.empty());
+	C3EditDoc* pDoc = GetDocument();
+
+	pCmdUI->Enable(pDoc && pDoc->GetNumSelected());
 }
 
 
@@ -1718,4 +1702,144 @@ void C3EditView::OnViewHoverInformation()
 {
 	bool b = !theApp.m_Config->GetBool(_T("environment.hoverinfo"), false);
 	theApp.m_Config->SetBool(_T("environment.hoverinfo"), b);
+}
+
+
+void C3EditView::OnEditCopy()
+{
+	if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
+	{
+		C3EditDoc* pDoc = GetDocument();
+
+		c3::Object *br = nullptr;
+
+		if (pDoc->GetNumSelected() > 1)
+		{
+			br = theApp.m_C3->GetFactory()->Build();
+			br->SetName(_T("Copied Objects"));
+			br->Flags().Set(OF_UPDATE | OF_DRAW | OF_LIGHT | OF_CASTSHADOW | OF_CHECKCOLLISIONS | OF_EXPANDED);
+			br->AddComponent(c3::Positionable::Type());
+
+			pDoc->DoForAllSelected([&](c3::Object *pobj)
+			{
+				c3::Object *brc = theApp.m_C3->GetFactory()->Build(pobj, nullptr, br);
+			});
+		}
+		else if (pDoc->GetNumSelected() == 1)
+		{
+			 br = theApp.m_C3->GetFactory()->Build(pDoc->GetSelection(0));
+		}
+
+		pDoc->SetBrush(br);
+	}
+}
+
+
+void C3EditView::OnUpdateEditCopy(CCmdUI *pCmdUI)
+{
+	C3EditDoc* pDoc = GetDocument();
+
+	pCmdUI->Enable(ValidSelection_SameParent(pDoc));
+}
+
+
+void C3EditView::OnEditCut()
+{
+	if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
+	{
+		C3EditDoc* pDoc = GetDocument();
+
+		c3::Object *br = nullptr;
+
+		if (pDoc->GetNumSelected() > 1)
+		{
+			br = theApp.m_C3->GetFactory()->Build();
+			br->SetName(_T("Cut Objects"));
+			br->Flags().Set(OF_UPDATE | OF_DRAW | OF_LIGHT | OF_CASTSHADOW | OF_CHECKCOLLISIONS | OF_EXPANDED);
+			br->AddComponent(c3::Positionable::Type());
+
+			pDoc->DoForAllSelected([&](c3::Object *pobj)
+			{
+				pobj->SetParent(br);
+			});
+		}
+		else if (pDoc->GetNumSelected() == 1)
+		{
+			br = theApp.m_C3->GetFactory()->Build(pDoc->GetSelection(0));
+		}
+
+		pDoc->SetBrush(br);
+		pDoc->ClearSelection();
+		pDoc->SetModifiedFlag();
+
+		((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
+	}
+}
+
+
+void C3EditView::OnUpdateEditCut(CCmdUI *pCmdUI)
+{
+	C3EditDoc* pDoc = GetDocument();
+
+	pCmdUI->Enable(ValidSelection_SameParent(pDoc));
+}
+
+
+void C3EditView::OnEditPaste()
+{
+	C3EditDoc* pDoc = GetDocument();
+
+	// get the combined transform and then use on the camera position to derived an offset from the root
+
+	c3::Object *root = pDoc->m_OperationalRootObj ? pDoc->m_OperationalRootObj : pDoc->m_RootObj;
+
+	c3::Object *pobj = theApp.m_C3->GetFactory()->Build(pDoc->m_Brush, nullptr, root, true);
+	pobj->Flags().Set(OF_EXPANDED);
+
+	c3::Positionable *pobjpos = (c3::Positionable *)(pobj->FindComponent(c3::Positionable::Type()));
+	if (pobjpos)
+	{
+		c3::Object *pcam = pDoc->GetPerViewInfo(GetSafeHwnd())->m_Camera;
+		c3::Camera *pcampos = (c3::Camera *)(pcam->FindComponent(c3::Camera::Type()));
+		pcam->Update();
+
+		glm::fvec3 ct;
+		pcampos->GetTargetPos(&ct);
+
+		glm::fmat4x4 root_mat;
+		c3::util::ComputeFinalTransform(root, &root_mat);
+		glm::fvec3 pt = root_mat * glm::fvec4(0, 0, 0, 1);
+		ct -= pt;
+
+		pobjpos->SetPosVec(&ct);
+	}
+
+	pDoc->SetModifiedFlag();
+	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
+}
+
+
+void C3EditView::OnUpdateEditPaste(CCmdUI *pCmdUI)
+{
+	C3EditDoc* pDoc = GetDocument();
+
+	pCmdUI->Enable(pDoc->m_Brush != nullptr);
+}
+
+
+void C3EditView::OnUpdateEditAssignRoot(CCmdUI *pCmdUI)
+{
+	C3EditDoc* pDoc = GetDocument();
+
+	pCmdUI->Enable(pDoc->GetNumSelected() == 1);
+}
+
+
+void C3EditView::OnEditAssignRoot()
+{
+	C3EditDoc* pDoc = GetDocument();
+
+	pDoc->m_OperationalRootObj = pDoc->GetSelection(0);
+
+	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
 }

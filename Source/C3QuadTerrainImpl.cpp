@@ -103,7 +103,7 @@ bool QuadTerrainImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void QuadTerrainImpl::Render(Object::RenderFlags flags)
+void QuadTerrainImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 
@@ -543,7 +543,7 @@ QuadTerrainImpl::CTerrainQuadNode *QuadTerrainImpl::GenerateGeometryQuadSet(size
 }
 
 
-bool QuadTerrainImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const
+bool QuadTerrainImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	return false;
 }
