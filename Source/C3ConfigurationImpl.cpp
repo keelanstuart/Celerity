@@ -444,7 +444,11 @@ void ConfigurationImpl::SetPoint(const TCHAR *path, const POINT &val)
 const TCHAR *ConfigurationImpl::GetString(const TCHAR *path, const TCHAR *def)
 {
 	bool created;
-	tinyxml2::XMLElement *pel = EvaluatePath(path, true, created);
+	bool should_create = true;
+	if (_tcschr(path, _T('#')) && !def)
+		should_create = false;
+
+	tinyxml2::XMLElement *pel = EvaluatePath(path, should_create, created);
 
 	if (pel)
 	{
@@ -603,7 +607,7 @@ tinyxml2::XMLElement *ConfigurationImpl::EvaluatePath(const TCHAR *path, bool cr
 				tmpret = next;
 			}
 
-			if (!tmpret)
+			if (!tmpret && create)
 			{
 				std::transform(pathcomp.begin(), pathcomp.end(), pathcomp.begin(), tolower);
 
