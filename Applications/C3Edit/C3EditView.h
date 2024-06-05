@@ -73,6 +73,8 @@ protected:
 	c3::ShaderComponent *m_FS_bounds;
 	c3::ShaderProgram *m_SP_bounds;
 
+	c3::VertexBuffer *m_FSQuadVB;
+
 	int32_t m_ulSunDir;
 	int32_t m_ulSunColor;
 	int32_t m_ulAmbientColor;
