@@ -7,28 +7,28 @@ To start developing, load the main Celerity solution in Visual Studio and build 
 
 Pull requests are welcome.
 
-![image](https://github.com/keelanstuart/Celerity/blob/master/Media/screen_20230128.png)
-
-![image](https://github.com/keelanstuart/Celerity/blob/master/Media/screen_20230209.png)
-
-![image](https://github.com/keelanstuart/Celerity/blob/master/Media/screen_ed_20230209.png)
-
-![image](https://github.com/keelanstuart/Celerity/blob/master/Media/screen_ed_20240209.png)
-
-Videos:
 <br>
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=CBt5-uMS4ak
-" target="_blank"><img src="http://img.youtube.com/vi/CBt5-uMS4ak/0.jpg" 
-alt="Warehouse Flythrough" width="240" height="180" border="10" /></a>
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=RB7WNeSvIYw
-" target="_blank"><img src="http://img.youtube.com/vi/RB7WNeSvIYw/0.jpg" 
-alt="Light Manipulation" width="240" height="180" border="10" /></a>
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=P6HyNWIeEA8
-" target="_blank"><img src="http://img.youtube.com/vi/P6HyNWIeEA8/0.jpg" 
-alt="Simple Particles" width="240" height="180" border="10" /></a>
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=QzydaeRiJyw
-" target="_blank"><img src="http://img.youtube.com/vi/QzydaeRiJyw/0.jpg" 
-alt="Simple Animation" width="240" height="180" border="10" /></a>
+Images:
+<br>
+<img src="https://github.com/keelanstuart/Celerity/blob/master/Media/screen_20230128.png" width="300" height="225" border="50"/>
+<img src="https://github.com/keelanstuart/Celerity/blob/master/Media/screen_ed_20240209.png" width="300" height="225" border="50"/>
+
+<br>
+Video Links:
+<br>
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=CBt5-uMS4ak" target="_blank">
+<img src="http://img.youtube.com/vi/CBt5-uMS4ak/0.jpg" alt="Warehouse Flythrough" width="300" height="225" border="50" />
+</a>
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=Wi8DE7UJTM0" target="_blank">
+<img src="http://img.youtube.com/vi/Wi8DE7UJTM0/0.jpg" alt="Full hierarchies" width="300" height="225" border="50" />
+</a>
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=QzydaeRiJyw" target="_blank">
+<img src="http://img.youtube.com/vi/QzydaeRiJyw/0.jpg" alt="Simple Animation" width="300" height="225" border="50" />
+</a>
+
+<br>
 ______________________________________________
 
 Some background...
