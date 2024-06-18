@@ -63,19 +63,43 @@ bool EnvironmentModifierImpl::Initialize(Object *pobject)
 
 	props::IProperty *pp;
 
-	if (pp = ps->CreateReferenceProperty(_T("uBackgroundColor"), 'eBGC', &m_BackgroundColor, props::IProperty::PT_FLOAT_V3))
+	pp = ps->GetPropertyById('eBGC');
+	if (!pp && ((pp = ps->CreateProperty(_T("uBackgroundColor"), 'eBGC')) && pp))
+		pp->SetVec3F(*(props::TVec3F *)&m_BackgroundColor);
+	else
+		PropertyChanged(pp);
+	if (pp)
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGB);
 
-	if (pp = ps->CreateReferenceProperty(_T("uAmbientColor"), 'eAMB', &m_AmbColor, props::IProperty::PT_FLOAT_V3))
+	pp = ps->GetPropertyById('eAMB');
+	if (!pp && ((pp = ps->CreateProperty(_T("uAmbientColor"), 'eAMB')) && pp))
+		pp->SetVec3F(*(props::TVec3F *)&m_AmbColor);
+	else
+		PropertyChanged(pp);
+	if (pp)
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_AMBIENT_COLOR);
 
-	if (pp = ps->CreateReferenceProperty(_T("uSunColor"), 'eSNC', &m_SunColor, props::IProperty::PT_FLOAT_V3))
+	pp = ps->GetPropertyById('eSNC');
+	if (!pp && ((pp = ps->CreateProperty(_T("uSunColor"), 'eSNC')) && pp))
+		pp->SetVec3F(*(props::TVec3F *)&m_SunColor);
+	else
+		PropertyChanged(pp);
+	if (pp)
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_COLOR);
 
-	if (pp = ps->CreateReferenceProperty(_T("uSunDirection"), 'eSND', &m_SunDir, props::IProperty::PT_FLOAT_V3))
+	pp = ps->GetPropertyById('eSND');
+	if (!pp && ((pp = ps->CreateProperty(_T("uSunDirection"), 'eSND')) && pp))
+		pp->SetVec3F(*(props::TVec3F *)&m_SunDir);
+	else
+		PropertyChanged(pp);
+	if (pp)
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_DIRECTION);
 
-	pp = ps->CreateReferenceProperty(_T("Gravity"), 'GRAV', &m_Gravity, props::IProperty::PT_FLOAT_V3);
+	pp = ps->GetPropertyById('GRAV');
+	if (!pp && ((pp = ps->CreateProperty(_T("Gravity"), 'GRAV')) && pp))
+		pp->SetVec3F(*(props::TVec3F *)&m_Gravity);
+	else
+		PropertyChanged(pp);
 
 	if (pp = ps->CreateProperty(_T("Sky.Texture"), 'SkTx'))
 	{
@@ -171,7 +195,7 @@ void EnvironmentModifierImpl::Render(Object::RenderFlags flags, const glm::fmat4
 	}
 
 	if (!m_pSkyTexture)
-		m_pSkyTexture = pr->GetWhiteTexture();
+		m_pSkyTexture = pr->GetBlackTexture();
 
 	if (!m_pSkyMtl)
 		m_pSkyMtl = pr->GetMaterialManager()->CreateMaterial();
@@ -189,7 +213,7 @@ void EnvironmentModifierImpl::Render(Object::RenderFlags flags, const glm::fmat4
 
 	if (!m_pSkyModel)
 	{
-		Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("[hemisphere_lo.model]"));
+		Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(_T("[hemisphere_med.model]"));
 		m_pSkyModel = (Model *)pres->GetData();
 	}
 
@@ -243,8 +267,29 @@ void EnvironmentModifierImpl::PropertyChanged(const props::IProperty *pprop)
 			m_pSkyTexture = nullptr;
 			break;
 
+		case 'C3RM':
 		case 'SkRm':
 			m_pSkyMethod = nullptr;
+			break;
+
+		case 'eBGC':
+			pprop->AsVec3F((props::TVec3F *)&m_BackgroundColor);
+			break;
+
+		case 'eAMB':
+			pprop->AsVec3F((props::TVec3F *)&m_AmbColor);
+			break;
+
+		case 'eSNC':
+			pprop->AsVec3F((props::TVec3F *)&m_SunColor);
+			break;
+
+		case 'eSND':
+			pprop->AsVec3F((props::TVec3F *)&m_SunDir);
+			break;
+
+		case 'GRAV':
+			pprop->AsVec3F((props::TVec3F *)&m_Gravity);
 			break;
 	}
 }

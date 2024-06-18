@@ -346,10 +346,24 @@ void ResourceManagerImpl::Reset()
 }
 
 
+bool ResourceManagerImpl::IsZipArchiveRegistered(const TCHAR *filename) const
+{
+	for (auto zit = m_ZipFileRegistry.cbegin(); zit != m_ZipFileRegistry.cend(); zit++)
+	{
+		if (!_tcsicmp(filename, zit->second.first.c_str()))
+			return true;
+	}
+
+	return false;
+}
+
 bool ResourceManagerImpl::RegisterZipArchive(const TCHAR *filename)
 {
 	if (!filename)
 		return false;
+
+	if (IsZipArchiveRegistered(filename))
+		return true;
 
 	bool ret = false;
 
@@ -424,6 +438,28 @@ const ZipFile *ResourceManagerImpl::GetZipFile(uint16_t zipid) const
 		return it->second.second;
 
 	return nullptr;
+}
+
+
+size_t ResourceManagerImpl::GetNumRegisteredZipArchives() const
+{
+	return m_ZipFileRegistry.size();
+}
+
+
+const TCHAR *ResourceManagerImpl::GetRegisteredZipArchivePath(size_t idx) const
+{
+	if (idx >= m_ZipFileRegistry.size())
+		return nullptr;
+
+	auto it = m_ZipFileRegistry.cbegin();
+	while (idx)
+	{
+		it++;
+		idx--;
+	}
+
+	return it->second.first.c_str();
 }
 
 

@@ -34,6 +34,7 @@ protected:
 	c3::ShaderComponent *m_VS_combine;
 	c3::ShaderComponent *m_FS_combine;
 	c3::ShaderProgram *m_SP_combine;
+	c3::VertexBuffer *m_FSQuadVB;
 	bool m_bFirstDraw;
 	bool m_DebugEnabled;
 

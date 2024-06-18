@@ -161,6 +161,7 @@
 #define ID_SCRIPTEDITOR_STATUS_NAME     358
 #define ID_SCRIPTEDITOR_STATUS_ROWCOL   359
 #define ID_VIEW_RESOURCESPYWND          362
+#define IDD_PACKFILEMANAGER             364
 #define IDC_PROPERTIES                  1000
 #define IDC_COMPONENTS                  1001
 #define IDC_NAME                        1002
@@ -175,6 +176,7 @@
 #define IDC_EDIT_PROPFCC                1013
 #define IDC_COMBO_PROPTYPE              1014
 #define IDC_COMBO_PROPASPECT            1015
+#define IDC_PACKFILELIST                1015
 #define ID_EDIT_TRIGGERRENDERDOCCAPTURE 32771
 #define ID_EDIT_DELETE                  32772
 #define ID_EDIT_DUPLICATE               32773
@@ -237,14 +239,16 @@
 #define ID_HELP_GENCOMPONENT            32839
 #define ID_EDIT_ASSIGN                  32840
 #define ID_EDIT_ASSIGNROOT              32841
+#define ID_EDIT_PACKFILEREGISTRATION    32842
+#define ID_EDIT_PACKFILEMANAGEMENT      32843
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        346
-#define _APS_NEXT_COMMAND_VALUE         32842
-#define _APS_NEXT_CONTROL_VALUE         1015
-#define _APS_NEXT_SYMED_VALUE           364
+#define _APS_NEXT_RESOURCE_VALUE        348
+#define _APS_NEXT_COMMAND_VALUE         32844
+#define _APS_NEXT_CONTROL_VALUE         1016
+#define _APS_NEXT_SYMED_VALUE           365
 #endif
 #endif

@@ -27,15 +27,14 @@ namespace c3
 
 
 		/// ResTypeFlagMode is used in ForAllResourceDo calls
-		typedef enum
+		using ResTypeFlagMode = enum
 		{
 			RTFM_IGNORE = 0,		/// Don't use the flags
 			RTFM_ANY,				/// Passes if ANY ResType flags (set in your DEFINE_RESOURCETYPE code) match the flags given here
 			RTFM_ALL,				/// Passes only if ALL ResType flags (set in your DEFINE_RESOURCETYPE code) match the flags given here
 			RTFM_NONE				/// Passes if NONE OF the ResType flags (set in your DEFINE_RESOURCETYPE code) match the flags given here
 
-		} ResTypeFlagMode;
-
+		};
 
 		// resource handling functions
 		typedef bool (__cdecl *RESOURCE_CALLBACK_FUNC)(Resource *pres);
@@ -69,8 +68,19 @@ namespace c3
 		// Deletes all references on all resources, effectively unloading everything
 		virtual void Reset() = NULL;
 
+		// Returns the number of zip archives currently registered with the ResourceManager
+		virtual size_t GetNumRegisteredZipArchives() const = NULL;
+
+		// Returns the number of zip archives currently registered with the ResourceManager
+		virtual const TCHAR *GetRegisteredZipArchivePath(size_t idx) const = NULL;
+
+		// returns true is the given path is registered as a zip archive, false otherwise
+		virtual bool IsZipArchiveRegistered(const TCHAR *filename) const = NULL;
+
+		// Register a c3z archive with the ResourceManager, letting you load resources inside
 		virtual bool RegisterZipArchive(const TCHAR *filename) = NULL;
 
+		// Remove a c3z archive from the ResourceManager
 		virtual void UnregisterZipArchive(const TCHAR *filename) = NULL;
 
 		virtual bool FindZippedFile(const TCHAR *filename, TCHAR *fullpath, size_t fullpathlen) = NULL;

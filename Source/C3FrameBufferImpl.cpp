@@ -29,6 +29,8 @@ const GLuint FrameBufferImpl::targenum[MAX_COLORTARGETS] =
 
 FrameBufferImpl::FrameBufferImpl(RendererImpl* prend, const TCHAR *name)
 {
+	m_Pub = Publisher::Create(name);
+
 	m_Rend = prend;
 	m_Name = name;
 	m_glID = NULL;
@@ -53,6 +55,8 @@ FrameBufferImpl::FrameBufferImpl(RendererImpl* prend, const TCHAR *name)
 
 FrameBufferImpl::~FrameBufferImpl()
 {
+	C3_SAFERELEASE(m_Pub);
+
 	if (m_Rend && (m_glID != NULL))
 	{
 		m_Rend->gl.DeleteFramebuffers(1, &m_glID);
@@ -63,6 +67,8 @@ FrameBufferImpl::~FrameBufferImpl()
 
 void FrameBufferImpl::Release()
 {
+	m_Pub->Deliver();
+
 	m_Rend->RemoveFrameBuffer(m_Name.c_str());
 	Teardown();
 
@@ -532,4 +538,16 @@ void FrameBufferImpl::SetBlendEquation(Renderer::BlendEquation eq)
 Renderer::BlendEquation FrameBufferImpl::GetBlendEquation() const
 {
 	return m_BlendEq;
+}
+
+
+void FrameBufferImpl::Subscribe(Subscription *sub)
+{
+	m_Pub->Subscribe(sub);
+}
+
+
+void FrameBufferImpl::Unsubscribe(Subscription *sub)
+{
+	m_Pub->Unsubscribe(sub);
 }

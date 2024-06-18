@@ -432,13 +432,28 @@
 
 </file2>
 
+<file2>
+
+<powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">%localappdata%\Celerity\C3Edit</powerprops:property>
+<powerprops:property id="EXCL" type="STRING"></powerprops:property>
+<powerprops:property id="NAME" type="STRING">C3Edit.config</powerprops:property>
+<powerprops:property id="PRES" type="STRING">CheckOverwrite();</powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\INSTALLER\C3Edit.config</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
 </files2>
 
 <scripts>
 
-<script type="initialize">SetProperty(&quot;Apply C3Edit Defaults (recommended)&quot;, &quot;bool&quot;, &quot;yesno&quot;, 0);</script>
+<script type="initialize">SetProperty(&quot;Apply C3Edit Defaults (recommended)&quot;, &quot;bool&quot;, &quot;yesno&quot;, 1);</script>
 
 <script type="preinstall">ShowLicenseAcceptanceDlg();CreateDirectoryTree(&quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK&quot;);Echo(&quot;Created Start Menu folder...\n&quot;);</script>
+
+<script type="prefile">function CheckOverwrite(){	if (FileExists(FILEPATH) == 1)	{		if (MessageBoxYesNo(&quot;Overwrite File?&quot;, &quot;The file \&quot;&quot; + FILEPATH + &quot;\&quot; already exists. Do you want to overwrite it?&quot;) == 0)		{			Skip();		}	}}</script>
 
 <script type="postfile">function CreateStartMenuEntry(){	var ext_idx = FILENAME.indexOf(&quot;.exe&quot;);	var name_only = FILENAME.substring(0, ext_idx);	var link_path = &quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/&quot; + name_only + &quot;.lnk&quot;;		CreateShortcut(link_path, FILEPATH, &quot;&quot;, PATH, name_only, 1, FILEPATH, 0);	Echo(&quot;Created Start Menu shortcut for \&quot;&quot; + name_only + &quot;\&quot;.\n&quot;);}</script>
 

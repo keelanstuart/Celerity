@@ -126,9 +126,6 @@
     <ClCompile Include="Source\C3PublisherImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\C3SubscriptionImpl.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\C3MaterialManagerImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -407,9 +404,6 @@
     <ClInclude Include="Source\C3ResourceManagerImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
-    <ClInclude Include="Source\C3SubscriptionImpl.h">
-      <Filter>Header Files\Private</Filter>
-    </ClInclude>
     <ClInclude Include="Include\C3TString.h">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
@@ -495,9 +489,6 @@
       <Filter>Header Files\Public</Filter>
     </ClInclude>
     <ClInclude Include="Include\C3ResourceManager.h">
-      <Filter>Header Files\Public</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3Subscription.h">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
     <ClInclude Include="third-party\imgui\imgui.h">

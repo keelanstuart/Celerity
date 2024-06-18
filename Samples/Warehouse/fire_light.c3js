@@ -1,0 +1,17 @@
+var runtime;
+var hatten;
+var s;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	s = Math.random(3.0, 4.0);
+	SetPropertyValue(hatten, s);
+}
+
+function init()
+{
+	runtime = 0.0;
+	hatten = FindProperty(self, "LightAttenuation");
+}

@@ -1,0 +1,74 @@
+var runtime;
+
+var hcam;
+var hcam_pos;
+var hcam_ori;
+var cam_pos;
+var cam_ori;
+
+var hplayer;
+var hplayer_pos;
+var hplayer_ori;
+var player_pos;
+var player_ori;
+
+var setup = false;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	if (setup == false)
+	{
+		var maxi = GetModelNodeCount(self);
+		if (maxi > 0)
+		{
+			var i;
+			for (i = 0; i < maxi; i++)
+			{
+				var nodename = GetModelNodeName(self, i);
+
+				if (nodename.indexOf("DYNAMIC") == 0)
+				{
+					// dyanmically change the map
+					if (Math.Random(0, 10) < 2)
+					{
+						SetModelNodeVisibility(self, i, false);
+						SetModelNodeCollisions(self, i, false);
+					}
+				}
+				else if ((nodename == "G7") || (nodename == "G7") || (nodename == "BuildingShell"))
+				{
+					SetModelNodeVisibility(self, i, true);
+					SetModelNodeCollisions(self, i, true);
+				}
+				else
+				{
+					// show all other objects, but don't check collisions for them
+					SetModelNodeVisibility(self, i, true);
+					SetModelNodeCollisions(self, i, false);
+				}
+			}
+
+			setup = true;
+		}
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	LoadObject(self, "Warehouse.c3o");
+	Log("Demo scene loaded!\n");
+
+	var hplayer = CreateObject("Ship", self);
+	RegisterObject("player", hplayer);
+
+	hplayer_pos = FindProperty(hplayer, "Position");
+	hplayer_ori = FindProperty(hplayer, "Orientation");
+
+	hcam = GetRegisteredObject("camera.root");
+	hcam_pos = FindProperty(hcam, "Position");
+	hcam_ori = FindProperty(hcam, "Orientation");
+}

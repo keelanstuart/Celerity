@@ -12,6 +12,7 @@
 #include "C3EditView.h"
 #include <shellscalingapi.h>
 #include "ResourcePathEditorDlg.h"
+#include "PackfileManager.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -100,6 +101,8 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_HELP_SDKDOCS, &C3EditFrame::OnUpdateHelpSdkDocs)
 	ON_COMMAND(ID_HELP_GENCOMPONENT, &C3EditFrame::OnHelpGenComponent)
 	ON_UPDATE_COMMAND_UI(ID_HELP_GENCOMPONENT, &C3EditFrame::OnUpdateHelpGenComponent)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_PACKFILEMANAGEMENT, &C3EditFrame::OnUpdateEditPackfileManagement)
+	ON_COMMAND(ID_EDIT_PACKFILEMANAGEMENT, &C3EditFrame::OnEditPackfileManagement)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -1228,3 +1231,16 @@ void C3EditFrame::OnUpdateHelpGenComponent(CCmdUI *pCmdUI)
 	pCmdUI->Enable();
 }
 
+
+
+void C3EditFrame::OnUpdateEditPackfileManagement(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
+}
+
+
+void C3EditFrame::OnEditPackfileManagement()
+{
+	CPackfileManager pfm;
+	pfm.DoModal();
+}

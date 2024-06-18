@@ -82,6 +82,15 @@ bool ModelRendererImpl::Initialize(Object *pobject)
 	}
 
 	pp = props->GetPropertyById('MODF');
+	if (!pp)
+	{
+		pp = props->CreateProperty(_T("ModelFile"), 'MODF');
+		if (pp)
+		{
+			pp->SetString(_T("[sphere_lo.model]"));
+			pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
+		}
+	}
 	if (pp)
 		m_Mod.second = pobject->GetSystem()->GetResourceManager()->GetResource(pp->AsString());
 

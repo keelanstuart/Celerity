@@ -1,0 +1,38 @@
+<render_method name="standard">
+
+	<technique name="g+s">
+		<pass name="color">
+			<setting name="windingorder"		value="ccw" />
+			<setting name="cullmode"			value="back" />
+			<setting name="framebuffer"			value="GBuffer" />
+			<setting name="shader.vertex"		value="def-obj.vsh" />
+			<setting name="shader.fragment"		value="def-obj.fsh" />
+		</pass>
+		<pass name="shadow">
+			<setting name="windingorder"		value="ccw" />
+			<setting name="cullmode"			value="disabled" />
+			<setting name="framebuffer"			value="Shadow" />
+			<setting name="shader.vertex"		value="def-obj-shadow.vsh" />
+			<setting name="shader.fragment"		value="def-obj-shadow.fsh" />
+		</pass>
+	</technique>
+
+	<technique name="g">
+		<pass>
+			<setting name="windingorder"		value="ccw" />
+			<setting name="cullmode"			value="back" />
+			<setting name="shader.vertex"		value="def-obj.vsh" />
+			<setting name="shader.fragment"		value="def-obj.fsh" />
+		</pass>
+	</technique>
+
+	<technique name="s">
+		<pass>
+			<setting name="windingorder"		value="ccw" />
+			<setting name="cullmode"			value="disabled" />
+			<setting name="shader.vertex"		value="def-obj-shadow.vsh" />
+			<setting name="shader.fragment"		value="def-obj-shadow.fsh" />
+		</pass>
+	</technique>
+
+</render_method>

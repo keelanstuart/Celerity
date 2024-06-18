@@ -79,7 +79,6 @@
     <ClCompile Include="Source\C3ShaderComponentImpl.cpp" />
     <ClCompile Include="Source\C3ShaderProgramImpl.cpp" />
     <ClCompile Include="Source\C3SoundPlayerImpl.cpp" />
-    <ClCompile Include="Source\C3SubscriptionImpl.cpp" />
     <ClCompile Include="Source\C3SystemImpl.cpp" />
     <ClCompile Include="Source\C3TextureImpl.cpp" />
     <ClCompile Include="Source\C3Utility.cpp" />
@@ -204,7 +203,6 @@
     <ClInclude Include="Include\C3ShaderComponent.h" />
     <ClInclude Include="Include\C3ShaderProgram.h" />
     <ClInclude Include="Include\C3SoundPlayer.h" />
-    <ClInclude Include="Include\C3Subscription.h" />
     <ClInclude Include="Include\C3System.h" />
     <ClInclude Include="Include\C3Texture.h" />
     <ClInclude Include="Include\C3TString.h" />
@@ -258,7 +256,6 @@
     <ClInclude Include="Source\C3ShaderProgramImpl.h" />
     <ClInclude Include="Source\C3ShaderComponentImpl.h" />
     <ClInclude Include="Source\C3SoundPlayerImpl.h" />
-    <ClInclude Include="Source\C3SubscriptionImpl.h" />
     <ClInclude Include="Source\C3SystemImpl.h" />
     <ClInclude Include="Source\C3TextureImpl.h" />
     <ClInclude Include="Source\C3VertexBufferImpl.h" />

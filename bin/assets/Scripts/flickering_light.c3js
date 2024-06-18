@@ -8,7 +8,7 @@ function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 
-	if (special_time > 0)
+	if (special_time > 10)
 	{
 		special_time -= elapsed_seconds;
 	}

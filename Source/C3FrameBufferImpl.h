@@ -9,6 +9,7 @@
 #include <C3FrameBuffer.h>
 #include <C3RendererImpl.h>
 #include <C3DepthBufferImpl.h>
+#include <C3Publisher.h>
 
 
 namespace c3
@@ -74,6 +75,7 @@ namespace c3
 
 		Renderer::BlendMode m_BlendMode;
 		Renderer::BlendEquation m_BlendEq;
+		Publisher *m_Pub;
 
 	public:
 
@@ -125,6 +127,10 @@ namespace c3
 		virtual Renderer::BlendEquation GetBlendEquation() const;
 
 		operator GLuint() const { return m_glID; }
+
+		void Subscribe(Subscription *sub);
+
+		void Unsubscribe(Subscription *sub);
 
 	};
 

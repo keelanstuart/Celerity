@@ -32,10 +32,13 @@ namespace c3
 		typedef std::multimap<tstring, const ResourceType *> TExtToResourceTypeMap;
 		TExtToResourceTypeMap m_ExtResTypeMap;
 
-		typedef std::map<uint16_t, std::pair<tstring, ZipFile *>> TZipFileRegistry;
+		using ArchiveID = uint16_t;
+
+		typedef std::map<ArchiveID, std::pair<tstring, ZipFile *>> TZipFileRegistry;
 		TZipFileRegistry m_ZipFileRegistry;
 
 		friend class ResourceImpl;
+
 
 	public:
 
@@ -65,9 +68,15 @@ namespace c3
 
 		virtual void Reset();
 
+		virtual bool IsZipArchiveRegistered(const TCHAR *filename) const;
+
 		virtual bool RegisterZipArchive(const TCHAR *filename);
 
 		virtual void UnregisterZipArchive(const TCHAR *filename);
+
+		virtual size_t GetNumRegisteredZipArchives() const;
+
+		virtual const TCHAR *GetRegisteredZipArchivePath(size_t idx) const;
 
 		const ZipFile *GetZipFile(uint16_t zipid) const;
 

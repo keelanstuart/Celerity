@@ -172,6 +172,8 @@ public:
 	afx_msg void OnUpdateHelpSdkDocs(CCmdUI *pCmdUI);
 	afx_msg void OnHelpGenComponent();
 	afx_msg void OnUpdateHelpGenComponent(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateEditPackfileManagement(CCmdUI *pCmdUI);
+	afx_msg void OnEditPackfileManagement();
 };
 
 

@@ -39,4 +39,11 @@
             <powerprops:property id="MODF" name="Model" type="STRING">[xzplane.model]</powerprops:property>
         </powerprops:property_set>
     </prototype>
+    <prototype guid="{B4442092-1185-4C6C-B013-BB66ED890FA2}" name="Sphere" group="Primitives" flags="131079">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set/>
+    </prototype>
 </prototypes>

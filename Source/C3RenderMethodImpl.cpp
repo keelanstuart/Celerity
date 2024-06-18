@@ -8,6 +8,7 @@
 
 #include <C3RenderMethodImpl.h>
 #include <C3Resource.h>
+#include <C3FrameBufferImpl.h>
 
 using namespace c3;
 
@@ -43,16 +44,19 @@ RenderMethodImpl::PassImpl::PassImpl()
 {
 	m_ShaderProg = nullptr;
 	m_FrameBuffer = nullptr;
+	m_FBSub = true;
 	m_FrameBufferFlags = 0;
 	m_pOwner = nullptr;
 	m_StateRestorationMask.Set(-1);
-
-
 }
 
 
 RenderMethodImpl::PassImpl::~PassImpl()
 {
+	// m_FBSub being null means that the FrameBuffer already went away... so we don't need to Unsubscribe
+	if (!m_FBSub && m_FrameBuffer)
+		((FrameBufferImpl *)m_FrameBuffer)->Unsubscribe(&m_FBSub);
+
 	if (m_ShaderProg)
 	{
 		m_ShaderProg->Release();
@@ -105,10 +109,18 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 
 	if (m_FrameBufferName.has_value())
 	{
-		if (!m_FrameBuffer)
+		if (m_FBSub)
+		{
 			m_FrameBuffer = prend->FindFrameBuffer((*m_FrameBufferName).c_str());
+			if (m_FrameBuffer)
+			{
+				((FrameBufferImpl *)m_FrameBuffer)->Subscribe(&m_FBSub);
+				m_FBSub = false;
+			}
+		}
 
-		prend->UseFrameBuffer(m_FrameBuffer, m_FrameBufferFlags);
+		if (m_FrameBuffer)
+			prend->UseFrameBuffer(m_FrameBuffer, m_FrameBufferFlags);
 	}
 
 	bool need_shader = false;
@@ -158,6 +170,9 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 
 void RenderMethodImpl::PassImpl::SetFrameBufferName(const TCHAR *name)
 {
+	if (m_FrameBuffer)
+		((FrameBufferImpl *)m_FrameBuffer)->Unsubscribe(&m_FBSub);
+
 	if (!name)
 	{
 		m_FrameBufferName.reset();

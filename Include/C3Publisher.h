@@ -7,10 +7,11 @@
 #pragma once
 
 #include <C3.h>
-#include <C3Subscription.h>
 
 namespace c3
 {
+
+	using Subscription = bool;
 
 	class Publisher
 	{
@@ -21,11 +22,11 @@ namespace c3
 
 		virtual void Release() = NULL;
 
-		///  Returns a Subscription that you can query to see if something new has been published
-		virtual Subscription *Subscribe() = NULL;
+		/// Starts subscribing to this Publisher -- under the hood, a Subscription is a bool
+		virtual void Subscribe(Subscription *sub) = NULL;
 
 		/// Will make all Subscriptions indicate that their delivery has arrived
-		virtual void Unsubscribe(Subscription **sub) = NULL;
+		virtual void Unsubscribe(Subscription *sub) = NULL;
 
 		/// Will make all Subscriptions indicate that their delivery has arrived
 		virtual void Deliver() = NULL;

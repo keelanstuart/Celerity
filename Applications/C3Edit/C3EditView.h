@@ -99,6 +99,10 @@ protected:
 
 	c3::Object *m_pUICam;
 
+	bool m_bCenter;
+
+	bool m_bSurfacesCreated, m_bSurfacesReady;
+
 // Generated message map functions
 protected:
 

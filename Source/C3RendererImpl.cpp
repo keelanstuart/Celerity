@@ -466,7 +466,8 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		TCHAR *spherename[EResLevel::RL_RESCOUNT] = {_T("[sphere_lo.model]"), _T("[sphere_med.model]"), _T("[sphere_hi.model]")};
 
 		c3::Material *refmtl = GetMaterialManager()->CreateMaterial();
-		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetGridTexture());
+		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetWhiteTexture());
+		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_SURFACEDESC, GetBlackTexture());
 		refmtl->SetWindingOrder(c3::Renderer::EWindingOrder::WO_CCW);
 
 		for (size_t i = 0; i < EResLevel::RL_RESCOUNT; i++)
@@ -2856,7 +2857,7 @@ Mesh *RendererImpl::GetHemisphereMesh(EResLevel lvl)
 					}
 
 					uint16_t ss = 1;
-					for (uint16_t i = 1, maxi = (uint16_t)(hemisphereStackCount[lvl] + 1); i < maxi; i++)
+					for (uint16_t i = 1, maxi = (uint16_t)(hemisphereStackCount[lvl]); i < maxi; i++)
 					{
 						for (uint16_t j = 0, maxj = (uint16_t)(hemisphereSectorCount[lvl] + 1); j < maxj; j++)
 						{

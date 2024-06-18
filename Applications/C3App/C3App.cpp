@@ -246,6 +246,10 @@ BOOL C3App::InitInstance()
 	resexts = m_Config->GetString(_T("resources.sound.extensions"), _T("wav;mp3;flac"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
+	respaths = m_Config->GetString(_T("resources.packfiles.paths"), _T("./;./assets;./assets/models;./assets/textures;./assets/shaders;./assets/scripts;./assets/animations;./assets/sounds;./assets/levels"));
+	resexts = m_Config->GetString(_T("resources.packfiles.extensions"), _T("zip;c3z"));
+	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
+
 	theApp.m_C3->GetLog()->Print(_T("done\n"));
 
 	theApp.m_C3->GetLog()->Print(_T("Loading prototypes..."));
@@ -285,10 +289,14 @@ BOOL C3App::InitInstance()
 		_stprintf_s(kn, _T("resources.packfiles.packfile#%zu"), rpi);
 
 		const TCHAR *zp = m_Config->GetString(kn, nullptr);
+		if (!zp)
+			break;
+
 		theApp.m_C3->GetLog()->Print(_T("\t%s\n"), zp);
 		theApp.m_C3->GetResourceManager()->RegisterZipArchive(zp);
 	}
 	theApp.m_C3->GetLog()->Print(_T("done.\n"));
+
 
 	theApp.m_C3->GetLog()->Print(_T("Loading Plugins..."));
 
@@ -302,8 +310,9 @@ BOOL C3App::InitInstance()
 	theApp.m_C3->GetLog()->Print(_T(" done\n"));
 
 	// Standard initialization
-
-	SetRegistryKey(_T("Celerity"));
+	tstring regkey = _T("CelerityApps\\");
+	regkey += appname;
+	SetRegistryKey(regkey.c_str());
 
 	C3Dlg dlg;
 	m_pMainWnd = &dlg;

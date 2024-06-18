@@ -119,6 +119,9 @@ const glm::fvec4 *MaterialImpl::GetColor(ColorComponentType comptype, glm::fvec4
 void MaterialImpl::SetTexture(TextureComponentType comptype, Texture *ptex)
 {
 	m_tex[comptype].first = ptex;
+
+	// Since the Resource takes precedent over the bare Texture, clear out the Resource if you set the Texture
+	m_tex[comptype].second = nullptr;
 }
 
 

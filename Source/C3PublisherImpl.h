@@ -22,15 +22,15 @@ namespace c3
 
 		virtual void Release();
 
-		virtual Subscription *Subscribe();
+		virtual void Subscribe(Subscription *sub);
 
-		virtual void Unsubscribe(Subscription **sub);
+		virtual void Unsubscribe(Subscription *sub);
 
 		virtual void Deliver();
 
 	protected:
 
-		typedef std::deque<c3::Subscription *> TSubscriptionArray;
+		typedef std::deque<Subscription *> TSubscriptionArray;
 
 		TSubscriptionArray m_Subs;
 		std::mutex m_mxSubs;

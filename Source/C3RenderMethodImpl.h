@@ -37,6 +37,7 @@ namespace c3
 
 			ShaderProgram *m_ShaderProg;
 			FrameBuffer *m_FrameBuffer;
+			Subscription m_FBSub;
 			std::optional<tstring> m_ShaderCompFilename[Renderer::ShaderComponentType::ST_NUMTYPES];
 			std::optional<tstring> m_FrameBufferName;
 			props::TFlags64 m_FrameBufferFlags;
