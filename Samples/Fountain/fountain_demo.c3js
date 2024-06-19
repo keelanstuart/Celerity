@@ -1,0 +1,14 @@
+var runtime;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	LoadObject(self, "floating_fountain.c3o");
+	Log("Demo scene loaded!\n");
+}

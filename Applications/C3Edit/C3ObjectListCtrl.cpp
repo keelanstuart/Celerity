@@ -339,6 +339,8 @@ void C3ObjectListCtrl::OnLButtonDblClk(UINT nFlags, CPoint point)
 	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
 	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
 	const c3::Object *pobj = ((CObjectWnd *)GetParent())->GetItemByIndex(pdoc->m_RootObj, i);
+	if (!pobj)
+		return;
 
 	POSITION vp = pdoc->GetFirstViewPosition();
 	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);

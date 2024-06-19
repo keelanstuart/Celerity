@@ -234,17 +234,24 @@ bool ScriptableImpl::Initialize(Object *pobject)
 	if (!propset)
 		return false;
 
-	props::IProperty *pscl = propset->CreateReferenceProperty(_T("ScriptUpdateRate"), 'SUDR', &m_UpdateRate, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
-	if (pscl)
-		pscl->SetFloat(0.033f);
+	props::IProperty *pudr = propset->GetPropertyById('SUDR');
+	if (!pudr)
+	{
+		pudr = propset->CreateProperty(_T("ScriptUpdateRate"), 'SUDR');
+		if (pudr)
+			pudr->SetFloat(m_UpdateRate);
+	}
 
 	props::IProperty *psrc = propset->GetPropertyById('SRCF');
 	if (!psrc)
 	{
 		psrc = propset->CreateProperty(_T("SourceFile"), 'SRCF');
-		psrc->SetString(_T(""));
-		psrc->SetAspect(props::IProperty::PA_FILENAME);
-		psrc->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+		if (psrc)
+		{
+			psrc->SetString(_T(""));
+			psrc->SetAspect(props::IProperty::PA_FILENAME);
+			psrc->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
+		}
 	}
 
 	return true;

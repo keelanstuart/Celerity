@@ -397,6 +397,8 @@ tstring CScriptLex::getTokenStr(int64_t token)
 		case LEX_RSHIFTEQUAL: return _T(">>=");
 		case LEX_PLUSEQUAL: return _T("+=");
 		case LEX_MINUSEQUAL: return _T("-=");
+		case LEX_MULEQUAL: return _T("*=");
+		case LEX_DIVEQUAL: return _T("/=");
 		case LEX_PLUSPLUS: return _T("++");
 		case LEX_MINUSMINUS: return _T("--");
 		case LEX_ANDEQUAL: return _T("&=");
@@ -717,6 +719,16 @@ void CScriptLex::getNextToken()
 		else if ((tk == _T('-')) && (currCh == _T('=')))
 		{
 			tk = LEX_MINUSEQUAL;
+			getNextCh();
+		}
+		else if ((tk == _T('*')) && (currCh == _T('=')))
+		{
+			tk = LEX_MULEQUAL;
+			getNextCh();
+		}
+		else if ((tk == _T('/')) && (currCh == _T('=')))
+		{
+			tk = LEX_DIVEQUAL;
 			getNextCh();
 		}
 		else if ((tk == _T('+')) && (currCh == _T('+')))
@@ -2377,7 +2389,7 @@ CScriptVarLink *CTinyJS::base(bool &execute)
 {
 	CScriptVarLink *lhs = ternary(execute);
 
-	if ((l->tk == _T('=')) || (l->tk == LEX_PLUSEQUAL) || (l->tk == LEX_MINUSEQUAL))
+	if ((l->tk == _T('=')) || (l->tk == LEX_PLUSEQUAL) || (l->tk == LEX_MINUSEQUAL) || (l->tk == LEX_MULEQUAL) || (l->tk == LEX_DIVEQUAL))
 	{
 		// If we're assigning to this and we don't have a parent,
 		// add it to the symbol table m_Root as per JavaScript
@@ -2414,6 +2426,16 @@ CScriptVarLink *CTinyJS::base(bool &execute)
 			else if (op == LEX_MINUSEQUAL)
 			{
 				CScriptVar *res = lhs->m_Var->MathsOp(rhs->m_Var, _T('-'));
+				lhs->ReplaceWith(res);
+			}
+			else if (op == LEX_MULEQUAL)
+			{
+				CScriptVar *res = lhs->m_Var->MathsOp(rhs->m_Var, _T('*'));
+				lhs->ReplaceWith(res);
+			}
+			else if (op == LEX_DIVEQUAL)
+			{
+				CScriptVar *res = lhs->m_Var->MathsOp(rhs->m_Var, _T('/'));
 				lhs->ReplaceWith(res);
 			}
 		}

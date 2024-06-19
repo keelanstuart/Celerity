@@ -1,0 +1,35 @@
+var hracc;
+var hrvel;
+var hmrs;
+var dir;
+
+var mrs = { x: 0.0, y: 0.0, z: 0.0 };
+var rvel = { x: 0.0, y: 0.0, z: 0.0 };
+var racc = { x: 0.0, y: 0.0, z: 0.0 };
+
+function update(elapsed_seconds)
+{
+	mrs = GetPropertyValue(hmrs);
+	rvel = GetPropertyValue(hrvel);
+
+	if (((dir > 0) && (rvel.z >= mrs.z)) || ((dir < 0) && (rvel.z <= -mrs.z)))
+	{
+		racc = GetPropertyValue(hracc);
+		racc.z *= -1.0;
+		dir *= -1;
+		SetPropertyValue(hracc, racc);
+	}
+}
+
+function init()
+{
+	hracc = FindProperty(self, "RotationalAcceleration");
+	hrvel = FindProperty(self, "RotationalVelocity");
+	hmrs = FindProperty(self, "MaxRotationalSpeed");
+
+	SetPropertyValue(hrvel, rvel);
+
+	racc.z = -0.05;
+	dir = -1;
+	SetPropertyValue(hracc, racc);
+}

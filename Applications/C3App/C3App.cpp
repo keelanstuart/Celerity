@@ -153,15 +153,14 @@ BOOL C3App::InitInstance()
 
 	CWinApp::InitInstance();
 
-	int argc = 0;
-
 	// Parse the command line into arguments
+	int argc = 0;
 	LPTSTR *argv = CommandLineToArgvW(m_lpCmdLine, &argc);
 	if (argv)
 	{
-		if (argc > 1)
+		if (argc > 0)
 		{
-			m_StartScript = argv[1];
+			m_StartScript = argv[0];
 		}
 
 		// Free memory allocated by CommandLineToArgvW
@@ -174,6 +173,7 @@ BOOL C3App::InitInstance()
 	if (!m_C3)
 		return FALSE;
 
+	// Get the user's home path for their configuration
 	CString appname;
 	appname.LoadStringW(IDS_APPNAME);
 
@@ -191,6 +191,34 @@ BOOL C3App::InitInstance()
 
 		CreateDirectories(m_AppDataRoot.c_str());
 	}
+
+	// make sure the thing we're loading is able to find it's resources
+	TCHAR currentDir[MAX_PATH * 2];
+	TCHAR targetDir[MAX_PATH * 2];
+	TCHAR relativePath[MAX_PATH * 2], relativeParentPath[MAX_PATH * 2];
+
+	// Get the current working directory
+	_tgetcwd(currentDir, MAX_PATH);
+
+	// Get the path of the script
+	_tcscpy_s(targetDir, m_StartScript.c_str());
+	PathRemoveFileSpec(targetDir);
+
+	// Calculate the relative path
+	PathRelativePathTo(
+		relativePath,
+		currentDir,
+		FILE_ATTRIBUTE_DIRECTORY,
+		targetDir,
+		FILE_ATTRIBUTE_DIRECTORY);
+
+	_tcscpy_s(relativeParentPath, relativePath);
+	_tcscat_s(relativeParentPath, _T("\\..\\"));
+
+	tstring path_extra = _T(";");
+	path_extra += relativePath;
+	path_extra += _T(";");
+	path_extra += relativeParentPath;
 
 	tstring cfgpath = m_AppDataRoot;
 	cfgpath += appname;
@@ -211,42 +239,52 @@ BOOL C3App::InitInstance()
 	tstring respaths, resexts;
 
 	respaths = m_Config->GetString(_T("resources.textures.paths"), _T("./;./assets;./assets/textures"));
+	respaths += path_extra;
 	resexts = m_Config->GetString(_T("resources.textures.extensions"), _T("tga;png;jpg;dds;bmp;tif"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.models.paths"), _T("./;./assets;./assets/models"));
+	respaths += path_extra;
 	resexts = m_Config->GetString(_T("resources.models.extensions"), _T("fbx;gltf;glb;obj;3ds;dae;x"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.shaders.paths"), _T("./;./assets;./assets/shaders"));
+	respaths += path_extra;
 	resexts = m_Config->GetString(_T("resources.shaders.extensions"), _T("vsh;fsh;gsh;esh;tsh"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.rendermethods.paths"), _T("./;./assets;./assets/shaders"));
+	respaths += path_extra;
 	resexts = m_Config->GetString(_T("resources.rendermethods.extensions"), _T("c3rm"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.prototypes.paths"), _T("./;./assets"));
+	respaths += path_extra;
 	resexts = m_Config->GetString(_T("resources.prototypes.extensions"), _T("c3protoa"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.scripts.paths"), _T("./;./assets;./assets/scripts"));
+	respaths += path_extra;
 	resexts = m_Config->GetString(_T("resources.scripts.extensions"), _T("c3js"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.animstates.paths"), _T("./;./assets;./assets/animations"));
+	respaths += path_extra;
 	resexts = m_Config->GetString(_T("resources.animstates.extensions"), _T("c3states"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.levels.paths"), _T("./;./assets;./assets/levels"));
+	respaths += path_extra;
 	resexts = m_Config->GetString(_T("resources.levels.extensions"), _T("c3o"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.sound.paths"), _T("./;./assets;./assets/sound"));
+	respaths += path_extra;
 	resexts = m_Config->GetString(_T("resources.sound.extensions"), _T("wav;mp3;flac"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.packfiles.paths"), _T("./;./assets;./assets/models;./assets/textures;./assets/shaders;./assets/scripts;./assets/animations;./assets/sounds;./assets/levels"));
+	respaths += path_extra;
 	resexts = m_Config->GetString(_T("resources.packfiles.extensions"), _T("zip;c3z"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 

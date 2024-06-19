@@ -416,12 +416,7 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags) const
 void ObjectImpl::PostLoad()
 {
 	for (size_t i = 0, maxi = m_Props->GetPropertyCount(); i < maxi; i++)
-	{
-		for (auto comp : m_Components)
-		{
-			comp->PropertyChanged(m_Props->GetProperty(i));
-		}
-	}
+		PropertyChanged(m_Props->GetProperty(i));
 
 	Update();
 }
