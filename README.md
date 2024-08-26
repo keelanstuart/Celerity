@@ -36,8 +36,8 @@ Video Links:
 <img src="http://img.youtube.com/vi/v6H-AJ6Iizc/0.jpg" alt="Turbo Teaser 1" width="300" height="225" border="50" />
 </a>
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=8yZyUu2bY-c" target="_blank">
-<img src="http://img.youtube.com/vi/8yZyUu2bY-c/0.jpg" alt="Turbo Teaser 2" width="300" height="225" border="50" />
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=gavOlOR2wtU" target="_blank">
+<img src="http://img.youtube.com/vi/gavOlOR2wtU/0.jpg" alt="Turbo Teaser 2" width="300" height="225" border="50" />
 </a>
 
 <br>
