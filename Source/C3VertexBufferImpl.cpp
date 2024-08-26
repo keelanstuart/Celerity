@@ -21,7 +21,7 @@ VertexBufferImpl::VertexBufferImpl(RendererImpl *prend)
 	m_VAOglID = NULL;
 	m_VBglID = NULL;
 	m_Components.reserve(5);
-	m_Cache = nullptr;
+	m_Configured = false;
 }
 
 
@@ -29,15 +29,6 @@ VertexBufferImpl::~VertexBufferImpl()
 {
 	if (m_Buffer)
 		Unlock();
-
-	if (m_Cache)
-	{
-		free(m_Cache);
-		m_Cache = nullptr;
-	}
-
-	m_NumVerts = 0;
-	m_VertSize = 0;
 
 	if (m_Rend)
 	{
@@ -82,15 +73,26 @@ bool IdenticalComponents(const VertexBuffer::ComponentDescription* c, const Vert
 
 VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, const ComponentDescription *components, props::TFlags64 flags)
 {
-	if (m_Buffer)
-		return RET_ALREADY_LOCKED;
-
 	if (!buffer)
 		return RET_NULL_BUFFER;
 
-	bool init = (m_NumVerts != numverts);
+	// if we want read-only access, then use the cache if one is available. this avoids a map/unmap
+	if (flags.IsSet(VBLOCKFLAG_READ) && !flags.IsSet(VBLOCKFLAG_WRITE) && !m_Cache.empty())
+	{
+		*buffer = m_Cache.data();
+		return RET_OK;
+	}
 
+	if (m_Buffer)
+		return RET_ALREADY_LOCKED;
+
+	bool init = (m_NumVerts != numverts);
 	m_NumVerts = numverts;
+
+	bool update_now = flags.IsSet(VBLOCKFLAG_UPDATENOW);
+	bool user_buffer = flags.IsSet(VBLOCKFLAG_USERBUFFER);
+	if (update_now && !user_buffer)
+		return RET_UPDATENOW_NEEDS_USERBUFFER;
 
 	if (flags.IsSet(VBLOCKFLAG_WRITE))
 	{
@@ -102,6 +104,8 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 
 		if (!IdenticalComponents(components, m_Components))
 		{
+			m_Configured = false;
+
 			size_t sz = 0;
 			m_Components.clear();
 
@@ -117,43 +121,8 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 			if (!sz)
 				return RET_BAD_VERTEX_DESCRIPTION;
 
-			if (m_VertSize != sz)
-				init = true;
-
+			init |= (sz != m_VertSize);
 			m_VertSize = sz;
-		}
-
-		if (flags.IsSet(VBLOCKFLAG_CACHE))
-		{
-			if (m_Cache)
-			{
-				size_t cache_sz = _msize(m_Cache);
-				if (cache_sz != (m_VertSize * m_NumVerts))
-				{
-					free(m_Cache);
-					m_Cache = nullptr;
-					init = true;
-				}
-			}
-
-			if (!m_Cache)
-				m_Cache = malloc(m_VertSize * m_NumVerts);
-		}
-	}
-
-	// if we want read-only access, then use the cache if one is available. this avoids a map/unmap
-	if (flags.IsSet(VBLOCKFLAG_READ) && !flags.IsSet(VBLOCKFLAG_WRITE))
-	{
-		if (m_Cache)
-		{
-			m_Buffer = m_Cache;
-			*buffer = m_Buffer;
-
-			return RET_OK;
-		}
-		else
-		{
-			assert(0 && "Cache never created; expect poor performance. Use VBLOCKFLAG_CACHE when calling Lock()!");
 		}
 	}
 
@@ -161,11 +130,6 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 	{
 		m_Rend->gl.GenVertexArrays(1, &m_VAOglID);
 	}
-
-	bool update_now = flags.IsSet(VBLOCKFLAG_UPDATENOW);
-	bool user_buffer = flags.IsSet(VBLOCKFLAG_USERBUFFER);
-	if (update_now && !user_buffer)
-		return RET_UPDATENOW_NEEDS_USERBUFFER;
 
 	if (m_VBglID == NULL)
 	{
@@ -176,13 +140,18 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 	if (m_VBglID == NULL)
 		return RET_GENBUFFER_FAILED;
 
-	GLint mode = 0;
-	if (flags.IsSet(VBLOCKFLAG_READ | VBLOCKFLAG_WRITE))
-		mode = GL_READ_WRITE;
-	else if (flags.IsSet(VBLOCKFLAG_READ))
-		mode = GL_READ_ONLY;
-	else if (flags.IsSet(VBLOCKFLAG_WRITE))
-		mode = GL_WRITE_ONLY;
+	GLbitfield mode = 0;
+	if (flags.IsSet(VBLOCKFLAG_READ) || flags.IsSet(VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE))
+		mode |= GL_MAP_READ_BIT;
+	if (flags.IsSet(VBLOCKFLAG_WRITE))
+		mode |= GL_MAP_WRITE_BIT;
+
+	size_t bufsize = m_VertSize * m_NumVerts;
+	if (flags.IsSet(VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE))
+	{
+		if (bufsize > m_Cache.size())
+			m_Cache.resize(bufsize);
+	}
 
 	// bind the buffer
 	m_Rend->UseVertexBuffer(this);
@@ -190,16 +159,19 @@ VertexBuffer::RETURNCODE VertexBufferImpl::Lock(void **buffer, size_t numverts, 
 	if (init || update_now)
 	{
 		// make sure that it is allocated
-		m_Rend->gl.BufferData(GL_ARRAY_BUFFER, m_VertSize * m_NumVerts, user_buffer ? *buffer : nullptr, flags.IsSet(VBLOCKFLAG_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		m_Rend->gl.BufferData(GL_ARRAY_BUFFER, bufsize, user_buffer ? *buffer : nullptr, flags.IsSet(VBLOCKFLAG_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 		if (update_now)
 		{
+			if (flags.IsSet(VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE))
+				memcpy(m_Cache.data(), *buffer, bufsize);
+
 			ConfigureAttributes();
 
 			return RET_OK;
 		}
 	}
 
-	m_Buffer = m_Rend->gl.MapBuffer(GL_ARRAY_BUFFER, mode);
+	m_Buffer = m_Rend->gl.MapBufferRange(GL_ARRAY_BUFFER, 0, bufsize, mode);
 	if (!m_Buffer)
 		return RET_MAPBUFFER_FAILED;
 
@@ -214,16 +186,17 @@ void VertexBufferImpl::Unlock()
 	if (m_Buffer)
 	{
 		// if the buffer isn't just our cached copy, then unmap it and let the video driver do it's thing
-		if (m_Buffer != m_Cache)
+		if (m_Buffer != m_Cache.data() && !m_Cache.empty())
 		{
 			// if there IS a cache, then copy our new buffer contents to it
-			if (m_Cache)
-				memcpy(m_Cache, m_Buffer, m_VertSize * m_NumVerts);
-
-			m_Rend->gl.UnmapBuffer(GL_ARRAY_BUFFER);
-
-			ConfigureAttributes();
+			memcpy(m_Cache.data(), m_Buffer, m_VertSize * m_NumVerts);
 		}
+
+		GLboolean b = m_Rend->gl.UnmapBuffer(GL_ARRAY_BUFFER);
+		if (!b)
+			m_Rend->GetSystem()->GetLog()->Print(_T("WTF!!"));
+
+		ConfigureAttributes();
 
 		m_Buffer = NULL;
 	}
@@ -297,4 +270,6 @@ void VertexBufferImpl::ConfigureAttributes()
 
 		vo += pcd->size();
 	}
+
+	m_Configured = true;
 }

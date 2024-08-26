@@ -9,6 +9,7 @@
 #include <C3FrameBufferImpl.h>
 #include <C3DepthBufferImpl.h>
 #include <C3TextureImpl.h>
+#include <C3ResourceImpl.h>
 
 
 using namespace c3;
@@ -98,43 +99,25 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Setup(size_t numtargs, const TargetDesc
 	if (ret != RETURNCODE::RET_OK)
 		return ret;
 
-#if 0
-	// on nVidia systems, actually follow the openGL spec and normalize texture types to the largest
-	if (m_Rend->isnv)
-	{
-		Renderer::TextureType h = Renderer::TextureType::P8_3CH;
-		for (size_t i = 0; i < numtargs; i++)
-			if (ptargdescs[i].type > h)
-				h = ptargdescs[i].type;
-
-		for (size_t i = 0; i < numtargs; i++)
-		{
-			if ((ptargdescs[i].type >= Renderer::TextureType::U8_1CH) && (h >= Renderer::TextureType::F16_1CH))
-			{
-				*((uint8_t *)ptargdescs[i].type) += 4;
-			}
-
-			if ((ptargdescs[i].type >= Renderer::TextureType::F16_1CH) && (h >= Renderer::TextureType::F32_1CH))
-			{
-				*((uint8_t *)ptargdescs[i].type) += 4;
-			}
-		}
-	}
-#endif
+	m_ColorTarget.resize(numtargs);
 
 	for (size_t i = 0; i < numtargs; i++)
 	{
-		c3::Texture2D* pt = m_Rend->CreateTexture2D(w, h, ptargdescs[i].type, 1, ptargdescs[i].flags);
+		Texture2D *pt = m_Rend->CreateTexture2D(w, h, ptargdescs[i].type, 1, ptargdescs[i].flags);
 		if (!pt)
 			return RETURNCODE::RET_UNKNOWN;
+
+		pt->SetName(ptargdescs[i].name);
+
+		// register the texture so it can be auto-bound in a shader
+		ResourceManager *presman = m_Rend->GetSystem()->GetResourceManager();
+		ResourceImpl *pres = (ResourceImpl *)presman->GetResource(ptargdescs[i].name, RESF_CREATEENTRYONLY, DefaultTexture2DResourceType::Type(), pt);
 
 		ret = AttachColorTarget(pt, i);
 		if (ret != RETURNCODE::RET_OK)
 			return ret;
 
 		m_ColorTarget[i].owns = true;
-
-		pt->SetName(ptargdescs[i].name);
 	}
 
 	return Seal();
@@ -152,7 +135,7 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Teardown()
 	{
 		if (m_ColorTarget[i].owns)
 		{
-			C3_SAFERELEASE(m_ColorTarget[i].tex);
+			//C3_SAFERELEASE(m_ColorTarget[i].tex);
 		}
 	}
 
@@ -168,7 +151,7 @@ FrameBuffer::RETURNCODE FrameBufferImpl::AttachColorTarget(Texture2D *target, si
 	{
 		m_Rend->UseFrameBuffer(this, 0);
 
-		if (position <= m_ColorTarget.size())
+		if (position >= m_ColorTarget.size())
 			m_ColorTarget.resize(position + 1);
 
 		m_ColorTarget[position].tex = target;
@@ -305,22 +288,10 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Seal()
 }
 
 
-void FrameBufferImpl::SetClearColor(size_t position, uint32_t color)
+void FrameBufferImpl::SetClearColor(size_t position, glm::fvec4 color)
 {
 	if (position < m_ColorTarget.size())
 	{
-		glm::vec4 c;
-		if (((m_ColorTarget[position].tex->Format() >= Renderer::TextureType::F16_1CH) &&
-			(m_ColorTarget[position].tex->Format() <= Renderer::TextureType::F16_4CH)) ||
-			((m_ColorTarget[position].tex->Format() >= Renderer::TextureType::F32_1CH) &&
-			(m_ColorTarget[position].tex->Format() <= Renderer::TextureType::F32_4CH)))
-		{
-			c.x = float(color & 0xff) / 255.0f;
-			c.y = float((color >> 8) & 0xff) / 255.0f;
-			c.z = float((color >> 16) & 0xff) / 255.0f;
-			c.w = float((color >> 24) & 0xff) / 255.0f;
-		}
-
 		switch (m_ColorTarget[position].tex->Format())
 		{
 			case Renderer::TextureType::U8_1CH:
@@ -328,7 +299,22 @@ void FrameBufferImpl::SetClearColor(size_t position, uint32_t color)
 			case Renderer::TextureType::U8_3CH:
 			case Renderer::TextureType::U8_4CH:
 			{
-				m_ColorTarget[position].clearcolor.pu = color;
+				m_ColorTarget[position].clearcolor.ur = (uint8_t)(std::min<float>(std::max<float>(0, color.x), 1) * 255.0f);
+				m_ColorTarget[position].clearcolor.ug = (uint8_t)(std::min<float>(std::max<float>(0, color.y), 1) * 255.0f);
+				m_ColorTarget[position].clearcolor.ub = (uint8_t)(std::min<float>(std::max<float>(0, color.z), 1) * 255.0f);
+				m_ColorTarget[position].clearcolor.ua = (uint8_t)(std::min<float>(std::max<float>(0, color.w), 1) * 255.0f);
+				break;
+			}
+
+			case Renderer::TextureType::S8_1CH:
+			case Renderer::TextureType::S8_2CH:
+			case Renderer::TextureType::S8_3CH:
+			case Renderer::TextureType::S8_4CH:
+			{
+				m_ColorTarget[position].clearcolor.sr = (int8_t)(std::min<float>(std::max<float>(-1, color.x), 1) * 128.0f + 128.0f);
+				m_ColorTarget[position].clearcolor.sg = (int8_t)(std::min<float>(std::max<float>(-1, color.y), 1) * 128.0f + 128.0f);
+				m_ColorTarget[position].clearcolor.sb = (int8_t)(std::min<float>(std::max<float>(-1, color.z), 1) * 128.0f + 128.0f);
+				m_ColorTarget[position].clearcolor.sa = (int8_t)(std::min<float>(std::max<float>(-1, color.w), 1) * 128.0f + 128.0f);
 				break;
 			}
 
@@ -336,20 +322,15 @@ void FrameBufferImpl::SetClearColor(size_t position, uint32_t color)
 			case Renderer::TextureType::F16_2CH:
 			case Renderer::TextureType::F16_3CH:
 			case Renderer::TextureType::F16_4CH:
-			{
-				m_ColorTarget[position].clearcolor.ph = glm::packHalf4x16(c);
-				break;
-			}
-
 			case Renderer::TextureType::F32_1CH:
 			case Renderer::TextureType::F32_2CH:
 			case Renderer::TextureType::F32_3CH:
 			case Renderer::TextureType::F32_4CH:
 			{
-				m_ColorTarget[position].clearcolor.fr = c.x;
-				m_ColorTarget[position].clearcolor.fg = c.y;
-				m_ColorTarget[position].clearcolor.fb = c.z;
-				m_ColorTarget[position].clearcolor.fa = c.w;
+				m_ColorTarget[position].clearcolor.fr = color.x;
+				m_ColorTarget[position].clearcolor.fg = color.y;
+				m_ColorTarget[position].clearcolor.fb = color.z;
+				m_ColorTarget[position].clearcolor.fa = color.w;
 				break;
 			}
 		}
@@ -357,7 +338,7 @@ void FrameBufferImpl::SetClearColor(size_t position, uint32_t color)
 }
 
 
-uint32_t FrameBufferImpl::GetClearColor(size_t position) const
+glm::fvec4 FrameBufferImpl::GetClearColor(size_t position) const
 {
 	if (position < m_ColorTarget.size())
 	{
@@ -368,31 +349,43 @@ uint32_t FrameBufferImpl::GetClearColor(size_t position) const
 			case Renderer::TextureType::U8_3CH:
 			case Renderer::TextureType::U8_4CH:
 			{
-				return m_ColorTarget[position].clearcolor.pu;
+				glm::fvec4 ret;
+				ret.x = (float)m_ColorTarget[position].clearcolor.ur / 255.0f;
+				ret.y = (float)m_ColorTarget[position].clearcolor.ug / 255.0f;
+				ret.z = (float)m_ColorTarget[position].clearcolor.ub / 255.0f;
+				ret.w = (float)m_ColorTarget[position].clearcolor.ua / 255.0f;
+				return ret;
+			}
+
+			case Renderer::TextureType::S8_1CH:
+			case Renderer::TextureType::S8_2CH:
+			case Renderer::TextureType::S8_3CH:
+			case Renderer::TextureType::S8_4CH:
+			{
+				glm::fvec4 ret;
+				ret.x = ((float)m_ColorTarget[position].clearcolor.ur - 128.0f) / 128.0f;
+				ret.y = ((float)m_ColorTarget[position].clearcolor.ug - 128.0f) / 128.0f;
+				ret.z = ((float)m_ColorTarget[position].clearcolor.ub - 128.0f) / 128.0f;
+				ret.w = ((float)m_ColorTarget[position].clearcolor.ua - 128.0f) / 128.0f;
+				return ret;
 			}
 
 			case Renderer::TextureType::F16_1CH:
 			case Renderer::TextureType::F16_2CH:
 			case Renderer::TextureType::F16_3CH:
 			case Renderer::TextureType::F16_4CH:
-			{
-				glm::vec4 c = glm::unpackHalf4x16(m_ColorTarget[position].clearcolor.ph);
-				return uint32_t(uint8_t(c.x * 255.0f) | (uint8_t(c.y * 255.0f) << 8) | (uint8_t(c.z * 255.0f) << 16) | (uint8_t(c.w * 255.0f) << 24));
-				break;
-			}
-
 			case Renderer::TextureType::F32_1CH:
 			case Renderer::TextureType::F32_2CH:
 			case Renderer::TextureType::F32_3CH:
 			case Renderer::TextureType::F32_4CH:
 			{
-				glm::vec4 *c = (glm::vec4 *)&(m_ColorTarget[position].clearcolor.f[0]);
-				return uint32_t(uint8_t(c->x * 255.0f) | (uint8_t(c->y * 255.0f) << 8) | (uint8_t(c->z * 255.0f) << 16) | (uint8_t(c->w * 255.0f) << 24));
+				return glm::fvec4(m_ColorTarget[position].clearcolor.f[0], m_ColorTarget[position].clearcolor.f[1],
+								  m_ColorTarget[position].clearcolor.f[2], m_ColorTarget[position].clearcolor.f[3]);
 			}
 		}
 	}
 
-	return 0;
+	return glm::fvec4(0, 0, 0, 0);
 }
 
 
@@ -420,19 +413,58 @@ int8_t FrameBufferImpl::GetClearStencil() const
 }
 
 
-void FrameBufferImpl::Clear(props::TFlags64 flags)
+void FrameBufferImpl::Clear(props::TFlags64 flags, int target)
 {
 	if (flags.IsSet(UFBFLAG_CLEARCOLOR))
 	{
-		for (size_t i = 0; i < m_ColorTarget.size(); i++)
-		{
-			GLuint c[4];
-			c[0] = m_ColorTarget[i].clearcolor.pu & 0xff;
-			c[1] = (m_ColorTarget[i].clearcolor.pu >> 8) & 0xff;
-			c[2] = (m_ColorTarget[i].clearcolor.pu >> 16) & 0xff;
-			c[3] = (m_ColorTarget[i].clearcolor.pu >> 24) & 0xff;
+		size_t mini = flags.IsSet(UFBFLAG_STRICTCOMPLIANCE) ? 1 : 0; // (target < 0) ? 0 : target;
+		size_t maxi = m_ColorTarget.size(); // (target < 0) ? m_ColorTarget.size() : (size_t)mini + 1;
 
-			m_Rend->gl.ClearBufferuiv(GL_COLOR, (GLint)i, (const GLuint *)c);
+		for (size_t i = mini; i < maxi; i++)
+		{
+			switch (m_ColorTarget[i].tex->Format())
+			{
+				case Renderer::TextureType::U8_1CH:
+				case Renderer::TextureType::U8_2CH:
+				case Renderer::TextureType::U8_3CH:
+				case Renderer::TextureType::U8_4CH:
+				{
+					GLuint c[4];
+					c[0] = m_ColorTarget[i].clearcolor.ur;
+					c[1] = m_ColorTarget[i].clearcolor.ug;
+					c[2] = m_ColorTarget[i].clearcolor.ub;
+					c[3] = m_ColorTarget[i].clearcolor.ua;
+					m_Rend->gl.ClearBufferuiv(GL_COLOR, (GLint)i, (const GLuint *)c);
+					break;
+				}
+
+				case Renderer::TextureType::S8_1CH:
+				case Renderer::TextureType::S8_2CH:
+				case Renderer::TextureType::S8_3CH:
+				case Renderer::TextureType::S8_4CH:
+				{
+					GLint c[4];
+					c[0] = m_ColorTarget[i].clearcolor.sr;
+					c[1] = m_ColorTarget[i].clearcolor.sg;
+					c[2] = m_ColorTarget[i].clearcolor.sb;
+					c[3] = m_ColorTarget[i].clearcolor.sa;
+					m_Rend->gl.ClearBufferiv(GL_COLOR, (GLint)i, (const GLint *)c);
+					break;
+				}
+
+				case Renderer::TextureType::F16_1CH:
+				case Renderer::TextureType::F16_2CH:
+				case Renderer::TextureType::F16_3CH:
+				case Renderer::TextureType::F16_4CH:
+				case Renderer::TextureType::F32_1CH:
+				case Renderer::TextureType::F32_2CH:
+				case Renderer::TextureType::F32_3CH:
+				case Renderer::TextureType::F32_4CH:
+				{
+					m_Rend->gl.ClearBufferfv(GL_COLOR, (GLint)i, m_ColorTarget[i].clearcolor.f);
+					break;
+				}
+			}
 		}
 	}
 

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <C3AppCommon.h>
+
 
 class C3EditDoc : public CDocument
 {
@@ -43,7 +45,6 @@ public:
 	glm::fvec4 m_FogColor;
 	float m_FogDensity;
 
-	typedef std::deque<c3::Object *> TObjectArray;
 	TObjectArray m_Selected;
 
 // Operations

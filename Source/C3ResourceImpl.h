@@ -44,6 +44,9 @@ namespace c3
 
 		virtual void *GetData() const;
 
+		// RISKY, BUT SOMETIMES NECESSARY INTERNALLY
+		void OverrideData(void *newdata);
+
 		virtual void AddRef();
 
 		virtual void DelRef();

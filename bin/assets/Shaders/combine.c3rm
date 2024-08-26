@@ -1,0 +1,29 @@
+<render_method name="combine">
+
+	<technique name="default">
+		<pass>
+			<setting name="depthmode"			value="disabled" />
+			<setting name="shader.vertex"		value="combine.vsh" />
+			<setting name="shader.fragment"		value="combine.fsh" />
+		</pass>
+	</technique>
+
+	<technique name="editor">
+		<pass>
+			<setting name="depthmode"			value="disabled" />
+			<setting name="shader.vertex"		value="combine.vsh" />
+			<setting name="shader.fragment"		value="combine-editor.fsh" />
+		</pass>
+	</technique>
+
+	<technique name="blur">
+		<pass>
+			<setting name="depthmode"			value="disabled" />
+			<setting name="cullhmode"			value="disabled" />
+			<setting name="blendmode"			value="replace" />
+			<setting name="shader.vertex"		value="blur.vsh" />
+			<setting name="shader.fragment"		value="blur.fsh" />
+		</pass>
+	</technique>
+
+</render_method>

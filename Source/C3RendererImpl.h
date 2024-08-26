@@ -126,6 +126,7 @@ namespace c3
 
 		VertexBuffer *m_FSPlaneVB;
 		VertexBuffer *m_PlanesVB;
+		Mesh *m_FullScreenPlaneMesh;
 		Mesh *m_XYPlaneMesh;
 		Mesh *m_YZPlaneMesh;
 		Mesh *m_XZPlaneMesh;
@@ -175,6 +176,10 @@ namespace c3
 
 		BoundingBox *m_Frustum;
 
+		std::vector<std::string> m_DebugGroupStack;
+
+		LOG_FUNC m_LogFunc;
+
 	public:
 
 		COpenGL gl;
@@ -191,6 +196,14 @@ namespace c3
 		virtual bool Initialized();
 
 		virtual void FlushErrors(const TCHAR *msgformat, ...);
+
+		virtual LOG_FUNC GetLogFunc() const;
+
+		virtual void SetLogFunc(LOG_FUNC logfunc = nullptr);
+
+		virtual void PushDebugGroup(const char *groupname = nullptr);
+
+		virtual void PopDebugGroup();
 
 		virtual void Shutdown();
 
@@ -285,7 +298,7 @@ namespace c3
 		virtual ShaderComponent *CreateShaderComponent(ShaderComponentType type);
 
 		virtual RenderMethod *CreateRenderMethod();
-		virtual void UseRenderMethod(const RenderMethod *method);
+		virtual void UseRenderMethod(const RenderMethod *method, size_t techidx = -1);
 		virtual RenderMethod *GetActiveRenderMethod() const;
 
 		virtual void UseMaterial(const Material *material);
@@ -334,6 +347,7 @@ namespace c3
 		virtual void SetModelInstanceData(const Model::InstanceData *pinstdata = nullptr);
 
 		virtual VertexBuffer *GetFullscreenPlaneVB();
+		virtual Mesh *GetFullScreenPlaneMesh();
 
 		VertexBuffer *GetCubeVB();
 		VertexBuffer *GetRefCubeVB();

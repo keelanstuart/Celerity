@@ -145,25 +145,32 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 
 	if (pres)
 	{
-		if (!only_create_entry && (pres->GetStatus() == Resource::Status::RS_NONE))
+		if (!only_create_entry)
 		{
-			if (flags.IsSet(RESF_DEMANDLOAD) || !pres->GetType()->Flags().IsSet(RTFLAG_RUNBYRENDERER))
+			if (pres->GetStatus() == Resource::Status::RS_NONE)
 			{
-				if (flags.IsSet(RESF_DEMANDLOAD))
+				if (flags.IsSet(RESF_DEMANDLOAD) || !pres->GetType()->Flags().IsSet(RTFLAG_RUNBYRENDERER))
 				{
-					// Just adding a reference should cause the resource to load... and in this thread.
-					pres->AddRef();
+					if (flags.IsSet(RESF_DEMANDLOAD))
+					{
+						// Just adding a reference should cause the resource to load... and in this thread.
+						pres->AddRef();
+					}
+					else
+					{
+						// Since we didn't demand that this get loaded right now, schedule it on the thread pool.
+						m_pSys->GetThreadPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
+					}
 				}
 				else
 				{
-					// Since we didn't demand that this get loaded right now, schedule it on the thread pool.
-					m_pSys->GetThreadPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
+					((RendererImpl *)(m_pSys->GetRenderer()))->GetTaskPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
 				}
 			}
-			else
-			{
-				((RendererImpl *)(m_pSys->GetRenderer()))->GetTaskPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
-			}
+		}
+		else if (data && (pres->GetType() == restype))
+		{
+			((ResourceImpl *)pres)->OverrideData((void *)data);
 		}
 	}
 

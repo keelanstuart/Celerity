@@ -49,7 +49,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_LastPresentTime = 0;
 
 	m_glVersionMaj = 4;
-	m_glVersionMin = 5;
+	m_glVersionMin = 6;
 
 	m_event_shutdown = CreateEvent(nullptr, TRUE, TRUE, nullptr);
 
@@ -103,6 +103,7 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 
 	m_FSPlaneVB = nullptr;
 	m_PlanesVB = nullptr;
+	m_FullScreenPlaneMesh = nullptr;
 	m_XYPlaneMesh = nullptr;
 	m_XZPlaneMesh = nullptr;
 	m_YZPlaneMesh = nullptr;
@@ -297,11 +298,12 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 				WGL_CONTEXT_MAJOR_VERSION_ARB,	(int)m_glVersionMaj,
 				WGL_CONTEXT_MINOR_VERSION_ARB,	(int)m_glVersionMin,
 #if defined(_DEBUG)
-				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB | WGL_CONTEXT_DEBUG_BIT_ARB,
+				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_DEBUG_BIT_ARB | WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 #else
 				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 #endif
 				WGL_CONTEXT_PROFILE_MASK_ARB,	WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+
 				0, 0	// end
 			};
 
@@ -322,13 +324,12 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	if (!gl.Initialize())
 		return false;
 
-	gl.SetLogFunc([](const wchar_t *msg, void *userdata)
+	gl.SetLogFunc([&](const TCHAR *msg)
 	{
-			RendererImpl *_this = (RendererImpl *)userdata;
-			_this->m_pSys->GetLog()->Print(L"[GL] ");
-			_this->m_pSys->GetLog()->Print(msg);
-			_this->m_pSys->GetLog()->Print(L"\n");
-		}, this);
+		m_pSys->GetLog()->Print(L"[GL] ");
+		m_pSys->GetLog()->Print(msg);
+		m_pSys->GetLog()->Print(L"\n");
+	});
 
 	// make use of opengl messages, log them
 	gl.DebugMessageCallback([](GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam)
@@ -343,6 +344,9 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 			{
 				TCHAR *tmp;
 				CONVERT_MBCS2TCS(message, tmp);
+
+				// until making the logging system thread-safe (including the editor's output window), don't log.
+				// nvidia's messages come from a thread that's not the main one grrrr
 				psys->GetLog()->Print(_T("[GL] DEBUG: %s\n"), tmp);
 
 				if (!errct)
@@ -351,8 +355,14 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		}
 	}, m_pSys);
 
-	// turn on all opengl mesages
-	gl.DebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+	// turn on all opengl mesages unless we're on nvidia - they report too much
+	if (isnv)
+	{
+		gl.DebugMessageControl(GL_DEBUG_SOURCE_API, GL_DEBUG_TYPE_ERROR, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+		gl.DebugMessageControl(GL_DEBUG_SOURCE_SHADER_COMPILER, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
+	}
+	else
+		gl.DebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 
 	m_Initialized = true;
 
@@ -406,13 +416,13 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	SetBlendEquation(BE_ADD);
 
 	// Initialize meshes
-	GetFullscreenPlaneVB();
 	GetCubeMesh();
 	GetBoundsMesh();
 	GetXYPlaneMesh();
 	GetXZPlaneMesh();
 	GetYZPlaneMesh();
 	GetGuiRectMesh();
+	GetFullScreenPlaneMesh();
 
 
 	c3::ResourceManager *rm = m_pSys->GetResourceManager();
@@ -543,6 +553,9 @@ bool RendererImpl::Initialized()
 
 void RendererImpl::FlushErrors(const TCHAR *msgformat, ...)
 {
+	using TGlErrMap = std::map<GLenum, size_t>;
+	static TGlErrMap errmap;
+
 	GLenum err;
 	bool wrotehdr = false;
 	// check OpenGL error
@@ -551,6 +564,23 @@ void RendererImpl::FlushErrors(const TCHAR *msgformat, ...)
 		err = gl.GetError();
 		if (err != GL_NO_ERROR)
 		{
+			TGlErrMap::iterator errit = errmap.find(err);
+			if (errit == errmap.end())
+			{
+				std::pair<TGlErrMap::iterator, bool> r = errmap.insert(TGlErrMap::value_type(err, 5));
+				errit = r.first;
+			}
+
+			if (!errit->second)
+				continue;
+
+			errit->second--;
+			if (!errit->second)
+			{
+				m_pSys->GetLog()->Print(_T("\nToo many errors of type: %d\n"), err);
+				continue;
+			}
+
 			if (!wrotehdr)
 			{
 #define PRINT_BUFSIZE	1024
@@ -560,7 +590,7 @@ void RendererImpl::FlushErrors(const TCHAR *msgformat, ...)
 				va_start(marker, msgformat);
 				_vsntprintf_s(buf, PRINT_BUFSIZE - 1, msgformat, marker);
 
-				m_pSys->GetLog()->Print(_T("\n*** %s ***\n"), buf);
+				m_pSys->GetLog()->Print(_T("\n*** frame: %lu  //  %s\n"), m_FrameNum, buf);
 				wrotehdr = true;
 			}
 
@@ -568,6 +598,43 @@ void RendererImpl::FlushErrors(const TCHAR *msgformat, ...)
 		}
 	}
 	while (err != GL_NO_ERROR);
+}
+
+
+Renderer::LOG_FUNC RendererImpl::GetLogFunc() const
+{
+	return m_LogFunc;
+}
+
+
+void RendererImpl::SetLogFunc(Renderer::LOG_FUNC logfunc)
+{
+	m_LogFunc = logfunc;
+	gl.SetLogFunc(logfunc);
+}
+
+
+void RendererImpl::PushDebugGroup(const char *groupname)
+{
+	char tmpname[64];
+	if (!groupname)
+	{
+		_snprintf_s(tmpname, 64, "gfxdbg%zu", m_DebugGroupStack.size());
+		groupname = tmpname;
+	}
+
+	m_DebugGroupStack.push_back(groupname);
+
+	gl.PushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, groupname);
+}
+
+
+void RendererImpl::PopDebugGroup()
+{
+	if (!m_DebugGroupStack.empty())
+		m_DebugGroupStack.pop_back();
+
+	gl.PopDebugGroup();
 }
 
 
@@ -796,6 +863,12 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 
 	m_BeginSceneFlags = flags;
 
+#if 0	// should this really be done at some point?
+	for (size_t i = 0; i < 32; i++)
+		UseTexture(i, nullptr);
+	UseRenderMethod(nullptr);
+#endif
+		 
 	if (m_Gui && flags.IsSet(BSFLAG_SHOWGUI))
 	{
 		m_Gui->BeginFrame();
@@ -1560,9 +1633,13 @@ RenderMethod *RendererImpl::CreateRenderMethod()
 }
 
 
-void RendererImpl::UseRenderMethod(const RenderMethod *method)
+void RendererImpl::UseRenderMethod(const RenderMethod *method, size_t techidx)
 {
 	m_ActiveRenderMethod = method ? (RenderMethod *)method : m_DefaultRenderMethod;
+	if (m_ActiveRenderMethod)
+		m_ActiveRenderMethod->SetActiveTechnique(techidx);
+	else
+		UseProgram(nullptr);
 }
 
 
@@ -1647,12 +1724,17 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 			changed_dm = true;
 		}
 
-		if (!m_CurFB)
+		BlendMode bm = m_BlendMode;
+		SetBlendMode(BlendMode::BM_REPLACE);
+
+		if (!m_CurFB || isnv)
 			gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) |
 				(flags.IsSet(UFBFLAG_CLEARDEPTH) ? GL_DEPTH_BUFFER_BIT : 0) |
 				(flags.IsSet(UFBFLAG_CLEARSTENCIL) ? GL_STENCIL_BUFFER_BIT : 0));
-		else
-			m_CurFB->Clear(flags);
+		if (m_CurFB)
+			m_CurFB->Clear((uint64_t)flags | (isnv ? UFBFLAG_STRICTCOMPLIANCE : 0));
+
+		SetBlendMode(bm);
 
 		if (changed_dm)
 			SetDepthMode(dm);
@@ -1805,42 +1887,34 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 	GLuint glid = NULL;
 	GLenum textype;
 
-	c3::Texture2DImpl *tex2d = dynamic_cast<c3::Texture2DImpl *>(luptex);
-	if (!tex2d)
+	if (luptex)
 	{
-		c3::TextureCubeImpl *texcube = dynamic_cast<c3::TextureCubeImpl *>(luptex);
-		if (!texcube)
+		if (c3::Texture2DImpl *tex2d = dynamic_cast<c3::Texture2DImpl *>(luptex))
 		{
-			c3::Texture3DImpl *tex3d = dynamic_cast<c3::Texture3DImpl *>(luptex);
-			if (!tex3d)
-			{
-				c3::DepthBufferImpl *texdep = dynamic_cast<c3::DepthBufferImpl *>((c3::DepthBuffer *)luptex);
-				if (!texdep)
-				{
-					return;
-				}
-				else
-				{
-					textype = GL_TEXTURE_2D;
-					glid = (GLuint)(c3::DepthBufferImpl &)*texdep;
-				}
-			}
-			else
-			{
-				textype = GL_TEXTURE_3D;
-				glid = (GLuint)(c3::Texture3DImpl &)*tex3d;
-			}
+			textype = GL_TEXTURE_2D;
+			glid = (GLuint)(c3::Texture2DImpl &)*tex2d;
 		}
-		else
+		else if (c3::TextureCubeImpl *texcube = dynamic_cast<c3::TextureCubeImpl *>(luptex))
 		{
 			textype = GL_TEXTURE_CUBE_MAP;
 			glid = (GLuint)(c3::TextureCubeImpl &)*texcube;
+		}
+		else if (c3::Texture3DImpl *tex3d = dynamic_cast<c3::Texture3DImpl *>(luptex))
+		{
+			textype = GL_TEXTURE_3D;
+			glid = (GLuint)(c3::Texture3DImpl &)*tex3d;
+		}
+		else if (c3::DepthBufferImpl *texdep = dynamic_cast<c3::DepthBufferImpl *>((c3::DepthBuffer *)luptex))
+		{
+			textype = GL_TEXTURE_2D;
+			glid = (GLuint)(c3::DepthBufferImpl &)*texdep;
 		}
 	}
 	else
 	{
 		textype = GL_TEXTURE_2D;
-		glid = (GLuint)(c3::Texture2DImpl &)*tex2d;
+		ptex = m_BlackTex;
+		glid = (GLuint)(c3::Texture2DImpl &)*m_BlackTex;
 	}
 
 	s_TexCache[texunit] = ptex;
@@ -1859,6 +1933,19 @@ bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
 		if (count == -1)
 			count = m_CurVB->Count();
 
+		std::function<void(Renderer::RenderStateOverrideFlags)> _draw = [&](Renderer::RenderStateOverrideFlags rsof)
+		{
+			if (m_CurProg)
+			{
+				if (m_ActiveMaterial)
+					m_ActiveMaterial->Apply(m_CurProg, rsof);
+
+				m_CurProg->ApplyUniforms();
+			}
+
+			gl.DrawArrays(typelu[type], 0, (GLsizei)count);
+		};
+
 		RenderMethod::Technique *tech = m_ActiveRenderMethod ? m_ActiveRenderMethod->GetActiveTechnique() : nullptr;
 		if (tech)
 		{
@@ -1869,18 +1956,15 @@ bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
 				{
 					Renderer::RenderStateOverrideFlags rsof = tech->ApplyPass(passidx);
 
-					if (m_CurProg)
-					{
-						if (m_ActiveMaterial)
-							m_ActiveMaterial->Apply(m_CurProg, rsof);
-
-						m_CurProg->ApplyUniforms();
-					}
-
-					gl.DrawArrays(typelu[type], 0, (GLsizei)count);
+					_draw(rsof);
 				}
+
 				tech->End();
 			}
+		}
+		else
+		{
+			_draw(0);
 		}
 
 		m_VertsPerFrame += m_CurVB->Count();
@@ -1942,6 +2026,19 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 		case IndexBuffer::IndexSize::IS_32BIT: glidxs = GL_UNSIGNED_INT; break;
 	}
 
+	std::function<void(Renderer::RenderStateOverrideFlags)> _draw = [&](Renderer::RenderStateOverrideFlags rsof)
+	{
+		if (m_CurProg)
+		{
+			if (m_ActiveMaterial)
+				m_ActiveMaterial->Apply(m_CurProg, rsof);
+
+			m_CurProg->ApplyUniforms();
+		}
+
+		gl.DrawElements(typelu[type], (GLsizei)count, glidxs, NULL);
+	};
+
 	RenderMethod::Technique *tech = m_ActiveRenderMethod ? m_ActiveRenderMethod->GetActiveTechnique() : nullptr;
 	if (tech)
 	{
@@ -1952,16 +2049,14 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 			{
 				Renderer::RenderStateOverrideFlags rsof = tech->ApplyPass(passidx);
 
-				if (m_ActiveMaterial)
-					m_ActiveMaterial->Apply(m_CurProg, rsof);
-
-				if (m_CurProg)
-					m_CurProg->ApplyUniforms();
-
-				gl.DrawElements(typelu[type], (GLsizei)count, glidxs, NULL);
+				_draw(rsof);
 			}
 			tech->End();
 		}
+	}
+	else
+	{
+		_draw(0);
 	}
 
 	m_VertsPerFrame += m_CurVB->Count();
@@ -2766,6 +2861,38 @@ VertexBuffer *RendererImpl::GetFullscreenPlaneVB()
 	return m_FSPlaneVB;
 }
 
+Mesh *RendererImpl::GetFullScreenPlaneMesh()
+{
+	if (!m_FullScreenPlaneMesh)
+	{
+		m_FullScreenPlaneMesh = CreateMesh();
+
+		m_FullScreenPlaneMesh->AttachVertexBuffer(GetFullscreenPlaneVB());
+
+		if (m_FSPlaneVB)
+		{
+			IndexBuffer *pib = CreateIndexBuffer(0);
+			if (pib)
+			{
+				static const uint16_t i[2][3] =
+				{
+					 {  0,  2,  1 }, {  0,  3, 2  }
+				};
+
+				void *buf = nullptr;
+				if (pib->Lock((void **)&buf, 2 * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
+				{
+					memcpy(buf, pib, sizeof(i));
+					pib->Unlock();
+				}
+
+				m_FullScreenPlaneMesh->AttachIndexBuffer(pib);
+			}
+		}
+	}
+
+	return m_FullScreenPlaneMesh;
+}
 
 size_t hemisphereSectorCount[Renderer::EResLevel::RL_RESCOUNT] = {8, 16, 24};
 size_t hemisphereStackCount[Renderer::EResLevel::RL_RESCOUNT] = {4, 8, 12};

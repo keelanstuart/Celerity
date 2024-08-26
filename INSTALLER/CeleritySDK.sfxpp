@@ -10,9 +10,9 @@
 <powerprops:property id="CPTN" type="STRING">Celerity Engine SDK Setup</powerprops:property>
 <powerprops:property id="DDST" type="STRING">%localappdata%\CeleritySDK</powerprops:property>
 <powerprops:property id="ENEX" type="BOOLEAN">yes</powerprops:property>
-<powerprops:property id="ICON" type="STRING">D:\temp\Celerity\Applications\C3App\res\C3App.ico</powerprops:property>
-<powerprops:property id="IMAG" type="STRING">D:\temp\Celerity\INSTALLER\c3install.bmp</powerprops:property>
-<powerprops:property id="LICM" type="STRING">D:\temp\Celerity\INSTALLER\LICENSE.html</powerprops:property>
+<powerprops:property id="ICON" type="STRING">D:\proj\Celerity\Applications\C3App\res\C3App.ico</powerprops:property>
+<powerprops:property id="IMAG" type="STRING">D:\proj\Celerity\INSTALLER\c3install.bmp</powerprops:property>
+<powerprops:property id="LICM" type="STRING">D:\proj\Celerity\INSTALLER\LICENSE.html</powerprops:property>
 <powerprops:property id="LNCH" type="STRING"></powerprops:property>
 <powerprops:property id="MXSZ" type="INT">-1</powerprops:property>
 <powerprops:property id="OFSF" type="ENUM">None,Build Date,Version:1</powerprops:property>
@@ -22,7 +22,7 @@
 <powerprops:property id="VDSC" type="STRING"></powerprops:property>
 <powerprops:property id="VERS" type="STRING"></powerprops:property>
 <powerprops:property id="VPRD" type="STRING"></powerprops:property>
-<powerprops:property id="WLCM" type="STRING">D:\temp\Celerity\INSTALLER\SDKSetupWelcome.html</powerprops:property>
+<powerprops:property id="WLCM" type="STRING">D:\proj\Celerity\INSTALLER\SDKSetupWelcome.html</powerprops:property>
 </powerprops:property_set>
 
 </settings2>
@@ -37,7 +37,7 @@
 <powerprops:property id="NAME" type="STRING">*64.exe</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING">CreateStartMenuEntry();</powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -50,7 +50,7 @@
 <powerprops:property id="NAME" type="STRING">*64.dll</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -63,7 +63,7 @@
 <powerprops:property id="NAME" type="STRING">C3ComponentGenerator.exe</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING">CreateStartMenuEntry();</powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\C3ComponentGenerator.exe</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin\C3ComponentGenerator.exe</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -76,7 +76,7 @@
 <powerprops:property id="NAME" type="STRING">*.h</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Include</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\Include</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -89,7 +89,7 @@
 <powerprops:property id="NAME" type="STRING">Pool.h</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\third-party\Pool\Include\Pool.h</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\third-party\Pool\Include\Pool.h</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -102,7 +102,7 @@
 <powerprops:property id="NAME" type="STRING">PowerProps.h</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\third-party\PowerProps\Include\PowerProps.h</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\third-party\PowerProps\Include\PowerProps.h</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -115,7 +115,7 @@
 <powerprops:property id="NAME" type="STRING">mqme.h</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\third-party\mqme\Include\mqme.h</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\third-party\mqme\Include\mqme.h</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -128,7 +128,7 @@
 <powerprops:property id="NAME" type="STRING">GenIO.h</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\third-party\GenIO\Include\GenIO.h</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\third-party\GenIO\Include\GenIO.h</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -141,7 +141,7 @@
 <powerprops:property id="NAME" type="STRING">tinyxml2.h</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\third-party\tinyxml2\tinyxml2.h</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\third-party\tinyxml2\tinyxml2.h</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -154,7 +154,7 @@
 <powerprops:property id="NAME" type="STRING">*</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\third-party\glm\glm</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\third-party\glm\glm</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -167,7 +167,7 @@
 <powerprops:property id="NAME" type="STRING">copying.txt</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\third-party\glm\copying.txt</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\third-party\glm\copying.txt</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -180,7 +180,7 @@
 <powerprops:property id="NAME" type="STRING">license.txt</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\LICENSE</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\LICENSE</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -193,7 +193,7 @@
 <powerprops:property id="NAME" type="STRING">SetupCelerityEnv.bat</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\SetupCelerityEnv.bat</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\SetupCelerityEnv.bat</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -206,7 +206,7 @@
 <powerprops:property id="NAME" type="STRING">Celerity64.lib</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\lib\Celerity64.lib</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\lib\Celerity64.lib</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -219,7 +219,7 @@
 <powerprops:property id="NAME" type="STRING">PowerProps64.lib</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\lib\PowerProps64.lib</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\lib\PowerProps64.lib</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -232,7 +232,7 @@
 <powerprops:property id="NAME" type="STRING">GenIO64.lib</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\lib\GenIO64.lib</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\lib\GenIO64.lib</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -245,7 +245,7 @@
 <powerprops:property id="NAME" type="STRING">mqme64.lib</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\lib\mqme64.lib</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\lib\mqme64.lib</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -258,7 +258,7 @@
 <powerprops:property id="NAME" type="STRING">Pool64.lib</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\lib\Pool64.lib</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\lib\Pool64.lib</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -271,7 +271,7 @@
 <powerprops:property id="NAME" type="STRING">Celerity3Docs.chm</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Docs\Celerity3Docs.chm</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\Docs\Celerity3Docs.chm</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -284,7 +284,7 @@
 <powerprops:property id="NAME" type="STRING">*</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Samples</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\Samples</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -297,7 +297,7 @@
 <powerprops:property id="NAME" type="STRING">Celerity64.pdb</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\Celerity64.pdb</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin\Celerity64.pdb</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -310,7 +310,7 @@
 <powerprops:property id="NAME" type="STRING">*.props</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\extras</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\extras</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -323,7 +323,7 @@
 <powerprops:property id="NAME" type="STRING">C3EditDefaults.reg</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\Applications\C3Edit\C3EditDefaults.reg</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\Applications\C3Edit\C3EditDefaults.reg</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -336,7 +336,7 @@
 <powerprops:property id="NAME" type="STRING">*.c3protoa</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin\assets</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -349,7 +349,7 @@
 <powerprops:property id="NAME" type="STRING">*</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets\Shaders</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin\assets\Shaders</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -362,7 +362,7 @@
 <powerprops:property id="NAME" type="STRING">*</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets\Textures</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin\assets\Textures</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -375,7 +375,7 @@
 <powerprops:property id="NAME" type="STRING">*</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets\Scripts</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin\assets\Scripts</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -388,7 +388,7 @@
 <powerprops:property id="NAME" type="STRING">CeleritySymbol.X</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets\Models\CeleritySymbol.X</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin\assets\Models\CeleritySymbol.X</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -414,7 +414,7 @@
 <powerprops:property id="NAME" type="STRING">apache.3ds</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets\Models\apache.3ds</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin\assets\Models\apache.3ds</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -427,7 +427,7 @@
 <powerprops:property id="NAME" type="STRING">*</powerprops:property>
 <powerprops:property id="PRES" type="STRING"></powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\bin\assets\Models\Ship</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\bin\assets\Models\Ship</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -440,7 +440,7 @@
 <powerprops:property id="NAME" type="STRING">C3Edit.config</powerprops:property>
 <powerprops:property id="PRES" type="STRING">CheckOverwrite();</powerprops:property>
 <powerprops:property id="SNPT" type="STRING"></powerprops:property>
-<powerprops:property id="SRCP" type="STRING">D:\temp\Celerity\INSTALLER\C3Edit.config</powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\INSTALLER\C3Edit.config</powerprops:property>
 </powerprops:property_set>
 
 </file2>
@@ -457,7 +457,7 @@
 
 <script type="postfile">function CreateStartMenuEntry(){	var ext_idx = FILENAME.indexOf(&quot;.exe&quot;);	var name_only = FILENAME.substring(0, ext_idx);	var link_path = &quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/&quot; + name_only + &quot;.lnk&quot;;		CreateShortcut(link_path, FILEPATH, &quot;&quot;, PATH, name_only, 1, FILEPATH, 0);	Echo(&quot;Created Start Menu shortcut for \&quot;&quot; + name_only + &quot;\&quot;.\n&quot;);}</script>
 
-<script type="postinstall">if (INSTALLOK == 1){	CreateShortcut(&quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/Celerity Documentation.lnk&quot;, BASEPATH + &quot;/Docs/Celerity3Docs.chm&quot;, &quot;&quot;, &quot;&quot;, &quot;Celerity3 SDK Documentation&quot;, 1, &quot;&quot;, 0);	Echo(&quot;Created Start Menu shortcut for CHM documentation.\n&quot;);	if (GetProperty(&quot;Use C3Edit Defaults (recommended)&quot;) == 1)	{		Echo(&quot;Registering C3Edit default settings...\n&quot;);		SpawnProcess(&quot;regedit&quot;, &quot;/S C3EditDefaults.reg&quot;, BASEPATH, 1);	}}</script>
+<script type="postinstall">if (INSTALLOK == 1){	CreateShortcut(&quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/Celerity Documentation.lnk&quot;, BASEPATH + &quot;/Docs/Celerity3Docs.chm&quot;, &quot;&quot;, &quot;&quot;, &quot;Celerity3 SDK Documentation&quot;, 1, &quot;&quot;, 0);	Echo(&quot;Created Start Menu shortcut for CHM documentation.\n&quot;);	if (GetProperty(&quot;Apply C3Edit Defaults (recommended)&quot;) == 1)	{		Echo(&quot;Registering C3Edit default settings...\n&quot;);		SpawnProcess(&quot;regedit&quot;, &quot;/S &quot; + BASEPATH + &quot;\\extras\\C3EditDefaults.reg&quot;, BASEPATH, 1);	}}</script>
 
 </scripts>
 

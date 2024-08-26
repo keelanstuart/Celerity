@@ -221,64 +221,34 @@ BOOL C3EditDoc::OnSaveDocument(LPCTSTR lpszPathName)
 	if (!os || !os->Assign(lpszPathName) || !os->Open() || !os->CanAccess())
 		return FALSE;
 
-	if (os->BeginBlock('CEL0'))
+	c3::Object::MetadataSaveFunc savemd = [&](tstring &name, tstring &description, tstring &author, tstring &website, tstring &copyright)
 	{
-		uint16_t len;
+		name = m_Name;
+		description = m_Description;
+		author = m_Author;
+		website = m_Website;
+		copyright = m_Copyright;
+	};
 
-		len = (uint16_t)m_Name.length();
-		os->WriteUINT16(len);
-		if (len)
-			os->WriteString((TCHAR *)(m_Name.c_str()));
+	c3::Object::CameraSaveFunc savecam = [&](c3::Object **camera, float &yaw, float &pitch)
+	{
+		SPerViewInfo &pvi = m_PerViewInfo.begin()->second;
 
-		len = (uint16_t)m_Description.length();
-		os->WriteUINT16(len);
-		if (len)
-			os->WriteString((TCHAR *)(m_Description.c_str()));
+		assert(camera);
+		*camera = pvi.m_Camera;
+		yaw = pvi.yaw;
+		pitch = pvi.pitch;
+	};
 
-		len = (uint16_t)m_Author.length();
-		os->WriteUINT16(len);
-		if (len)
-			os->WriteString((TCHAR *)(m_Author.c_str()));
+	c3::Object::EnvironmentSaveFunc saveenv = [&](glm::fvec4 &clearcolor, glm::fvec4 &shadowcolor, glm::fvec4 &fogcolor, float &fogdensity)
+	{
+		clearcolor = m_ClearColor;
+		shadowcolor = m_ShadowColor;
+		fogcolor = m_FogColor;
+		fogdensity = m_FogDensity;
+	};
 
-		len = (uint16_t)m_Website.length();
-		os->WriteUINT16(len);
-		if (len)
-			os->WriteString((TCHAR *)(m_Website.c_str()));
-
-		len = (uint16_t)m_Copyright.length();
-		os->WriteUINT16(len);
-		if (len)
-			os->WriteString((TCHAR *)(m_Copyright.c_str()));
-
-		if (os->BeginBlock('CAM0'))
-		{
-			SPerViewInfo *pvi = &m_PerViewInfo.begin()->second;
-			c3::Object *cam = pvi->m_Camera;
-			cam->Save(os, 0);
-
-			c3::Positionable *p = (c3::Positionable *)(cam->FindComponent(c3::Positionable::Type()));
-			os->WriteFloat(pvi->yaw);
-			os->WriteFloat(pvi->pitch);
-
-			os->EndBlock();
-		}
-
-		if (os->BeginBlock('ENV0'))
-		{
-			os->Write(&m_ClearColor, sizeof(glm::fvec4));
-
-			os->Write(&m_ShadowColor, sizeof(glm::fvec4));
-
-			os->Write(&m_FogColor, sizeof(glm::fvec4));
-			os->WriteFloat(m_FogDensity);
-
-			os->EndBlock();
-		}
-
-		m_RootObj->Save(os, 0);
-
-		os->EndBlock();
-	}
+	m_RootObj->Save(os, 0, savemd, savecam, saveenv);
 
 	os->Close();
 
@@ -309,71 +279,36 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	if (!is || !is->Assign(lpszPathName) || !is->Open() || !is->CanAccess())
 		return FALSE;
 
-	genio::FOURCHARCODE b = is->NextBlockId();
-	if (b == 'CEL0')
+	c3::Object::MetadataLoadFunc loadmd = [&](const tstring &name, const tstring &description, const tstring &author, const tstring &website, const tstring &copyright)
 	{
-		if (is->BeginBlock(b))
-		{
-			uint16_t len;
+		m_Name = name;
+		m_Description = description;
+		m_Author = author;
+		m_Website = website;
+		m_Copyright = copyright;
+	};
 
-			is->ReadUINT16(len);
-			m_Name.resize(len);
-			if (len)
-				is->ReadString((TCHAR *)(m_Name.c_str()));
+	c3::Object::CameraLoadFunc loadcam = [&](c3::Object *camera, float yaw, float pitch)
+	{
+		SPerViewInfo &pvi = m_PerViewInfo.begin()->second;
 
-			is->ReadUINT16(len);
-			m_Description.resize(len);
-			if (len)
-				is->ReadString((TCHAR *)(m_Description.c_str()));
+		pvi.m_Camera = camera;
+		pvi.yaw = yaw;
+		pvi.pitch = pitch;
+	};
 
-			is->ReadUINT16(len);
-			m_Author.resize(len);
-			if (len)
-				is->ReadString((TCHAR *)(m_Author.c_str()));
+	c3::Object::EnvironmentLoadFunc loadenv = [&](const glm::fvec4 &clearcolor, const glm::fvec4 &shadowcolor, const glm::fvec4 &fogcolor, const float &fogdensity)
+	{
+		m_ClearColor = clearcolor;
+		m_ShadowColor = shadowcolor;
+		m_FogColor = fogcolor;
+		m_FogDensity = fogdensity;
+	};
 
-			is->ReadUINT16(len);
-			m_Website.resize(len);
-			if (len)
-				is->ReadString((TCHAR *)(m_Website.c_str()));
-
-			is->ReadUINT16(len);
-			m_Copyright.resize(len);
-			if (len)
-				is->ReadString((TCHAR *)(m_Copyright.c_str()));
-
-			if (is->BeginBlock('CAM0'))
-			{
-				SPerViewInfo &pvi = m_PerViewInfo.begin()->second;
-
-				pvi.m_Camera = theApp.m_C3->GetFactory()->Build();
-				pvi.m_Camera->Load(is);
-
-				is->ReadFloat(pvi.yaw);
-				is->ReadFloat(pvi.pitch);
-
-				is->EndBlock();
-			}
-
-			if (is->BeginBlock('ENV0'))
-			{
-				is->Read(&m_ClearColor, sizeof(glm::fvec4));
-	
-				is->Read(&m_ShadowColor, sizeof(glm::fvec4));
-	
-				is->Read(&m_FogColor, sizeof(glm::fvec4));
-				is->ReadFloat(m_FogDensity);
-	
-				is->EndBlock();
-			}
-
-			if (m_RootObj)
-			{
-				m_RootObj->Load(is);
-				m_RootObj->Flags().Set(OF_EXPANDED);
-			}
-
-			is->EndBlock();
-		}
+	if (m_RootObj)
+	{
+		m_RootObj->Load(is, loadmd, loadcam, loadenv);
+		m_RootObj->Flags().Set(OF_EXPANDED);
 	}
 
 	is->Close();
@@ -394,6 +329,7 @@ void C3EditDoc::ResetViews()
 		C3EditView *pv = dynamic_cast<C3EditView *>((CView *)m_viewList.GetAt(p));
 		if (pv)
 		{
+			pv->AdjustYawPitch(0, 0, false);
 		}
 
 		m_viewList.GetNext(p);

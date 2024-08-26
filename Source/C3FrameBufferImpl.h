@@ -44,10 +44,10 @@ namespace c3
 			{
 				struct
 				{
-					uint16_t hr, hg, hb, ha;
+					int8_t sr, sg, sb, sa;
 				};
-				uint16_t h[4];
-				uint64_t ph;
+				int8_t s[4];
+				uint32_t ps;
 			};
 
 			union
@@ -62,6 +62,13 @@ namespace c3
 
 		typedef struct sTargetData
 		{
+			sTargetData()
+			{
+				tex = nullptr;
+				clearcolor = {0};
+				owns = false;
+			}
+
 			Texture2D *tex;
 			UClearColor clearcolor;
 			bool owns;
@@ -104,9 +111,9 @@ namespace c3
 
 		virtual RETURNCODE Seal();
 
-		virtual void SetClearColor(size_t position, const uint32_t color);
+		virtual void SetClearColor(size_t position, glm::fvec4 color);
 
-		virtual uint32_t GetClearColor(size_t position) const;
+		virtual glm::fvec4 GetClearColor(size_t position) const;
 
 		virtual void SetClearDepth(float depth = 1.0f);
 
@@ -116,7 +123,7 @@ namespace c3
 
 		virtual int8_t GetClearStencil() const;
 
-		virtual void Clear(props::TFlags64 flags);
+		virtual void Clear(props::TFlags64 flags, int target = -1);
 
 		virtual void SetBlendMode(Renderer::BlendMode mode);
 

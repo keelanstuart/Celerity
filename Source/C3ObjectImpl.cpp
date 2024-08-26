@@ -303,74 +303,239 @@ bool ObjectImpl::Render(Object::RenderFlags flags, int draworder, const glm::fma
 }
 
 
-bool ObjectImpl::Load(genio::IInputStream *is)
+bool ObjectImpl::Load(genio::IInputStream *is, MetadataLoadFunc loadmd, CameraLoadFunc loadcam, EnvironmentLoadFunc loadenv, CustomLoadFunc loadcust)
 {
 	if (!is)
 		return false;
 
-	genio::FOURCHARCODE b = is->NextBlockId();
-	if (b == 'OBJ0')
+	genio::FOURCHARCODE b;
+
+	size_t celdepth = 0;
+
+	do
 	{
-		if (is->BeginBlock(b))
+		b = is->NextBlockId();
+
+		switch (b)
 		{
-			is->Read(&m_GUID, sizeof(GUID));
-
-			uint16_t len;
-			is->ReadUINT16(len);
-			if (len)
-			{
-				m_Name.resize(len, _T('#'));
-				is->Read(m_Name.data(), sizeof(TCHAR) * len);
-			}
-
-			is->Read(&m_Flags, sizeof(props::TFlags64));
-
-			size_t ct;
-
-			// read components
-			is->ReadUINT64(ct);
-			while (ct--)
-			{
-				GUID g;
-				is->Read(&g, sizeof(GUID));
-				AddComponent(m_pSys->GetFactory()->FindComponentType(g));
-			}
-
-			size_t propssz, propsbr;
-			is->ReadUINT64(propssz);
-			if (propssz)
-			{
-				BYTE *propsbuf = (BYTE *)_alloca(propssz);
-				is->Read(propsbuf, propssz);
-				m_Props->Deserialize(propsbuf, propssz, &propsbr);
-			}
-
-			// read children
-			is->ReadUINT64(ct);
-			for (size_t i = 0; i < ct; i++)
-			{
-				Object *obj = m_pSys->GetFactory()->Build();
-				if (obj)
+			case 'CEL0':
+				if (is->BeginBlock(b))
 				{
-					obj->Load(is);
-					AddChild(obj);
+					uint16_t len;
+
+					tstring name, description, author, website, copyright;
+					is->ReadUINT16(len);
+					name.resize(len);
+					if (len)
+						is->ReadString(name.data());
+
+					is->ReadUINT16(len);
+					description.resize(len);
+					if (len)
+						is->ReadString(description.data());
+
+					is->ReadUINT16(len);
+					author.resize(len);
+					if (len)
+						is->ReadString(author.data());
+
+					is->ReadUINT16(len);
+					website.resize(len);
+					if (len)
+						is->ReadString(website.data());
+
+					is->ReadUINT16(len);
+					copyright.resize(len);
+					if (len)
+						is->ReadString(copyright.data());
+
+					if (loadmd)
+						loadmd(name, description, author, website, copyright);
+
+					celdepth++;
 				}
-			}
+				break;
 
-			is->EndBlock();
+			case 'CAM0':
+				if (is->BeginBlock(b))
+				{
+					if (loadcam)
+					{
+						Object *pcam = m_pSys->GetFactory()->Build();
+						pcam->Load(is);
+
+						float yaw, pitch;
+						is->ReadFloat(yaw);
+						is->ReadFloat(pitch);
+
+						loadcam(pcam, yaw, pitch);
+					}
+
+					is->EndBlock();
+				}
+				break;
+
+			case 'ENV0':
+				if (is->BeginBlock(b))
+				{
+					if (loadenv)
+					{
+						glm::fvec4 clearcolor, fogcolor, shadowcolor;
+						float fogdensity;
+
+						is->Read(&clearcolor, sizeof(glm::fvec4));
+						is->Read(&shadowcolor, sizeof(glm::fvec4));
+						is->Read(&fogcolor, sizeof(glm::fvec4));
+						is->ReadFloat(fogdensity);
+
+						loadenv(clearcolor, shadowcolor, fogcolor, fogdensity);
+					}
+
+					is->EndBlock();
+				}
+				break;
+
+			case 'OBJ0':
+				if (is->BeginBlock(b))
+				{
+					is->Read(&m_GUID, sizeof(GUID));
+
+					uint16_t len;
+					is->ReadUINT16(len);
+					if (len)
+					{
+						m_Name.resize(len, _T('#'));
+						is->Read(m_Name.data(), sizeof(TCHAR) * len);
+					}
+
+					is->Read(&m_Flags, sizeof(props::TFlags64));
+
+					size_t ct;
+
+					// read components
+					is->ReadUINT64(ct);
+					while (ct--)
+					{
+						GUID g;
+						is->Read(&g, sizeof(GUID));
+						AddComponent(m_pSys->GetFactory()->FindComponentType(g));
+					}
+
+					size_t propssz, propsbr;
+					is->ReadUINT64(propssz);
+					if (propssz)
+					{
+						BYTE *propsbuf = (BYTE *)_alloca(propssz);
+						is->Read(propsbuf, propssz);
+						m_Props->Deserialize(propsbuf, propssz, &propsbr);
+					}
+
+					// read children
+					is->ReadUINT64(ct);
+					for (size_t i = 0; i < ct; i++)
+					{
+						Object *obj = m_pSys->GetFactory()->Build();
+						if (obj)
+						{
+							obj->Load(is, nullptr, nullptr, nullptr, loadcust);
+							AddChild(obj);
+						}
+					}
+
+					is->EndBlock();
+				}
+
+				PostLoad();
+				b = 0;	// exit this loop once the object is loaded
+				break;
+
+			default:
+				if (is->BeginBlock(b))
+				{
+					if (loadcust)
+						loadcust(is);
+
+					is->EndBlock();
+				}
+				break;
 		}
+	}
+	while (b);
 
-		PostLoad();
+	while (celdepth)
+	{
+		celdepth--;
+		is->EndBlock();
 	}
 
 	return true;
 }
 
 
-bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags) const
+bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags, MetadataSaveFunc savemd, CameraSaveFunc savecam, EnvironmentSaveFunc saveenv, CustomSaveFunc savecust) const
 {
 	if (!os)
 		return false;
+
+	if (savemd && os->BeginBlock('CEL0'))
+	{
+		tstring name, description, author, website, copyright;
+		savemd(name, description, author, website, copyright);
+
+		uint16_t len;
+
+		len = (uint16_t)name.length();
+		os->WriteUINT16(len);
+		if (len)
+			os->WriteString(name.data());
+
+		len = (uint16_t)description.length();
+		os->WriteUINT16(len);
+		if (len)
+			os->WriteString(description.data());
+
+		len = (uint16_t)author.length();
+		os->WriteUINT16(len);
+		if (len)
+			os->WriteString(author.data());
+
+		len = (uint16_t)website.length();
+		os->WriteUINT16(len);
+		if (len)
+			os->WriteString(website.data());
+
+		len = (uint16_t)copyright.length();
+		os->WriteUINT16(len);
+		if (len)
+			os->WriteString(copyright.c_str());
+	}
+
+	if (savecam && os->BeginBlock('CAM0'))
+	{
+		Object *pcam;
+		float yaw, pitch;
+		savecam(&pcam, yaw, pitch);
+
+		pcam->Save(os, 0);
+		os->WriteFloat(yaw);
+		os->WriteFloat(pitch);
+
+		os->EndBlock();
+	}
+
+	if (saveenv && os->BeginBlock('ENV0'))
+	{
+		glm::fvec4 clearcolor, shadowcolor, fogcolor;
+		float fogdensity;
+		saveenv(clearcolor, shadowcolor, fogcolor, fogdensity);
+
+		os->Write(&clearcolor, sizeof(glm::fvec4));
+		os->Write(&shadowcolor, sizeof(glm::fvec4));
+		os->Write(&fogcolor, sizeof(glm::fvec4));
+		os->WriteFloat(fogdensity);
+
+		os->EndBlock();
+	}
 
 	if (os->BeginBlock('OBJ0'))
 	{
@@ -408,6 +573,9 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags) const
 
 		os->EndBlock();
 	}
+
+	if (savemd)
+		os->EndBlock();
 
 	return true;
 }

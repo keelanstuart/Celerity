@@ -116,8 +116,6 @@ C3EditView::C3EditView() noexcept
 	m_FS_bounds = nullptr;
 	m_SP_bounds = nullptr;
 
-	m_FSQuadVB = nullptr;
-
 	m_SelectionXforms = nullptr;
 
 	m_ulSunDir = -1;
@@ -185,8 +183,6 @@ void C3EditView::DestroySurfaces()
 	for (auto p : m_BTex)
 		C3_SAFERELEASE(p);
 	m_BTex.clear();
-
-	C3_SAFERELEASE(m_FSQuadVB);
 }
 
 
@@ -248,7 +244,7 @@ void C3EditView::CreateSurfaces()
 
 	c3::FrameBuffer::TargetDesc AuxBufTargData[] =
 	{
-		{ _T("uSamplerAuxiliary"), c3::Renderer::TextureType::U8_3CH, TEXCREATEFLAG_RENDERTARGET },
+		{ _T("uSamplerAuxiliary"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },
 	};
 
 	theApp.m_C3->GetLog()->Print(_T("Creating auxiliary buffer... "));
@@ -257,22 +253,7 @@ void C3EditView::CreateSurfaces()
 	if (m_AuxBuf)
 		gbok = m_AuxBuf->Setup(_countof(AuxBufTargData), AuxBufTargData, m_DepthTarg, auxr) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
-
-	m_FSQuadVB = prend->CreateVertexBuffer(0);
-	static const c3::Vertex::WT1::s v[4] =
-	{
-		{ {-1.0f,  1.0f, 0.5f, 1.0f}, {0, 1} },
-		{ { 1.0f,  1.0f, 0.5f, 1.0f}, {1, 1} },
-		{ {-1.0f, -1.0f, 0.5f, 1.0f}, {0, 0} },
-		{ { 1.0f, -1.0f, 0.5f, 1.0f}, {1, 0} }
-	};
-	void *buf;
-	if (m_FSQuadVB->Lock(&buf, 4, c3::Vertex::WT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == c3::VertexBuffer::RETURNCODE::RET_OK)
-	{
-		memcpy(buf, v, sizeof(c3::Vertex::WT1::s) * 4);
-
-		m_FSQuadVB->Unlock();
-	}
+	m_AuxBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 
 	UpdateShaderSurfaces();
 }
@@ -369,8 +350,6 @@ void C3EditView::OnInitialUpdate()
 
 	theApp.m_C3->GetSoundPlayer()->Initialize();
 
-	m_SelectionXforms = c3::MatrixStack::Create();
-
 	m_pUICam = theApp.m_C3->GetFactory()->Build();
 	m_pUICam->SetName(_T("GUI Camera"));
 	c3::Positionable *puicampos = dynamic_cast<c3::Positionable *>(m_pUICam->AddComponent(c3::Positionable::Type()));
@@ -444,21 +423,23 @@ void C3EditView::OnDraw(CDC *pDC)
 		c3::Environment *penv = theApp.m_C3->GetEnvironment();
 		assert(penv);
 
-		glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 1.0f);
-		prend->SetClearColor(&cc);
-
-		COLORREF cci = uint32_t(cc.x * 255.0f) | (uint32_t(cc.y * 255.0f) << 8) | (uint32_t(cc.z * 255.0f) << 16) | (uint32_t(cc.w * 255.0f) << 24);
-		m_GBuf->SetClearColor(0, cci);
-
-		prend->SetClearDepth(1.0f);
-
 		C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
 
-		if (pvi->m_Camera)
-			pvi->m_Camera->Update(dt);
+		if (camobj)
+			camobj->Update(dt);
 
 		if (pDoc->m_Brush)
 			pDoc->m_Brush->Update(dt);
+
+		float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
+		float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
+
+		glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 0);
+		prend->SetClearColor(&cc);
+		m_GBuf->SetClearColor(0, cc);
+		m_GBuf->SetClearColor(2, glm::fvec4(0, 0, 0, farclip));
+
+		prend->SetClearDepth(1.0f);
 
 		pDoc->m_RootObj->Update(theApp.m_Config->GetBool(_T("environment.advancetime"), true) ? dt : 0);
 
@@ -491,11 +472,13 @@ void C3EditView::OnDraw(CDC *pDC)
 			m_pRenderDoc->StartFrameCapture(NULL, NULL);
 		}
 
+		m_GBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+
 		if (prend->BeginScene(BSFLAG_SHOWGUI))
 		{
 			// Solid color pass
-			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 			prend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL | UFBFLAG_UPDATEVIEWPORT);
+			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 			prend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
 			prend->SetAlphaPassRange(254.9f / 255.0f);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
@@ -505,6 +488,10 @@ void C3EditView::OnDraw(CDC *pDC)
 			{
 				pDoc->m_RootObj->Render(renderflags, order);
 			});
+
+			// after the main pass, clear everything with black...
+			prend->SetClearColor(&c3::Color::fBlack);
+			m_LCBuf->SetClearColor(0, c3::Color::fBlack);
 
 			// Lighting pass(es)
 			prend->UseFrameBuffer(m_LCBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
@@ -522,9 +509,6 @@ void C3EditView::OnDraw(CDC *pDC)
 				static float sunposmult = -800.0f;
 
 				// Set up our shadow transforms
-
-				float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
-				float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
 				glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-800, 800, -800, 800, nearclip, farclip);
 				glm::fvec3 sunpos;
 				penv->GetSunDirection(&sunpos);
@@ -560,6 +544,8 @@ void C3EditView::OnDraw(CDC *pDC)
 			}
 
 			// Selection hilighting
+			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+			m_AuxBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 			prend->UseProgram(m_SP_bounds);
@@ -570,6 +556,8 @@ void C3EditView::OnDraw(CDC *pDC)
 			});
 
 			// Resolve
+			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+			m_BBuf[0]->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH); // | UFBFLAG_FINISHLAST);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
@@ -581,6 +569,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			float bs = 2.0f;
 			for (int b = 0; b < BLURTARGS - 1; b++)
 			{
+				m_BBuf[b + 1]->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				prend->UseFrameBuffer(m_BBuf[b + 1], 0); // UFBFLAG_FINISHLAST);
 				prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				prend->UseProgram(m_SP_blur);
@@ -597,18 +586,6 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetTextureTransformMatrix(&revmat);
 			m_SP_resolve->ApplyUniforms(true);
 			prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
-
-			c3::Positionable *puicampos = dynamic_cast<c3::Positionable *>(pvi->m_GUICamera->FindComponent(c3::Positionable::Type()));
-			c3::Camera *puicam = dynamic_cast<c3::Camera *>(pvi->m_GUICamera->FindComponent(c3::Camera::Type()));
-			if (puicam)
-			{
-				prend->SetViewMatrix(puicam->GetViewMatrix());
-				prend->SetProjectionMatrix(puicam->GetProjectionMatrix());
-				prend->SetEyePosition(puicam->GetEyePos());
-				glm::fvec3 eyedir = glm::normalize(*puicam->GetTargetPos() - *(puicam->GetEyePos()));
-				prend->SetEyeDirection(&eyedir);
-			}
-			pDoc->m_RootObj->Render(RF_GUI);
 
 			c3::Gui *pgui = prend->GetGui();
 
@@ -864,11 +841,14 @@ void C3EditView::ComputePickRay(POINT screenpos, glm::fvec3 &pickpos, glm::fvec3
 	float pctx = 1.0f - ((float)screenpos.x / (float)r.Width());
 	float pcty = 1.0f - ((float)screenpos.y / (float)r.Height());
 
-	float rposx = pctx * m_DepthTarg->Width();
-	float rposy = pcty * m_DepthTarg->Height();
+	size_t w = (size_t)((float)r.Width() / m_WindowsUIScale);
+	size_t h = (size_t)((float)r.Height() / m_WindowsUIScale);
+
+	float rposx = pctx * w;
+	float rposy = pcty * h;
 
 	// Construct a viewport that desribes our view metric
-	glm::fvec4 viewport(0, 0, m_DepthTarg->Width(), m_DepthTarg->Height());
+	glm::fvec4 viewport(0, 0, w, h);
 
 	glm::fvec3 pos3d_near(rposx, rposy, 0.0f);
 	glm::fvec3 pos3d_far(rposx, rposy, 1.0f);
@@ -1227,6 +1207,11 @@ void C3EditView::OnTimer(UINT_PTR nIDEvent)
 
 				AdjustYawPitch(0, 0, false);
 			}
+
+			c3::util::RecursiveObjectAction(pDoc->m_RootObj, [](c3::Object *pobj)
+			{
+				pobj->PropertyChanged(pobj->GetProperties()->GetPropertyById('C3RM'));
+			});
 
 			KillTimer('SIZE');
 			SetTimer('DRAW', 17, nullptr);

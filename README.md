@@ -29,7 +29,15 @@ Video Links:
 </a>
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=UDmb0Wn8nBE" target="_blank">
-<img src="http://img.youtube.com/vi/UDmb0Wn8nBE/0.jpg" alt="Simple Animation" width="300" height="225" border="50" />
+<img src="http://img.youtube.com/vi/UDmb0Wn8nBE/0.jpg" alt="Floating Fountain" width="300" height="225" border="50" />
+</a>
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=v6H-AJ6Iizc" target="_blank">
+<img src="http://img.youtube.com/vi/v6H-AJ6Iizc/0.jpg" alt="Turbo Teaser 1" width="300" height="225" border="50" />
+</a>
+
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=8yZyUu2bY-c" target="_blank">
+<img src="http://img.youtube.com/vi/8yZyUu2bY-c/0.jpg" alt="Turbo Teaser 2" width="300" height="225" border="50" />
 </a>
 
 <br>

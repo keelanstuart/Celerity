@@ -12,6 +12,8 @@ var hplayer_ori;
 var player_pos;
 var player_ori;
 
+var load_result;
+
 var setup = false;
 
 function update(elapsed_seconds)
@@ -37,7 +39,7 @@ function update(elapsed_seconds)
 						SetModelNodeCollisions(self, i, false);
 					}
 				}
-				else if ((nodename == "G7") || (nodename == "G7") || (nodename == "BuildingShell"))
+				else if ((nodename == "G7") || (nodename == "BuildingShell"))
 				{
 					SetModelNodeVisibility(self, i, true);
 					SetModelNodeCollisions(self, i, true);
@@ -59,16 +61,24 @@ function init()
 {
 	runtime = 0.0;
 
-	LoadObject(self, "Warehouse.c3o");
-	Log("Demo scene loaded!\n");
+	load_result = LoadObject(self, "Warehouse.c3o");
 
-	var hplayer = CreateObject("Ship", self);
+	var hplayer = CreateObject("Player", self);
 	RegisterObject("player", hplayer);
 
 	hplayer_pos = FindProperty(hplayer, "Position");
 	hplayer_ori = FindProperty(hplayer, "Orientation");
 
-	hcam = GetRegisteredObject("camera.root");
-	hcam_pos = FindProperty(hcam, "Position");
-	hcam_ori = FindProperty(hcam, "Orientation");
+	hcam = GetRegisteredObject("camera");
+
+	if (load_result["success"] == 1)
+	{
+		Log("Scene loaded successfully!\n");
+
+		DeleteObject(hcam);
+		load_result.camera = hcam;
+		SetRegisteredObject("camera", hcam);
+	}
+	else
+		Log("Scene failed to load!\n");
 }

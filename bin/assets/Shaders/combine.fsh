@@ -29,10 +29,15 @@ void main()
 {
 	vec4 texNormalAmbOcc = texture(uSamplerNormalAmbOcc, fTex0);
 	
-	if (texNormalAmbOcc.rgb == vec3(0, 0, 0))
-		discard;
 	
-	vec3 norm = normalize(texNormalAmbOcc.rgb - 0.5 * 2.0);
+	vec4 texDiffuseMetalness = texture(uSamplerDiffuseMetalness, fTex0);
+	if (texNormalAmbOcc.rgb == vec3(0, 0, 0))
+	{
+		oColor = vec4(texDiffuseMetalness.rgb, 1);
+		return;
+	}
+	
+	vec3 norm = normalize((normalize(texNormalAmbOcc.rgb) - 0.5) * 2.0);
 
 #if 0
 	vec2 texofs = 1.0 / textureSize(uSamplerNormalAmbOcc, 0);
@@ -56,7 +61,6 @@ void main()
 	vec3 sunlight = normalize(-uSunDirection);
 	float NdotL = max(dot(norm, sunlight), 0.0);
 	
-	vec4 texDiffuseMetalness = texture(uSamplerDiffuseMetalness, fTex0);
 	vec4 texEmissiveRoughness = texture(uSamplerEmissionRoughness, fTex0);
 	vec3 texPositionDepth = texture(uSamplerPosDepth, fTex0).rgb;
 	
@@ -76,7 +80,7 @@ void main()
 	vec3 view = normalize(texPositionDepth - uEyePosition);
 	vec3 refl = normalize(-reflect(-sunlight, norm));
 	float spec = pow(max(dot(view, refl), 0.0), roughness * 16.0);
-	vec3 specular = spec * mix(uSunColor, texDiffuseMetalness.rgb, 1 - metalness);
+	vec3 specular = spec * mix(uSunColor, texDiffuseMetalness.rgb, metalness) * 0.4;
 	
 	vec4 shadow_pos = uMatrixS * vec4(texPositionDepth.xyz, 1.0);
 	vec3 shadow_coords = (shadow_pos.xyz / shadow_pos.w) * 0.5 + 0.5;

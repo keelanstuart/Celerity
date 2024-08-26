@@ -12,6 +12,7 @@
 #include <TinyJS_Functions.h>
 #include <C3GlobalObjectRegistry.h>
 #include <C3Math.h>
+#include <C3ColorDefs.h>
 
 using namespace c3;
 
@@ -79,6 +80,7 @@ ScriptableImpl::ScriptableImpl()
 {
 	m_JS = nullptr;
 	m_Continue = true;
+	m_bHasUpdate = false;
 }
 
 
@@ -214,7 +216,7 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function CreateCollisionResults()"),							jcCreateCollisionResults, psys);
 	m_JS->AddNative(_T("function FreeCollisionResults(colres)"),						jcFreeCollisionResults, psys);
-	m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir)"),			jcCheckCollisions, psys);
+	m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir, collinfo)"),	jcCheckCollisions, psys);
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -867,60 +869,65 @@ void jcLoadObject(CScriptVar *c, void *userdata)
 		{
 			if (is->Assign(fullpath) && is->Open())
 			{
-				genio::FOURCHARCODE b = is->NextBlockId();
-				if (b == 'CEL0')
+				CScriptVarLink *psvl;
+
+				c3::Object::MetadataLoadFunc loadmd = [&](const tstring &name, const tstring &description, const tstring &author, const tstring &website, const tstring &copyright)
 				{
-					if (is->BeginBlock(b))
+					if (ret)
 					{
-						uint16_t len;
+						if (psvl = ret->FindChildOrCreate(_T("name")))
+							psvl->m_Var->SetString(name.c_str());
 
-						tstring name, description, author, website, copyright;
+						if (psvl = ret->FindChildOrCreate(_T("description")))
+							psvl->m_Var->SetString(description.c_str());
 
-						is->ReadUINT16(len);
-						name.resize(len);
-						if (len)
-							is->ReadString(name.data());
+						if (psvl = ret->FindChildOrCreate(_T("author")))
+							psvl->m_Var->SetString(author.c_str());
 
-						is->ReadUINT16(len);
-						description.resize(len);
-						if (len)
-							is->ReadString(description.data());
+						if (psvl = ret->FindChildOrCreate(_T("website")))
+							psvl->m_Var->SetString(website.c_str());
 
-						is->ReadUINT16(len);
-						author.resize(len);
-						if (len)
-							is->ReadString(author.data());
-
-						is->ReadUINT16(len);
-						website.resize(len);
-						if (len)
-							is->ReadString(website.data());
-
-						is->ReadUINT16(len);
-						copyright.resize(len);
-						if (len)
-							is->ReadString(copyright.data());
-
-						if (is->BeginBlock('CAM0'))
-						{
-							is->EndBlock();
-						}
-
-						if (is->BeginBlock('ENV0'))
-						{
-							is->EndBlock();
-						}
-
-						if (pobj)
-						{
-							bool r = pobj->Load(is);
-							if (ret)
-								ret->SetInt(r ? 1 : 0);
-						}
-
-						is->EndBlock();
+						if (psvl = ret->FindChildOrCreate(_T("copyright")))
+							psvl->m_Var->SetString(copyright.c_str());
 					}
-				}
+				};
+
+				c3::Object::CameraLoadFunc loadcam = [&](c3::Object *camera, float yaw, float pitch)
+				{
+					if (psvl = ret->FindChildOrCreate(_T("camera")))
+						psvl->m_Var->SetInt((int64_t)camera);
+
+					if (psvl = ret->FindChildOrCreate(_T("yaw")))
+						psvl->m_Var->SetFloat(yaw);
+
+					if (psvl = ret->FindChildOrCreate(_T("pitch")))
+						psvl->m_Var->SetFloat(pitch);
+				};
+
+				c3::Object::EnvironmentLoadFunc loadenv = [&](const glm::fvec4 &clearcolor, const glm::fvec4 &shadowcolor, const glm::fvec4 &fogcolor, const float &fogdensity)
+				{
+					Color::SRGBAColor c;
+
+					c = Color::ConvertVecToInt((props::TVec4F &)clearcolor);
+					if (psvl = ret->FindChildOrCreate(_T("clearcolor")))
+						psvl->m_Var->SetInt((int64_t)c.i);
+
+					c = Color::ConvertVecToInt((props::TVec4F &)shadowcolor);
+					if (psvl = ret->FindChildOrCreate(_T("shadowcolor")))
+						psvl->m_Var->SetInt((int64_t)c.i);
+
+					c = Color::ConvertVecToInt((props::TVec4F &)fogcolor);
+					if (psvl = ret->FindChildOrCreate(_T("fogcolor")))
+						psvl->m_Var->SetInt((int64_t)c.i);
+
+					if (psvl = ret->FindChildOrCreate(_T("fogdensity")))
+						psvl->m_Var->SetFloat(fogdensity);
+				};
+
+				bool r = pobj->Load(is, loadmd, loadcam, loadenv);
+
+				if (ret && (psvl = ret->FindChildOrCreate(_T("success"))))
+					psvl->m_Var->SetInt(r ? 1 : 0);
 			}
 
 			is->Release();
@@ -1728,29 +1735,34 @@ void jcFreeCollisionResults(CScriptVar *c, void *userdata)
 void jcCheckCollisions(CScriptVar *c, void *userdata)
 {
 	CScriptVar *ret = c->GetReturnVar();
-	if (!ret)
-		return;
 
 	System *psys = (System *)userdata;
 	assert(psys);
 
-	CScriptVarLink *ret_dist = ret->FindChild(_T("distance"));
-	CScriptVarLink *ret_hobj = ret->FindChild(_T("hobj"));
-	CScriptVarLink *ret_found = ret->FindChild(_T("found"));
-	if (!(ret_dist && ret_hobj && ret_found))
-	{
-		psys->GetLog()->Print(_T("JS ERROR: you must call CreateCollisionResults before calling CheckCollisions!\n"));
-		return;
-	}
-
-	ret_found->m_Var->SetInt(0);
-
+	CScriptVar *phcollinfo = c->GetParameter(_T("collinfo"));
 	CScriptVar *phrootobj = c->GetParameter(_T("hrootobj"));
 	CScriptVar *praypos = c->GetParameter(_T("raypos"));
 	CScriptVar *praydir = c->GetParameter(_T("raydir"));
 
-	if (!(phrootobj && praypos && praydir))
+	if (!(phrootobj && praypos && praydir && phcollinfo))
 		return;
+
+	CScriptVarLink *ret_dist = phcollinfo->FindChild(_T("distance"));
+	CScriptVarLink *ret_hobj = phcollinfo->FindChild(_T("hobj"));
+	CScriptVarLink *ret_found = phcollinfo->FindChild(_T("found"));
+	if (!(ret_dist && ret_hobj && ret_found))
+	{
+		static bool errshown = false;
+		if (!errshown)
+		{
+			psys->GetLog()->Print(_T("JS ERROR: you must call CreateCollisionResults before calling CheckCollisions!\n"));
+			errshown = true;
+		}
+
+		return;
+	}
+
+	ret_found->m_Var->SetInt(0);
 
 	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
 	Object *prootobj = dynamic_cast<Object *>((Object *)hrootobj);
@@ -1791,5 +1803,8 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 			ret_hobj->m_Var->SetInt((int64_t)obj);
 			ret_dist->m_Var->SetFloat(dist);
 		}
+
+		if (ret)
+			ret->SetInt(ret_found->m_Var->GetInt());
 	}
 }

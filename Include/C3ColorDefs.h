@@ -80,7 +80,7 @@ namespace c3
 			vc.b = (float)(ic.b) / 255.0f;
 		}
 
-		inline SRGBAColor ConvertVecToInt(props::TVec4F &vc)
+		inline SRGBAColor ConvertVecToInt(const props::TVec4F &vc)
 		{
 			SRGBAColor ret;
 
@@ -92,7 +92,7 @@ namespace c3
 			return ret;
 		}
 
-		inline SRGBColor ConvertVecToInt(props::TVec3F &vc)
+		inline SRGBColor ConvertVecToInt(const props::TVec3F &vc)
 		{
 			SRGBColor ret;
 

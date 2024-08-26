@@ -103,6 +103,7 @@ namespace c3
 			size_t m_Mode;
 			std::optional<int> m_DrawOrder;
 
+			bool m_RestoreOld;
 			Renderer::RenderStateOverrideFlags m_OldState;
 			Renderer::BlendMode m_OldBlendMode;
 			Renderer::BlendEquation m_OldBlendEq;
@@ -119,7 +120,7 @@ namespace c3
 			virtual size_t GetNumPasses() const;
 			virtual Pass *GetPass(size_t idx) const;
 			virtual Pass *AddPass();
-			virtual bool Begin(size_t &passes);
+			virtual bool Begin(size_t &passes, bool restore_old = false);
 			virtual Renderer::RenderStateOverrideFlags ApplyPass(size_t idx);
 			virtual void End();
 			virtual void SetDrawOrder(int order);
@@ -163,6 +164,7 @@ namespace c3
 		virtual Technique *GetActiveTechnique() const;
 
 		virtual bool SetActiveTechnique(size_t idx);
+		virtual bool SetActiveTechniqueByName(const TCHAR *name);
 
 		virtual bool FindTechnique(const TCHAR *name, size_t &idx) const;
 

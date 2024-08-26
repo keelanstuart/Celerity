@@ -130,13 +130,23 @@ namespace c3
 		virtual void Update(float elapsed_time = 0.0f) = NULL;
 
 		/// Called to render the object; returns true if Postrender should be called, false if not
-		virtual bool Render(RenderFlags flags = OF_DRAW | OF_DRAWINEDITOR | OF_LIGHT, int draworder = 0, const glm::fmat4x4 *pmat = nullptr) = NULL;
+		virtual bool Render(RenderFlags flags = 0, int draworder = 0, const glm::fmat4x4 *pmat = nullptr) = NULL;
+
+		using MetadataLoadFunc = std::function<void(const tstring &name, const tstring &description, const tstring &author, const tstring &website, const tstring &copyright)>;
+		using CameraLoadFunc = std::function<void(Object *camera, float yaw, float pitch)>;
+		using EnvironmentLoadFunc = std::function<void(const glm::fvec4 &clearcolor, const glm::fvec4 &shadowcolor, const glm::fvec4 &fogcolor, const float &fogdensity)>;
+		using CustomLoadFunc = std::function<void(genio::IInputStream *is)>; // BeginBlock has been called already - load things yourself
 
 		/// Loads the Object from a stream
-		virtual bool Load(genio::IInputStream *is) = NULL;
+		virtual bool Load(genio::IInputStream *is, MetadataLoadFunc loadmd = nullptr, CameraLoadFunc loadcam = nullptr, EnvironmentLoadFunc loadenv = nullptr, CustomLoadFunc loadcust = nullptr) = NULL;
+
+		using MetadataSaveFunc = std::function<void(tstring &name, tstring &description, tstring &author, tstring &website, tstring &copyright)>;
+		using CameraSaveFunc = std::function<void(Object **camera, float &yaw, float &pitch)>;
+		using EnvironmentSaveFunc = std::function<void(glm::fvec4 &clearcolor, glm::fvec4 &shadowcolor, glm::fvec4 &fogcolor, float &fogdensity)>;
+		using CustomSaveFunc = std::function<void(genio::IOutputStream *os)>; // BeginBlock has been called already - load things yourself
 
 		/// Saves an Object to a stream
-		virtual bool Save(genio::IOutputStream *os, props::TFlags64 saveflags) const = NULL;
+		virtual bool Save(genio::IOutputStream *os, props::TFlags64 saveflags, MetadataSaveFunc savemd = nullptr, CameraSaveFunc savecam = nullptr, EnvironmentSaveFunc saveenv = nullptr, CustomSaveFunc savecust = nullptr) const = NULL;
 
 		/// Called once Load has finished
 		virtual void PostLoad() = NULL;

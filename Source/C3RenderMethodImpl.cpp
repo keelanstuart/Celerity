@@ -368,18 +368,23 @@ RenderMethod::Pass *RenderMethodImpl::TechniqueImpl::AddPass()
 }
 
 
-bool RenderMethodImpl::TechniqueImpl::Begin(size_t &passes)
+bool RenderMethodImpl::TechniqueImpl::Begin(size_t &passes, bool restore_old)
 {
 	if (m_Passes.empty())
 		return false;
 
-	m_OldState = 0;
-	m_OldBlendMode = m_pOwner->m_pRend->GetBlendMode();
-	m_OldBlendEq = m_pOwner->m_pRend->GetBlendEquation();
-	m_OldCullMode = m_pOwner->m_pRend->GetCullMode();
-	m_OldWindingOrder = m_pOwner->m_pRend->GetWindingOrder();
-	m_OldDepthMode = m_pOwner->m_pRend->GetDepthMode();
-	m_OldFillMode = m_pOwner->m_pRend->GetFillMode();
+	m_RestoreOld = restore_old;
+	if (m_RestoreOld)
+	{
+		c3::Renderer *r = m_pOwner->m_pRend;
+		m_OldState = 0;
+		m_OldBlendMode = r->GetBlendMode();
+		m_OldBlendEq = r->GetBlendEquation();
+		m_OldCullMode = r->GetCullMode();
+		m_OldWindingOrder = r->GetWindingOrder();
+		m_OldDepthMode = r->GetDepthMode();
+		m_OldFillMode = r->GetFillMode();
+	}
 
 	passes = m_Passes.size();
 	return true;
@@ -402,23 +407,26 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::TechniqueImpl::ApplyPass(si
 
 void RenderMethodImpl::TechniqueImpl::End()
 {
-	if (m_OldState.IsSet(RSOF_BLENDMODE))
-		m_pOwner->m_pRend->SetBlendMode(m_OldBlendMode);
+	if (m_RestoreOld)
+	{
+		if (m_OldState.IsSet(RSOF_BLENDMODE))
+			m_pOwner->m_pRend->SetBlendMode(m_OldBlendMode);
 
-	if (m_OldState.IsSet(RSOF_BLENDEQ))
-		m_pOwner->m_pRend->SetBlendEquation(m_OldBlendEq);
+		if (m_OldState.IsSet(RSOF_BLENDEQ))
+			m_pOwner->m_pRend->SetBlendEquation(m_OldBlendEq);
 
-	if (m_OldState.IsSet(RSOF_CULLMODE))
-		m_pOwner->m_pRend->SetCullMode(m_OldCullMode);
+		if (m_OldState.IsSet(RSOF_CULLMODE))
+			m_pOwner->m_pRend->SetCullMode(m_OldCullMode);
 
-	if (m_OldState.IsSet(RSOF_WINDINGORDER))
-		m_pOwner->m_pRend->SetWindingOrder(m_OldWindingOrder);
+		if (m_OldState.IsSet(RSOF_WINDINGORDER))
+			m_pOwner->m_pRend->SetWindingOrder(m_OldWindingOrder);
 
-	if (m_OldState.IsSet(RSOF_DEPTHMODE))
-		m_pOwner->m_pRend->SetDepthMode(m_OldDepthMode);
+		if (m_OldState.IsSet(RSOF_DEPTHMODE))
+			m_pOwner->m_pRend->SetDepthMode(m_OldDepthMode);
 
-	if (m_OldState.IsSet(RSOF_FILLMODE))
-		m_pOwner->m_pRend->SetFillMode(m_OldFillMode);
+		if (m_OldState.IsSet(RSOF_FILLMODE))
+			m_pOwner->m_pRend->SetFillMode(m_OldFillMode);
+	}
 }
 
 
@@ -554,6 +562,16 @@ bool RenderMethodImpl::SetActiveTechnique(size_t idx)
 }
 
 
+bool RenderMethodImpl::SetActiveTechniqueByName(const TCHAR *name)
+{
+	size_t idx;
+	if (FindTechnique(name, idx))
+		return SetActiveTechnique(idx);
+
+	return false;
+}
+
+
 bool RenderMethodImpl::Load(const tinyxml2::XMLElement *proot, const TCHAR *options)
 {
 	if (!proot)
@@ -669,11 +687,14 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	auto SetShaderToLoad = [&](Renderer::ShaderComponentType shtype, const TCHAR *filename)
 	{
 		tstring modval = filename;
-		if (m_pOwner->GetShaderMode())
+
+		const TCHAR * sms = m_pOwner->GetShaderMode();
+		if (sms && *sms)
 		{
 			modval += _T("|");
 			modval += m_pOwner->GetShaderMode();
 		}
+
 		m_ShaderCompFilename[shtype] = std::make_optional<tstring>(modval);
 	};
 

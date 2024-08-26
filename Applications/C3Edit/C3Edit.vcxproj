@@ -125,6 +125,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ConformanceMode>false</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -176,6 +177,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <ConformanceMode>false</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -221,6 +223,9 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Common\C3AppCommon.h" />
+    <ClInclude Include="..\Common\DeferredPipeline.h" />
+    <ClInclude Include="..\Common\renderdoc_app.h" />
     <ClInclude Include="C3Edit.h" />
     <ClInclude Include="C3EditDoc.h" />
     <ClInclude Include="C3EditFrame.h" />
@@ -258,6 +263,10 @@
     <ClInclude Include="wtfvslistbox.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Common\DeferredPipeline.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="C3Edit.cpp" />
     <ClCompile Include="C3EditDoc.cpp" />
     <ClCompile Include="C3EditFrame.cpp" />

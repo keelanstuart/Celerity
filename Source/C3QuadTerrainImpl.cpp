@@ -150,7 +150,7 @@ void QuadTerrainImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat
 			glm::fvec2 texinc(1.0f / (float)m_HeightTexDim.x, 1.0f / (float)m_HeightTexDim.y);
 			glm::fvec2 texinc_half = texinc / 2.0f;
 
-			if (m_VB && (m_VB->Lock(&buffer, vcount, c3::Vertex::PNYT1::d, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK))
+			if (m_VB && (m_VB->Lock(&buffer, vcount, c3::Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK))
 			{
 				c3::Vertex::PNYT1::s *v = (c3::Vertex::PNYT1::s *)buffer;
 

@@ -123,6 +123,9 @@ namespace c3
 
 		// Returns the size in bytes of each vertex
 		virtual size_t VertexSize() = NULL;
+
+		// Returns true if the underlying structures of the vertices have been configured
+		virtual bool Configured() const = NULL;
 	};
 
 };

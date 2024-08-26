@@ -84,6 +84,12 @@ void *ResourceImpl::GetData() const
 }
 
 
+void ResourceImpl::OverrideData(void *newdata)
+{
+	m_Data = newdata;
+}
+
+
 void ResourceImpl::AddRef()
 {
 	// if a previous status was an error, don't bother coming in here...

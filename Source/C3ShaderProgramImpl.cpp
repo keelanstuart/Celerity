@@ -11,6 +11,7 @@
 #include <C3TextureImpl.h>
 #include <C3ModelImpl.h>
 #include <C3CRC.h>
+#include <C3ResourceImpl.h>
 
 
 using namespace c3;
@@ -225,7 +226,10 @@ bool ShaderProgramImpl::SetUniform4(int32_t location, const glm::fvec4 *v4)
 bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_t texunit, props::TFlags32 texflags)
 {
 	if (!tex)
+	{
 		tex = m_Rend->GetBlackTexture();
+		texflags.Clear(TEXFLAG_RESOURCE);
+	}
 
 	props::IProperty *p = m_Uniforms->GetPropertyById(location);
 	if (!p)
@@ -243,6 +247,14 @@ bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_
 	p->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 
 	return true;
+}
+
+
+bool ShaderProgramImpl::SetUniformTexture(Resource *texres, int32_t location, int32_t texunit, props::TFlags32 texflags)
+{
+	texflags.Set(TEXFLAG_RESOURCE);
+
+	return SetUniformTexture((Texture *)texres, location, texunit, texflags);
 }
 
 
@@ -386,10 +398,15 @@ void ShaderProgramImpl::CaptureUniforms()
 
 			// Vec4I = (uniform index, sampler, texture, texture flags)
 			case GL_SAMPLER_2D:
-				p->SetVec4I(props::TVec4I(location, sampleridx++, (int64_t)(m_Rend->GetBlackTexture()), TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR));
+			{
+				ResourceManager *presman = m_Rend->GetSystem()->GetResourceManager();
+				ResourceImpl *pres = (ResourceImpl *)presman->GetResource(n, RESF_CREATEENTRYONLY, DefaultTexture2DResourceType::Type(), nullptr);
+
+				p->SetVec4I(props::TVec4I(location, sampleridx++, (int64_t)pres, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR | TEXFLAG_RESOURCE));
 				p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D);
 				p->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 				break;
+			}
 		}
 	}
 }
@@ -588,8 +605,18 @@ void ShaderProgramImpl::ApplyUniforms(bool update_globals)
 						{
 							GLint id = (GLint)p->AsVec4I()->x;
 							GLint texunit = (GLint)p->AsVec4I()->y;
-							Texture *tex = (Texture *)p->AsVec4I()->z;
 							props::TFlags32 texflags((uint32_t)p->AsVec4I()->w);
+
+							Texture *tex;
+							if (texflags.IsSet(TEXFLAG_RESOURCE))
+							{
+								Resource *texres = (Resource *)p->AsVec4I()->z;
+								tex = texres ? (Texture *)texres->GetData() : nullptr;
+							}
+							else
+								tex = (Texture *)p->AsVec4I()->z;
+							if (!tex)
+								tex = m_Rend->GetBlackTexture();
 
 							m_Rend->UseTexture(texunit, tex, texflags);
 							m_Rend->gl.ProgramUniform1i(m_glID, id, texunit);

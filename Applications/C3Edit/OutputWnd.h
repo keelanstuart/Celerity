@@ -25,6 +25,7 @@ public:
 protected:
 
 	CDebugOutputEdit m_wndOutputDebug;
+	DWORD m_hUIThread;
 
 protected:
 	void FillDebugWindow();
@@ -41,5 +42,6 @@ protected:
 public:
     virtual BOOL DestroyWindow();
     afx_msg void OnClose();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
 };
 

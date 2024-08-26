@@ -26,8 +26,9 @@ namespace c3
 		GLuint m_VBglID;
 		GLuint m_VAOglID;
 		size_t m_VertSize;
+		bool m_Configured;
 
-		void *m_Cache;
+		std::vector<uint8_t> m_Cache;
 
 		TVertexComponentDescriptionArray m_Components;
 
@@ -46,6 +47,8 @@ namespace c3
 		virtual const ComponentDescription *Component(size_t compidx);
 
 		virtual size_t VertexSize();
+
+		virtual bool Configured() const { return m_Configured; }
 
 		operator GLuint() const { return m_VBglID; }
 		GLuint VAOglID() const { return m_VAOglID; }

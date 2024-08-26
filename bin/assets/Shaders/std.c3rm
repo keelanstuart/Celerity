@@ -8,7 +8,6 @@
 			<setting name="shader.fragment"		value="def-obj.fsh" />
 		</pass>
 		<pass name="shadow">
-			<setting name="cullmode"			value="disabled" />
 			<setting name="framebuffer"			value="Shadow" />
 			<setting name="shader.vertex"		value="def-obj-shadow.vsh" />
 			<setting name="shader.fragment"		value="def-obj-shadow.fsh" />
@@ -17,7 +16,6 @@
 
 	<technique name="g">
 		<pass>
-			<setting name="cullmode"			value="back" />
 			<setting name="shader.vertex"		value="def-obj.vsh" />
 			<setting name="shader.fragment"		value="def-obj.fsh" />
 		</pass>
@@ -25,7 +23,7 @@
 
 	<technique name="s">
 		<pass>
-			<setting name="cullmode"			value="disabled" />
+			<setting name="framebuffer"			value="Shadow" />
 			<setting name="shader.vertex"		value="def-obj-shadow.vsh" />
 			<setting name="shader.fragment"		value="def-obj-shadow.fsh" />
 		</pass>

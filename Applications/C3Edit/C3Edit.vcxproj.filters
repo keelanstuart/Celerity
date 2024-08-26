@@ -97,6 +97,9 @@
     <ClCompile Include="PackfileManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\DeferredPipeline.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C3Edit.h">
@@ -202,6 +205,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PackfileManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\renderdoc_app.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\DeferredPipeline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\C3AppCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

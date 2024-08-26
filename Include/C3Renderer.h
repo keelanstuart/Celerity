@@ -7,6 +7,7 @@
 #pragma once
 
 #include <C3.h>
+#include <functional>
 
 namespace c3
 {
@@ -240,6 +241,7 @@ namespace c3
 		#define UFBFLAG_CLEARSTENCIL		0x0004
 		#define UFBFLAG_FINISHLAST			0x0008
 		#define UFBFLAG_UPDATEVIEWPORT		0x0010
+		#define UFBFLAG_STRICTCOMPLIANCE	0x0020		// on nv systems, does not call glClearBuffer for attachment 0, only glClear
 		#define BSFLAG_SHOWGUI				0x0100		// BeginScene flag; Indicates that the GUI should be rendered
 
 		/// Returns the System that created this Renderer
@@ -253,6 +255,21 @@ namespace c3
 
 		// Flushes all accumulated errors to the console with a header message that you may provide
 		virtual void FlushErrors(const TCHAR *msgformat, ...) = NULL;
+
+		using LOG_FUNC = std::function<void(const TCHAR *msg)>;
+
+		// Returns the current graphics call logging function
+		virtual LOG_FUNC GetLogFunc() const = NULL;
+
+		// Sets the graphics call logging function
+		virtual void SetLogFunc(LOG_FUNC logfunc = nullptr) = NULL;
+
+		// Pushes a debug group (useful for grouping graphics operations in RenderDoc, et al)
+		// Providing no groupname will result in a procedural, numbered name being generated
+		virtual void PushDebugGroup(const char *groupname = nullptr) = NULL;
+
+		// Pops the current debug group (useful for grouping graphics operations in RenderDoc, et al)
+		virtual void PopDebugGroup() = NULL;
 
 		// Call this if you are done using the Renderer or need to reset / re-initialize. It is called automatically when shutting down Celerity otherwise
 		virtual void Shutdown() = NULL;
@@ -362,13 +379,13 @@ namespace c3
 		virtual ShaderComponent *CreateShaderComponent(ShaderComponentType type) = NULL;
 
 		virtual RenderMethod *CreateRenderMethod() = NULL;
-		virtual void UseRenderMethod(const RenderMethod *method = nullptr) = NULL;
+		virtual void UseRenderMethod(const RenderMethod *method = nullptr, size_t techidx = -1) = NULL;
 		virtual RenderMethod *GetActiveRenderMethod() const = NULL;
 
 		virtual void UseMaterial(const Material *material = nullptr) = NULL;
 		virtual Material *GetActiveMaterial() const = NULL;
 
-		virtual void UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags = UFBFLAG_FINISHLAST) = NULL;
+		virtual void UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags = 0) = NULL;
 		virtual FrameBuffer *GetActiveFrameBuffer() = NULL;
 
 		virtual void UseProgram(ShaderProgram *pprog) = NULL;
@@ -407,6 +424,7 @@ namespace c3
 		virtual const glm::fvec3 *GetEyeDirection(glm::fvec3 *dir = nullptr) const = NULL;
 
 		virtual VertexBuffer *GetFullscreenPlaneVB() = NULL;
+		virtual Mesh *GetFullScreenPlaneMesh() = NULL;
 
 		virtual Mesh *GetBoundsMesh() = NULL;
 		virtual Mesh *GetCubeMesh() = NULL;

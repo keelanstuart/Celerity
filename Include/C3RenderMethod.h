@@ -75,7 +75,7 @@ namespace c3
 			virtual Pass *AddPass() = NULL;
 
 			// Called when starting the technique. Tells you how many passes there are.
-			virtual bool Begin(size_t &passes) = NULL;
+			virtual bool Begin(size_t &passes, bool restore_old = false) = NULL;
 
 			// Applies the render settings for the given pass, typically in a loop run after Begin
 			virtual Renderer::RenderStateOverrideFlags ApplyPass(size_t idx) = NULL;
@@ -118,6 +118,9 @@ namespace c3
 
 		// Sets the active technique by index (the technique used when this method is active and things are rendered)
 		virtual bool SetActiveTechnique(size_t idx) = NULL;
+
+		// Sets the active technique by name (the technique used when this method is active and things are rendered)
+		virtual bool SetActiveTechniqueByName(const TCHAR *name) = NULL;
 
 		// Finds a Technique by name
 		virtual bool FindTechnique(const TCHAR *name, size_t &idx) const = NULL;

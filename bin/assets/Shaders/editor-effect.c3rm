@@ -1,0 +1,11 @@
+<render_method name="editor-effect">
+
+	<technique name="select">
+		<pass>
+			<setting name="shader.vertex"		value="def-obj.vsh" />
+			<setting name="shader.fragment"		value="editor-select.fsh" />
+			<setting name="depthmode"			value="disabled" />
+		</pass>
+	</technique>
+
+</render_method>

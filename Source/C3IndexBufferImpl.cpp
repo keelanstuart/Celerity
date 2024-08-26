@@ -20,7 +20,6 @@ IndexBufferImpl::IndexBufferImpl(RendererImpl *prend)
 	m_IndexSize = IS_16BIT;
 	m_glID = NULL;
 	m_LastBoundBuffer = 0;
-	m_Cache = nullptr;
 }
 
 
@@ -28,12 +27,6 @@ IndexBufferImpl::~IndexBufferImpl()
 {
 	if (m_Buffer)
 		Unlock();
-
-	if (m_Cache)
-	{
-		free(m_Cache);
-		m_Cache = nullptr;
-	}
 
 	m_NumIndices = 0;
 	m_IndexSize = IS_16BIT;
@@ -55,45 +48,29 @@ void IndexBufferImpl::Release()
 
 IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, IndexSize sz, props::TFlags64 flags)
 {
-	if (m_Buffer)
-		return RET_ALREADY_LOCKED;
-
 	if (!buffer)
 		return RET_NULL_BUFFER;
+
+	if (flags.IsSet(IBLOCKFLAG_READ) && !flags.IsSet(IBLOCKFLAG_WRITE) && !m_Cache.empty())
+	{
+		*buffer = m_Cache.data();
+		return RET_OK;
+	}
+
+	if (m_Buffer)
+		return RET_ALREADY_LOCKED;
 
 	if (flags.IsSet(IBLOCKFLAG_WRITE) && !numindices)
 		return RET_ZERO_ELEMENTS;
 
-	bool init = false;
+	bool init = (sz != m_IndexSize) || (numindices != m_NumIndices);
+	m_IndexSize = sz;
+	m_NumIndices = numindices;
 
-	if (flags.IsSet(IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE))
-	{
-		if (m_Cache)
-		{
-			size_t cache_sz = _msize(m_Cache);
-			if (cache_sz != (sz * numindices))
-			{
-				free(m_Cache);
-				m_Cache = nullptr;
-				init = true;
-			}
-		}
-
-		if (!m_Cache)
-			m_Cache = malloc(sz * numindices);
-	}
-
-	// if we want read-only access, then use the cache if one is available. this avoids a map/unmap
-	if (flags.IsSet(IBLOCKFLAG_READ) && !flags.IsSet(IBLOCKFLAG_WRITE))
-	{
-		if (m_Cache)
-		{
-			m_Buffer = m_Cache;
-			*buffer = m_Buffer;
-
-			return RET_OK;
-		}
-	}
+	bool update_now = flags.IsSet(IBLOCKFLAG_UPDATENOW);
+	bool user_buffer = flags.IsSet(IBLOCKFLAG_USERBUFFER);
+	if (update_now && !user_buffer)
+		return RET_UPDATENOW_NEEDS_USERBUFFER;
 
 	if (m_glID == NULL)
 	{
@@ -104,35 +81,37 @@ IndexBuffer::RETURNCODE IndexBufferImpl::Lock(void **buffer, size_t numindices, 
 	if (m_glID == NULL)
 		return RET_GENBUFFER_FAILED;
 
-	bool update_now = flags.IsSet(IBLOCKFLAG_UPDATENOW);
-	bool user_buffer = flags.IsSet(IBLOCKFLAG_USERBUFFER);
-	if (update_now && !user_buffer)
-		return RET_UPDATENOW_NEEDS_USERBUFFER;
+	GLbitfield mode = 0;
+	if (flags.IsSet(IBLOCKFLAG_READ) || flags.IsSet(IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE))
+		mode |= GL_MAP_READ_BIT;
+	if (flags.IsSet(IBLOCKFLAG_WRITE))
+		mode |= GL_MAP_WRITE_BIT;
 
-	GLint mode;
-	if (flags.IsSet(IBLOCKFLAG_READ | IBLOCKFLAG_WRITE))
-		mode = GL_READ_WRITE;
-	else if (flags.IsSet(IBLOCKFLAG_READ))
-		mode = GL_READ_ONLY;
-	else if (flags.IsSet(IBLOCKFLAG_WRITE))
-		mode = GL_WRITE_ONLY;
+	size_t bufsize = m_IndexSize * m_NumIndices;
+	if (flags.IsSet(IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE))
+	{
+		if (bufsize > m_Cache.size())
+			m_Cache.resize(bufsize);
+	}
 
 	m_Rend->UseIndexBuffer(this);
 
 	if (init || update_now)
 	{
 		// make sure that it is allocated
-		m_Rend->gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, sz * numindices, user_buffer ? *buffer : nullptr, flags.IsSet(IBLOCKFLAG_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
+		m_Rend->gl.BufferData(GL_ELEMENT_ARRAY_BUFFER, bufsize, user_buffer ? *buffer : nullptr, flags.IsSet(IBLOCKFLAG_DYNAMIC) ? GL_DYNAMIC_DRAW : GL_STATIC_DRAW);
 		if (update_now)
+		{
+			if (flags.IsSet(IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE))
+				memcpy(m_Cache.data(), buffer, bufsize);
+
 			return RET_OK;
+		}
 	}
 
-	m_Buffer = m_Rend->gl.MapBuffer(GL_ELEMENT_ARRAY_BUFFER, mode);
+	m_Buffer = m_Rend->gl.MapBufferRange(GL_ELEMENT_ARRAY_BUFFER, 0, bufsize, mode);
 	if (!m_Buffer)
 		return RET_MAPBUFFER_FAILED;
-
-	m_IndexSize = sz;
-	m_NumIndices = numindices;
 
 	*buffer = m_Buffer;
 
@@ -144,13 +123,13 @@ void IndexBufferImpl::Unlock()
 {
 	if (m_Buffer)
 	{
-		if (m_Buffer != m_Cache)
+		if (m_Buffer != m_Cache.data() && !m_Cache.empty())
 		{
-			m_Rend->gl.UnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
-
-			if (m_Cache)
-				memcpy(m_Cache, m_Buffer, m_IndexSize * m_NumIndices);
+			// if there IS a cache, then copy our new buffer contents to it
+			memcpy(m_Cache.data(), m_Buffer, m_IndexSize * m_NumIndices);
 		}
+
+		m_Rend->gl.UnmapBuffer(GL_ELEMENT_ARRAY_BUFFER);
 
 		m_Buffer = NULL;
 	}

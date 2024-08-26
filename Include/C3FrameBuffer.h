@@ -79,10 +79,10 @@ namespace c3
 		virtual RETURNCODE Seal() = NULL;
 
 		/// Sets the clear color for an individual target at the given position
-		virtual void SetClearColor(size_t position, uint32_t color) = NULL;
+		virtual void SetClearColor(size_t position, glm::fvec4 color) = NULL;
 
 		/// Gets the clear color for an individual target at the given position
-		virtual uint32_t GetClearColor(size_t position) const = NULL;
+		virtual glm::fvec4 GetClearColor(size_t position) const = NULL;
 
 		/// Sets the clear depth
 		virtual void SetClearDepth(float depth = 1.0f) = NULL;
@@ -98,7 +98,7 @@ namespace c3
 
 		/// Clears the FrameBuffer with the values given to the SetClearColor method
 		/// NOTE: Uses the same flags as Renderer::UserFrameBuffer for selecting what to clear
-		virtual void Clear(props::TFlags64 flags) = NULL;
+		virtual void Clear(props::TFlags64 flags, int target = -1) = NULL;
 
 		/// Sets the blend mode for this render target
 		virtual void SetBlendMode(Renderer::BlendMode mode) = NULL;

@@ -2,7 +2,7 @@
 
 	<technique name="g">
 		<pass>
-			<setting name="blendmode"			value="alpha" />
+			<setting name="blendmode"			value="add" />
 			<setting name="depthmode"			value="disabled" />
 			<setting name="cullmode"			value="disabled" />
 			<setting name="framebuffer"			value="GBuffer" />

@@ -34,7 +34,6 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_FS_blur = m_VS_blur = nullptr;
 	m_SP_blur = nullptr;
 	m_DepthTarg = nullptr;
-	m_FSQuadVB = nullptr;
 	m_pRDoc = nullptr;
 	m_bCapturedFirstFrame = false;
 	m_bFirstDraw = true;
@@ -132,8 +131,6 @@ void C3Dlg::DestroySurfaces()
 	for (auto p : m_BTex)
 		C3_SAFERELEASE(p);
 	m_BTex.clear();
-
-	C3_SAFERELEASE(m_FSQuadVB);
 }
 
 
@@ -198,22 +195,6 @@ void C3Dlg::CreateSurfaces()
 	{
 		{ _T("uSamplerAuxiliary"), c3::Renderer::TextureType::U8_3CH, TEXCREATEFLAG_RENDERTARGET },
 	};
-
-	m_FSQuadVB = prend->CreateVertexBuffer(0);
-	static const c3::Vertex::WT1::s v[4] =
-	{
-		{ {-1.0f,  1.0f, 0.5f, 1.0f}, {0, 1} },
-		{ { 1.0f,  1.0f, 0.5f, 1.0f}, {1, 1} },
-		{ {-1.0f, -1.0f, 0.5f, 1.0f}, {0, 0} },
-		{ { 1.0f, -1.0f, 0.5f, 1.0f}, {1, 0} }
-	};
-	void *buf;
-	if (m_FSQuadVB->Lock(&buf, 4, c3::Vertex::WT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == c3::VertexBuffer::RETURNCODE::RET_OK)
-	{
-		memcpy(buf, v, sizeof(c3::Vertex::WT1::s) * 4);
-
-		m_FSQuadVB->Unlock();
-	}
 
 	UpdateShaderSurfaces();
 }
@@ -618,7 +599,7 @@ void C3Dlg::OnPaint()
 			m_Rend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			m_Rend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
 			m_Rend->UseProgram(m_SP_combine);
-			m_Rend->UseVertexBuffer(m_FSQuadVB);
+			m_Rend->UseVertexBuffer(m_Rend->GetFullscreenPlaneVB());
 			m_Rend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
 			float bs = 2.0f;
