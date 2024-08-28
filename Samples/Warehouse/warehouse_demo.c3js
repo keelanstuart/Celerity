@@ -7,55 +7,37 @@ var cam_pos;
 var cam_ori;
 
 var hplayer;
+var hplayer_script;
 var hplayer_pos;
 var hplayer_ori;
 var player_pos;
 var player_ori;
+var hplayer_lvel;
+var hplayer_rvel;
+var hhead_rvel;
+var vec3a = { x:0.0, y:0.0, z:0.0 };
+var vec3b = { x:0.0, y:0.0, z:0.0 };
+var vec3c = { x:0.0, y:0.0, z:0.0 };
+var hplayer_facing;
+var player_facing;
+var hplayer_right;
+var player_right;
+var hcamarm;
+var hcam;
+var hprop;
+var run = 0.0;
+
+var hspawn;
+var hspawn_pos;
+var spawn_pos;
+var hspawn_ori;
+var spawn_ori;
+
+var hwarehouse;
 
 var load_result;
 
-var setup = false;
-
-function update(elapsed_seconds)
-{
-	runtime += elapsed_seconds;
-
-	if (setup == false)
-	{
-		var maxi = GetModelNodeCount(self);
-		if (maxi > 0)
-		{
-			var i;
-			for (i = 0; i < maxi; i++)
-			{
-				var nodename = GetModelNodeName(self, i);
-
-				if (nodename.indexOf("DYNAMIC") == 0)
-				{
-					// dyanmically change the map
-					if (Math.Random(0, 10) < 2)
-					{
-						SetModelNodeVisibility(self, i, false);
-						SetModelNodeCollisions(self, i, false);
-					}
-				}
-				else if ((nodename == "G7") || (nodename == "BuildingShell"))
-				{
-					SetModelNodeVisibility(self, i, true);
-					SetModelNodeCollisions(self, i, true);
-				}
-				else
-				{
-					// show all other objects, but don't check collisions for them
-					SetModelNodeVisibility(self, i, true);
-					SetModelNodeCollisions(self, i, false);
-				}
-			}
-
-			setup = true;
-		}
-	}
-}
+var setup = 1;
 
 function init()
 {
@@ -63,22 +45,144 @@ function init()
 
 	load_result = LoadObject(self, "Warehouse.c3o");
 
-	var hplayer = CreateObject("Player", self);
-	RegisterObject("player", hplayer);
-
-	hplayer_pos = FindProperty(hplayer, "Position");
-	hplayer_ori = FindProperty(hplayer, "Orientation");
-
-	hcam = GetRegisteredObject("camera");
-
 	if (load_result["success"] == 1)
-	{
 		Log("Scene loaded successfully!\n");
 
-		DeleteObject(hcam);
-		load_result.camera = hcam;
-		SetRegisteredObject("camera", hcam);
-	}
 	else
 		Log("Scene failed to load!\n");
+
+	hplayer = GetRegisteredObject("camera.root");
+	hcamarm = GetRegisteredObject("camera.arm");
+	hcam = GetRegisteredObject("camera");
+
+	// place the head 2m high
+	vec3a.x = 0.0;
+	vec3a.y = 0.0;
+	vec3a.z = 2.0;
+	hprop = FindProperty(hcamarm, "Position");
+	SetPropertyValue(hprop, vec3a);
+
+	// how quickly you come to a stop after you let go of the controls
+	hprop = FindProperty(hplayer, "LinearSpeedFalloffFactor");
+	SetPropertyValue(hprop, 4.0);
+
+	hplayer_lvel = FindProperty(hplayer, "LinearVelocity");
+	hplayer_rvel = FindProperty(hplayer, "RotationalVelocity");
+	hhead_rvel = FindProperty(hcam, "RotationalVelocity");
+	hplayer_facing = FindProperty(hplayer, "Facing.Forward");
+	hplayer_right = FindProperty(hplayer, "Facing.Right");
+
+	if (Math.random(0, 10) < 5)
+		hspawn = FindFirstObjByName(self, "SPAWN1", 1);
+	else
+		hspawn = FindFirstObjByName(self, "SPAWN2", 1);
+
+	hspawn_pos = FindProperty(hspawn, "Position");
+	spawn_pos = GetPropertyValue(hspawn_pos);
+	hspawn_ori = FindProperty(hspawn, "Orientation");
+	spawn_ori = GetPropertyValue(hspawn_ori);
+
+	hplayer_pos = FindProperty(hplayer, "Position");
+	SetPropertyValue(hplayer_pos, spawn_pos);
+	SetPropertyValue(hplayer_ori, spawn_ori);
+	
+	hwarehouse = FindFirstObjByName(self, "warehouse", 1);
+}
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	if (setup == 1)
+	{
+		var maxi = GetModelNodeCount(hwarehouse);
+		if (maxi > 0)
+		{
+			var i;
+			for (i = 0; i < maxi; i++)
+			{
+				var nodename = GetModelNodeName(hwarehouse, i);
+
+				if (nodename.indexOf("DYNAMIC") == 0)
+				{
+					// dyanmically change the map
+					if (Math.random(0, 10) < 2)
+					{
+						SetModelNodeVisibility(hwarehouse, i, 0);
+						SetModelNodeCollisions(hwarehouse, i, 0);
+					}
+				}
+				else if ((nodename == "G7") || (nodename == "BuildingShell"))
+				{
+					SetModelNodeVisibility(hwarehouse, i, 1);
+					SetModelNodeCollisions(hwarehouse, i, 1);
+				}
+				else
+				{
+					// show all other objects, but don't check collisions for them
+					SetModelNodeVisibility(hwarehouse, i, 1);
+					SetModelNodeCollisions(hwarehouse, i, 0);
+				}
+			}
+
+			setup = 0;
+			Log("Level Configured.\n");
+		}
+	}
+	
+	run = 0.0;
+}
+
+function handle_input(action, value)
+{
+	player_facing = GetPropertyValue(hplayer_facing);
+	player_right = GetPropertyValue(hplayer_right);
+	vec3a = GetPropertyValue(hplayer_lvel);
+	vec3b = GetPropertyValue(hplayer_rvel);
+	vec3c = GetPropertyValue(hhead_rvel);
+
+	var speed = 3.0 + (3.0 * run) * value;
+	var hlook = 25.0;
+	var vlook = 25.0;
+
+	if (action == "Run")
+	{
+		run = 1.0;
+	}
+	else if (action == "Move Forward")
+	{
+		vec3a.y += speed;
+	}
+	else if (action == "Move Backward")
+	{
+		vec3a.y -= speed;
+	}
+	else if (action == "Strafe Left")
+	{
+		vec3a.x -= speed;
+	}
+	else if (action == "Strafe Right")
+	{
+		vec3a.x += speed;
+	}
+	else if (action == "Look Left")
+	{
+		vec3b.z += value * hlook;
+	}
+	else if (action == "Look Right")
+	{
+		vec3b.z -= value * hlook;
+	}
+	else if (action == "Look Up")
+	{
+		vec3c.x -= value * vlook;
+	}
+	else if (action == "Look Down")
+	{
+		vec3c.x += value * vlook;
+	}
+	
+	SetPropertyValue(hplayer_lvel, vec3a);
+	SetPropertyValue(hplayer_rvel, vec3b);
+	SetPropertyValue(hhead_rvel, vec3c);
 }

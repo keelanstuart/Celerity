@@ -143,6 +143,23 @@ bool __cdecl AltTextureName(const TCHAR *diffuse_texname, c3::Material::TextureC
 	return false;
 }
 
+
+tstring ReplaceFileExtension(const tstring &filename, const tstring &newExtension)
+{
+	tstring::size_type dotPos = filename.find_last_of('.');
+
+	if (dotPos == std::string::npos)
+	{
+		// No extension found, just append the new extension
+		return filename + newExtension;
+	}
+	else
+	{
+		// Replace the extension
+		return filename.substr(0, dotPos) + newExtension;
+	}
+}
+
 // C3App initialization
 
 BOOL C3App::InitInstance()
@@ -158,7 +175,12 @@ BOOL C3App::InitInstance()
 	LPTSTR *argv = CommandLineToArgvW(m_lpCmdLine, &argc);
 	if (argv)
 	{
-		if (argc > 0)
+		if (__argc < 2)
+		{
+			const TCHAR *fn = PathFindFileName(argv[0]);
+			m_StartScript = ReplaceFileExtension(fn, _T("c3js"));
+		}
+		else if (argv > 0)
 		{
 			m_StartScript = argv[0];
 		}
@@ -225,7 +247,11 @@ BOOL C3App::InitInstance()
 	cfgpath += _T(".config");
 	m_Config = m_C3->CreateConfiguration(cfgpath.c_str());
 
-	m_C3->GetLog()->SetLogFile(_T("C3App.log"));
+	tstring logpath = m_AppDataRoot;
+	logpath += appname;
+	logpath += _T(".log");
+	m_C3->GetLog()->SetLogFile(logpath.c_str());
+
 	theApp.m_C3->GetLog()->Print(_T("Celerity3 system created\nC3App starting up...\n"));
 
 	c3::Factory *pfactory = m_C3->GetFactory();
@@ -335,6 +361,10 @@ BOOL C3App::InitInstance()
 	}
 	theApp.m_C3->GetLog()->Print(_T("done.\n"));
 
+	// auto-register a c3z file with a name matching the app name ("MyCelerityGame.exe" would try to load "MyCelerityGame.c3z")
+	tstring c3zpath = appname;
+	c3zpath += _T(".c3z");
+	theApp.m_C3->GetResourceManager()->RegisterZipArchive(c3zpath.c_str());
 
 	theApp.m_C3->GetLog()->Print(_T("Loading Plugins..."));
 
@@ -343,7 +373,7 @@ BOOL C3App::InitInstance()
 		return FALSE;
 
 	ppm->DiscoverPlugins(m_Config->GetString(_T("resources.plugin.path"), _T("./")));	// scan in app data
-	ppm->DiscoverPlugins();															// scan locally
+	ppm->DiscoverPlugins();																// scan locally
 
 	theApp.m_C3->GetLog()->Print(_T(" done\n"));
 
@@ -351,6 +381,13 @@ BOOL C3App::InitInstance()
 	tstring regkey = _T("CelerityApps\\");
 	regkey += appname;
 	SetRegistryKey(regkey.c_str());
+
+	// if no start script was given, try to get one with a name matching the app name
+	if (m_StartScript.empty())
+	{
+		m_StartScript = appname;
+		m_StartScript += _T(".c3js");
+	}
 
 	C3Dlg dlg;
 	m_pMainWnd = &dlg;

@@ -1172,13 +1172,13 @@ void jcEulerToQuat(CScriptVar *c, void *userdata)
 	glm::fquat q = glm::identity<glm::fquat>();
 
 	float roll = glm::radians(py->m_Var->GetFloat());
-	q = glm::angleAxis(roll, glm::fvec3(0, 1, 0)) * q;
+	q = glm::normalize(glm::angleAxis(roll, glm::fvec3(0, 1, 0)) * q);
 
 	float pitch = glm::radians(px->m_Var->GetFloat());
-	q = glm::angleAxis(pitch, glm::fvec3(1, 0, 0)) * q;
+	q = glm::normalize(glm::angleAxis(pitch, glm::fvec3(1, 0, 0)) * q);
 
 	float yaw = glm::radians(pz->m_Var->GetFloat());
-	q = glm::angleAxis(yaw, glm::fvec3(0, 0, 1)) * q;
+	q = glm::normalize(glm::angleAxis(yaw, glm::fvec3(0, 0, 1)) * q);
 
 	CScriptVarLink *psvl;
 

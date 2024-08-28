@@ -29,7 +29,7 @@ CameraImpl::CameraImpl()
 	m_eyepos = glm::vec3(0, 0, 0);
 	m_targpos = glm::vec3(0, 0, 0);
 	m_nearclip = 0.1f;
-	m_farclip = 1400.0f;
+	m_farclip = 5000.0f;
 
 	m_orbitdist = 10.0f;
 
@@ -118,6 +118,16 @@ bool CameraImpl::Initialize(Object *pobject)
 
 void CameraImpl::Update(float elapsed_time)
 {
+	glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	const Object *ppar = m_pOwner;
+	while (ppar)
+	{
+		Positionable *ppos = dynamic_cast<Positionable *>(ppar->FindComponent(Positionable::Type()));
+		if (ppos)
+			imat = *ppos->GetTransformMatrix() * imat;
+		ppar = ppar->GetParent();
+	}
+
 	// get a positionable feature from the object -- and if we can't, don't proceed
 	if (!m_pcpos)
 		m_pcpos = dynamic_cast<PositionableImpl *>(m_pOwner->FindComponent(Positionable::Type()));
@@ -125,17 +135,18 @@ void CameraImpl::Update(float elapsed_time)
 	if (!m_pcpos)
 		return;
 
-	if (m_Flags.IsSet(CAMFLAG_REBUILDMATRICES) || m_pcpos->Flags().IsSet(POSFLAG_MATRIXCHANGED))
+	//if (m_Flags.IsSet(CAMFLAG_REBUILDMATRICES) || m_pcpos->Flags().IsSet(POSFLAG_MATRIXCHANGED))
 	{
-		glm::vec3 facing;
-		m_pcpos->GetFacingVector(&facing);
+		glm::fvec3 facing = glm::normalize(imat * glm::vec4(0, 1, 0, 0));
+		glm::fvec3 up = glm::normalize(imat * glm::vec4(0, 0, 1, 0));
+		glm::fvec3 right = glm::normalize(imat * glm::vec4(1, 0, 0, 0));
 
 		switch (m_viewmode)
 		{
 			// In LOOKAT m_Mode, the eye position is actually located at camera position,
 			// and the lookat position is the position plus the orientation vector
 			case VM_LOOKAT:
-				m_eyepos = *m_pcpos->GetTransformMatrix() * glm::fvec4(0, 0, 0, 1);
+				m_eyepos = imat * glm::fvec4(0, 0, 0, 1);
 				m_targpos = m_eyepos + facing;
 				break;
 
@@ -143,14 +154,10 @@ void CameraImpl::Update(float elapsed_time)
 			// the eye location is derived by multiplying the orientation by the distance
 			default:
 			case VM_POLAR:
-				m_targpos = *m_pcpos->GetTransformMatrix() * glm::fvec4(0, 0, 0, 1);
+				m_targpos = imat * glm::fvec4(0, 0, 0, 1);
 				m_eyepos = m_targpos - (facing * m_orbitdist);
 				break;
 		}
-
-		glm::fvec3 up, right;
-		m_pcpos->GetLocalUpVector(&up);
-		m_pcpos->GetLocalRightVector(&right);
 
 		// glm's lookAt is busted. Using it results in incorrect placement of the eyepoint (opposite facing)
 		m_view = glm::lookAt(m_eyepos, m_targpos, up);
@@ -244,7 +251,7 @@ void CameraImpl::SetOrthoDimensions(float dimx, float dimy)
 		m_dim.x = dimx;
 		m_dim.y = dimy;
 
-		if (m_projmode == Camera::ProjectionMode::PM_ORTHOGRAPHIC)
+		//if (m_projmode == Camera::ProjectionMode::PM_ORTHOGRAPHIC)
 			m_Flags.Set(CAMFLAG_REBUILDMATRICES);
 	}
 }
@@ -360,7 +367,7 @@ bool CameraImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, c
 
 void CameraImpl::PropertyChanged(const props::IProperty *pprop)
 {
-	props::FOURCHARCODE fcc = pprop->GetID();
+	props::FOURCHARCODE fcc = pprop ? pprop->GetID() : 0;
 
 	switch (fcc)
 	{

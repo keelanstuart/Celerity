@@ -15,12 +15,13 @@ class C3Dlg : public CDialog
 public:
 
 protected:
-	c3::Renderer *m_Rend;
-	c3::InputManager *m_Input;
+
+#define BLURTARGS	4
+
 	c3::FrameBuffer *m_GBuf;
 	c3::FrameBuffer *m_LCBuf;
+	c3::FrameBuffer *m_AuxBuf;
 	c3::FrameBuffer *m_SSBuf;
-	std::vector<c3::Texture2D *> m_ColorTarg;
 	c3::DepthBuffer *m_DepthTarg;
 	c3::DepthBuffer *m_ShadowTarg;
 	std::vector<c3::Texture2D *> m_BTex;
@@ -34,29 +35,32 @@ protected:
 	c3::ShaderComponent *m_VS_combine;
 	c3::ShaderComponent *m_FS_combine;
 	c3::ShaderProgram *m_SP_combine;
-	c3::VertexBuffer *m_FSQuadVB;
-	bool m_bFirstDraw;
-	bool m_DebugEnabled;
+	c3::ShaderComponent *m_VS_bounds;
+	c3::ShaderComponent *m_FS_bounds;
+	c3::ShaderProgram *m_SP_bounds;
 
-	UINT_PTR m_DrawTimerId;
+	int32_t m_ulSunDir;
+	int32_t m_ulSunColor;
+	int32_t m_ulAmbientColor;
 
-	int32_t m_uBlurTex, m_uBlurScale;
+	int32_t m_uBlurTex;
+	int32_t m_uBlurScale;
 
-	c3::Factory *m_Factory;
-	c3::Object *m_WorldRoot;
-	c3::Object *m_GUIRoot;
-	c3::Object *m_CameraRoot, *m_CameraArm, *m_Camera;
-	c3::Object *m_GUICamera;
+	bool m_bSurfacesCreated, m_bSurfacesReady;
+	bool m_ShowDebug;
 
-	LARGE_INTEGER m_PerfFreq;
-	LARGE_INTEGER m_PerfTime;
-
-	RENDERDOC_API_1_4_0 *m_pRDoc;
-	bool m_bCapturedFirstFrame;
-
-	bool m_bMouseCursorEnabled;
+	CPoint m_MousePos;
+	glm::fvec3 m_BasePickPos;
+	glm::fvec3 m_BasePickVec;
 
 	float m_WindowsUIScale;
+
+	c3::Object *m_WorldRoot;
+	c3::Object *m_CameraRoot, *m_CameraArm, *m_Camera;
+	c3::Object *m_GUIRoot;
+	c3::Object *m_GUICamera;
+
+	bool m_bMouseCursorEnabled;
 
 	static bool __cdecl DeviceConnected(c3::InputDevice *device, bool conn, void *userdata);
 
@@ -65,6 +69,7 @@ public:
 // Construction
 public:
 	C3Dlg(CWnd* pParent = nullptr);	// standard constructor
+	virtual ~C3Dlg();
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -98,10 +103,7 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
-	virtual void OnFinalRelease();
-	virtual BOOL PreCreateWindow(CREATESTRUCT &cs);
 	afx_msg BOOL OnEraseBkgnd(CDC *pDC);
-	virtual BOOL DestroyWindow();
 	afx_msg BOOL OnMouseWheel(UINT nFlags, short zDelta, CPoint pt);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnSizing(UINT fwSide, LPRECT pRect);
@@ -112,7 +114,6 @@ public:
 	afx_msg void OnCaptureChanged(CWnd* pWnd);
 	afx_msg void OnActivateApp(BOOL bActive, DWORD dwThreadID);
 	afx_msg void OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized);
-	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg LRESULT OnDevChange(WPARAM wparam, LPARAM lparam);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnLButtonUp(UINT nFlags, CPoint point);
@@ -120,4 +121,7 @@ public:
 	afx_msg void OnMButtonUp(UINT nFlags, CPoint point);
 	afx_msg void OnRButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnRButtonUp(UINT nFlags, CPoint point);
+	afx_msg void OnDestroy();
+	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnMove(int x, int y);
 };

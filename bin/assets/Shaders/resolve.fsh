@@ -20,6 +20,5 @@ void main()
 	vec4 smip2 = texture(uSamplerSceneMip2, fTex0);
 	vec4 smip3 = texture(uSamplerSceneMip3, fTex0);
 
-	//float fblur = smoothstep(mindist, maxdist, abs(posd.a - uFocusDist));
-	oColor = vec4((smip0.rgb + smip1.rgb + (smip2.rgb * smip2.rgb) + (smip3.rgb * smip3.rgb * smip3.rgb)) * 0.5, smip0.a);
+	oColor = vec4((smip0.rgb + smip1.rgb + (smip2.rgb * smip2.rgb) + (smip3.rgb * smip3.rgb * smip3.rgb)) * 0.4, smip0.a);
 }

@@ -1,0 +1,71 @@
+var runtime;
+
+var hcam;
+var hcam_ori;
+var cam_ori = { x:0.0, y:0.0, z:0.0, w:0.0 };
+var cam_rot = { x:0.0, y:0.0, z:0.0 };
+var vec3 = { x:0.0, y:0.0, z:0.0 };
+var vec4 = { x:0.0, y:0.0, z:0.0, w:1.0 };
+var hobj;
+var hprop;
+var hgroup;
+var hrvel;
+
+function init()
+{
+	runtime = 0.0;
+
+	LoadObject(self, "C3Demo.c3o");
+	Log("Demo scene loaded!\n");
+
+	hobj = GetRegisteredObject("camera.root");
+	hprop = FindProperty(hobj, "Orientation");
+	SetPropertyValue(hprop, vec4);
+	hprop = FindProperty(hobj, "Position");
+	SetPropertyValue(hprop, vec3);
+
+	hobj = GetRegisteredObject("camera.arm");
+	hprop = FindProperty(hobj, "Orientation");
+	SetPropertyValue(hprop, vec4);
+	hprop = FindProperty(hobj, "Position");
+	SetPropertyValue(hprop, vec3);
+
+	hcam = GetRegisteredObject("camera");
+	hprop = FindProperty(hcam, "FOV(Perspective)");
+	SetPropertyValue(hprop, 68.0);
+	hprop = FindProperty(hcam, "OrbitDistance(Polar)");
+	SetPropertyValue(hprop, 70.0);
+	hcam_ori = FindProperty(hcam, "Orientation");
+	
+	hgroup = FindFirstObjByName(self, "Group", 0);
+	hrvel = FindProperty(hgroup, "RotationalVelocity");
+}
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+}
+
+function handle_input(action, value)
+{
+	vec3 = GetPropertyValue(hrvel);
+
+	if (action == "Look Down")
+	{
+		vec3.x -= value;
+	}
+	else if (action == "Look Up")
+	{
+		vec3.x += value;
+	}
+	else if (action == "Look Left")
+	{
+		vec3.z -= value;
+	}
+	else if (action == "Look Right")
+	{
+		vec3.z += value;
+	}
+
+	SetPropertyValue(hrvel, vec3);
+}

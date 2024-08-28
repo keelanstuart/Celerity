@@ -1,10 +1,16 @@
 uniform vec3 uLightColor;
 
-//layout (location=0) out vec4 oDefDiffuseMetalness;
-layout (location=3) out vec4 oDefEmissionRoughness;
+in vec4 fPosDepth;
+
+layout (location=0) out vec4 oDefDiffuseMetalness;
+layout (location=1) out vec4 oDefNormalAmbOcc;
+layout (location=2) out vec4 oDefPosDepth;
+layout (location=3) out vec4 oDefEmissiveRoughness;
 
 void main()
 {
-	//oDefDiffuseMetalness = vec4(1,1,1,0);//uLightColor.rgb, 0);
-	oDefEmissionRoughness = vec4(uLightColor.rgb * 10.0, 0);
+	oDefDiffuseMetalness = vec4(1,1,1,1);
+	oDefNormalAmbOcc = vec4(1, 1, 1, 0);
+	oDefPosDepth = fPosDepth;
+	oDefEmissiveRoughness = vec4(uLightColor, 0);
 }

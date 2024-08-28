@@ -132,8 +132,6 @@ void CDeferredPipeline::CreateSurfaces()
 	if (!m_DepthTarg)
 		m_DepthTarg = prend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
 
-	prend->FlushErrors(_T(__FILE__) _T(":%lu"), __LINE__);
-
 	bool gbok;
 
 	c3::FrameBuffer::TargetDesc GBufTargData[] =
@@ -155,8 +153,6 @@ void CDeferredPipeline::CreateSurfaces()
 	}
 	m_pSys->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
-	prend->FlushErrors(_T(__FILE__) _T(":%lu"), __LINE__);
-
 	for (size_t c = 0; c < BLURTARGS; c++)
 	{
 		m_BTex[c] = prend->CreateTexture2D(w, h, c3::Renderer::TextureType::U8_3CH, 0, TEXCREATEFLAG_RENDERTARGET);
@@ -167,8 +163,6 @@ void CDeferredPipeline::CreateSurfaces()
 		m_BBuf[c]->Seal();
 		w /= 2;
 		h /= 2;
-
-		prend->FlushErrors(_T(__FILE__) _T(":%lu"), __LINE__);
 	}
 
 	c3::FrameBuffer::TargetDesc LCBufTargData[] =
@@ -183,13 +177,11 @@ void CDeferredPipeline::CreateSurfaces()
 		gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	m_pSys->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
-	prend->FlushErrors(_T(__FILE__) _T(":%lu"), __LINE__);
-
 	CRect auxr = r;
 
 	c3::FrameBuffer::TargetDesc AuxBufTargData[] =
 	{
-		{ _T("uSamplerAuxiliary"), c3::Renderer::TextureType::U8_3CH, TEXCREATEFLAG_RENDERTARGET },
+		{ _T("uSamplerAuxiliary"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },
 	};
 
 	m_pSys->GetLog()->Print(_T("Creating auxiliary buffer... "));
@@ -200,10 +192,9 @@ void CDeferredPipeline::CreateSurfaces()
 	if (gbok)
 	{
 		m_AuxBuf->SetClearColor(0, c3::Color::fBlackFT);
+		m_AuxBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 	}
 	m_pSys->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
-
-	prend->FlushErrors(_T(__FILE__) _T(":%lu"), __LINE__);
 
 	if (gbok)
 		m_bSurfacesCreated = true;
@@ -238,8 +229,6 @@ void CDeferredPipeline::UpdateShaderSurfaces()
 		m_SP_resolve->SetUniformTexture(m_GBuf->GetColorTargetByName(_T("uSamplerPosDepth")), ut);
 	}
 
-	prend->FlushErrors(_T(__FILE__) _T(":%lu"), __LINE__);
-
 	if (m_SP_combine)
 	{
 		uint32_t i;
@@ -266,8 +255,6 @@ void CDeferredPipeline::UpdateShaderSurfaces()
 		if (ul >= 0)
 			m_SP_combine->SetUniformTexture((c3::Texture*)m_AuxBuf->GetColorTarget(0), ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 	}
-
-	prend->FlushErrors(_T(__FILE__) _T(":%lu"), __LINE__);
 
 	m_bSurfacesReady = true;
 }
@@ -298,8 +285,6 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 	{
 		InitializeGraphics();
 		m_bInitialized = true;
-
-		prend->FlushErrors(_T(__FILE__) _T(":%lu"), __LINE__);
 	}
 
 	if (!m_bSurfacesCreated)
@@ -317,8 +302,6 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 
 	uint32_t renderflags = m_pConfig->GetBool(_T("environment.editordraw"), true) ? RF_EDITORDRAW : 0;
 
-	prend->FlushErrors(_T(__FILE__) _T(":%lu"), __LINE__);
-
 	prend->SetOverrideHwnd(m_pWnd->GetSafeHwnd());
 
 	CRect r;
@@ -327,9 +310,7 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 	c3::Positionable *pcampos = camera ? dynamic_cast<c3::Positionable *>(camera->FindComponent(c3::Positionable::Type())) : nullptr;
 	c3::Camera *pcam = camera ? dynamic_cast<c3::Camera *>(camera->FindComponent(c3::Camera::Type())) : nullptr;
 
-	prend->FlushErrors(_T(__FILE__) _T(":%lu"), __LINE__);
 	prend->UseFrameBuffer(nullptr);
-	prend->FlushErrors(_T("AFTER : "));
 
 	pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
 	prend->SetViewport(r);
@@ -337,9 +318,13 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 	c3::Environment *penv = m_pSys->GetEnvironment();
 	assert(penv);
 
+	float farclip = camera->GetProperties()->GetPropertyById('C:FC')->AsFloat();
+	float nearclip = camera->GetProperties()->GetPropertyById('C:NC')->AsFloat();
+
 	glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 1.0f);
 	prend->SetClearColor(&cc);
 	m_GBuf->SetClearColor(0, cc);
+	m_GBuf->SetClearColor(2, glm::fvec4(0, 0, 0, farclip));
 
 	prend->SetClearDepth(1.0f);
 
@@ -358,6 +343,7 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 	m_SP_combine->SetUniform3(m_ulSunColor, penv->GetSunColor());
 	m_SP_combine->SetUniform3(m_ulSunDir, penv->GetSunDirection());
 
+	m_GBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 	if (prend->BeginScene(BSFLAG_SHOWGUI))
 	{
 		// Solid color pass
@@ -372,6 +358,10 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 		{
 			root->Render(renderflags, order);
 		});
+
+		// after the main pass, clear everything with black...
+		prend->SetClearColor(&c3::Color::fBlack);
+		m_LCBuf->SetClearColor(0, c3::Color::fBlack);
 
 		// Lighting pass(es)
 		prend->UseFrameBuffer(m_LCBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
@@ -390,8 +380,6 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 
 			// Set up our shadow transforms
 
-			float farclip = camera->GetProperties()->GetPropertyById('C:FC')->AsFloat();
-			float nearclip = camera->GetProperties()->GetPropertyById('C:NC')->AsFloat();
 			glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-800, 800, -800, 800, nearclip, farclip);
 			glm::fvec3 sunpos;
 			penv->GetSunDirection(&sunpos);
@@ -427,6 +415,8 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 		}
 
 		// Selection hilighting
+		prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+		m_AuxBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 		prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
 		prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 		prend->UseProgram(m_SP_bounds);
@@ -440,6 +430,8 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 		}
 
 		// Resolve
+		prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+		m_BBuf[0]->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 		prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH); // | UFBFLAG_FINISHLAST);
 		prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 		prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);

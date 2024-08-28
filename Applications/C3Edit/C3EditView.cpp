@@ -116,29 +116,27 @@ C3EditView::C3EditView() noexcept
 	m_FS_bounds = nullptr;
 	m_SP_bounds = nullptr;
 
-	m_SelectionXforms = nullptr;
-
 	m_ulSunDir = -1;
 	m_ulSunColor = -1;
 	m_ulAmbientColor = -1;
 	m_uBlurTex = -1;
 	m_uBlurScale = -1;
 
-	m_pHoverObj = nullptr;
-
 	m_ShowDebug = false;
-	m_bCenter = false;
 
 	m_bSurfacesCreated = false;
 	m_bSurfacesReady = false;
+
+	m_pHoverObj = nullptr;
+
+	m_bCenter = false;
+
 }
 
 
 C3EditView::~C3EditView()
 {
 	DestroySurfaces();
-
-	C3_SAFERELEASE(m_pUICam);
 
 	C3_SAFERELEASE(m_SSBuf);
 	C3_SAFERELEASE(m_ShadowTarg);
@@ -148,8 +146,6 @@ C3EditView::~C3EditView()
 	C3_SAFERELEASE(m_SP_combine);
 
 	C3_SAFERELEASE(m_SP_bounds);
-
-	C3_SAFERELEASE(m_SelectionXforms);
 
 	c3::Renderer *prend = theApp.m_C3->GetRenderer();
 	assert(prend);
@@ -273,15 +269,11 @@ void C3EditView::UpdateShaderSurfaces()
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip1"));
 		m_SP_resolve->SetUniformTexture(m_BTex[1], ut);
 
-#if (BLURTARGS > 2)
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2"));
 		m_SP_resolve->SetUniformTexture(m_BTex[2], ut);
-#endif
 
-#if (BLURTARGS > 3)
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip3"));
 		m_SP_resolve->SetUniformTexture(m_BTex[3], ut);
-#endif
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerPosDepth"));
 		m_SP_resolve->SetUniformTexture(m_GBuf->GetColorTargetByName(_T("uSamplerPosDepth")), ut);
@@ -350,24 +342,8 @@ void C3EditView::OnInitialUpdate()
 
 	theApp.m_C3->GetSoundPlayer()->Initialize();
 
-	m_pUICam = theApp.m_C3->GetFactory()->Build();
-	m_pUICam->SetName(_T("GUI Camera"));
-	c3::Positionable *puicampos = dynamic_cast<c3::Positionable *>(m_pUICam->AddComponent(c3::Positionable::Type()));
-	c3::Camera *puicam = dynamic_cast<c3::Camera *>(m_pUICam->AddComponent(c3::Camera::Type()));
-
 	CRect r;
 	GetClientRect(r);
-
-	if (puicam)
-	{
-		puicam->SetProjectionMode(c3::Camera::EProjectionMode::PM_ORTHOGRAPHIC);
-		puicam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
-	}
-
-	if (puicampos)
-	{
-		puicampos->AdjustPos(0, -1, 0);
-	}
 
 	SetTimer('DRAW', 17, nullptr);
 	SetTimer('PICK', 500, nullptr);
@@ -500,7 +476,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 			{
-				pDoc->m_RootObj->Render(renderflags | RF_LIGHT, order);
+				pDoc->m_RootObj->Render(RF_LIGHT, order);
 			});
 
 			// Shadow pass
@@ -527,7 +503,7 @@ void C3EditView::OnDraw(CDC *pDC)
 				prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
 				c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 				{
-					pDoc->m_RootObj->Render(renderflags | RF_SHADOW, order);
+					pDoc->m_RootObj->Render(RF_SHADOW, order);
 				});
 			}
 
@@ -556,6 +532,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			});
 
 			// Resolve
+			prend->UseMaterial();
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			m_BBuf[0]->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH); // | UFBFLAG_FINISHLAST);
@@ -1257,11 +1234,6 @@ void C3EditView::OnSize(UINT nType, int cx, int cy)
 	KillTimer('SIZE');
 
 	CView::OnSize(nType, cx, cy);
-	CRect r(0, 0, cx, cy);
-
-	c3::Renderer *pr = theApp.m_C3->GetRenderer();
-	if (pr->Initialized())
-		pr->SetViewport(&r);
 
 	SetTimer('SIZE', 500, NULL);
 }
@@ -1402,6 +1374,9 @@ void C3EditView::OnUpdateEditDelete(CCmdUI *pCmdUI)
 
 void C3EditView::OnEditDelete()
 {
+	if (GetFocus() != this)
+		return;
+
 	C3EditDoc *pDoc = GetDocument();
 
 	if (!pDoc->IsSelected(pDoc->m_RootObj))
@@ -1739,6 +1714,9 @@ void C3EditView::OnViewHoverInformation()
 
 void C3EditView::OnEditCopy()
 {
+	if (GetFocus() != this)
+		return;
+
 	if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
 	{
 		C3EditDoc* pDoc = GetDocument();
@@ -1777,6 +1755,9 @@ void C3EditView::OnUpdateEditCopy(CCmdUI *pCmdUI)
 
 void C3EditView::OnEditCut()
 {
+	if (GetFocus() != this)
+		return;
+
 	if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
 	{
 		C3EditDoc* pDoc = GetDocument();

@@ -19,7 +19,7 @@ PhysicalImpl::PhysicalImpl()
 	m_LinVel = glm::fvec3(0, 0, 0);
 	m_LinAcc = glm::fvec3(0, 0, 0);
 	m_maxLinSpeed = 1000.0f;
-	m_LinSpeedFalloff = 0.01f;
+	m_LinSpeedFalloff = 50.0f;
 
 	m_RotVel = glm::fvec3(0, 0, 0);
 	m_RotAcc = glm::fvec3(0, 0, 0);

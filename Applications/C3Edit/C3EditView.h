@@ -19,9 +19,6 @@ protected: // create from serialization only
 public:
 	C3EditDoc* GetDocument() const;
 
-protected:
-	bool m_ShowDebug;
-
 // Operations
 public:
 	void ComputePickRay(POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const;
@@ -49,6 +46,8 @@ public:
 
 protected:
 	static size_t m_ResourcesRefCt;
+	static RENDERDOC_API_1_4_0 *m_pRenderDoc;
+	bool m_RenderDocCaptureFrame;
 
 #define BLURTARGS	4
 
@@ -79,27 +78,19 @@ protected:
 
 	int32_t m_uBlurTex;
 	int32_t m_uBlurScale;
-	c3::MatrixStack *m_SelectionXforms;
 
-	static RENDERDOC_API_1_4_0 *m_pRenderDoc;
-	bool m_RenderDocCaptureFrame;
-
-	c3::Object *m_pHoverObj;
+	bool m_bSurfacesCreated, m_bSurfacesReady;
+	bool m_ShowDebug;
 
 	CPoint m_MousePos;
-	UINT_PTR m_DrawTimer;
-	UINT_PTR m_PickTimer;
 	glm::fvec3 m_BasePickPos;
 	glm::fvec3 m_BasePickVec;
-	c3::MatrixStack *m_PickMats;
 
 	float m_WindowsUIScale;
 
-	c3::Object *m_pUICam;
+	c3::Object *m_pHoverObj;
 
 	bool m_bCenter;
-
-	bool m_bSurfacesCreated, m_bSurfacesReady;
 
 // Generated message map functions
 protected:
