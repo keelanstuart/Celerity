@@ -309,9 +309,11 @@ void C3Dlg::InitializeGraphics()
 	c3::Renderer* prend = theApp.m_C3->GetRenderer();
 	assert(prend);
 
+#if 0
 	// Compensate for screen scaling in Windows 10+
 	m_WindowsUIScale = GetDC()->GetDeviceCaps(LOGPIXELSX) / 96.0f;
 	if ((m_WindowsUIScale > 1.0f) && (m_WindowsUIScale < 1.1f))
+#endif
 		m_WindowsUIScale = 1.0f;
 
 	theApp.m_C3->GetLog()->Print(_T("Initializing Renderer... "));

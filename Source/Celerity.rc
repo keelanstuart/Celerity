@@ -110,8 +110,6 @@ END
 // PNG
 //
 
-IDB_PNG_SPLASH          PNG                     "c3splash2.png"
-
 IDB_PNG_ORTHOREF        PNG                     "ortho_ref.png"
 
 
