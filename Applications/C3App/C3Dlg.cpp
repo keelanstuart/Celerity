@@ -982,8 +982,8 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 			pam->MakeAssociation(ai_sl, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGX);
 			pam->MakeAssociation(ai_sr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSX);
 
-			pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_W);
-			pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_S);
+			pam->MakeAssociation(ai_mf, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_W);
+			pam->MakeAssociation(ai_mb, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_S);
 			pam->MakeAssociation(ai_sl, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_A);
 			pam->MakeAssociation(ai_sr, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_D);
 
@@ -1018,8 +1018,8 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 			pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSZ);
 			pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGZ);
 
-			pam->MakeAssociation(ai_lu, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGY);
-			pam->MakeAssociation(ai_ld, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSY);
+			pam->MakeAssociation(ai_lu, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSY);
+			pam->MakeAssociation(ai_ld, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGY);
 			pam->MakeAssociation(ai_ll, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGX);
 			pam->MakeAssociation(ai_lr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSX);
 
