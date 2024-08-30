@@ -119,8 +119,7 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 			}
 		}
 
-		if (m_FrameBuffer)
-			prend->UseFrameBuffer(m_FrameBuffer, m_FrameBufferFlags);
+		prend->UseFrameBuffer(m_FrameBuffer, m_FrameBufferFlags);
 	}
 
 	bool need_shader = false;
