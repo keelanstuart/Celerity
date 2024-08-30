@@ -43,12 +43,4 @@ Video Links:
 <br>
 ______________________________________________
 
-Some background...
-
-Celerity has been around since roughly 2001, beginning life as a DirectX 8.1 engine (which got ported to the OG XBox)... eventually moving to DirectX 9... and finally being ported to OpenGL. The initial reasons for using DirectX (better drivers, rapid adoption of new hardware features, and lots of helper library functions in D3DX) went away sometime in the last decade, or so, and have finally prompted a re-write using OpenGL. Why not Vulkan or DX12? I think they (the hardware vendors and Microsoft) have tried to edge out smaller-scale studios by shifting the burden of software development away from themselves... and I'm not saying they're unwise to do this, but because of that I believe OpenGL, at this point, provides a better platform for lone wolf and small development teams.
-
-No one should expect Celerity to become the next big thing, but it was licensed to two companies in the past (in the DX8.1 form), and so therefore may have the pedigree to be a platform for small-scale PC-based graphics applications.
-
-Stay tuned for updates.
-
 To see some of the things Celerity has been used to create, check out this promotional video from my old company, Inventoractive: https://www.youtube.com/watch?v=mlXiiIEqRsw
