@@ -163,6 +163,7 @@ BOOL CCodeEditCtrl::PreTranslateMessage(MSG *pMsg)
 				ReplaceSel(_T("\t"));
 				return TRUE;
 			}
+			break;
 		}
 
 		case WM_CUT:
