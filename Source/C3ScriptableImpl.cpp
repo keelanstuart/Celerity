@@ -567,51 +567,105 @@ void jcGetPropertyValue(CScriptVar *c, void *userdata)
 			break;
 
 		case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:
-			psvl = ret->FindChildOrCreate(_T("w"));
+			psvl = ret->FindChildOrCreate(_T("x"));
 			psvl->m_Owned = true;
-			pw = psvl->m_Var;
-			pw->SetFloat(pprop->AsVec4F()->w);
+			px = psvl->m_Var;
+			px->SetFloat(pprop->AsVec2F()->x);
 
-		case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
-			psvl = ret->FindChildOrCreate(_T("z"));
-			psvl->m_Owned = true;
-			pz = psvl->m_Var;
-			pz->SetFloat(pprop->AsVec3F()->z);
-
-		case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:
 			psvl = ret->FindChildOrCreate(_T("y"));
 			psvl->m_Owned = true;
 			py = psvl->m_Var;
 			py->SetFloat(pprop->AsVec2F()->y);
 
+			psvl = ret->FindChildOrCreate(_T("z"));
+			psvl->m_Owned = true;
+			pz = psvl->m_Var;
+			pz->SetFloat(pprop->AsVec3F()->z);
+
+			psvl = ret->FindChildOrCreate(_T("w"));
+			psvl->m_Owned = true;
+			pw = psvl->m_Var;
+			pw->SetFloat(pprop->AsVec4F()->w);
+			break;
+
+		case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:
 			psvl = ret->FindChildOrCreate(_T("x"));
 			psvl->m_Owned = true;
 			px = psvl->m_Var;
 			px->SetFloat(pprop->AsVec2F()->x);
-			break;
 
-		case props::IProperty::PROPERTY_TYPE::PT_INT_V4:
-			psvl = ret->FindChildOrCreate(_T("w"));
+			psvl = ret->FindChildOrCreate(_T("y"));
 			psvl->m_Owned = true;
-			pw = psvl->m_Var;
-			pw->SetInt(pprop->AsVec4I()->w);
+			py = psvl->m_Var;
+			py->SetFloat(pprop->AsVec2F()->y);
 
-		case props::IProperty::PROPERTY_TYPE::PT_INT_V3:
 			psvl = ret->FindChildOrCreate(_T("z"));
 			psvl->m_Owned = true;
 			pz = psvl->m_Var;
-			pz->SetInt(pprop->AsVec3I()->z);
+			pz->SetFloat(pprop->AsVec3F()->z);
+			break;
 
-		case props::IProperty::PROPERTY_TYPE::PT_INT_V2:
+		case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:
+			psvl = ret->FindChildOrCreate(_T("x"));
+			psvl->m_Owned = true;
+			px = psvl->m_Var;
+			px->SetFloat(pprop->AsVec2F()->x);
+
+			psvl = ret->FindChildOrCreate(_T("y"));
+			psvl->m_Owned = true;
+			py = psvl->m_Var;
+			py->SetFloat(pprop->AsVec2F()->y);
+			break;
+
+		case props::IProperty::PROPERTY_TYPE::PT_INT_V4:
+			psvl = ret->FindChildOrCreate(_T("x"));
+			psvl->m_Owned = true;
+			px = psvl->m_Var;
+			px->SetInt(pprop->AsVec2I()->x);
+
 			psvl = ret->FindChildOrCreate(_T("y"));
 			psvl->m_Owned = true;
 			py = psvl->m_Var;
 			py->SetInt(pprop->AsVec2I()->y);
 
+			psvl = ret->FindChildOrCreate(_T("z"));
+			psvl->m_Owned = true;
+			pz = psvl->m_Var;
+			pz->SetInt(pprop->AsVec3I()->z);
+
+			psvl = ret->FindChildOrCreate(_T("w"));
+			psvl->m_Owned = true;
+			pw = psvl->m_Var;
+			pw->SetInt(pprop->AsVec4I()->w);
+			break;
+
+		case props::IProperty::PROPERTY_TYPE::PT_INT_V3:
 			psvl = ret->FindChildOrCreate(_T("x"));
 			psvl->m_Owned = true;
 			px = psvl->m_Var;
 			px->SetInt(pprop->AsVec2I()->x);
+
+			psvl = ret->FindChildOrCreate(_T("y"));
+			psvl->m_Owned = true;
+			py = psvl->m_Var;
+			py->SetInt(pprop->AsVec2I()->y);
+
+			psvl = ret->FindChildOrCreate(_T("z"));
+			psvl->m_Owned = true;
+			pz = psvl->m_Var;
+			pz->SetInt(pprop->AsVec3I()->z);
+			break;
+
+		case props::IProperty::PROPERTY_TYPE::PT_INT_V2:
+			psvl = ret->FindChildOrCreate(_T("x"));
+			psvl->m_Owned = true;
+			px = psvl->m_Var;
+			px->SetInt(pprop->AsVec2I()->x);
+
+			psvl = ret->FindChildOrCreate(_T("y"));
+			psvl->m_Owned = true;
+			py = psvl->m_Var;
+			py->SetInt(pprop->AsVec2I()->y);
 			break;
 	}
 }

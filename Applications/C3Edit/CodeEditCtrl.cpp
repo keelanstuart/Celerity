@@ -5,6 +5,10 @@
 #include "C3Edit.h"
 #include "CodeEditCtrl.h"
 #include "Resource.h"
+#include "C3EditDoc.h"
+#include "C3EditView.h"
+#include "C3EditFrame.h"
+
 
 
 // CCodeEditCtrl
@@ -148,39 +152,69 @@ void CCodeEditCtrl::OnEnUpdate()
 
 BOOL CCodeEditCtrl::PreTranslateMessage(MSG *pMsg)
 {
-	if (m_Accel)
+	if (GetFocus() == this)
 	{
-		if (::TranslateAccelerator(GetSafeHwnd(), m_Accel, pMsg))
-			return TRUE;
-	}
-
-	switch (pMsg->message)
-	{
-		case WM_KEYDOWN:
+		if (m_Accel)
 		{
-			if (pMsg->wParam == VK_TAB)
-			{
-				ReplaceSel(_T("\t"));
+			if (::TranslateAccelerator(GetSafeHwnd(), m_Accel, pMsg))
 				return TRUE;
-			}
-			break;
 		}
 
-		case WM_CUT:
-			Cut();
-			break;
+		switch (pMsg->message)
+		{
+			case WM_KEYDOWN:
+			{
+				switch (pMsg->wParam)
+				{
+					case VK_ESCAPE:
+					{
+						C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+						C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+						POSITION vp = pdoc->GetFirstViewPosition();
+						C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
 
-		case WM_COPY:
-			Copy();
-			break;
+						pv->SetFocus();
+						return TRUE;
+						break;
+					}
 
-		case WM_PASTE:
-			Paste();
-			break;
+					case VK_TAB:
+					{
+						ReplaceSel(_T("\t"));
+						return TRUE;
+						break;
+					}
 
-		case WM_CLEAR:
-			Clear();
-			break;
+					case VK_DELETE:
+					{
+						long ss, se;
+						GetSel(ss, se);
+						if (ss == se)
+							SetSel(ss, ss + 1);
+						ReplaceSel(_T(""));
+						return TRUE;
+						break;
+					}
+				}
+				break;
+			}
+
+			case WM_CUT:
+				Cut();
+				break;
+
+			case WM_COPY:
+				Copy();
+				break;
+
+			case WM_PASTE:
+				Paste();
+				break;
+
+			case WM_CLEAR:
+				Clear();
+				break;
+		}
 	}
 
 	return CRichEditCtrl::PreTranslateMessage(pMsg);

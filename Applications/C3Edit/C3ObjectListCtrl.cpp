@@ -459,6 +459,7 @@ void C3ObjectListCtrl::OnEditDelete()
 	POSITION vp = pdoc->GetFirstViewPosition();
 	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
 
+	pv->SetFocus();
 	pv->OnEditDelete();
 }
 
@@ -650,6 +651,10 @@ void C3ObjectListCtrl::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	{
 		case VK_ESCAPE:
 			pv->SetFocus();
+			break;
+
+		case VK_DELETE:
+			OnEditDelete();
 			break;
 
 		default:

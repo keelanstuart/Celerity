@@ -828,3 +828,8 @@ IMPLEMENT_DYNAMIC(CWtfCheckListBox, CListBox)
 PROCESS_LOCAL(CHECKLIST_STATE, _checklistState)
 
 /////////////////////////////////////////////////////////////////////////////
+
+BOOL CWtfCheckListBox::PreTranslateMessage(MSG* pMsg)
+{
+    return CListBox::PreTranslateMessage(pMsg);
+}

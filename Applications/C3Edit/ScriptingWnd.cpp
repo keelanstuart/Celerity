@@ -156,7 +156,7 @@ bool CScriptingWnd::ImmediateScriptEmpty()
 
 bool CScriptingWnd::ResourceScriptChanged()
 {
-	return m_wndCodeEditorRes.GetModify();
+	return m_wndCodeEditorRes.GetSafeHwnd() ? m_wndCodeEditorRes.GetModify() : false;
 }
 
 

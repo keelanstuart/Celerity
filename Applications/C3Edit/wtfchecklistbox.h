@@ -67,4 +67,6 @@ protected:
 	afx_msg LRESULT OnLBSetItemHeight(WPARAM wParam, LPARAM lParam);
 
 	DECLARE_MESSAGE_MAP()
+public:
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };

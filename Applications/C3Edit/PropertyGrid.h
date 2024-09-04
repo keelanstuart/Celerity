@@ -40,6 +40,7 @@ public:
 protected:
 	props::IPropertySet *m_Props;
 	bool m_bLocked;
+	bool m_bUnfocus;
 
 	DECLARE_MESSAGE_MAP()
 
@@ -47,6 +48,8 @@ public:
 	virtual void OnPropertyChanged(CWTFPropertyGridProperty* pProp);
 
     afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
+    afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 
 

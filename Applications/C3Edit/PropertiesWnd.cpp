@@ -13,6 +13,8 @@
 #include "C3Edit.h"
 #include <gdiplus.h>
 #include "CreatePropertyDlg.h"
+#include "C3EditDoc.h"
+#include "C3EditView.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -580,4 +582,25 @@ void CPropertiesWnd::OnPropsDelete()
 void CPropertiesWnd::OnUpdatePropsDelete(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable((m_wndPropList.GetCurSel() != nullptr) ? true : false);
+}
+
+
+BOOL CPropertiesWnd::PreTranslateMessage(MSG* pMsg)
+{
+	CWnd *pf = GetFocus();
+	if ((pf == this) || IsChild(pf))
+	{
+		if ((pMsg->message == WM_KEYDOWN) && (pMsg->wParam == VK_ESCAPE))
+		{
+			C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+			C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+			POSITION vp = pdoc->GetFirstViewPosition();
+			C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+			pv->SetFocus();
+			return TRUE;
+		}
+	}
+
+	return CDockablePane::PreTranslateMessage(pMsg);
 }

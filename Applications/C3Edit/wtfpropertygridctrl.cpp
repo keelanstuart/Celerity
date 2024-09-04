@@ -4037,6 +4037,10 @@ BOOL CWTFPropertyGridCtrl::PreTranslateMessage(MSG* pMsg)
 	switch (pMsg->message)
 	{
 	case WM_KEYDOWN:
+		m_ToolTip.RelayEvent(pMsg);
+		m_IPToolTip.Hide();
+		break;
+
 	case WM_SYSKEYDOWN:
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
@@ -4140,8 +4144,9 @@ BOOL CWTFPropertyGridCtrl::PreTranslateMessage(MSG* pMsg)
 				break;
 
 			case VK_ESCAPE:
-				EndEditItem(FALSE);
-				SetFocus();
+				//EndEditItem(FALSE);
+				//SetFocus();
+				return TRUE;
 				break;
 
 			case VK_DOWN:
@@ -4154,6 +4159,14 @@ BOOL CWTFPropertyGridCtrl::PreTranslateMessage(MSG* pMsg)
 					}
 				}
 				else if (::IsWindow(m_pSel->m_pWndInPlace->GetSafeHwnd()))
+				{
+					m_pSel->m_pWndInPlace->SendMessage(WM_KEYDOWN, pMsg->wParam, pMsg->lParam);
+					return TRUE;
+				}
+				break;
+
+			case VK_DELETE:
+				if (::IsWindow(m_pSel->m_pWndInPlace->GetSafeHwnd()))
 				{
 					m_pSel->m_pWndInPlace->SendMessage(WM_KEYDOWN, pMsg->wParam, pMsg->lParam);
 					return TRUE;
@@ -4625,6 +4638,17 @@ void CWTFPropertyGridCtrl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 	switch (nChar)
 	{
+	case VK_DELETE:
+		if (m_pSel != NULL && m_pSel->m_bInPlaceEdit != NULL && m_pSel->m_bEnabled)
+		{
+			ASSERT_VALID(m_pSel);
+
+			if (IsChild(GetFocus()))
+			{
+			}
+		}
+		break;
+
 	case VK_F4:
 		if (m_pSel != NULL && m_pSel->m_bEnabled && EditItem(m_pSel))
 		{

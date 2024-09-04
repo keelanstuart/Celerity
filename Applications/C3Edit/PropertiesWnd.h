@@ -104,5 +104,6 @@ public:
     afx_msg void OnUpdatePropsAdd(CCmdUI *pCmdUI);
     afx_msg void OnPropsDelete();
     afx_msg void OnUpdatePropsDelete(CCmdUI *pCmdUI);
+    virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
 

@@ -1585,6 +1585,10 @@ void C3EditView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 		case _T('6'):
 			pmf->SetActiveTool(C3EditApp::TT_WAND);
 			break;
+
+		case VK_DELETE:
+			OnEditDelete();
+			break;
 	}
 
 	CView::OnKeyUp(nChar, nRepCnt, nFlags);

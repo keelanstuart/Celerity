@@ -28,6 +28,7 @@ CPropertyGrid::CPropertyGrid()
 {
 	m_bLocked = false;
 	m_Props = nullptr;
+	m_bUnfocus = true;
 }
 
 
@@ -633,6 +634,7 @@ void CPropertyGrid::OnClickButton(CPoint point)
 
 BEGIN_MESSAGE_MAP(CPropertyGrid, CWTFPropertyGridCtrl)
 	ON_WM_KEYUP()
+	ON_WM_KEYDOWN()
 END_MESSAGE_MAP()
 
 
@@ -1147,7 +1149,13 @@ void CPropertyGrid::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	switch (nChar)
 	{
 		case VK_ESCAPE:
-			pv->SetFocus();
+			if (m_pSel)
+			{
+				if (m_bUnfocus)
+					pv->SetFocus();
+				else
+					m_bUnfocus = true;
+			}
 			break;
 
 		default:
@@ -1155,4 +1163,31 @@ void CPropertyGrid::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	}
 
 	CWTFPropertyGridCtrl::OnKeyUp(nChar, nRepCnt, nFlags);
+}
+
+
+void CPropertyGrid::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	CWTFPropertyGridCtrl::OnKeyDown(nChar, nRepCnt, nFlags);
+}
+
+
+BOOL CPropertyGrid::PreTranslateMessage(MSG* pMsg)
+{
+	if ((pMsg->message == WM_KEYDOWN) && (pMsg->wParam == VK_ESCAPE))
+	{
+		if (m_pSel)
+		{
+			if (m_pSel->IsInPlaceEditing())
+			{
+				EndEditItem(FALSE);
+				SetFocus();
+				m_bUnfocus = false;
+			}
+
+			return TRUE;
+		}
+	}
+
+	return CWTFPropertyGridCtrl::PreTranslateMessage(pMsg);
 }
