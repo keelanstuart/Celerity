@@ -1030,6 +1030,17 @@ CScriptVarLink *CScriptVar::FindChild(const TCHAR *child_name)
 	return 0;
 }
 
+CScriptVarLink *CScriptVar::GetChild(size_t idx)
+{
+	CScriptVarLink *v = m_Child.first;
+	while (idx && v)
+	{
+		idx--;
+		v = v->m_Sibling.next;
+	}
+	return v;
+}
+
 CScriptVarLink *CScriptVar::FindChildOrCreate(const TCHAR *childName, JSFlagsType varFlags)
 {
 	CScriptVarLink *l = FindChild(childName);

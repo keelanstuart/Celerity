@@ -145,6 +145,10 @@ void jcSetModelNodeCollisions(CScriptVar *c, void *userdata);
 void jcCreateCollisionResults(CScriptVar *c, void *userdata);
 void jcFreeCollisionResults(CScriptVar *c, void *userdata);
 void jcCheckCollisions(CScriptVar *c, void *userdata);
+void jcPackColorFromIntVec(CScriptVar *c, void *userdata);
+void jcPackColorFromFloatVec(CScriptVar *c, void *userdata);
+void jcUnpackColorToIntVec(CScriptVar *c, void *userdata);
+void jcUnpackColorToFloatVec(CScriptVar *c, void *userdata);
 
 
 void ScriptableImpl::ResetJS()
@@ -217,6 +221,12 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function CreateCollisionResults()"),							jcCreateCollisionResults, psys);
 	m_JS->AddNative(_T("function FreeCollisionResults(colres)"),						jcFreeCollisionResults, psys);
 	m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir, collinfo)"),	jcCheckCollisions, psys);
+
+	m_JS->AddNative(_T("function PackColorFromIntVec(coloriv)"),						jcPackColorFromIntVec, psys);
+	m_JS->AddNative(_T("function PackColorFromFloatVec(colorfv)"),						jcPackColorFromFloatVec, psys);
+	m_JS->AddNative(_T("function UnpackColorToIntVec(color)"),							jcUnpackColorToIntVec, psys);
+	m_JS->AddNative(_T("function UnpackColorToFloatVec(color)"),						jcUnpackColorToFloatVec, psys);
+
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -529,7 +539,8 @@ void jcFindProperty(CScriptVar *c, void *userdata)
 
 	tstring name = c->GetParameter(_T("name"))->GetString();
 
-	ret->SetInt((int64_t)(pobj->GetProperties()->GetPropertyByName(name.c_str())));
+	props::IProperty *p = pobj->GetProperties()->GetPropertyByName(name.c_str());
+	ret->SetInt((int64_t)p);
 }
 
 
@@ -1860,5 +1871,105 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 
 		if (ret)
 			ret->SetInt(ret_found->m_Var->GetInt());
+	}
+}
+
+
+static const TCHAR *elnames[4] ={_T("r"), _T("g"), _T("b"), _T("a")};
+
+//PackColorFromIntVec(coloriv) - Takes a color vector of ints in the range of [0..255] (3 or 4 channel) and packs it into an int
+void jcPackColorFromIntVec(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pc = c->GetParameter(_T("coloriv"));
+	CScriptVar *pr = c->GetReturnVar();
+	size_t elct = pc->GetNumChildren();
+
+	if ((elct < 1) || (elct > 4) || !pr || !pc)
+		return;
+
+	uint32_t r = 0;
+
+	for (size_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pccomp = pc->GetChild(i);
+
+		uint32_t cc = std::min<int>(std::max<int>(0, (int)(pccomp->m_Var->GetInt())), 255);
+		cc <<= (i * 8);
+		r |= cc;
+	}
+
+	pr->SetInt(r);
+}
+
+
+//PackColorFromFloatVec(colorfv) - Takes a color vector of floats in the range of [0..1] (3 or 4 channel) and packs it into an int
+void jcPackColorFromFloatVec(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pc = c->GetParameter(_T("colorfv"));
+	CScriptVar *pr = c->GetReturnVar();
+	size_t elct = pc->GetNumChildren();
+
+	if ((elct < 1) || (elct > 4) || !pr || !pc)
+		return;
+
+	uint32_t r = 0;
+
+	for (size_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pccomp = pc->GetChild(i);
+
+		uint32_t cc = (uint32_t)(std::min<float>(std::max<float>(0.0f, pccomp->m_Var->GetFloat()), 1.0f) * 255.0f);
+		cc <<= (i * 8);
+		r |= cc;
+	}
+
+	pr->SetInt(r);
+}
+
+
+//UnpackColorToIntVec(color) - Takes a packed color and unpacks it into an int vector in the range of [0..255] (3 or 4 channel)
+void jcUnpackColorToIntVec(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pc = c->GetParameter(_T("color"));
+	CScriptVar *pr = c->GetReturnVar();
+
+	if (!pr || !pc)
+		return;
+
+	size_t elct = pr->GetNumChildren();
+	if (!elct)
+		elct = 4;
+
+	uint32_t r = (uint32_t)pc->GetInt();
+
+	for (size_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *prcomp = pr->FindChildOrCreate(elnames[i]);
+		prcomp->m_Var->SetInt(r & 0xff);
+		r >>= 8;
+	}
+}
+
+
+//UnpackColorToFloatVec(color) - Takes a packed color and unpacks it into a float vector in the range of [0..1] (3 or 4 channel)
+void jcUnpackColorToFloatVec(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pc = c->GetParameter(_T("color"));
+	CScriptVar *pr = c->GetReturnVar();
+
+	if (!pr || !pc)
+		return;
+
+	size_t elct = pr->GetNumChildren();
+	if (!elct)
+		elct = 4;
+
+	uint32_t r = (uint32_t)pc->GetInt();
+
+	for (size_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *prcomp = pr->FindChildOrCreate(elnames[i]);
+		prcomp->m_Var->SetFloat((float)(r & 0xff) / 255.0f);
+		r >>= 8;
 	}
 }

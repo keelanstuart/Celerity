@@ -330,9 +330,9 @@ void scMathLerp(CScriptVar *c, void *userdata)
 
 	for (int64_t i = 0; i < elct; i++)
 	{
-		CScriptVarLink *pacomp = pa->FindChild(elnames[i]);
-		CScriptVarLink *pbcomp = pb->FindChild(elnames[i]);
-		CScriptVarLink *prcomp = pr->FindChildOrCreate(elnames[i]);
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		CScriptVarLink *prcomp = pr->FindChildOrCreate(pacomp->m_Name.c_str());
 
 		float va = pacomp->m_Var->GetFloat();
 		float vb = pbcomp->m_Var->GetFloat();
@@ -362,13 +362,13 @@ void scMathSlerp(CScriptVar *c, void *userdata)
 
 	for (int64_t i = 0; i < elct; i++)
 	{
-		CScriptVarLink *pacomp = pa->FindChild(elnames[i]);
+		CScriptVarLink *pacomp = pa->GetChild(i);
 		qa[(glm::fquat::length_type)i] = pacomp->m_Var->GetFloat();
 
-		CScriptVarLink *pbcomp = pb->FindChild(elnames[i]);
+		CScriptVarLink *pbcomp = pb->GetChild(i);
 		qb[(glm::fquat::length_type)i] = pbcomp->m_Var->GetFloat();
 
-		prcomp[(glm::fquat::length_type)i] = pr->FindChildOrCreate(elnames[i]);
+		prcomp[(glm::fquat::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
 	}
 
 	glm::fquat qr = glm::slerp(qa, qb, t);

@@ -218,6 +218,7 @@ public:
 	CScriptVar *GetParameter(const TCHAR *name); ///< If this is a function, get the parameter with the given name (for use by native functions)
 
 	CScriptVarLink *FindChild(const TCHAR *child_name); ///< Tries to Find a child with the given name, may return 0
+	CScriptVarLink *GetChild(size_t idx); ///< Tries to Find a child with the given index, may return 0
 	CScriptVarLink *FindChildOrCreate(const TCHAR *child_name, JSFlagsType varFlags = 0); ///< Tries to Find a child with the given name, or will create it with the given flags
 	CScriptVarLink *FindChildOrCreateByPath(const TCHAR *path); ///< Tries to Find a child with the given path (separated by dots)
 	CScriptVarLink *AddChild(const TCHAR *child_name, CScriptVar *child = nullptr, bool overwrite = false);

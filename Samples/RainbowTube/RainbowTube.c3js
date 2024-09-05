@@ -1,0 +1,235 @@
+var runtime;
+var time_color;
+var time_speed;
+
+var hobj_ir, hobj_il, hobj_or, hobj_ol;
+var hrvel;
+var rvel = { x:0.0, y:0.0, z:0.0 };
+var hori, hori_or, hori_ol;
+
+var cstart_r = { r:0.0, g:0.0, b:0.0, a:1.0 };
+var hcstart_ir, hcstart_or;
+
+var cstart_l = { r:0.0, g:0.0, b:0.0, a:1.0 };
+var hcstart_il, hcstart_ol;
+
+var cpeak_ir = { r:0.0, g:0.0, b:0.0, a:1.0 };
+var hcpeak_ir;
+
+var cpeak_il = { r:0.0, g:0.0, b:0.0, a:1.0 };
+var hcpeak_il;
+
+var cpeak_or = { r:0.0, g:0.0, b:0.0, a:0.0 };
+var hcpeak_or;
+
+var cpeak_ol = { r:0.0, g:0.0, b:0.0, a:1.0 };
+var hcpeak_ol;
+
+var cend_or = { r:0.0, g:0.0, b:0.0, a:0.0 };
+var hcend_or;
+
+var cend_ol = { r:0.0, g:0.0, b:0.0, a:0.0 };
+var hcend_ol;
+
+var cend_i = { r:0.0, g:0.0, b:0.0, a:1.0 };
+var hcend_ir, hcend_il;
+
+var hpeak_ir, hpeak_il, hpeak_or, hpeak_ol;
+
+var f = 0.0;
+var vec3 = { x:0.0, y:0.0, z:0.0 };
+var vec4 = { x:0.0, y:0.0, z:0.0, w:1.0 };
+var cp = 0;
+var cu = { r:0.0, g:0.0, b:0.0, a:0.0 };
+
+
+function init()
+{
+	runtime = 0.0;
+	time_color = 0.0;
+	time_speed = 0.0;
+
+	hobj_ir = FindFirstObjByName(self, "INNER_R", 1);
+	hcstart_ir = FindProperty(hobj_ir, "StartColor");
+	hcpeak_ir = FindProperty(hobj_ir, "PeakColor");
+	hcend_ir = FindProperty(hobj_ir, "EndColor");
+	hpeak_ir = FindProperty(hobj_ir, "Peak");
+
+	hobj_il = FindFirstObjByName(self, "INNER_L", 1);
+	hcstart_il = FindProperty(hobj_il, "StartColor");
+	hcpeak_il = FindProperty(hobj_il, "PeakColor");
+	hcend_il = FindProperty(hobj_il, "EndColor");
+	hpeak_il = FindProperty(hobj_il, "Peak");
+
+	hobj_or = FindFirstObjByName(self, "OUTER_R", 1);
+	hcstart_or = FindProperty(hobj_or, "StartColor");
+	hcpeak_or = FindProperty(hobj_or, "PeakColor");
+	hcend_or = FindProperty(hobj_or, "EndColor");
+	hpeak_or = FindProperty(hobj_or, "Peak");
+
+	hobj_ol = FindFirstObjByName(self, "OUTER_L", 1);
+	hcstart_ol = FindProperty(hobj_ol, "StartColor");
+	hcpeak_ol = FindProperty(hobj_ol, "PeakColor");
+	hcend_ol = FindProperty(hobj_ol, "EndColor");
+	hpeak_ol = FindProperty(hobj_ol, "Peak");
+
+	hrvel = FindProperty(self, "RotationalVelocity");
+	hori = FindProperty(self, "Orientation");
+	
+	hori_or = FindProperty(hobj_or, "Orientation");
+	hori_ol = FindProperty(hobj_ol, "Orientation");
+}
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+	time_color -= elapsed_seconds;
+	time_speed -= elapsed_seconds;
+
+	// if the color timer timed out, set new colors
+	if (time_color <= 0.0)
+	{
+		time_color = Math.random(150, 300) / 10.0;
+		//Log("Color Timer Expired: " + time_color + "\n");
+
+		cstart_r.r = Math.random(1, 16) / 255.0;
+		cstart_r.g = Math.random(1, 16) / 255.0;
+		cstart_r.b = Math.random(1, 16) / 255.0;
+
+		cstart_l.r = Math.random(1, 16) / 255.0;
+		cstart_l.g = Math.random(1, 16) / 255.0;
+		cstart_l.b = Math.random(1, 16) / 255.0;
+
+		cpeak_ir.r = Math.random(1, 16) / 255.0;
+		cpeak_ir.g = Math.random(1, 16) / 255.0;
+		cpeak_ir.b = Math.random(1, 16) / 255.0;
+
+		cpeak_il.r = Math.random(1, 16) / 255.0;
+		cpeak_il.g = Math.random(1, 16) / 255.0;
+		cpeak_il.b = Math.random(1, 16) / 255.0;
+
+		cend_i.r = Math.random(1, 16) / 255.0;
+		cend_i.g = Math.random(1, 16) / 255.0;
+		cend_i.b = Math.random(1, 16) / 255.0;
+
+		cpeak_or.r = Math.random(1, 16) / 255.0;
+		cpeak_or.g = Math.random(1, 16) / 255.0;
+		cpeak_or.b = Math.random(1, 16) / 255.0;
+
+		cpeak_ol.r = Math.random(1, 16) / 255.0;
+		cpeak_ol.g = Math.random(1, 16) / 255.0;
+		cpeak_ol.b = Math.random(1, 16) / 255.0;
+
+		cend_or.r = Math.random(1, 16) / 255.0;
+		cend_or.g = Math.random(1, 16) / 255.0;
+		cend_or.b = Math.random(1, 16) / 255.0;
+
+		cend_ol.r = Math.random(1, 16) / 255.0;
+		cend_ol.g = Math.random(1, 16) / 255.0;
+		cend_ol.b = Math.random(1, 16) / 255.0;
+	}
+
+	// if the speed timer timed out, set a new rotational velocity
+	if (time_speed <= 0.0)
+	{
+		time_speed = Math.random(300, 600) / 10.0;
+
+		rvel.x = Math.toRadians((Math.random(0, 50) - 25));
+		rvel.y = Math.toRadians((Math.random(0, 50) - 25));
+		rvel.z = Math.toRadians((Math.random(0, 50) - 25));
+
+		//Log("Speed Timer Expired: " + time_speed + "  (" + rvel.x + ", " + rvel.y + ", " + rvel.z + ")\n");
+	}
+
+	f = Math.sin(runtime) / 10.0 + 0.5;
+	SetPropertyValue(hpeak_ir, f);
+	SetPropertyValue(hpeak_il, f);
+
+	f = Math.cos(runtime) / 10.0 + 0.5;
+	SetPropertyValue(hpeak_or, f);
+	SetPropertyValue(hpeak_ol, f);
+
+	// interpolate rotational velocity
+	vec3 = GetPropertyValue(hrvel);
+	vec3 = Math.lerp(vec3, rvel, 0.5);
+	SetPropertyValue(hrvel, vec3);
+
+	// interpolate colors
+	cp = GetPropertyValue(hcstart_ir);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cstart_r, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcstart_ir, cp);
+
+	cp = GetPropertyValue(hcpeak_ir);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cpeak_ir, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcpeak_ir, cp);
+
+	cp = GetPropertyValue(hcend_ir);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cend_i, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcend_ir, cp);
+
+	cu = GetPropertyValue(hcstart_il);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cstart_l, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcstart_il, cp);
+
+	cu = GetPropertyValue(hcpeak_il);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cpeak_il, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcpeak_il, cp);
+
+	cu = GetPropertyValue(hcend_il);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cend_i, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcend_il, cp);
+
+	cu = GetPropertyValue(hcstart_or);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cstart_r, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcstart_or, cp);
+
+	cu = GetPropertyValue(hcpeak_or);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cpeak_or, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcpeak_or, cp);
+
+	cu = GetPropertyValue(hcend_or);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cend_or, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcend_or, cp);
+
+	cu = GetPropertyValue(hcstart_ol);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cstart_l, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcstart_ol, cp);
+
+	cu = GetPropertyValue(hcpeak_ol);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cpeak_ol, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcpeak_ol, cp);
+
+	cu = GetPropertyValue(hcend_ol);
+	cu = UnpackColorToFloatVec(cp);
+	cu = Math.lerp(cu, cend_ol, 0.5);
+	cp = PackColorFromFloatVec(cu);
+	SetPropertyValue(hcend_ol, cp);
+
+	// negate inner orientation and apply to outer emitters
+	//vec4 = GetPropertyValue(hori);
+	//vec4.x *= -1.0;	vec4.y *= -1.0;	vec4.z *= -1.0;	vec4.w *= -1.0;
+	//SetPropertyValue(hori_or, vec4);
+	//SetPropertyValue(hori_ol, vec4);
+}

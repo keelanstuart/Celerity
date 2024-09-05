@@ -1,0 +1,38 @@
+var runtime;
+var hcam;
+var vec3 = { x:0.0, y:0.0, z:0.0 };
+var vec4 = { x:0.0, y:0.0, z:0.0, w:1.0 };
+var hprop;
+var hobj;
+var hcam_ori;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	vec3.x = 0.0;
+	vec3.y = Math.sin(runtime / 60.0) * 5.0;
+	vec3.z = Math.sin(runtime / 30.0) * 360.0;
+
+	vec4 = EulerToQuat(vec3);
+	SetPropertyValue(hcam_ori, vec4);
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	hcam = GetRegisteredObject("camera");
+	hprop = FindProperty(hcam, "FOV(Perspective)");
+	SetPropertyValue(hprop, 30.0);
+
+	hobj = GetRegisteredObject("camera.root");
+	hcam_ori = FindProperty(hobj, "Orientation");
+
+	var load_result = LoadObject(self, "RainbowTube.c3o");
+
+	if (load_result["success"] == 1)
+		Log("Scene loaded successfully!\n");
+	else
+		Log("Scene failed to load!\n");
+}
