@@ -80,7 +80,7 @@ void ActionMapperImpl::Update()
 	if (!pim)
 		return;
 
-	for (auto a : m_Actions)
+	for (SAction &a : m_Actions)
 	{
 		if (a.timeout > 0)
 		{
