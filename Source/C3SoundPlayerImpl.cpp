@@ -75,7 +75,7 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 
 	for (size_t i = 0; i < m_Channels.size(); i++)
 	{
-		m_Channels[i].alive = false;
+		m_Channels[i].state = ChannelState::inactive;
 		m_Channels[i].loop_count = 0;
 	}
 }
@@ -266,25 +266,34 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 	if (!hs)
 		return INVALID_HSAMPLE;
 
-	TChannelArray::iterator chit = m_Channels.begin();
-	for (; chit != m_Channels.end(); chit++)
+	size_t chidx = 0;
+	TChannel *pch = m_Channels.data();
+	for (; chidx < MA_MAX_CHANNELS; chidx++, pch++)
 	{
-		// any sound that is no loger queued for play can be replaced
-		if (!chit->alive)
+		// any sound that has finished playing must be uninitialized, I think...
+		if (pch->state == ChannelState::finished)
 		{
-			ma_sound_init_copy(&m_Engine, hs, 0, &m_Group[sndtype], &chit->sound);
-			chit->loop_count = loopcount;
-			chit->alive = true;
-			chit->sound.ownsDataSource = false;
+			ma_sound_uninit(&(pch->sound));
+
+			pch->state = ChannelState::inactive;
+		}
+
+		// any sound that is no loger queued for play can be replaced
+		if (pch->state == ChannelState::inactive)
+		{
+			ma_sound_init_copy(&m_Engine, hs, 0, &m_Group[sndtype], &pch->sound);
+
+			pch->sound.ownsDataSource = false;	// this is key; we are playing a copy of a sound we loaded elsewhere
+			pch->loop_count = loopcount;
+			pch->state = ChannelState::active;
 			break;
 		}
 	}
 
-	if (chit == m_Channels.end())
+	if (chidx >= MA_MAX_CHANNELS)
 		return INVALID_HCHANNEL;
 
-	HCHANNEL hc = (HCHANNEL)std::distance(m_Channels.begin(), chit);
-	ma_sound *ps = &chit->sound;
+	ma_sound *ps = &(pch->sound);
 
 	ma_sound_set_volume(ps, volume);
 
@@ -294,7 +303,7 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 
 	ma_sound_set_pitch(ps, pitchmult);
 
-	ps->pEndCallbackUserData = &*chit;
+	ps->pEndCallbackUserData = pch;
 	ps->endCallback = [](void *userdata, ma_sound *psound)
 	{
 		TChannel *pch = (TChannel *)userdata;
@@ -307,20 +316,22 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 
 			if (pch->loop_count)
 			{
+				ma_sound_start(&(pch->sound));
+
 				ma_sound_seek_to_pcm_frame(&(pch->sound), 0);
 
-				ma_sound_start(&(pch->sound));
+				ma_sound_set_at_end(&(pch->sound), false);
 			}
 			else
 			{
-				pch->alive = false;
+				pch->state = ChannelState::finished;
 			}
 		}
 	};
 
 	ma_sound_start(ps);
 
-	return hc;
+	return chidx;
 }
 
 
@@ -342,11 +353,11 @@ void SoundPlayerImpl::Stop(HCHANNEL hc)
 
 	TChannelArray::iterator chit = m_Channels.begin() + hc;
 
-	if (chit->alive)
+	if (chit->state == ChannelState::active)
 	{
 		ma_sound_stop(&chit->sound);
 
-		chit->alive = false;
+		chit->state = ChannelState::inactive;
 	}
 }
 
@@ -369,7 +380,7 @@ void SoundPlayerImpl::Pause(HCHANNEL hc)
 
 	TChannelArray::iterator chit = m_Channels.begin() + hc;
 
-	if (chit->alive)
+	if (chit->state == ChannelState::active)
 	{
 		ma_sound *ps = &chit->sound;
 
@@ -396,7 +407,7 @@ void SoundPlayerImpl::Resume(HCHANNEL hc)
 
 	TChannelArray::iterator chit = m_Channels.begin() + hc;
 
-	if (chit->alive)
+	if (chit->state == ChannelState::active)
 	{
 		ma_sound_start(&chit->sound);
 	}
@@ -413,7 +424,7 @@ SoundPlayer::PLAY_STATUS SoundPlayerImpl::Status(HCHANNEL hc) const
 
 	TChannelArray::const_iterator chit = m_Channels.cbegin() + hc;
 
-	if (!chit->alive)
+	if (chit->state != ChannelState::active)
 		return SoundPlayer::PLAY_STATUS::PS_STOPPED;
 
 	if (ma_sound_at_end(&chit->sound))
@@ -478,7 +489,7 @@ void SoundPlayerImpl::SetChannelVolume(HCHANNEL hc, float volume)
 		return;
 
 	TChannelArray::iterator chit = m_Channels.begin() + hc;
-	if (!chit->alive)
+	if (chit->state != ChannelState::active)
 		return;
 
 	float tmpvol = std::min<float>(std::max<float>(0, volume), 1);
@@ -497,7 +508,7 @@ void SoundPlayerImpl::SetChannelPos(HCHANNEL hc, const glm::fvec3 *pos)
 
 	TChannelArray::iterator chit = m_Channels.begin() + hc;
 
-	if (!chit->alive)
+	if (chit->state != ChannelState::active)
 		return;
 
 	ma_sound_set_position(&chit->sound, pos ? pos->x : 0, pos ? pos->y : 0, pos ? pos->z : 0);
