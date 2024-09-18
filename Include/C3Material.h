@@ -68,13 +68,13 @@ namespace c3
 		virtual const glm::fvec4 *GetColor(ColorComponentType comptype, glm::fvec4 *pcolor = nullptr) const = NULL;
 
 		/// Sets the texture for the given type
-		virtual void SetTexture(TextureComponentType comptype, Texture *ptex) = NULL;
+		virtual void SetTexture(TextureComponentType comptype, Texture *ptex, props::TFlags32 texflags = TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR | TEXFLAG_WRAP_U | TEXFLAG_WRAP_V) = NULL;
 
 		/// Sets a texture resource for the given type
-		virtual void SetTexture(TextureComponentType comptype, Resource *ptexres) = NULL;
+		virtual void SetTexture(TextureComponentType comptype, Resource *ptexres, props::TFlags32 texflags = TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR | TEXFLAG_WRAP_U | TEXFLAG_WRAP_V) = NULL;
 
-		/// Gets the texture for the given type
-		virtual Texture *GetTexture(TextureComponentType comptype) const = NULL;
+		/// Gets the texture for the given type, texflags receives the texture flags for it if provided
+		virtual Texture *GetTexture(TextureComponentType comptype, props::TFlags32 *texflags = nullptr) const = NULL;
 
 		/// Construct the flags using RENDERMODEFLAGS
 		virtual props::TFlags64 &RenderModeFlags() = NULL;

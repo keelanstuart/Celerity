@@ -1,0 +1,14 @@
+<render_method name="resolve">
+
+	<technique name="default">
+		<pass>
+			<setting name="framebuffer"			value="" />
+			<setting name="depthmode"			value="disabled" />
+			<setting name="blendmode"			value="replace" />
+			<setting name="cullmode"			value="disabled" />
+			<setting name="shader.vertex"		value="resolve.vsh" />
+			<setting name="shader.fragment"		value="resolve.fsh" />
+		</pass>
+	</technique>
+
+</render_method>

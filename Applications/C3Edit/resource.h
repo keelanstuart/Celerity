@@ -242,13 +242,15 @@
 #define ID_EDIT_ASSIGNROOT              32841
 #define ID_EDIT_PACKFILEREGISTRATION    32842
 #define ID_EDIT_PACKFILEMANAGEMENT      32843
+#define ID_APP_INTERACTABLE             32845
+#define ID_BUTTON32846                  32846
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        349
-#define _APS_NEXT_COMMAND_VALUE         32845
+#define _APS_NEXT_COMMAND_VALUE         32847
 #define _APS_NEXT_CONTROL_VALUE         1016
 #define _APS_NEXT_SYMED_VALUE           365
 #endif

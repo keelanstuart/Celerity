@@ -952,6 +952,10 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 
+	glm::fvec3 pickpos, pickvec;
+	ComputePickRay(m_MousePos, pickpos, pickvec);
+	theApp.m_C3->GetInputManager()->SetPickRay(pickpos, pickvec);
+
 	// Wrap the cursor around to the other side if we've Captured the mouse and it's gone beyond the client rect...
 	if (this == GetCapture())
 	{
@@ -1028,9 +1032,6 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 		float tsens = theApp.m_Config->GetFloat(_T("environment.sensitivity.translation"), 0.1f);
 		float rsens = theApp.m_Config->GetFloat(_T("environment.sensitivity.rotation"), 0.1f);
 		float ssens = theApp.m_Config->GetFloat(_T("environment.sensitivity.scale"), 0.1f);
-
-		glm::fvec3 pickpos, pickvec;
-		ComputePickRay(m_MousePos, pickpos, pickvec);
 
 		static glm::fvec3 xaxis(1, 0, 0), yaxis(0, 1, 0), zaxis(0, 0, 1);
 

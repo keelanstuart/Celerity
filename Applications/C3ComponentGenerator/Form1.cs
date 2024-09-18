@@ -95,10 +95,10 @@ namespace C3ComponentGenerator
                 "\t\tvirtual props::TFlags64 Flags() const;\n\n" +
                 "\t\tvirtual bool Initialize(Object *pobject);\n\n" +
                 "\t\tvirtual void Update(float elapsed_time = 0.0f);\n\n" +
-                "\t\tvirtual bool Prerender(Object::RenderFlags flags);\n\n" +
-                "\t\tvirtual void Render(Object::RenderFlags rendflags);\n\n" +
+				"\t\tvirtual bool Prerender(Object::RenderFlags flags, int draworder = 0);\n\n" +
+				"\t\tvirtual void Render(Object::RenderFlags rendflags, const glm::fmat4x4 *pmat);\n\n" +
                 "\t\tvirtual void PropertyChanged(const props::IProperty *pprop);\n\n" +
-                "\t\tvirtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const;\n\n" +
+				"\t\tvirtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *mats, float *pDistance) const;\n\n" +
                 "\t};\n\n" +
                 "\tDEFINE_COMPONENTTYPE(" + name + ", " + impl_name + ", GUID(" + g.ToString("X") + "), \"" + name + "\", \"TODO: describe your component here\", 0);\n\n" +
                 "};\n";
@@ -129,11 +129,11 @@ namespace C3ComponentGenerator
 
                 "void " + impl_name + "::Update(float elapsed_time)\n{\n\tif (elapsed_time == 0)\n\t\treturn;\n}\n\n\n" +
 
-                "bool " + impl_name + "::Prerender(Object::RenderFlags flags)\n{\n" +
+                "bool " + impl_name + "::Prerender(Object::RenderFlags flags, int draworder)\n{\n" +
                 "\tif (flags.IsSet(RF_FORCE))\n\t\treturn true;\n\n" +
                 "\tif (!m_pOwner->Flags().IsSet(OF_DRAW))\n\t\treturn false;\n\n\treturn true;\n}\n\n\n" +
 
-                "void " + impl_name + "::Render(Object::RenderFlags flags)\n{\n" +
+                "void " + impl_name + "::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)\n{\n" +
                 "\tif (flags.IsSet(RF_SHADOW))\n\t\treturn; // TODO; just suggestions\n\n" +
                 "\tif (flags.IsSet(RF_LIGHT))\n\t\treturn; // TODO; just suggestions\n\n" +
                 "\tif (flags.IsSet(RF_AUXILIARY))\n\t\treturn; // TODO; just suggestions\n\n" +
@@ -142,9 +142,12 @@ namespace C3ComponentGenerator
 
                 "void " + impl_name + "::PropertyChanged(const props::IProperty *pprop)\n{\n" +
                 "\tprops::FOURCHARCODE fcc = pprop->GetID();\n\n" +
-                "\tswitch (fcc) // TODO: handle property changes by ID\n\t{\n\t\tdefault:\n\t\t\tbreak;\n\t}\n}\n\n\n" +
+				"#if 0  // include this code once you need to check for property changes\n" +
+                "\tswitch (fcc) // TODO: handle property changes by ID\n\t{\n\t\tdefault:\n\t\t\tbreak;\n\t}\n" +
+				"#endif\n" +
+				"}\n\n\n" +
 
-                "bool " + impl_name + "::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, MatrixStack *mats, float *pDistance) const\n" +
+                "bool " + impl_name + "::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *mats, float *pDistance) const\n" +
                 "{\n\tbool ret = false;\n\n\t// TODO: check collisions however you want here\n\n\treturn ret;\n}\n";
 
             if (!File.Exists(src_impl_path) || (MessageBox.Show(

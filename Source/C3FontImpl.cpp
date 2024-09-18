@@ -62,7 +62,9 @@ bool FontImpl::Initialize()
 	size_t h = 1024;
 
 	if (!m_Tex)
+	{
 		m_Tex = m_pRend->CreateTexture2D(w, h, Renderer::TextureType::U8_1CH, 1);
+	}
 
 	if (!m_Tex)
 	{
@@ -76,7 +78,7 @@ bool FontImpl::Initialize()
 	if (m_Mtl)
 	{
 		m_Mtl->SetWindingOrder(Renderer::WindingOrder::WO_CCW);
-		m_Mtl->SetTexture(Material::TextureComponentType::TCT_DIFFUSE, m_Tex);
+		m_Mtl->SetTexture(Material::TextureComponentType::TCT_DIFFUSE, m_Tex, 0);
 		m_Mtl->SetColor(Material::ColorComponentType::CCT_DIFFUSE, &Color::fWhite);
 	}
 	else
@@ -212,7 +214,7 @@ FontImpl::~FontImpl()
 }
 
 
-void FontImpl::GetTextExtent(const TCHAR *text, RECT &extent, float tabwidth) const
+void FontImpl::GetTextExtent(const TCHAR *text, math::FRect2D &extent, float tabwidth) const
 {
 	extent.left = extent.top = extent.right = extent.bottom = 0;
 
@@ -221,45 +223,50 @@ void FontImpl::GetTextExtent(const TCHAR *text, RECT &extent, float tabwidth) co
 
 	tabwidth *= m_SpaceWidth;
 
-	if(!text || !*text)
+	if (!text)
 		return;
 
 	const TCHAR *c = text;
 
-	glm::fvec2 corg(0, 0);
+	float x = 0.0f;
+	float y = 0.0f;
+	float lh = 0.0f;
 
-	while (!*c)
+	while (*c)
 	{
 		TGlyphInfoMap::const_iterator it = m_GlyphInfo.find(*c);
 
 		switch (*c)
 		{
 			case _T('\n'):
-				corg.x = 0.0f;
-				corg.y += m_Size + m_ExtraLineSpacing;
+				x = 0.0f;
+				y -= (lh + m_ExtraLineSpacing);
+
+				lh = 0.0f;
 				break;
 
 			case _T('\t'):
-				corg.x += tabwidth;
+				x += tabwidth;
 				break;
 
 			default:
 				if (it != m_GlyphInfo.end())
 				{
-					extent.right = std::max<LONG>(extent.right, (LONG)(corg.x + it->second.w));
-					extent.bottom = std::max<LONG>(extent.bottom, (LONG)(corg.y + it->second.h));
-
-					corg.x = it->second.w + m_Kerning;
+					x += it->second.w + m_Kerning;
+					extent.right = std::max<float>(extent.right, x);
+					lh = std::max<float>(lh, (float)it->second.h);
 				}
 				break;
 		}
 
 		c++;
 	}
+
+	extent.bottom = y - lh;
 }
 
 
-size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFlags32 draw_flags, float tabwidth) const
+size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFlags32 draw_flags, math::FRect2D *extents, float tabwidth) const
 {
 	if (!m_Initialized)
 		return 0;
@@ -280,13 +287,52 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 
 	tabwidth *= m_SpaceWidth;
 
-	Vertex::ST1::s *v;
+	Vertex::PNYT1::s *v;
 
 	glm::fvec2 corg(0, 0);
 
+	math::FRect2D ext;
+	GetTextExtent(text, ext, tabwidth);
+
+	float hofs = 0.0f;
+	float vofs = 0.0f;
+
+	if (draw_flags.IsSet(FONTFLAG_HCENTER))
+	{
+		hofs = ext.Width() / 2.0f;
+	}
+	else if (draw_flags.IsSet(FONTFLAG_HRIGHT))
+	{
+		hofs = ext.Width();
+	}
+
+	if (draw_flags.IsSet(FONTFLAG_VCENTER))
+	{
+		vofs = ext.Height() / 2.0f;
+	}
+	else if (draw_flags.IsSet(FONTFLAG_VBOTTOM))
+	{
+		vofs = ext.Height();
+	}
+
+	corg.x -= hofs;
+	corg.y += vofs;
+
+	if (extents)
+	{
+		extents->left = ext.left - hofs;
+		extents->right = ext.right - hofs;
+		extents->top = ext.top + vofs;
+		extents->bottom = ext.bottom + vofs;
+	}
+
 	size_t d = 0;
 
-	if (pverts->Lock((void **)&v, length * 6, Vertex::ST1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_DYNAMIC) == VertexBuffer::RETURNCODE::RET_OK)
+	glm::fvec3 vn(0, 1, 0);
+	glm::fvec3 vt(1, 0, 0);
+	glm::fvec3 vb(0, 0, 1);
+
+	if (pverts->Lock((void **)&v, length * 6, Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_DYNAMIC) == VertexBuffer::RETURNCODE::RET_OK)
 	{
 		while (*text)
 		{
@@ -295,7 +341,7 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 				case _T('\n'):
 				{
 					corg.x = 0.0f;
-					corg.y += m_Size + m_ExtraLineSpacing;
+					corg.y -= m_Size + m_ExtraLineSpacing;
 					break;
 				}
 
@@ -319,39 +365,63 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 						if (it != m_GlyphInfo.end())
 						{
 							v->pos.x = corg.x + topshift;
-							v->pos.y = corg.y;
+							v->pos.y = 0.0f;
+							v->pos.z = corg.y;
+							memcpy(&(v->norm), &vn, sizeof(float) * 3);
+							memcpy(&(v->tang), &vt, sizeof(float) * 3);
+							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
 							v->uv.x = it->second.uv.ul.x;
 							v->uv.y = it->second.uv.ul.y;
 							v++;
 
-							v->pos.x = corg.x;
-							v->pos.y = corg.y + it->second.h;
-							v->uv.x = it->second.uv.ul.x;
-							v->uv.y = it->second.uv.lr.y;
-							v++;
-
 							v->pos.x = corg.x + it->second.w + topshift;
-							v->pos.y = corg.y;
+							v->pos.y = 0.0f;
+							v->pos.z = corg.y;
+							memcpy(&(v->norm), &vn, sizeof(float) * 3);
+							memcpy(&(v->tang), &vt, sizeof(float) * 3);
+							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
 							v->uv.x = it->second.uv.lr.x;
 							v->uv.y = it->second.uv.ul.y;
 							v++;
 
 							v->pos.x = corg.x;
-							v->pos.y = corg.y + it->second.h;
+							v->pos.y = 0.0f;
+							v->pos.z = corg.y - it->second.h;
+							memcpy(&(v->norm), &vn, sizeof(float) * 3);
+							memcpy(&(v->tang), &vt, sizeof(float) * 3);
+							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
 							v->uv.x = it->second.uv.ul.x;
 							v->uv.y = it->second.uv.lr.y;
+							v++;
+
+							v->pos.x = corg.x;
+							v->pos.y = 0.0f;
+							v->pos.z = corg.y - it->second.h;
+							memcpy(&(v->norm), &vn, sizeof(float) * 3);
+							memcpy(&(v->tang), &vt, sizeof(float) * 3);
+							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
+							v->uv.x = it->second.uv.ul.x;
+							v->uv.y = it->second.uv.lr.y;
+							v++;
+
+							v->pos.x = corg.x + it->second.w + topshift;
+							v->pos.y = 0.0f;
+							v->pos.z = corg.y;
+							memcpy(&(v->norm), &vn, sizeof(float) * 3);
+							memcpy(&(v->tang), &vt, sizeof(float) * 3);
+							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
+							v->uv.x = it->second.uv.lr.x;
+							v->uv.y = it->second.uv.ul.y;
 							v++;
 
 							v->pos.x = corg.x + it->second.w;
-							v->pos.y = corg.y + it->second.h;
+							v->pos.y = 0.0f;
+							v->pos.z = corg.y - it->second.h;
+							memcpy(&(v->norm), &vn, sizeof(float) * 3);
+							memcpy(&(v->tang), &vt, sizeof(float) * 3);
+							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
 							v->uv.x = it->second.uv.lr.x;
 							v->uv.y = it->second.uv.lr.y;
-							v++;
-
-							v->pos.x = corg.x + it->second.w + topshift;
-							v->pos.y = corg.y;
-							v->uv.x = it->second.uv.lr.x;
-							v->uv.y = it->second.uv.ul.y;
 							v++;
 
 							corg.x += it->second.w + m_Kerning;

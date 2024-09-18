@@ -142,6 +142,42 @@ void InputManagerImpl::GetMousePos(int32_t& x, int32_t& y)
 }
 
 
+void InputManagerImpl::SetPickRay(const glm::fvec3 &pos, const glm::fvec3 &dir, UserID user)
+{
+	if (user == USER_ANY)
+		user = USER_DEFAULT;
+
+	PickRayData prd;
+	prd.pos = pos;
+	prd.dir = dir;
+
+	m_PickData.insert_or_assign(user, prd);
+}
+
+
+bool InputManagerImpl::GetPickRay(glm::fvec3 &pos, glm::fvec3 &dir, UserID user)
+{
+	UserPickRayDataMap::const_iterator it;
+	if (user == USER_ANY)
+	{
+		it = m_PickData.cbegin();
+	}
+	else
+	{
+		it = m_PickData.find(user);
+	}
+
+	if (it != m_PickData.cend())
+	{
+		pos = it->second.pos;
+		dir = it->second.dir;
+		return true;
+	}
+
+	return false;
+}
+
+
 void InputManagerImpl::Update(float elapsed_seconds)
 {
 	if (!m_pDI)

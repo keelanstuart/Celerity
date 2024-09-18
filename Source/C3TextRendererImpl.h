@@ -7,14 +7,14 @@
 #pragma once
 
 #include <C3.h>
-#include <C3InterfaceElement.h>
+#include <C3TextRenderer.h>
 #include <C3ScriptableImpl.h>
 #include <C3Math.h>
 
 namespace c3
 {
 
-	class InterfaceElementImpl : public InterfaceElement, props::IPropertyChangeListener, props::IProperty::IEnumProvider
+	class TextRendererImpl : public TextRenderer, props::IPropertyChangeListener, props::IProperty::IEnumProvider
 	{
 
 	protected:
@@ -24,17 +24,8 @@ namespace c3
 #define IEF_UPDATEIMAGE		0x0001
 #define IEF_UPDATETEXT		0x0002
 
-		using State = enum {
-			IS_NORMAL = 0,
-			IS_HOVER,
-			IS_DOWN,
-
-			IS_NUMSTATES
-		};
-		State m_State;
-
-		Color::SRGBAColor m_ImgColor[IS_NUMSTATES];
-		Color::SRGBAColor m_TextColor[IS_NUMSTATES];
+		Color::SRGBAColor m_ImgColor;
+		Color::SRGBAColor m_TextColor;
 
 		Texture2D *m_pImage;
 		RenderMethod *m_pMethodImage;
@@ -46,9 +37,8 @@ namespace c3
 		VertexBuffer *m_pTextVB;
 		Font *m_pFont;
 		size_t m_TextQuads;
-		props::TVec2F m_Dims;
 
-		math::FRECT m_Rect;
+		math::FRect2D m_Rect;
 
 		using ImageMode = enum
 		{
@@ -80,9 +70,9 @@ namespace c3
 
 	public:
 
-		InterfaceElementImpl();
+		TextRendererImpl();
 
-		virtual ~InterfaceElementImpl();
+		virtual ~TextRendererImpl();
 
 		virtual void Release();
 
@@ -108,6 +98,6 @@ namespace c3
 
 	};
 
-	DEFINE_COMPONENTTYPE(InterfaceElement, InterfaceElementImpl, GUID({0x2a1a3303, 0xb99f, 0x4f3b, {0xb6, 0x88, 0x5d, 0x13, 0xf4, 0xae, 0x77, 0xd0}}), "InterfaceElement", "InterfaceElement contains combined text and image rendering and event response scripting (requires Scriptable)", 0);
+	DEFINE_COMPONENTTYPE(TextRenderer, TextRendererImpl, GUID({0x2a1a3303, 0xb99f, 0x4f3b, {0xb6, 0x88, 0x5d, 0x13, 0xf4, 0xae, 0x77, 0xd0}}), "TextRenderer", "TextRenderer contains combined text and image rendering and event response scripting (requires Scriptable)", 0);
 
 };

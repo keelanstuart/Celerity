@@ -32,23 +32,27 @@ namespace c3
 
 		virtual void GetMousePos(int32_t &x, int32_t &y);
 
-		virtual void AssignUser(const InputDevice *pdevice, size_t user);
+		virtual void SetPickRay(const glm::fvec3 &pos, const glm::fvec3 &dir, UserID user = USER_DEFAULT);
+
+		virtual bool GetPickRay(glm::fvec3 &pos, glm::fvec3 &dir, UserID user = USER_DEFAULT);
+
+		virtual void AssignUser(const InputDevice *pdevice, UserID user);
 
 		virtual bool GetAssignedUser(const InputDevice *pdevice, size_t &user) const;
 
 		virtual size_t GetNumUsers() const;
 
 		// Has the button been pressed?  A non-zero value is TRUE...
-		virtual int ButtonPressed(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, size_t user = USER_ANY, float time = 0.0f) const;
+		virtual int ButtonPressed(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, UserID user = USER_ANY, float time = 0.0f) const;
 
 		// Has the button been pressed?  A non-zero value is TRUE...
-		virtual float ButtonPressedProportional(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, size_t user = USER_ANY) const;
+		virtual float ButtonPressedProportional(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, UserID user = USER_ANY) const;
 
 		// What was the change in the button's state?
-		virtual int ButtonChange(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, size_t user = USER_ANY) const;
+		virtual int ButtonChange(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, UserID user = USER_ANY) const;
 
 		// Was the button just released?
-		virtual bool ButtonReleased(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, size_t user = USER_ANY) const;
+		virtual bool ButtonReleased(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, UserID user = USER_ANY) const;
 
 		virtual void AcquireAll();
 		virtual void UnacquireAll();
@@ -78,6 +82,13 @@ namespace c3
 		HINSTANCE m_hinst;
 
 		float m_PlugCheckTime;
+
+		using PickRayData = struct
+		{
+			glm::fvec3 pos, dir;
+		};
+		using UserPickRayDataMap = std::map<UserID, PickRayData>;
+		UserPickRayDataMap m_PickData;
 
 		struct
 		{

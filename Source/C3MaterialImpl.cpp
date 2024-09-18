@@ -35,6 +35,9 @@ MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend, const Mate
 		m_tex[ETextureComponentType::TCT_SURFACEDESC] = TTexOrRes(prend->GetDefaultDescTexture(), nullptr);
 		m_tex[ETextureComponentType::TCT_POSITIONDEPTH] = TTexOrRes(prend->GetBlackTexture(), nullptr);
 
+		for (size_t i = 0; i < ETextureComponentType::NUM_TEXTURETYPES; i++)
+			m_texflags[i] = TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR | TEXFLAG_WRAP_U | TEXFLAG_WRAP_V;
+
 		m_color[EColorComponentType::CCT_DIFFUSE] = Color::fWhite;
 		m_color[EColorComponentType::CCT_EMISSIVE] = Color::fBlack;
 		m_color[EColorComponentType::CCT_SPECULAR] = Color::fDarkGrey;
@@ -81,7 +84,10 @@ void MaterialImpl::Copy(const Material *from)
 	m_StencilZPassOp	= ((const MaterialImpl *)from)->m_StencilZPassOp;
 
 	for (size_t i = 0; i < TextureComponentType::NUM_TEXTURETYPES; i++)
+	{
 		m_tex[i] = ((const MaterialImpl *)from)->m_tex[i];
+		m_texflags[i] = ((const MaterialImpl *)from)->m_texflags[i];
+	}
 
 	for (size_t i = 0; i < ColorComponentType::NUM_COLORTYPES; i++)
 		m_color[i] = ((const MaterialImpl *)from)->m_color[i];
@@ -116,32 +122,44 @@ const glm::fvec4 *MaterialImpl::GetColor(ColorComponentType comptype, glm::fvec4
 }
 
 
-void MaterialImpl::SetTexture(TextureComponentType comptype, Texture *ptex)
+void MaterialImpl::SetTexture(TextureComponentType comptype, Texture *ptex, props::TFlags32 texflags)
 {
 	m_tex[comptype].first = ptex;
 
 	// Since the Resource takes precedent over the bare Texture, clear out the Resource if you set the Texture
 	m_tex[comptype].second = nullptr;
+
+	m_texflags[comptype] = texflags;
 }
 
 
-void MaterialImpl::SetTexture(TextureComponentType comptype, Resource *ptexres)
+void MaterialImpl::SetTexture(TextureComponentType comptype, Resource *ptexres, props::TFlags32 texflags)
 {
 	m_tex[comptype].second = ptexres;
+
+	m_texflags[comptype] = texflags;
 }
 
 
-Texture *MaterialImpl::GetTexture(TextureComponentType comptype) const
+Texture *MaterialImpl::GetTexture(TextureComponentType comptype, props::TFlags32 *texflags) const
 {
+	Texture *ret = nullptr;
+
 	if (m_tex[comptype].second && (m_tex[comptype].second->GetStatus() == Resource::Status::RS_LOADED))
 	{
 		// if the resource is loaded and actually a texture, then return it
 		Texture *pt = dynamic_cast<Texture *>((Texture *)(m_tex[comptype].second->GetData()));
 		if (pt)
-			return pt;
+			ret = pt;
 	}
 
-	return m_tex[comptype].first;
+	if (!ret)
+		ret = m_tex[comptype].first;
+
+	if (texflags)
+		*texflags = m_texflags[comptype];
+
+	return ret;
 }
 
 
@@ -288,6 +306,8 @@ bool MaterialImpl::Apply(ShaderProgram *shader, Renderer::RenderStateOverrideFla
 
 	if (shader)
 	{
+		props::TFlags32 texflags;
+
 		int32_t ul_coldiff = shader->GetUniformLocation(_T("uColorDiffuse"));
 		if (ul_coldiff != ShaderProgram::INVALID_UNIFORM)
 			shader->SetUniform4(ul_coldiff, &m_color[CCT_DIFFUSE]);
@@ -302,23 +322,38 @@ bool MaterialImpl::Apply(ShaderProgram *shader, Renderer::RenderStateOverrideFla
 
 		int32_t ul_texdiff = shader->GetUniformLocation(_T("uSamplerDiffuse"));
 		if (ul_texdiff != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(GetTexture(TCT_DIFFUSE), ul_texdiff);
+		{
+			Texture *ptex = GetTexture(TCT_DIFFUSE, &texflags);
+			shader->SetUniformTexture(ptex, ul_texdiff, -1, texflags);
+		}
 
 		int32_t ul_texnorm = shader->GetUniformLocation(_T("uSamplerNormal"));
 		if (ul_texnorm != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(GetTexture(TCT_NORMAL), ul_texnorm);
+		{
+			Texture *ptex = GetTexture(TCT_NORMAL, &texflags);
+			shader->SetUniformTexture(ptex, ul_texnorm, -1, texflags);
+		}
 
 		int32_t ul_texsurf = shader->GetUniformLocation(_T("uSamplerSurfaceDesc"));
 		if (ul_texsurf != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(GetTexture(TCT_SURFACEDESC), ul_texsurf);
+		{
+			Texture *ptex = GetTexture(TCT_SURFACEDESC, &texflags);
+			shader->SetUniformTexture(ptex, ul_texsurf, -1, texflags);
+		}
 
 		int32_t ul_texemis = shader->GetUniformLocation(_T("uSamplerEmissive"));
 		if (ul_texemis != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(GetTexture(TCT_EMISSIVE), ul_texemis);
+		{
+			Texture *ptex = GetTexture(TCT_EMISSIVE, &texflags);
+			shader->SetUniformTexture(ptex, ul_texemis, -1, texflags);
+		}
 
 		int32_t ul_texdepth = shader->GetUniformLocation(_T("uSamplerPosDepth"));
 		if (ul_texdepth != ShaderProgram::INVALID_UNIFORM)
-			shader->SetUniformTexture(GetTexture(TCT_POSITIONDEPTH), ul_texdepth);
+		{
+			Texture *ptex = GetTexture(TCT_POSITIONDEPTH, &texflags);
+			shader->SetUniformTexture(ptex, ul_texdepth, -1, texflags);
+		}
 	}
 
 	return true;

@@ -7,12 +7,12 @@
 #pragma once
 
 #include <C3.h>
-#include <C3InterfaceElement.h>
+#include <C3TextRenderer.h>
 
 namespace c3
 {
 
-	class InterfaceElement : public Component
+	class TextRenderer : public Component
 	{
 
 	public:

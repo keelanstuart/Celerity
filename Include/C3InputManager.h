@@ -18,6 +18,7 @@ namespace c3
 
 	public:
 		enum { USER_ANY = -1, USER_DEFAULT };
+		using UserID = size_t;
 
 		typedef bool (__cdecl *DEVICECONNECTION_CALLBACK_FUNC)(InputDevice *device, bool conn, void *userdata);
 
@@ -32,31 +33,37 @@ namespace c3
 
 		// The User paradigm can be useful for local multiplayer where 3 physical devices (mouse / keyboard pair and a joypad)
 		// supply input data for 2 players. AssignUser allows you to set that
-		virtual void AssignUser(const InputDevice *pdevice, size_t user) = NULL;
+		virtual void AssignUser(const InputDevice *pdevice, UserID user) = NULL;
 
 		// Returns the user for the given Device
-		virtual bool GetAssignedUser(const InputDevice *pdevice, size_t &user) const = NULL;
+		virtual bool GetAssignedUser(const InputDevice *pdevice, UserID &user) const = NULL;
 
 		// Returns the number of individual users
 		virtual size_t GetNumUsers() const = NULL;
 
 		// Has the button been pressed?  A non-zero value is TRUE...
-		virtual int ButtonPressed(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, size_t user = USER_ANY, float time = 0.0f) const = NULL;
+		virtual int ButtonPressed(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, UserID user = USER_ANY, float time = 0.0f) const = NULL;
 
 		// Has the button been pressed?  A non-zero value is TRUE...
-		virtual float ButtonPressedProportional(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, size_t user = USER_ANY) const = NULL;
+		virtual float ButtonPressedProportional(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, UserID user = USER_ANY) const = NULL;
 
 		// What was the change in the button's state?
-		virtual int ButtonChange(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, size_t user = USER_ANY) const = NULL;
+		virtual int ButtonChange(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, UserID user = USER_ANY) const = NULL;
 
 		// Was the button just released?
-		virtual bool ButtonReleased(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, size_t user = USER_ANY) const = NULL;
+		virtual bool ButtonReleased(InputDevice::VirtualButton button = InputDevice::VirtualButton::ANY, UserID user = USER_ANY) const = NULL;
 
 		// Sets the mouse position (primarily for UI) in desktop space
 		virtual void SetMousePos(int32_t x, int32_t y) = NULL;
 
 		// Gets the mouse position (primarily for UI) in desktop space
 		virtual void GetMousePos(int32_t &x, int32_t &y) = NULL;
+
+		// Sets the global pick ray origin (in world space) and direction (normalized) - used by Interactable
+		virtual void SetPickRay(const glm::fvec3 &pos, const glm::fvec3 &dir, UserID user = USER_DEFAULT) = NULL;
+
+		// Gets the global pick ray origin (in world space) and direction (normalized) - used by Interactable
+		virtual bool GetPickRay(glm::fvec3 &pos, glm::fvec3 &dir, UserID user = USER_DEFAULT) = NULL;
 
 		// Acquires all connected Devices; this may be necessary when restoring focus to your application
 		virtual void AcquireAll() = NULL;

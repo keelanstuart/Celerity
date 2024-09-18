@@ -21,4 +21,5 @@ namespace c3
 		void C3_API RecursiveObjectAction(Object *proot, std::function<void(Object *)> action_func);
 
 	};
+
 };

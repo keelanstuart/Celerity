@@ -26,7 +26,8 @@
 #include <C3EnvironmentModifierImpl.h>
 #include <C3AnimationImpl.h>
 #include <C3AnimatorImpl.h>
-#include <C3InterfaceElementImpl.h>
+#include <C3TextRendererImpl.h>
+#include <C3InteractableImpl.h>
 
 #include <C3ResourceImpl.h>
 
@@ -173,7 +174,8 @@ void SystemImpl::Release()
 		UNREGISTER_COMPONENTTYPE(Scriptable, m_Factory);
 		UNREGISTER_COMPONENTTYPE(Physical, m_Factory);
 		UNREGISTER_COMPONENTTYPE(EnvironmentModifier, m_Factory);
-		UNREGISTER_COMPONENTTYPE(InterfaceElement, m_Factory);
+		UNREGISTER_COMPONENTTYPE(TextRenderer, m_Factory);
+		UNREGISTER_COMPONENTTYPE(Interactable, m_Factory);
 		// *************************************************
 
 		delete m_Factory;
@@ -304,7 +306,8 @@ Factory *SystemImpl::GetFactory()
 		REGISTER_COMPONENTTYPE(Scriptable, m_Factory);
 		REGISTER_COMPONENTTYPE(Physical, m_Factory);
 		REGISTER_COMPONENTTYPE(EnvironmentModifier, m_Factory);
-		REGISTER_COMPONENTTYPE(InterfaceElement, m_Factory);
+		REGISTER_COMPONENTTYPE(TextRenderer, m_Factory);
+		REGISTER_COMPONENTTYPE(Interactable, m_Factory);
 		// *************************************************
 	}
 

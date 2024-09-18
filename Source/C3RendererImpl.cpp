@@ -337,11 +337,13 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		static size_t errct = 10;
 		if (errct)
 		{
-			errct--;
-
 			c3::System* psys = (c3::System*)userParam;
 			if (message)
 			{
+				// keep these log messages; NV info spam
+				if (strstr(message, "Buffer detailed info") != message)
+					errct--;
+
 				TCHAR *tmp;
 				CONVERT_MBCS2TCS(message, tmp);
 
@@ -1856,16 +1858,14 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 
 			if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR))
 				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			else if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPNEAREST))
+			else if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR))
 				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 			else if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 			else if (texflags.IsSet(TEXFLAG_MINFILTER_MIPLINEAR))
 				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-			else if (texflags.IsSet(TEXFLAG_MINFILTER_MIPNEAREST))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 			else
-				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 
 			m_TexFlagsToSampler.insert(TTexFlagsToSamplerMap::value_type((uint32_t)texflags, sampid));
 		}
@@ -2794,18 +2794,18 @@ Mesh *RendererImpl::GetGuiRectMesh()
 		VertexBuffer *pvb = CreateVertexBuffer(0);
 		if (pvb)
 		{
-			static const Vertex::ST1::s v[4] =
+			static const Vertex::PNYT1::s v[4] =
 			{
 				// GUI Rect (on the x/z plane)
-				{ { 0, 0 }, { 0, 0 } },
-				{ { 0, 1 }, { 0, 1 } },
-				{ { 1, 1 }, { 1, 1 } },
-				{ { 1, 0 }, { 1, 0 } }
+				{ { 0, 0, 0 }, { 0, -1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 0, 0 } },
+				{ { 0, 0, 1 }, { 0, -1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 0, 1 } },
+				{ { 1, 0, 1 }, { 0, -1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 1, 1 } },
+				{ { 1, 0, 0 }, { 0, -1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 1, 0 } }
 			};
 
-			if (pvb->Lock(&buf, 4, Vertex::ST1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
+			if (pvb->Lock(&buf, 4, Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
 			{
-				memcpy(buf, v, sizeof(Vertex::ST1::s) * 4);
+				memcpy(buf, v, sizeof(Vertex::PNYT1::s) * 4);
 
 				pvb->Unlock();
 			}
@@ -3422,6 +3422,8 @@ Texture2D *RendererImpl::GetOrthoRefTexture()
 		m_OrthoRefTex = CreateTexture2D(imgw, imgh, tt, 1, 0);
 		if (m_OrthoRefTex)
 		{
+			m_OrthoRefTex->SetName(_T("OrthoReference"));
+
 			uint8_t *bufd, *bufs = pimg;
 			Texture2D::SLockInfo li;
 			if ((m_OrthoRefTex->Lock((void **)&bufd, li, 0, TEXLOCKFLAG_WRITE) == Texture2D::RETURNCODE::RET_OK) && bufd)

@@ -22,6 +22,8 @@ namespace c3
 
 		virtual void Execute(const TCHAR *pcmd, ...) = NULL;
 
+		virtual bool FunctionExists(const TCHAR *funcname) = NULL;
+
 	};
 
 };

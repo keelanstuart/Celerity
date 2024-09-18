@@ -138,7 +138,8 @@ void C3Dlg::RegisterAction(const TCHAR *name, c3::ActionMapper::ETriggerType tt,
 			if (pscr)
 			{
 				value *= theApp.m_C3->GetElapsedTime();
-				pscr->Execute(_T("handle_input(\"%s\", %0.5f);"), name, value);
+				if (pscr->FunctionExists(_T("handle_input")))
+					pscr->Execute(_T("handle_input(\"%s\", %0.5f);"), name, value);
 				return true;
 			}
 		}

@@ -94,7 +94,7 @@ void ScriptableImpl::Release()
 {
 	if (m_JS)
 	{
-		if (m_JS->GetScriptVariable(_T("free")))
+		if (FunctionExists(_T("free")))
 			Execute(_T("free();"));
 
 		delete m_JS;
@@ -155,7 +155,7 @@ void ScriptableImpl::ResetJS()
 {
 	if (m_JS)
 	{
-		if (m_JS->GetScriptVariable(_T("free")))
+		if (FunctionExists(_T("free")))
 			Execute(_T("free();"));
 
 		delete m_JS;
@@ -347,7 +347,7 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 
 	if (needs_init)
 	{
-		if (m_JS->GetScriptVariable(_T("init")))
+		if (FunctionExists(_T("init")))
 			Execute(_T("init();"));
 
 		m_bHasUpdate = m_JS->GetScriptVariable(_T("update")) ? true : false;
@@ -380,6 +380,14 @@ void ScriptableImpl::Execute(const TCHAR *pcmd, ...)
 	m_Continue = m_JS->Execute(execbuf.c_str());
 }
 
+bool ScriptableImpl::FunctionExists(const TCHAR *funcname)
+{
+	CScriptVar *v = m_JS->GetScriptVariable(funcname);
+	if (v && v->IsFunction())
+		return true;
+
+	return false;
+}
 
 void jcGetNumChildren(CScriptVar *c, void *userdata)
 {

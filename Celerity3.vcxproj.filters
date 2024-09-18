@@ -228,10 +228,13 @@
     <ClCompile Include="Source\C3FontImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\C3InterfaceElementImpl.cpp">
+    <ClCompile Include="Source\C3Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\C3Utility.cpp">
+    <ClCompile Include="Source\C3TextRendererImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3InteractableImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -614,12 +617,6 @@
     <ClInclude Include="Source\resource.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
-    <ClInclude Include="Source\C3InterfaceElementImpl.h">
-      <Filter>Header Files\Private</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3InterfaceElement.h">
-      <Filter>Header Files\Public</Filter>
-    </ClInclude>
     <ClInclude Include="Include\C3Font.h">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
@@ -627,6 +624,18 @@
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="include\C3Utility.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3TextRendererImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3TextRenderer.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3InteractableImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Interactable.h">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
   </ItemGroup>

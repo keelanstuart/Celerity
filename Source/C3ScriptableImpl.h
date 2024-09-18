@@ -55,6 +55,8 @@ namespace c3
 
 		virtual void Execute(const TCHAR *pcmd, ...);
 
+		virtual bool FunctionExists(const TCHAR *funcname);
+
 	};
 
 	// Scriptable Component GUID {1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}

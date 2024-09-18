@@ -14,16 +14,6 @@ namespace c3
 
 	namespace math
 	{
-		struct C3_API FRECT
-		{
-			float left;
-			float top;
-			float right;
-			float bottom;
-
-			inline float Width() { return fabs(right - left); }
-			inline float Height() { return fabs(bottom - top); }
-		};
 
 		/// Computes the hermite spline position at percent_traveled between points A and B, given tangent vectors through those points
 		/// Optionally computes the first and second derivatives
@@ -46,6 +36,26 @@ namespace c3
 		float C3_API GetRoll(const glm::fquat *q);
 
 		float C3_API RandomRange(float lo, float hi);
+
+		template <class T> struct Rect2D
+		{
+			T left, top, right, bottom;
+
+			Rect2D() { }
+			Rect2D(T l, T t, T r, T b) : left(l), top(t), right(r), bottom(b) { }
+
+			inline T Width()
+			{
+				return std::abs(right - left);
+			}
+
+			inline T Height()
+			{
+				return std::abs(top - bottom);
+			}
+		};
+
+		using FRect2D = Rect2D<float>;
 
 	};
 
