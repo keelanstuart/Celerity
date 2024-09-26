@@ -10,6 +10,7 @@
 #include <C3RendererImpl.h>
 #include <C3Resource.h>
 #include <C3BoundingBox.h>
+#include <C3FrameBuffer.h>
 #include <optional>
 
 
@@ -44,6 +45,10 @@ namespace c3
 			Renderer::RenderStateOverrideFlags m_StateRestorationMask;
 			std::optional<Renderer::BlendMode> m_BlendMode;
 			std::optional<Renderer::BlendEquation> m_BlendEq;
+			std::optional<Renderer::ChannelMask> m_ChannelWriteMask;
+			std::optional<Renderer::BlendMode> m_BlendModeCh[FrameBuffer::MAX_COLORTARGETS];
+			std::optional<Renderer::BlendEquation> m_BlendEqCh[FrameBuffer::MAX_COLORTARGETS];
+			std::optional<Renderer::ChannelMask> m_ChannelWriteMaskCh[FrameBuffer::MAX_COLORTARGETS];
 			std::optional<Renderer::CullMode> m_CullMode;
 			std::optional<Renderer::WindingOrder> m_WindingOrder;
 			std::optional<Renderer::DepthMode> m_DepthMode;

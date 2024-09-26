@@ -36,7 +36,13 @@ FrameBufferImpl::FrameBufferImpl(RendererImpl* prend, const TCHAR *name)
 	m_Name = name;
 	m_glID = NULL;
 	m_DepthTarget = nullptr;
-	m_BlendMode = Renderer::BlendMode::BM_NUMMODES;
+
+	for (size_t i = 0; i < MAX_COLORTARGETS; i++)
+	{
+		m_BlendMode[i] = Renderer::BlendMode::BM_NUMMODES;
+		m_BlendEq[i] = Renderer::BlendEquation::BE_NUMMODES;
+		m_ChannelMask[i] = CM_RED | CM_GREEN | CM_BLUE | CM_ALPHA;
+	}
 
 	if (m_Rend)
 	{
@@ -492,84 +498,99 @@ void FrameBufferImpl::Clear(props::TFlags64 flags, int target)
 }
 
 
-void FrameBufferImpl::SetBlendMode(Renderer::BlendMode mode)
+void FrameBufferImpl::SetBlendMode(Renderer::BlendMode mode, int target)
 {
-	if (mode != m_BlendMode)
+	// if target is negative, then go through all attachments
+	if (target < 0)
 	{
-		if ((m_BlendMode != Renderer::BlendMode::BM_ALPHA) && (m_BlendMode != Renderer::BlendMode::BM_ADD) && (m_BlendMode != Renderer::BlendMode::BM_ADDALPHA))
-			m_Rend->gl.Enablei(GL_BLEND, m_glID);
-		else if ((mode != Renderer::BlendMode::BM_ALPHA) && (mode != Renderer::BlendMode::BM_ADD) && (mode != Renderer::BlendMode::BM_ADDALPHA))
-			m_Rend->gl.Disablei(GL_BLEND, m_glID);
+		for (size_t i = 0; i < GetNumColorTargets(); i++)
+			SetBlendMode(mode, (int)i);
+		return;
+	}
+	else if (target >= GetNumColorTargets())
+		return;
 
-		switch (mode)
+	if (mode != m_BlendMode[target])
+	{
+		// normally, we want to set these things when we change the active frame buffer, but if we change a setting while
+		// the frame is already active, do it now.
+		if (m_Rend->GetActiveFrameBuffer() == this)
 		{
-			case Renderer::BlendMode::BM_ALPHA:
-				m_Rend->gl.BlendFunci(m_glID, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				break;
-
-			case Renderer::BlendMode::BM_ADD:
-				m_Rend->gl.BlendFunci(m_glID, GL_ONE, GL_ONE);
-				break;
-
-			case Renderer::BlendMode::BM_ADDALPHA:
-				m_Rend->gl.BlendFunci(m_glID, GL_SRC_ALPHA, GL_ONE);
-				break;
-
-			case Renderer::BlendMode::BM_REPLACE:
-				m_Rend->gl.BlendFunci(m_glID, GL_ONE, GL_ZERO);
-				break;
-
-			case Renderer::BlendMode::BM_DISABLED:
-				m_Rend->gl.BlendFunci(m_glID, GL_ZERO, GL_ZERO);
-				break;
+			_SetBlendMode((size_t)target, mode);
 		}
 
-		m_BlendMode = mode;
+		m_BlendMode[target] = mode;
 	}
 }
 
 
-Renderer::BlendMode FrameBufferImpl::GetBlendMode() const
+Renderer::BlendMode FrameBufferImpl::GetBlendMode(int target) const
 {
-	return m_BlendMode;
+	return m_BlendMode[std::min<int>(std::max<int>(0, target), MAX_COLORTARGETS)];
 }
 
 
-void FrameBufferImpl::SetBlendEquation(Renderer::BlendEquation eq)
+void FrameBufferImpl::SetBlendEquation(Renderer::BlendEquation eq, int target)
 {
-	if (eq != m_BlendEq)
+	// if target is negative, then go through all attachments
+	if (target < 0)
 	{
-		switch (eq)
+		for (size_t i = 0; i < GetNumColorTargets(); i++)
+			SetBlendEquation(eq, (int)i);
+		return;
+	}
+	else if (target >= GetNumColorTargets())
+		return;
+
+	if (eq != m_BlendEq[target])
+	{
+		// normally, we want to set these things when we change the active frame buffer, but if we change a setting while
+		// the frame is already active, do it now.
+		if (m_Rend->GetActiveFrameBuffer() == this)
 		{
-			case Renderer::BlendEquation::BE_ADD:
-				m_Rend->gl.BlendEquationi(m_glID, GL_FUNC_ADD);
-				break;
-
-			case Renderer::BlendEquation::BE_SUBTRACT:
-				m_Rend->gl.BlendEquationi(m_glID, GL_FUNC_SUBTRACT);
-				break;
-
-			case Renderer::BlendEquation::BE_REVERSE_SUBTRACT:
-				m_Rend->gl.BlendEquationi(m_glID, GL_FUNC_REVERSE_SUBTRACT);
-				break;
-
-			case Renderer::BlendEquation::BE_MIN:
-				m_Rend->gl.BlendEquationi(m_glID, GL_MIN);
-				break;
-
-			case Renderer::BlendEquation::BE_MAX:
-				m_Rend->gl.BlendEquationi(m_glID, GL_MAX);
-				break;
+			_SetBlendEquation((size_t)target, eq);
 		}
 
-		m_BlendEq = eq;
+		m_BlendEq[target] = eq;
 	}
 }
 
 
-Renderer::BlendEquation FrameBufferImpl::GetBlendEquation() const
+Renderer::BlendEquation FrameBufferImpl::GetBlendEquation(int target) const
 {
-	return m_BlendEq;
+	return m_BlendEq[std::min<int>(std::max<int>(0, target), MAX_COLORTARGETS)];
+}
+
+
+void FrameBufferImpl::FrameBufferImpl::SetChannelWriteMask(Renderer::ChannelMask mask, int target)
+{
+	// if target is negative, then go through all attachments
+	if (target < 0)
+	{
+		for (size_t i = 0; i < GetNumColorTargets(); i++)
+			SetChannelWriteMask(mask, (int)i);
+		return;
+	}
+	else if (target >= GetNumColorTargets())
+		return;
+
+	if (mask != m_ChannelMask[target])
+	{
+		// normally, we want to set these things when we change the active frame buffer, but if we change a setting while
+		// the frame is already active, do it now.
+		if (m_Rend->GetActiveFrameBuffer() == this)
+		{
+			_SetChannelWriteMask((size_t)target, mask);
+		}
+
+		m_ChannelMask[target] = mask;
+	}
+}
+
+
+Renderer::ChannelMask FrameBufferImpl::GetChannelWriteMask(int target) const
+{
+	return m_ChannelMask[std::min<int>(std::max<int>(0, target), MAX_COLORTARGETS)];
 }
 
 
@@ -582,4 +603,111 @@ void FrameBufferImpl::Subscribe(Subscription *sub)
 void FrameBufferImpl::Unsubscribe(Subscription *sub)
 {
 	m_Pub->Unsubscribe(sub);
+}
+
+
+void FrameBufferImpl::ApplySettings()
+{
+	for (size_t i = 0; i < GetNumColorTargets(); i++)
+	{
+		_SetBlendMode(i, m_BlendMode[i]);
+		_SetBlendEquation(i, m_BlendEq[i]);
+		_SetChannelWriteMask(i, m_ChannelMask[i]);
+	}
+}
+
+
+void FrameBufferImpl::_SetBlendMode(size_t target, Renderer::BlendMode mode)
+{
+	static Renderer::BlendMode oldmode[MAX_COLORTARGETS] = {Renderer::BM_DISABLED};
+	if (oldmode[target] == mode)
+		return;
+
+	if ((oldmode[target] != Renderer::BlendMode::BM_ALPHA) &&
+		(oldmode[target] != Renderer::BlendMode::BM_ADD) &&
+		(oldmode[target] != Renderer::BlendMode::BM_ADDALPHA))
+	{
+		m_Rend->gl.Enablei(GL_BLEND, (GLuint)target);
+	}
+	else if ((mode != Renderer::BlendMode::BM_ALPHA) &&
+			 (mode != Renderer::BlendMode::BM_ADD) &&
+			 (mode != Renderer::BlendMode::BM_ADDALPHA))
+	{
+		m_Rend->gl.Disablei(GL_BLEND, (GLuint)target);
+	}
+
+	switch (mode)
+	{
+		case Renderer::BlendMode::BM_ALPHA:
+			m_Rend->gl.BlendFunci((GLuint)target, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			break;
+
+		case Renderer::BlendMode::BM_ADD:
+			m_Rend->gl.BlendFunci((GLuint)target, GL_ONE, GL_ONE);
+			break;
+
+		case Renderer::BlendMode::BM_ADDALPHA:
+			m_Rend->gl.BlendFunci((GLuint)target, GL_SRC_ALPHA, GL_ONE);
+			break;
+
+		case Renderer::BlendMode::BM_REPLACE:
+			m_Rend->gl.BlendFunci((GLuint)target, GL_ONE, GL_ZERO);
+			break;
+
+		case Renderer::BlendMode::BM_DISABLED:
+			m_Rend->gl.BlendFunci((GLuint)target, GL_ZERO, GL_ZERO);
+			break;
+	}
+
+	oldmode[target] = mode;
+}
+
+
+void FrameBufferImpl::_SetBlendEquation(size_t target, Renderer::BlendEquation eq)
+{
+	static Renderer::BlendEquation oldeq[MAX_COLORTARGETS] = {Renderer::BE_ADD};
+	if (oldeq[target] == eq)
+		return;
+
+	switch (eq)
+	{
+		case Renderer::BlendEquation::BE_ADD:
+			m_Rend->gl.BlendEquationi((GLuint)target, GL_FUNC_ADD);
+			break;
+
+		case Renderer::BlendEquation::BE_SUBTRACT:
+			m_Rend->gl.BlendEquationi((GLuint)target, GL_FUNC_SUBTRACT);
+			break;
+
+		case Renderer::BlendEquation::BE_REVERSE_SUBTRACT:
+			m_Rend->gl.BlendEquationi((GLuint)target, GL_FUNC_REVERSE_SUBTRACT);
+			break;
+
+		case Renderer::BlendEquation::BE_MIN:
+			m_Rend->gl.BlendEquationi((GLuint)target, GL_MIN);
+			break;
+
+		case Renderer::BlendEquation::BE_MAX:
+			m_Rend->gl.BlendEquationi((GLuint)target, GL_MAX);
+			break;
+	}
+
+	oldeq[target] = eq;
+}
+
+
+void FrameBufferImpl::_SetChannelWriteMask(size_t target, Renderer::ChannelMask mask)
+{
+	static Renderer::ChannelMask oldmask[MAX_COLORTARGETS] = {CM_RED | CM_GREEN | CM_BLUE | CM_ALPHA};
+	if (oldmask[target] == mask)
+		return;
+
+	GLboolean r = mask.IsSet(CM_RED);
+	GLboolean g = mask.IsSet(CM_GREEN);
+	GLboolean b = mask.IsSet(CM_BLUE);
+	GLboolean a = mask.IsSet(CM_ALPHA);
+
+	m_Rend->gl.ColorMaski((GLuint)target, r, g, b, a);
+
+	oldmask[target] = mask;
 }

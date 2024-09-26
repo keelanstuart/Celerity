@@ -71,6 +71,48 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 
 	Renderer::RenderStateOverrideFlags ret;
 
+	if (m_FrameBufferName.has_value())
+	{
+		if (m_FBSub)
+		{
+			m_FrameBuffer = prend->FindFrameBuffer((*m_FrameBufferName).c_str());
+			if (m_FrameBuffer)
+			{
+				((FrameBufferImpl *)m_FrameBuffer)->Subscribe(&m_FBSub);
+				m_FBSub = false;
+			}
+		}
+	}
+
+	// If we have a frame buffer, we need to check for target-specific settings (blending and color masking stuff)
+	if (m_FrameBuffer)
+	{
+		size_t ct = m_FrameBuffer->GetNumColorTargets();
+		for (size_t i = 0; i < ct; i++)
+		{
+			if (m_BlendModeCh[i].has_value())
+			{
+				m_FrameBuffer->SetBlendMode(*m_BlendModeCh[i], (int)i);
+				ret.Set(RSOF_BLENDMODE);
+			}
+
+			if (m_BlendEqCh[i].has_value())
+			{
+				m_FrameBuffer->SetBlendEquation(*m_BlendEqCh[i], (int)i);
+				ret.Set(RSOF_BLENDEQ);
+			}
+
+			if (m_ChannelWriteMaskCh[i].has_value())
+			{
+				m_FrameBuffer->SetChannelWriteMask(*m_ChannelWriteMaskCh[i], (int)i);
+				ret.Set(RSOF_COLORMASK);
+			}
+		}
+	}
+
+	if (m_FrameBuffer)
+		prend->UseFrameBuffer(m_FrameBuffer, m_FrameBufferFlags);
+
 	if (m_BlendMode.has_value())
 	{
 		prend->SetBlendMode(*m_BlendMode);
@@ -81,6 +123,12 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 	{
 		prend->SetBlendEquation(*m_BlendEq);
 		ret.Set(RSOF_BLENDEQ);
+	}
+
+	if (m_ChannelWriteMask.has_value())
+	{
+		prend->SetChannelWriteMask(*m_ChannelWriteMask);
+		ret.Set(RSOF_COLORMASK);
 	}
 
 	if (m_CullMode.has_value())
@@ -105,21 +153,6 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 	{
 		prend->SetFillMode(*m_FillMode);
 		ret.Set(RSOF_FILLMODE);
-	}
-
-	if (m_FrameBufferName.has_value())
-	{
-		if (m_FBSub)
-		{
-			m_FrameBuffer = prend->FindFrameBuffer((*m_FrameBufferName).c_str());
-			if (m_FrameBuffer)
-			{
-				((FrameBufferImpl *)m_FrameBuffer)->Subscribe(&m_FBSub);
-				m_FBSub = false;
-			}
-		}
-
-		prend->UseFrameBuffer(m_FrameBuffer, m_FrameBufferFlags);
 	}
 
 	bool need_shader = false;
@@ -679,6 +712,17 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 			persist = true;
 	}
 
+	const tinyxml2::XMLAttribute *pafbtarget = proot->FindAttribute("fbtarget");
+	int fbtarget = -1;
+	if (pafbtarget)
+	{
+		fbtarget = pafbtarget->IntValue();
+		if (fbtarget >= FrameBuffer::MAX_COLORTARGETS)
+		{
+			// ??? ->GetSystem()->GetLog()->Print(_T("FBO target out of range!"));
+		}
+	}
+
 	TCHAR *v;
 	CONVERT_MBCS2TCS(pavalue->Value(), v);
 	tstring value = v;
@@ -769,29 +813,31 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 		if (persist)
 			m_StateRestorationMask.Clear(RSOF_BLENDMODE);
 
+		std::optional<Renderer::BlendMode> &blendmode = (fbtarget < 0) ? m_BlendMode : m_BlendModeCh[fbtarget];
+
 		if (value == _T("add"))
 		{
-			m_BlendMode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ADD);
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ADD);
 		}
 		else if (value == _T("alpha"))
 		{
-			m_BlendMode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ALPHA);
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ALPHA);
 		}
 		else if (value == _T("addalpha"))
 		{
-			m_BlendMode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ADDALPHA);
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ADDALPHA);
 		}
 		else if (value == _T("alphatocoverage"))
 		{
-			m_BlendMode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ALPHATOCOVERAGE);
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ALPHATOCOVERAGE);
 		}
 		else if (value == _T("replace"))
 		{
-			m_BlendMode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_REPLACE);
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_REPLACE);
 		}
 		else if (value == _T("disabled"))
 		{
-			m_BlendMode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_DISABLED);
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_DISABLED);
 		}
 	}
 	else if (name == _T("blendeq"))
@@ -799,26 +845,42 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 		if (persist)
 			m_StateRestorationMask.Clear(RSOF_BLENDEQ);
 
+		std::optional<Renderer::BlendEquation> &blendeq = (fbtarget < 0) ? m_BlendEq : m_BlendEqCh[fbtarget];
+
 		if (value == _T("add"))
 		{
-			m_BlendEq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_ADD);
+			blendeq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_ADD);
 		}
 		else if (value == _T("subtract"))
 		{
-			m_BlendEq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_SUBTRACT);
+			blendeq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_SUBTRACT);
 		}
 		else if (value == _T("revsubtract"))
 		{
-			m_BlendEq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_REVERSE_SUBTRACT);
+			blendeq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_REVERSE_SUBTRACT);
 		}
 		else if (value == _T("min"))
 		{
-			m_BlendEq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_MIN);
+			blendeq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_MIN);
 		}
 		else if (value == _T("max"))
 		{
-			m_BlendEq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_MAX);
+			blendeq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_MAX);
 		}
+	}
+	else if (name == _T("channelmask"))
+	{
+		if (persist)
+			m_StateRestorationMask.Clear(RSOF_COLORMASK);
+
+		std::optional<Renderer::ChannelMask> &chmask = (fbtarget < 0) ? m_ChannelWriteMask : m_ChannelWriteMaskCh[fbtarget];
+
+		bool r = (_tcschr(value.c_str(), _T('R')) != nullptr) || (_tcschr(value.c_str(), _T('r')) != nullptr);
+		bool g = (_tcschr(value.c_str(), _T('G')) != nullptr) || (_tcschr(value.c_str(), _T('g')) != nullptr);
+		bool b = (_tcschr(value.c_str(), _T('B')) != nullptr) || (_tcschr(value.c_str(), _T('b')) != nullptr);
+		bool a = (_tcschr(value.c_str(), _T('A')) != nullptr) || (_tcschr(value.c_str(), _T('a')) != nullptr);
+
+		chmask = std::make_optional<Renderer::ChannelMask>((r ? CM_RED : 0) | (g ? CM_GREEN : 0) | (b ? CM_BLUE : 0) | (a ? CM_ALPHA : 0));
 	}
 	else if (name == _T("cullmode"))
 	{

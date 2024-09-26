@@ -80,8 +80,10 @@ namespace c3
 
 		const static GLuint targenum[MAX_COLORTARGETS];
 
-		Renderer::BlendMode m_BlendMode;
-		Renderer::BlendEquation m_BlendEq;
+		Renderer::BlendMode m_BlendMode[MAX_COLORTARGETS];
+		Renderer::BlendEquation m_BlendEq[MAX_COLORTARGETS];
+		Renderer::ChannelMask m_ChannelMask[MAX_COLORTARGETS];
+
 		Publisher *m_Pub;
 
 	public:
@@ -125,19 +127,31 @@ namespace c3
 
 		virtual void Clear(props::TFlags64 flags, int target = -1);
 
-		virtual void SetBlendMode(Renderer::BlendMode mode);
+		virtual void SetBlendMode(Renderer::BlendMode mode, int target = -1);
 
-		virtual Renderer::BlendMode GetBlendMode() const;
+		virtual Renderer::BlendMode GetBlendMode(int target = 0) const;
 
-		virtual void SetBlendEquation(Renderer::BlendEquation eq);
+		virtual void SetBlendEquation(Renderer::BlendEquation eq, int target = -1);
 
-		virtual Renderer::BlendEquation GetBlendEquation() const;
+		virtual Renderer::BlendEquation GetBlendEquation(int target = 0) const;
+
+		virtual void SetChannelWriteMask(Renderer::ChannelMask mask, int target = -1);
+
+		virtual Renderer::ChannelMask GetChannelWriteMask(int target = -1) const;
 
 		operator GLuint() const { return m_glID; }
 
 		void Subscribe(Subscription *sub);
 
 		void Unsubscribe(Subscription *sub);
+
+		void ApplySettings();
+
+		void _SetBlendMode(size_t target, Renderer::BlendMode mode);
+
+		void _SetBlendEquation(size_t target, Renderer::BlendEquation eq);
+
+		void _SetChannelWriteMask(size_t target, Renderer::ChannelMask mask);
 
 	};
 

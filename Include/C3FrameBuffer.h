@@ -100,17 +100,23 @@ namespace c3
 		/// NOTE: Uses the same flags as Renderer::UserFrameBuffer for selecting what to clear
 		virtual void Clear(props::TFlags64 flags, int target = -1) = NULL;
 
-		/// Sets the blend mode for this render target
-		virtual void SetBlendMode(Renderer::BlendMode mode) = NULL;
+		/// Sets the blend mode for this render target (or a specific attachment)
+		virtual void SetBlendMode(Renderer::BlendMode mode, int target = -1) = NULL;
 
-		/// Gets the blend mode for this render target
-		virtual Renderer::BlendMode GetBlendMode() const = NULL;
+		/// Gets the blend mode for this render target (or a specific attachment)
+		virtual Renderer::BlendMode GetBlendMode(int target = -1) const = NULL;
 
 		/// Sets the blend equation for this render target
-		virtual void SetBlendEquation(Renderer::BlendEquation eq) = NULL;
+		virtual void SetBlendEquation(Renderer::BlendEquation eq, int target = -1) = NULL;
 
 		/// Gets the blend equation for this render target
-		virtual Renderer::BlendEquation GetBlendEquation() const = NULL;
+		virtual Renderer::BlendEquation GetBlendEquation(int target = -1) const = NULL;
+
+		/// Sets the channel write mask for this render target (or a specific attachment)
+		virtual void SetChannelWriteMask(Renderer::ChannelMask mask, int target = -1) = NULL;
+
+		/// Gets the channel write mask for this render target (or a specific attachment)
+		virtual Renderer::ChannelMask GetChannelWriteMask(int target = -1) const = NULL;
 
 	};
 

@@ -160,6 +160,8 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	pt->AddPass();
 
 	m_Frustum = BoundingBox::Create();
+
+	m_DepthBias = 0;
 }
 
 
@@ -1311,6 +1313,45 @@ Renderer::BlendEquation RendererImpl::GetBlendEquation() const
 }
 
 
+void RendererImpl::SetChannelWriteMask(ChannelMask mask)
+{
+	if (mask != m_ChannelWriteMask)
+	{
+		GLboolean r = mask.IsSet(CM_RED);
+		GLboolean g = mask.IsSet(CM_GREEN);
+		GLboolean b = mask.IsSet(CM_BLUE);
+		GLboolean a = mask.IsSet(CM_ALPHA);
+
+		gl.ColorMask(r, g, b, a);
+
+		m_ChannelWriteMask = mask;
+	}
+}
+
+
+void RendererImpl::SetDepthBias(float bias)
+{
+	if (bias != m_DepthBias)
+	{
+		gl.PolygonOffset(1.0f, bias);
+
+		m_DepthBias = bias;
+	}
+}
+
+
+float RendererImpl::GetDepthBias() const
+{
+	return m_DepthBias;
+}
+
+
+Renderer::ChannelMask RendererImpl::GetChannelWriteMask() const
+{
+	return m_ChannelWriteMask;
+}
+
+
 size_t RendererImpl::PixelSize(Renderer::TextureType type)
 {
 	switch (type)
@@ -1670,7 +1711,13 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 
 	GLuint glid = 0;
 	if (pfb)
-		glid = (c3::FrameBufferImpl &)*pfb;
+	{
+		c3::FrameBufferImpl &fb = (c3::FrameBufferImpl &)*pfb;
+		glid = fb;
+
+		// apply the FBO-specific settings
+		fb.ApplySettings();
+	}
 
 	if (flags.IsSet(UFBFLAG_FINISHLAST))
 		gl.Finish();

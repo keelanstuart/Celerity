@@ -108,6 +108,7 @@ namespace c3
 		BlendMode m_BlendMode;
 		BlendEquation m_BlendEq;
 		FillMode m_FillMode;
+		ChannelMask m_ChannelWriteMask;
 
 		float m_AlphaPassMin, m_AlphaPassMax;
 		bool m_StencilEnabled;
@@ -179,6 +180,8 @@ namespace c3
 		std::vector<std::string> m_DebugGroupStack;
 
 		LOG_FUNC m_LogFunc;
+
+		float m_DepthBias;
 
 	public:
 
@@ -274,6 +277,12 @@ namespace c3
 
 		virtual void SetBlendEquation(BlendEquation eq);
 		virtual BlendEquation GetBlendEquation() const;
+
+		virtual void SetChannelWriteMask(ChannelMask mask);
+		virtual ChannelMask GetChannelWriteMask() const;
+
+		virtual void SetDepthBias(float bias);
+		virtual float GetDepthBias() const;
 
 		size_t PixelSize(TextureType type);
 		GLenum GLType(TextureType type);

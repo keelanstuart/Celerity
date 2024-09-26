@@ -16,6 +16,7 @@
 
 	<technique name="g">
 		<pass>
+			<setting name="framebuffer"			value="GBuffer" />
 			<setting name="shader.vertex"		value="def-obj.vsh" />
 			<setting name="shader.fragment"		value="def-obj.fsh" />
 		</pass>
@@ -25,8 +26,19 @@
 		<pass>
 			<setting name="cullmode"			value="disabled" />
 			<setting name="depthtest"			value="lessequal" />
+			<setting name="depthmode"			value="readonly" />
 			<setting name="shader.vertex"		value="def-obj.vsh" />
 			<setting name="shader.fragment"		value="def-text.fsh" />
+		</pass>
+	</technique>
+
+	<technique name="textbg" draworder="1">
+		<pass>
+			<setting name="cullmode"			value="disabled" />
+			<setting name="depthtest"			value="less" />
+			<setting name="depthmode"			value="readwrite" />
+			<setting name="shader.vertex"		value="def-obj.vsh" />
+			<setting name="shader.fragment"		value="def-obj.fsh" />
 		</pass>
 	</technique>
 

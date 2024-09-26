@@ -211,27 +211,34 @@ namespace c3
 			RL_RESCOUNT
 		};
 
+		using ChannelMask = props::TFlags64;
+		#define CM_RED		0x1
+		#define CM_GREEN	0x2
+		#define CM_BLUE		0x4
+		#define CM_ALPHA	0x8
+
 		// There is an interplay between RenderMethods and Materials. Since Materials are (or can be) data driven by Models,
 		// and because RenderMethods sit logically on top of them and because it is often desirable to make them override render states set
 		// by a Material, RenderMethod Passes will return a set of RenderStateOverrideFlags indicating which states have been overridden
 		// and should therefore not be re-set by Materials. This is not really useful for most users of Materials or RenderMethods,
 		// but the flags are being defined here because the Apply interfaces are public-facing and these represent only the overlapping parts of both
 		using RenderStateOverrideFlags = props::TFlags32;
-		#define RSOF_WINDINGORDER	0x0001
-		#define RSOF_CULLMODE		0x0002
-		#define RSOF_FILLMODE		0x0004
-		#define RSOF_DEPTHMODE		0x0008
-		#define RSOF_DEPTHTEST		0x0010
-		#define RSOF_STENCIL		0x0020
-		#define RSOF_BLENDMODE		0x0040
-		#define RSOF_BLENDEQ		0x0080
-		#define RSOF_COLORAMB		0x0100
-		#define RSOF_COLORDIFF		0x0200
-		#define RSOF_COLOREMIS		0x0400
-		#define RSOF_TEXDIFF		0x1000
-		#define RSOF_TEXNORM		0x2000
-		#define RSOF_TEXEMIS		0x4000
-		#define RSOF_TEXSURF		0x8000
+		#define RSOF_WINDINGORDER	0x00001
+		#define RSOF_CULLMODE		0x00002
+		#define RSOF_FILLMODE		0x00004
+		#define RSOF_DEPTHMODE		0x00008
+		#define RSOF_DEPTHTEST		0x00010
+		#define RSOF_STENCIL		0x00020
+		#define RSOF_BLENDMODE		0x00040
+		#define RSOF_BLENDEQ		0x00080
+		#define RSOF_COLORAMB		0x00100
+		#define RSOF_COLORDIFF		0x00200
+		#define RSOF_COLOREMIS		0x00400
+		#define RSOF_TEXDIFF		0x01000
+		#define RSOF_TEXNORM		0x02000
+		#define RSOF_TEXEMIS		0x04000
+		#define RSOF_TEXSURF		0x08000
+		#define RSOF_COLORMASK		0x10000
 
 
 
@@ -357,6 +364,17 @@ namespace c3
 
 		virtual void SetBlendEquation(BlendEquation eq) = NULL;
 		virtual BlendEquation GetBlendEquation() const = NULL;
+
+		// Sets the write mask for output color channels, use bitwise OR to combine CM_RED, CM_GREEN, CM_BLUE, and CM_ALPHA
+		virtual void SetChannelWriteMask(ChannelMask mask) = NULL;
+
+		// Gets the write mask for output color channels
+		virtual ChannelMask GetChannelWriteMask() const = NULL;
+
+		/// Sets the depth bias when rendering polygons - used to combat z-fighting scintillation
+		virtual void SetDepthBias(float bias) = NULL;
+
+		virtual float GetDepthBias() const = NULL;
 
 		virtual Texture2D *CreateTexture2D(size_t width, size_t height, TextureType type, size_t mipcount = 0, props::TFlags64 createflags = 0) = NULL;
 		virtual TextureCube *CreateTextureCube(size_t width, size_t height, size_t depth, TextureType type, size_t mipcount = 0, props::TFlags64 createflags = 0) = NULL;

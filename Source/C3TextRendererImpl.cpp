@@ -257,7 +257,7 @@ void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pma
 					m_pMethodImage = (RenderMethod *)(pres->GetData());
 
 				if (m_pMethodImage)
-					m_pMethodImage->FindTechnique(_T("g"), m_TechImage);
+					m_pMethodImage->FindTechnique(_T("textbg"), m_TechImage);
 			}
 		}
 
@@ -288,8 +288,10 @@ void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pma
 		m_pMethodImage->SetActiveTechnique(m_TechImage);
 		pr->UseRenderMethod(m_pMethodImage);
 	}
+
 	if (!flags.IsSet(RF_LOCKMATERIAL))
 		pr->UseMaterial(m_pImgMtl);
+
 	glm::fmat4x4 transmat = glm::translate(glm::fvec3(m_Rect.left, 0.0f, m_Rect.top));
 	glm::fmat4x4 sclmat = glm::scale(glm::fvec3(m_Rect.Width(), 1.0f, -m_Rect.Height()));
 	glm::fmat4x4 mat = *pmat * (transmat * sclmat);
@@ -302,11 +304,26 @@ void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pma
 			m_pMethodText->SetActiveTechnique(m_TechText);
 			pr->UseRenderMethod(m_pMethodText);
 		}
+
 		if (!flags.IsSet(RF_LOCKMATERIAL))
 			pr->UseMaterial(m_pTextMtl);
+
 		pr->UseVertexBuffer(m_pTextVB);
 		pr->SetWorldMatrix(pmat);
+
+		//pr->SetDepthBias(0.1f);
+
+		Renderer::BlendMode bm = pr->GetActiveFrameBuffer()->GetBlendMode(0);
+		pr->GetActiveFrameBuffer()->SetBlendMode(Renderer::BM_ALPHA, 0);
+
+		Renderer::ChannelMask cm = pr->GetActiveFrameBuffer()->GetChannelWriteMask(0);
+		pr->GetActiveFrameBuffer()->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE, 0);
+
 		pr->DrawPrimitives(Renderer::PrimType::TRILIST, m_TextQuads * 6);
+
+		pr->GetActiveFrameBuffer()->SetChannelWriteMask(cm, 0);
+		pr->GetActiveFrameBuffer()->SetBlendMode(bm, 0);
+		//pr->SetDepthBias(0);
 	}
 }
 
@@ -369,6 +386,13 @@ bool TextRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRay
 	if (!pmat)
 		pmat = &imat;
 
+	// Inverse of the transformation matrix to transform the ray to local space
+	glm::fmat4x4 invMat = glm::inverse(*pmat);
+
+	// Transform ray position and direction to local space
+	glm::vec3 localRayPos = glm::vec3(invMat * glm::vec4(*pRayPos, 1.0f));
+	glm::vec3 localRayDir = glm::normalize(glm::vec3(invMat * glm::vec4(*pRayDir, 0.0f)));
+
 	bool ret = false;
 
 	glm::fvec3 v_lt = *pmat * glm::vec4(m_Rect.left, 0, m_Rect.top, 0);
@@ -382,24 +406,27 @@ bool TextRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRay
 	// check for a collision
 	bool hit = false;
 
-	hit = glm::intersectRayTriangle(*pRayPos, *pRayDir, v_lt, v_lb, v_rt, luv, ldist);
+	hit = glm::intersectRayTriangle(localRayPos, localRayDir, v_lt, v_lb, v_rt, luv, ldist);
 	if (!hit)
-		hit = glm::intersectRayTriangle(*pRayPos, *pRayDir, v_lt, v_rt, v_lb, luv, ldist);
+		hit = glm::intersectRayTriangle(localRayPos, localRayDir, v_lt, v_rt, v_lb, luv, ldist);
 	if (!hit)
-		hit = glm::intersectRayTriangle(*pRayPos, *pRayDir, v_lb, v_rb, v_rt, luv, ldist);
+		hit = glm::intersectRayTriangle(localRayPos, localRayDir, v_lb, v_rb, v_rt, luv, ldist);
 	if (!hit)
-		hit = glm::intersectRayTriangle(*pRayPos, *pRayDir, v_lb, v_rt, v_rb, luv, ldist);
+		hit = glm::intersectRayTriangle(localRayPos, localRayDir, v_lb, v_rt, v_rb, luv, ldist);
 
 	if (hit)
 	{
+		// Transform distance back to the original coordinate space
+		glm::vec3 hitPoint = localRayPos + ldist * localRayDir;
+		glm::vec3 transformedHitPoint = glm::vec3(*pmat * glm::vec4(hitPoint, 1.0f));
+		float worldDistance = glm::length(transformedHitPoint - *pRayPos);
+
 		float cdist = FLT_MAX, *pcdist = pDistance ? pDistance : &cdist;
 
-		// get the nearest collision
-		if ((ldist >= 0) && (ldist < *pcdist))
+		// Get the nearest collision
+		if ((worldDistance >= 0) && (worldDistance < *pcdist))
 		{
-			if (pDistance)
-				*pcdist = ldist;
-
+			*pcdist = worldDistance;
 			ret = true;
 		}
 	}

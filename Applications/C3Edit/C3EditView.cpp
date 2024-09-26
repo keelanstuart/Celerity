@@ -224,6 +224,8 @@ void C3EditView::CreateSurfaces()
 		h /= 2;
 	}
 
+	m_GBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE, 0);
+
 	c3::FrameBuffer::TargetDesc LCBufTargData[] =
 	{
 		{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },

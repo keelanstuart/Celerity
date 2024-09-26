@@ -16,9 +16,9 @@ layout (location=3) out vec4 oDefEmissiveRoughness;
 
 void main()
 {
-	vec4 texDiffuse = texture(uSamplerDiffuse, fTex0);
-	texDiffuse *= fColor0;
-	if (texDiffuse.a == 0)
+	vec4 fonttex = vec4(1, 1, 1, texture(uSamplerDiffuse, fTex0).r);
+	fonttex *= fColor0;
+	if (fonttex.a == 0)
 		discard;
 
 	// construct the normal transform
@@ -35,7 +35,7 @@ void main()
 	vec4 texEmissive = texture(uSamplerEmissive, fTex0); 
 
 	// encode metalness as diffuse.a
-	oDefDiffuseMetalness = vec4(texDiffuse.aaa, texSurfaceDesc.b);
+	oDefDiffuseMetalness = fonttex;
 
 	// encode ambient occlusion as normal.a
 	oDefNormalAmbOcc = vec4(N * 0.5 + 0.5, texSurfaceDesc.r);
@@ -43,5 +43,10 @@ void main()
 	oDefPosDepth = fPosDepth;
 
 	// encode roughness as emissive.a
-	oDefEmissiveRoughness = vec4(texEmissive.rgb * texDiffuse.a * fColor0.a, texSurfaceDesc.g);
+	oDefEmissiveRoughness = vec4(texEmissive.rgb * fonttex.a, texSurfaceDesc.g);
+
+    // Modify the depth (e.g., apply an offset)
+    float depthBias = 0.0001; // Example small bias
+    gl_FragDepth = fPosDepth.z / fPosDepth.w + depthBias;
+
 }
