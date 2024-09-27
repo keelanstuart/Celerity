@@ -316,12 +316,19 @@ void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pma
 		Renderer::BlendMode bm = pr->GetActiveFrameBuffer()->GetBlendMode(0);
 		pr->GetActiveFrameBuffer()->SetBlendMode(Renderer::BM_ALPHA, 0);
 
-		Renderer::ChannelMask cm = pr->GetActiveFrameBuffer()->GetChannelWriteMask(0);
+		Renderer::ChannelMask cm[4];
+		for (size_t i = 0; i < 4; i++)
+			cm[i] = pr->GetActiveFrameBuffer()->GetChannelWriteMask(i);
+
 		pr->GetActiveFrameBuffer()->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE, 0);
+		pr->GetActiveFrameBuffer()->SetChannelWriteMask(CM_ALPHA, 1);
+		pr->GetActiveFrameBuffer()->SetChannelWriteMask(0, 2);
+		pr->GetActiveFrameBuffer()->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE | CM_ALPHA, 3);
 
 		pr->DrawPrimitives(Renderer::PrimType::TRILIST, m_TextQuads * 6);
 
-		pr->GetActiveFrameBuffer()->SetChannelWriteMask(cm, 0);
+		for (size_t i = 0; i < 4; i++)
+			pr->GetActiveFrameBuffer()->SetChannelWriteMask(cm[i], i);
 		pr->GetActiveFrameBuffer()->SetBlendMode(bm, 0);
 		//pr->SetDepthBias(0);
 	}
@@ -395,10 +402,10 @@ bool TextRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRay
 
 	bool ret = false;
 
-	glm::fvec3 v_lt = *pmat * glm::vec4(m_Rect.left, 0, m_Rect.top, 0);
-	glm::fvec3 v_lb = *pmat * glm::vec4(m_Rect.left, 0, m_Rect.bottom, 0);
-	glm::fvec3 v_rb = *pmat * glm::vec4(m_Rect.right, 0, m_Rect.bottom, 0);
-	glm::fvec3 v_rt = *pmat * glm::vec4(m_Rect.right, 0, m_Rect.top, 0);
+	glm::fvec3 v_lt = glm::vec4(m_Rect.left, 0, m_Rect.top, 0);
+	glm::fvec3 v_lb = glm::vec4(m_Rect.left, 0, m_Rect.bottom, 0);
+	glm::fvec3 v_rb = glm::vec4(m_Rect.right, 0, m_Rect.bottom, 0);
+	glm::fvec3 v_rt = glm::vec4(m_Rect.right, 0, m_Rect.top, 0);
 
 	glm::vec2 luv;
 	float ldist;

@@ -18,13 +18,13 @@ void main()
 {
 	vec4 fonttex = vec4(1, 1, 1, texture(uSamplerDiffuse, fTex0).r);
 	fonttex *= fColor0;
+	fonttex.a *= fonttex.a;
 	if (fonttex.a == 0)
 		discard;
 
-	// construct the normal transform
-	mat3 TBN = mat3(normalize(fT), normalize(fB), normalize(fN));
-	vec3 texN = normalize((texture(uSamplerNormal, fTex0).rgb - 0.5) * 2.0);
-	vec3 N = normalize(TBN * texN);
+    // Modify the depth (e.g., apply an offset)
+    float depthBias = 0.00001; // Example small bias
+    gl_FragDepth = fPosDepth.z / fPosDepth.w + depthBias;
 
 	// surface description texture (UE4 style)
 	//  .r = ambient occlusion
@@ -34,19 +34,14 @@ void main()
 
 	vec4 texEmissive = texture(uSamplerEmissive, fTex0); 
 
-	// encode metalness as diffuse.a
+	// output real alpha, enable alpha blending, and disable alpha writes
 	oDefDiffuseMetalness = fonttex;
 
 	// encode ambient occlusion as normal.a
-	oDefNormalAmbOcc = vec4(N * 0.5 + 0.5, texSurfaceDesc.r);
+	oDefNormalAmbOcc = vec4(0, 0, 0, texSurfaceDesc.r);
 
 	oDefPosDepth = fPosDepth;
 
 	// encode roughness as emissive.a
 	oDefEmissiveRoughness = vec4(texEmissive.rgb * fonttex.a, texSurfaceDesc.g);
-
-    // Modify the depth (e.g., apply an offset)
-    float depthBias = 0.0001; // Example small bias
-    gl_FragDepth = fPosDepth.z / fPosDepth.w + depthBias;
-
 }

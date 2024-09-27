@@ -278,17 +278,19 @@ bool ObjectImpl::Render(Object::RenderFlags flags, int draworder, const glm::fma
 
 	if (m_Flags.IsSet(OF_DRAW)
 		|| (flags.IsSet(RF_EDITORDRAW) && m_Flags.IsSet(OF_DRAWINEDITOR))
-		|| (flags.IsSet(RF_SHADOW) && m_Flags.IsSet(OF_CASTSHADOW))
 		|| (flags.IsSet(RF_LIGHT) && m_Flags.IsSet(OF_LIGHT))
 		|| flags.IsSet(RF_FORCE))
 	{
 		Positionable *ppos = (Positionable *)FindComponent(Positionable::Type());
 		glm::fmat4x4 mat = ppos ? (*pmat * *ppos->GetTransformMatrix()) : *pmat;
 
-		for (const auto &it : m_Components)
+		if (!flags.IsSet(RF_SHADOW) || m_Flags.IsSet(OF_CASTSHADOW))
 		{
-			if (it->Prerender(flags, draworder))
-				it->Render(flags, &mat);
+			for (const auto &it : m_Components)
+			{
+				if (it->Prerender(flags, draworder))
+					it->Render(flags, &mat);
+			}
 		}
 
 		for (auto child : m_Children)
