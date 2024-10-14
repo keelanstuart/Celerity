@@ -145,13 +145,19 @@ void Texture2DImpl::Unbind()
 
 Texture::RETURNCODE Texture2DImpl::Lock(void **buffer, Texture2D::SLockInfo &lockinfo, size_t mip, props::TFlags64 flags)
 {
-	assert(m_Rend);
-
-	if (m_Buffer)
-		return RET_ALREADY_LOCKED;
-
 	if (!buffer)
 		return RET_NULL_BUFFER;
+
+	assert(m_Rend);
+
+	if (flags.IsSet(IBLOCKFLAG_READ) && !flags.IsSet(IBLOCKFLAG_WRITE) && !m_Cache.empty())
+	{
+		*buffer = m_Cache.data();
+		return RET_OK;
+	}
+		
+	if (m_Buffer)
+		return RET_ALREADY_LOCKED;
 
 	bool init = false;
 	if (m_glID == NULL)
@@ -210,7 +216,19 @@ Texture::RETURNCODE Texture2DImpl::Lock(void **buffer, Texture2D::SLockInfo &loc
 	lockinfo.height = m_Height >> mip;
 	lockinfo.stride = lockinfo.width * m_Rend->PixelSize(m_Type);
 
-	m_Buffer = malloc(lockinfo.height * lockinfo.stride);
+	if (flags.IsSet(TEXLOCKFLAG_CACHE))
+	{
+		m_Cache.resize(lockinfo.height * lockinfo.stride);
+		m_Buffer = m_Cache.data();
+	}
+	else
+	{
+		if (!m_Cache.empty())
+			m_Cache.clear();
+
+		m_Buffer = malloc(lockinfo.height * lockinfo.stride);
+	}
+
 	if (!m_Buffer)
 		return RET_MAPBUFFER_FAILED;
 
@@ -254,7 +272,9 @@ Texture::RETURNCODE Texture2DImpl::Unlock()
 		m_Rend->gl.CompressedTexSubImage2D(GL_TEXTURE_2D, (GLint)m_LockMip, 0, 0, GLsizei(m_Width >> m_LockMip), GLsizei(m_Height >> m_LockMip), m_Rend->GLFormat(m_Type), m_Rend->GLType(m_Type), m_Buffer);
 	}
 
-	free(m_Buffer);
+	if (m_Cache.data() != m_Buffer)
+		free(m_Buffer);
+
 	m_Buffer = nullptr;
 
 	if (m_Flags.IsSet(TEXFLAG_GENMIPS))

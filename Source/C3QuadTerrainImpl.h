@@ -92,13 +92,14 @@ namespace c3
 #define QTFLAG_DIRTY	0x0001
 		props::TFlags64 m_Flags = 0;
 
-		props::TVec2I m_HeightTexDim = { 128, 128 };
+		props::TVec2I m_HeightTexDim;
 		props::TVec2I m_VertDim = { 129, 129 };
-		glm::fvec3 m_Scale = { 1.0f, 1.0f, 1.0f };
 
 		float m_TexPeriod = 1.0f;
 
 		Texture2D *m_HeightTex = nullptr;
+		float m_MinHeight = 0.0f;
+		float m_MaxHeight = 0.0f;
 
 		VertexBuffer *m_VB = nullptr;
 
@@ -143,6 +144,8 @@ namespace c3
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const;
 
 	protected:
+
+		void QuadTerrainImpl::LoadHeightMap(const TCHAR *filename);
 
 		void DeleteQuadNode(CTerrainQuadNode *node);
 

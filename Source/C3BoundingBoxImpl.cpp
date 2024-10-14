@@ -359,38 +359,61 @@ bool BoundingBoxImpl::IsSphereInside(const glm::fvec3 *centroid, float radius) c
 	return false;
 }
 
-// the only way this should be able to fail is if the line is directly on one of the planes without
-// having either the start or end point on that plane... I'm ok with that for right now
+
 bool BoundingBoxImpl::CheckCollision(const glm::fvec3 *raypos, const glm::fvec3 *rayvec, float *dist) const
 {
-	assert(!m_bNeedsAlignment);
+	const float EPSILON = 1e-6f;
 
-	glm::fvec3 tmp = *raypos;
-	tmp += *rayvec;
-	if (IsPointInside(raypos) || IsPointInside(&tmp))
-		return true;
+	bool inside = true;
+	float tMin = -std::numeric_limits<float>::infinity();
+	float tMax = std::numeric_limits<float>::infinity();
 
-	float mindist = glm::length(*rayvec);
+	glm::vec3 dir = glm::normalize(*rayvec);
 
-	bool ret = false;
-	for (uint32_t i = 0; i < FACE::NUMFACES; i++)
+	for (size_t plidx = 0; plidx < FACE::NUMFACES; plidx++)
 	{
-		float d;
+		float denom = glm::dot(m_Face[plidx].normal, dir);
+		float numer = glm::dot(m_Face[plidx].normal, m_Face[plidx].point - *raypos);
 
-		if (glm::intersectRayPlane(*raypos, *rayvec, m_Face[i].point, m_Face[i].normal, d))
+		if (std::fabs(denom) < EPSILON)
 		{
-			if (d <= mindist)
-				mindist = d;
-
-			ret = true;
+			// Ray is parallel to the plane
+			if (numer < 0)
+				return false;				// Ray is outside the plane
+			else
+				continue;					// Ray is inside or on the plane; no need to update tMin or tMax
 		}
+
+		float t = numer / denom;
+
+		if (denom < 0)
+		{
+			tMin = std::max(tMin, t);		// Ray is entering through this plane
+			inside = false;
+		}
+		else
+		{
+			tMax = std::min(tMax, t);		// Ray is exiting through this plane
+			if (t < 0)
+				inside = false;
+		}
+
+		// Early exit if no intersection is possible
+		if (tMin > tMax)
+			return false;
 	}
 
-	if (ret && dist)
-		*dist = FLT_MAX;
+	// If tMax < 0, the intersection is behind the ray origin
+	if (tMax < 0)
+		return false;
 
-	return ret;
+	// The ray intersects the polyhedron
+	if (dist)
+		*dist = inside ? 0 : ((tMin >= 0) ? tMin : tMax);
+
+	return true;
 }
+
 
 void BoundingBoxImpl::IncludeBounds(const BoundingBox *pbox)
 {

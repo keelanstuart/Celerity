@@ -28,6 +28,7 @@ namespace c3
 		int64_t m_SamplerID;
 		GLuint m_glID;
 		void *m_Buffer;
+		std::vector<uint8_t> m_Cache;
 		size_t m_LockMip;
 		RendererImpl *m_Rend;
 

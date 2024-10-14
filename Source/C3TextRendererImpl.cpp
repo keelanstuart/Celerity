@@ -318,7 +318,7 @@ void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pma
 
 		Renderer::ChannelMask cm[4];
 		for (size_t i = 0; i < 4; i++)
-			cm[i] = pr->GetActiveFrameBuffer()->GetChannelWriteMask(i);
+			cm[i] = pr->GetActiveFrameBuffer()->GetChannelWriteMask((int)i);
 
 		pr->GetActiveFrameBuffer()->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE, 0);
 		pr->GetActiveFrameBuffer()->SetChannelWriteMask(CM_ALPHA, 1);
@@ -328,7 +328,7 @@ void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pma
 		pr->DrawPrimitives(Renderer::PrimType::TRILIST, m_TextQuads * 6);
 
 		for (size_t i = 0; i < 4; i++)
-			pr->GetActiveFrameBuffer()->SetChannelWriteMask(cm[i], i);
+			pr->GetActiveFrameBuffer()->SetChannelWriteMask(cm[i], (int)i);
 		pr->GetActiveFrameBuffer()->SetBlendMode(bm, 0);
 		//pr->SetDepthBias(0);
 	}

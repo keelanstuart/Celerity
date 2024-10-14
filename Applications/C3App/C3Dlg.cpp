@@ -412,6 +412,13 @@ void C3Dlg::InitializeGraphics()
 
 BOOL C3Dlg::OnInitDialog()
 {
+	CString title;
+	title.Format(_T("%s%s%s"),
+		theApp.m_AppName.c_str(),
+		theApp.m_StartScript.empty() ? _T("") : _T("  -  "),
+		theApp.m_StartScript.empty() ? _T("") : theApp.m_StartScript.c_str());
+	SetWindowText(title);
+
 	CRect dr;
 	::GetWindowRect(GetDesktopWindow()->GetSafeHwnd(), dr);
 

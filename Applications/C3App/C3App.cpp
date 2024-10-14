@@ -170,34 +170,45 @@ BOOL C3App::InitInstance()
 
 	CWinApp::InitInstance();
 
-	// Parse the command line into arguments
-	int argc = 0;
-	LPTSTR *argv = CommandLineToArgvW(m_lpCmdLine, &argc);
-	if (argv)
-	{
-		if (__argc < 2)
-		{
-			const TCHAR *fn = PathFindFileName(argv[0]);
-			m_StartScript = ReplaceFileExtension(fn, _T("c3js"));
-		}
-		else if (argv > 0)
-		{
-			m_StartScript = argv[0];
-		}
-
-		// Free memory allocated by CommandLineToArgvW
-		LocalFree(argv);
-	}
-
 	srand(GetTickCount());
 
 	m_C3 = c3::System::Create(NULL, 0);
 	if (!m_C3)
 		return FALSE;
 
+	// Parse the command line into arguments
+	int argc = 0;
+	LPTSTR *argv = CommandLineToArgvW(m_lpCmdLine, &argc);
+	if (argv)
+	{
+		const TCHAR *fn = PathFindFileName(argv[0]);
+
+		if (__argc < 2)
+		{
+			m_StartScript = ReplaceFileExtension(fn, _T(".c3js"));
+		}
+		else if (argv > 0)
+		{
+			m_StartScript = argv[0];
+		}
+
+		tstring modpack = ReplaceFileExtension(fn, _T(".c3z"));
+		if (theApp.m_C3->GetResourceManager()->RegisterZipArchive(modpack.c_str()))
+		{
+			if (!PathFileExists(m_StartScript.c_str()))
+			{
+				m_StartScript.insert(m_StartScript.rfind(_T('.'), 0), _T("/main"));
+			}
+		}
+
+		// Free memory allocated by CommandLineToArgvW
+		LocalFree(argv);
+	}
+
 	// Get the user's home path for their configuration
 	CString appname;
 	appname.LoadStringW(IDS_APPNAME);
+	m_AppName = appname;
 
 	PWSTR appdata = nullptr;
 	if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appdata) == S_OK)

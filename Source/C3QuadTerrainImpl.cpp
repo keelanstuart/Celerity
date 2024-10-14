@@ -71,6 +71,17 @@ bool QuadTerrainImpl::Initialize(Object *pobject)
 	if (!props)
 		return false;
 
+	props::IProperty *pp;
+	
+	if (pp = props->CreateProperty(_T("FragmentShader"), 'FSHF'))
+		pp->SetString(_T("def-terrain.fsh"));
+
+	if (pp = props->CreateProperty(_T("VertexShader"), 'VSHF'))
+		pp->SetString(_T("def-terrain.vsh"));
+
+	if (pp = props->CreateProperty(_T("HeightMap"), 'HtMp'))
+		pp->SetString(_T("test_terrain.png"));
+
 	return true;
 }
 
@@ -100,6 +111,161 @@ bool QuadTerrainImpl::Prerender(Object::RenderFlags flags, int draworder)
 	}
 
 	return false;
+}
+
+
+using TerrainSampleFunc = std::function<float(const void *h, Texture2D::SLockInfo *li, props::TVec2I &pos)>;
+
+TerrainSampleFunc SampleF32_1CH = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
+{
+	assert(h);
+	assert((size_t)pos.x < li->width);
+	assert((size_t)pos.y < li->height);
+
+	return ((float *)h)[pos.y * li->width + pos.x];
+};
+
+TerrainSampleFunc SampleS8_1CH = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
+{
+	assert(h);
+	assert((size_t)pos.x < li->width);
+	assert((size_t)pos.y < li->height);
+
+	return (float)((int8_t *)h)[pos.y * li->stride + pos.x] * 0.5f;
+};
+
+TerrainSampleFunc SampleU8_1CH = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
+{
+	assert(h);
+	assert((size_t)pos.x < li->width);
+	assert((size_t)pos.y < li->height);
+
+	return (float)((uint8_t *)h)[pos.y * li->stride + pos.x] * 0.5f;
+
+};
+
+TerrainSampleFunc SampleU8_2CH = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
+{
+	assert(h);
+	assert((size_t)pos.x < li->width);
+	assert((size_t)pos.y < li->height);
+
+	return (float)((uint16_t *)h)[pos.y * li->stride + pos.x] * 0.5f;
+};
+
+TerrainSampleFunc SampleU8_3CH = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
+{
+	assert(h);
+	assert((size_t)pos.x < li->width);
+	assert((size_t)pos.y < li->height);
+
+	return (float)((uint8_t *)h)[pos.y * li->stride + (pos.x * 3)] * 0.5f;
+};
+
+TerrainSampleFunc SampleU8_4CH = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
+{
+	assert(h);
+	assert((size_t)pos.x < li->width);
+	assert((size_t)pos.y < li->height);
+
+	return (float)((uint8_t *)h)[pos.y * li->stride + (pos.x * 4)] * 0.5f;
+};
+
+TerrainSampleFunc SampleDummy = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
+{
+	return 0.0f;
+};
+
+
+void QuadTerrainImpl::LoadHeightMap(const TCHAR *filename)
+{
+	Renderer *rend = m_pOwner->GetSystem()->GetRenderer();
+	ResourceManager *rm = m_pOwner->GetSystem()->GetResourceManager();
+
+	Resource *r = rm->GetResource(filename, RESF_DEMANDLOAD);
+	Texture2D *readtex = nullptr;
+	void *readbuf = nullptr;
+	Texture2D::SLockInfo readli;
+	TerrainSampleFunc samp = SampleDummy;
+	m_HeightTexDim.x = m_HeightTexDim.y = 128;
+
+	if (r && (r->GetStatus() == Resource::RS_LOADED))
+	{
+		readtex = dynamic_cast<Texture2D *>((Texture2D *)(r->GetData()));
+		if (readtex)
+		{
+			m_HeightTexDim.x = readtex->Width();
+			m_HeightTexDim.y = readtex->Height();
+			readtex->Lock(&readbuf, readli, 0, TEXLOCKFLAG_READ);
+
+			switch (readtex->Format())
+			{
+				case Renderer::TextureType::F16_1CH:
+					break;
+
+				case Renderer::TextureType::F32_1CH:
+					samp = SampleF32_1CH;
+					break;
+
+				case Renderer::TextureType::S8_1CH:
+					samp = SampleS8_1CH;
+					break;
+
+				case Renderer::TextureType::U8_1CH:
+					samp = SampleU8_1CH;
+					break;
+
+				case Renderer::TextureType::U8_2CH:
+					samp = SampleU8_2CH;
+					break;
+
+				case Renderer::TextureType::U8_3CH:
+					samp = SampleU8_3CH;
+					break;
+
+				case Renderer::TextureType::U8_4CH:
+					samp = SampleU8_4CH;
+					break;
+			}
+		}
+	}
+
+	// if the height texture existed and the size changed, free it
+	if (m_HeightTex && ((m_HeightTexDim.x != m_HeightTex->Width()) || (m_HeightTexDim.y != m_HeightTex->Height())))
+		C3_SAFERELEASE(m_HeightTex);
+
+	C3_SAFERELEASE(m_VB);
+	DeleteQuadNode(m_Root);
+
+	// if we don't have a height texture any more, make a new one
+	if (!m_HeightTex)
+		m_HeightTex = rend->CreateTexture2D(m_HeightTexDim.x, m_HeightTexDim.y, Renderer::TextureType::F32_1CH, 1, 0);
+
+	if (m_HeightTex)
+	{
+		float *phtpix = nullptr;
+		Texture2D::SLockInfo li;
+
+		// lock the height texture and fill it by sampling the read texture given then appropriate sampler
+		if (m_HeightTex && m_HeightTex->Lock((void **)&phtpix, li, 0, TEXLOCKFLAG_WRITE | TEXLOCKFLAG_CACHE) == Texture2D::RETURNCODE::RET_OK)
+		{
+			for (size_t y = 0; y < li.height; y++)
+			{
+				for (size_t x = 0; x < li.width; x++)
+				{
+					*(phtpix++) = samp(readbuf, &readli, props::TVec2I(x, y));
+				}
+			}
+
+			m_HeightTex->Unlock();
+		}
+	}
+
+	// if we loaded a read texture, then unlock it now
+	if (readbuf && readtex)
+	{
+		readtex->Unlock();
+	}
 }
 
 
@@ -145,12 +311,14 @@ void QuadTerrainImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat
 			*/
 
 			size_t vcount = (m_VertDim.x * m_VertDim.y) + ((m_VertDim.x - 1) * (m_VertDim.y - 1));
-			glm::fvec2 vdimf((float)m_VertDim.x * m_Scale.x, (float)m_VertDim.y * m_Scale.y);
-			glm::fvec2 ofs = vdimf / 2.0f;
+			glm::fvec2 vdimf((float)m_VertDim.x, (float)m_VertDim.y);
 			glm::fvec2 texinc(1.0f / (float)m_HeightTexDim.x, 1.0f / (float)m_HeightTexDim.y);
 			glm::fvec2 texinc_half = texinc / 2.0f;
 
-			if (m_VB && (m_VB->Lock(&buffer, vcount, c3::Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK))
+			// I used to center the terrain around the origin... but that makes collisions more irritating
+			glm::fvec2 ofs(0, 0); // = vdimf / 2.0f;
+
+			if (m_VB && (m_VB->Lock(&buffer, vcount, c3::Vertex::PNYT1::d, VBLOCKFLAG_WRITE) == VertexBuffer::RETURNCODE::RET_OK))
 			{
 				c3::Vertex::PNYT1::s *v = (c3::Vertex::PNYT1::s *)buffer;
 
@@ -187,10 +355,10 @@ void QuadTerrainImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat
 						tu += texinc.x;
 					}
 
-					ys += (0.5f * m_Scale.y);
+					ys += 0.5f;
 					tv += texinc_half.y;
 
-					xs = -ofs.x + (0.5f * m_Scale.x);
+					xs = -ofs.x + 0.5f;
 					tu = 0.0f;
 
 					if (y < (m_VertDim.y - 1))
@@ -203,10 +371,10 @@ void QuadTerrainImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat
 
 							v->norm.x = 0;
 							v->norm.y = 0;
-							v->norm.z = 0.5;
+							v->norm.z = 0.5f;
 
 							v->binorm.x = 0;
-							v->binorm.y = 0.5;
+							v->binorm.y = 0.5f;
 							v->binorm.z = 0;
 
 							v->tang.x = 1;
@@ -216,12 +384,12 @@ void QuadTerrainImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat
 							v->uv.x = tu;
 							v->uv.y = tv;
 
-							xs += m_Scale.x;
+							xs += 1;
 							tu += texinc.x;
 						}
 					}
 
-					ys += (0.5f * m_Scale.y);
+					ys += 0.5f;
 					tv += texinc_half.y;
 				}
 
@@ -266,30 +434,9 @@ void QuadTerrainImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat
 				}
 
 				m_pMtl = prend->GetMaterialManager()->CreateMaterial();
-			}
-		}
-
-		if (!m_HeightTex)
-		{
-			m_HeightTex = prend->CreateTexture2D(m_HeightTexDim.x, m_HeightTexDim.y, Renderer::TextureType::F32_1CH, 1, 0);
-
-			float *phtpix = nullptr;
-			Texture2D::SLockInfo li;
-			if (m_HeightTex && m_HeightTex->Lock((void **)&phtpix, li) == Texture2D::RETURNCODE::RET_OK)
-			{
-				for (size_t y = 0; y < li.height; y++)
-				{
-					float *pp = phtpix;
-
-					for (size_t x = 0; x < li.width; x++)
-					{
-						pp[x] = (sinf((float)x / 10.0f) + cosf((float)y / 10.0f)) * 4.0f;
-					}
-
-					phtpix += li.stride / sizeof(float);
-				}
-
-				m_HeightTex->Unlock();
+				m_pMtl->SetColor(Material::CCT_DIFFUSE, Color::iWhite);
+				m_pMtl->SetTexture(Material::TCT_DIFFUSE, prend->GetWhiteTexture());
+				//m_pMtl->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_WIREFRAME));
 			}
 		}
 	}
@@ -304,7 +451,7 @@ void QuadTerrainImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat
 		m_SP_terr->SetUniform2(m_uSamplerHeightStep, &step);
 		m_SP_terr->SetUniformTexture(m_HeightTex, m_uSamplerHeight, -1, 0);
 
-		prend->GetWhiteMaterial()->Apply(m_SP_terr);
+		m_pMtl->Apply(m_SP_terr);
 	}
 	else
 	{
@@ -350,10 +497,9 @@ void QuadTerrainImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat
 #endif
 	}
 
-	Renderer::FillMode fillmode = prend->GetFillMode();
-	prend->SetFillMode(Renderer::FillMode::FM_WIRE);
+	prend->UseMaterial(m_pMtl);
+	prend->UseRenderMethod(nullptr);
 	RenderQuad(m_Root, flags);
-	prend->SetFillMode(fillmode);
 }
 
 void QuadTerrainImpl::RenderQuad(CTerrainQuadNode *node, props::TFlags64 rendflags)
@@ -362,14 +508,17 @@ void QuadTerrainImpl::RenderQuad(CTerrainQuadNode *node, props::TFlags64 rendfla
 	{
 		TerrainQuad *quad = node->GetData();
 
-		if (quad)// && sys->Renderer()->IsVolumeVisible(quad->min_bounds, quad->max_bounds, &matrix))
+		const BoundingBox *clipfrust = m_pOwner->GetSystem()->GetRenderer()->GetClipFrustum();
+
+		if (quad && clipfrust->IsBoxInside(&quad->m_Bounds))
 		{
 			bool allvis = true;
+
 			for (size_t qidx = CTerrainQuadNode::ChildQuad::POSX_POSY; qidx < CTerrainQuadNode::ChildQuad::NUM_QUADS; qidx++)
 			{
 				CTerrainQuadNode *pqn = node->GetChild((CTerrainQuadNode::ChildQuad)qidx);
 				TerrainQuad *ptq = pqn ? pqn->GetData() : nullptr;
-				allvis &= !ptq ? true : true; //ptq->m_Bounds.IsBoxInside();
+				allvis &= clipfrust->IsBoxInside(&ptq->m_Bounds);
 			}
 
 			c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
@@ -398,6 +547,7 @@ void QuadTerrainImpl::RenderQuad(CTerrainQuadNode *node, props::TFlags64 rendfla
 }
 
 
+
 void QuadTerrainImpl::PropertyChanged(const props::IProperty *pprop)
 {
 	assert(pprop);
@@ -414,6 +564,10 @@ void QuadTerrainImpl::PropertyChanged(const props::IProperty *pprop)
 
 		case 'FSHF':
 			m_FS_terr = (c3::ShaderComponent *)((prm->GetResource(pprop->AsString()))->GetData());
+			break;
+
+		case 'HtMp':
+			LoadHeightMap(pprop->AsString());
 			break;
 	}
 }
@@ -546,4 +700,106 @@ QuadTerrainImpl::CTerrainQuadNode *QuadTerrainImpl::GenerateGeometryQuadSet(size
 bool QuadTerrainImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	return false;
+
+	if (!m_HeightTex)
+		return false;
+
+	if (!pRayPos || !pRayDir)
+		return false;
+
+	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
+	if (!pmat)
+		pmat = &imat;
+
+	// Inverse of the transformation matrix to transform the ray to local space
+	glm::fmat4x4 invMat = glm::inverse(*pmat);
+
+	// Transform ray position and direction to local space
+	glm::vec3 localRayPos = glm::vec3(invMat * glm::vec4(*pRayPos, 1.0f));
+	glm::vec3 localRayDir = glm::normalize(glm::vec3(invMat * glm::vec4(*pRayDir, 0.0f)));
+
+	bool ret = false;
+
+	float *pheights;
+	Texture2D::SLockInfo li;
+	if (m_HeightTex->Lock((void **)&pheights, li, 0, TEXLOCKFLAG_READ | TEXLOCKFLAG_CACHE) == Texture::RETURNCODE::RET_OK)
+	{
+		glm::vec3 pos = localRayPos;
+		while (((pos.x <= 0) && (localRayDir.x > 0)) || ((pos.x >= li.width) && (localRayDir.x < 0)) &&
+			   ((pos.y <= 0) && (localRayDir.y > 0)) || ((pos.y >= li.height) && (localRayDir.y < 0)) &&
+			   ((pos.z > m_MinHeight) && (localRayDir.z > 0)) || ((pos.z < m_MaxHeight) && (localRayDir.z < 0)))
+		{
+			int64_t y = (int64_t)floor(pos.y);
+			int64_t x = (int64_t)floor(pos.x);
+
+			if ((y < 0) && (y >= m_HeightTexDim.y) && (x < 0) && (x >= m_HeightTexDim.x))
+			{
+				pos += localRayDir;
+				continue;
+			}
+
+			int64_t ny = (int64_t)floor(pos.y + localRayDir.y);
+			int64_t nx = (int64_t)floor(pos.y + localRayDir.y);
+
+			if ((ny < 0) && (ny >= m_HeightTexDim.y) && (nx < 0) && (nx >= m_HeightTexDim.x))
+			{
+				pos += localRayDir;
+				continue;
+			}
+
+			size_t swi = (y * li.stride) * x;
+			size_t nwi = (ny * li.stride) * x;
+			size_t sei = (y * li.stride) * nx;
+			size_t nei = (ny * li.stride) * nx;
+
+			float hsw = pheights[swi];
+			float hnw = pheights[nwi];
+			float hse = pheights[sei];
+			float hne = pheights[nei];
+			float hc = (hsw + hse + hnw + hne) / 4.0f;
+
+			glm::vec3 sw(x, y, hsw);
+			glm::vec3 nw(x, ny, hnw);
+			glm::vec3 se(nx, y, hse);
+			glm::vec3 ne(nx, ny, hne);
+			glm::vec3 c(x + 0.5f, y + 0.5f, hc);
+
+			// check for a collision
+			bool hit = false;
+			glm::vec2 luv;
+			float ldist;
+
+			hit = glm::intersectRayTriangle(pos, localRayDir, c, nw, sw, luv, ldist);
+			if (!hit)
+				hit = glm::intersectRayTriangle(pos, localRayDir, c, sw, se, luv, ldist);
+			if (!hit)
+				hit = glm::intersectRayTriangle(pos, localRayDir, c, sw, ne, luv, ldist);
+			if (!hit)
+				hit = glm::intersectRayTriangle(pos, localRayDir, c, ne, nw, luv, ldist);
+
+			if (hit)
+			{
+				// Transform distance back to the original coordinate space
+				glm::vec3 hitPoint = localRayPos + ldist * localRayDir;
+				glm::vec3 transformedHitPoint = glm::vec3(*pmat * glm::vec4(hitPoint, 1.0f));
+				float worldDistance = glm::length(transformedHitPoint - *pRayPos);
+
+				float cdist = FLT_MAX, *pcdist = pDistance ? pDistance : &cdist;
+
+				// Get the nearest collision
+				if ((worldDistance >= 0) && (worldDistance < *pcdist))
+				{
+					*pcdist = worldDistance;
+					ret = true;
+				}
+			}
+
+			pos += localRayDir;
+		}
+
+
+
+	}
+
+	return ret;
 }
