@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #pragma once
@@ -9,12 +9,17 @@
 #include <C3.h>
 #include <C3Physical.h>
 
+#include <ode\ode.h>
+#include <ode\objects.h>
+#include <ode\collision_space.h>
+
 
 namespace c3
 {
 
-	class PhysicalImpl : public Physical, props::IPropertyChangeListener
+	class PhysicalImpl : public Physical, props::IPropertyChangeListener, props::IProperty::IEnumProvider
 	{
+		friend class PhysicsManagerImpl;
 
 	protected:
 
@@ -30,12 +35,19 @@ namespace c3
 		glm::vec3 m_RotVelFalloff;
 		glm::vec3 m_maxRotSpeed;
 
-		float m_Mass;
-
 		props::TFlags64 m_Flags;
 
 		Positionable *m_pPositionable;
 		glm::fvec3 m_DeltaPos;
+
+		ColliderShape m_ColliderShape;
+		CollisionMode m_CollisionMode;
+		union
+		{
+			dBodyID u_ODEBody;
+			dGeomID u_ODEGeom;
+		};
+		dMass m_ODEMass;
 
 	public:
 
@@ -60,6 +72,16 @@ namespace c3
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const;
+
+		virtual size_t GetNumValues(const props::IProperty *pprop) const;
+
+		virtual const TCHAR *GetValue(const props::IProperty *pprop, size_t ordinal, TCHAR *buf = nullptr, size_t bufsize = 0) const;
+
+		virtual void SetColliderShape(ColliderShape t);
+		virtual ColliderShape GetColliderShape() const;
+
+		virtual void SetCollisionMode(CollisionMode m);
+		virtual CollisionMode GetCollisionMode() const;
 
 		// *** LINEAR VELOCITY FUNCTIONS *******************************
 

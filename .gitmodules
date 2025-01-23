@@ -51,3 +51,6 @@
 [submodule "third-party/libtiff"]
 	path = third-party/libtiff
 	url = https://github.com/keelanstuart/libtiff
+[submodule "third-party/ode"]
+	path = third-party/ode
+	url = https://github.com/keelanstuart/ode

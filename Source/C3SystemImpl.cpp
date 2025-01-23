@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #include "pch.h"
@@ -169,7 +169,6 @@ void SystemImpl::Release()
 		UNREGISTER_COMPONENTTYPE(Camera, m_Factory);
 		UNREGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);
 		UNREGISTER_COMPONENTTYPE(OmniLight, m_Factory);
-		UNREGISTER_COMPONENTTYPE(QuadTerrain, m_Factory);
 		UNREGISTER_COMPONENTTYPE(ParticleEmitter, m_Factory);
 		UNREGISTER_COMPONENTTYPE(Scriptable, m_Factory);
 		UNREGISTER_COMPONENTTYPE(Physical, m_Factory);
@@ -193,6 +192,12 @@ void SystemImpl::Release()
 		m_Pool->WaitForAllTasks(INFINITE);
 		m_Pool->Release();
 		m_Pool = nullptr;
+	}
+
+	if (m_PhysicsManager)
+	{
+		delete m_PhysicsManager;
+		m_PhysicsManager = nullptr;
 	}
 
 	delete this;
@@ -264,6 +269,19 @@ Environment *SystemImpl::GetEnvironment()
 }
 
 
+PhysicsManager *SystemImpl::GetPhysicsManager()
+{
+	if (!m_PhysicsManager)
+	{
+		m_PhysicsManager = new PhysicsManagerImpl(this);
+
+		//m_PhysicsManager->Initialize();
+	}
+
+	return m_PhysicsManager;
+}
+
+
 InputManager *SystemImpl::GetInputManager()
 {
 	if (!m_InputManager)
@@ -301,7 +319,6 @@ Factory *SystemImpl::GetFactory()
 		REGISTER_COMPONENTTYPE(Camera, m_Factory);
 		REGISTER_COMPONENTTYPE(ModelRenderer, m_Factory);
 		REGISTER_COMPONENTTYPE(OmniLight, m_Factory);
-		REGISTER_COMPONENTTYPE(QuadTerrain, m_Factory);
 		REGISTER_COMPONENTTYPE(ParticleEmitter, m_Factory);
 		REGISTER_COMPONENTTYPE(Scriptable, m_Factory);
 		REGISTER_COMPONENTTYPE(Physical, m_Factory);
@@ -350,6 +367,9 @@ ScreenManager *SystemImpl::GetScreenManager()
 
 Configuration *SystemImpl::CreateConfiguration(const TCHAR *filename)
 {
+	if (!filename)
+		return nullptr;
+
 	Configuration *ret = new ConfigurationImpl(filename);
 
 	return ret;
@@ -380,7 +400,7 @@ float SystemImpl::GetElapsedTime()
 }
 
 
-void SystemImpl::UpdateTime()
+void SystemImpl::UpdateTime(bool paused)
 {
 	LARGE_INTEGER c;
 	QueryPerformanceCounter(&c);
@@ -411,8 +431,10 @@ void SystemImpl::UpdateTime()
 			}
 		}
 
-		m_SoundPlayer->Update(m_ElapsedTime);
+		m_SoundPlayer->Update(paused ? 0 : m_ElapsedTime);
 	}
 
-	m_Environment.Update(m_ElapsedTime);
+	m_Environment.Update(paused ? 0 : m_ElapsedTime);
+
+	m_PhysicsManager->Update(paused ? 0 : m_ElapsedTime);
 }

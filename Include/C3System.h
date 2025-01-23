@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #pragma once
@@ -43,6 +43,8 @@ namespace c3
 
 		virtual Environment *GetEnvironment() = NULL;
 
+		virtual PhysicsManager *GetPhysicsManager() = NULL;
+
 		virtual InputManager *GetInputManager() = NULL;
 
 		virtual ActionMapper *GetActionMapper() = NULL;
@@ -63,7 +65,7 @@ namespace c3
 
 		virtual float GetElapsedTime() = NULL;
 
-		virtual void UpdateTime() = NULL;
+		virtual void UpdateTime(bool paused = false) = NULL;
 
 	};
 

@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #include "pch.h"
@@ -279,6 +279,9 @@ bool BoundingBoxImpl::IsPointInside(const glm::fvec3 *ppt) const
 
 bool BoundingBoxImpl::IsBoxInside(const BoundingBox *pbox) const
 {
+	if (!pbox)
+		return false;
+
 	BoundingBoxImpl *pboxi = (BoundingBoxImpl *)pbox;
 
 	assert(!m_bNeedsAlignment);

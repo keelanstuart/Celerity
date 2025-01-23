@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #include "pch.h"
@@ -176,7 +176,7 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 
 			bool has_all_comps = true;
 			for (size_t i = 0; i < Renderer::ShaderComponentType::ST_NUMTYPES; i++)
-				has_all_comps &= m_ShaderCompFilename[i].has_value() ? (scres[i]->GetStatus() == Resource::RS_LOADED) : true;
+				has_all_comps &= (m_ShaderCompFilename[i].has_value() && scres[i]) ? (scres[i]->GetStatus() == Resource::RS_LOADED) : true;
 
 			if (has_all_comps)
 			{

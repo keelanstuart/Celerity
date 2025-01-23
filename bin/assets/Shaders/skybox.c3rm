@@ -5,7 +5,6 @@
 			<setting name="blendmode"			value="add" />
 			<setting name="depthmode"			value="disabled" />
 			<setting name="cullmode"			value="disabled" />
-			<setting name="framebuffer"			value="GBuffer" />
 			<setting name="shader.vertex"		value="skybox.vsh" />
 			<setting name="shader.fragment"		value="skybox.fsh" />
 		</pass>

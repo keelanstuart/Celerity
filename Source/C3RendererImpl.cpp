@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #include "pch.h"
@@ -3263,7 +3263,7 @@ Texture2D *RendererImpl::GetDefaultDescTexture()
 				{
 					for (size_t x = 0, maxx = li.width; x < maxx; x++)
 					{
-						buf[x] = 0x0020A0FF;
+						buf[x] = 0x00A020FF;
 					}
 
 					buf = (uint32_t *)((BYTE *)buf + li.stride);

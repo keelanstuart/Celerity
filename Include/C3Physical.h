@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #pragma once
@@ -62,6 +62,34 @@ namespace c3
 
 		static const ComponentType *Type();
 
+		using ColliderShape = enum
+		{
+			NONE = 0,
+
+			MODEL,
+			PLANE,
+			BOX,
+			SPHERE,
+			CYLINDER,
+			CAPSULE,
+
+			COLLIDER_SHAPE_COUNT
+		};
+
+		using CollisionMode = enum
+		{
+			STATIC,
+			KINEMATIC,
+			DYNAMIC,
+
+			COLLISION_MODE_COUNT
+		};
+
+		virtual void SetColliderShape(ColliderShape t) = NULL;
+		virtual ColliderShape GetColliderShape() const = NULL;
+
+		virtual void SetCollisionMode(CollisionMode m) = NULL;
+		virtual CollisionMode GetCollisionMode() const = NULL;
 
 		// *** LINEAR VELOCITY FUNCTIONS *******************************
 

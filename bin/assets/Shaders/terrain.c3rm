@@ -1,0 +1,34 @@
+<render_method name="terrain">
+
+	<technique name="g">
+		<pass>
+			<setting name="shader.vertex"		value="def-terrain.vsh" />
+			<setting name="shader.fragment"		value="def-terrain.fsh" />
+		</pass>
+	</technique>
+
+	<technique name="s">
+		<pass>
+			<setting name="framebuffer"			value="Shadow" />
+			<setting name="shader.vertex"		value="def-terrain-shadow.vsh" />
+			<setting name="shader.fragment"		value="def-terrain-shadow.fsh" />
+		</pass>
+	</technique>
+
+	<technique name="sel">
+		<pass>
+			<setting name="shader.vertex"		value="def-terrain.vsh" />
+			<setting name="shader.fragment"		value="def-terrain-select.fsh" />
+			<setting name="depthmode"			value="disabled" />
+		</pass>
+		<pass>
+			<setting name="shader.vertex"		value="def-terrain.vsh" />
+			<setting name="shader.fragment"		value="def-terrain-select.fsh" />
+			<setting name="depthmode"			value="disabled" />
+			<setting name="fillmode"			value="wire" />
+			<setting name="blendmode"			value="replace" />
+			<setting name="blendeq"				value="subtract" />
+		</pass>
+	</technique>
+
+</render_method>

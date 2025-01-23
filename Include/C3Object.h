@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #pragma once
@@ -67,6 +67,7 @@ namespace c3
 		#define RF_FORCE			0x00000040					// Force drawing
 		#define RF_AUXILIARY		0x00000080					// Drawing the auxiliary surface
 		#define RF_GUI				0x00000100					// User Interface
+		#define RF_SELECTED			0x00000200					// Drawing as a selection
 
 
 		/// Returns the Celerity System in which the Object exists

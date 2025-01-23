@@ -3,7 +3,6 @@ uniform mat4 uMatrixMVP;
 uniform mat4 uMatrixN;
 uniform vec4 uColorDiffuse;
 uniform sampler2D uSamplerHeight;
-uniform vec2 uSamplerHeightStep;
 
 layout (location=0) in vec3 vPos;
 layout (location=1) in vec3 vNorm;
@@ -47,10 +46,15 @@ void main()
 	}
 	else
 	{
-		h_n = texture2D(uSamplerHeight, vec2(vTex0.x, vTex0.y + uSamplerHeightStep.y)).r;
-		h_e = texture2D(uSamplerHeight, vec2(vTex0.x + uSamplerHeightStep.x, vTex0.y)).r;
-		h_s = texture2D(uSamplerHeight, vec2(vTex0.x, vTex0.y - uSamplerHeightStep.y)).r;
-		h_w = texture2D(uSamplerHeight, vec2(vTex0.x - uSamplerHeightStep.x, vTex0.y)).r;
+		ivec2 tex_size = textureSize(uSamplerHeight, 0);
+		vec2 texel_inc;
+		texel_inc.x = 1.0 / float(tex_size.x);
+		texel_inc.y = 1.0 / float(tex_size.y);
+
+		h_n = texture2D(uSamplerHeight, vec2(vTex0.x, vTex0.y + texel_inc.y)).r;
+		h_e = texture2D(uSamplerHeight, vec2(vTex0.x + texel_inc.x, vTex0.y)).r;
+		h_s = texture2D(uSamplerHeight, vec2(vTex0.x, vTex0.y - texel_inc.y)).r;
+		h_w = texture2D(uSamplerHeight, vec2(vTex0.x - texel_inc.x, vTex0.y)).r;
 
 		wpos.z = texture2D(uSamplerHeight, vec2(vTex0.x, vTex0.y)).r;
 

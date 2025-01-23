@@ -3,12 +3,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LocalDebuggerWorkingDirectory>$(SolutionDir)bin</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>"D:\proj\Celerity\Samples\RainbowTube\RainbowTubeApp.c3js"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"D:\proj\Celerity\Samples\Warehouse\Warehouse_demo.c3js"</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LocalDebuggerWorkingDirectory>$(SolutionDir)bin</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>"D:\proj\Celerity\Samples\RainbowTube\RainbowTubeApp.c3js"</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>"D:\proj\Celerity\Samples\Warehouse\Warehouse_demo.c3js"</LocalDebuggerCommandArguments>
   </PropertyGroup>
   <PropertyGroup>
     <RESOURCE_FILE>C3App.rc</RESOURCE_FILE>

@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #pragma once
@@ -21,6 +21,7 @@
 #include <C3EnvironmentImpl.h>
 #include <C3SoundPlayerImpl.h>
 #include <C3ScreenManagerImpl.h>
+#include <C3PhysicsManagerImpl.h>
 
 
 namespace c3
@@ -45,6 +46,7 @@ namespace c3
 		EnvironmentImpl m_Environment;
 		SoundPlayerImpl *m_SoundPlayer;
 		ScreenManager *m_ScreenManager;
+		PhysicsManager *m_PhysicsManager;
 
 		LARGE_INTEGER m_PerfFreq, m_PerfCount, m_PerfDelta;
 		float m_CurrentTime;
@@ -72,6 +74,8 @@ namespace c3
 
 		virtual Environment *GetEnvironment();
 
+		virtual PhysicsManager *GetPhysicsManager();
+
 		virtual InputManager *GetInputManager();
 
 		virtual ActionMapper *GetActionMapper();
@@ -96,7 +100,7 @@ namespace c3
 
 		virtual float GetElapsedTime();
 
-		virtual void UpdateTime();
+		virtual void UpdateTime(bool paused);
 
 	};
 

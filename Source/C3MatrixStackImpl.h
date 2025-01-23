@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #pragma once
@@ -31,7 +31,7 @@ namespace c3
 		virtual void Push(const glm::fmat4x4 *m = nullptr);
 		virtual bool Pop();
 
-		virtual const glm::fmat4x4 *Top(glm::fmat4x4 *m) const;
+		virtual const glm::fmat4x4 *Top(glm::fmat4x4 *m = nullptr) const;
 
 	};
 

@@ -237,6 +237,9 @@
     <ClCompile Include="Source\C3InteractableImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="source\C3PhysicsManagerImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -637,6 +640,12 @@
     </ClInclude>
     <ClInclude Include="Include\C3Interactable.h">
       <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="include\C3PhysicsManager.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="source\C3PhysicsManagerImpl.h">
+      <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

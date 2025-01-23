@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #include "pch.h"
@@ -343,12 +343,13 @@ void C3EditView::OnInitialUpdate()
 	}
 
 	theApp.m_C3->GetSoundPlayer()->Initialize();
+	theApp.m_C3->GetPhysicsManager()->Initialize();
 
 	CRect r;
 	GetClientRect(r);
 
 	SetTimer('DRAW', 17, nullptr);
-	SetTimer('PICK', 500, nullptr);
+	SetTimer('PICK', 33, nullptr);
 	SetTimer('PROP', 1000, nullptr);
 }
 
@@ -381,8 +382,12 @@ void C3EditView::OnDraw(CDC *pDC)
 
 	uint32_t renderflags = theApp.m_Config->GetBool(_T("environment.editordraw"), true) ? RF_EDITORDRAW : 0;
 
-	theApp.m_C3->UpdateTime();
-	float dt = pDoc->m_Paused ? 0.0f : (pDoc->m_TimeWarp * theApp.m_C3->GetElapsedTime());
+	bool advtime = theApp.m_Config->GetBool(_T("environment.advancetime"), true);
+
+	bool paused = pDoc->m_Paused || !advtime;
+
+	theApp.m_C3->UpdateTime(paused);
+	float dt = paused ? 0.0f : (pDoc->m_TimeWarp * theApp.m_C3->GetElapsedTime());
 
 	c3::Renderer *prend = theApp.m_C3->GetRenderer();
 	assert(prend);
@@ -419,7 +424,7 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		prend->SetClearDepth(1.0f);
 
-		pDoc->m_RootObj->Update(theApp.m_Config->GetBool(_T("environment.advancetime"), true) ? dt : 0);
+		pDoc->m_RootObj->Update(paused ? 0 : dt);
 
 		if (m_bCenter)
 		{

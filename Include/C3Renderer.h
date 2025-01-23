@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #pragma once
@@ -249,7 +249,8 @@ namespace c3
 		#define UFBFLAG_FINISHLAST			0x0008
 		#define UFBFLAG_UPDATEVIEWPORT		0x0010
 		#define UFBFLAG_STRICTCOMPLIANCE	0x0020		// on nv systems, does not call glClearBuffer for attachment 0, only glClear
-		#define BSFLAG_SHOWGUI				0x0100		// BeginScene flag; Indicates that the GUI should be rendered
+
+		#define BSFLAG_SHOWGUI				0x0001		// BeginScene flag; Indicates that the GUI should be rendered
 
 		/// Returns the System that created this Renderer
 		virtual System *GetSystem() = NULL;

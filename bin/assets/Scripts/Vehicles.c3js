@@ -1,0 +1,127 @@
+var runtime;
+
+var Vec3 = { x: 0.0, y: 0.0, z: 0.0 };
+var Vec4 = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+var Quat = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+var Facing = { forward: -1, right: -1, up: -1 };
+
+var hfacing = new Facing();
+
+var iwl;
+var iwr;
+var wl_ori = new Quat();
+var wr_ori = new Quat();
+
+var hpos;
+var pos;
+
+var hlacc;
+var lacc = new Vec3();
+var hrvel;
+var rvel = new Vec3();
+var hlvel;
+var lvel = new Vec3();
+
+var speed;
+var maxspeed;
+var speedratio;
+var rfac;
+
+var v3 = new Vec3();
+
+var acc = 20.0;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	pos = GetPropertyValue(hpos);
+/*
+	if (iwl >= 0)
+	{
+		rotor_ori = GetModelInstNodeOri(self, irotor);
+		rotor_ori.w += elapsed_seconds;
+		SetModelInstNodeOri(self, irotor, rotor_ori);
+	}
+*/
+
+	lvel = GetPropertyValue(hlvel);
+	speed = Math.sqrt((lvel.x * lvel.x) + (lvel.y * lvel.y) + (lvel.z * lvel.z));
+	speedratio = speed / maxspeed;
+	rfac = Math.sin(speedratio * 3.0);
+
+	rvel.z *= rfac;
+	SetPropertyValue(hrvel, rvel);
+	rvel.z = 0.0;
+
+	if ((lacc.x != 0.0) || (lacc.y != 0.0))
+		Log("BINGO!\n");
+	SetPropertyValue(hlvel, lacc);
+	v3 = GetPropertyValue(hlvel);
+	if ((lacc.x != 0.0) || (lacc.y != 0.0))
+		Log("v3 = { " + v3.x + ", " + v3.y + " }\n");
+	lacc.x = 0.0;
+	lacc.y = 0.0;
+}
+
+
+function handle_input(action, value)
+{
+	if (action == "Move Forward")
+	{
+		v3 = GetPropertyValue(hfacing.forward);
+		lacc.x += (v3.x * value * acc);
+		lacc.y += (v3.y * value * acc);
+		Log("lacc = { " + lacc.x + ", " + lacc.y + " }\n");
+	}
+	else if (action == "Move Backward")
+	{
+		v3 = GetPropertyValue(hfacing.forward);
+		lacc.x -= (v3.x * value) * acc;
+		lacc.y -= (v3.y * value) * acc;
+		Log("lacc = { " + lacc.x + ", " + lacc.y + " }\n");
+	}
+	else if (action == "Strafe Left")
+	{
+		rvel.z -= 35.0 * value;
+		Log("rvel.z = " + rvel.z + "\n");
+	}
+	else if (action == "Strafe Right")
+	{
+		rvel.z += 35.0 * value;
+		Log("rvel.z = " + rvel.z + "\n");
+	}
+	else if (action == "Run")
+	{
+	}
+	else if (action == "Jump")
+	{
+	}
+	else if (action == "Fire 1")
+	{
+	}
+	else if (action == "Fire 2")
+	{
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	hpos = FindProperty(self, "Position");
+	hlacc = FindProperty(self, "LinearAcceleration");
+	Log("HLACC = " + hlacc + "\n");
+	hlvel = FindProperty(self, "LinearVelocity");
+	Log("HLVEL = " + hlvel + "\n");
+
+	var hprop = FindProperty(self, "MaxLinearSpeed");
+	maxspeed = GetPropertyValue(hprop);
+
+	hfacing.forward = FindProperty(self, "Facing.Forward");
+	hfacing.right = FindProperty(self, "Facing.Right");
+	hfacing.up = FindProperty(self, "Facing.Up");
+
+	iwl = GetModelNodeIndex(self, "LeftFrontWheel");
+	iwr = GetModelNodeIndex(self, "RightFrontWheel");
+}

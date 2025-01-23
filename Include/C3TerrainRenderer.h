@@ -13,7 +13,7 @@
 namespace c3
 {
 
-	class C3_API QuadTerrain : public Component
+	class C3_API TerrainRenderer : public Component
 	{
 
 	public:

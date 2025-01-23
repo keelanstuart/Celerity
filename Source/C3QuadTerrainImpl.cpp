@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #include "pch.h"
@@ -11,9 +11,7 @@
 
 using namespace c3;
 
-
-DECLARE_COMPONENTTYPE(QuadTerrain, QuadTerrainImpl);
-
+#if 0
 
 QuadTerrainImpl::QuadTerrainImpl()
 {
@@ -23,12 +21,6 @@ QuadTerrainImpl::QuadTerrainImpl()
 
 QuadTerrainImpl::~QuadTerrainImpl()
 {
-	if (m_SP_terr)
-	{
-		m_SP_terr->Release();
-		m_SP_terr = nullptr;
-	}
-
 	DeleteQuadNode(m_Root);
 	m_Root = nullptr;
 
@@ -73,14 +65,11 @@ bool QuadTerrainImpl::Initialize(Object *pobject)
 
 	props::IProperty *pp;
 	
-	if (pp = props->CreateProperty(_T("FragmentShader"), 'FSHF'))
-		pp->SetString(_T("def-terrain.fsh"));
-
-	if (pp = props->CreateProperty(_T("VertexShader"), 'VSHF'))
-		pp->SetString(_T("def-terrain.vsh"));
-
 	if (pp = props->CreateProperty(_T("HeightMap"), 'HtMp'))
 		pp->SetString(_T("test_terrain.png"));
+
+	if (pp = props->CreateProperty(_T("RenderMethod"), 'C3RM'))
+		pp->SetString(_T("terrain.c3rm"));
 
 	return true;
 }
@@ -95,20 +84,98 @@ void QuadTerrainImpl::Update(float elapsed_time)
 
 bool QuadTerrainImpl::Prerender(Object::RenderFlags flags, int draworder)
 {
-	if (flags.IsSet(RF_FORCE))
-		return true;
+	if (!m_pMethod)
+	{
+		ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
+		m_TechIdx_Override.reset();
+
+		props::IProperty *pmethod = m_pOwner->GetProperties()->GetPropertyById('C3RM');
+		if (prm)
+		{
+			c3::Resource *pres = prm->GetResource(pmethod ? pmethod->AsString() : _T("terrain.c3rm"), RESF_DEMANDLOAD);
+			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
+			{
+				m_pMethod = (RenderMethod *)(pres->GetData());
+
+				std::function<void(size_t)> _SetTechIdx = [&](size_t tidx)
+				{
+					if (tidx < m_pMethod->GetNumTechniques())
+					{
+						if (m_TechIdx_Override.has_value())
+							*m_TechIdx_Override = tidx;
+						else
+							m_TechIdx_Override = std::make_optional<size_t>(tidx);
+					}
+					else
+					{
+						m_TechIdx_Override.reset();
+					}
+				};
+
+				if (props::IProperty *pp = m_pOwner->GetProperties()->GetPropertyById('C3RT'))
+				{
+					size_t t;
+					switch (pp->GetType())
+					{
+						case props::IProperty::PROPERTY_TYPE::PT_INT:
+						{
+							t = pp->AsInt();
+							_SetTechIdx(t);
+							break;
+						}
+
+						case props::IProperty::PROPERTY_TYPE::PT_STRING:
+						{
+							t = -1;
+							m_pMethod->FindTechnique(pp->AsString(), t);
+							_SetTechIdx(t);
+							break;
+						}
+					}
+				}
+
+				m_pMethod->FindTechnique(_T("g"), m_TechIdx_G);
+				m_pMethod->FindTechnique(_T("s"), m_TechIdx_Shadow);
+				m_pMethod->FindTechnique(_T("sel"), m_TechIdx_Sel);
+				m_uSamplerHeight_ByTech.resize(m_pMethod->GetNumTechniques(), -1);
+			}
+		}
+	}
+
+	if (!m_pMethod)
+		return false;
 
 	if (flags.IsSet(RF_LIGHT))
 		return false;
 
-	//if (!m_pMethod || (draworder == m_pMethod->GetActiveTechnique()->GetDrawOrder()))
+	if ((flags.IsSet(RF_SHADOW) && !m_pOwner->Flags().IsSet(OF_CASTSHADOW)))
+		return false;
+
+	size_t t;
+	if (m_TechIdx_Override.has_value())
+		t = *m_TechIdx_Override;
+	else if (flags.IsSet(RF_SHADOW))
+		t = m_TechIdx_Shadow;
+	else
+		t = m_TechIdx_G;
+
+	if (t >= m_pMethod->GetNumTechniques())
+		return false;
+
+	RenderMethod::Technique *ptech = m_pMethod->GetTechnique(t);
+	if (ptech && (draworder == ptech->GetDrawOrder()))
 	{
+		m_pMethod->SetActiveTechnique(t);
+
 		if (m_pOwner->Flags().IsSet(OF_DRAW))
 			return true;
 
 		if (flags.IsSet(RF_EDITORDRAW) && m_pOwner->Flags().IsSet(OF_DRAWINEDITOR))
 			return true;
 	}
+
+	if (flags.IsSet(RF_FORCE))
+		return true;
 
 	return false;
 }
@@ -131,7 +198,7 @@ TerrainSampleFunc SampleS8_1CH = [](const void *h, const Texture2D::SLockInfo *l
 	assert((size_t)pos.x < li->width);
 	assert((size_t)pos.y < li->height);
 
-	return (float)((int8_t *)h)[pos.y * li->stride + pos.x] * 0.5f;
+	return (float)((int8_t *)h)[pos.y * li->stride + pos.x];
 };
 
 TerrainSampleFunc SampleU8_1CH = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
@@ -140,7 +207,7 @@ TerrainSampleFunc SampleU8_1CH = [](const void *h, const Texture2D::SLockInfo *l
 	assert((size_t)pos.x < li->width);
 	assert((size_t)pos.y < li->height);
 
-	return (float)((uint8_t *)h)[pos.y * li->stride + pos.x] * 0.5f;
+	return (float)((uint8_t *)h)[pos.y * li->stride + pos.x];
 
 };
 
@@ -150,7 +217,7 @@ TerrainSampleFunc SampleU8_2CH = [](const void *h, const Texture2D::SLockInfo *l
 	assert((size_t)pos.x < li->width);
 	assert((size_t)pos.y < li->height);
 
-	return (float)((uint16_t *)h)[pos.y * li->stride + pos.x] * 0.5f;
+	return (float)((uint16_t *)h)[pos.y * li->stride + pos.x];
 };
 
 TerrainSampleFunc SampleU8_3CH = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
@@ -159,7 +226,7 @@ TerrainSampleFunc SampleU8_3CH = [](const void *h, const Texture2D::SLockInfo *l
 	assert((size_t)pos.x < li->width);
 	assert((size_t)pos.y < li->height);
 
-	return (float)((uint8_t *)h)[pos.y * li->stride + (pos.x * 3)] * 0.5f;
+	return (float)((uint8_t *)h)[pos.y * li->stride + (pos.x * 3)];
 };
 
 TerrainSampleFunc SampleU8_4CH = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
@@ -168,7 +235,7 @@ TerrainSampleFunc SampleU8_4CH = [](const void *h, const Texture2D::SLockInfo *l
 	assert((size_t)pos.x < li->width);
 	assert((size_t)pos.y < li->height);
 
-	return (float)((uint8_t *)h)[pos.y * li->stride + (pos.x * 4)] * 0.5f;
+	return (float)((uint8_t *)h)[pos.y * li->stride + (pos.x * 4)];
 };
 
 TerrainSampleFunc SampleDummy = [](const void *h, const Texture2D::SLockInfo *li, props::TVec2I &pos)
@@ -253,7 +320,11 @@ void QuadTerrainImpl::LoadHeightMap(const TCHAR *filename)
 			{
 				for (size_t x = 0; x < li.width; x++)
 				{
-					*(phtpix++) = samp(readbuf, &readli, props::TVec2I(x, y));
+					float h = samp(readbuf, &readli, props::TVec2I(x, y));
+					*(phtpix++) = h;
+
+					m_MinHeight = std::min<float>(m_MinHeight, h);
+					m_MaxHeight = std::max<float>(m_MaxHeight, h);
 				}
 			}
 
@@ -400,106 +471,32 @@ void QuadTerrainImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat
 		if (!m_Root)
 			m_Root = GenerateGeometryQuadSet(0, 0, m_VertDim.x, m_VertDim.y);
 
-		if (!m_SP_terr)
-		{
-			ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();
 
-			props::IProperty *pvsh = m_pOwner->GetProperties()->GetPropertyById('VSHF');
-			props::IProperty *pfsh = m_pOwner->GetProperties()->GetPropertyById('FSHF');
-			if (!m_VS_terr)
-			{
-				c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-terrain.vsh"), RESF_DEMANDLOAD);
-				if (pres)
-					m_VS_terr = (c3::ShaderComponent *)(pres->GetData());
-			}
-
-			if (!m_FS_terr)
-			{
-				c3::Resource *pres = prm->GetResource(pfsh ? pfsh->AsString() : _T("def-terrain.fsh"), RESF_DEMANDLOAD);
-				if (pres)
-					m_FS_terr = (c3::ShaderComponent *)(pres->GetData());
-			}
-
-			m_SP_terr = m_pOwner->GetSystem()->GetRenderer()->CreateShaderProgram();
-
-			if (m_SP_terr && m_VS_terr && m_FS_terr)
-			{
-				m_SP_terr->AttachShader(m_VS_terr);
-				m_SP_terr->AttachShader(m_FS_terr);
-				if (m_SP_terr->Link() == ShaderProgram::RETURNCODE::RET_OK)
-				{
-					// anything special to do when the shader links correctly
-					m_uSamplerHeight = m_SP_terr->GetUniformLocation(_T("uSamplerHeight"));
-					m_uSamplerHeightStep = m_SP_terr->GetUniformLocation(_T("uSamplerHeightStep"));
-				}
-
-				m_pMtl = prend->GetMaterialManager()->CreateMaterial();
-				m_pMtl->SetColor(Material::CCT_DIFFUSE, Color::iWhite);
-				m_pMtl->SetTexture(Material::TCT_DIFFUSE, prend->GetWhiteTexture());
-				//m_pMtl->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_WIREFRAME));
-			}
-		}
+		m_pMtl = prend->GetMaterialManager()->CreateMaterial();
+		m_pMtl->SetColor(Material::CCT_DIFFUSE, Color::iWhite);
+		m_pMtl->SetTexture(Material::TCT_DIFFUSE, prend->GetWhiteTexture());
+		//m_pMtl->RenderModeFlags().Set(Material::RENDERMODEFLAG(Material::RMF_WIREFRAME));
 	}
 
 	prend->SetWorldMatrix(m_pPos->GetTransformMatrix());
 
-	if (!flags.IsSet(OF_CASTSHADOW))
+	size_t ti;
+	m_pMethod->GetActiveTechniqueIndex(ti);
+
+	ShaderProgram *ps = m_pMethod->GetTechnique(ti)->GetPass(0)->GetShader();
+	if (ps)
 	{
-		prend->UseProgram(m_SP_terr);
-
-		glm::fvec2 step(1.0f / (float)m_HeightTexDim.x, 1.0f / (float)m_HeightTexDim.y);
-		m_SP_terr->SetUniform2(m_uSamplerHeightStep, &step);
-		m_SP_terr->SetUniformTexture(m_HeightTex, m_uSamplerHeight, -1, 0);
-
-		m_pMtl->Apply(m_SP_terr);
-	}
-	else
-	{
-#if 0
-		if (!m_SP_obj)
-		{
-			props::IProperty *pvsh = m_pOwner->GetProperties()->GetPropertyById('VSSF');
-			props::IProperty *pfsh = m_pOwner->GetProperties()->GetPropertyById('FSSF');
-			if (!m_VS_shadowobj)
-			{
-				c3::Resource *pres = prm->GetResource(pvsh ? pvsh->AsString() : _T("def-obj-shadow.vsh"), rf);
-				if (pres)
-					m_VS_shadowobj = (c3::ShaderComponent *)(pres->GetData());
-			}
-
-			if (!m_FS_shadowobj)
-			{
-				c3::Resource *pres = prm->GetResource(pfsh ? pfsh->AsString() : _T("def-obj-shadow.fsh"), rf);
-				if (pres)
-					m_FS_shadowobj = (c3::ShaderComponent *)(pres->GetData());
-			}
-
-			m_SP_shadowobj = m_pOwner->GetSystem()->GetRenderer()->CreateShaderProgram();
-
-			if (m_SP_shadowobj && m_VS_shadowobj && m_FS_shadowobj)
-			{
-				m_SP_shadowobj->AttachShader(m_VS_shadowobj);
-				m_SP_shadowobj->AttachShader(m_FS_shadowobj);
-				if (m_SP_shadowobj->Link() == ShaderProgram::RETURNCODE::RET_OK)
-				{
-					m_Flags.Clear(Object::OBJFLAG(Object::CASTSHADOW));
-					return;
-				}
-			}
-			else
-			{
-				m_Flags.Clear(Object::OBJFLAG(Object::CASTSHADOW));
-				return;
-			}
-		}
-
-		prend->UseProgram(m_SP_shadowobj);
-#endif
+		if (m_uSamplerHeight_ByTech[ti] < 0)
+			m_uSamplerHeight_ByTech[ti] = ps->GetUniformLocation(_T("uSamplerHeight"));
+		ps->SetUniformTexture(m_HeightTex, m_uSamplerHeight_ByTech[ti], -1, 0);
 	}
 
 	prend->UseMaterial(m_pMtl);
-	prend->UseRenderMethod(nullptr);
+	prend->UseRenderMethod(m_pMethod);
 	RenderQuad(m_Root, flags);
+
+	if (ps)
+		ps->SetUniformTexture((c3::Texture *)nullptr, m_uSamplerHeight_ByTech[ti], -1, 0);
 }
 
 void QuadTerrainImpl::RenderQuad(CTerrainQuadNode *node, props::TFlags64 rendflags)
@@ -510,16 +507,18 @@ void QuadTerrainImpl::RenderQuad(CTerrainQuadNode *node, props::TFlags64 rendfla
 
 		const BoundingBox *clipfrust = m_pOwner->GetSystem()->GetRenderer()->GetClipFrustum();
 
-		if (quad && clipfrust->IsBoxInside(&quad->m_Bounds))
+		//if (quad && clipfrust->IsBoxInside(&quad->m_Bounds))
 		{
 			bool allvis = true;
 
+#if 0
 			for (size_t qidx = CTerrainQuadNode::ChildQuad::POSX_POSY; qidx < CTerrainQuadNode::ChildQuad::NUM_QUADS; qidx++)
 			{
 				CTerrainQuadNode *pqn = node->GetChild((CTerrainQuadNode::ChildQuad)qidx);
 				TerrainQuad *ptq = pqn ? pqn->GetData() : nullptr;
 				allvis &= clipfrust->IsBoxInside(&ptq->m_Bounds);
 			}
+#endif
 
 			c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 
@@ -558,12 +557,10 @@ void QuadTerrainImpl::PropertyChanged(const props::IProperty *pprop)
 
 	switch (pprop->GetID())
 	{
-		case 'VSHF':
-			m_VS_terr = (c3::ShaderComponent *)((prm->GetResource(pprop->AsString()))->GetData());
-			break;
-
-		case 'FSHF':
-			m_FS_terr = (c3::ShaderComponent *)((prm->GetResource(pprop->AsString()))->GetData());
+		case 'C3RT':
+			// a change of override technique will also clear the RenderMethod
+		case 'C3RM':
+			m_pMethod = nullptr;
 			break;
 
 		case 'HtMp':
@@ -609,6 +606,11 @@ QuadTerrainImpl::CTerrainQuadNode *QuadTerrainImpl::GenerateGeometryQuadSet(size
 	if (!ptq)
 		return nullptr;
 
+	glm::fvec3 minb(startx, starty, m_MinHeight);
+	glm::fvec3 maxb(startx + xdim, starty + ydim, m_MaxHeight);
+	ptq->m_Bounds.SetExtents(&minb, &maxb);
+	ptq->m_Bounds.Align(nullptr);
+
 	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 
 	ptq->m_NumVerts = xdim * ydim;
@@ -627,41 +629,41 @@ QuadTerrainImpl::CTerrainQuadNode *QuadTerrainImpl::GenerateGeometryQuadSet(size
 
 	ptq->m_IB = prend->CreateIndexBuffer();
 
-	uint16_t *pib = nullptr;
-	if (ptq->m_IB->Lock((void **)&pib, ptq->m_NumFaces * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
+	uint32_t *pib = nullptr;
+	if (ptq->m_IB->Lock((void **)&pib, ptq->m_NumFaces * 3, IndexBuffer::IndexSize::IS_32BIT, IBLOCKFLAG_WRITE) == IndexBuffer::RETURNCODE::RET_OK)
 	{
-		uint16_t ir0 = (uint16_t)starty * (uint16_t)startx;
-		uint16_t mid = (uint16_t)m_VertDim.x;
-		uint16_t ir1 = mid + (uint16_t)m_VertDim.x - 1;
+		uint32_t ir0 = (uint32_t)starty * (uint32_t)startx;
+		uint32_t mid = (uint32_t)m_VertDim.x;
+		uint32_t ir1 = mid + (uint32_t)m_VertDim.x - 1;
 
 		// Build our indices...
 		for (int64_t y = 0, maxy = ydim - 1; y < maxy; y++)
 		{
-			uint16_t _ir0 = ir0;
-			uint16_t _mid = mid;
-			uint16_t _ir1 = ir1;
+			uint32_t _ir0 = ir0;
+			uint32_t _mid = mid;
+			uint32_t _ir1 = ir1;
 
 			for (int64_t x = 0, maxx = xdim - 1; x < maxx; x++)
 			{
 				// Face 0 - top
 				*(pib++) = _ir0;
-				*(pib++) = _mid;
 				*(pib++) = _ir0 + 1;
+				*(pib++) = _mid;
 
 				// Face 1 - left
 				*(pib++) = _ir0;
-				*(pib++) = _ir1;
 				*(pib++) = _mid;
+				*(pib++) = _ir1;
 
 				// Face 2 - bottom
 				*(pib++) = _ir1;
-				*(pib++) = _ir1 + 1;
 				*(pib++) = _mid;
+				*(pib++) = _ir1 + 1;
 
 				// Face 3 - right
 				*(pib++) = _mid;
-				*(pib++) = _ir1 + 1;
 				*(pib++) = _ir0 + 1;
+				*(pib++) = _ir1 + 1;
 
 				_ir0++;
 				_mid++;
@@ -670,7 +672,7 @@ QuadTerrainImpl::CTerrainQuadNode *QuadTerrainImpl::GenerateGeometryQuadSet(size
 
 			ir0 = ir1;
 			mid = _ir1 + 1;
-			ir1 = mid + (uint16_t)m_VertDim.x - 1;
+			ir1 = mid + (uint32_t)m_VertDim.x - 1;
 		}
 
 		ptq->m_IB->Unlock();
@@ -682,7 +684,7 @@ QuadTerrainImpl::CTerrainQuadNode *QuadTerrainImpl::GenerateGeometryQuadSet(size
 #define SMALLEST_DIM	16
 
 	if ((xdim < SMALLEST_DIM) || (ydim < SMALLEST_DIM))
-		return;
+		return nullptr;
 
 	xdim /= 2;
 	ydim /= 2;
@@ -718,13 +720,19 @@ bool QuadTerrainImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayD
 	glm::vec3 localRayPos = glm::vec3(invMat * glm::vec4(*pRayPos, 1.0f));
 	glm::vec3 localRayDir = glm::normalize(glm::vec3(invMat * glm::vec4(*pRayDir, 0.0f)));
 
-	bool ret = false;
+	float dist;
+	
+	bool ret = m_Root->GetData()->m_Bounds.CheckCollision(&localRayPos, &localRayDir, &dist);
+	if (!ret)
+		return false;
+
+	glm::fvec3 lrp = localRayPos + (localRayDir * dist);
 
 	float *pheights;
 	Texture2D::SLockInfo li;
 	if (m_HeightTex->Lock((void **)&pheights, li, 0, TEXLOCKFLAG_READ | TEXLOCKFLAG_CACHE) == Texture::RETURNCODE::RET_OK)
 	{
-		glm::vec3 pos = localRayPos;
+		glm::vec3 pos = lrp;
 		while (((pos.x <= 0) && (localRayDir.x > 0)) || ((pos.x >= li.width) && (localRayDir.x < 0)) &&
 			   ((pos.y <= 0) && (localRayDir.y > 0)) || ((pos.y >= li.height) && (localRayDir.y < 0)) &&
 			   ((pos.z > m_MinHeight) && (localRayDir.z > 0)) || ((pos.z < m_MaxHeight) && (localRayDir.z < 0)))
@@ -803,3 +811,5 @@ bool QuadTerrainImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayD
 
 	return ret;
 }
+
+#endif

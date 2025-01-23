@@ -1,12 +1,13 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #include "pch.h"
 
 #include <C3PhysicalImpl.h>
+#include <C3PhysicsManagerImpl.h>
 
 using namespace c3;
 
@@ -30,6 +31,11 @@ PhysicalImpl::PhysicalImpl()
 
 	m_Flags = 0;
 
+	m_ColliderShape = ColliderShape::MODEL;
+	m_CollisionMode = CollisionMode::DYNAMIC;
+	u_ODEBody = 0;
+	dMassSetZero(&m_ODEMass);
+
 	//m_MotionState = new b3DefaultMotionState(b3Transform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
 	//m_RigidBody = new btRigidBody(1.0f, m_MotionState, m_CollShape.has_value() ? *m_CollShape : nullptr /* get the collision shape from a mesh */);
 }
@@ -46,6 +52,9 @@ PhysicalImpl::~PhysicalImpl()
 
 void PhysicalImpl::Release()
 {
+	PhysicsManagerImpl *ppm = (PhysicsManagerImpl *)m_pOwner->GetSystem()->GetPhysicsManager();
+	ppm->RemoveObject(m_pOwner);
+
 	delete this;
 }
 
@@ -55,6 +64,71 @@ props::TFlags64 PhysicalImpl::Flags() const
 	return m_Flags;
 }
 
+size_t PhysicalImpl::GetNumValues(const props::IProperty *pprop) const
+{
+	assert(pprop);
+
+	switch (pprop->GetID())
+	{
+		case 'PhCT':
+		{
+			return ColliderShape::COLLIDER_SHAPE_COUNT;
+			break;
+		}
+
+		case 'PhCM':
+		{
+			return CollisionMode::COLLISION_MODE_COUNT;
+			break;
+		}
+
+		default:
+			break;
+	}
+
+	return 1;
+}
+
+
+const TCHAR *PhysicalImpl::GetValue(const props::IProperty *pprop, size_t ordinal, TCHAR *buf, size_t bufsize) const
+{
+	assert(pprop);
+
+	const TCHAR *ret = nullptr;
+
+	switch (pprop->GetID())
+	{
+		case 'PhCT':
+		{
+			static TCHAR *ctname[ColliderShape::COLLIDER_SHAPE_COUNT + 1] = {_T("None"), _T("Model"), _T("Plane"), _T("Box"), _T("Sphere"), _T("Cylinder"), _T("Capsule"), _T("INVALID")};
+			if ((ordinal < 0) || (ordinal >= ColliderShape::COLLIDER_SHAPE_COUNT))
+				ordinal = ColliderShape::COLLIDER_SHAPE_COUNT;
+
+			ret = ctname[ordinal];
+
+			break;
+		}
+
+		case 'PhCM':
+		{
+			static TCHAR *cmname[ColliderShape::COLLIDER_SHAPE_COUNT + 1] = {_T("Static"), _T("Kinetic"), _T("Dynamic")};
+			if ((ordinal < 0) || (ordinal >= ColliderShape::COLLIDER_SHAPE_COUNT))
+				ordinal = ColliderShape::COLLIDER_SHAPE_COUNT;
+
+			ret = cmname[ordinal];
+
+			break;
+		}
+
+		default:
+			break;
+	}
+
+	if (ret && buf && bufsize)
+		_tcscpy_s(buf, bufsize, ret);
+
+	return ret;
+}
 
 bool PhysicalImpl::Initialize(Object *pobject)
 {
@@ -64,6 +138,14 @@ bool PhysicalImpl::Initialize(Object *pobject)
 	props::IPropertySet *propset = pobject->GetProperties();
 	if (!propset)
 		return false;
+
+	props::IProperty *pctprop = propset->CreateProperty(_T("ColliderShape"), 'PhCT');
+	pctprop->SetEnumProvider(this);
+	pctprop->SetEnumVal(m_ColliderShape);
+
+	props::IProperty *pcmprop = propset->CreateProperty(_T("CollisionMode"), 'PhCM');
+	pcmprop->SetEnumProvider(this);
+	pcmprop->SetEnumVal(m_CollisionMode);
 
 	props::IProperty *plvel = propset->CreateReferenceProperty(_T("LinearVelocity"), 'LVEL', &m_LinVel, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
 	props::IProperty *placc = propset->CreateReferenceProperty(_T("LinearAcceleration"), 'LACC', &m_LinAcc, props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3);
@@ -99,7 +181,10 @@ bool PhysicalImpl::Initialize(Object *pobject)
 		prspdmax->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
 
-	props::IProperty *prmass = propset->CreateReferenceProperty(_T("Mass"), 'MASS', &m_Mass, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
+	props::IProperty *prmass = propset->CreateReferenceProperty(_T("Mass"), 'MASS', &(m_ODEMass.mass), props::IProperty::PROPERTY_TYPE::PT_FLOAT);
+
+	PhysicsManagerImpl *ppm = (PhysicsManagerImpl *)m_pOwner->GetSystem()->GetPhysicsManager();
+	ppm->AddObject(m_pOwner);
 
 	return true;
 }
@@ -112,6 +197,7 @@ void PhysicalImpl::Update(float elapsed_time)
 
 	if (m_pPositionable)
 	{
+#if 0
 		m_LinVel = glm::lerp(m_LinVel, glm::fvec3(0, 0, 0), glm::clamp<float>(m_LinSpeedFalloff * elapsed_time, 0, 1));
 		m_LinVel += m_LinAcc * elapsed_time;
 		float speed = glm::length(m_LinVel);
@@ -135,8 +221,8 @@ void PhysicalImpl::Update(float elapsed_time)
 		m_pPositionable->AdjustYaw(m_RotVel.z * elapsed_time);
 		m_pPositionable->AdjustPitch(m_RotVel.x * elapsed_time);
 		m_pPositionable->AdjustRoll(m_RotVel.y * elapsed_time);
+#endif
 
-		//m_MotionState->setWorldTransform(m_pPositionable->GetTransformMatrix());
 	}
 }
 
@@ -154,6 +240,8 @@ void PhysicalImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 
 void PhysicalImpl::PropertyChanged(const props::IProperty *pprop)
 {
+	PhysicsManagerImpl *ppm = (PhysicsManagerImpl *)(m_pOwner->GetSystem()->GetPhysicsManager());
+
 	switch (pprop->GetID())
 	{
 		case 'LACC':
@@ -168,6 +256,24 @@ void PhysicalImpl::PropertyChanged(const props::IProperty *pprop)
 		case 'RVEL':
 			//m_pOwner->GetSystem()->GetLog()->Print(_T("@"));
 			break;
+		case 'PhCT':
+			if (ppm->RemoveObject(m_pOwner))
+			{
+				m_ColliderShape = (ColliderShape)pprop->AsInt();
+				ppm->AddObject(m_pOwner);
+			}
+			break;
+		case 'PhCM':
+			if (ppm->RemoveObject(m_pOwner))
+			{
+				m_CollisionMode = (CollisionMode)pprop->AsInt();
+				ppm->AddObject(m_pOwner);
+			}
+			// break; // intentionally fall through to set mass
+		case 'MASS':
+			if ((m_CollisionMode == CollisionMode::DYNAMIC) && u_ODEBody)
+				dBodySetMass(u_ODEBody, &m_ODEMass);
+			break;
 	}
 }
 
@@ -175,6 +281,30 @@ void PhysicalImpl::PropertyChanged(const props::IProperty *pprop)
 bool PhysicalImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
 {
 	return false;
+}
+
+
+void PhysicalImpl::SetColliderShape(Physical::ColliderShape t)
+{
+	m_ColliderShape = t;
+}
+
+
+Physical::ColliderShape PhysicalImpl::GetColliderShape() const
+{
+	return (Physical::ColliderShape)m_ColliderShape;
+}
+
+
+void PhysicalImpl::SetCollisionMode(Physical::CollisionMode m)
+{
+	m_CollisionMode = m;
+}
+
+
+Physical::CollisionMode PhysicalImpl::GetCollisionMode() const
+{
+	return (Physical::CollisionMode)m_CollisionMode;
 }
 
 

@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2024, Keelan Stuart
+// Copyright © 2001-2025, Keelan Stuart
 
 
 #include "pch.h"
@@ -74,9 +74,6 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_ASSIGN, &C3EditFrame::OnUpdateAssignScript)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_RUN, &C3EditFrame::OnUpdateRunScript)
 	ON_UPDATE_COMMAND_UI(ID_SCRIPT_UPDATE, &C3EditFrame::OnUpdateUpdateScript)
-
-	ON_COMMAND(ID_RESOURCESPY_RELOAD, &C3EditFrame::OnReloadResource)
-	ON_UPDATE_COMMAND_UI(ID_RESOURCESPY_RELOAD, &C3EditFrame::OnUpdateReloadResource)
 
 	ON_WM_MOVE()
 	ON_WM_CLOSE()
@@ -1037,17 +1034,6 @@ void C3EditFrame::OnUpdateScript()
 		});
 	}
 }
-
-void C3EditFrame::OnUpdateReloadResource(CCmdUI *pCmdUI)
-{
-	pCmdUI->Enable(FALSE);// !m_wndResourceSpy.SomethingIsSelected());
-}
-
-void C3EditFrame::OnReloadResource()
-{
-
-}
-
 
 void C3EditFrame::OnMove(int x, int y)
 {
