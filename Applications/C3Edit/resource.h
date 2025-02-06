@@ -152,6 +152,7 @@
 #define ID_SEARCH                       349
 #define IDS_PROTOTYPE_VIEW              350
 #define IDR_PROTOTREE                   351
+#define IDD_BRUSHSETTINGS               351
 #define IDB_CHECKBOX                    352
 #define IDR_POPUP_GRAPH                 353
 #define IDR_TOOLBAR_RESOURCESPY         353
@@ -178,6 +179,40 @@
 #define IDC_COMBO_PROPTYPE              1014
 #define IDC_COMBO_PROPASPECT            1015
 #define IDC_PACKFILELIST                1015
+#define IDC_CHECK_YAW                   1016
+#define IDC_EDIT_MINYAW                 1017
+#define IDC_EDIT_MAXYAW                 1018
+#define IDC_CHECK_PITCH                 1019
+#define IDC_EDIT_MINPITCH               1020
+#define IDC_EDIT_MAXPITCH               1021
+#define IDC_CHECK_ROLL                  1022
+#define IDC_EDIT_MINROLL                1023
+#define IDC_EDIT_MAXROLL                1024
+#define IDC_CHECK_SCLX                  1025
+#define IDC_EDIT_MINSCLX                1026
+#define IDC_EDIT_MAXSCLX                1027
+#define IDC_CHECK_SCLY                  1028
+#define IDC_EDIT_MINSCLY                1029
+#define IDC_EDIT_MAXSCLY                1030
+#define IDC_CHECK_SCLZ                  1031
+#define IDC_EDIT_MINSCLZ                1032
+#define IDC_EDIT_MAXSCLZ                1033
+#define IDC_CHECK_LOCKXY                1034
+#define IDC_CHECK_LOCKYZ                1035
+#define IDC_CHECK_YAW_DETENTS           1036
+#define IDC_EDIT_YAW_DETENTS            1037
+#define IDC_CHECK_PITCH_DETENTS         1038
+#define IDC_EDIT_PITCH_DETENTS          1039
+#define IDC_CHECK_ROLL_DETENTS          1040
+#define IDC_EDIT_ROLL_DETENTS           1041
+#define IDC_CHECK_SNAPX                 1042
+#define IDC_EDIT_SNAPX                  1043
+#define IDC_COMBO1                      1044
+#define IDC_COMBO_PLACEMENTMODE         1044
+#define IDC_CHECK_SNAPY                 1045
+#define IDC_EDIT_SNAPY                  1046
+#define IDC_CHECK_SNAPZ                 1048
+#define IDC_EDIT_SNAPZ                  1049
 #define ID_EDIT_TRIGGERRENDERDOCCAPTURE 32771
 #define ID_EDIT_DELETE                  32772
 #define ID_EDIT_DUPLICATE               32773
@@ -243,15 +278,15 @@
 #define ID_EDIT_PACKFILEREGISTRATION    32842
 #define ID_EDIT_PACKFILEMANAGEMENT      32843
 #define ID_APP_INTERACTABLE             32845
-#define ID_BUTTON32846                  32846
+#define ID_EDIT_BRUSHSETTINGS           32847
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        349
-#define _APS_NEXT_COMMAND_VALUE         32847
-#define _APS_NEXT_CONTROL_VALUE         1016
-#define _APS_NEXT_SYMED_VALUE           365
+#define _APS_NEXT_RESOURCE_VALUE        354
+#define _APS_NEXT_COMMAND_VALUE         32848
+#define _APS_NEXT_CONTROL_VALUE         1045
+#define _APS_NEXT_SYMED_VALUE           367
 #endif
 #endif

@@ -31,6 +31,7 @@ public:
 	typedef std::map<HWND, SPerViewInfo> TWndMappedObject;
 	TWndMappedObject m_PerViewInfo;
 	c3::Object *m_Brush;
+	c3::Prototype *m_BrushProto;
 	float m_TimeWarp;
 	bool m_Paused;
 
@@ -53,6 +54,7 @@ public:
 
 	void SetBrush(c3::Object *pobj);
 	void SetBrush(const TCHAR *protoname);
+	void SetBrush(const c3::Prototype *pproto);
 
 	void ClearSelection();
 	bool IsSelected(const c3::Object *obj) const;

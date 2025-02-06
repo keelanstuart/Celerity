@@ -144,6 +144,32 @@ HTREEITEM CPrototypeView::MakeProtoGroup(HTREEITEM hroot, const TCHAR *group)
 }
 
 
+HTREEITEM CPrototypeView::FindItemByPrototype(HTREEITEM hroot, const c3::Prototype *pproto)
+{
+	if ((const c3::Prototype *)(m_wndPrototypeView.GetItemData(hroot)) == pproto)
+		return hroot;
+
+	HTREEITEM hc = m_wndPrototypeView.GetNextItem(hroot, TVGN_CHILD);
+	while (hc)
+	{
+		HTREEITEM hret = FindItemByPrototype(hc, pproto);
+		if (hret)
+			return hret;
+
+		hc = m_wndPrototypeView.GetNextItem(hc, TVGN_NEXT);
+	}
+
+	return NULL;
+}
+
+
+void CPrototypeView::UpdateItem(const c3::Prototype *pproto)
+{
+	HTREEITEM hitem = FindItemByPrototype(m_wndPrototypeView.GetRootItem(), pproto);
+	m_wndPrototypeView.SetItemText(hitem, pproto->GetName());
+}
+
+
 void CPrototypeView::FillPrototypeView()
 {
 	HTREEITEM hRoot = m_wndPrototypeView.InsertItem(_T("All Prototypes"), IMGIDX_GROUP, IMGIDX_GROUP);
@@ -500,7 +526,20 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 				filter += exts;
 				filter += _T("|*.*|All Files (*.*)||");
 
-				CFileDialog fd(TRUE, nullptr, nullptr, OFN_ALLOWMULTISELECT | OFN_ENABLESIZING, filter.c_str(), nullptr, sizeof(OPENFILENAME));
+				CFileDialog fd(TRUE, nullptr, nullptr,
+							   OFN_ALLOWMULTISELECT | OFN_ENABLESIZING,
+							   filter.c_str(), nullptr, 8192);
+
+				// Allocate a large buffer
+				std::vector<TCHAR> file_buffer;
+
+				// Allocate a large buffer (say 262144 characters)
+				file_buffer.resize(1 << 16, _T('\0'));
+
+				// Assign the buffer to the OPENFILENAME structure.
+				fd.m_ofn.lpstrFile = file_buffer.data();
+				fd.m_ofn.nMaxFile  = static_cast<DWORD>(file_buffer.size());
+
 				if (fd.DoModal() == IDOK)
 				{
 					if (pproto)

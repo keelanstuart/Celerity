@@ -1,0 +1,80 @@
+var runtime;
+var sway;
+
+var light1 = { h: 0, hatten: 0 };
+var light2 = { h: 0, hatten: 0 };
+var s, t;
+var special_time = 0.0;
+var lo, hi;
+
+var sparks = { h: 0, hemitrate: 0 };
+var emitrate = { x: 0.0, y: 0.0 };
+
+var hori;
+var ori = { x: 0.0, y: 0.0, z: 0.0 };
+var oriq = { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	ori.x = Math.sin(runtime) * sway;
+	oriq = EulerToQuat(ori);
+	SetPropertyValue(hori, oriq);
+
+	if (special_time > 0)
+	{
+		special_time -= elapsed_seconds;
+	}
+	else
+	{
+		emitrate.x = 0.0;
+		emitrate.y = 0.0;
+
+		t = Math.random(0, 10000);
+		if (t < 10) // go dark
+		{
+			special_time = Math.random(1.0, 3.0);
+			lo = 0.2;
+			hi = 0.3;
+
+			emitrate.x = 5.0;
+			emitrate.y = 8.0;
+		}
+		else if (t < 15) // go bright
+		{
+			special_time = Math.random(0.05, 0.15);
+			lo = 2.0;
+			hi = 2.1;
+		}
+		else // normal
+		{
+			lo = 0.95;
+			hi = 1.05;
+		}
+	}
+
+	SetPropertyValue(sparks.hemitrate, emitrate);
+
+	s = Math.random(lo, hi);
+	SetPropertyValue(light1.hatten, s);
+	SetPropertyValue(light2.hatten, s);
+}
+
+function init()
+{
+	runtime = Math.random(0.0, 100.0);
+	sway = Math.random(1.0, 5.0);
+
+	hori = FindProperty(self, "Orientation");
+
+	light1.h = GetChild(self, 1);
+	light1.hatten = FindProperty(light1.h, "LightAttenuation");
+
+	light2.h = GetChild(self, 2);
+	light2.hatten = FindProperty(light2.h, "LightAttenuation");
+
+	sparks.h = GetChild(self, 3);
+	if (sparks.h != 0)
+		sparks.hemitrate = FindProperty(sparks.h, "EmitRate");
+}

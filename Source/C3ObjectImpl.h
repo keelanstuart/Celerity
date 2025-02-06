@@ -84,7 +84,7 @@ namespace c3
 
 		virtual void PostLoad() final;
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance = nullptr, Object **ppHitObj = nullptr, props::TFlags64 flagmask = OF_DRAW, size_t child_depth = 0) const final;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance = nullptr, Object **ppHitObj = nullptr, props::TFlags64 flagmask = OF_DRAW, size_t child_depth = 0, bool force = false) const final;
 
 		virtual void PropertyChanged(const props::IProperty *pprop) final;
 

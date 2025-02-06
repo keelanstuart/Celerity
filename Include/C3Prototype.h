@@ -23,18 +23,18 @@ namespace c3
 	public:
 
 		/// Returns the name of the Prototype
-		virtual const TCHAR *GetName() = NULL;
+		virtual const TCHAR *GetName() const = NULL;
 
 		/// Sets the name of the Prototype
 		virtual void SetName(const TCHAR *name) = NULL;
 
 		/// Returns the system-generated GUID assigned to the Prototype
-		virtual GUID GetGUID() = NULL;
+		virtual GUID GetGUID() const = NULL;
 
 		/// Returns the name of the group to which this prototype belongs
 		/// It is used as a way to organize prototypes in the editor...
 		/// '\\' or '/' delimits the hierarchy.
-		virtual const TCHAR *GetGroup() = NULL;
+		virtual const TCHAR *GetGroup() const = NULL;
 
 		/// Sets the group to which this Prototype belongs
 		/// It is used as a way to organize prototypes in the editor...
@@ -54,13 +54,13 @@ namespace c3
 		virtual bool RemoveComponent(const ComponentType *pcomp) = NULL;
 
 		// Returns true if the Prototype has the given Component
-		virtual bool HasComponent(const ComponentType *pcomp) = NULL;
+		virtual bool HasComponent(const ComponentType *pcomp) const = NULL;
 
 		/// Returns the number of Components that are part of the Prototype
-		virtual size_t GetNumComponents() = NULL;
+		virtual size_t GetNumComponents() const = NULL;
 
 		/// Returns the Component at the given index
-		virtual const ComponentType *GetComponent(size_t index) = NULL;
+		virtual const ComponentType *GetComponent(size_t index) const = NULL;
 
 		/// Returns the file from whence the Prototype was loaded
 		virtual const TCHAR *GetSource() const = NULL;

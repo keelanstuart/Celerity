@@ -417,7 +417,7 @@ const BoundingBox *ModelImpl::GetBounds(BoundingBox *pbb) const
 }
 
 
-void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst) const
+void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst, bool force) const
 {
 	if (inst && (((InstanceDataImpl *)inst)->m_pSourceModel != this))
 		return;
@@ -430,16 +430,16 @@ void ModelImpl::Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, cons
 	{
 		// from this point, only draw top-level nodes
 		if (m_Nodes[i]->parent == NO_PARENT)
-			DrawNode(i, pmat, allow_material_changes, inst);
+			DrawNode(i, pmat, allow_material_changes, inst, force);
 	}
 }
 
 
-bool ModelImpl::DrawNode(NodeIndex nodeidx, const glm::fmat4x4 *pmat, bool allow_material_changes, const Model::InstanceData *inst) const
+bool ModelImpl::DrawNode(NodeIndex nodeidx, const glm::fmat4x4 *pmat, bool allow_material_changes, const Model::InstanceData *inst, bool force) const
 {
 	const SNodeInfo *pnode = m_Nodes[nodeidx];
 
-	if (!pnode || !pnode->flags.IsSet(NodeFlag::VISIBLE))
+	if (!pnode || (!force && !pnode->flags.IsSet(NodeFlag::VISIBLE)))
 		return false;
 
 	// push the node's transform to build the hierarchy correctly
@@ -474,7 +474,7 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, const glm::fmat4x4 *pmat, bool allow
 		assert(m_Nodes[pnode->children[c]] != nullptr);
 
 		// recursively draw each of the child nodes here
-		DrawNode(pnode->children[c], &mat, allow_material_changes, inst);
+		DrawNode(pnode->children[c], &mat, allow_material_changes, inst, force);
 	}
 
 	return true;
@@ -482,8 +482,12 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, const glm::fmat4x4 *pmat, bool allow
 
 // TODO: add a way to pass the normal of the face we collided with throughout the collision pipeline
 bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, size_t *pMeshIndex,
-							float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const InstanceData *inst) const
+							float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const InstanceData *inst, bool force) const
 {
+#if 0
+	auto tb = std::chrono::high_resolution_clock::now();
+#endif
+
 	bool ret = false;
 
 	float d = FLT_MAX;
@@ -505,7 +509,7 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, co
 		// from this point, only draw top-level nodes
 		if (m_Nodes[ni]->parent == NO_PARENT)
 		{
-			ret = IntersectNode(ni, pRayPos, pRayDir, pmat, &d, pFaceIndex, pUV, inst);
+			ret = IntersectNode(ni, pRayPos, pRayDir, pmat, &d, pFaceIndex, pUV, inst, force);
 
 			if (ret && (d < mindist))
 			{
@@ -520,15 +524,21 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, co
 		}
 	}
 
+#if 0
+	auto te = std::chrono::high_resolution_clock::now();
+	std::chrono::duration<double> tl = te - tb;
+	m_pRend->GetSystem()->GetLog()->Print(_T("collision tested: %lf\n"), tl);
+#endif
+
 	return ret;
 }
 
 bool ModelImpl::IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat,
-				   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const Model::InstanceData *inst) const
+				   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const Model::InstanceData *inst, bool force) const
 {
 	const SNodeInfo *pnode = m_Nodes[nodeidx];
 
-	if (!pnode || !pnode->flags.IsSet(NodeFlag::COLLIDE))
+	if (!pnode || (!force && !pnode->flags.IsSet(NodeFlag::COLLIDE)))
 		return false;
 
 	bool ret = false;
@@ -565,7 +575,7 @@ bool ModelImpl::IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const
 	for (auto cit : pnode->children)
 	{
 		// recursively intersect each of the child nodes here
-		ret |= IntersectNode(cit, pRayPos, pRayDir, &mat, pDistance, pFaceIndex, pUV, inst);
+		ret |= IntersectNode(cit, pRayPos, pRayDir, &mat, pDistance, pFaceIndex, pUV, inst, force);
 	}
 
 	return ret;
@@ -1327,6 +1337,36 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 	TNodeIndexMap nim;
 	AddModelNode(pmi, Model::NO_PARENT, scene->mRootNode, keep_rootxform ? &scene->mRootNode->mTransformation : nullptr, nim, mim);
+
+	bool any_colliders = false;
+	for (Model::NodeIndex ni = 0; ni < pmi->GetNodeCount(); ni++)
+	{
+		const TCHAR *pnn = pmi->GetNodeName(ni);
+		if (!pnn)
+			continue;
+
+		bool hidden = (pnn[0] && (pnn[0] == _T('#'))) || (pnn[1] && (pnn[1] == _T('#')));
+		pmi->NodeVisibility(ni, !hidden);
+
+		bool collider = (pnn[0] && (pnn[0] == _T('$'))) || (pnn[1] && (pnn[1] == _T('$')));
+		any_colliders |= collider;
+	}
+
+	if (any_colliders)
+	{
+		for (Model::NodeIndex ni = 0; ni < pmi->GetNodeCount(); ni++)
+		{
+			const TCHAR *pnn = pmi->GetNodeName(ni);
+			if (!pnn || !pmi->GetMeshCountOnNode(ni))	// if it's a dummy node, make sure sub-nodes are collided
+			{
+				pmi->NodeCollidability(ni, true);
+				continue;
+			}
+
+			bool collider = (pnn[0] && (pnn[0] == _T('$'))) || (pnn[1] && (pnn[1] == _T('$')));
+			pmi->NodeCollidability(ni, collider);
+		}
+	}
 
 	return pmi;
 }

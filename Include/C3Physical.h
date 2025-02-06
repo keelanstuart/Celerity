@@ -66,9 +66,8 @@ namespace c3
 		{
 			NONE = 0,
 
+			MODELBOUNDS,
 			MODEL,
-			PLANE,
-			BOX,
 			SPHERE,
 			CYLINDER,
 			CAPSULE,

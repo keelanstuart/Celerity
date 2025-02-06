@@ -1,0 +1,24 @@
+var Vec3F = { x: 0.0, y: 0.0, z: 0.0 };
+var Vec4F = { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+
+var runtime;
+
+var hori;
+var ori = new Vec3F();
+var oriq = new Vec4F();
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	ori.x = Math.toRandians(Math.sin(runtime) * 3.0);
+	oriq = EulerToQuat(ori);
+	SetPropertyValue(hori, oriq);
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	hori = FindProperty(self, "Orientation");
+}

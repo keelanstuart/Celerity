@@ -98,7 +98,7 @@ namespace C3ComponentGenerator
 				"\t\tvirtual bool Prerender(Object::RenderFlags flags, int draworder = 0);\n\n" +
 				"\t\tvirtual void Render(Object::RenderFlags rendflags, const glm::fmat4x4 *pmat);\n\n" +
                 "\t\tvirtual void PropertyChanged(const props::IProperty *pprop);\n\n" +
-				"\t\tvirtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *mats, float *pDistance) const;\n\n" +
+				"\t\tvirtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *mats, float *pDistance, bool force) const;\n\n" +
                 "\t};\n\n" +
                 "\tDEFINE_COMPONENTTYPE(" + name + ", " + impl_name + ", GUID(" + g.ToString("X") + "), \"" + name + "\", \"TODO: describe your component here\", 0);\n\n" +
                 "};\n";

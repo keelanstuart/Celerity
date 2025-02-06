@@ -100,6 +100,7 @@
     <ClCompile Include="..\Common\DeferredPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="BrushSettingsDlg.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C3Edit.h">
@@ -216,6 +217,7 @@
     <ClInclude Include="..\Common\C3AppCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="BrushSettingsDlg.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\class_view.ico">

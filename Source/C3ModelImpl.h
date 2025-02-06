@@ -158,10 +158,10 @@ namespace c3
 
 		virtual void GetBoundingSphere(glm::fvec3 *centroid = nullptr, float *radius = nullptr) const;
 
-		virtual void Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst = nullptr) const;
+		virtual void Draw(const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst = nullptr, bool force = false) const;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, size_t *pMeshIndex,
-							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const InstanceData *inst) const;
+							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const InstanceData *inst, bool force = false) const;
 
 		virtual const Animation *GetDefaultAnim() const;
 
@@ -172,10 +172,10 @@ namespace c3
 		void SetBounds(glm::fvec3 &bmin, glm::fvec3 &bmax);
 
 	protected:
-		bool DrawNode(NodeIndex nodeidx, const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst) const;
+		bool DrawNode(NodeIndex nodeidx, const glm::fmat4x4 *pmat, bool allow_material_changes, const InstanceData *inst, bool force) const;
 
 		bool IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat,
-						   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const Model::InstanceData *inst) const;
+						   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const Model::InstanceData *inst, bool force = false) const;
 
 	};
 

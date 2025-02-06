@@ -38,7 +38,7 @@ FactoryImpl::~FactoryImpl()
 }
 
 
-Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid, Object *pparent)
+Object *FactoryImpl::Build(const Prototype *pproto, GUID *override_guid, Object *pparent)
 {
 	GUID guid;
 	if (!override_guid)
@@ -50,7 +50,7 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid, Object *ppare
 	if (pproto)
 	{
 		o->SetName(pproto->GetName());
-		o->Flags().SetAll(pproto->Flags());
+		o->Flags().SetAll(((c3::Prototype *)pproto)->Flags());
 
 		// add all components first, before intializing them...
 		for (size_t i = 0, maxi = pproto->GetNumComponents(); i < maxi; i++)
@@ -68,7 +68,7 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid, Object *ppare
 			pc->Initialize(o);
 		}
 
-		o->GetProperties()->AppendPropertySet(pproto->GetProperties());
+		o->GetProperties()->AppendPropertySet(((c3::Prototype *)pproto)->GetProperties());
 	}
 
 	o->PostLoad();
@@ -77,7 +77,7 @@ Object *FactoryImpl::Build(Prototype *pproto, GUID *override_guid, Object *ppare
 }
 
 
-Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *pparent, bool build_children)
+Object *FactoryImpl::Build(const Object *pobject, GUID *override_guid, Object *pparent, bool build_children)
 {
 	GUID guid;
 	if (!override_guid)
@@ -89,7 +89,7 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *pparent
 	if (pobject)
 	{
 		o->SetName(pobject->GetName());
-		o->Flags().SetAll(pobject->Flags());
+		o->Flags().SetAll(((c3::Object *)pobject)->Flags());
 
 		for (size_t i = 0, maxi = pobject->GetNumComponents(); i < maxi; i++)
 		{
@@ -109,7 +109,7 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *pparent
 			pc->Initialize(o);
 		}
 
-		o->GetProperties()->AppendPropertySet(pobject->GetProperties());
+		o->GetProperties()->AppendPropertySet(((c3::Object *)pobject)->GetProperties());
 
 		if (build_children)
 		{
@@ -127,7 +127,7 @@ Object *FactoryImpl::Build(Object *pobject, GUID *override_guid, Object *pparent
 }
 
 
-Prototype *FactoryImpl::CreatePrototype(Prototype *pproto)
+Prototype *FactoryImpl::CreatePrototype(const Prototype *pproto)
 {
 	GUID guid;
 	CoCreateGuid(&guid);
@@ -137,13 +137,13 @@ Prototype *FactoryImpl::CreatePrototype(Prototype *pproto)
 
 	if (pproto)
 	{
-		p->SetName(pproto->GetName());
-		p->Flags().SetAll(pproto->Flags());
-		p->GetProperties()->AppendPropertySet(pproto->GetProperties());
+		p->SetName(((c3::Prototype *)pproto)->GetName());
+		p->Flags().SetAll(((c3::Prototype *)pproto)->Flags());
+		p->GetProperties()->AppendPropertySet(((c3::Prototype *)pproto)->GetProperties());
 
-		for (size_t i = 0, maxi = pproto->GetNumComponents(); i < maxi; i++)
+		for (size_t i = 0, maxi = ((c3::Prototype *)pproto)->GetNumComponents(); i < maxi; i++)
 		{
-			p->AddComponent(pproto->GetComponent(i));
+			p->AddComponent(((c3::Prototype *)pproto)->GetComponent(i));
 		}
 	}
 
@@ -151,7 +151,7 @@ Prototype *FactoryImpl::CreatePrototype(Prototype *pproto)
 }
 
 
-Prototype *FactoryImpl::MakePrototype(Object *pobject)
+Prototype *FactoryImpl::MakePrototype(const Object *pobject)
 {
 	GUID guid;
 	CoCreateGuid(&guid);
@@ -162,8 +162,8 @@ Prototype *FactoryImpl::MakePrototype(Object *pobject)
 	if (pobject)
 	{
 		p->SetName(pobject->GetName());
-		p->Flags().SetAll(pobject->Flags());
-		p->GetProperties()->AppendPropertySet(pobject->GetProperties());
+		p->Flags().SetAll(((c3::Object *)pobject)->Flags());
+		p->GetProperties()->AppendPropertySet(((c3::Object *)pobject)->GetProperties());
 
 		for (size_t i = 0, maxi = pobject->GetNumComponents(); i < maxi; i++)
 		{
@@ -190,13 +190,13 @@ void FactoryImpl::RemovePrototype(Prototype *pproto)
 }
 
 
-size_t FactoryImpl::GetNumPrototypes()
+size_t FactoryImpl::GetNumPrototypes() const
 {
 	return m_Prototypes.size();
 }
 
 
-Prototype *FactoryImpl::GetPrototype(size_t index)
+Prototype *FactoryImpl::GetPrototype(size_t index) const
 {
 	if (index >= m_Prototypes.size())
 		return nullptr;
@@ -205,11 +205,11 @@ Prototype *FactoryImpl::GetPrototype(size_t index)
 }
 
 
-Prototype *FactoryImpl::FindPrototype(const TCHAR *name, bool case_sensitive)
+Prototype *FactoryImpl::FindPrototype(const TCHAR *name, bool case_sensitive) const
 {
 	if (case_sensitive)
 	{
-		for (auto &it : m_Prototypes)
+		for (const auto &it : m_Prototypes)
 		{
 			if (!_tcscmp(it->GetName(), name))
 				return it;
@@ -217,7 +217,7 @@ Prototype *FactoryImpl::FindPrototype(const TCHAR *name, bool case_sensitive)
 	}
 	else
 	{
-		for (auto &it : m_Prototypes)
+		for (const auto &it : m_Prototypes)
 		{
 			if (!_tcsicmp(it->GetName(), name))
 				return it;
@@ -228,9 +228,9 @@ Prototype *FactoryImpl::FindPrototype(const TCHAR *name, bool case_sensitive)
 }
 
 
-Prototype *FactoryImpl::FindPrototype(GUID guid)
+Prototype *FactoryImpl::FindPrototype(GUID guid) const
 {
-	for (auto &it : m_Prototypes)
+	for (const auto &it : m_Prototypes)
 	{
 		if (it->GetGUID() == guid)
 			return it;
@@ -581,13 +581,13 @@ bool FactoryImpl::UnregisterComponentType(ComponentType *pctype)
 }
 
 
-size_t FactoryImpl::GetNumComponentTypes()
+size_t FactoryImpl::GetNumComponentTypes() const
 {
 	return s_ComponentTypes.size();
 }
 
 
-const ComponentType *FactoryImpl::GetComponentType(size_t index)
+const ComponentType *FactoryImpl::GetComponentType(size_t index) const
 {
 	if (index >= s_ComponentTypes.size())
 		return nullptr;
@@ -596,7 +596,7 @@ const ComponentType *FactoryImpl::GetComponentType(size_t index)
 }
 
 
-const ComponentType *FactoryImpl::FindComponentType(const TCHAR *name, bool case_sensitive)
+const ComponentType *FactoryImpl::FindComponentType(const TCHAR *name, bool case_sensitive) const
 {
 	if (!name)
 		return nullptr;
@@ -626,7 +626,7 @@ const ComponentType *FactoryImpl::FindComponentType(const TCHAR *name, bool case
 }
 
 
-const ComponentType *FactoryImpl::FindComponentType(GUID guid)
+const ComponentType *FactoryImpl::FindComponentType(GUID guid) const
 {
 	for (const auto &it : s_ComponentTypes)
 	{
@@ -678,13 +678,13 @@ bool FactoryImpl::UnregisterFlowNodeType(FlowNodeType *pfntype)
 }
 
 
-size_t FactoryImpl::GetNumFlowNodeTypes()
+size_t FactoryImpl::GetNumFlowNodeTypes() const
 {
 	return s_FlowNodeTypes.size();
 }
 
 
-const FlowNodeType *FactoryImpl::GetFlowNodeType(size_t index)
+const FlowNodeType *FactoryImpl::GetFlowNodeType(size_t index) const
 {
 	if (index >= s_FlowNodeTypes.size())
 		return nullptr;
@@ -693,7 +693,7 @@ const FlowNodeType *FactoryImpl::GetFlowNodeType(size_t index)
 }
 
 
-const FlowNodeType *FactoryImpl::FindFlowNodeType(const TCHAR *name, bool case_sensitive)
+const FlowNodeType *FactoryImpl::FindFlowNodeType(const TCHAR *name, bool case_sensitive) const
 {
 	if (!name)
 		return nullptr;
@@ -723,7 +723,7 @@ const FlowNodeType *FactoryImpl::FindFlowNodeType(const TCHAR *name, bool case_s
 }
 
 
-const FlowNodeType *FactoryImpl::FindFlowNodeType(GUID guid)
+const FlowNodeType *FactoryImpl::FindFlowNodeType(GUID guid) const
 {
 	for (const auto &it : s_FlowNodeTypes)
 	{

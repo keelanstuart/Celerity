@@ -230,7 +230,7 @@ void ModelRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pm
 
 		glm::fmat4x4 mat = *pmat * *GetMatrix();
 
-		pmod->Draw(&mat, !flags.IsSet(RF_LOCKMATERIAL), (Model::InstanceData *)m_Inst);
+		pmod->Draw(&mat, !flags.IsSet(RF_LOCKMATERIAL), (Model::InstanceData *)m_Inst, flags.AnySet(RF_EDITORDRAW | RF_FORCE));
 	}
 }
 
@@ -356,7 +356,7 @@ Model::InstanceData *ModelRendererImpl::GetModelInstanceData()
 }
 
 
-bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
+bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const
 {
 	bool ret = false;
 
@@ -371,7 +371,7 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 
 		glm::fmat4x4 mat = pmat ? (*pmat * *GetMatrix()) : *GetMatrix();
 
-		ret = pmod->Intersect(pRayPos, pRayDir, &mat, &meshidx, &dist, &faceidx, &uv, (const Model::InstanceData *)m_Inst);
+		ret = pmod->Intersect(pRayPos, pRayDir, &mat, &meshidx, &dist, &faceidx, &uv, (const Model::InstanceData *)m_Inst, force);
 		if (ret && pDistance)
 		{
 			if (dist < *pDistance)

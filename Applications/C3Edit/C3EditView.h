@@ -22,7 +22,7 @@ public:
 // Operations
 public:
 	void ComputePickRay(POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const;
-	c3::Object *Pick(POINT p) const;
+	c3::Object *Pick(POINT p, glm::fvec3 *picked_point = nullptr, bool allow_root = false) const;
 
 	void AdjustYawPitch(float yawadj, float pitchadj, bool redraw = true);
 
@@ -83,8 +83,6 @@ protected:
 	bool m_ShowDebug;
 
 	CPoint m_MousePos;
-	glm::fvec3 m_BasePickPos;
-	glm::fvec3 m_BasePickVec;
 
 	float m_WindowsUIScale;
 
@@ -99,6 +97,7 @@ protected:
 	void CreateSurfaces();
 	void DestroySurfaces();
 	void UpdateShaderSurfaces();
+	void RandomizeBrush();
 
 	void HandleInput(c3::Positionable* pcampos);
 
@@ -145,6 +144,7 @@ public:
 	afx_msg void OnUpdateEditPaste(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateEditAssignRoot(CCmdUI *pCmdUI);
 	afx_msg void OnEditAssignRoot();
+	afx_msg void OnEditBrushSettings();
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

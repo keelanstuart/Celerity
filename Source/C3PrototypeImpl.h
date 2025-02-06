@@ -34,13 +34,13 @@ namespace c3
 
 		virtual ~PrototypeImpl();
 
-		virtual const TCHAR *GetName();
+		virtual const TCHAR *GetName() const;
 
 		virtual void SetName(const TCHAR *name);
 
-		virtual GUID GetGUID();
+		virtual GUID GetGUID() const;
 
-		virtual const TCHAR *GetGroup();
+		virtual const TCHAR *GetGroup() const;
 
 		virtual void SetGroup(const TCHAR *group);
 
@@ -52,11 +52,11 @@ namespace c3
 
 		virtual bool RemoveComponent(const ComponentType *pcomp);
 
-		virtual bool HasComponent(const ComponentType *pcomp);
+		virtual bool HasComponent(const ComponentType *pcomp) const;
 
-		virtual size_t GetNumComponents();
+		virtual size_t GetNumComponents() const;
 
-		virtual const ComponentType *GetComponent(size_t index);
+		virtual const ComponentType *GetComponent(size_t index) const;
 
 		virtual const TCHAR *GetSource() const;
 

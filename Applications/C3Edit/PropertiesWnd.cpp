@@ -151,6 +151,14 @@ int CPropertiesWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 	m_wndFlagList.SetFont(m_wndPropList.GetFont());
 
+	for (size_t j = 0, maxj = theApp.m_C3->GetFactory()->GetNumComponentTypes(); j < maxj; j++)
+	{
+		c3::ComponentType *pct = (c3::ComponentType *)theApp.m_C3->GetFactory()->GetComponentType(j);
+		int ic = m_wndCompList.AddString(pct->GetName());
+		m_wndCompList.SetItemData(ic, j);
+	}
+	m_wndCompList.SetFont(m_wndPropList.GetFont());
+
 	m_wndNameEdit.SetFont(m_wndPropList.GetFont());
 
 	m_wndPropList.SetCustomColors(RGB(64, 64, 64), RGB(255, 255, 255), RGB(64, 64, 64), RGB(255, 255, 255), RGB(0, 0, 0), RGB(200, 200, 200), RGB(128, 128, 128));
@@ -198,26 +206,6 @@ void CPropertiesWnd::OnUpdateSortProperties(CCmdUI* pCmdUI)
 	pCmdUI->SetCheck(m_wndPropList.IsAlphabeticMode());
 }
 
-//void CPropertiesWnd::OnProperties1()
-//{
-	// TODO: Add your command handler code here
-//}
-
-//void CPropertiesWnd::OnUpdateProperties1(CCmdUI* /*pCmdUI*/)
-//{
-	// TODO: Add your command update UI handler code here
-//}
-
-//void CPropertiesWnd::OnProperties2()
-//{
-	// TODO: Add your command handler code here
-//}
-
-//void CPropertiesWnd::OnUpdateProperties2(CCmdUI* /*pCmdUI*/)
-//{
-	// TODO: Add your command update UI handler code here
-//}
-
 void CPropertiesWnd::InitPropList()
 {
 	m_wndPropList.EnableHeaderCtrl(FALSE);
@@ -263,7 +251,25 @@ void CPropertiesWnd::SetActiveObject(c3::Object *pobj)
 	m_pProto = nullptr;
 	m_pProps = m_pObj ? m_pObj->GetProperties() : nullptr;
 
-	m_wndNameEdit.SetWindowText(m_pObj ? m_pObj->GetName() : _T(""));
+	tstring name = m_pObj ? m_pObj->GetName() : _T("");
+
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	if (pdoc && pdoc->GetNumSelected() > 1)
+	{
+		pdoc->DoForAllSelectedBreakable([&](c3::Object *pobj) -> bool
+		{
+			if (name.compare(pobj->GetName()))
+			{
+				name = _T("(multiple selections)");
+				return false;
+			}
+
+			return true;
+		});
+	}
+
+	m_wndNameEdit.SetWindowText(name.c_str());
 
 	if (m_wndPropList.GetSafeHwnd())
 	{
@@ -293,15 +299,39 @@ void CPropertiesWnd::SetActiveProperties(props::IPropertySet* props, bool readon
 
 void CPropertiesWnd::FillOutFlags()
 {
-	props::TFlags64 *f = nullptr;
+	props::TFlags64 f, fm = 0;
+
 	if (m_pProto)
-		f = &(m_pProto->Flags());
+	{
+		f = m_pProto->Flags();
+	}
 	else if (m_pObj)
-		f = &(m_pObj->Flags());
+	{
+		C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+		C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+
+		// initialize the flags
+		f = m_pObj ? m_pObj->Flags() : 0;
+
+		if (pdoc && (pdoc->GetNumSelected() > 1))
+		{
+			pdoc->DoForAllSelected([&](c3::Object *pobj)
+			{
+				f &= pobj->Flags();
+				fm |= f ^ pobj->Flags();
+			});
+		}
+	}
 
 	for (int i = 0, maxi = m_wndFlagList.GetCount(); i < maxi; i++)
 	{
-		m_wndFlagList.SetCheck(i, f ? (f->IsSet(m_wndFlagList.GetItemData(i))) : 0);
+		DWORD_PTR m = m_wndFlagList.GetItemData(i);
+		if (fm.IsSet(m))
+			m_wndFlagList.SetCheck(i, BST_INDETERMINATE);
+		else if (f.IsSet(m))
+			m_wndFlagList.SetCheck(i, BST_CHECKED);
+		else
+			m_wndFlagList.SetCheck(i, BST_UNCHECKED);
 	}
 
 	m_wndFlagList.RedrawWindow(0, 0, RDW_ALLCHILDREN | RDW_ERASENOW | RDW_INTERNALPAINT | RDW_VALIDATE | RDW_UPDATENOW);
@@ -310,32 +340,62 @@ void CPropertiesWnd::FillOutFlags()
 
 void CPropertiesWnd::FillOutComponents()
 {
-	m_wndCompList.ResetContent();
-	for (size_t j = 0, maxj = theApp.m_C3->GetFactory()->GetNumComponentTypes(); j < maxj; j++)
+	std::map<const c3::ComponentType *, size_t> cc;
+
+	for (size_t i = 0, maxi = m_wndCompList.GetCount(); i < maxi; i++)
 	{
-		c3::ComponentType *pct = (c3::ComponentType *)theApp.m_C3->GetFactory()->GetComponentType(j);
-		if (!pct)
-			continue;
+		const c3::ComponentType *pct = theApp.m_C3->GetFactory()->GetComponentType(m_wndCompList.GetItemData((int)i));
+		cc.insert(std::pair<const c3::ComponentType *, size_t>(pct, 0));
+	}
 
-		int ic = m_wndCompList.AddString(pct->GetName());
-		m_wndCompList.SetItemData(ic, (DWORD_PTR)pct);
-		//assert((DWORD_PTR)pct == m_wndCompList.GetItemData(ic));
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
 
-		if (m_pProto)
+	if (pdoc)
+	{
+		if (!m_pProto)
 		{
-			m_wndCompList.SetCheck(ic, m_pProto->HasComponent(pct));
-		}
-		else if (m_pObj)
-		{
-			m_wndCompList.SetCheck(ic, m_pObj->HasComponent(pct));
+			pdoc->DoForAllSelected([&](c3::Object *pobj)
+			{
+				for (size_t i = 0, maxi = pobj->GetNumComponents(); i < maxi; i++)
+				{
+					const c3::ComponentType *pct = pobj->GetComponent(i)->GetType();
+					auto fr = cc.find(pct);
+					if (fr != cc.end())
+						fr->second++;
+				}
+			});
 		}
 		else
 		{
-			m_wndCompList.SetCheck(ic, FALSE);
+			for (size_t i = 0, maxi = m_pProto->GetNumComponents(); i < maxi; i++)
+			{
+				auto fr = cc.find(m_pProto->GetComponent(i));
+				if (fr != cc.end())
+					fr->second++;
+			}
 		}
 	}
 
-	m_wndCompList.SetFont(m_wndPropList.GetFont());
+	size_t numsel = m_pProto ? 1 : (pdoc ? pdoc->GetNumSelected() : 0);
+
+	for (size_t i = 0, maxi = m_wndCompList.GetCount(); i < maxi; i++)
+	{
+		const c3::ComponentType *pct = theApp.m_C3->GetFactory()->GetComponentType(m_wndCompList.GetItemData((int)i));
+		auto fr = cc.find(pct);
+
+		if (fr == cc.end())
+			continue;
+		
+		if (!fr->second)
+			m_wndCompList.SetCheck((int)i, BST_UNCHECKED);
+		else if (fr->second < numsel)
+			m_wndCompList.SetCheck((int)i, BST_INDETERMINATE);
+		else
+			m_wndCompList.SetCheck((int)i, BST_CHECKED);
+	}
+
+	m_wndCompList.RedrawWindow(0, 0, RDW_ALLCHILDREN | RDW_ERASENOW | RDW_INTERNALPAINT | RDW_VALIDATE | RDW_UPDATENOW);
 }
 
 
@@ -419,22 +479,45 @@ afx_msg LRESULT CPropertiesWnd::OnCtlcolorlistbox(WPARAM wParam, LPARAM lParam)
 
 afx_msg void CPropertiesWnd::OnCheckChangeFlags()
 {
-	props::TFlags64 f = 0;
+	props::TFlags64 enable = 0;
+	props::TFlags64 disable = 0;
+	props::TFlags64 leave = -1;
 
 	for (int i = 0, maxi = m_wndFlagList.GetCount(); i < maxi; i++)
 	{
-		if (m_wndFlagList.GetCheck(i) == BST_CHECKED)
-			f.Set(m_wndFlagList.GetItemData(i));
+		DWORD_PTR f = m_wndFlagList.GetItemData(i);
+
+		switch (m_wndFlagList.GetCheck(i))
+		{
+			case BST_UNCHECKED:
+				disable.Set(f);
+				leave.Clear(f);
+				break;
+			case BST_CHECKED:
+				enable.Set(f);
+				leave.Clear(f);
+				break;
+			case BST_INDETERMINATE:
+				leave.Set(f);
+				break;
+		}
 	}
 
 	if (m_pProto)
 	{
-		m_pProto->Flags().SetAll(f);
+		m_pProto->Flags().Set(enable & ~leave);
+		m_pProto->Flags().Clear(disable & ~leave);
 	}
 	else if (m_pObj)
 	{
-		m_pObj->Flags().SetAll(f);
-		m_pObj->Flags().Set(OF_SCLCHANGED);
+		C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+		C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+
+		pdoc->DoForAllSelected([&](c3::Object *pobj)
+		{
+			pobj->Flags().Set(enable & ~leave);
+			pobj->Flags().Clear(disable & ~leave);
+		});
 	}
 
 	C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
@@ -447,52 +530,89 @@ afx_msg void CPropertiesWnd::OnCheckChangeComponents()
 {
 	EnterCriticalSection(&m_PropLock);
 
-	for (int i = 0, maxi = m_wndCompList.GetCount(); i < maxi; i++)
-	{
-		// this is awful... for whatever reason, WtfCheckListBox is using item data (?) so for now, look up components by name
-		CString name;
-		m_wndCompList.GetText(i, name);
-		const c3::ComponentType *pct = theApp.m_C3->GetFactory()->FindComponentType(name);
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
 
-		if (m_wndCompList.GetCheck(i) == BST_CHECKED)
+	if (pdoc)
+	{
+		for (int i = 0, maxi = m_wndCompList.GetCount(); i < maxi; i++)
 		{
-			if (m_pProto && !m_pProto->HasComponent(pct))
-				m_pProto->AddComponent(pct);
-			else if (m_pObj && !m_pObj->HasComponent(pct))
-				m_pObj->AddComponent(pct);
-		}
-		else
-		{
-			if (m_pProto && m_pProto->HasComponent(pct))
-				m_pProto->RemoveComponent(pct);
-			else if (m_pObj && m_pObj->HasComponent(pct))
+			// this is awful... for whatever reason, WtfCheckListBox is using item data (?) so for now, look up components by name
+			CString name;
+			m_wndCompList.GetText(i, name);
+			const c3::ComponentType *pct = theApp.m_C3->GetFactory()->FindComponentType(name);
+			assert(pct);
+
+			// ignore indeterminate check boxes...
+
+			if (m_wndCompList.GetCheck(i) == BST_CHECKED)
 			{
-				c3::Component *pc = m_pObj->FindComponent(pct);
-				if (pc)
-					m_pObj->RemoveComponent(pc);
+				if (m_pProto && !m_pProto->HasComponent(pct))
+					m_pProto->AddComponent(pct);
+				else
+				{
+					pdoc->DoForAllSelected([&](c3::Object *pobj)
+					{
+						if (!pobj->HasComponent(pct))
+							pobj->AddComponent(pct);
+					});
+				}
+			}
+			else if (m_wndCompList.GetCheck(i) == BST_UNCHECKED)
+			{
+				if (m_pProto && m_pProto->HasComponent(pct))
+					m_pProto->RemoveComponent(pct);
+				else
+				{
+					pdoc->DoForAllSelected([&](c3::Object *pobj)
+					{
+						if (pobj->HasComponent(pct))
+							pobj->RemoveComponent(pobj->FindComponent(pct));
+					});
+				}
 			}
 		}
-	}
 
-	m_RebuildProps = true;
+		m_RebuildProps = true;
+	}
 
 	LeaveCriticalSection(&m_PropLock);
 }
 
 afx_msg void CPropertiesWnd::OnChangeName()
 {
+	if (::GetFocus() != m_wndNameEdit.GetSafeHwnd())
+		return;
+
 	CString name;
 	m_wndNameEdit.GetWindowText(name);
+
+	C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
 
 	if (m_pProto)
 	{
 		m_pProto->SetName(name);
-		((C3EditFrame *)theApp.GetMainWnd())->m_wndProtoView.UpdateData();
+
+		pef->m_wndProtoView.UpdateItem(m_pProto);
 	}
 	else if (m_pObj)
 	{
-		m_pObj->SetName(name);
-		((C3EditFrame *)theApp.GetMainWnd())->m_wndObjects.UpdateData();
+		C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+		C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+
+		if (pdoc)
+		{
+			pdoc->DoForAllSelected([&](c3::Object *pobj)
+			{
+				pobj->SetName(name);
+			});
+		}
+
+		if (pef->GetSafeHwnd() && pef->m_wndObjects.GetSafeHwnd())
+		{
+			pef->m_wndObjects.UpdateData();
+			pef->m_wndObjects.UpdateContents();
+		}
 	}
 }
 

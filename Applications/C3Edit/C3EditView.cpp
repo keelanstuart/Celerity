@@ -16,6 +16,7 @@
 #include "C3EditDoc.h"
 #include "C3EditView.h"
 #include "resource.h"
+#include "BrushSettingsDlg.h"
 
 #include <C3Gui.h>
 #include <C3RenderMethod.h>
@@ -83,6 +84,7 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 
 	ON_COMMAND(ID_EDIT_PASTE, &C3EditView::OnEditPaste)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, &C3EditView::OnUpdateEditPaste)
+	ON_COMMAND(ID_EDIT_BRUSHSETTINGS, &C3EditView::OnEditBrushSettings)
 END_MESSAGE_MAP()
 
 
@@ -130,7 +132,6 @@ C3EditView::C3EditView() noexcept
 	m_pHoverObj = nullptr;
 
 	m_bCenter = false;
-
 }
 
 
@@ -411,8 +412,7 @@ void C3EditView::OnDraw(CDC *pDC)
 		if (camobj)
 			camobj->Update(dt);
 
-		if (pDoc->m_Brush)
-			pDoc->m_Brush->Update(dt);
+		int64_t active_tool = theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
 
 		float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
 		float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
@@ -425,6 +425,9 @@ void C3EditView::OnDraw(CDC *pDC)
 		prend->SetClearDepth(1.0f);
 
 		pDoc->m_RootObj->Update(paused ? 0 : dt);
+
+		if ((active_tool == C3EditApp::ToolType::TT_WAND) && pDoc->m_Brush)
+			pDoc->m_Brush->Update(dt);
 
 		if (m_bCenter)
 		{
@@ -472,6 +475,14 @@ void C3EditView::OnDraw(CDC *pDC)
 				pDoc->m_RootObj->Render(renderflags, order);
 			});
 
+			if ((active_tool == C3EditApp::ToolType::TT_WAND) && pDoc->m_Brush)
+			{
+				c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+				{
+					pDoc->m_Brush->Render(renderflags, order);
+				});
+			}
+
 			// after the main pass, clear everything with black...
 			prend->SetClearColor(&c3::Color::fBlack);
 			m_LCBuf->SetClearColor(0, c3::Color::fBlack);
@@ -485,6 +496,9 @@ void C3EditView::OnDraw(CDC *pDC)
 			{
 				pDoc->m_RootObj->Render(RF_LIGHT, order);
 			});
+
+			if ((active_tool == C3EditApp::ToolType::TT_WAND) && pDoc->m_Brush)
+				pDoc->m_Brush->Render(RF_LIGHT);
 
 			// Shadow pass
 			{
@@ -512,6 +526,9 @@ void C3EditView::OnDraw(CDC *pDC)
 				{
 					pDoc->m_RootObj->Render(RF_SHADOW, order);
 				});
+
+				if ((active_tool == C3EditApp::ToolType::TT_WAND) && pDoc->m_Brush)
+					pDoc->m_Brush->Render(RF_SHADOW);
 			}
 
 			// clear the render method and material
@@ -846,7 +863,7 @@ void C3EditView::ComputePickRay(POINT screenpos, glm::fvec3 &pickpos, glm::fvec3
 }
 
 
-c3::Object *C3EditView::Pick(POINT p) const
+c3::Object *C3EditView::Pick(POINT p, glm::fvec3 *picked_point, bool allow_root) const
 {
 	c3::Object *ret = nullptr;
 
@@ -861,11 +878,20 @@ c3::Object *C3EditView::Pick(POINT p) const
 	if (uint32_t renderflags = theApp.m_Config->GetBool(_T("environment.editordraw"), true))
 		flagmask |= OF_DRAWINEDITOR;
 
-	pDoc->m_RootObj->Intersect(&pickpos, &pickray, nullptr, nullptr, &ret, flagmask, -1);
-	while (ret && (ret->GetParent() != pDoc->m_OperationalRootObj))
+	float dist = FLT_MAX;
+	pDoc->m_RootObj->Intersect(&pickpos, &pickray, nullptr, &dist, &ret, flagmask, -1, false);
+
+	c3::Object *stop_obj = pDoc->m_OperationalRootObj;
+	if (allow_root)
+		stop_obj = stop_obj->GetParent();
+
+	while (ret && (ret->GetParent() != stop_obj))
 	{
 		ret = ret->GetParent();
 	}
+
+	if (ret && picked_point)
+		*picked_point = (pickray * dist) + pickpos;
 
 	return ret;
 }
@@ -1001,20 +1027,69 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	if ((nFlags & (MK_SHIFT | MK_MBUTTON | MK_LBUTTON)) && (this != GetCapture()))
 		SetCapture();
 
-#if 0
-	c3::ModelRenderer *pbr = pDoc->m_Brush ? dynamic_cast<c3::ModelRenderer *>(pDoc->m_Brush->FindComponent(c3::ModelRenderer::Type())) : nullptr;
-	c3::Positionable *pbp = pDoc->m_Brush ? dynamic_cast<c3::Positionable *>(pDoc->m_Brush->FindComponent(c3::Positionable::Type())) : nullptr;
-
-	if ((active_tool == C3EditApp::ToolType::TT_WAND) && pcam && pbr && pbp)
+	if ((active_tool == C3EditApp::ToolType::TT_WAND) && pDoc->m_Brush)
 	{
-		rayvec = glm::normalize(rayvec);
+		glm::fvec3 pp, pd, pf;
+		ComputePickRay(m_MousePos, pp, pd);
 
-		rayvec *= shortdist;
-		rayvec += pos3d_near;
+		int64_t placemode = (int)theApp.m_Config->GetInt(_T("brush.placemode"), CBrushSettingsDlg::PlacementMode::PLACEMENT_RAYCAST);
+		if (placemode == CBrushSettingsDlg::PlacementMode::PLACEMENT_RAYCAST)
+		{
+			c3::Object *pickobj = Pick(m_MousePos, &pf, true);
 
-		pbp->SetPos(rayvec.x, rayvec.y, rayvec.z);
+			if (!pickobj)
+				pf = pp + (glm::normalize(pd) * 20.0f);
+		}
+		else
+		{
+			glm::fvec3 orig(0, 0, 0), pdir(0, 0, 0);
+			if (placemode < CBrushSettingsDlg::PlacementMode::PLACEMENT_XYORIG)
+				pcampos->GetPosVec(&orig);
+			float d;
+			switch (placemode)
+			{
+				case CBrushSettingsDlg::PlacementMode::PLACEMENT_XYORIG:
+				case CBrushSettingsDlg::PlacementMode::PLACEMENT_XYCAM:
+					pdir.z = 1;
+					break;
+
+				case CBrushSettingsDlg::PlacementMode::PLACEMENT_YZORIG:
+				case CBrushSettingsDlg::PlacementMode::PLACEMENT_YZCAM:
+					pdir.x = 1;
+					break;
+
+				case CBrushSettingsDlg::PlacementMode::PLACEMENT_XZORIG:
+				case CBrushSettingsDlg::PlacementMode::PLACEMENT_XZCAM:
+					pdir.y = 1;
+					break;
+			}
+
+			glm::intersectRayPlane(pp, pd, orig, pdir, d);
+			pf = pp + (glm::normalize(pd) * d);
+		}
+
+		c3::Positionable *pbp = pDoc->m_Brush ? dynamic_cast<c3::Positionable *>(pDoc->m_Brush->FindComponent(c3::Positionable::Type())) : nullptr;
+
+		if (theApp.m_Config->GetBool(_T("brush.snap.x.apply"), false))
+		{
+			float snapx = theApp.m_Config->GetFloat(_T("brush.snap.x.val"), 1.0f);
+			pf.x = roundf(pf.x / snapx) * snapx;
+		}
+
+		if (theApp.m_Config->GetBool(_T("brush.snap.y.apply"), false))
+		{
+			float snapy = theApp.m_Config->GetFloat(_T("brush.snap.y.val"), 1.0f);
+			pf.y = roundf(pf.y / snapy) * snapy;
+		}
+
+		if (theApp.m_Config->GetBool(_T("brush.snap.z.apply"), false))
+		{
+			float snapz = theApp.m_Config->GetFloat(_T("brush.snap.z.apply"), 1.0f);
+			pf.z = roundf(pf.z / snapz) * snapz;
+		}
+
+		pbp->SetPos(pf.x, pf.y, pf.z);
 	}
-#endif
 
 	if ((nFlags & MK_SHIFT) && (deltax || deltay))// && !camori_lock)
 	{
@@ -1149,9 +1224,6 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 				}
 			}
 		}
-
-		m_BasePickPos = pickpos;
-		m_BasePickVec = pickvec;
 	}
 }
 
@@ -1268,34 +1340,47 @@ void C3EditView::OnLButtonDown(UINT nFlags, CPoint point)
 	C3EditDoc *pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 
-	// cache the pick ray so we can get a diff later
-	//ComputePickRay(point, m_BasePickPos, m_BasePickVec);
-	c3::Object *pickobj = Pick(point);
-	
-	if (pickobj)
+	if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
 	{
-		if (nFlags & MK_CONTROL)
-		{
-			if (pickobj && pDoc->IsSelected(pickobj))
-				pDoc->RemoveFromSelection(pickobj);
-			else
-				pDoc->AddToSelection(pickobj);
-		}
-		else if (!pDoc->IsSelected(pickobj))
-		{
-			pDoc->ClearSelection();
+		c3::Object *pickobj = Pick(point);
 
-			if (pickobj)
-				pDoc->AddToSelection(pickobj);
+		if (pickobj)
+		{
+			if (nFlags & MK_CONTROL)
+			{
+				if (pickobj && pDoc->IsSelected(pickobj))
+					pDoc->RemoveFromSelection(pickobj);
+				else
+					pDoc->AddToSelection(pickobj);
+			}
+			else if (!pDoc->IsSelected(pickobj))
+			{
+				pDoc->ClearSelection();
+
+				if (pickobj)
+					pDoc->AddToSelection(pickobj);
+			}
 		}
+		else
+		{
+			if (!(nFlags & MK_CONTROL))
+				pDoc->ClearSelection();
+		}
+
+		theApp.SetActiveObject(pickobj);
 	}
 	else
 	{
-		if (!(nFlags & MK_CONTROL))
-			pDoc->ClearSelection();
-	}
+		c3::Object *root = pDoc->m_OperationalRootObj ? pDoc->m_OperationalRootObj : pDoc->m_RootObj;
 
-	theApp.SetActiveObject(pickobj);
+		c3::Object *pobj = theApp.m_C3->GetFactory()->Build(pDoc->m_Brush, nullptr, root, true);
+		pobj->Flags().Set(OF_EXPANDED);
+
+		pDoc->SetModifiedFlag();
+		((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
+
+		RandomizeBrush();
+	}
 
 	SetAppropriateMouseCursor(nFlags);
 
@@ -1479,7 +1564,7 @@ void C3EditView::OnEditDuplicate()
 
 	pDoc->DoForAllSelected([&](c3::Object *pobj)
 	{
-		c3::Object *pdo = theApp.m_C3->GetFactory()->Build(pobj);
+		c3::Object *pdo = theApp.m_C3->GetFactory()->Build(pobj, nullptr, pobj->GetParent(), true);
 		pdo->SetParent(pobj->GetParent());
 	});
 
@@ -1592,6 +1677,7 @@ void C3EditView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 		case _T('6'):
 			pmf->SetActiveTool(C3EditApp::TT_WAND);
+			RandomizeBrush();
 			break;
 
 		case VK_DELETE:
@@ -1731,7 +1817,7 @@ void C3EditView::OnEditCopy()
 	if (GetFocus() != this)
 		return;
 
-	if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
+	//if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
 	{
 		C3EditDoc* pDoc = GetDocument();
 
@@ -1746,12 +1832,12 @@ void C3EditView::OnEditCopy()
 
 			pDoc->DoForAllSelected([&](c3::Object *pobj)
 			{
-				c3::Object *brc = theApp.m_C3->GetFactory()->Build(pobj, nullptr, br);
+				c3::Object *brc = theApp.m_C3->GetFactory()->Build(pobj, nullptr, br, true);
 			});
 		}
 		else if (pDoc->GetNumSelected() == 1)
 		{
-			 br = theApp.m_C3->GetFactory()->Build(pDoc->GetSelection(0));
+			 br = theApp.m_C3->GetFactory()->Build(pDoc->GetSelection(0), nullptr, nullptr, true);
 		}
 
 		pDoc->SetBrush(br);
@@ -1772,7 +1858,7 @@ void C3EditView::OnEditCut()
 	if (GetFocus() != this)
 		return;
 
-	if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
+	//if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
 	{
 		C3EditDoc* pDoc = GetDocument();
 
@@ -1781,7 +1867,7 @@ void C3EditView::OnEditCut()
 		if (pDoc->GetNumSelected() > 1)
 		{
 			br = theApp.m_C3->GetFactory()->Build();
-			br->SetName(_T("Cut Objects"));
+			br->SetName(_T("[CUT OBJECTS]"));
 			br->Flags().Set(OF_UPDATE | OF_DRAW | OF_LIGHT | OF_CASTSHADOW | OF_CHECKCOLLISIONS | OF_EXPANDED);
 			br->AddComponent(c3::Positionable::Type());
 
@@ -1869,4 +1955,118 @@ void C3EditView::OnEditAssignRoot()
 	pDoc->m_OperationalRootObj = pDoc->GetSelection(0);
 
 	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
+}
+
+
+void C3EditView::OnEditBrushSettings()
+{
+	CBrushSettingsDlg dlg;
+	dlg.DoModal();
+
+	RandomizeBrush();
+}
+
+
+void C3EditView::RandomizeBrush()
+{
+	C3EditDoc* pDoc = GetDocument();
+	if (!pDoc->m_Brush)
+		return;
+
+	c3::Positionable *ppos = (c3::Positionable *)pDoc->m_Brush->FindComponent(c3::Positionable::Type());
+	if (!ppos)
+		return;
+
+	bool yaw = theApp.m_Config->GetBool(_T("brush.yaw.apply"), true);
+	float minyaw = theApp.m_Config->GetFloat(_T("brush.yaw.min"), 0.0f);
+	float maxyaw = theApp.m_Config->GetFloat(_T("brush.yaw.max"), 360.0f);
+	if (minyaw > maxyaw)
+		std::swap(minyaw, maxyaw);
+
+	bool pitch = theApp.m_Config->GetBool(_T("brush.pitch.apply"), false);
+	bool minpitch = theApp.m_Config->GetFloat(_T("brush.pitch.min"), 0.0f);
+	bool maxpitch = theApp.m_Config->GetFloat(_T("brush.pitch.max"), 0.0f);
+	if (minpitch > maxpitch)
+		std::swap(minpitch, maxpitch);
+
+	bool roll = theApp.m_Config->GetBool(_T("brush.roll.apply"), false);
+	float minroll = theApp.m_Config->GetFloat(_T("brush.roll.min"), 0.0f);
+	float maxroll = theApp.m_Config->GetFloat(_T("brush.roll.max"), 0.0f);
+	if (minroll > maxroll)
+		std::swap(minroll, maxroll);
+
+	bool sclx = theApp.m_Config->GetBool(_T("brush.scale.x.apply"), true);
+	float minsclx = theApp.m_Config->GetFloat(_T("brush.scale.x.min"), 1.0f);
+	float maxsclx = theApp.m_Config->GetFloat(_T("brush.scale.x.max"), 1.0f);
+
+	bool scly = theApp.m_Config->GetBool(_T("brush.scale.y.apply"), true);
+	float minscly = theApp.m_Config->GetFloat(_T("brush.scale.y.min"), 1.0f);
+	float maxscly = theApp.m_Config->GetFloat(_T("brush.scale.y.max"), 1.0f);
+
+	bool sclz = theApp.m_Config->GetBool(_T("brush.scale.z.apply"), true);
+	float minsclz = theApp.m_Config->GetFloat(_T("brush.scale.z.min"), 1.0f);
+	float maxsclz = theApp.m_Config->GetFloat(_T("brush.scale.z.max"), 1.0f);
+
+	bool lockxy = theApp.m_Config->GetBool(_T("brush.scale.lockxy"), true);
+	bool lockyz = theApp.m_Config->GetBool(_T("brush.scale.lockyz"), false);
+
+	float y = 0, p = 0, r = 0;
+	float xs = 1, ys = 1, zs = 1;
+
+	if (yaw)
+	{
+		y = c3::math::RandomRange(minyaw, maxyaw);
+
+		if (theApp.m_Config->GetBool(_T("brush.yaw.detents.apply"), true))
+		{
+			int64_t dv = theApp.m_Config->GetInt(_T("brush.yaw.detents.val"), 4);
+			float dr = (maxyaw - minyaw) / (float)dv;
+			float d = floor((y - minyaw) / (float)dr);
+			y = d * dr + minyaw;
+		}
+	}
+
+	if (pitch)
+	{
+		p = c3::math::RandomRange(minpitch, maxpitch);
+
+		if (theApp.m_Config->GetBool(_T("brush.pitch.detents.apply"), true))
+		{
+			int64_t dv = theApp.m_Config->GetInt(_T("brush.pitch.detents.val"), 4);
+			float dr = (maxpitch - minpitch) / (float)dv;
+			float d = floor((p - minpitch) / (float)dr);
+			p = d * dr + minpitch;
+		}
+	}
+
+	if (roll)
+	{
+		r = c3::math::RandomRange(minroll, maxroll);
+
+		if (theApp.m_Config->GetBool(_T("brush.roll.detents.apply"), true))
+		{
+			int64_t dv = theApp.m_Config->GetInt(_T("brush.roll.detents.val"), 4);
+			float dr = (maxroll - minroll) / (float)dv;
+			float d = floor((r - minroll) / (float)dr);
+			r = d * dr + minroll;
+		}
+	}
+
+	if (sclz)
+		zs = c3::math::RandomRange(minsclz, maxsclz);
+
+	if (scly)
+		ys = c3::math::RandomRange(minscly, maxscly);
+
+	if (sclx)
+		xs = c3::math::RandomRange(minsclx, maxsclx);
+
+	if (lockyz)
+		ys = zs;
+
+	if (lockxy)
+		xs = ys;
+
+	ppos->SetYawPitchRoll(glm::radians(y), glm::radians(p), glm::radians(r));
+	ppos->SetScl(xs, ys, zs);
 }

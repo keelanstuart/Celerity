@@ -83,7 +83,8 @@ void PhysicsManagerImpl::Shutdown()
 
 void PhysicsManagerImpl::Update(float time)
 {
-	if ((time == 0.0f) || !m_World)
+	// if there's no world, time is paused, or there are no dynamic objects, don't bother with this...
+	if ((time == 0.0f) || !m_World || m_Dynamics.empty())
 		return;
 
 	Environment *penv = m_pSys->GetEnvironment();
@@ -316,6 +317,23 @@ bool PhysicsManagerImpl::AddObject(const Object *pobj)
 				case Physical::ColliderShape::NONE:
 					break;
 
+				case Physical::ColliderShape::MODELBOUNDS:
+				{
+#if 0
+					ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
+					if (pmr)
+					{
+						dTriMeshDataID tmd;
+						if (CreateCollisionMesh(pmr->GetModel(), tmd, ms.Top()))
+						{
+							gid = dCreateTriMesh(m_Space, tmd, nullptr, nullptr, nullptr);
+							dMassSetTrimesh(&pphys->m_ODEMass, 1.0f, gid);
+						}
+					}
+#endif
+					break;
+				}
+
 				case Physical::ColliderShape::MODEL:
 				{
 					ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
@@ -330,21 +348,6 @@ bool PhysicsManagerImpl::AddObject(const Object *pobj)
 					}
 					break;
 				}
-
-				case Physical::ColliderShape::PLANE:
-					if (ppos)
-					{
-						gid = dCreatePlane(m_Space, 0, 0, 1, 0);
-					}
-					break;
-
-				case Physical::ColliderShape::BOX:
-					if (ppos)
-					{
-						gid = dCreateBox(m_Space, s.x, s.y, s.z);
-						dMassSetBox(&pphys->m_ODEMass, 1.0f, 1.0f, 1.0f, 1.0f);
-					}
-					break;
 
 				case Physical::ColliderShape::SPHERE:
 					if (ppos)
@@ -378,29 +381,26 @@ bool PhysicsManagerImpl::AddObject(const Object *pobj)
 		if (!gid)
 			gid = dCreateBox(m_Space, 1.0f, 1.0f, 1.0f);
 
-		if (pphys->GetColliderShape() != Physical::ColliderShape::PLANE)
+		if (b)
 		{
-			if (b)
-			{
-				// dynamic or kinematic
+			// dynamic or kinematic
 
-				if (pphys->GetCollisionMode() == Physical::CollisionMode::DYNAMIC)
-					dBodySetDynamic(b);
-				else
-					dBodySetKinematic(b);
-
-				dGeomSetBody(gid, b);
-
-				dBodySetPosition(b, p.x, p.y, p.z);
-				dBodySetQuaternion(b, (const dReal *)&o);
-			}
+			if (pphys->GetCollisionMode() == Physical::CollisionMode::DYNAMIC)
+				dBodySetDynamic(b);
 			else
-			{
-				// static
+				dBodySetKinematic(b);
 
-				dGeomSetPosition(gid, p.x, p.y, p.z);
-				dGeomSetQuaternion(gid, *((dQuaternion *)&o));
-			}
+			dGeomSetBody(gid, b);
+
+			dBodySetPosition(b, p.x, p.y, p.z);
+			dBodySetQuaternion(b, (const dReal *)&o);
+		}
+		else
+		{
+			// static
+
+			dGeomSetPosition(gid, p.x, p.y, p.z);
+			dGeomSetQuaternion(gid, *((dQuaternion *)&o));
 		}
 
 		return true;
@@ -472,12 +472,16 @@ void PhysicsManagerImpl::UpdateObject(const Object *pobj)
 	{
 		case Physical::CollisionMode::KINEMATIC:
 		case Physical::CollisionMode::DYNAMIC:
+#if defined(USE_PHYSICS_MANAGER) && USE_PHYSICS_MANAGER
 			dBodySetPosition(pphys->u_ODEBody, p.x, p.y, p.z);
 			dBodySetQuaternion(pphys->u_ODEBody, (const dReal *)&o);
+#endif
 			break;
 		case Physical::CollisionMode::STATIC:
+#if defined(USE_PHYSICS_MANAGER) && USE_PHYSICS_MANAGER
 			dGeomSetPosition(pphys->u_ODEGeom, p.x, p.y, p.z);
 			dGeomSetQuaternion(pphys->u_ODEGeom, (const dReal *)&o);
+#endif
 			break;
 	}
 }

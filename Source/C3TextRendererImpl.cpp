@@ -384,7 +384,7 @@ void TextRendererImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool TextRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
+bool TextRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const
 {
 	if (!pRayPos || !pRayDir)
 		return false;

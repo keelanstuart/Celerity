@@ -107,7 +107,7 @@ void CPackfileManager::OnOK()
 
 		should_load.insert(std::pair<tstring, bool>(t, false));
 
-		_stprintf_s(kn, _T("resources.packfiles.packfile#%zu"), i);
+		_stprintf_s(kn, _T("resources.packfiles.archives.packfile#%zu"), i);
 		theApp.m_Config->RemoveKey(kn);
 	}
 
@@ -129,7 +129,7 @@ void CPackfileManager::OnOK()
 		{
 			theApp.m_C3->GetResourceManager()->RegisterZipArchive(t.first.c_str());
 
-			_stprintf_s(kn, _T("resources.packfiles.packfile#%zu"), i++);
+			_stprintf_s(kn, _T("resources.packfiles.archives.packfile#%zu"), i++);
 			theApp.m_Config->SetString(kn, t.first.c_str());
 		}
 		else

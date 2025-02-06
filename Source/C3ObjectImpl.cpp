@@ -293,9 +293,12 @@ bool ObjectImpl::Render(Object::RenderFlags flags, int draworder, const glm::fma
 			}
 		}
 
-		for (auto child : m_Children)
+		if (m_Flags.IsSet(OF_DRAW) || flags.IsSet(RF_FORCE))
 		{
-			child->Render(flags, draworder, &mat);
+			for (auto child : m_Children)
+			{
+				child->Render(flags, draworder, &mat);
+			}
 		}
 
 		return true;
@@ -593,7 +596,7 @@ void ObjectImpl::PostLoad()
 }
 
 
-bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, Object **ppHitObj, props::TFlags64 flagmask, size_t child_depth) const
+bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, Object **ppHitObj, props::TFlags64 flagmask, size_t child_depth, bool force) const
 {
 	if (!pRayPos || !pRayDir)
 		return false;
@@ -614,7 +617,7 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, c
 	}
 
 	// Check if the object passes the flag mask
-	if (!m_Flags.AnySet(flagmask))
+	if (!force && !m_Flags.AnySet(flagmask))
 		return false;
 
 	// Initialize distance to the maximum possible value
@@ -635,7 +638,7 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, c
 	for (auto comp : m_Components)
 	{
 		float compDist = dist;
-		if (comp->Intersect(pRayPos, pRayDir, &mat, &compDist))
+		if (comp->Intersect(pRayPos, pRayDir, &mat, &compDist, force))
 		{
 			if (compDist < *pDistance)
 			{
@@ -652,7 +655,7 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, c
 	{
 		for (auto child : m_Children)
 		{
-			if (child->Intersect(pRayPos, pRayDir, &mat, pDistance, ppHitObj, flagmask, child_depth - 1))
+			if (child->Intersect(pRayPos, pRayDir, &mat, pDistance, ppHitObj, flagmask, child_depth - 1, force))
 			{
 				ret = true;
 			}

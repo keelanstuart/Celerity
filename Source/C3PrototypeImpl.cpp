@@ -37,7 +37,7 @@ PrototypeImpl::~PrototypeImpl()
 }
 
 
-const TCHAR *PrototypeImpl::GetName()
+const TCHAR *PrototypeImpl::GetName() const
 {
 	return m_Name.c_str();
 }
@@ -49,13 +49,13 @@ void PrototypeImpl::SetName(const TCHAR *name)
 }
 
 
-GUID PrototypeImpl::GetGUID()
+GUID PrototypeImpl::GetGUID() const
 {
 	return m_GUID;
 }
 
 
-const TCHAR *PrototypeImpl::GetGroup()
+const TCHAR *PrototypeImpl::GetGroup() const
 {
 	return m_Group.c_str();
 }
@@ -107,9 +107,9 @@ bool PrototypeImpl::RemoveComponent(const ComponentType *pcomp)
 }
 
 
-bool PrototypeImpl::HasComponent(const ComponentType *pcomp)
+bool PrototypeImpl::HasComponent(const ComponentType *pcomp) const
 {
-	TComponentArray::iterator it = std::find(m_Components.begin(), m_Components.end(), pcomp);
+	TComponentArray::const_iterator it = std::find(m_Components.begin(), m_Components.end(), pcomp);
 	if (it != m_Components.end())
 	{
 		return true;
@@ -119,13 +119,13 @@ bool PrototypeImpl::HasComponent(const ComponentType *pcomp)
 }
 
 
-size_t PrototypeImpl::GetNumComponents()
+size_t PrototypeImpl::GetNumComponents() const
 {
 	return m_Components.size();
 }
 
 
-const ComponentType *PrototypeImpl::GetComponent(size_t index)
+const ComponentType *PrototypeImpl::GetComponent(size_t index) const
 {
 	if (index >= m_Components.size())
 		return nullptr;

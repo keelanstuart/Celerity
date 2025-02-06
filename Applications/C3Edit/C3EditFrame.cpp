@@ -947,6 +947,14 @@ void C3EditFrame::SetActiveProperties(props::IPropertySet *props, bool readonly,
 
 void C3EditFrame::SetActivePrototype(c3::Prototype *pproto, bool readonly, const TCHAR *title)
 {
+	int64_t active_tool = theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
+	if (active_tool == C3EditApp::ToolType::TT_WAND)
+	{
+		C3EditDoc *pdoc = (C3EditDoc *)GetActiveDocument();
+		if (pdoc)
+			pdoc->SetBrush(pproto);
+	}
+
 	if (m_wndProperties.GetSafeHwnd())
 		m_wndProperties.SetActivePrototype(pproto);
 }

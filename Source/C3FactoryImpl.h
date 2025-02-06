@@ -34,23 +34,23 @@ namespace c3
 
 		virtual ~FactoryImpl();
 
-		virtual Object *Build(Prototype *pproto, GUID *override_guid = nullptr, Object *pparent = nullptr);
+		virtual Object *Build(const Prototype *pproto, GUID *override_guid = nullptr, Object *pparent = nullptr);
 
-		virtual Object *Build(Object *pobject, GUID *override_guid = nullptr, Object *pparent = nullptr, bool build_children = false);
+		virtual Object *Build(const Object *pobject, GUID *override_guid = nullptr, Object *pparent = nullptr, bool build_children = false);
 
-		virtual Prototype *CreatePrototype(Prototype *pproto = nullptr);
+		virtual Prototype *CreatePrototype(const Prototype *pproto = nullptr);
 
-		virtual Prototype *MakePrototype(Object *pobject);
+		virtual Prototype *MakePrototype(const Object *pobject);
 
 		virtual void RemovePrototype(Prototype *pproto);
 
-		virtual size_t GetNumPrototypes();
+		virtual size_t GetNumPrototypes() const;
 
-		virtual Prototype *GetPrototype(size_t index);
+		virtual Prototype *GetPrototype(size_t index) const;
 
-		virtual Prototype *FindPrototype(const TCHAR *name, bool case_sensitive);
+		virtual Prototype *FindPrototype(const TCHAR *name, bool case_sensitive) const;
 
-		virtual Prototype *FindPrototype(GUID guid);
+		virtual Prototype *FindPrototype(GUID guid) const;
 
 		virtual bool LoadPrototypes(genio::IInputStream *is, const TCHAR *source = nullptr);
 
@@ -64,25 +64,25 @@ namespace c3
 
 		virtual bool UnregisterComponentType(ComponentType *pctype);
 		
-		virtual size_t GetNumComponentTypes();
+		virtual size_t GetNumComponentTypes() const;
 
-		virtual const ComponentType *GetComponentType(size_t index);
+		virtual const ComponentType *GetComponentType(size_t index) const;
 
-		virtual const ComponentType *FindComponentType(const TCHAR *name, bool case_sensitive);
+		virtual const ComponentType *FindComponentType(const TCHAR *name, bool case_sensitive) const;
 
-		virtual const ComponentType *FindComponentType(GUID guid);
+		virtual const ComponentType *FindComponentType(GUID guid) const;
 
 		virtual bool RegisterFlowNodeType(FlowNodeType *pfntype);
 
 		virtual bool UnregisterFlowNodeType(FlowNodeType *pfntype);
 
-		virtual size_t GetNumFlowNodeTypes();
+		virtual size_t GetNumFlowNodeTypes() const;
 
-		virtual const FlowNodeType *GetFlowNodeType(size_t index);
+		virtual const FlowNodeType *GetFlowNodeType(size_t index) const;
 
-		virtual const FlowNodeType *FindFlowNodeType(const TCHAR *name, bool case_sensitive = true);
+		virtual const FlowNodeType *FindFlowNodeType(const TCHAR *name, bool case_sensitive = true) const;
 
-		virtual const FlowNodeType *FindFlowNodeType(GUID guid);
+		virtual const FlowNodeType *FindFlowNodeType(GUID guid) const;
 
 	};
 

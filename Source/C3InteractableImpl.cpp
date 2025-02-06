@@ -159,7 +159,7 @@ void InteractableImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool InteractableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *mats, float *pDistance) const
+bool InteractableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *mats, float *pDistance, bool force) const
 {
 	bool ret = false;
 

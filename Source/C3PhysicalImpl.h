@@ -13,6 +13,7 @@
 #include <ode\objects.h>
 #include <ode\collision_space.h>
 
+#define USE_PHYSICS_MANAGER		FALSE
 
 namespace c3
 {
@@ -42,12 +43,16 @@ namespace c3
 
 		ColliderShape m_ColliderShape;
 		CollisionMode m_CollisionMode;
+
 		union
 		{
 			dBodyID u_ODEBody;
 			dGeomID u_ODEGeom;
 		};
+
+		// TODO
 		dMass m_ODEMass;
+		float m_Mass;
 
 	public:
 
@@ -71,7 +76,7 @@ namespace c3
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const;
 
 		virtual size_t GetNumValues(const props::IProperty *pprop) const;
 

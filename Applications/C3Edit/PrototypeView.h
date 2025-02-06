@@ -38,11 +38,14 @@ protected:
 	HTREEITEM FindChildItem(HTREEITEM hroot, const TCHAR *itemname);
 	HTREEITEM MakeProtoGroup(HTREEITEM hroot, const TCHAR *group);
 	HTREEITEM MakePrototype(HTREEITEM hroot, const TCHAR *group);
+	HTREEITEM FindItemByPrototype(HTREEITEM hroot, const c3::Prototype *pproto);
 	void FillPrototypeView();
 
 // Overrides
 public:
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+
+	void UpdateItem(const c3::Prototype *pproto);
 
 protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);

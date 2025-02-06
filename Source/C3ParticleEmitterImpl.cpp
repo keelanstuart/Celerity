@@ -269,7 +269,7 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 		p->rvel += (p->racc * elapsed_time);
 	}
 
-	if (!m_pOwner->Flags().IsSet(OF_KILL))
+	if (!m_pOwner->Flags().IsSet(OF_KILL) && (m_EmitRate.min > 0) && (m_EmitRate.max > 0))
 	{
 		m_EmitTime -= elapsed_time;
 
@@ -621,7 +621,7 @@ const TCHAR *ParticleEmitterImpl::GetValue(const props::IProperty *pprop, size_t
 }
 
 
-bool ParticleEmitterImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
+bool ParticleEmitterImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const
 {
 #if 0
 	if (!pRayPos || !pRayDir)

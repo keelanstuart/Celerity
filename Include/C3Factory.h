@@ -27,31 +27,31 @@ namespace c3
 	public:
 
 		/// Builds a new Object, optionally applying the attributes of a Prototype
-		virtual Object *Build(Prototype *pproto = nullptr, GUID *override_guid = nullptr, Object *pparent = nullptr) = NULL;
+		virtual Object *Build(const Prototype *pproto = nullptr, GUID *override_guid = nullptr, Object *pparent = nullptr) = NULL;
 
 		/// Builds a new Object, optionally applying the attributes of an existing Object
-		virtual Object *Build(Object *pobject, GUID *override_guid = nullptr, Object *pparent = nullptr, bool build_children = false) = NULL;
+		virtual Object *Build(const Object *pobject, GUID *override_guid = nullptr, Object *pparent = nullptr, bool build_children = false) = NULL;
 
 		/// Creates a new Prototype, optionally copying the attributes from an existing Prototype
-		virtual Prototype *CreatePrototype(Prototype *pproto = nullptr) = NULL;
+		virtual Prototype *CreatePrototype(const Prototype *pproto = nullptr) = NULL;
 
 		/// Creates a new Prototype, optionally copying the attributes of an existing Object
-		virtual Prototype *MakePrototype(Object *pobject = nullptr) = NULL;
+		virtual Prototype *MakePrototype(const Object *pobject = nullptr) = NULL;
 
 		/// Removes a Prototype from the Factory
 		virtual void RemovePrototype(Prototype *pproto) = NULL;
 
 		/// Returns the number of Prototypes that are currently registered
-		virtual size_t GetNumPrototypes() = NULL;
+		virtual size_t GetNumPrototypes() const = NULL;
 
 		/// Returns a Prototype by index (use GetNumPrototypes to determine the highest available)
-		virtual Prototype *GetPrototype(size_t index) = NULL;
+		virtual Prototype *GetPrototype(size_t index) const = NULL;
 
 		/// Finds a Prototype by name
-		virtual Prototype *FindPrototype(const TCHAR *name, bool case_sensitive = true) = NULL;
+		virtual Prototype *FindPrototype(const TCHAR *name, bool case_sensitive = true) const = NULL;
 
 		/// Finds a Prototype by GUID
-		virtual Prototype *FindPrototype(GUID guid) = NULL;
+		virtual Prototype *FindPrototype(GUID guid) const = NULL;
 
 		/// Loads one or more Prototypes from a stream
 		virtual bool LoadPrototypes(genio::IInputStream *is, const TCHAR *source = nullptr) = NULL;
@@ -76,16 +76,16 @@ namespace c3
 		virtual bool UnregisterComponentType(ComponentType *pctype) = NULL;
 
 		/// Returns the number of ComponentTypes currently registered
-		virtual size_t GetNumComponentTypes() = NULL;
+		virtual size_t GetNumComponentTypes() const = NULL;
 
 		/// Returns a ComponentType given an index
-		virtual const ComponentType *GetComponentType(size_t index) = NULL;
+		virtual const ComponentType *GetComponentType(size_t index) const = NULL;
 
 		/// Returns a ComponentType with the given name, or nullptr if one is not found
-		virtual const ComponentType *FindComponentType(const TCHAR *name, bool case_sensitive = true) = NULL;
+		virtual const ComponentType *FindComponentType(const TCHAR *name, bool case_sensitive = true) const = NULL;
 
 		/// Returns a ComponentType with the given GUID, or nullptr if one is not found
-		virtual const ComponentType *FindComponentType(GUID guid) = NULL;
+		virtual const ComponentType *FindComponentType(GUID guid) const = NULL;
 
 		/// Makes a FlowNodeType discoverable by all clients of the Celerity System that created this Factory
 		virtual bool RegisterFlowNodeType(FlowNodeType *pfntype) = NULL;
@@ -94,16 +94,16 @@ namespace c3
 		virtual bool UnregisterFlowNodeType(FlowNodeType *pfntype) = NULL;
 
 		/// Returns the number of FlowNodeTypes currently registered
-		virtual size_t GetNumFlowNodeTypes() = NULL;
+		virtual size_t GetNumFlowNodeTypes() const = NULL;
 
 		/// Returns a FlowNodeType given an index
-		virtual const FlowNodeType *GetFlowNodeType(size_t index) = NULL;
+		virtual const FlowNodeType *GetFlowNodeType(size_t index) const = NULL;
 
 		/// Returns a FlowNodeType with the given name, or nullptr if one is not found
-		virtual const FlowNodeType *FindFlowNodeType(const TCHAR *name, bool case_sensitive = true) = NULL;
+		virtual const FlowNodeType *FindFlowNodeType(const TCHAR *name, bool case_sensitive = true) const = NULL;
 
 		/// Returns a FlowNodeType with the given GUID, or nullptr if one is not found
-		virtual const FlowNodeType *FindFlowNodeType(GUID guid) = NULL;
+		virtual const FlowNodeType *FindFlowNodeType(GUID guid) const = NULL;
 
 	};
 

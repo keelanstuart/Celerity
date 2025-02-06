@@ -357,11 +357,11 @@ BOOL C3App::InitInstance()
 	theApp.m_C3->GetLog()->Print(_T(" done\n"));
 
 	theApp.m_C3->GetLog()->Print(_T("Registering Resource Packages...\n"));
-	size_t numrespacks = m_Config->GetNumSubKeys(_T("resources.packfiles"));
+	size_t numrespacks = m_Config->GetNumSubKeys(_T("resources.packfiles.archives"));
 	for (size_t rpi = 0; rpi < numrespacks; rpi++)
 	{
 		TCHAR kn[256];
-		_stprintf_s(kn, _T("resources.packfiles.packfile#%zu"), rpi);
+		_stprintf_s(kn, _T("resources.packfiles.archives.packfile#%zu"), rpi);
 
 		const TCHAR *zp = m_Config->GetString(kn, nullptr);
 		if (!zp)

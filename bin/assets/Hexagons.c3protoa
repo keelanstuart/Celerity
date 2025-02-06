@@ -1,0 +1,695 @@
+<prototypes>
+    <prototype guid="{ACEB0E72-199A-4F1B-99E3-FABAD0EF73A6}" name="building_cabin" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_cabin.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{F0B53302-3FDB-4FB8-AF9F-9E08720A0F12}" name="building_castle" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_castle.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{4E7F334D-F154-4838-A6A3-DDABF998ED95}" name="building_dock" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_dock.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{DECFD1F1-B430-4CE4-99A6-C1EBDEB53FA2}" name="building_farm" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_farm.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{AD376AFD-2ACA-490B-8EBB-D99AB0E67AA4}" name="building_house" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_house.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{679C3919-F86F-4C20-90AB-CA8B06464FB7}" name="building_market" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_market.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{8336262C-CAD9-4F57-9033-3D4BA778BF84}" name="building_mill" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_mill.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{6BDD9508-A70A-42D8-8865-F3986D4E4AB7}" name="building_mine" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_mine.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{0317B317-BEDE-4652-B4C9-0A258BF30074}" name="building_sheep" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_sheep.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{51BB7D6F-02BA-468C-B4AF-BED520CB91B2}" name="building_smelter" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_smelter.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{8EDB6869-83AF-400E-9642-3F09A35301F6}" name="building_tower" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_tower.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{A833CE51-008B-4D80-BFA7-A8EC1A4CEBCC}" name="building_village" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_village.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{079D2FAB-184A-42C0-8930-95F3A7708C0B}" name="building_wall" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_wall.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{176F20B8-3876-414F-8C2E-DEB6A082F4D9}" name="building_water" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/building_water.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{0A27983B-070B-4418-A311-C6C0210EA71D}" name="dirt" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/dirt.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{62349B36-4CB7-4D76-93AD-A529853328A7}" name="dirt_lumber" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/dirt_lumber.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{0C25A04A-E539-431F-8FA9-6F9D8A45BCFA}" name="grass" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/grass.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{03E2DD37-9A6D-4A6C-8DAC-B3C044FE589F}" name="grass_forest" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/grass_forest.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{59E767F1-11E8-4EE3-A547-A3570839794F}" name="grass_hill" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/grass_hill.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{38E822F3-FAAA-456C-B818-CB0E7AFB5E8C}" name="path_corner" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_corner.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{BD8C87C5-E658-4599-BE30-74FDFAD02F03}" name="path_cornerSharp" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_cornerSharp.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{D9B29D35-70A4-4518-BF87-F60512195693}" name="path_crossing" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_crossing.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{CB82BA49-CDC0-42A7-A86C-7B0377454938}" name="path_end" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_end.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{37C6307E-032C-4D91-9ED7-AD5642568F58}" name="path_intersectionA" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionA.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{4B069618-0C6B-4E15-8444-19B75C727788}" name="path_intersectionB" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionB.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{2D152F5D-BA90-452D-B1E6-191BC65C5FAF}" name="path_intersectionC" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionC.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{B64DD8E3-FCFD-4618-B2DB-9C0553BD77CC}" name="path_intersectionD" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionD.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{1BB2AEBF-6F01-4635-8CDD-23CC869E3F7F}" name="path_intersectionE" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionE.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{4A41FF07-C438-44F0-8BF2-6FD6614289C9}" name="path_intersectionF" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionF.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{8B2A7225-FEF9-494A-8A3B-E4596073C5F8}" name="path_intersectionG" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionG.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{7A6FE59E-F5B1-4D7C-8C51-42FC14855F2C}" name="path_intersectionH" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_intersectionH.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{65113621-9E38-48AB-BC4B-E19A923C6BA1}" name="path_start" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_start.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{F344F078-281C-4669-85A3-54ECE1B1D89C}" name="path_straight" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/path_straight.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{EF02C95D-7774-4465-8B7E-50611D6F2A47}" name="river_corner" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_corner.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{C151AFD7-246D-4A8D-B051-235E11FE9DF6}" name="river_cornerSharp" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_cornerSharp.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{D458E051-50D7-4E18-9010-E76626B6FB09}" name="river_crossing" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_crossing.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{36322764-4811-4731-9D53-3BB9A8468EC0}" name="river_end" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_end.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{5E9A6C21-F97A-4285-93AB-14BC4A2CEDFD}" name="river_intersectionA" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionA.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{E04759C1-6CDF-4246-B0FC-F2F3339EEB4B}" name="river_intersectionB" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionB.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{D741C174-9D26-416E-B225-3B364D745E29}" name="river_intersectionC" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionC.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{5F986717-3580-4824-8DFE-293965456186}" name="river_intersectionD" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionD.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{DE602C9A-05FE-45D3-9414-7BA8F66E1DEF}" name="river_intersectionE" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionE.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{82343655-B60A-4E28-9EF0-B70C432D7250}" name="river_intersectionF" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionF.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{B88BF6EF-19FF-4987-A926-90918043A48B}" name="river_intersectionG" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionG.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{64822033-ACDE-4661-8306-64CF20DB9C19}" name="river_intersectionH" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_intersectionH.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{2170EA94-5E0E-42A1-A510-172F9FFFB1E2}" name="river_start" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_start.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{00BD55AA-113A-44C2-B984-1826F1313E37}" name="river_straight" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/river_straight.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{05E175F0-60DA-4426-9315-61383D468EBB}" name="sand" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/sand.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{05A59A21-98E5-4393-A5EF-9DDACE920FA3}" name="sand_rocks" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/sand_rocks.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{CA9557E1-4C92-42A3-9ED9-6B9122B3C789}" name="stone" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/stone.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{0FFC0DC0-3F42-436E-8227-1E8A5A0849D5}" name="stone_hill" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/stone_hill.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{C1413254-40B5-4DB5-AFE2-C2A708D06F03}" name="stone_mountain" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/stone_mountain.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{6581E567-4E2A-40BE-9210-2380EB38A963}" name="stone_rocks" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/stone_rocks.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{4016BE9A-8E93-4FE6-9487-13377967AF63}" name="unit_boat" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_boat.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{F4E42894-82C3-489E-B22A-A65E95DD08A8}" name="unit_house" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_house.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{985CF2AF-EC43-49C9-977E-9AE2FF40EAED}" name="unit_houseLarge" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_houseLarge.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{85BA4832-A6D7-4D34-821A-DD0BBF18E26A}" name="unit_mill" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_mill.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{79605257-4510-4802-87D6-08E8B8CE3A67}" name="unit_tower" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_tower.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{78200147-5B15-4A32-9654-2DDEDECEBCE5}" name="unit_tree" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_tree.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{5CBA725D-E5FF-4141-9CA0-308F00F8B543}" name="unit_wallTower" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/unit_wallTower.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{57AE745C-13FB-40DF-A2C9-57A2ECFEA150}" name="water" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/water.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{6D2431A7-28E9-4653-B1C0-9BF63BB0A3C9}" name="water_island" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/water_island.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{8203D754-B873-42CB-9A3B-D614230CE625}" name="water_rocks" group="Hexagons" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">hexagons/water_rocks.fbx</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.707107,0.000000,-0.000000,0.707107</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

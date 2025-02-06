@@ -8,6 +8,7 @@
 
 #include <C3PhysicalImpl.h>
 #include <C3PhysicsManagerImpl.h>
+#include <C3BoundingBoxImpl.h>
 
 using namespace c3;
 
@@ -33,27 +34,25 @@ PhysicalImpl::PhysicalImpl()
 
 	m_ColliderShape = ColliderShape::MODEL;
 	m_CollisionMode = CollisionMode::DYNAMIC;
+
+#if defined(USE_PHYSICS_MANAGER) && USE_PHYSICS_MANAGER
 	u_ODEBody = 0;
 	dMassSetZero(&m_ODEMass);
-
-	//m_MotionState = new b3DefaultMotionState(b3Transform(btQuaternion(0, 0, 0, 1), btVector3(0, 0, 0)));
-	//m_RigidBody = new btRigidBody(1.0f, m_MotionState, m_CollShape.has_value() ? *m_CollShape : nullptr /* get the collision shape from a mesh */);
+#endif
 }
 
 
 PhysicalImpl::~PhysicalImpl()
 {
-	//delete m_RigidBody;
-	//delete m_MotionState;
-	//if (m_CollShape.has_value())
-	//	delete *m_CollShape;
 }
 
 
 void PhysicalImpl::Release()
 {
+#if defined(USE_PHYSICS_MANAGER) && USE_PHYSICS_MANAGER
 	PhysicsManagerImpl *ppm = (PhysicsManagerImpl *)m_pOwner->GetSystem()->GetPhysicsManager();
 	ppm->RemoveObject(m_pOwner);
+#endif
 
 	delete this;
 }
@@ -100,7 +99,7 @@ const TCHAR *PhysicalImpl::GetValue(const props::IProperty *pprop, size_t ordina
 	{
 		case 'PhCT':
 		{
-			static TCHAR *ctname[ColliderShape::COLLIDER_SHAPE_COUNT + 1] = {_T("None"), _T("Model"), _T("Plane"), _T("Box"), _T("Sphere"), _T("Cylinder"), _T("Capsule"), _T("INVALID")};
+			static TCHAR *ctname[ColliderShape::COLLIDER_SHAPE_COUNT + 1] = {_T("None"), _T("Model Bounds"), _T("Model"), _T("Sphere"), _T("Cylinder"), _T("Capsule"), _T("INVALID")};
 			if ((ordinal < 0) || (ordinal >= ColliderShape::COLLIDER_SHAPE_COUNT))
 				ordinal = ColliderShape::COLLIDER_SHAPE_COUNT;
 
@@ -181,10 +180,14 @@ bool PhysicalImpl::Initialize(Object *pobject)
 		prspdmax->Flags().Set(props::IProperty::PROPFLAG(props::IProperty::ASPECTLOCKED));
 	}
 
+#if defined(USE_PHYSICS_MANAGER) && USE_PHYSICS_MANAGER
 	props::IProperty *prmass = propset->CreateReferenceProperty(_T("Mass"), 'MASS', &(m_ODEMass.mass), props::IProperty::PROPERTY_TYPE::PT_FLOAT);
 
 	PhysicsManagerImpl *ppm = (PhysicsManagerImpl *)m_pOwner->GetSystem()->GetPhysicsManager();
 	ppm->AddObject(m_pOwner);
+#else
+	props::IProperty *prmass = propset->CreateReferenceProperty(_T("Mass"), 'MASS', &m_Mass, props::IProperty::PROPERTY_TYPE::PT_FLOAT);
+#endif
 
 	return true;
 }
@@ -195,11 +198,17 @@ void PhysicalImpl::Update(float elapsed_time)
 	if (!m_pPositionable)
 		m_pPositionable = dynamic_cast<Positionable *>(m_pOwner->FindComponent(Positionable::Type()));
 
-	if (m_pPositionable)
+	if (m_pPositionable && elapsed_time)
 	{
-#if 0
+
+#if !defined(USE_PHYSICS_MANAGER) || !USE_PHYSICS_MANAGER
+
+		glm::fvec3 acc;
+		m_pOwner->GetSystem()->GetEnvironment()->GetGravity(&acc);
+		acc += m_LinAcc;
+
 		m_LinVel = glm::lerp(m_LinVel, glm::fvec3(0, 0, 0), glm::clamp<float>(m_LinSpeedFalloff * elapsed_time, 0, 1));
-		m_LinVel += m_LinAcc * elapsed_time;
+		m_LinVel += acc * elapsed_time;
 		float speed = glm::length(m_LinVel);
 		if (speed > m_maxLinSpeed)
 			m_LinVel = normalize(m_LinVel) * m_maxLinSpeed;
@@ -217,10 +226,41 @@ void PhysicalImpl::Update(float elapsed_time)
 		m_DeltaPos += r * m_LinVel.x * elapsed_time;
 		m_DeltaPos += u * m_LinVel.z * elapsed_time;
 
+		Object *ppar = m_pOwner->GetParent();
+		if (ppar && m_pOwner->Flags().IsSet(OF_CHECKCOLLISIONS))
+		{
+			m_pOwner->Flags().Clear(OF_CHECKCOLLISIONS);
+
+			ModelRenderer *pmr = (ModelRenderer *)m_pOwner->FindComponent(ModelRenderer::Type());
+
+			BoundingBoxImpl bb;
+			pmr->GetModel()->GetBounds(&bb);
+			bb.Align(m_pPositionable->GetTransformMatrix());
+			glm::fvec3 bsc = bb.GetAlignedCorners()[BoundingBoxImpl::CORNER::XYZ] - bb.GetAlignedCorners()[BoundingBoxImpl::CORNER::xyz];
+			bsc /= 2.0f;
+			float bsr = bsc.length();
+
+			glm::fvec3 pos;
+			m_pPositionable->GetPosVec(&pos);
+			bsc += pos;
+
+			glm::fvec3 mv = glm::normalize(m_DeltaPos);
+			float d = fabs(glm::length(m_DeltaPos) - bsr);
+			Object *o = nullptr;
+			if (ppar->Intersect(&pos, &mv, nullptr, &d, &o, 2, 2))
+			{
+				m_DeltaPos = glm::normalize(m_DeltaPos) * (d - 0.1);
+				m_LinVel = glm::fvec3(0, 0, 0);
+			}
+
+			m_pOwner->Flags().Set(OF_CHECKCOLLISIONS);
+		}
+
 		m_pPositionable->AdjustPos(m_DeltaPos.x, m_DeltaPos.y, m_DeltaPos.z);
 		m_pPositionable->AdjustYaw(m_RotVel.z * elapsed_time);
 		m_pPositionable->AdjustPitch(m_RotVel.x * elapsed_time);
 		m_pPositionable->AdjustRoll(m_RotVel.y * elapsed_time);
+
 #endif
 
 	}
@@ -240,6 +280,9 @@ void PhysicalImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 
 void PhysicalImpl::PropertyChanged(const props::IProperty *pprop)
 {
+	if (!m_pOwner)
+		return;
+
 	PhysicsManagerImpl *ppm = (PhysicsManagerImpl *)(m_pOwner->GetSystem()->GetPhysicsManager());
 
 	switch (pprop->GetID())
@@ -257,28 +300,36 @@ void PhysicalImpl::PropertyChanged(const props::IProperty *pprop)
 			//m_pOwner->GetSystem()->GetLog()->Print(_T("@"));
 			break;
 		case 'PhCT':
+#if defined(USE_PHYSICS_MANAGER) && USE_PHYSICS_MANAGER
 			if (ppm->RemoveObject(m_pOwner))
 			{
 				m_ColliderShape = (ColliderShape)pprop->AsInt();
 				ppm->AddObject(m_pOwner);
 			}
+#endif
 			break;
 		case 'PhCM':
+#if defined(USE_PHYSICS_MANAGER) && USE_PHYSICS_MANAGER
 			if (ppm->RemoveObject(m_pOwner))
 			{
 				m_CollisionMode = (CollisionMode)pprop->AsInt();
 				ppm->AddObject(m_pOwner);
 			}
+#endif
 			// break; // intentionally fall through to set mass
 		case 'MASS':
+#if defined(USE_PHYSICS_MANAGER) && USE_PHYSICS_MANAGER
 			if ((m_CollisionMode == CollisionMode::DYNAMIC) && u_ODEBody)
+			{
 				dBodySetMass(u_ODEBody, &m_ODEMass);
+			}
+#endif
 			break;
 	}
 }
 
 
-bool PhysicalImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance) const
+bool PhysicalImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const
 {
 	return false;
 }

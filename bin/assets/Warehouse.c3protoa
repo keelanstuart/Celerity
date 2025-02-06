@@ -1,0 +1,112 @@
+<prototypes>
+    <prototype guid="{9803F9A7-00CF-4BD5-9897-98E4A5DF5235}" name="barrel" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\barrel.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{3D5C6FB8-6D94-4B23-A68D-0AC0B2F92BC1}" name="conex" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\conex.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{ECEE8D32-7C09-49A8-9D8E-780C2F68B879}" name="crate" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\crate.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{A2DC13A9-79F3-47D4-B509-8B921D4EBBED}" name="extinguisher" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\extinguisher.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{3CF8DD71-2878-4056-8A35-CCEBFF1F2762}" name="forklift" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\forklift.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{C98B53AB-C8E2-482A-8F09-E89B2862571B}" name="fuel_pod" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\fuel_pod.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{FEC1D515-597D-499B-A419-A3FC77DA26CA}" name="lockbox" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\lockbox.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{2B69602F-B50B-4580-A708-49982FC6B54C}" name="overhead_light" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\overhead_light.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{6BB12077-F4E1-41B0-ABA1-590D53D2A47A}" name="palette" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\palette.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{D3259C42-AE3F-4990-92D3-B93B72D92CCC}" name="warehouse_bare" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\warehouse_bare.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{70962FD2-BDAF-4480-A8F9-A031B3915958}" name="welding_gas" group="Warehouse" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Warehouse\welding_gas.fbx</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

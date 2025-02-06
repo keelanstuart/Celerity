@@ -436,5 +436,6 @@ void SystemImpl::UpdateTime(bool paused)
 
 	m_Environment.Update(paused ? 0 : m_ElapsedTime);
 
-	m_PhysicsManager->Update(paused ? 0 : m_ElapsedTime);
+	if (m_PhysicsManager)
+		m_PhysicsManager->Update(paused ? 0 : m_ElapsedTime);
 }

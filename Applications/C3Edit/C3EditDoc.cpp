@@ -348,10 +348,21 @@ void C3EditDoc::SetBrush(c3::Object *pobj)
 
 void C3EditDoc::SetBrush(const TCHAR *protoname)
 {
-	c3::Object *pobj = nullptr;
 	c3::Prototype *pp = theApp.m_C3->GetFactory()->FindPrototype(protoname);
-	if (pp)
-		theApp.m_C3->GetFactory()->Build(pp);
+
+	SetBrush(pp);
+}
+
+
+void C3EditDoc::SetBrush(const c3::Prototype *pproto)
+{
+	if (pproto == m_BrushProto)
+		return;
+
+	c3::Object *pobj = nullptr;
+
+	if (pproto)
+		pobj = theApp.m_C3->GetFactory()->Build(pproto);
 
 	SetBrush(pobj);
 }
@@ -379,26 +390,26 @@ bool C3EditDoc::IsSelected(const c3::Object *obj) const
 
 void C3EditDoc::AddToSelection(const c3::Object *obj)
 {
+	if (!obj)
+		return;
+
 	if (std::find(m_Selected.cbegin(), m_Selected.cend(), obj) == m_Selected.cend())
 		m_Selected.push_back((c3::Object *)obj);
 
+	// Only put the first selection's script in the editor window
 	if (m_Selected.size() == 1)
 	{
-		if (m_Selected[0])
+		props::IProperty *psrcf_prop = m_Selected[0]->GetProperties()->GetPropertyById('SRCF');
+		if (psrcf_prop)
 		{
-			theApp.SetActiveObject(m_Selected[0]);
-			props::IProperty *psrcf_prop = m_Selected[0]->GetProperties()->GetPropertyById('SRCF');
-			if (psrcf_prop)
-			{
-				c3::Resource *psrcf_res = theApp.m_C3->GetResourceManager()->GetResource(psrcf_prop->AsString(), RESF_DEMANDLOAD);
-				C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
-				if (pef->GetSafeHwnd() && pef->m_wndScripting.GetSafeHwnd())
-					pef->m_wndScripting.EditScriptResource(psrcf_res);
-			}
+			c3::Resource *psrcf_res = theApp.m_C3->GetResourceManager()->GetResource(psrcf_prop->AsString(), RESF_DEMANDLOAD);
+			C3EditFrame *pef = (C3EditFrame *)theApp.m_pMainWnd;
+			if (pef->GetSafeHwnd() && pef->m_wndScripting.GetSafeHwnd())
+				pef->m_wndScripting.EditScriptResource(psrcf_res);
 		}
-		else
-			m_Selected.clear();
 	}
+
+	theApp.SetActiveObject(m_Selected[0]);
 
 	UpdateStatusMessage();
 	theApp.UpdateObjectList();

@@ -3,25 +3,31 @@ var hatten;
 var s, t;
 var special_time = 0.0;
 var lo, hi;
+var hsparks = 0;
+var hemitrate = 0;
+var emitrate = { x: 0.0, y: 0.0 };
 
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 
-	if (special_time > 10)
+	if (special_time > 0)
 	{
 		special_time -= elapsed_seconds;
 	}
 	else
 	{
-		t = Math.random(0, 800);
-		if (t < 4) // go dark
+		t = Math.random(0, 10000);
+		if (t < 10) // go dark
 		{
 			special_time = Math.random(0.1, 1.8);
 			lo = 0.2;
 			hi = 0.3;
+
+			emitrate.x = 0.0;
+			emitrate.y = 0.0;
 		}
-		else if (t < 5) // go bright
+		else if (t < 15) // go bright
 		{
 			special_time = Math.random(0.05, 0.15);
 			lo = 2.0;
@@ -32,6 +38,9 @@ function update(elapsed_seconds)
 			lo = 0.95;
 			hi = 1.05;
 		}
+
+		if (hemitrate != 0)
+			SetPropertyValue(hemitrate, emitrate);
 	}
 
 	s = Math.random(lo, hi);
@@ -42,4 +51,10 @@ function init()
 {
 	runtime = 0.0;
 	hatten = FindProperty(self, "LightAttenuation");
+	hsparks = FindFirstObjByName(GetParent(self), "Sparks", 0);
+	if (hsparks != 0)
+	{
+		hemitrate = FindProperty(hsparks, "EmitRate");
+		SetPropertyValue(hemitrate, emitrate);
+	}
 }
