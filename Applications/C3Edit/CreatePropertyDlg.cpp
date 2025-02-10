@@ -15,6 +15,13 @@ IMPLEMENT_DYNAMIC(CCreatePropertyDlg, CDialog)
 CCreatePropertyDlg::CCreatePropertyDlg(props::IPropertySet *pprops, CWnd* pParent) : CDialog(IDD, pParent)
 {
 	m_pProps = pprops;
+	m_pDoc = nullptr;
+}
+
+CCreatePropertyDlg::CCreatePropertyDlg(C3EditDoc *pdoc, CWnd* pParent) : CDialog(IDD, pParent)
+{
+	m_pDoc = pdoc;
+	m_pProps = nullptr;
 }
 
 CCreatePropertyDlg::~CCreatePropertyDlg()
@@ -129,37 +136,56 @@ void CCreatePropertyDlg::OnOK()
 	m_PropType = (props::IProperty::PROPERTY_TYPE)m_wndComboType.GetItemData(m_wndComboType.GetCurSel());
 	m_PropAspect = (props::IProperty::PROPERTY_ASPECT)m_wndComboAspect.GetItemData(m_wndComboAspect.GetCurSel());
 
-	if (m_pProps->GetPropertyById(m_PropFCC))
+	std::function<bool(props::IPropertySet *)> create_prop = [&](props::IPropertySet *pprops) -> bool
 	{
-		MessageBox(_T("A property with that FCC already exists!"), _T("Create Property Failed"), MB_OK);
-		return;
-	}
-
-	if (m_pProps->GetPropertyByName(m_PropName))
-	{
-		MessageBox(_T("A property with that name already exists!"), _T("Create Property Failed"), MB_OK);
-		return;
-	}
-
-	props::IProperty *pp = m_pProps->CreateProperty(m_PropName, m_PropFCC);
-	if (pp)
-	{
-		pp->SetAspect(m_PropAspect);
-
-		switch (m_PropType)
+		if (pprops->GetPropertyById(m_PropFCC))
 		{
-			case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:	pp->SetBool(false);							break;
-			case props::IProperty::PROPERTY_TYPE::PT_FLOAT:		pp->SetFloat(0);							break;
-			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:	pp->SetVec2F(props::TVec2F(0, 0));			break;
-			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:	pp->SetVec3F(props::TVec3F(0, 0, 0));		break;
-			case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:	pp->SetVec4F(props::TVec4F(0, 0, 0, 0));	break;
-			case props::IProperty::PROPERTY_TYPE::PT_INT:		pp->SetInt(0);								break;
-			case props::IProperty::PROPERTY_TYPE::PT_INT_V2:	pp->SetVec2I(props::TVec2I(0, 0));			break;
-			case props::IProperty::PROPERTY_TYPE::PT_INT_V3:	pp->SetVec3I(props::TVec3I(0, 0, 0));		break;
-			case props::IProperty::PROPERTY_TYPE::PT_INT_V4:	pp->SetVec4I(props::TVec4I(0, 0, 0, 0));	break;
-			case props::IProperty::PROPERTY_TYPE::PT_GUID:		pp->SetGUID(GUID());						break;
-			case props::IProperty::PROPERTY_TYPE::PT_STRING:	pp->SetString(_T(""));						break;
+			if (MessageBox(_T("A property with that FCC already exists!"), _T("Create Property Failed"), MB_OKCANCEL) == IDOK)
+				return true;
+			return false;
 		}
+
+		if (pprops->GetPropertyByName(m_PropName))
+		{
+			if (MessageBox(_T("A property with that name already exists!"), _T("Create Property Failed"), MB_OKCANCEL) == IDOK)
+				return true;
+			return false;
+		}
+
+		props::IProperty *pp = pprops->CreateProperty(m_PropName, m_PropFCC);
+		if (pp)
+		{
+			pp->SetAspect(m_PropAspect);
+
+			switch (m_PropType)
+			{
+				case props::IProperty::PROPERTY_TYPE::PT_BOOLEAN:	pp->SetBool(false);							break;
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT:		pp->SetFloat(0);							break;
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V2:	pp->SetVec2F(props::TVec2F(0, 0));			break;
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V3:	pp->SetVec3F(props::TVec3F(0, 0, 0));		break;
+				case props::IProperty::PROPERTY_TYPE::PT_FLOAT_V4:	pp->SetVec4F(props::TVec4F(0, 0, 0, 0));	break;
+				case props::IProperty::PROPERTY_TYPE::PT_INT:		pp->SetInt(0);								break;
+				case props::IProperty::PROPERTY_TYPE::PT_INT_V2:	pp->SetVec2I(props::TVec2I(0, 0));			break;
+				case props::IProperty::PROPERTY_TYPE::PT_INT_V3:	pp->SetVec3I(props::TVec3I(0, 0, 0));		break;
+				case props::IProperty::PROPERTY_TYPE::PT_INT_V4:	pp->SetVec4I(props::TVec4I(0, 0, 0, 0));	break;
+				case props::IProperty::PROPERTY_TYPE::PT_GUID:		pp->SetGUID(GUID());						break;
+				case props::IProperty::PROPERTY_TYPE::PT_STRING:	pp->SetString(_T(""));						break;
+			}
+		}
+
+		return true;
+	};
+
+	if (!m_pDoc)
+	{
+		create_prop(m_pProps);
+	}
+	else
+	{
+		m_pDoc->DoForAllSelectedBreakable([&](c3::Object *pobj) -> bool
+		{
+			return create_prop(pobj->GetProperties());
+		});
 	}
 
 	CDialog::OnOK();

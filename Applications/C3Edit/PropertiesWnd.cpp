@@ -688,12 +688,20 @@ void CPropertiesWnd::OnPropsDelete()
 	}
 	else
 	{
-		if (MessageBox(_T("Are you sure you want to delete this property?"), _T("Delete Property?"), MB_YESNO) == IDYES)
+		C3EditFrame *pf = (C3EditFrame *)(theApp.GetMainWnd());
+		C3EditDoc *pd = (C3EditDoc *)(pf->GetActiveDocument());
+		if (m_pObj)
 		{
-			m_pProps->DeletePropertyById(id);
+			if (MessageBox(_T("Are you sure you want to delete this property from the select object(s)?"), _T("Delete Property?"), MB_YESNO) == IDYES)
+			{
+				pd->DoForAllSelected([&](c3::Object *pobj)
+				{
+					pobj->GetProperties()->DeletePropertyById(id);
+				});
 
-			m_RebuildProps = true;
-			UpdateCurrentProperties();
+				m_RebuildProps = true;
+				UpdateCurrentProperties();
+			}
 		}
 	}
 }

@@ -55,16 +55,15 @@ function init()
 	hcamarm = GetRegisteredObject("camera.arm");
 	hcam = GetRegisteredObject("camera");
 
-	// place the head 2m high
 	vec3a.x = 0.0;
 	vec3a.y = 0.0;
-	vec3a.z = 2.0;
+	vec3a.z = 100.0;
 	hprop = FindProperty(hcamarm, "Position");
 	SetPropertyValue(hprop, vec3a);
 
 	// how quickly you come to a stop after you let go of the controls
 	hprop = FindProperty(hplayer, "LinearSpeedFalloffFactor");
-	SetPropertyValue(hprop, 4.0);
+	SetPropertyValue(hprop, 10.0);
 
 	hplayer_lvel = FindProperty(hplayer, "LinearVelocity");
 	hplayer_rvel = FindProperty(hplayer, "RotationalVelocity");
@@ -102,27 +101,6 @@ function update(elapsed_seconds)
 			for (i = 0; i < maxi; i++)
 			{
 				var nodename = GetModelNodeName(hwarehouse, i);
-
-				if (nodename.indexOf("DYNAMIC") == 0)
-				{
-					// dyanmically change the map
-					if (Math.random(0, 10) < 2)
-					{
-						SetModelNodeVisibility(hwarehouse, i, 0);
-						SetModelNodeCollisions(hwarehouse, i, 0);
-					}
-				}
-				else if ((nodename == "G7") || (nodename == "BuildingShell"))
-				{
-					SetModelNodeVisibility(hwarehouse, i, 1);
-					SetModelNodeCollisions(hwarehouse, i, 1);
-				}
-				else
-				{
-					// show all other objects, but don't check collisions for them
-					SetModelNodeVisibility(hwarehouse, i, 1);
-					SetModelNodeCollisions(hwarehouse, i, 0);
-				}
 			}
 
 			setup = 0;
@@ -141,11 +119,12 @@ function handle_input(action, value)
 	vec3b = GetPropertyValue(hplayer_rvel);
 	vec3c = GetPropertyValue(hhead_rvel);
 
-	var speed = 3.0 + (3.0 * run) * value;
-	var hlook = 25.0;
-	var vlook = 25.0;
+	var hlook = 85.0;
+	var vlook = 80.0;
 
-	if (action == "Run")
+	var speed = 35.0 + (35.0 * run) * value;
+
+	if (action == "_Run")
 	{
 		run = 1.0;
 	}
@@ -181,7 +160,7 @@ function handle_input(action, value)
 	{
 		vec3c.x += value * vlook;
 	}
-	
+
 	SetPropertyValue(hplayer_lvel, vec3a);
 	SetPropertyValue(hplayer_rvel, vec3b);
 	SetPropertyValue(hhead_rvel, vec3c);

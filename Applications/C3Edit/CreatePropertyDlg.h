@@ -1,5 +1,6 @@
 #pragma once
 #include "afxdialogex.h"
+#include "C3EditDoc.h"
 
 
 // CCreatePropertyDlg dialog
@@ -10,6 +11,7 @@ class CCreatePropertyDlg : public CDialog
 
 public:
 	CCreatePropertyDlg(props::IPropertySet *pprops, CWnd* pParent = nullptr);   // standard constructor
+	CCreatePropertyDlg(C3EditDoc *pdoc, CWnd* pParent = nullptr);   // document selections
 	virtual ~CCreatePropertyDlg();
 
 // Dialog Data
@@ -22,6 +24,7 @@ public:
 
 protected:
 	props::IPropertySet *m_pProps;
+	C3EditDoc *m_pDoc;
 	CEdit m_wndEditName;
 	CEdit m_wndEditFCC;
 	CComboBox m_wndComboType;

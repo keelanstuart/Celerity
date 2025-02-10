@@ -127,6 +127,9 @@ void C3Dlg::RegisterAction(const TCHAR *name, c3::ActionMapper::ETriggerType tt,
 		if (theApp.GetMainWnd() != GetFocus())
 			return false;
 
+		if (theApp.m_pActiveWnd != GetCapture())
+			return false;
+
 		const TCHAR *name = (const TCHAR *)userdata;
 
 		c3::Object *inputobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_PLAYER);
@@ -468,7 +471,7 @@ BOOL C3Dlg::OnInitDialog()
 
 	theApp.m_C3->GetLog()->Print(_T("Setting up actions... "));
 
-	RegisterAction(_T("Run"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("_Run"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Jump"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0.1f);
 	RegisterAction(_T("Fire 1"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Fire 2"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
@@ -525,7 +528,19 @@ BOOL C3Dlg::OnInitDialog()
 	m_CameraRoot->SetName(_T("CameraRoot"));
 	m_CameraRoot->AddComponent(c3::Scriptable::Type());
 	m_CameraRoot->AddComponent(c3::Positionable::Type());
-	m_CameraRoot->AddComponent(c3::Physical::Type());
+	c3::Physical *camphys = (c3::Physical *)m_CameraRoot->AddComponent(c3::Physical::Type());
+	if (camphys)
+	{
+		glm::fvec3 grav;
+		theApp.m_C3->GetEnvironment()->GetGravity(&grav);
+		camphys->SetLinAcc(-grav.x, -grav.y, -grav.z);
+/*
+		glm::fvec3 lrff(0.0f, 0.0f, 0.0f);
+		camphys->SetRotVelFalloffFactor(&lrff);
+		glm::fvec3 lrms(180.0f, 180.0f, 180.0f);
+		camphys->SetMaxRotSpeed(&lrff);
+*/
+	}
 	m_CameraRoot->GetProperties()->GetPropertyById('SUDR')->SetFloat(0.0f);
 
 	m_CameraArm = pfac->Build();
@@ -536,7 +551,7 @@ BOOL C3Dlg::OnInitDialog()
 	c3::Positionable *parmpos = dynamic_cast<c3::Positionable *>(m_CameraArm->FindComponent(c3::Positionable::Type()));
 	if (parmpos)
 	{
-		parmpos->AdjustPitch(glm::radians(0.0f));
+		parmpos->AdjustPitch(glm::radians(0.01f));
 	}
 
 	m_Camera = pfac->Build();
@@ -554,7 +569,7 @@ BOOL C3Dlg::OnInitDialog()
 
 	if (pcampos)
 	{
-		pcampos->AdjustPos(0, -100.0f, 0);
+		pcampos->AdjustPos(0, -10.0f, 0);
 		pcampos->AdjustPitch(glm::radians(0.0f));
 	}
 
@@ -593,6 +608,8 @@ BOOL C3Dlg::OnInitDialog()
 	m_bMouseCursorEnabled = false;
 	SetCapture();
 	ShowCursor(FALSE);
+
+	theApp.m_pActiveWnd = this;
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -684,16 +701,20 @@ void C3Dlg::OnPaint()
 			prend->SetClearDepth(1.0f);
 
 			c3::Object *world = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT);
-			if (world)
-				world->Update(dt);
-
 			c3::Object *skybox = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_SKYBOXROOT);
-			if (skybox)
-				skybox->Update(dt);
-
 			c3::Object *gui = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_ROOT);
-			if (gui)
-				gui->Update(dt);
+
+			if (!m_bMouseCursorEnabled)
+			{
+				if (world)
+					world->Update(dt);
+
+				if (skybox)
+					skybox->Update(dt);
+
+				if (gui)
+					gui->Update(dt);
+			}
 
 			if (cam)
 			{
@@ -970,7 +991,7 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 	size_t ai_lr = pam->FindActionIndex(_T("Look Right"));
 	size_t ai_a = pam->FindActionIndex(_T("Ascend"));
 	size_t ai_d = pam->FindActionIndex(_T("Descend"));
-	size_t ai_r = pam->FindActionIndex(_T("Run"));
+	size_t ai_r = pam->FindActionIndex(_T("_Run"));
 	size_t ai_j = pam->FindActionIndex(_T("Jump"));
 	size_t ai_cvm = pam->FindActionIndex(_T("Cycle View Mode"));
 	size_t ai_f1 = pam->FindActionIndex(_T("Fire 1"));
@@ -984,6 +1005,8 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 		case c3::InputDevice::DeviceType::KEYBOARD:
 		{
 			theApp.m_C3->GetInputManager()->AssignUser(device, 0);
+
+			pam->MakeAssociation(ai_r, device->GetUID(), c3::InputDevice::VirtualButton::LSHIFT);
 
 			pam->MakeAssociation(ai_mf, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSY);
 			pam->MakeAssociation(ai_mb, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGY);
@@ -1003,7 +1026,6 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 			pam->MakeAssociation(ai_a, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_Q);
 			pam->MakeAssociation(ai_d, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_Z);
 
-			pam->MakeAssociation(ai_r, device->GetUID(), c3::InputDevice::VirtualButton::LSHIFT);
 			pam->MakeAssociation(ai_f1, device->GetUID(), c3::InputDevice::VirtualButton::SELECT);
 			pam->MakeAssociation(ai_f2, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_X);
 
@@ -1040,6 +1062,7 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 
 			if (device->GetNumAxes() > 1)
 			{
+				pam->MakeAssociation(ai_r, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON2);
 				pam->MakeAssociation(ai_mf, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSY);
 				pam->MakeAssociation(ai_mb, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGY);
 				pam->MakeAssociation(ai_sl, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGX);
@@ -1055,7 +1078,6 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 				pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSZ);
 				pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGZ);
 
-				pam->MakeAssociation(ai_r, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON2);
 				pam->MakeAssociation(ai_j, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON1);
 				pam->MakeAssociation(ai_f1, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON3);
 				pam->MakeAssociation(ai_f2, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON4);
