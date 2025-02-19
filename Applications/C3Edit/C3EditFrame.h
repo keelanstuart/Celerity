@@ -84,6 +84,9 @@ public:  // control bar embedded members
 
 	float m_Scale;
 
+protected:
+	PROCESS_INFORMATION m_AppProcInfo;
+
 // Generated message map functions
 protected:
 	afx_msg void OnUpdateAxisScreenrel(CCmdUI* pCmdUI);

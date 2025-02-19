@@ -13,6 +13,7 @@
 #include <shellscalingapi.h>
 #include "ResourcePathEditorDlg.h"
 #include "PackfileManager.h"
+#include <filesystem>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -116,11 +117,13 @@ static UINT indicators[] =
 
 C3EditFrame::C3EditFrame() noexcept
 {
-	// TODO: add member initialization code here
+	memset(&m_AppProcInfo, 0, sizeof(PROCESS_INFORMATION));
 }
 
 C3EditFrame::~C3EditFrame()
 {
+	if (m_AppProcInfo.hProcess)
+		TerminateProcess(m_AppProcInfo.hProcess, 1);
 }
 
 int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -1244,18 +1247,44 @@ void C3EditFrame::OnEditPackfileManagement()
 
 void C3EditFrame::OnRun()
 {
+	if (m_AppProcInfo.hProcess)
+		TerminateProcess(m_AppProcInfo.hProcess, 1);
+
+	memset(&m_AppProcInfo, 0, sizeof(PROCESS_INFORMATION));
+
 	STARTUPINFO si = {0};
 	si.cb = sizeof(si);
-	PROCESS_INFORMATION pi;
+
+	TCHAR *ext;
+	TCHAR target[MAX_PATH * 2];
+
+	_tcsncpy_s(target, GetActiveDocument()->GetPathName(), MAX_PATH * 2);
+	ext = PathFindExtension(target);
+
+	size_t remaining_buffer = _countof(target) - (ext - target);
+
+	_tcscpy_s(ext, remaining_buffer, _T("App.c3js"));
+	if (!PathFileExists(target))
+	{
+		_tcscpy_s(ext, remaining_buffer, _T(".c3js"));
+		if (!PathFileExists(target))
+		{
+			_tcscpy_s(ext, remaining_buffer, _T(".c3o"));
+			if (!PathFileExists(target))
+				return;
+		}
+	}
 
 	TCHAR command[MAX_PATH * 2];
 #if defined(_DEBUG)
-	_stprintf_s(command, _T("C3App64D.exe d:\\proj\\Celerity\\Samples\\Stuff\\RacerApp.c3js"), (LPCTSTR)GetActiveDocument()->GetPathName());
+	_stprintf_s(command, _T("C3App64D.exe %s"), target);
 #else
-	_stprintf_s(command, _T("C3App64.exe d:\\proj\\Celerity\\Samples\\Stuff\\RacerApp.c3js"), (LPCTSTR)GetActiveDocument()->GetPathName());
+	_stprintf_s(command, _T("C3App64.exe %s"), target);
 #endif
 
-	BOOL created = CreateProcess(NULL, command, NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi);
+	BOOL created = CreateProcess(NULL, command, NULL, NULL, FALSE, NULL, NULL, NULL, &si, &m_AppProcInfo);
+	if (!created)
+		memset(&m_AppProcInfo, 0, sizeof(PROCESS_INFORMATION));
 }
 
 
