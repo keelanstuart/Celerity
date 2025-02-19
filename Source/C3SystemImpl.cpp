@@ -95,6 +95,8 @@ SystemImpl::SystemImpl()
 	m_CurrentTime = 0.0f;
 	m_LastTime = 0.0f;
 	m_ElapsedTime = 0.0f;
+
+	srand(timeGetTime());
 }
 
 

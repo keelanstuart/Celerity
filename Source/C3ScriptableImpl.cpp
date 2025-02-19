@@ -149,6 +149,8 @@ void jcPackColorFromIntVec(CScriptVar *c, void *userdata);
 void jcPackColorFromFloatVec(CScriptVar *c, void *userdata);
 void jcUnpackColorToIntVec(CScriptVar *c, void *userdata);
 void jcUnpackColorToFloatVec(CScriptVar *c, void *userdata);
+void jcLoadPackfile(CScriptVar *c, void *userdata);
+void jcUnloadPackfile(CScriptVar *c, void *userdata);
 
 
 void ScriptableImpl::ResetJS()
@@ -197,8 +199,6 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function IsObjFlagSet(hobj, flagname)"),						jcIsObjFlagSet, psys);
 	m_JS->AddNative(_T("function SetObjFlag(hobj, flagname, val)"),						jcSetObjFlag, psys);
-	m_JS->AddNative(_T("function IsObjFlagSet(hobj, flagname)"),						jcIsObjFlagSet, psys);
-	m_JS->AddNative(_T("function SetObjFlag(hobj, flagname, val)"),						jcSetObjFlag, psys);
 
 	m_JS->AddNative(_T("function AdjustQuat(quat, axis, angle)"),						jcAdjustQuat, psys);
 	m_JS->AddNative(_T("function EulerToQuat(euler)"),									jcEulerToQuat, psys);
@@ -226,6 +226,9 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function PackColorFromFloatVec(colorfv)"),						jcPackColorFromFloatVec, psys);
 	m_JS->AddNative(_T("function UnpackColorToIntVec(color)"),							jcUnpackColorToIntVec, psys);
 	m_JS->AddNative(_T("function UnpackColorToFloatVec(color)"),						jcUnpackColorToFloatVec, psys);
+
+	m_JS->AddNative(_T("function LoadPackfile(filename)"),								jcLoadPackfile, psys);
+	m_JS->AddNative(_T("function UnloadPackfile(filename)"),							jcUnloadPackfile, psys);
 
 
 	TCHAR make_self_cmd[64];
@@ -842,9 +845,13 @@ void jcCreateObject(CScriptVar *c, void *userdata)
 	Object *pretobj = nullptr;
 
 	Prototype *pproto = psys->GetFactory()->FindPrototype(protoname.c_str(), false);
+	// if a particular prototype was specified and not found, inform the user
+	if (!protoname.empty() && !pproto)
+		psys->GetLog()->Print(_T("CreateObject could not find prototype: \"%\"\n"), protoname.c_str());
+
 	Object *pparentobj = dynamic_cast<Object *>((Object *)hparentobj);
-	if (pproto)
-		pretobj = psys->GetFactory()->Build(pproto, nullptr, pparentobj);
+
+	pretobj = psys->GetFactory()->Build(pproto, nullptr, pparentobj);
 
 	ret->SetInt((int64_t)pretobj);
 }
@@ -1980,4 +1987,41 @@ void jcUnpackColorToFloatVec(CScriptVar *c, void *userdata)
 		prcomp->m_Var->SetFloat((float)(r & 0xff) / 255.0f);
 		r >>= 8;
 	}
+}
+
+
+//m_JS->AddNative(_T("function LoadPackfile(filename)"),				jcLoadPackfile, psys);
+void jcLoadPackfile(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	bool success = false;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring filename = c->GetParameter(_T("filename"))->GetString();
+	TCHAR fullpath[MAX_PATH];
+
+	if (psys->GetFileMapper()->FindFile(filename.c_str(), fullpath, MAX_PATH))
+	{
+		if (psys->GetResourceManager()->RegisterZipArchive(filename.c_str()))
+		{
+			success = true;
+		}
+	}
+
+	if (ret)
+		ret->SetInt(success ? 1 : 0);
+}
+
+
+//m_JS->AddNative(_T("function UnloadPackfile(filename)"),				jcUnloadPackfile, psys);
+void jcUnloadPackfile(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring filename = c->GetParameter(_T("filename"))->GetString();
+
+	psys->GetResourceManager()->UnregisterZipArchive(filename.c_str());
 }

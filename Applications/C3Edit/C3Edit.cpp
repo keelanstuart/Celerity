@@ -629,3 +629,32 @@ void C3EditApp::PopUndo()
 	m_Redo.push_back(m_Undo.back());
 	m_Undo.pop_back();
 }
+
+
+void C3EditApp::ExtractPaths(const TCHAR *allpaths, std::vector<tstring> &paths)
+{
+	if (!allpaths)
+		return;
+
+	tstring p;
+
+	TCHAR c;
+	while ((c = *allpaths) != 0)
+	{
+		while (((c = *allpaths) != 0) && (c != _T(';')))
+		{
+			p.push_back(c);
+			allpaths++;
+		}
+
+		if (!p.empty())
+		{
+
+			paths.push_back(p);
+			p.clear();
+		}
+
+		if (*allpaths == _T(';'))
+			allpaths++;
+	}
+}

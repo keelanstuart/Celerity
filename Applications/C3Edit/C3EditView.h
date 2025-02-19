@@ -98,6 +98,8 @@ protected:
 	void DestroySurfaces();
 	void UpdateShaderSurfaces();
 	void RandomizeBrush();
+	bool AdvanceBrushYaw();
+
 
 	void HandleInput(c3::Positionable* pcampos);
 
@@ -145,6 +147,8 @@ public:
 	afx_msg void OnUpdateEditAssignRoot(CCmdUI *pCmdUI);
 	afx_msg void OnEditAssignRoot();
 	afx_msg void OnEditBrushSettings();
+	afx_msg void OnUpdateToolsRepath(CCmdUI *pCmdUI);
+	afx_msg void OnToolsRepath();
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

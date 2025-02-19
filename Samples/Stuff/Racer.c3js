@@ -1,0 +1,136 @@
+var runtime;
+
+var hpos;
+var hori;
+var Facing = { forward: -1, right: -1, up: -1 };
+var zaxis = { x: 0.0, y: 0.0, z:0.0 };
+
+var pos = { x: 0.0, y: 0.0, z: 0.0 };
+var qori = { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+var tmpv4 = { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+var tmp = 0.0;
+
+var lacc_accum = { x: 0.0, y: 0.0, z: 0.0 };
+var racc_accum = { x: 0.0, y: 0.0, z: 0.0 };
+
+var hlacc, hlvel;
+var hracc;
+var hmxrs;
+
+var turn_speed = 1.0;
+var acceleration = 1.0;
+var braking = 0.7;
+var collision_info;
+var max_speed;
+var used_brakes;
+
+var hobj_brakelights;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	// adjust the linear acceleration based on the accumulated inputs
+	// apply a falloff if you let up on the controls
+
+	SetPropertyValue(hlacc, lacc_accum);
+
+
+	// adjust the rotational acceleration based on the accumulated inputs
+	// apply a falloff if you let up on the controls
+
+	SetPropertyValue(hracc, racc_accum);
+
+
+	// the car's ability to turn is affected by it's
+	// linear velocity and it's kind of a sine wave that's
+	// cut off on the right side - at a speed of 0,
+	// you can't turn, at maximum speed you can
+	// turn a little less well
+
+	tmpv3 = GetPropertyValue(hlvel);
+	tmp = Vec3.length(tmpv3);
+	tmp /= max_speed;			// a ratio of current speed / max speed
+	tmpv3.x = 0.0;
+	tmpv3.y = 0.0;
+	tmpv3.z = Math.sin(tmp * 1.6) * turn_speed;	// a little past pi / 2 (peak sin)
+	SetPropertyValue(hmxrs, tmpv3);
+
+
+	// clear the accumulators after each update
+	
+	lacc_accum.x = 0.0;
+	lacc_accum.y = 0.0;
+	lacc_accum.z = 0.0;
+
+	racc_accum.x = 0.0;
+	racc_accum.y = 0.0;
+	racc_accum.z = 0.0;
+	
+	SetObjFlag(hobj_brakelights, "DRAW", used_brakes);
+	used_brakes = 0;
+}
+
+function handle_input(action, value)
+{
+	if (action == "Strafe Left")
+	{
+		racc_accum.z += (turn_speed * value);
+	}
+	else if (action == "Strafe Right")
+	{
+		racc_accum.z -= (turn_speed * value);
+	}
+	else if (action == "Look Left")
+	{
+	}
+	else if (action == "Look Right")
+	{
+	}
+	else if (action == "Jump")
+	{
+		lacc_accum.y += (acceleration * value);
+	}
+	else if (action == "Run")
+	{
+		lacc_accum.y -= (braking * value);
+		SetObjFlag(hobj_brakelights, "DRAW", 1);
+		used_brakes = 1;
+	}
+	else if (action == "Fire 1")
+	{
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	hparent = GetParent(self);
+
+
+	// cache property handles now so value access is cheaper later
+
+	hfacing.forward = FindProperty(self, "Facing.Forward");
+	hlacc = FindProperty(self, "LinearAcceleration");
+	hracc = FindProperty(self, "RotationalAcceleration");
+	hlvel = FindProperty(self, "LinearVelocity");
+	hmxrs = FindProperty(self, "MaxRotationalSpeed");
+
+
+	// store the max speed for this car
+
+	var hmax_speed = FindProperty(self, "MaxLinearSpeed");
+	max_speed = GetPropertyValue(hmax_speed);
+	
+	hobj_brakelights = FindFirstObjByName(self, "Brakelights", 1);
+
+	collision_info = CreateCollisionResults();
+}
+
+function free()
+{
+	FreeCollisionResults(collision_info);
+}

@@ -471,6 +471,19 @@
 
 </file2>
 
+<file2>
+
+<powerprops:property_set>
+<powerprops:property id="DSTP" type="STRING">%localappdata%\Celerity\C3App</powerprops:property>
+<powerprops:property id="EXCL" type="STRING"></powerprops:property>
+<powerprops:property id="NAME" type="STRING">C3App.config</powerprops:property>
+<powerprops:property id="PRES" type="STRING">CheckOverwrite();</powerprops:property>
+<powerprops:property id="SNPT" type="STRING"></powerprops:property>
+<powerprops:property id="SRCP" type="STRING">D:\proj\Celerity\INSTALLER\C3App.config</powerprops:property>
+</powerprops:property_set>
+
+</file2>
+
 </files2>
 
 <scripts>
@@ -481,7 +494,7 @@
 
 <script type="prefile">function CheckOverwrite(){	if (FileExists(FILEPATH) == 1)	{		if (MessageBoxYesNo(&quot;Overwrite File?&quot;, &quot;The file \&quot;&quot; + FILEPATH + &quot;\&quot; already exists. Do you want to overwrite it?&quot;) == 0)		{			Skip();		}	}}</script>
 
-<script type="postfile">function CreateStartMenuEntry(){	var ext_idx = FILENAME.indexOf(&quot;.exe&quot;);	var name_only = FILENAME.substring(0, ext_idx);	var link_path = &quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/&quot; + name_only + &quot;.lnk&quot;;		CreateShortcut(link_path, FILEPATH, &quot;&quot;, PATH, name_only, 1, FILEPATH, 0);	Echo(&quot;Created Start Menu shortcut for \&quot;&quot; + name_only + &quot;\&quot;.\n&quot;);}function CreateStartMenuDemoEntries(){	var ext_idx = FILENAME.indexOf(&quot;.exe&quot;);	var name_only = FILENAME.substring(0, ext_idx);	var link_path = &quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/&quot;;	CreateShortcut(link_path + &quot;Demo - Celerity3.lnk&quot;, FILEPATH, BASEPATH + &quot;\\Samples\\C3Demo\\C3Demo.c3js&quot;, PATH, &quot;Demo: Celerity3&quot;, 1, FILEPATH, 0);	CreateShortcut(link_path + &quot;Demo - Floating Fountain.lnk&quot;, FILEPATH, BASEPATH + &quot;\\Samples\\Fountain\\fountain_demo.c3js&quot;, PATH, &quot;Demo: Floating Fountain&quot;, 1, FILEPATH, 0);	CreateShortcut(link_path + &quot;Demo - Rainbow Tubes.lnk&quot;, FILEPATH, BASEPATH + &quot;\\Samples\\RainbowTube\\RainbowTubeApp.c3js&quot;, PATH, &quot;Demo: Rainbow Tubes&quot;, 1, FILEPATH, 0);	CreateShortcut(link_path + &quot;Demo - Warehouse.lnk&quot;, FILEPATH, BASEPATH + &quot;\\Samples\\Warehouse\\warehouse_demo.c3js&quot;, PATH, &quot;Demo: Warehouse&quot;, 1, FILEPATH, 0);	Echo(&quot;Created Start Menu shortcuts for demo content\n&quot;);}</script>
+<script type="postfile">function CreateStartMenuEntry(){	var ext_idx = FILENAME.indexOf(&quot;.exe&quot;);	var name_only = FILENAME.substring(0, ext_idx);	var link_path = &quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/&quot; + name_only + &quot;.lnk&quot;;		CreateShortcut(link_path, FILEPATH, &quot;&quot;, PATH, name_only, 1, FILEPATH, 0);	Echo(&quot;Created Start Menu shortcut for \&quot;&quot; + name_only + &quot;\&quot;.\n&quot;);}function CreateStartMenuDemoEntries(){	var ext_idx = FILENAME.indexOf(&quot;.exe&quot;);	var name_only = FILENAME.substring(0, ext_idx);	var link_path = &quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/&quot;;	CreateShortcut(link_path + &quot;Demo - Celerity3.lnk&quot;, FILEPATH, BASEPATH + &quot;\\Samples\\C3Demo\\C3Demo.c3js&quot;, PATH, &quot;Demo: Celerity3&quot;, 1, FILEPATH, 0);	CreateShortcut(link_path + &quot;Demo - Floating Fountain.lnk&quot;, FILEPATH, BASEPATH + &quot;\\Samples\\Fountain\\fountain_demo.c3js&quot;, PATH, &quot;Demo: Floating Fountain&quot;, 1, FILEPATH, 0);	CreateShortcut(link_path + &quot;Demo - Rainbow Tubes.lnk&quot;, FILEPATH, BASEPATH + &quot;\\Samples\\RainbowTube\\RainbowTubeApp.c3js&quot;, PATH, &quot;Demo: Rainbow Tubes&quot;, 1, FILEPATH, 0);	CreateShortcut(link_path + &quot;Demo - Warehouse.lnk&quot;, FILEPATH, BASEPATH + &quot;\\Samples\\Warehouse\\warehouse_demo.c3js&quot;, PATH, &quot;Demo: Warehouse&quot;, 1, FILEPATH, 0);	CreateShortcut(link_path + &quot;Demo - Space Demo.lnk&quot;, FILEPATH, BASEPATH + &quot;\\Samples\\SpaceDemo\\SpaceDemo.c3o&quot;, PATH, &quot;Demo: Space&quot;, 1, FILEPATH, 0);	CreateShortcut(link_path + &quot;Demo - Racing Stuff.lnk&quot;, FILEPATH, BASEPATH + &quot;\\Samples\\Stuff\\RacerApp.c3js&quot;, PATH, &quot;Demo: Racing Stuff&quot;, 1, FILEPATH, 0);	Echo(&quot;Created Start Menu shortcuts for demo content\n&quot;);}</script>
 
 <script type="postinstall">if (INSTALLOK == 1){	CreateShortcut(&quot;%APPDATA%/Microsoft/Windows/Start Menu/Programs/Celerity SDK/Celerity Documentation.lnk&quot;, BASEPATH + &quot;/Docs/Celerity3Docs.chm&quot;, &quot;&quot;, &quot;&quot;, &quot;Celerity3 SDK Documentation&quot;, 1, &quot;&quot;, 0);	Echo(&quot;Created Start Menu shortcut for CHM documentation.\n&quot;);	if (GetProperty(&quot;Apply C3Edit Defaults (recommended)&quot;) == 1)	{		Echo(&quot;Registering C3Edit default settings...\n&quot;);		SpawnProcess(&quot;regedit&quot;, &quot;/S &quot; + BASEPATH + &quot;\\extras\\C3EditDefaults.reg&quot;, BASEPATH, 1);	}}</script>
 

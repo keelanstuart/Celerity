@@ -303,12 +303,19 @@ void scRandom(CScriptVar *c, void *userdata)
 	uint16_t r = rand();
 	if (plo->IsFloat() || phi->IsFloat())
 	{
-		float pct = (float)r / (float)USHRT_MAX;
-		scReturnFloat((pct * (phi->GetFloat() - plo->GetFloat())) + plo->GetFloat());
+		float pct = (float)r / (float)RAND_MAX;
+
+		float l = plo->GetFloat();
+		float h = phi->GetFloat();
+		float t = (pct * (h - l)) + l;
+		scReturnFloat(t);
 	}
 	else
 	{
-		scReturnInt((r % (phi->GetInt() - plo->GetInt())) + plo->GetInt());
+		int64_t l = plo->GetInt();
+		int64_t h = phi->GetInt();
+		int64_t t = (r % (h - l)) + l;
+		scReturnInt(t);
 	}
 }
 
@@ -380,6 +387,256 @@ void scMathSlerp(CScriptVar *c, void *userdata)
 }
 
 
+void scVec3Dot(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (elct != pb->GetNumChildren() || !pr || (elct != 3))
+		return;
+
+	glm::fvec3 va, vb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec3::length_type)i] = pbcomp->m_Var->GetFloat();
+	}
+
+	float r = glm::dot(va, vb);
+
+	pr->SetFloat(r);
+}
+
+
+void scVec3Cross(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (elct != pb->GetNumChildren() || !pr || (elct != 3))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec3 va, vb, vr;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec3::length_type)i] = pbcomp->m_Var->GetFloat();
+
+		prcomp[(glm::fvec3::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = glm::cross(va, vb);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec3::length_type)i]);
+	}
+}
+
+
+void scVec3Length(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct != 3))
+		return;
+
+	glm::fvec3 va;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+	}
+
+	float r = glm::fastLength(va);
+
+	pr->SetFloat(r);
+}
+
+
+void scVec3Normalize(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct != 3))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec3 va, vr;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+
+		prcomp[(glm::fvec3::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = glm::normalize(va);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec3::length_type)i]);
+	}
+}
+
+
+void scVec3Add(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct != 3))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec3 va, vb, vr;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec3::length_type)i] = pbcomp ? pbcomp->m_Var->GetFloat() : pb->GetFloat();
+
+		prcomp[(glm::fvec3::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = va + vb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec3::length_type)i]);
+	}
+}
+
+
+void scVec3Sub(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct != 3))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec3 va, vb, vr;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec3::length_type)i] = pbcomp ? pbcomp->m_Var->GetFloat() : pb->GetFloat();
+
+		prcomp[(glm::fvec3::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = va - vb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec3::length_type)i]);
+	}
+}
+
+
+void scVec3Mul(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct != 3))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec3 va, vb, vr;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec3::length_type)i] = pbcomp ? pbcomp->m_Var->GetFloat() : pb->GetFloat();
+
+		prcomp[(glm::fvec3::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = va * vb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec3::length_type)i]);
+	}
+}
+
+
+void scVec3Div(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct != 3))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec3 va, vb, vr;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec3::length_type)i] = pbcomp ? pbcomp->m_Var->GetFloat() : pb->GetFloat();
+
+		prcomp[(glm::fvec3::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = va / vb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec3::length_type)i]);
+	}
+}
+
+
 // ----------------------------------------------- Register Functions
 void registerMathFunctions(CTinyJS *tinyJS)
 {
@@ -420,4 +677,13 @@ void registerMathFunctions(CTinyJS *tinyJS)
 
 	tinyJS->AddNative(_T("function Math.lerp(a, b, t)"), scMathLerp, 0);
 	tinyJS->AddNative(_T("function Math.slerp(a, b, t)"), scMathSlerp, 0);
+
+	tinyJS->AddNative(_T("function Vec3.dot(a, b)"), scVec3Dot, 0);
+	tinyJS->AddNative(_T("function Vec3.cross(a, b)"), scVec3Cross, 0);
+	tinyJS->AddNative(_T("function Vec3.length(a)"), scVec3Length, 0);
+	tinyJS->AddNative(_T("function Vec3.normalize(a)"), scVec3Normalize, 0);
+	tinyJS->AddNative(_T("function Vec3.add(a, b)"), scVec3Add, 0);
+	tinyJS->AddNative(_T("function Vec3.sub(a, b)"), scVec3Sub, 0);
+	tinyJS->AddNative(_T("function Vec3.mul(a, b)"), scVec3Mul, 0);
+	tinyJS->AddNative(_T("function Vec3.div(a, b)"), scVec3Div, 0);
 }

@@ -47,6 +47,9 @@ public:
 
 	void UpdateItem(const c3::Prototype *pproto);
 
+	using PrototypeActionFunc = std::function<void(c3::Prototype *)>;
+	void ActOnSelection(PrototypeActionFunc func, bool recursive);
+
 protected:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnSize(UINT nType, int cx, int cy);

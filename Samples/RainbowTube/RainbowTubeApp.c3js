@@ -11,8 +11,8 @@ function update(elapsed_seconds)
 	runtime += elapsed_seconds;
 
 	vec3.x = 0.0;
-	vec3.y = Math.sin(runtime / 60.0) * 5.0;
-	vec3.z = Math.sin(runtime / 30.0) * 360.0;
+	vec3.y = 0.0;
+	vec3.z = Math.sin(runtime / 30.0) * 180.0;
 
 	vec4 = EulerToQuat(vec3);
 	SetPropertyValue(hcam_ori, vec4);
@@ -21,10 +21,6 @@ function update(elapsed_seconds)
 function init()
 {
 	runtime = 0.0;
-
-	hcam = GetRegisteredObject("camera");
-	hprop = FindProperty(hcam, "FOV(Perspective)");
-	SetPropertyValue(hprop, 30.0);
 
 	hobj = GetRegisteredObject("camera.root");
 	hcam_ori = FindProperty(hobj, "Orientation");

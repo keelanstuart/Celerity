@@ -17,6 +17,7 @@
 #include "C3EditView.h"
 #include "resource.h"
 #include "BrushSettingsDlg.h"
+#include "RepathDlg.h"
 
 #include <C3Gui.h>
 #include <C3RenderMethod.h>
@@ -85,6 +86,8 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_COMMAND(ID_EDIT_PASTE, &C3EditView::OnEditPaste)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, &C3EditView::OnUpdateEditPaste)
 	ON_COMMAND(ID_EDIT_BRUSHSETTINGS, &C3EditView::OnEditBrushSettings)
+	ON_UPDATE_COMMAND_UI(ID_TOOLS_REPATH, &C3EditView::OnUpdateToolsRepath)
+	ON_COMMAND(ID_TOOLS_REPATH, &C3EditView::OnToolsRepath)
 END_MESSAGE_MAP()
 
 
@@ -1676,8 +1679,17 @@ void C3EditView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 			break;
 
 		case _T('6'):
-			pmf->SetActiveTool(C3EditApp::TT_WAND);
-			RandomizeBrush();
+			if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) == C3EditApp::TT_WAND)
+			{
+				// if the tool is already the brush, then advance the yaw or re-randomize if no detents are set
+				if (!AdvanceBrushYaw())
+					RandomizeBrush();
+			}
+			else
+			{
+				pmf->SetActiveTool(C3EditApp::TT_WAND);
+				RandomizeBrush();
+			}
 			break;
 
 		case VK_DELETE:
@@ -1817,7 +1829,7 @@ void C3EditView::OnEditCopy()
 	if (GetFocus() != this)
 		return;
 
-	//if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
+	if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
 	{
 		C3EditDoc* pDoc = GetDocument();
 
@@ -1826,7 +1838,7 @@ void C3EditView::OnEditCopy()
 		if (pDoc->GetNumSelected() > 1)
 		{
 			br = theApp.m_C3->GetFactory()->Build();
-			br->SetName(_T("Copied Objects"));
+			br->SetName(_T("[COPIED OBJECTS]"));
 			br->Flags().Set(OF_UPDATE | OF_DRAW | OF_LIGHT | OF_CASTSHADOW | OF_CHECKCOLLISIONS | OF_EXPANDED);
 			br->AddComponent(c3::Positionable::Type());
 
@@ -1858,7 +1870,7 @@ void C3EditView::OnEditCut()
 	if (GetFocus() != this)
 		return;
 
-	//if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
+	if (theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT) != C3EditApp::TT_WAND)
 	{
 		C3EditDoc* pDoc = GetDocument();
 
@@ -1867,7 +1879,7 @@ void C3EditView::OnEditCut()
 		if (pDoc->GetNumSelected() > 1)
 		{
 			br = theApp.m_C3->GetFactory()->Build();
-			br->SetName(_T("[CUT OBJECTS]"));
+			br->SetName(_T("[COPIED OBJECTS]"));
 			br->Flags().Set(OF_UPDATE | OF_DRAW | OF_LIGHT | OF_CASTSHADOW | OF_CHECKCOLLISIONS | OF_EXPANDED);
 			br->AddComponent(c3::Positionable::Type());
 
@@ -1878,7 +1890,8 @@ void C3EditView::OnEditCut()
 		}
 		else if (pDoc->GetNumSelected() == 1)
 		{
-			br = theApp.m_C3->GetFactory()->Build(pDoc->GetSelection(0));
+			br = pDoc->GetSelection(0);
+			br->SetParent(nullptr);
 		}
 
 		pDoc->SetBrush(br);
@@ -1966,6 +1979,32 @@ void C3EditView::OnEditBrushSettings()
 	RandomizeBrush();
 }
 
+
+bool C3EditView::AdvanceBrushYaw()
+{
+	C3EditDoc* pDoc = GetDocument();
+	if (!pDoc->m_Brush)
+		return false;
+
+	c3::Positionable *ppos = (c3::Positionable *)pDoc->m_Brush->FindComponent(c3::Positionable::Type());
+	if (!ppos)
+		return false;
+
+	if (!theApp.m_Config->GetBool(_T("brush.yaw.apply"), true) || !theApp.m_Config->GetBool(_T("brush.yaw.detents.apply"), true))
+		return false;
+
+	float minyaw = theApp.m_Config->GetFloat(_T("brush.yaw.min"), 0.0f);
+	float maxyaw = theApp.m_Config->GetFloat(_T("brush.yaw.max"), 360.0f);
+	if (minyaw > maxyaw)
+		std::swap(minyaw, maxyaw);
+
+	int64_t dv = theApp.m_Config->GetInt(_T("brush.yaw.detents.val"), 4);
+	float dr = (maxyaw - minyaw) / (float)dv;
+
+	ppos->AdjustYaw(glm::radians(dr));
+
+	return true;
+}
 
 void C3EditView::RandomizeBrush()
 {
@@ -2069,4 +2108,20 @@ void C3EditView::RandomizeBrush()
 
 	ppos->SetYawPitchRoll(glm::radians(y), glm::radians(p), glm::radians(r));
 	ppos->SetScl(xs, ys, zs);
+}
+
+
+
+void C3EditView::OnUpdateToolsRepath(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable(true);
+}
+
+
+void C3EditView::OnToolsRepath()
+{
+	CRepathDlg dlg;
+	dlg.DoModal();
+
+	((C3EditFrame *)(theApp.GetMainWnd()))->RefreshActiveProperties();
 }

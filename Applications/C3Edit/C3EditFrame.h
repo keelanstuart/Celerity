@@ -174,6 +174,8 @@ public:
 	afx_msg void OnUpdateHelpGenComponent(CCmdUI *pCmdUI);
 	afx_msg void OnUpdateEditPackfileManagement(CCmdUI *pCmdUI);
 	afx_msg void OnEditPackfileManagement();
+	afx_msg void OnRun();
+	afx_msg void OnUpdateRun(CCmdUI *pCmdUI);
 };
 
 

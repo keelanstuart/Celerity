@@ -49,6 +49,21 @@ PhysicalImpl::~PhysicalImpl()
 
 void PhysicalImpl::Release()
 {
+	props::IPropertySet *propset = m_pOwner->GetProperties();
+
+	propset->GetPropertyById('LVEL')->ExternalizeReference();
+	propset->GetPropertyById('LACC')->ExternalizeReference();
+	propset->GetPropertyById('LSFF')->ExternalizeReference();
+	propset->GetPropertyById('MXLS')->ExternalizeReference();
+	propset->GetPropertyById('RVEL')->ExternalizeReference();
+	propset->GetPropertyById('DPOS')->ExternalizeReference();
+	propset->GetPropertyById('RACC')->ExternalizeReference();
+	propset->GetPropertyById('RVFF')->ExternalizeReference();
+	propset->GetPropertyById('MXRS')->ExternalizeReference();
+	propset->GetPropertyById('MASS')->ExternalizeReference();
+	propset->GetPropertyById('PhCT')->SetEnumProvider(nullptr);
+	propset->GetPropertyById('PhCM')->SetEnumProvider(nullptr);
+
 #if defined(USE_PHYSICS_MANAGER) && USE_PHYSICS_MANAGER
 	PhysicsManagerImpl *ppm = (PhysicsManagerImpl *)m_pOwner->GetSystem()->GetPhysicsManager();
 	ppm->RemoveObject(m_pOwner);
@@ -207,13 +222,11 @@ void PhysicalImpl::Update(float elapsed_time)
 		m_pOwner->GetSystem()->GetEnvironment()->GetGravity(&acc);
 		acc += m_LinAcc;
 
-		m_LinVel = glm::lerp(m_LinVel, glm::fvec3(0, 0, 0), glm::clamp<float>(m_LinSpeedFalloff * elapsed_time, 0, 1));
 		m_LinVel += acc * elapsed_time;
 		float speed = glm::length(m_LinVel);
 		if (speed > m_maxLinSpeed)
 			m_LinVel = normalize(m_LinVel) * m_maxLinSpeed;
 
-		m_RotVel = glm::mix(m_RotVel, glm::fvec3(0, 0, 0), m_RotVelFalloff * elapsed_time);
 		m_RotVel += m_RotAcc * elapsed_time;
 		m_RotVel = glm::min(glm::max(-m_maxRotSpeed, m_RotVel), m_maxRotSpeed);
 
@@ -222,9 +235,10 @@ void PhysicalImpl::Update(float elapsed_time)
 		m_pPositionable->GetLocalRightVector(&r);
 		m_pPositionable->GetLocalUpVector(&u);
 
-		m_DeltaPos =  f * m_LinVel.y * elapsed_time;
-		m_DeltaPos += r * m_LinVel.x * elapsed_time;
-		m_DeltaPos += u * m_LinVel.z * elapsed_time;
+		m_DeltaPos =  f * m_LinVel.y;
+		m_DeltaPos += r * m_LinVel.x;
+		m_DeltaPos += u * m_LinVel.z;
+		m_DeltaPos *= elapsed_time;
 
 		Object *ppar = m_pOwner->GetParent();
 		if (ppar && m_pOwner->Flags().IsSet(OF_CHECKCOLLISIONS))
@@ -233,33 +247,39 @@ void PhysicalImpl::Update(float elapsed_time)
 
 			ModelRenderer *pmr = (ModelRenderer *)m_pOwner->FindComponent(ModelRenderer::Type());
 
-			BoundingBoxImpl bb;
-			pmr->GetModel()->GetBounds(&bb);
-			bb.Align(m_pPositionable->GetTransformMatrix());
-			glm::fvec3 bsc = bb.GetAlignedCorners()[BoundingBoxImpl::CORNER::XYZ] - bb.GetAlignedCorners()[BoundingBoxImpl::CORNER::xyz];
-			bsc /= 2.0f;
-			float bsr = bsc.length();
-
-			glm::fvec3 pos;
-			m_pPositionable->GetPosVec(&pos);
-			bsc += pos;
-
-			glm::fvec3 mv = glm::normalize(m_DeltaPos);
-			float d = fabs(glm::length(m_DeltaPos) - bsr);
-			Object *o = nullptr;
-			if (ppar->Intersect(&pos, &mv, nullptr, &d, &o, 2, 2))
+			if (pmr)
 			{
-				m_DeltaPos = glm::normalize(m_DeltaPos) * (d - 0.1);
-				m_LinVel = glm::fvec3(0, 0, 0);
-			}
+				BoundingBoxImpl bb;
+				pmr->GetModel()->GetBounds(&bb);
+				bb.Align(m_pPositionable->GetTransformMatrix());
+				glm::fvec3 bsc = bb.GetAlignedCorners()[BoundingBoxImpl::CORNER::XYZ] - bb.GetAlignedCorners()[BoundingBoxImpl::CORNER::xyz];
+				bsc /= 2.0f;
+				float bsr = (float)bsc.length();
 
-			m_pOwner->Flags().Set(OF_CHECKCOLLISIONS);
+				glm::fvec3 pos;
+				m_pPositionable->GetPosVec(&pos);
+				bsc += pos;
+
+				glm::fvec3 mv = glm::normalize(m_DeltaPos);
+				float d = fabs(glm::length(m_DeltaPos) - bsr);
+				Object *o = nullptr;
+				if (ppar->Intersect(&pos, &mv, nullptr, &d, &o, 2, 2))
+				{
+					m_DeltaPos = glm::normalize(m_DeltaPos) * (d - 0.1);
+					m_LinVel = glm::fvec3(0, 0, 0);
+				}
+
+				m_pOwner->Flags().Set(OF_CHECKCOLLISIONS);
+			}
 		}
 
 		m_pPositionable->AdjustPos(m_DeltaPos.x, m_DeltaPos.y, m_DeltaPos.z);
 		m_pPositionable->AdjustYaw(m_RotVel.z * elapsed_time);
 		m_pPositionable->AdjustPitch(m_RotVel.x * elapsed_time);
 		m_pPositionable->AdjustRoll(m_RotVel.y * elapsed_time);
+
+		m_LinVel = glm::lerp(m_LinVel, glm::fvec3(0, 0, 0), m_LinSpeedFalloff * elapsed_time);
+		m_RotVel = glm::lerp(m_RotVel, glm::fvec3(0, 0, 0), m_RotVelFalloff * elapsed_time);
 
 #endif
 

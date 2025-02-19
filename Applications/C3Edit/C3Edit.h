@@ -107,6 +107,8 @@ public:
 	void UpdateObjectList();
 	void UpdateStatusMessage(const TCHAR *msg = nullptr);
 
+	void ExtractPaths(const TCHAR *allpaths, std::vector<tstring> &paths);
+
 	void RefreshActiveProperties();
 
 	virtual void PreLoadState();
@@ -119,6 +121,7 @@ public:
 	DECLARE_MESSAGE_MAP()
 	virtual int ExitInstance();
     afx_msg void OnViewGrapheditor();
+
 };
 
 extern C3EditApp theApp;

@@ -885,3 +885,33 @@ void CPrototypeView::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 {
 	CDockablePane::OnActivate(nState, pWndOther, bMinimized);
 }
+
+
+void CPrototypeView::ActOnSelection(PrototypeActionFunc func, bool recursive)
+{
+	CTreeCtrl* pwt = (CTreeCtrl*)&m_wndPrototypeView;
+	HTREEITEM hti = pwt->GetSelectedItem();
+
+	std::function<void(HTREEITEM, PrototypeActionFunc, bool)> internalfunc = [&](HTREEITEM h, PrototypeActionFunc f, bool r)
+	{
+		if (!h)
+			return;
+
+		c3::Prototype *p = (c3::Prototype *)pwt->GetItemData(h);
+		if (p)
+		{
+			func(p);
+		}
+		else if (r)
+		{
+			HTREEITEM hc = pwt->GetChildItem(h);
+			while (hc)
+			{
+				internalfunc(hc, func, r);
+				hc = pwt->GetNextSiblingItem(hc);
+			}
+		}
+	};
+
+	internalfunc(pwt->GetSelectedItem(), func, recursive);
+}

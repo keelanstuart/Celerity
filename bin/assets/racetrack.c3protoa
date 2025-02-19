@@ -1,0 +1,222 @@
+<prototypes>
+    <prototype guid="{2C19B1D5-F37F-4B84-8A86-63BAA4F99AF2}" name="boulder1" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\boulder1.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{4CC94661-B2D6-447A-91D4-2BBD522C4FF3}" name="boulder2" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\boulder2.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{C28D9B71-08A3-4145-8BC8-6DE54E1D3B44}" name="bush1" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\bush1.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{46EFC65C-C7B2-4409-BFA1-888EB1FA25B6}" name="grass1" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\grass1.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{0E6ADE21-9DA1-4F84-B340-840D1B8EEE34}" name="grass2" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\grass2.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{E712A8E7-E3BF-43E7-BB7B-D8BB19E5B127}" name="grass3" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\grass3.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{5722F565-95C7-43EE-A187-7892D0709D01}" name="palm1" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\palm1.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{785B9050-260C-4347-B898-5670E6D939B1}" name="palm2" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\palm2.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{34D36E9E-BF95-41EC-9B96-8CF1C5BAB75B}" name="race_dirt_curve" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\race_dirt_curve.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{DF5FB439-FB61-4B75-BED4-0B2B8B52D6C8}" name="race_dirt_straight" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\race_dirt_straight.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{534376F4-C0A2-4363-9D03-7A5C72511C81}" name="race_grass" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\race_grass.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{3F718912-2900-46E4-83D0-87BDA0DFD4FF}" name="race_grass_curve" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\race_grass_curve.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{AC8D3007-4AFB-4953-B09B-77EE96F2E50F}" name="race_grass_straight" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\race_grass_straight.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{DAEE6031-3AB3-4B9A-9681-1D680716D303}" name="race_mixed_straight" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\race_mixed_straight.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{5B74E9D3-5499-49B4-9A54-B4D8379D7989}" name="race_start" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\race_start.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{F56F306F-2EA0-47F3-AC43-E3BC83FC16CE}" name="tree1" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\tree1.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{EBCF0D94-BEF4-4118-8776-08AF59BBE6D2}" name="tree2" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\tree2.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{358A315B-1230-4182-AFDE-B4B66BCB6455}" name="tree3" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\tree3.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{F4C90398-070C-48EF-963B-39F04AE84E36}" name="tree4" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\tree4.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{D1B1DD98-2F98-4CC6-BE5E-470EBF021448}" name="race_grass_straight_fence" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\race_grass_straight_fence.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{3B3EFDAA-E6B9-4525-A4A4-95354BB2ADDF}" name="stands" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\stands.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{FB24340B-7CE5-46C2-A07B-90B7C09CEA57}" name="tower1" group="RaceTrack" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">Stuff\tower1.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

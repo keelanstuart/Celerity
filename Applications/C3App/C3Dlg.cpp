@@ -140,7 +140,6 @@ void C3Dlg::RegisterAction(const TCHAR *name, c3::ActionMapper::ETriggerType tt,
 			c3::Scriptable *pscr = dynamic_cast<c3::Scriptable *>(inputobj->FindComponent(c3::Scriptable::Type()));
 			if (pscr)
 			{
-				value *= theApp.m_C3->GetElapsedTime();
 				if (pscr->FunctionExists(_T("handle_input")))
 					pscr->Execute(_T("handle_input(\"%s\", %0.5f);"), name, value);
 				return true;
@@ -242,6 +241,7 @@ void C3Dlg::CreateSurfaces()
 		{ _T("uSamplerAuxiliary"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },
 	};
 
+#if 0
 	theApp.m_C3->GetLog()->Print(_T("Creating auxiliary buffer... "));
 	if (!m_AuxBuf)
 		m_AuxBuf = prend->CreateFrameBuffer(0, _T("Aux"));
@@ -249,6 +249,7 @@ void C3Dlg::CreateSurfaces()
 		gbok = m_AuxBuf->Setup(_countof(AuxBufTargData), AuxBufTargData, m_DepthTarg, auxr) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 	m_AuxBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+#endif
 
 	UpdateShaderSurfaces();
 }
@@ -303,7 +304,10 @@ void C3Dlg::UpdateShaderSurfaces()
 
 		ul = m_SP_combine->GetUniformLocation(_T("uSamplerAuxiliary"));
 		if (ul >= 0)
-			m_SP_combine->SetUniformTexture((c3::Texture*)m_AuxBuf->GetColorTarget(0), ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+		{
+			c3::Texture *pt = m_AuxBuf ? (c3::Texture*)m_AuxBuf->GetColorTarget(0) : prend->GetBlackTexture();
+			m_SP_combine->SetUniformTexture(pt, ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+		}
 	}
 }
 
@@ -471,8 +475,8 @@ BOOL C3Dlg::OnInitDialog()
 
 	theApp.m_C3->GetLog()->Print(_T("Setting up actions... "));
 
-	RegisterAction(_T("_Run"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Jump"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0.1f);
+	RegisterAction(_T("Run"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
+	RegisterAction(_T("Jump"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Fire 1"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Fire 2"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
 	RegisterAction(_T("Move Forward"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
@@ -528,19 +532,6 @@ BOOL C3Dlg::OnInitDialog()
 	m_CameraRoot->SetName(_T("CameraRoot"));
 	m_CameraRoot->AddComponent(c3::Scriptable::Type());
 	m_CameraRoot->AddComponent(c3::Positionable::Type());
-	c3::Physical *camphys = (c3::Physical *)m_CameraRoot->AddComponent(c3::Physical::Type());
-	if (camphys)
-	{
-		glm::fvec3 grav;
-		theApp.m_C3->GetEnvironment()->GetGravity(&grav);
-		camphys->SetLinAcc(-grav.x, -grav.y, -grav.z);
-/*
-		glm::fvec3 lrff(0.0f, 0.0f, 0.0f);
-		camphys->SetRotVelFalloffFactor(&lrff);
-		glm::fvec3 lrms(180.0f, 180.0f, 180.0f);
-		camphys->SetMaxRotSpeed(&lrff);
-*/
-	}
 	m_CameraRoot->GetProperties()->GetPropertyById('SUDR')->SetFloat(0.0f);
 
 	m_CameraArm = pfac->Build();
@@ -596,10 +587,44 @@ BOOL C3Dlg::OnInitDialog()
 	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_GUI_CAMERA, m_GUICamera);
 	theApp.m_C3->GetLog()->Print(_T("Camera hierarchy created and registered\n"));
 
-	props::IProperty *psp = m_WorldRoot->GetProperties()->GetPropertyById('SRCF');
-	if (psp)
+	// maybe we're supposed to start a script...
+	const TCHAR *ext = PathFindExtension(theApp.m_StartScript.c_str());
+	if (!_tcsicmp(ext, _T(".c3js")))
 	{
-		psp->SetString(theApp.m_StartScript.c_str());
+		props::IProperty *psp = m_WorldRoot->GetProperties()->GetPropertyById('SRCF');
+		if (psp)
+		{
+			psp->SetString(theApp.m_StartScript.c_str());
+		}
+	}
+	// ...but maybe we're supposed to load a level.
+	else if (!_tcsicmp(ext, _T(".c3o")))
+	{
+		genio::IInputStream *is = genio::IInputStream::Create();
+		if (is)
+		{
+			is->Assign(theApp.m_StartScript.c_str());
+			if (is->Open())
+			{
+				// use the camera from the editor to start
+				c3::Object::CameraLoadFunc loadcam = [&](c3::Object *camera, float yaw, float pitch)
+				{
+					// release the old camera
+					if (m_Camera)
+						m_Camera->Release();
+
+					// use the one we loaded
+					m_Camera = camera;
+					m_CameraArm->AddChild(m_Camera);
+					theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, m_Camera);
+				};
+
+				m_WorldRoot->Load(is, nullptr, loadcam);
+				is->Close();
+			}
+
+			is->Release();
+		}
 	}
 
 	UINT_PTR timerid = SetTimer('DRAW', 17, nullptr);
@@ -697,6 +722,9 @@ void C3Dlg::OnPaint()
 			prend->SetClearColor(&cc);
 			m_GBuf->SetClearColor(0, cc);
 			m_GBuf->SetClearColor(2, glm::fvec4(0, 0, 0, farclip));
+
+//			m_AuxBuf->SetClearColor(0, c3::Color::fBlackFT);
+///			m_AuxBuf->Clear(UFBFLAG_CLEARCOLOR);
 
 			prend->SetClearDepth(1.0f);
 
@@ -991,14 +1019,14 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 	size_t ai_lr = pam->FindActionIndex(_T("Look Right"));
 	size_t ai_a = pam->FindActionIndex(_T("Ascend"));
 	size_t ai_d = pam->FindActionIndex(_T("Descend"));
-	size_t ai_r = pam->FindActionIndex(_T("_Run"));
+	size_t ai_r = pam->FindActionIndex(_T("Run"));
 	size_t ai_j = pam->FindActionIndex(_T("Jump"));
 	size_t ai_cvm = pam->FindActionIndex(_T("Cycle View Mode"));
 	size_t ai_f1 = pam->FindActionIndex(_T("Fire 1"));
 	size_t ai_f2 = pam->FindActionIndex(_T("Fire 2"));
 	size_t ai_td = pam->FindActionIndex(_T("Toggle Debug"));
-	size_t ai_iv = pam->FindActionIndex(_T("Increase Velocity"));
-	size_t ai_dv = pam->FindActionIndex(_T("Decrease Velocity"));
+	size_t ai_dv = pam->FindActionIndex(_T("Increase Velocity"));
+	size_t ai_iv = pam->FindActionIndex(_T("Decrease Velocity"));
 
 	switch (device->GetType())
 	{
@@ -1043,8 +1071,6 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 			pam->MakeAssociation(ai_f1, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON1);
 			pam->MakeAssociation(ai_f2, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON2);
 
-			pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::THROTTLE1);
-			pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::THROTTLE2);
 			pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSZ);
 			pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGZ);
 
@@ -1073,8 +1099,6 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 				pam->MakeAssociation(ai_ll, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGX);
 				pam->MakeAssociation(ai_lr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSX);
 
-				pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::THROTTLE1);
-				pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::THROTTLE2);
 				pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSZ);
 				pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGZ);
 

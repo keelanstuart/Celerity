@@ -63,8 +63,6 @@
 #define IDB_SORT_24                     172
 #define IDR_POPUP_SORT                  173
 #define IDR_POPUP_EXPLORER              174
-#define IDB_FILE_VIEW                   175
-#define IDB_FILE_VIEW_24                176
 #define IDB_CLASS_VIEW                  177
 #define IDB_CLASS_VIEW_24               178
 #define IDR_MENU_IMAGES                 179
@@ -74,12 +72,6 @@
 #define IDR_PROPERTIES                  183
 #define IDB_PROPERTIES_HC               184
 #define ID_VIEW_NAVIGATION              185
-#define IDB_NAVIGATION_LARGE            186
-#define IDB_NAVIGATION_LARGE_HC         187
-#define IDB_PAGES                       188
-#define IDB_PAGES_HC                    189
-#define IDB_PAGES_SMALL                 190
-#define IDB_PAGES_SMALL_HC              191
 #define IDS_CLOSE                       195
 #define ID_TOOLS_OPTIONS                220
 #define ID_VIEW_CAPTION_BAR             221
@@ -164,6 +156,7 @@
 #define ID_SCRIPTEDITOR_STATUS_ROWCOL   359
 #define ID_VIEW_RESOURCESPYWND          362
 #define IDD_PACKFILEMANAGER             364
+#define IDD_REPATH                      367
 #define IDC_PROPERTIES                  1000
 #define IDC_COMPONENTS                  1001
 #define IDC_NAME                        1002
@@ -207,9 +200,9 @@
 #define IDC_EDIT_ROLL_DETENTS           1041
 #define IDC_CHECK_SNAPX                 1042
 #define IDC_EDIT_SNAPX                  1043
-#define IDC_COMBO1                      1044
 #define IDC_COMBO_PLACEMENTMODE         1044
 #define IDC_CHECK_SNAPY                 1045
+#define IDC_REPATH_MODE                 1045
 #define IDC_EDIT_SNAPY                  1046
 #define IDC_CHECK_SNAPZ                 1048
 #define IDC_EDIT_SNAPZ                  1049
@@ -279,14 +272,19 @@
 #define ID_EDIT_PACKFILEMANAGEMENT      32843
 #define ID_APP_INTERACTABLE             32845
 #define ID_EDIT_BRUSHSETTINGS           32847
+#define ID_TOOLS_RE                     32848
+#define ID_TOOLS_REPATH                 32849
+#define ID_RUN                          32850
+#define ID_TOOLS_RUN                    32852
+#define ID_BUTTON32853                  32853
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        354
-#define _APS_NEXT_COMMAND_VALUE         32848
-#define _APS_NEXT_CONTROL_VALUE         1045
-#define _APS_NEXT_SYMED_VALUE           367
+#define _APS_NEXT_RESOURCE_VALUE        358
+#define _APS_NEXT_COMMAND_VALUE         32854
+#define _APS_NEXT_CONTROL_VALUE         1046
+#define _APS_NEXT_SYMED_VALUE           368
 #endif
 #endif

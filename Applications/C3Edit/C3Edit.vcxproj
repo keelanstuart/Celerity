@@ -247,6 +247,7 @@
     <ClInclude Include="PropertiesWnd.h" />
     <ClInclude Include="PropertyGrid.h" />
     <ClInclude Include="PrototypeView.h" />
+    <ClInclude Include="RepathDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ResourcePathEditorDlg.h" />
     <ClInclude Include="ResourceSpyWnd.h" />
@@ -293,6 +294,7 @@
     <ClCompile Include="PropertiesWnd.cpp" />
     <ClCompile Include="PropertyGrid.cpp" />
     <ClCompile Include="PrototypeView.cpp" />
+    <ClCompile Include="RepathDlg.cpp" />
     <ClCompile Include="ResourcePathEditorDlg.cpp" />
     <ClCompile Include="ResourceSpyWnd.cpp" />
     <ClCompile Include="ScriptingWnd.cpp" />

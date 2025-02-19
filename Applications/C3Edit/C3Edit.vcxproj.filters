@@ -100,7 +100,12 @@
     <ClCompile Include="..\Common\DeferredPipeline.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BrushSettingsDlg.cpp" />
+    <ClCompile Include="BrushSettingsDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RepathDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="C3Edit.h">
@@ -217,7 +222,12 @@
     <ClInclude Include="..\Common\C3AppCommon.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BrushSettingsDlg.h" />
+    <ClInclude Include="BrushSettingsDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RepathDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\class_view.ico">

@@ -1,0 +1,80 @@
+var runtime;
+var hcam;
+var vec3 = { x:0.0, y:0.0, z:0.0 };
+var vec4 = { x:0.0, y:0.0, z:0.0, w:1.0 };
+var campos = { x:0.0, y:0.0, z:0.0 };
+var camori = { x:0.0, y:0.0, z:0.0, w:1.0 };
+var zaxis = { x:0.0, y:0.0, z:1.0 };
+
+var hprop;
+
+var hobj;
+
+var hobj_camroot;
+var hprop_camrootpos, hprop_camrootori;
+
+var hobj_player;
+var hprop_playerpos, hprop_playerori;
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+	
+	campos = GetPropertyValue(hprop_camrootpos);
+	vec3 = GetPropertyValue(hprop_playerpos);
+	campos = Math.lerp(campos, vec3, 0.7);
+	SetPropertyValue(hprop_camrootpos, campos);
+
+	camori = GetPropertyValue(hprop_camrootori);
+	vec4 = GetPropertyValue(hprop_playerori);
+	AdjustQuat(vec4, zaxis, Math.toRadians(90.0));
+	camori = Math.slerp(camori, vec4, 0.7);
+	SetPropertyValue(hprop_camrootori, camori);
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	LoadPackfile("Vehicles.c3z");
+
+	var load_result = LoadObject(self, "Racetrack1.c3o");
+
+	var hobj_camarm = GetRegisteredObject("camera.arm");
+
+	var hprop_camarmori = FindProperty(hobj_camarm, "Orientation");
+	vec3.x = -60.0; vec3.y = 0.0; vec3.z = 0.0;
+	vec4 = EulerToQuat(vec3);
+	SetPropertyValue(hprop_camarmori, vec4);
+
+	var hprop_camarmpos = FindProperty(hobj_camarm, "Position");
+	vec3.x = 0.0; vec3.y = -10.0; vec3.z = 0.0;
+	SetPropertyValue(hprop_camarmpos, vec3);
+	
+	var hobj_cam = GetRegisteredObject("camera");
+	var hprop_camori = FindProperty(hobj_cam, "Orientation");
+	vec3.x = 45.0; vec3.y = 0.0; vec3.z = 0.0;
+	vec4 = EulerToQuat(vec3);
+	SetPropertyValue(hprop_camori, vec4);
+
+	hobj_camroot = GetRegisteredObject("camera.root");
+	hprop_camrootpos = FindProperty(hobj_camroot, "Position");
+	hprop_camrootori = FindProperty(hobj_camroot, "Orientation");
+	
+	hobj_player = FindFirstObjByName(self, "Racer1", 0);
+	RegisterObject("player", hobj_player);
+	hprop_playerpos = FindProperty(hobj_player, "Position");
+	hprop_playerori = FindProperty(hobj_player, "Orientation");
+	
+	camori = GetPropertyValue(hprop_playerori);
+	AdjustQuat(camori, zaxis, Math.toRadians(90.0));
+	SetPropertyValue(hprop_camrootori, camori);
+
+	campos = GetPropertyValue(hprop_playerpos);
+	SetPropertyValue(hprop_camrootpos, campos);
+
+	if (load_result["success"] == 1)
+		Log("Scene loaded successfully!\n");
+	else
+		Log("Scene failed to load!\n");
+}

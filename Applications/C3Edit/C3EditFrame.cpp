@@ -100,6 +100,8 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_HELP_GENCOMPONENT, &C3EditFrame::OnUpdateHelpGenComponent)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PACKFILEMANAGEMENT, &C3EditFrame::OnUpdateEditPackfileManagement)
 	ON_COMMAND(ID_EDIT_PACKFILEMANAGEMENT, &C3EditFrame::OnEditPackfileManagement)
+	ON_COMMAND(ID_RUN, &C3EditFrame::OnRun)
+	ON_UPDATE_COMMAND_UI(ID_RUN, &C3EditFrame::OnUpdateRun)
 END_MESSAGE_MAP()
 
 static UINT indicators[] =
@@ -1237,4 +1239,27 @@ void C3EditFrame::OnEditPackfileManagement()
 {
 	CPackfileManager pfm;
 	pfm.DoModal();
+}
+
+
+void C3EditFrame::OnRun()
+{
+	STARTUPINFO si = {0};
+	si.cb = sizeof(si);
+	PROCESS_INFORMATION pi;
+
+	TCHAR command[MAX_PATH * 2];
+#if defined(_DEBUG)
+	_stprintf_s(command, _T("C3App64D.exe d:\\proj\\Celerity\\Samples\\Stuff\\RacerApp.c3js"), (LPCTSTR)GetActiveDocument()->GetPathName());
+#else
+	_stprintf_s(command, _T("C3App64.exe d:\\proj\\Celerity\\Samples\\Stuff\\RacerApp.c3js"), (LPCTSTR)GetActiveDocument()->GetPathName());
+#endif
+
+	BOOL created = CreateProcess(NULL, command, NULL, NULL, FALSE, NULL, NULL, NULL, &si, &pi);
+}
+
+
+void C3EditFrame::OnUpdateRun(CCmdUI *pCmdUI)
+{
+	pCmdUI->Enable();
 }

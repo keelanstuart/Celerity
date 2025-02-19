@@ -121,10 +121,10 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 
 		if (abs(state.lRz) > (InputDevice::BUTTONVAL_MAX / 16))
 		{
-			if ((state.lRz > 0) && (state.lRz > iminprop))
+			if ((state.lRz > iminprop) && (state.lRz > 0))
 				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSZ] = abs(state.lRz);	// right motion
 
-			if ((state.lRz < 0) && (state.lRz < -iminprop))
+			if ((state.lRz < -iminprop) && (state.lRz < 0))
 				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGZ] = abs(state.lRz);	// left motion
 		}
 
