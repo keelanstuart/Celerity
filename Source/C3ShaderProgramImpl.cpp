@@ -567,7 +567,16 @@ void ShaderProgramImpl::ApplyUniforms(bool update_globals)
 			// special case - this is an array of matrices
 			// todo: maybe make this more generic some day
 			const ModelImpl::InstanceDataImpl *pid = (const ModelImpl::InstanceDataImpl *)(p->AsInt());
-			m_Rend->gl.ProgramUniformMatrix4fv(m_glID, (GLint)p->GetID(), (GLsizei)(pid->m_NodeMat.size()), false, (const GLfloat *)(pid->m_NodeMat.data()));
+
+			glm::fmat4x4 finalmat[128];
+			for (size_t j = 0, maxj = pid->m_NodeMat.size(); j < maxj; j++)
+			{
+				glm::fmat4x4 ofs;
+				pid->GetBoneOffsetTransform(j, ofs);
+				finalmat[j] = pid->m_NodeMat[j] * ofs;	// offset bones
+			}
+
+			m_Rend->gl.ProgramUniformMatrix4fv(m_glID, (GLint)p->GetID(), (GLsizei)(pid->m_NodeMat.size()), false, (const GLfloat *)finalmat);
 		}
 		else
 		{

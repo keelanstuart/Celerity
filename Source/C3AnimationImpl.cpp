@@ -85,11 +85,14 @@ Animation::TrackIndex AnimationImpl::AddNewTrack(const TCHAR *trackname, TrackIn
 
 Animation::TrackIndex AnimationImpl::FindTrackByName(const TCHAR *trackname) const
 {
+	if (!trackname)
+		return Animation::TRACKINDEX_INVALID;
+
 	Animation::TrackIndex ret = 0;
 
-	for (auto t : m_Tracks)
+	while (ret < m_Tracks.size())
 	{
-		if (!_tcsicmp(t.GetName(), trackname))
+		if (!_tcsicmp(m_Tracks[ret].GetName(), trackname))
 			return ret;
 
 		ret++;
@@ -123,9 +126,9 @@ void AnimationImpl::BuildNodeHierarchy()
 	m_TrackParent.clear();
 
 	TrackIndex idx = 0;
-	for (auto t : m_Tracks)
+	for (size_t i = 0, maxi = m_Tracks.size(); i < maxi; i++)
 	{
-		TrackIndex pidx = FindTrackByName(t.GetParentName());
+		TrackIndex pidx = FindTrackByName(m_Tracks[i].GetParentName());
 
 		m_TrackParent.push_back(pidx);
 	}

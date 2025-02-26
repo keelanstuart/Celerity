@@ -603,7 +603,7 @@ DECLARE_RESOURCETYPE(Model);
 typedef std::map<const aiNode *, Model::NodeIndex> TNodeIndexMap;
 typedef std::map<size_t, Model::MeshIndex> TMeshIndexMap;
 
-void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMatrix4x4 *pnxform, TNodeIndexMap &nidxmap, TMeshIndexMap &midxmap)
+void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMatrix4x4 *pnxform, TNodeIndexMap &nidxmap)
 {
 	if (!pn || !pm)
 		return;
@@ -637,6 +637,25 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMat
 
 	pm->SetTransform(nidx, &t);
 
+	pm->SetParentNode(nidx, parent_nidx);
+
+	for (size_t i = 0; i < pn->mNumChildren; i++)
+		AddModelNode(pm, nidx, pn->mChildren[i], &pn->mChildren[i]->mTransformation, nidxmap);
+}
+
+void AssignMeshesToNodes(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, TMeshIndexMap &midxmap)
+{
+	if (!pn || !pm)
+		return;
+
+	Model::NodeIndex nidx;
+
+	TCHAR *name;
+	CONVERT_MBCS2TCS(pn->mName.C_Str(), name);
+
+	if (!pm->FindNode(name, &nidx, true))
+		return;
+
 	for (size_t j = 0; j < pn->mNumMeshes; j++)
 	{
 		TMeshIndexMap::const_iterator cit = midxmap.find(size_t(pn->mMeshes[j]));
@@ -644,11 +663,10 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMat
 			pm->AssignMeshToNode(nidx, cit->second);
 	}
 
-	pm->SetParentNode(nidx, parent_nidx);
-
 	for (size_t i = 0; i < pn->mNumChildren; i++)
-		AddModelNode(pm, nidx, pn->mChildren[i], &pn->mChildren[i]->mTransformation, nidxmap, midxmap);
+		AssignMeshesToNodes(pm, nidx, pn->mChildren[i], midxmap);
 }
+
 
 inline unsigned int MakeImportFlags(const TCHAR *options, bool &animation_only, bool &keep_rootxform)
 {
@@ -717,6 +735,70 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 	if (!pmi)
 		return nullptr;
 
+	TNodeIndexMap nim;
+	AddModelNode(pmi, Model::NO_PARENT, scene->mRootNode, keep_rootxform ? &scene->mRootNode->mTransformation : nullptr, nim);
+
+	pmi->m_BoneOffsetMat.resize(nim.size());
+	std::for_each(pmi->m_BoneOffsetMat.begin(), pmi->m_BoneOffsetMat.end(), [](glm::fmat4x4 &m)
+	{
+		m = glm::identity<glm::fmat4x4>();
+	});
+
+#if 0
+	int upAxis = 0;
+	bool hasUpAxis = scene->mMetaData->Get<int>("UpAxis", upAxis);
+	int upAxisSign = 1;
+	scene->mMetaData->Get<int>("UpAxisSign", upAxisSign);
+
+	int frontAxis = 0;
+	bool hasFrontAxis = scene->mMetaData->Get<int>("FrontAxis", frontAxis);
+	int frontAxisSign = 1;
+	scene->mMetaData->Get<int>("FrontAxisSign", frontAxisSign);
+
+	int rightAxis = 0;
+	bool hasRightAxis = scene->mMetaData->Get<int>("RightAxis", rightAxis);
+	int rightAxisSign = 1;
+	scene->mMetaData->Get<int>("RightAxisSign", rightAxisSign);
+
+	aiVector3D upVec = upAxis == 0 ? aiVector3D(upAxisSign, 0, 0) : upAxis == 1 ? aiVector3D(0, upAxisSign, 0) : aiVector3D(0, 0, upAxisSign);
+	aiVector3D forwardVec = frontAxis == 0 ? aiVector3D(frontAxisSign, 0, 0) : frontAxis == 1 ? aiVector3D(0, frontAxisSign, 0) : aiVector3D(0, 0, frontAxisSign);
+	aiVector3D rightVec = rightAxis == 0 ? aiVector3D(rightAxisSign, 0, 0) : rightAxis == 1 ? aiVector3D(0, rightAxisSign, 0) : aiVector3D(0, 0, rightAxisSign);
+	aiMatrix4x4 mat(rightVec.x, rightVec.y, rightVec.z, 0.0f,
+					upVec.x, upVec.y, upVec.z, 0.0f,
+					forwardVec.x, forwardVec.y, forwardVec.z, 0.0f,
+					0.0f, 0.0f, 0.0f, 1.0f);
+#endif
+
+	bool any_colliders = false;
+	for (Model::NodeIndex ni = 0; ni < pmi->GetNodeCount(); ni++)
+	{
+		const TCHAR *pnn = pmi->GetNodeName(ni);
+		if (!pnn)
+			continue;
+
+		bool hidden = (pnn[0] && (pnn[0] == _T('#'))) || (pnn[1] && (pnn[1] == _T('#')));
+		pmi->NodeVisibility(ni, !hidden);
+
+		bool collider = (pnn[0] && (pnn[0] == _T('$'))) || (pnn[1] && (pnn[1] == _T('$')));
+		any_colliders |= collider;
+	}
+
+	if (any_colliders)
+	{
+		for (Model::NodeIndex ni = 0; ni < pmi->GetNodeCount(); ni++)
+		{
+			const TCHAR *pnn = pmi->GetNodeName(ni);
+			if (!pnn || !pmi->GetMeshCountOnNode(ni))	// if it's a dummy node, make sure sub-nodes are collided
+			{
+				pmi->NodeCollidability(ni, true);
+				continue;
+			}
+
+			bool collider = (pnn[0] && (pnn[0] == _T('$'))) || (pnn[1] && (pnn[1] == _T('$')));
+			pmi->NodeCollidability(ni, collider);
+		}
+	}
+
 	std::function<const TCHAR *(tstring &, const TCHAR *)> MakeTexFilename = [&sourcename](tstring &out, const TCHAR *idx) -> const TCHAR *
 	{
 		out += _T(":texture[");
@@ -747,7 +829,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 	if (scene->HasAnimations())
 	{
-		Animation *panim = Animation::Create();
+		AnimationImpl *panim = (AnimationImpl *)Animation::Create();
 		if (panim)
 		{
 			pmi->SetDefaultAnim(panim);
@@ -808,6 +890,8 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 					ptrack->SortKeys();
 				}
 			}
+
+			panim->BuildNodeHierarchy();
 
 			tstring animfilename = rootpath;
 			size_t extidx = animfilename.find_last_of(_T('.'), 0);
@@ -1096,16 +1180,27 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 		std::vector<TWeightVector> weights_per_vert;
 		if (impmesh->HasBones())
 		{
-			((MeshImpl *)pm)->MakeSkinned();
-
 			weights_per_vert.resize(impmesh->mNumVertices);
 
 			for (unsigned int a = 0; a < impmesh->mNumBones; a++)
 			{
 				const aiBone* bone = impmesh->mBones[a];
+
+				TNodeIndexMap::const_iterator it = nim.find(bone->mNode);
+
+				for (unsigned int row = 0; row < 4; row++)
+				{
+					for (unsigned int col = 0; col < 4; col++)
+					{
+						pmi->m_BoneOffsetMat[it->second][col][row] = bone->mOffsetMatrix[row][col];
+					}
+				}
+
 				for (unsigned int b = 0; b < bone->mNumWeights; b++)
-					weights_per_vert[bone->mWeights[b].mVertexId].push_back(aiVertexWeight(a, bone->mWeights[b].mWeight));
+					weights_per_vert[bone->mWeights[b].mVertexId].push_back(aiVertexWeight((unsigned int)it->second, bone->mWeights[b].mWeight));
 			}
+
+			((MeshImpl *)pm)->MakeSkinned();
 
 			vcd[ci].m_Count = 4;
 			vcd[ci].m_Type = VertexBuffer::ComponentDescription::ComponentType::VCT_U8;
@@ -1310,63 +1405,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 	pmi->SetBounds(vmin_model, vmax_model);
 
-#if 0
-	int upAxis = 0;
-	bool hasUpAxis = scene->mMetaData->Get<int>("UpAxis", upAxis);
-	int upAxisSign = 1;
-	scene->mMetaData->Get<int>("UpAxisSign", upAxisSign);
-
-	int frontAxis = 0;
-	bool hasFrontAxis = scene->mMetaData->Get<int>("FrontAxis", frontAxis);
-	int frontAxisSign = 1;
-	scene->mMetaData->Get<int>("FrontAxisSign", frontAxisSign);
-
-	int rightAxis = 0;
-	bool hasRightAxis = scene->mMetaData->Get<int>("RightAxis", rightAxis);
-	int rightAxisSign = 1;
-	scene->mMetaData->Get<int>("RightAxisSign", rightAxisSign);
-
-	aiVector3D upVec = upAxis == 0 ? aiVector3D(upAxisSign,0,0) : upAxis == 1 ? aiVector3D(0, upAxisSign,0) : aiVector3D(0, 0, upAxisSign);
-	aiVector3D forwardVec = frontAxis == 0 ? aiVector3D(frontAxisSign, 0, 0) : frontAxis == 1 ? aiVector3D(0, frontAxisSign, 0) : aiVector3D(0, 0, frontAxisSign);
-	aiVector3D rightVec = rightAxis == 0 ? aiVector3D(rightAxisSign, 0, 0) : rightAxis == 1 ? aiVector3D(0, rightAxisSign, 0) : aiVector3D(0, 0, rightAxisSign);
-	aiMatrix4x4 mat(rightVec.x, rightVec.y, rightVec.z, 0.0f,
-					upVec.x, upVec.y, upVec.z, 0.0f,
-					forwardVec.x, forwardVec.y, forwardVec.z, 0.0f,
-					0.0f, 0.0f, 0.0f, 1.0f);
-#endif
-
-	TNodeIndexMap nim;
-	AddModelNode(pmi, Model::NO_PARENT, scene->mRootNode, keep_rootxform ? &scene->mRootNode->mTransformation : nullptr, nim, mim);
-
-	bool any_colliders = false;
-	for (Model::NodeIndex ni = 0; ni < pmi->GetNodeCount(); ni++)
-	{
-		const TCHAR *pnn = pmi->GetNodeName(ni);
-		if (!pnn)
-			continue;
-
-		bool hidden = (pnn[0] && (pnn[0] == _T('#'))) || (pnn[1] && (pnn[1] == _T('#')));
-		pmi->NodeVisibility(ni, !hidden);
-
-		bool collider = (pnn[0] && (pnn[0] == _T('$'))) || (pnn[1] && (pnn[1] == _T('$')));
-		any_colliders |= collider;
-	}
-
-	if (any_colliders)
-	{
-		for (Model::NodeIndex ni = 0; ni < pmi->GetNodeCount(); ni++)
-		{
-			const TCHAR *pnn = pmi->GetNodeName(ni);
-			if (!pnn || !pmi->GetMeshCountOnNode(ni))	// if it's a dummy node, make sure sub-nodes are collided
-			{
-				pmi->NodeCollidability(ni, true);
-				continue;
-			}
-
-			bool collider = (pnn[0] && (pnn[0] == _T('$'))) || (pnn[1] && (pnn[1] == _T('$')));
-			pmi->NodeCollidability(ni, collider);
-		}
-	}
+	AssignMeshesToNodes(pmi, Model::NO_PARENT, scene->mRootNode, mim);
 
 	return pmi;
 }
@@ -1563,6 +1602,18 @@ void ModelImpl::InstanceDataImpl::Release()
 const Model *ModelImpl::InstanceDataImpl::GetSourceModel()
 {
 	return m_pSourceModel;
+}
+
+
+bool ModelImpl::InstanceDataImpl::GetBoneOffsetTransform(NodeIndex idx, glm::fmat4x4 &mat) const
+{
+	if (idx < m_NodeMat.size())
+	{
+		mat = m_pSourceModel->m_BoneOffsetMat[idx];
+		return true;
+	}
+
+	return false;
 }
 
 

@@ -202,10 +202,10 @@
 #define IDC_EDIT_SNAPX                  1043
 #define IDC_COMBO_PLACEMENTMODE         1044
 #define IDC_CHECK_SNAPY                 1045
-#define IDC_REPATH_MODE                 1045
 #define IDC_EDIT_SNAPY                  1046
-#define IDC_CHECK_SNAPZ                 1048
-#define IDC_EDIT_SNAPZ                  1049
+#define IDC_CHECK_SNAPZ                 1047
+#define IDC_EDIT_SNAPZ                  1048
+#define IDC_REPATH_MODE                 1049
 #define ID_EDIT_TRIGGERRENDERDOCCAPTURE 32771
 #define ID_EDIT_DELETE                  32772
 #define ID_EDIT_DUPLICATE               32773

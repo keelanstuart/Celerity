@@ -1087,7 +1087,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 		if (theApp.m_Config->GetBool(_T("brush.snap.z.apply"), false))
 		{
-			float snapz = theApp.m_Config->GetFloat(_T("brush.snap.z.apply"), 1.0f);
+			float snapz = theApp.m_Config->GetFloat(_T("brush.snap.z.val"), 1.0f);
 			pf.z = roundf(pf.z / snapz) * snapz;
 		}
 

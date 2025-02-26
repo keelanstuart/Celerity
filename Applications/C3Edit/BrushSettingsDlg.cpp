@@ -194,10 +194,13 @@ void CBrushSettingsDlg::DoDataExchange(CDataExchange* pDX)
 		theApp.m_Config->SetBool(_T("brush.scale.lockyz"), lockyz ? true : false);
 
 		theApp.m_Config->SetInt(_T("brush.placemode"), placemode);
+
 		theApp.m_Config->SetBool(_T("brush.snap.x.apply"), snapx ? true : false);
 		theApp.m_Config->SetFloat(_T("brush.snap.x.val"), snapxval);
+
 		theApp.m_Config->SetBool(_T("brush.snap.y.apply"), snapy ? true : false);
 		theApp.m_Config->SetFloat(_T("brush.snap.y.val"), snapyval);
+
 		theApp.m_Config->SetBool(_T("brush.snap.z.apply"), snapz ? true : false);
 		theApp.m_Config->SetFloat(_T("brush.snap.z.val"), snapzval);
 	}

@@ -45,6 +45,7 @@ void util::RecursiveObjectAction(Object *proot, ObjectActionFunc action_func)
 	}
 }
 
+
 bool util::RecursiveObjectActionBreakable(Object *proot, ObjectActionFuncBreakable action_func)
 {
 	assert(action_func);
@@ -62,6 +63,21 @@ bool util::RecursiveObjectActionBreakable(Object *proot, ObjectActionFuncBreakab
 
 	return ret;
 }
+
+
+void util::ObjectArrayAction(TObjectArray &objs, ObjectActionFunc action_func)
+{
+	if (!objs.size() || !action_func)
+		return;
+
+	int64_t i = (int64_t)objs.size();
+	do
+	{
+		action_func(objs[--i]);
+	}
+	while (i > 0);
+}
+
 
 bool util::FindShortestRelativePath(const std::vector<tstring> &relative_paths,
 	const TCHAR *target_filename,

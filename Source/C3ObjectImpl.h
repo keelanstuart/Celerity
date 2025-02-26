@@ -7,6 +7,7 @@
 #pragma once
 
 #include <C3.h>
+#include <C3Utility.h>
 
 namespace c3
 {
@@ -27,7 +28,6 @@ namespace c3
 
 		Object *m_pParent;
 
-		typedef std::deque<Object *> TObjectArray;
 		TObjectArray m_Children;
 
 	public:

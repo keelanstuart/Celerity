@@ -7,10 +7,12 @@
 #pragma once
 
 #include <C3.h>
+#include <deque>
 
 
 namespace c3
 {
+	typedef std::deque<Object *> TObjectArray;
 
 	namespace util
 	{
@@ -26,6 +28,9 @@ namespace c3
 
 		// Runs an ObjectActionFunc function on all objects in the hierarchy given, starting at proot... and it stops if you return false
 		bool C3_API RecursiveObjectActionBreakable(Object *proot, ObjectActionFuncBreakable action_func);
+
+		// Runs an ObjectActionFunc function on all objects in give list
+		void C3_API ObjectArrayAction(TObjectArray &objs, ObjectActionFunc action_func);
 
 		// Finds the best relative path to one of the given candidate paths
 		bool C3_API FindShortestRelativePath(const std::vector<tstring> &relative_paths,

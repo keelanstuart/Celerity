@@ -10,6 +10,7 @@
 #include <C3SystemImpl.h>
 #include <C3PrototypeImpl.h>
 #include <C3ObjectImpl.h>
+#include <C3Utility.h>
 
 using namespace c3;
 
@@ -483,6 +484,9 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags, Metad
 	if (!os)
 		return false;
 
+	if (m_Flags.IsSet(OF_TEMPORARY))
+		return true;
+
 	if (savemd && os->BeginBlock('CEL0'))
 	{
 		tstring name, description, author, website, copyright;
@@ -674,5 +678,30 @@ void ObjectImpl::PropertyChanged(const props::IProperty *pprop)
 	for (const auto &it : m_Components)
 	{
 		it->PropertyChanged(pprop);
+	}
+
+	// a composition object - loads temporary children from a file
+	if ((pprop->GetID() == 'COMP') && (pprop->GetType() == props::IProperty::PT_STRING))
+	{
+		// delete all the existing temporary child objects... then load from the 
+		util::ObjectArrayAction(m_Children, [&](Object *pobj)
+		{
+			if (pobj->Flags().IsSet(OF_TEMPORARY))
+				pobj->Release();
+		});
+
+		genio::IInputStream *is = genio::IInputStream::Create();
+		is->Assign(pprop->AsString());
+		if (is->Open())
+		{
+			Object *pco = m_pSys->GetFactory()->Build();
+			pco->Load(is);
+
+			// mark all the objects we loaded as temporary... they're created on the fly
+			util::RecursiveObjectAction(pco, [&](Object *pobj)
+			{
+				pobj->Flags().Set(OF_TEMPORARY);
+			});
+		}
 	}
 }

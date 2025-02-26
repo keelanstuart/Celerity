@@ -9,6 +9,7 @@
 #include "C3AnimatorImpl.h"
 #include "C3AnimTrackImpl.h"
 #include "C3AnimationImpl.h"
+#include "C3ModelRendererImpl.h"
 
 using namespace c3;
 
@@ -21,7 +22,8 @@ DECLARE_COMPONENTTYPE(Animator, AnimatorImpl);
 
 AnimatorImpl::AnimatorImpl()
 {
-	m_Owner = nullptr;
+	m_pOwner = nullptr;
+	m_pLastModel = nullptr;
 
 	m_CurState = m_LastState = m_StateMap.end();
 	m_CurAnimTime = m_LastAnimTime = 0.0f;
@@ -115,9 +117,9 @@ const TCHAR *AnimatorImpl::GetValue(const props::IProperty *pprop, size_t ordina
 
 bool AnimatorImpl::Initialize(Object *pobject)
 {
-	m_Owner = pobject;
+	m_pOwner = pobject;
 
-	props::IPropertySet *props = m_Owner->GetProperties();
+	props::IPropertySet *props = m_pOwner->GetProperties();
 	if (!props)
 		return false;
 
@@ -149,7 +151,7 @@ void AnimatorImpl::GenerateNodeToTrackMapping()
 	if (!m_CurAnim)
 		return;
 
-	ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(m_Owner->FindComponent(ModelRenderer::Type()));
+	ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(m_pOwner->FindComponent(ModelRenderer::Type()));
 	if (!pmr)
 		return;
 
@@ -192,25 +194,31 @@ void AnimatorImpl::SelectAnimation()
 	{
 		// Firgure out which random animation to play
 
-		// get the total weight of all animations in the state, then iteratively decerement that by the weights of individual animations until it's less than one of them
-		size_t animchoice = rand() % m_CurState->second->m_TotalWeight;
-
-		for (size_t i = 0, maxi = m_CurState->second->m_WeightedAnims.size(); i < maxi; i++)
+		size_t w = m_CurState->second->m_TotalWeight;
+		if (w)
 		{
-			size_t w = m_CurState->second->m_WeightedAnims[i].m_Weight;
-			if (animchoice < w)
-			{
-				m_CurAnim = m_CurState->second->m_WeightedAnims[i].m_Anim;
-				break;
-			}
+			// get the total weight of all animations in the state, then iteratively decerement that by the weights of individual animations until it's less than one of them
+			size_t animchoice = rand() % w;
 
-			animchoice -= w;
+			for (size_t i = 0, maxi = m_CurState->second->m_WeightedAnims.size(); i < maxi; i++)
+			{
+				size_t w = m_CurState->second->m_WeightedAnims[i].m_Weight;
+				if (animchoice < w)
+				{
+					m_CurAnim = m_CurState->second->m_WeightedAnims[i].m_Anim;
+					break;
+				}
+
+				animchoice -= w;
+			}
 		}
+		else
+			m_CurAnim = nullptr;
 	}
 
 	if (!m_CurAnim)
 	{
-		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(m_Owner->FindComponent(ModelRenderer::Type()));
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(m_pOwner->FindComponent(ModelRenderer::Type()));
 		if (pmr)
 		{
 			const Model *pm = pmr->GetModel();
@@ -261,8 +269,14 @@ void AnimatorImpl::Update(float elapsed_time)
 
 	if (m_CurAnim && ((m_CurAnimTime != m_LastAnimTime) || (m_CurAnim != oldanim)))
 	{
-		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(m_Owner->FindComponent(ModelRenderer::Type()));
+		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(m_pOwner->FindComponent(ModelRenderer::Type()));
 		const Model *pm = pmr->GetModel();
+		if (pm != m_pLastModel)
+		{
+			const props::IProperty *psf = m_pOwner->GetProperties()->GetPropertyById('ST8F');
+			if (psf)
+				PropertyChanged(psf);
+		}
 		Model::InstanceData *pmid = pmr->GetModelInstanceData();
 
 		if (pm && pmid)
@@ -270,8 +284,54 @@ void AnimatorImpl::Update(float elapsed_time)
 			if (m_NodeToTrack.size() != pm->GetNodeCount())
 				GenerateNodeToTrackMapping();
 
-			glm::fmat4x4 m, ident = glm::identity<glm::fmat4x4>();
+			glm::fmat4x4 m, om, ident = glm::identity<glm::fmat4x4>();
 
+#if 1
+			std::function<void(size_t)> ComputeTransforms = [&](size_t child_of)
+			{
+				for (size_t n = 0, maxn = pm->GetNodeCount(); n < maxn; n++)
+				{
+					if (pm->GetParentNode(n) == child_of)
+					{
+						Animation::TrackIndex ti = m_NodeToTrack[n];
+
+						if (ti != Animation::TRACKINDEX_INVALID)
+						{
+							AnimTrack *pat = m_CurAnim->GetTrack(ti);
+
+							// if there's a note on the current key and we just now reached it (last time was before this key) then process it
+							// TODO: evaluate for correctness - this might be better in Update than Prerender. <shrug>
+							if (const TCHAR *pnote = pat->GetNote(m_LastAnimTime, m_CurAnimTime))
+								ProcessNote(pnote);
+
+							AnimTrack::KeyIndex kip = AnimTrack::KEYINDEX_INVALID, kio = kip, kis = kio;
+							glm::fvec3 apos = pat->GetPos(m_CurAnimTime, kip);//m_KeyIndices[ti].m_Pos);
+							glm::fquat aori = pat->GetOri(m_CurAnimTime, kio);//m_KeyIndices[ti].m_Ori);
+							glm::fvec3 ascl = pat->GetScl(m_CurAnimTime, kis);//m_KeyIndices[ti].m_Scl);
+
+							m = glm::scale(glm::identity<glm::fmat4x4>(), ascl) * (glm::fmat4x4)(aori);
+
+							// Then translate last... 
+							m = glm::translate(glm::identity<glm::fmat4x4>(), apos) * m;
+
+							m_MatStack->Push(&m);
+						}
+						else
+							m_MatStack->Push(&ident);
+
+						m_MatStack->Top(&m);
+
+						pmid->SetTransform(n, m);
+
+						ComputeTransforms(n);
+
+						m_MatStack->Pop();
+					}
+				}
+			};
+
+			ComputeTransforms(Model::NO_PARENT);
+#else
 			for (size_t n = 0, maxn = pm->GetNodeCount(); n < maxn; n++)
 			{
 				Animation::TrackIndex ti = m_NodeToTrack[n];
@@ -302,6 +362,7 @@ void AnimatorImpl::Update(float elapsed_time)
 					pmid->SetTransform(n, ident);
 				}
 			}
+#endif
 		}
 	}
 }
@@ -350,8 +411,12 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 	{
 		case 'ST8F':
 		{
-			System *psys = m_Owner->GetSystem();
+			System *psys = m_pOwner->GetSystem();
 			ResourceManager *prm = psys->GetResourceManager();
+
+			const ModelRendererImpl *pmr = dynamic_cast<ModelRendererImpl *>(m_pOwner->FindComponent(ModelRenderer::Type()));
+			const Model *pm = pmr ? pmr->GetModel() : nullptr;
+			m_pLastModel = pm;
 
 			ResetStates(true);
 
@@ -387,7 +452,7 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 
 							if (!emres.second)
 							{
-								m_Owner->GetSystem()->GetLog()->Print(_T("\"%s\" contains duplicate state: \"%s\"\n"), filename, _name);
+								m_pOwner->GetSystem()->GetLog()->Print(_T("\"%s\" contains duplicate state: \"%s\"\n"), filename, _name);
 							}
 							else
 							{
@@ -415,16 +480,15 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 										CONVERT_MBCS2TCS(pfilename->Value(), _filename);
 
 										Resource *animres = prm->GetResource(_filename, RESF_DEMANDLOAD);
-										if (animres && animres->GetData())
-										{
-											emres.first->second->m_WeightedAnims.emplace_back();
-											emres.first->second->m_WeightedAnims.back().m_Anim = (Animation *)animres->GetData();
+										const Animation *pa = (const Animation *)(animres ? animres->GetData() : nullptr);
 
-											const tinyxml2::XMLAttribute *pweight = panim->FindAttribute("weight");
-											size_t wt = pweight ? pweight->IntValue() : 1;
-											emres.first->second->m_WeightedAnims.back().m_Weight = wt;
-											emres.first->second->m_TotalWeight += wt;
-										}
+										emres.first->second->m_WeightedAnims.emplace_back();
+										emres.first->second->m_WeightedAnims.back().m_Anim = pa;
+
+										const tinyxml2::XMLAttribute *pweight = panim->FindAttribute("weight");
+										size_t wt = pweight ? pweight->IntValue() : 1;
+										emres.first->second->m_WeightedAnims.back().m_Weight = wt;
+										emres.first->second->m_TotalWeight += wt;
 									}
 
 									panim = panim->NextSiblingElement("animation");
@@ -456,9 +520,9 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 
 bool AnimatorImpl::ProcessNote(const TCHAR *note)
 {
-	if (m_Owner)
+	if (m_pOwner)
 	{
-		Scriptable *ps = (Scriptable *)(m_Owner->FindComponent(Scriptable::Type()));
+		Scriptable *ps = (Scriptable *)(m_pOwner->FindComponent(Scriptable::Type()));
 		if (ps)
 		{
 			ps->Execute(note);

@@ -79,13 +79,15 @@ namespace c3
 
 	public:
 
+		std::vector<glm::fmat4x4> m_BoneOffsetMat;		// this is the offset for skeletal nodes
+
 		class InstanceDataImpl : Model::InstanceData
 		{
 		public:
 
 			const ModelImpl *m_pSourceModel;
 
-			std::vector<glm::fmat4x4> m_NodeMat;
+			std::vector<glm::fmat4x4> m_NodeMat;			// this is used for animation
 			std::vector<std::vector<Material *>> m_NodeMtl;
 			std::vector<NodeIndex> m_NodeParent;
 
@@ -94,6 +96,8 @@ namespace c3
 			virtual void Release();
 
 			virtual const Model *GetSourceModel();
+
+			virtual bool GetBoneOffsetTransform(NodeIndex idx, glm::fmat4x4 &mat) const;
 
 			virtual bool GetTransform(NodeIndex idx, glm::fmat4x4 &mat);
 

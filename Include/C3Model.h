@@ -44,6 +44,8 @@ namespace c3
 
 			virtual const Model *GetSourceModel() = NULL;
 
+			virtual bool GetBoneOffsetTransform(NodeIndex idx, glm::fmat4x4 &mat) const = NULL;
+
 			virtual bool GetTransform(NodeIndex idx, glm::fmat4x4 &mat) = NULL;
 
 			virtual void SetTransform(NodeIndex idx, glm::fmat4x4 &mat) = NULL;

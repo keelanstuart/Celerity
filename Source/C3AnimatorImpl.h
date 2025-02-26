@@ -77,7 +77,8 @@ namespace c3
 
 	protected:
 
-		Object *m_Owner;
+		Object *m_pOwner;
+		const Model *m_pLastModel;
 
 		const Animation *m_CurAnim;
 
