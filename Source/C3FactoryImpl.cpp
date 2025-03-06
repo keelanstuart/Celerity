@@ -314,102 +314,119 @@ bool FactoryImpl::LoadPrototypes(genio::IInputStream *is, const TCHAR *source)
 
 bool FactoryImpl::LoadPrototypes(const tinyxml2::XMLNode *proot, const TCHAR *source)
 {
-	if (!proot)
-		return false;
-
-	const tinyxml2::XMLElement *pel = proot->FirstChildElement("prototype");
-	while (pel)
+	tinyxml2::XMLDocument *pdoc = nullptr;
+	if (!proot && source)
 	{
-		GUID guid;
-		const tinyxml2::XMLAttribute *paguid = pel->FindAttribute("guid");
-		if (paguid)
-		{
-			size_t len = strlen(paguid->Value());
-			sscanf_s(paguid->Value(), "{%8X-%4hX-%4hX-%2hhX%2hhX-%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX}", &guid.Data1, &guid.Data2, &guid.Data3,
-					 &guid.Data4[0], &guid.Data4[1], &guid.Data4[2], &guid.Data4[3], &guid.Data4[4], &guid.Data4[5], &guid.Data4[6], &guid.Data4[7]);
-		}
-
-		Prototype *pproto = new PrototypeImpl(m_pSys, guid, source);
-
-		m_Prototypes.push_back(pproto);
-
-		const tinyxml2::XMLAttribute *paname = pel->FindAttribute("name");
-		if (paname)
-		{
-			TCHAR *n;
-			CONVERT_MBCS2TCS(paname->Value(), n);
-			pproto->SetName(n);
-		}
-
-		const tinyxml2::XMLAttribute *pagroup = pel->FindAttribute("group");
-		if (pagroup)
-		{
-			TCHAR *g;
-			CONVERT_MBCS2TCS(pagroup->Value(), g);
-			pproto->SetGroup(g);
-		}
-
-		const tinyxml2::XMLAttribute *paflags = pel->FindAttribute("flags");
-		if (paflags)
-		{
-			pproto->Flags().SetAll(paflags->Int64Value());
-		}
-
-		const tinyxml2::XMLElement *pcomps = pel->FirstChildElement("components");
-		if (pcomps)
-		{
-			const tinyxml2::XMLElement *pcomp = pcomps->FirstChildElement("component");
-			while (pcomp)
-			{
-				const tinyxml2::XMLAttribute *pacompguid = pcomp->FindAttribute("guid");
-				const tinyxml2::XMLAttribute *pacompname = pcomp->FindAttribute("name");
-				const ComponentType *pct = nullptr;
-				if (pacompguid)
-				{
-					size_t len = strlen(pacompguid->Value());
-					sscanf_s(pacompguid->Value(), "{%8X-%4hX-%4hX-%2hhX%2hhX-%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX}", &guid.Data1, &guid.Data2, &guid.Data3,
-							 &guid.Data4[0], &guid.Data4[1], &guid.Data4[2], &guid.Data4[3], &guid.Data4[4], &guid.Data4[5], &guid.Data4[6], &guid.Data4[7]);
-
-					pct = FindComponentType(guid);
-				}
-				else if (pacompname)
-				{
-					TCHAR *compname;
-					CONVERT_MBCS2TCS(pacompname->Value(), compname);
-
-					pct = FindComponentType(compname, false);
-				}
-
-				if (pct)
-					pproto->AddComponent(pct);
-
-				pcomp = pcomp->NextSiblingElement("component");
-			}
-
-			const tinyxml2::XMLElement *proproot = pel->FirstChildElement("powerprops:property_set");
-
-			tinyxml2::XMLPrinter printer;
-			proproot->Accept(&printer);
-			std::string ps = printer.CStr();
-			tstring tps;
-
-			if (!ps.empty())
-			{
-#ifdef _UNICODE
-				std::wstring_convert<deletable_facet<std::codecvt<wchar_t, char, std::mbstate_t>>> conv;
-				tps = conv.from_bytes(ps);
-#else
-				tps = ps;
-#endif
-			}
-
-			pproto->GetProperties()->DeserializeFromXMLString(tps);
-		}
-
-		pel = pel->NextSiblingElement("prototype");
+		pdoc = new tinyxml2::XMLDocument;
+		char *p;
+		CONVERT_TCS2MBCS(source, p);
+		pdoc->LoadFile(p);
+		proot = pdoc->RootElement();
 	}
 
-	return true;
+	bool ret = false;
+
+	if (proot)
+	{
+		const tinyxml2::XMLElement *pel = proot->FirstChildElement("prototype");
+		while (pel)
+		{
+			GUID guid;
+			const tinyxml2::XMLAttribute *paguid = pel->FindAttribute("guid");
+			if (paguid)
+			{
+				size_t len = strlen(paguid->Value());
+				sscanf_s(paguid->Value(), "{%8X-%4hX-%4hX-%2hhX%2hhX-%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX}", &guid.Data1, &guid.Data2, &guid.Data3,
+						 &guid.Data4[0], &guid.Data4[1], &guid.Data4[2], &guid.Data4[3], &guid.Data4[4], &guid.Data4[5], &guid.Data4[6], &guid.Data4[7]);
+			}
+
+			Prototype *pproto = new PrototypeImpl(m_pSys, guid, source);
+
+			m_Prototypes.push_back(pproto);
+
+			const tinyxml2::XMLAttribute *paname = pel->FindAttribute("name");
+			if (paname)
+			{
+				TCHAR *n;
+				CONVERT_MBCS2TCS(paname->Value(), n);
+				pproto->SetName(n);
+			}
+
+			const tinyxml2::XMLAttribute *pagroup = pel->FindAttribute("group");
+			if (pagroup)
+			{
+				TCHAR *g;
+				CONVERT_MBCS2TCS(pagroup->Value(), g);
+				pproto->SetGroup(g);
+			}
+
+			const tinyxml2::XMLAttribute *paflags = pel->FindAttribute("flags");
+			if (paflags)
+			{
+				pproto->Flags().SetAll(paflags->Int64Value());
+			}
+
+			const tinyxml2::XMLElement *pcomps = pel->FirstChildElement("components");
+			if (pcomps)
+			{
+				const tinyxml2::XMLElement *pcomp = pcomps->FirstChildElement("component");
+				while (pcomp)
+				{
+					const tinyxml2::XMLAttribute *pacompguid = pcomp->FindAttribute("guid");
+					const tinyxml2::XMLAttribute *pacompname = pcomp->FindAttribute("name");
+					const ComponentType *pct = nullptr;
+					if (pacompguid)
+					{
+						size_t len = strlen(pacompguid->Value());
+						sscanf_s(pacompguid->Value(), "{%8X-%4hX-%4hX-%2hhX%2hhX-%2hhX%2hhX%2hhX%2hhX%2hhX%2hhX}", &guid.Data1, &guid.Data2, &guid.Data3,
+								 &guid.Data4[0], &guid.Data4[1], &guid.Data4[2], &guid.Data4[3], &guid.Data4[4], &guid.Data4[5], &guid.Data4[6], &guid.Data4[7]);
+
+						pct = FindComponentType(guid);
+					}
+					else if (pacompname)
+					{
+						TCHAR *compname;
+						CONVERT_MBCS2TCS(pacompname->Value(), compname);
+
+						pct = FindComponentType(compname, false);
+					}
+
+					if (pct)
+						pproto->AddComponent(pct);
+
+					pcomp = pcomp->NextSiblingElement("component");
+				}
+
+				const tinyxml2::XMLElement *proproot = pel->FirstChildElement("powerprops:property_set");
+
+				tinyxml2::XMLPrinter printer;
+				proproot->Accept(&printer);
+				std::string ps = printer.CStr();
+				tstring tps;
+
+				if (!ps.empty())
+				{
+#ifdef _UNICODE
+					std::wstring_convert<deletable_facet<std::codecvt<wchar_t, char, std::mbstate_t>>> conv;
+					tps = conv.from_bytes(ps);
+#else
+					tps = ps;
+#endif
+				}
+
+				pproto->GetProperties()->DeserializeFromXMLString(tps);
+			}
+
+			pel = pel->NextSiblingElement("prototype");
+		}
+
+		ret = true;
+	}
+
+	if (pdoc)
+		delete pdoc;
+
+	return ret;
 }
 
 

@@ -122,6 +122,7 @@ void jcDeleteObject(CScriptVar *c, void *userdata);
 void jcGetParent(CScriptVar *c, void *userdata);
 void jcSetParent(CScriptVar *c, void *userdata);
 void jcSetObjectName(CScriptVar *c, void *userdata);
+void jcLoadPrototypes(CScriptVar *c, void *userdata);
 void jcLoadObject(CScriptVar *c, void *userdata);
 void jcGetRegisteredObject(CScriptVar *c, void *userdata);
 void jcRegisterObject(CScriptVar *c, void *userdata);
@@ -191,6 +192,8 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function SetParent(hobj, hnewparentobj)"),						jcSetParent, psys);
 
 	m_JS->AddNative(_T("function SetObjectName(hobj, newname)"),						jcSetObjectName, psys);
+
+	m_JS->AddNative(_T("function LoadPrototypes(filename)"),							jcLoadPrototypes, psys);
 
 	m_JS->AddNative(_T("function LoadObject(hobj, filename)"),							jcLoadObject, psys);
 
@@ -305,6 +308,65 @@ void ScriptableImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
 }
 
 
+void ScriptableImpl::Preprocess(const TCHAR *options)
+{
+#define KILL_LINE	-1
+	std::function<void(size_t, size_t)> KillCodeBlock = [&](size_t sc, size_t ec)
+	{
+		if (ec == KILL_LINE)
+			ec = m_Code.find(_T('\n'), sc);
+		m_Code.erase(m_Code.begin() + sc, m_Code.begin() + ec);
+	};
+
+	std::function<size_t(size_t)> SkipWhitespace = [&](size_t sc) -> size_t
+	{
+		size_t ret = m_Code.find_first_not_of(_T(" \t"), sc);
+		return ret;
+	};
+
+	const tstring incdir = _T("#include");
+	std::vector<tstring> already_included;
+
+	size_t start_pos;
+	while ((start_pos = m_Code.find(incdir)) != tstring::npos)
+	{
+		size_t qpos = SkipWhitespace(start_pos);
+		if (qpos != tstring::npos)
+		{
+			if (m_Code[qpos] != _T('\"'))
+			{
+				m_pOwner->GetSystem()->GetLog()->Print(_T("#include directive missing include file\n"));
+				KillCodeBlock(start_pos, KILL_LINE);
+				continue;
+			}
+
+			size_t _qpos = m_Code.find_first_of(_T("\"\n"), qpos);
+			if (m_Code[_qpos] != _T('\"'))
+			{
+				m_pOwner->GetSystem()->GetLog()->Print(_T("#include directive missing closing \"\n"));
+				KillCodeBlock(start_pos, KILL_LINE);
+				continue;
+			}
+
+			tstring filename = m_Code.substr(qpos, _qpos - qpos - 1);
+			Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(filename.c_str(), RESF_DEMANDLOAD);
+			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
+			{
+				// no recursive inclusions
+				if (std::find(already_included.cbegin(), already_included.cend(), filename) != already_included.cend())
+				{
+					KillCodeBlock(start_pos, KILL_LINE);
+					continue;
+				}
+
+				// insert the included code
+				m_Code.replace(m_Code.begin() + start_pos, m_Code.begin() + _qpos, ((Script *)(pres->GetData()))->m_Code);
+			}
+		}
+	}
+}
+
+
 void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 {
 	if (!pprop)
@@ -324,6 +386,8 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 					ResetJS();
 
 					m_Code = ((Script *)(pres->GetData()))->m_Code;
+					Preprocess();
+
 					m_Continue = m_JS->Execute(m_Code.c_str());
 					needs_init = true;
 				}
@@ -337,6 +401,8 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 				ResetJS();
 
 				m_Code = pprop->AsString();
+				Preprocess();
+
 				m_Continue = m_JS->Execute(m_Code.c_str());
 				needs_init = true;
 			}
@@ -921,6 +987,27 @@ void jcSetObjectName(CScriptVar *c, void *userdata)
 	if (pobj)
 	{
 		pobj->SetName(newname.c_str());
+	}
+}
+
+
+//m_JS->AddNative(_T("function LoadPrototypes(filename)"),				jcLoadPrototypes, psys);
+void jcLoadPrototypes(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	if (ret)
+		ret->SetInt(0);
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring filename = c->GetParameter(_T("filename"))->GetString();
+	TCHAR fullpath[MAX_PATH];
+
+	if (psys->GetFileMapper()->FindFile(filename.c_str(), fullpath, MAX_PATH))
+	{
+		psys->GetFactory()->LoadPrototypes((genio::IInputStream *)nullptr, fullpath);
 	}
 }
 

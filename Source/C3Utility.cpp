@@ -79,6 +79,29 @@ void util::ObjectArrayAction(TObjectArray &objs, ObjectActionFunc action_func)
 }
 
 
+bool util::IsInHeirarchyOf(Object *obj, Object *parent, size_t *depth)
+{
+	if (!obj || !parent)
+		return false;
+
+	size_t ret = 0;
+	while (obj != parent)
+	{
+		obj = obj->GetParent();
+		ret++;
+	}
+
+	if (obj == parent)
+	{
+		if (depth)
+			*depth = ret;
+		return true;
+	}
+
+	return false;
+}
+
+
 bool util::FindShortestRelativePath(const std::vector<tstring> &relative_paths,
 	const TCHAR *target_filename,
 	TCHAR *shortest_path_buf,

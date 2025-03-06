@@ -12,7 +12,7 @@
 void ZipArchiveVSListBox::OnBrowse()
 {
 	CString filter = _T("Supported Archive Files (*.c3z; *.zip)|*.c3z;*.zip|All Files (*.*)|*.*||");
-	CFileDialog dlg(TRUE, _T("c3z"), NULL, OFN_HIDEREADONLY | OFN_FILEMUSTEXIST, filter);
+	CFileDialog dlg(TRUE, _T("c3z"), NULL, OFN_HIDEREADONLY | OFN_FILEMUSTEXIST | OFN_ENABLESIZING, filter);
 	if (dlg.DoModal() == IDOK)
 	{
 		CString filepath = dlg.GetPathName();

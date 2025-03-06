@@ -90,6 +90,7 @@ namespace c3
 
 		float m_Peak;				// percentage of particle lifetime that it reaches the "peak" values
 
+		glm::fvec3 m_LastEmitPos;
 
 	public:
 

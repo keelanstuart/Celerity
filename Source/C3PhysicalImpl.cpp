@@ -114,7 +114,7 @@ const TCHAR *PhysicalImpl::GetValue(const props::IProperty *pprop, size_t ordina
 	{
 		case 'PhCT':
 		{
-			static TCHAR *ctname[ColliderShape::COLLIDER_SHAPE_COUNT + 1] = {_T("None"), _T("Model Bounds"), _T("Model"), _T("Sphere"), _T("Cylinder"), _T("Capsule"), _T("INVALID")};
+			static TCHAR *ctname[ColliderShape::COLLIDER_SHAPE_COUNT + 1] = {_T("None"), _T("Model Bounds"), _T("Model"), _T("Sphere"), _T("Cylinder"), _T("Capsule")};
 			if ((ordinal < 0) || (ordinal >= ColliderShape::COLLIDER_SHAPE_COUNT))
 				ordinal = ColliderShape::COLLIDER_SHAPE_COUNT;
 
@@ -125,9 +125,9 @@ const TCHAR *PhysicalImpl::GetValue(const props::IProperty *pprop, size_t ordina
 
 		case 'PhCM':
 		{
-			static TCHAR *cmname[ColliderShape::COLLIDER_SHAPE_COUNT + 1] = {_T("Static"), _T("Kinetic"), _T("Dynamic")};
-			if ((ordinal < 0) || (ordinal >= ColliderShape::COLLIDER_SHAPE_COUNT))
-				ordinal = ColliderShape::COLLIDER_SHAPE_COUNT;
+			static TCHAR *cmname[CollisionMode::COLLISION_MODE_COUNT + 1] = {_T("Static"), _T("Kinetic"), _T("Dynamic")};
+			if ((ordinal < 0) || (ordinal >= CollisionMode::COLLISION_MODE_COUNT))
+				ordinal = CollisionMode::COLLISION_MODE_COUNT;
 
 			ret = cmname[ordinal];
 

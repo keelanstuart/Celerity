@@ -423,7 +423,7 @@ void PositionableImpl::AdjustRoll(float dr)
 }
 
 
-const glm::fvec3 *PositionableImpl::GetFacingVector(glm::fvec3 *vec)
+const glm::fvec3 *PositionableImpl::GetFacingVector(glm::fvec3 *vec) const
 {
 	if (vec)
 	{
@@ -435,7 +435,7 @@ const glm::fvec3 *PositionableImpl::GetFacingVector(glm::fvec3 *vec)
 }
 
 
-const glm::fvec3 *PositionableImpl::GetLocalUpVector(glm::fvec3 *vec)
+const glm::fvec3 *PositionableImpl::GetLocalUpVector(glm::fvec3 *vec) const
 {
 	if (vec)
 	{
@@ -447,7 +447,7 @@ const glm::fvec3 *PositionableImpl::GetLocalUpVector(glm::fvec3 *vec)
 }
 
 
-const glm::fvec3 *PositionableImpl::GetLocalRightVector(glm::fvec3 *vec)
+const glm::fvec3 *PositionableImpl::GetLocalRightVector(glm::fvec3 *vec) const
 {
 	if (vec)
 	{

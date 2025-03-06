@@ -1,0 +1,5 @@
+<states startstate="idle">
+	<state name="idle" goto="idle">
+		<animation filename="" weight="10" />
+	</state>
+</states>

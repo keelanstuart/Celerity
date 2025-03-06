@@ -397,6 +397,41 @@ void CameraImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
+float CameraImpl::GetNearClipDistance() const
+{
+	return m_nearclip;
+}
+
+
+void CameraImpl::SetNearClipDistance(float dist)
+{
+	if (m_nearclip != dist)
+	{
+		m_nearclip = dist;
+
+		m_Flags.Set(CAMFLAG_REBUILDMATRICES);
+	}
+}
+
+
+float CameraImpl::GetFarClipDistance() const
+{
+	return m_farclip;
+}
+
+
+void CameraImpl::SetFarClipDistance(float dist)
+{
+	if (m_farclip != dist)
+	{
+		m_farclip = dist;
+
+		m_Flags.Set(CAMFLAG_REBUILDMATRICES);
+	}
+}
+
+
+
 std::vector<tstring> ViewModeNames ={_T("Polar"), _T("Look At")};
 std::vector<tstring> ProjModeNames ={_T("Perspective"), _T("Orthographic")};
 

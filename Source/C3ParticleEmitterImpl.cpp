@@ -10,6 +10,7 @@
 #include <C3EnvironmentModifierImpl.h>
 #include <C3Math.h>
 #include <C3Utility.h>
+#include <C3Positionable.h>
 
 using namespace c3;
 
@@ -22,6 +23,7 @@ ParticleEmitterImpl::ParticleEmitterImpl()
 	m_pMethod = nullptr;
 	m_pTexture = nullptr;
 	m_MaxParticles = 100;
+	m_LastEmitPos.x = m_LastEmitPos.y = m_LastEmitPos.z = 0.0f;
 }
 
 
@@ -85,6 +87,10 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 {
 	if (nullptr == (m_pOwner = pobject))
 		return false;
+
+	Positionable *ppos = (Positionable *)m_pOwner->FindComponent(Positionable::Type());
+	if (ppos)
+		ppos->GetPosVec(&m_LastEmitPos);
 
 	props::IPropertySet *propset = pobject->GetProperties();
 	if (!propset)
@@ -229,6 +235,12 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 	glm::fmat4x4 mat = glm::identity<glm::fmat4x4>();
 	util::ComputeFinalTransform(m_pOwner, &mat);
 
+	glm::fvec3 empos(0, 0, 0), emposdiff;
+	Positionable *ppos = (Positionable *)m_pOwner->FindComponent(Positionable::Type());
+	if (ppos)
+		ppos->GetPosVec(&empos);
+	emposdiff = empos - m_LastEmitPos;
+
 	glm::fvec3 epos = mat * glm::fvec4(glm::fvec3(0, 0, 0), 1);
 	glm::fvec3 facing = mat * glm::fvec4(glm::fvec3(0, 1, 0), 0);
 	glm::fvec3 right = mat * glm::fvec4(glm::fvec3(1, 0, 0), 0);
@@ -273,10 +285,16 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 	{
 		m_EmitTime -= elapsed_time;
 
+		float emit_count_sec = math::RandomRange(m_EmitRate.min, m_EmitRate.max);
+		float emit_count_cur = emit_count_sec / fabs(m_EmitTime);
+		float emit_time_single = 1.0f / emit_count_sec;
+		float pct_single = emit_time_single / fabs(m_EmitTime);
+		float pct_cur = 0.0f;
+
 		// if we've lapsed our emission time and have inactive particles to use, then make one
 		while ((m_EmitTime < 0.0f) && !m_Inactive.empty())
 		{
-			m_EmitTime += 1.0f / math::RandomRange(m_EmitRate.min, m_EmitRate.max);
+			m_EmitTime += emit_time_single;
 
 			size_t i = m_Inactive.back();
 			m_Inactive.pop_back();
@@ -341,14 +359,19 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 
 			float spd = math::RandomRange(m_EmitSpeed.min, m_EmitSpeed.max);
 			part.vel *= spd;
+			part.pos += (emposdiff * pct_cur);
 
 			part.roll = 0.0f;
 			part.rvel = glm::radians(math::RandomRange(m_Roll.min, m_Roll.max));
 			part.racc = 0.0f; // TODO
 
 			m_Active.push_back(i);
+
+			pct_cur += pct_single;
 		}
 	}
+
+	m_LastEmitPos = empos;
 }
 
 
@@ -370,6 +393,9 @@ bool ParticleEmitterImpl::Prerender(Object::RenderFlags flags, int draworder)
 			}
 		}
 	}
+
+	if (flags.IsSet(RF_EFFECT))
+		return true;
 
 	if (flags.IsSet(RF_SHADOW))
 		return false;
@@ -396,8 +422,6 @@ void ParticleEmitterImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *
 	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
 	if (!pmat)
 		pmat = &imat;
-
-	//glm::fmat4x4 mat = 
 
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 

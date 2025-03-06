@@ -1,7 +1,8 @@
 <render_method name="particles">
 
-	<technique name="g" draworder="10">
+	<technique name="g" draworder="3">
 		<pass>
+			<setting name="framebuffer"			value="EffectsBuffer" />
 			<setting name="depthmode"			value="readonly" />
 			<setting name="blendmode"			value="addalpha" />
 			<setting name="cullmode"			value="disabled" />

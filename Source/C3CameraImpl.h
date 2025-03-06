@@ -79,6 +79,11 @@ namespace c3
 		virtual void SetFOV(float height);
 		virtual float GetFOV();
 
+		virtual float GetNearClipDistance() const;
+		virtual void SetNearClipDistance(float dist);
+		virtual float GetFarClipDistance() const;
+		virtual void SetFarClipDistance(float dist);
+
 		virtual const glm::fvec3 *GetEyePos(glm::fvec3 *pos);
 		virtual const glm::fvec3 *GetTargetPos(glm::fvec3 *pos);
 

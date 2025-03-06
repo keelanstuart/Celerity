@@ -246,16 +246,15 @@ void ObjectImpl::Update(float elapsed_time)
 	if (!m_Flags.IsSet(OF_UPDATE))
 		return;
 
-	for (const auto &it : m_Components)
-	{
-		it->Update(elapsed_time);
-	}
-
 	for (auto child : m_Children)
 	{
 		child->Update(elapsed_time);
 	}
 
+	for (const auto &it : m_Components)
+	{
+		it->Update(elapsed_time);
+	}
 }
 
 
@@ -318,6 +317,10 @@ bool ObjectImpl::Load(genio::IInputStream *is, MetadataLoadFunc loadmd, CameraLo
 	genio::FOURCHARCODE b;
 
 	size_t celdepth = 0;
+
+	b = is->NextBlockId();
+	if ((b != 'CEL0') && (b != 'OBJ0'))
+		return false;
 
 	do
 	{
@@ -556,7 +559,8 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags, Metad
 		if (len)
 			os->Write(m_Name.c_str(), sizeof(TCHAR) * len);
 
-		os->Write(&m_Flags, sizeof(props::TFlags64));
+		props::TFlags64 f = m_Flags;
+		os->Write(&f, sizeof(props::TFlags64));
 
 		os->WriteUINT64(GetNumComponents());
 		for (auto comp : m_Components)
@@ -576,6 +580,7 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags, Metad
 		}
 
 		os->WriteUINT64(GetNumChildren());
+
 		for (auto child : m_Children)
 		{
 			child->Save(os, saveflags);
@@ -681,7 +686,7 @@ void ObjectImpl::PropertyChanged(const props::IProperty *pprop)
 	}
 
 	// a composition object - loads temporary children from a file
-	if ((pprop->GetID() == 'COMP') && (pprop->GetType() == props::IProperty::PT_STRING))
+	if ((pprop->GetID() == 'FILE') && (pprop->GetType() == props::IProperty::PT_STRING))
 	{
 		// delete all the existing temporary child objects... then load from the 
 		util::ObjectArrayAction(m_Children, [&](Object *pobj)

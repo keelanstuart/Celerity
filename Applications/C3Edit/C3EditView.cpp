@@ -88,6 +88,8 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_COMMAND(ID_EDIT_BRUSHSETTINGS, &C3EditView::OnEditBrushSettings)
 	ON_UPDATE_COMMAND_UI(ID_TOOLS_REPATH, &C3EditView::OnUpdateToolsRepath)
 	ON_COMMAND(ID_TOOLS_REPATH, &C3EditView::OnToolsRepath)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_EXPORT, &C3EditView::OnUpdateEditExport)
+	ON_COMMAND(ID_EDIT_EXPORT, &C3EditView::OnEditExport)
 END_MESSAGE_MAP()
 
 
@@ -101,6 +103,7 @@ C3EditView::C3EditView() noexcept
 	m_ResourcesRefCt++;
 
 	m_GBuf = nullptr;
+	m_EffectsBuf = nullptr;
 	m_LCBuf = nullptr;
 	m_AuxBuf = nullptr;
 	m_SSBuf = nullptr;
@@ -172,6 +175,8 @@ void C3EditView::DestroySurfaces()
 
 	C3_SAFERELEASE(m_LCBuf);
 
+	C3_SAFERELEASE(m_EffectsBuf);
+
 	C3_SAFERELEASE(m_AuxBuf);
 
 	C3_SAFERELEASE(m_DepthTarg);
@@ -215,6 +220,18 @@ void C3EditView::CreateSurfaces()
 		m_GBuf = prend->CreateFrameBuffer(0, _T("GBuffer"));
 	if (m_GBuf)
 		gbok = m_GBuf->Setup(_countof(GBufTargData), GBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+	c3::FrameBuffer::TargetDesc EffectsTargData[] =
+	{
+		{ _T("uSamplerEffectsColor"), c3::Renderer::TextureType::U8_3CH, TEXCREATEFLAG_RENDERTARGET },	// diffuse color (rgb) and metalness (a)
+	};
+
+	theApp.m_C3->GetLog()->Print(_T("Creating Effects Buffer... "));
+	if (!m_EffectsBuf)
+		m_EffectsBuf = prend->CreateFrameBuffer(0, _T("EffectsBuffer"));
+	if (m_EffectsBuf)
+		gbok = m_EffectsBuf->Setup(_countof(EffectsTargData), EffectsTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	for (size_t c = 0; c < BLURTARGS; c++)
@@ -306,6 +323,10 @@ void C3EditView::UpdateShaderSurfaces()
 		ul = m_SP_combine->GetUniformLocation(_T("uSamplerShadow"));
 		if (ul >= 0)
 			m_SP_combine->SetUniformTexture((c3::Texture*)m_ShadowTarg, ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+
+		ul = m_SP_combine->GetUniformLocation(_T("uSamplerEffectsColor"));
+		if (ul >= 0)
+			m_SP_combine->SetUniformTexture((c3::Texture*)m_EffectsBuf->GetColorTarget(0), ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 		ul = m_SP_combine->GetUniformLocation(_T("uSamplerAuxiliary"));
 		if (ul >= 0)
@@ -427,6 +448,8 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		prend->SetClearDepth(1.0f);
 
+		m_EffectsBuf->SetClearColor(0, c3::Color::fBlack);
+
 		pDoc->m_RootObj->Update(paused ? 0 : dt);
 
 		if ((active_tool == C3EditApp::ToolType::TT_WAND) && pDoc->m_Brush)
@@ -465,6 +488,8 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		if (prend->BeginScene(BSFLAG_SHOWGUI))
 		{
+			prend->UseFrameBuffer(m_EffectsBuf, UFBFLAG_CLEARCOLOR);
+
 			// Solid color pass
 			prend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL | UFBFLAG_UPDATEVIEWPORT);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
@@ -557,6 +582,9 @@ void C3EditView::OnDraw(CDC *pDC)
 			{
 				pobj->Render(RF_FORCE | RF_LOCKSHADER | RF_LOCKMATERIAL | RF_AUXILIARY);
 			});
+
+			if (pDoc->m_Brush)
+				pDoc->m_Brush->Render(RF_FORCE | RF_LOCKSHADER | RF_LOCKMATERIAL | RF_AUXILIARY);
 
 			// Resolve
 			prend->UseMaterial();
@@ -1533,6 +1561,30 @@ bool ValidSelection_SameParent(C3EditDoc *pd)
 	return b;
 }
 
+bool ValidSelection_NoParentAndChild(C3EditDoc *pd)
+{
+	// To export Objects, no selected object can also have one of its children selected at the same time
+
+	size_t maxi = 0;
+	bool ret = true;
+
+	pd->DoForAllSelectedBreakable([&](c3::Object *pobj)
+	{
+		for (size_t i = 0; i < maxi; i++)
+		{
+			if (c3::util::IsInHeirarchyOf(pobj, pd->GetSelection(i)))
+			{
+				ret = false;
+				return false;
+			}
+		}
+
+		maxi++;
+		return true;
+	});
+
+	return ret;
+}
 
 bool ValidSelection_OnlyOne(C3EditDoc *pd)
 {
@@ -2124,4 +2176,34 @@ void C3EditView::OnToolsRepath()
 	dlg.DoModal();
 
 	((C3EditFrame *)(theApp.GetMainWnd()))->RefreshActiveProperties();
+}
+
+
+void C3EditView::OnUpdateEditExport(CCmdUI *pCmdUI)
+{
+	C3EditDoc* pDoc = GetDocument();
+
+	pCmdUI->Enable(ValidSelection_NoParentAndChild(pDoc));
+}
+
+
+void C3EditView::OnEditExport()
+{
+	C3EditDoc* pDoc = GetDocument();
+
+	CString filter = _T("C3 Object Files (*.c3o)|*.c3o|All Files (*.*)|*.*||");
+	CFileDialog fd(FALSE, nullptr, nullptr, OFN_ENABLESIZING, filter, nullptr, sizeof(OPENFILENAME));;
+	if (fd.DoModal() == IDOK)
+	{
+		genio::IOutputStream *os = genio::IOutputStream::Create();
+		os->Assign(fd.m_ofn.lpstrFile);
+
+		if (os->Open())
+		{
+			pDoc->DoForAllSelected([&](c3::Object *pobj)
+			{
+				pobj->Save(os, SF_REFERENCEFILE);
+			});
+		}
+	}
 }

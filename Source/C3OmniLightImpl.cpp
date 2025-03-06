@@ -138,6 +138,9 @@ bool OmniLightImpl::Prerender(Object::RenderFlags flags, int draworder)
 	if (flags.IsSet(RF_SHADOW))
 		return false;
 
+	if (flags.IsSet(RF_EFFECT))
+		return false;
+
 	if (flags.IsSet(RF_AUXILIARY))
 		return false;
 

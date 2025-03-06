@@ -1,0 +1,225 @@
+var runtime;
+
+var tmp = 0.0;
+var tmpv3 = { x: 0.0, y: 0.0, z:0.0 };
+var tmpv4 = { x: 0.0, y: 0.0, z:0.0, w: 0.0 };
+
+var xaxis = { x: 1.0, y: 0.0, z:0.0 };
+var yaxis = { x: 0.0, y: 1.0, z:0.0 };
+var zaxis = { x: 0.0, y: 0.0, z:1.0 };
+
+var hobj_parent;
+var hobj_thrust;
+
+var hprop_facing = { forward: -1, right: -1, up: -1 };
+
+var hprop_pos;
+var hprop_ori;
+var hprop_lvel;
+var hprop_rvel;
+
+var lacc_accum = { x: 0.0, y: 0.0, z: 0.0 };
+var lvel_accum = { x: 0.0, y: 0.0, z: 0.0 };
+var rvel_accum = { x: 0.0, y: 0.0, z: 0.0 };
+var ori = { x: 0.0, y: 0.0, z: 0.0, w: 0.0 };
+var pos = { x: 0.0, y: 0.0, z: 0.0 };
+
+var speed_max = 100.0;
+var speed_min = -20.0;
+var speed_step = 5.0;
+var speed = 0.0;
+
+var boost_time_max = 10.0;
+var boost_time = 0.0;
+var boost = 0;
+var boost_recharge = 0.3;
+
+var thruster_strength = 10.0;
+var turn_speed = Math.toRadians(1.0);
+
+var collision_info;
+
+var bullet_idx = 0;
+var bullet_max = 20;
+var hobj_bullet = [];
+var hprop_bullet_pos = [];
+var hprop_bullet_lvel = [];
+var bullet_cooldown_max = 0.33;
+var bullet_cooldown = 0.0;
+
+var missile_idx = 0;
+var missiles_max = 4;
+var hobj_missile = [];
+var hprop_missile_pos = [];
+var hprop_missile_lvel = [];
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+	
+	if (boost)
+		boost_time += elapsed_seconds;
+	else if (boost_time > 0.0)
+		boost_time -= (elapsed_seconds * boost_recharge);
+		
+	if (boost_time > boost_time_max)
+	{
+		boost = 0;
+		boost_time = boost_time_max;
+	}
+	else if (boost_time < 0.0)
+		boost_time = 0.0;
+
+	speed = Math.range(speed, speed_min, speed_max);
+
+	if (boost == 0)
+		lvel_accum.y = speed;
+	else
+		lvel_accum.y = speed_max * 2.0;
+	
+	if (lvel_accum.y <= 0.0)
+		SetObjFlag(hobj_thrust, "DRAW", 0);
+	else
+		SetObjFlag(hobj_thrust, "DRAW", 1);
+	
+	// adjust the linear velocity and orientation based on accumulated inputs
+	SetPropertyValue(hprop_lvel, lvel_accum);
+
+	xaxis = GetPropertyValue(hprop_facing.right);
+	yaxis = GetPropertyValue(hprop_facing.forward);
+	zaxis = GetPropertyValue(hprop_facing.up);
+	
+	ori = GetPropertyValue(hprop_ori);
+	ori = AdjustQuat(ori, xaxis, rvel_accum.x);
+	ori = AdjustQuat(ori, yaxis, rvel_accum.y);
+	ori = AdjustQuat(ori, zaxis, rvel_accum.z);
+	SetPropertyValue(hprop_ori, ori);
+
+	// clear the accumulators after each update
+	lvel_accum.x = 0.0;	lvel_accum.y = 0.0;	lvel_accum.z = 0.0;
+	rvel_accum.x = 0.0;	rvel_accum.y = 0.0;	rvel_accum.z = 0.0;
+
+	boost = 0;
+	
+	bullet_cooldown -= elapsed_seconds;
+}
+
+function handle_input(action, value)
+{
+	if (action == "Strafe Left")
+	{
+		lvel_accum.x -= (thruster_strength * value);
+	}
+	else if (action == "Strafe Right")
+	{
+		lvel_accum.x += (thruster_strength * value);
+	}
+	else if (action == "Ascend")
+	{
+		lvel_accum.z += (thruster_strength * value);
+	}
+	else if (action == "Descend")
+	{
+		lvel_accum.z -= (thruster_strength * value);
+	}
+	else if (action == "Look Up")
+	{
+		rvel_accum.x -= (turn_speed * value);
+	}
+	else if (action == "Look Down")
+	{
+		rvel_accum.x += (turn_speed * value);
+	}
+	else if (action == "Look Left")
+	{
+		rvel_accum.z += (turn_speed * value);
+	}
+	else if (action == "Look Right")
+	{
+		rvel_accum.z -= (turn_speed * value);
+	}
+	else if (action == "Increase Velocity")
+	{
+		speed += speed_step;
+	}
+	else if (action == "Decrease Velocity")
+	{
+		speed -= speed_step;
+	}
+	else if (action == "Run")
+	{
+		boost = 1;
+	}
+	else if ((action == "Fire 1") && (bullet_cooldown <= 0.0))
+	{
+		bullet_cooldown = bullet_cooldown_max;
+
+		SetObjFlag(hobj_bullet[bullet_idx], "UPDATE", 1);
+		SetObjFlag(hobj_bullet[bullet_idx], "DRAW", 1);
+		SetObjFlag(hobj_bullet[bullet_idx], "LIGHT", 1);
+
+		tmpv3 = GetPropertyValue(hprop_facing.forward);
+		tmpv3 = Vec3.mul(tmpv3, 900.0);
+		SetPropertyValue(hprop_bullet_lvel[bullet_idx], tmpv3);
+
+
+		bpos = GetPropertyValue(hprop_facing.right);
+		if (Math.even(bullet_idx))
+			bpos = Vec3.mul(bpos, -0.9);
+		else
+			bpos = Vec3.mul(bpos, 0.9);
+		tmpv3 = GetPropertyValue(hprop_pos);
+		bpos = Vec3.add(bpos, tmpv3);
+		tmpv3 = GetPropertyValue(hprop_facing.forward);
+		bpos = Vec3.add(bpos, tmpv3);
+		SetPropertyValue(hprop_bullet_pos[bullet_idx], bpos);
+
+		bullet_idx++;
+		if (bullet_idx >= bullet_max)
+			bullet_idx = 0;
+			
+		PlaySound("Protectorate/laser2.wav", 50.0, Math.random(0.95, 1.05), 0, tmp);
+	}
+	else if (action == "Fire 2")
+	{
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	hobj_parent = GetParent(self);
+	hobj_thrust = FindFirstObjByName(self, "ThrustEffects", 0);
+
+	// cache property handles now so value access is cheaper later
+
+	hprop_facing.right = FindProperty(self, "Facing.Right");
+	hprop_facing.forward = FindProperty(self, "Facing.Forward");
+	hprop_facing.up = FindProperty(self, "Facing.Up");
+
+	hprop_pos = FindProperty(self, "Position");
+	hprop_ori = FindProperty(self, "Orientation");
+	hprop_rvel = FindProperty(self, "RotationalVelocity");
+	hprop_lvel = FindProperty(self, "LinearVelocity");
+
+	var i;
+	for (i = 0; i < bullet_max; i++)
+	{
+		hobj_bullet[i] = CreateObject("EnergyProjectile1", hobj_parent);
+		hprop_bullet_pos[i] = FindProperty(hobj_bullet[i], "Position");
+		hprop_bullet_lvel[i] = FindProperty(hobj_bullet[i], "LinearVelocity");
+
+		SetObjFlag(hobj_bullet[bullet_idx], "TEMPORARY", 1);
+		SetObjFlag(hobj_bullet[bullet_idx], "UPDATE", 0);
+		SetObjFlag(hobj_bullet[bullet_idx], "DRAW", 0);
+		SetObjFlag(hobj_bullet[bullet_idx], "LIGHT", 0);
+	}
+
+	collision_info = CreateCollisionResults();
+}
+
+function free()
+{
+	FreeCollisionResults(collision_info);
+}

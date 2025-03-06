@@ -80,7 +80,7 @@ namespace c3
 
 		virtual bool Load(genio::IInputStream *is, MetadataLoadFunc loadmd, CameraLoadFunc loadcam, EnvironmentLoadFunc loadenv, CustomLoadFunc loadcust) final;
 
-		virtual bool Save(genio::IOutputStream *os, props::TFlags64 saveflags, MetadataSaveFunc savemd, CameraSaveFunc savecam, EnvironmentSaveFunc saveenv, CustomSaveFunc savecust) const final;
+		virtual bool Save(genio::IOutputStream *os, SaveFlags saveflags, MetadataSaveFunc savemd, CameraSaveFunc savecam, EnvironmentSaveFunc saveenv, CustomSaveFunc savecust) const final;
 
 		virtual void PostLoad() final;
 

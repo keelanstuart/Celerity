@@ -27,6 +27,7 @@ namespace c3
 
 		bool m_Continue;
 
+		void Preprocess(const TCHAR *options = nullptr);
 		void ResetJS();
 
 	public:

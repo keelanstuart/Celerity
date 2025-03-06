@@ -172,6 +172,8 @@ void CPrototypeView::UpdateItem(const c3::Prototype *pproto)
 
 void CPrototypeView::FillPrototypeView()
 {
+	m_wndPrototypeView.DeleteAllItems();
+
 	HTREEITEM hRoot = m_wndPrototypeView.InsertItem(_T("All Prototypes"), IMGIDX_GROUP, IMGIDX_GROUP);
 	m_wndPrototypeView.SetItemState(hRoot, TVIS_BOLD, TVIS_BOLD);
 
@@ -237,6 +239,7 @@ enum EPopupCommand
 	PC_CREATEPROTO,
 	PC_CREATEGROUP,
 	PC_IMPORT,
+	PC_IMPORT_MODELS,
 	PC_SAVEAS,
 	PC_DUPLICATE,
 	PC_RENAME,
@@ -311,7 +314,8 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 	MyAppendMenuItem(submenu, MFT_STRING, _T("Group"), true, 0, PC_CREATEGROUP);
 
 	MyAppendMenuItem(menu, MFT_STRING, _T("New"), true, submenu);
-	MyAppendMenuItem(menu, MFT_STRING, _T("Import From Model(s) ..."), true, 0, PC_IMPORT);
+	MyAppendMenuItem(menu, MFT_STRING, _T("Import From Model(s) ..."), true, 0, PC_IMPORT_MODELS);
+	MyAppendMenuItem(menu, MFT_STRING, _T("Import Prototypes From ..."), true, 0, PC_IMPORT);
 	MyAppendMenuItem(menu, MFT_STRING, _T("Save Prototypes As ..."), true, 0, PC_SAVEAS);
 
 	MyAppendMenuItem(menu, MFT_SEPARATOR);
@@ -507,6 +511,38 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 			}
 
 			case PC_IMPORT:
+			{
+				tstring filter = _T("C3 Prototypes Files (*.c3protoa; *.c3protob)|*.c3protoa;*.c3protob|*.*|All Files (*.*)||");
+
+				CFileDialog fd(TRUE, nullptr, nullptr,
+							   OFN_ALLOWMULTISELECT | OFN_ENABLESIZING,
+							   filter.c_str(), nullptr, 8192);
+
+				// Allocate a large buffer
+				std::vector<TCHAR> file_buffer;
+
+				// Allocate a large buffer (say 262144 characters)
+				file_buffer.resize(1 << 16, _T('\0'));
+
+				// Assign the buffer to the OPENFILENAME structure.
+				fd.m_ofn.lpstrFile = file_buffer.data();
+				fd.m_ofn.nMaxFile  = static_cast<DWORD>(file_buffer.size());
+
+				if (fd.DoModal() == IDOK)
+				{
+					POSITION fpos = fd.GetStartPosition();
+					while (fpos)
+					{
+						CPath fn = fd.GetNextPathName(fpos);
+						theApp.m_C3->GetFactory()->LoadPrototypes((tinyxml2::XMLDocument *)nullptr, fn);
+					}
+
+					FillPrototypeView();
+				}
+				break;
+			}
+
+			case PC_IMPORT_MODELS:
 			{
 				const c3::ResourceType *pModResType = theApp.m_C3->GetResourceManager()->FindResourceTypeByName(_T("Model"));
 				assert(pModResType);

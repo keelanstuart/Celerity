@@ -165,6 +165,9 @@ bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
 	if (flags.IsSet(RF_FORCE))
 		return true;
 
+	if (flags.IsSet(RF_EFFECT))
+		return false;
+
 	if (flags.IsSet(RF_LIGHT))
 		return false;
 

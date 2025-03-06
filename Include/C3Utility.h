@@ -38,6 +38,9 @@ namespace c3
 			TCHAR *shortest_path_buf,
 			size_t buf_len);
 
+		// Returns if the obj is in the hierarchy of parent (and optionally the depth)
+		bool C3_API IsInHeirarchyOf(Object *obj, Object *parent, size_t *depth = nullptr);
+
 	};
 
 };

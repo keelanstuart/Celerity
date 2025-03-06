@@ -2,6 +2,7 @@ uniform sampler2D uSamplerDiffuseMetalness;
 uniform sampler2D uSamplerNormalAmbOcc;
 uniform sampler2D uSamplerPosDepth;
 uniform sampler2D uSamplerEmissionRoughness;
+uniform sampler2D uSamplerEffectsColor;
 uniform sampler2D uSamplerLights;
 uniform sampler2D uSamplerShadow;
 uniform vec3 uSunDirection;
@@ -29,11 +30,12 @@ void main()
 {
 	vec4 texNormalAmbOcc = texture(uSamplerNormalAmbOcc, fTex0);
 	
-	
 	vec4 texDiffuseMetalness = texture(uSamplerDiffuseMetalness, fTex0);
+
+	vec4 texEffectsColor = texture(uSamplerEffectsColor, fTex0);
 	if (texNormalAmbOcc.rgb == vec3(0, 0, 0))
 	{
-		oColor = vec4(texDiffuseMetalness.rgb, 1);
+		oColor = vec4(texDiffuseMetalness.rgb + texEffectsColor.rgb, 1);
 		return;
 	}
 	
@@ -90,5 +92,5 @@ void main()
 	
 	float shade = (shadow_coords.z > (texShadow + bias)) ? 0.0 : 1.0;
 	
-	oColor = vec4(mix(ambient, diffuse, NdotL * shade) + (specular * shade) + emissive + lights, 1);
+	oColor = vec4(mix(ambient, diffuse, NdotL * shade) + (specular * shade) + emissive + lights, 1) + texEffectsColor;
 }

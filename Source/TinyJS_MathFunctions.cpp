@@ -40,20 +40,20 @@ using namespace std;
 #define k_E                 expf(1.0f)
 #define k_PI                3.14159f
 
-#define F_ABS(a)            ((a) >= 0 ? (a) : (-(a)))
-#define F_MIN(a,b)          ((a) > (b) ? (b) : (a))
-#define F_MAX(a,b)          ((a) > (b) ? (a) : (b))
-#define F_SGN(a)            ((a) > 0 ? 1 : ((a) < 0 ? -1 : 0 ))
-#define F_RNG(a,min,max)    ((a) < (min) ? min : ((a) > (max) ? max : a ))
-#define F_ROUND(a)          ((a) > 0 ? (int64_t) ((a) + 0.5f) : (int64_t) ((a) - 0.5f) )
+#define F_ABS(a)                ((a) >= 0 ? (a) : (-(a)))
+#define F_MIN(a,b)              ((a) > (b) ? (b) : (a))
+#define F_MAX(a,b)              ((a) > (b) ? (a) : (b))
+#define F_SGN(a)                ((a) > 0 ? 1 : ((a) < 0 ? -1 : 0 ))
+#define F_RNG(a,minval,maxval)  ((a) < (minval) ? minval : ((a) > (maxval) ? maxval : a ))
+#define F_ROUND(a)              ((a) > 0 ? (int64_t) ((a) + 0.5f) : (int64_t) ((a) - 0.5f) )
 
 //CScriptVar shortcut macro
-#define scIsInt(a)          ( c->GetParameter(a)->IsInt() )
-#define scIsFloat(a)       ( c->GetParameter(a)->IsFloat() )  
-#define scGetInt(a)         ( c->GetParameter(a)->GetInt() )
-#define scGetFloat(a)      ( c->GetParameter(a)->GetFloat() )  
-#define scReturnInt(a)      ( c->GetReturnVar()->SetInt(a) )
-#define scReturnFloat(a)   ( c->GetReturnVar()->SetFloat(a) )  
+#define scIsInt(a)              ( c->GetParameter(a)->IsInt() )
+#define scIsFloat(a)            ( c->GetParameter(a)->IsFloat() )  
+#define scGetInt(a)             ( c->GetParameter(a)->GetInt() )
+#define scGetFloat(a)           ( c->GetParameter(a)->GetFloat() )  
+#define scReturnInt(a)          ( c->GetReturnVar()->SetInt(a) )
+#define scReturnFloat(a)        ( c->GetReturnVar()->SetFloat(a) )  
 
 #ifdef _MSC_VER
 namespace
@@ -159,6 +159,19 @@ void scMathSign(CScriptVar *c, void *userdata)
 	else if (scIsFloat(_T("a")))
 	{
 		scReturnFloat((float)F_SGN(scGetFloat(_T("a"))));
+	}
+}
+
+//Math.even(a) - returns if the value is even (1==even,0==odd)
+void scMathEven(CScriptVar *c, void *userdata)
+{
+	if (scIsInt(_T("a")))
+	{
+		scReturnInt((scGetInt(_T("a"))) & 1);
+	}
+	else if (scIsFloat(_T("a")))
+	{
+		scReturnFloat((float)((int)(scGetFloat(_T("a"))) & 1));
 	}
 }
 
@@ -378,7 +391,14 @@ void scMathSlerp(CScriptVar *c, void *userdata)
 		prcomp[(glm::fquat::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
 	}
 
-	glm::fquat qr = glm::slerp(qa, qb, t);
+	qa = glm::normalize(qa);
+	qb = glm::normalize(qb);
+
+	float d = glm::dot(qa, qb);
+	if (d < 0.0f)
+		qb = -qb; // flip it
+
+	glm::fquat qr = glm::normalize(glm::slerp(qa, qb, t));
 
 	for (int64_t i = 0; i < elct; i++)
 	{
@@ -648,7 +668,9 @@ void registerMathFunctions(CTinyJS *tinyJS)
 	tinyJS->AddNative(_T("function Math.max(a,b)"), scMathMax, 0);
 	tinyJS->AddNative(_T("function Math.range(x,a,b)"), scMathRange, 0);
 	tinyJS->AddNative(_T("function Math.sign(a)"), scMathSign, 0);
+	tinyJS->AddNative(_T("function Math.even(a)"), scMathEven, 0);
 	tinyJS->AddNative(_T("function Math.random(lo, hi)"), scRandom, 0);
+
 
 	tinyJS->AddNative(_T("function Math.PI()"), scMathPI, 0);
 	tinyJS->AddNative(_T("function Math.toDegrees(a)"), scMathToDegrees, 0);

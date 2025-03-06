@@ -2,8 +2,8 @@
 
 	<technique name="g">
 		<pass>
-			<setting name="cullmode"			value="none" />
-			<setting name="fillmode"			value="wire" />
+			<setting name="cullmode"			value="none" persist="yes" />
+			<setting name="fillmode"			value="wire" persist="yes" />
 			<setting name="shader.vertex"		value="def-omnilight.vsh" />
 			<setting name="shader.fragment"		value="def-widget.fsh" />
 		</pass>

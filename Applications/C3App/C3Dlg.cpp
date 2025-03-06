@@ -166,6 +166,8 @@ void C3Dlg::DestroySurfaces()
 
 	C3_SAFERELEASE(m_LCBuf);
 
+	C3_SAFERELEASE(m_EffectsBuf);
+
 	C3_SAFERELEASE(m_AuxBuf);
 
 	C3_SAFERELEASE(m_DepthTarg);
@@ -209,6 +211,18 @@ void C3Dlg::CreateSurfaces()
 		m_GBuf = prend->CreateFrameBuffer(0, _T("GBuffer"));
 	if (m_GBuf)
 		gbok = m_GBuf->Setup(_countof(GBufTargData), GBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+	c3::FrameBuffer::TargetDesc EffectsTargData[] =
+	{
+		{ _T("uSamplerEffectsColor"), c3::Renderer::TextureType::U8_3CH, TEXCREATEFLAG_RENDERTARGET },	// diffuse color (rgb) and metalness (a)
+	};
+
+	theApp.m_C3->GetLog()->Print(_T("Creating Effects Buffer... "));
+	if (!m_EffectsBuf)
+		m_EffectsBuf = prend->CreateFrameBuffer(0, _T("EffectsBuffer"));
+	if (m_EffectsBuf)
+		gbok = m_EffectsBuf->Setup(_countof(EffectsTargData), EffectsTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	for (size_t c = 0; c < BLURTARGS; c++)
@@ -300,7 +314,14 @@ void C3Dlg::UpdateShaderSurfaces()
 
 		ul = m_SP_combine->GetUniformLocation(_T("uSamplerShadow"));
 		if (ul >= 0)
-			m_SP_combine->SetUniformTexture((c3::Texture*)m_ShadowTarg, ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+			m_SP_combine->SetUniformTexture((c3::Texture *)m_ShadowTarg, ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+
+		ul = m_SP_combine->GetUniformLocation(_T("uSamplerEffectsColor"));
+		if (ul >= 0)
+		{
+			c3::Texture *pt = m_EffectsBuf ? (c3::Texture*)m_EffectsBuf->GetColorTarget(0) : prend->GetBlackTexture();
+			m_SP_combine->SetUniformTexture(pt, ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+		}
 
 		ul = m_SP_combine->GetUniformLocation(_T("uSamplerAuxiliary"));
 		if (ul >= 0)
@@ -530,15 +551,12 @@ BOOL C3Dlg::OnInitDialog()
 
 	m_CameraRoot = pfac->Build();
 	m_CameraRoot->SetName(_T("CameraRoot"));
-	m_CameraRoot->AddComponent(c3::Scriptable::Type());
 	m_CameraRoot->AddComponent(c3::Positionable::Type());
-	m_CameraRoot->GetProperties()->GetPropertyById('SUDR')->SetFloat(0.0f);
 
 	m_CameraArm = pfac->Build();
 	m_CameraArm->SetName(_T("CameraArm"));
 	m_CameraRoot->AddChild(m_CameraArm);
 	m_CameraArm->AddComponent(c3::Positionable::Type());
-	m_CameraArm->AddComponent(c3::Physical::Type());
 	c3::Positionable *parmpos = dynamic_cast<c3::Positionable *>(m_CameraArm->FindComponent(c3::Positionable::Type()));
 	if (parmpos)
 	{
@@ -556,12 +574,6 @@ BOOL C3Dlg::OnInitDialog()
 	{
 		pcam->SetFOV(65.0f);
 		pcam->SetPolarDistance(0.01f);
-	}
-
-	if (pcampos)
-	{
-		pcampos->AdjustPos(0, -10.0f, 0);
-		pcampos->AdjustPitch(glm::radians(0.0f));
 	}
 
 	m_GUICamera = pfac->Build();
@@ -619,7 +631,7 @@ BOOL C3Dlg::OnInitDialog()
 					theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, m_Camera);
 				};
 
-				m_WorldRoot->Load(is, nullptr, loadcam);
+				m_WorldRoot->Load(is, nullptr, nullptr);
 				is->Close();
 			}
 
@@ -704,30 +716,6 @@ void C3Dlg::OnPaint()
 			if (camrootobj)
 				camrootobj->Update(dt);
 
-			c3::Object *camobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA);
-			c3::Positionable *campos = m_Camera ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
-			c3::Camera *cam = camobj ? dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type())) : nullptr;
-
-			c3::Object *guicamobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_CAMERA);
-			if (guicamobj)
-				guicamobj->Update(dt);
-			c3::Positionable *guicampos = m_Camera ? dynamic_cast<c3::Positionable *>(guicamobj->FindComponent(c3::Positionable::Type())) : nullptr;
-			c3::Camera *guicam = camobj ? dynamic_cast<c3::Camera *>(guicamobj->FindComponent(c3::Camera::Type())) : nullptr;
-
-			cam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
-			float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
-			float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
-
-			glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 0);
-			prend->SetClearColor(&cc);
-			m_GBuf->SetClearColor(0, cc);
-			m_GBuf->SetClearColor(2, glm::fvec4(0, 0, 0, farclip));
-
-//			m_AuxBuf->SetClearColor(0, c3::Color::fBlackFT);
-///			m_AuxBuf->Clear(UFBFLAG_CLEARCOLOR);
-
-			prend->SetClearDepth(1.0f);
-
 			c3::Object *world = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT);
 			c3::Object *skybox = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_SKYBOXROOT);
 			c3::Object *gui = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_ROOT);
@@ -743,6 +731,31 @@ void C3Dlg::OnPaint()
 				if (gui)
 					gui->Update(dt);
 			}
+
+			c3::Object *camobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA);
+			c3::Positionable *campos = m_Camera ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
+			c3::Camera *cam = camobj ? dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type())) : nullptr;
+
+			c3::Object *guicamobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_CAMERA);
+			if (guicamobj)
+				guicamobj->Update(dt);
+			c3::Positionable *guicampos = m_Camera ? dynamic_cast<c3::Positionable *>(guicamobj->FindComponent(c3::Positionable::Type())) : nullptr;
+			c3::Camera *guicam = camobj ? dynamic_cast<c3::Camera *>(guicamobj->FindComponent(c3::Camera::Type())) : nullptr;
+
+			theApp.m_C3->GetSoundPlayer()->SetListenerPos(campos->GetPosVec());
+			theApp.m_C3->GetSoundPlayer()->SetListenerDir(campos->GetFacingVector());
+			theApp.m_C3->GetSoundPlayer()->SetListenerRadius(1000.0f, 10000.0f);
+
+			cam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
+			float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
+			float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
+
+			glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 0);
+			prend->SetClearColor(&cc);
+			m_GBuf->SetClearColor(0, cc);
+			m_GBuf->SetClearColor(2, glm::fvec4(0, 0, 0, farclip));
+
+			prend->SetClearDepth(1.0f);
 
 			if (cam)
 			{
@@ -760,6 +773,8 @@ void C3Dlg::OnPaint()
 
 			if (prend->BeginScene(BSFLAG_SHOWGUI))
 			{
+				prend->UseFrameBuffer(m_EffectsBuf, UFBFLAG_CLEARCOLOR);
+
 				// Solid color pass
 				prend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL | UFBFLAG_UPDATEVIEWPORT);
 				prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);

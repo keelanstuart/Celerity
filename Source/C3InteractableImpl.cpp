@@ -120,6 +120,12 @@ bool InteractableImpl::Prerender(Object::RenderFlags flags, int draworder)
 	if (flags.IsSet(RF_FORCE))
 		return true;
 
+	if (flags.IsSet(RF_SHADOW))
+		return false;
+
+	if (flags.IsSet(RF_LIGHT))
+		return false;
+
 	if (!m_pOwner->Flags().IsSet(OF_DRAW))
 		return false;
 

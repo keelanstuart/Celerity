@@ -1,0 +1,115 @@
+var runtime;
+
+var tmp;
+var tmpv3 = { x:0.0, y:0.0, z:0.0 };
+var tmpv4 = { x:0.0, y:0.0, z:0.0, w:1.0 };
+
+var hplayer;
+var hprop_player_pos;
+var hprop_player_ori;
+var hprop_player_script;
+
+var hobj_camroot;
+var hprop_camroot_pos;
+var hprop_camroot_ori;
+
+var hobj_camarm;
+var hprop_camarm_pos;
+var hprop_camarm_ori;
+
+var hobj_cam;
+var hprop_cam_pos;
+var hprop_cam_ori;
+var hprop_cam_orbitdist;
+var hprop_cam_farclip;
+
+var hprop_scenario;
+var scenario;
+
+var playerpos = { x:0.0, y:0.0, z:0.0 };
+var campos = { x:0.0, y:0.0, z:0.0 };
+var playerori = { x:0.0, y:0.0, z:0.0, w:1.0 };
+var camori = { x:0.0, y:0.0, z:0.0, w:1.0 };
+var zaxis = { x:0.0, y:0.0, z:1.0 };
+
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	tmp = Math.range(10.0 * elapsed_seconds, 0.0, 1.0);
+	playerpos = GetPropertyValue(hprop_player_pos);
+	campos = GetPropertyValue(hprop_camroot_pos);
+	tmpv3 = Math.lerp(campos, playerpos, tmp);
+	SetPropertyValue(hprop_camroot_pos, tmpv3);
+
+	tmp = Math.range(7.0 * elapsed_seconds, 0.0, 1.0);
+	camori = GetPropertyValue(hprop_camroot_ori);
+	playerori = GetPropertyValue(hprop_player_ori);
+	tmpv4 = Math.slerp(playerori, camori, tmp);
+	SetPropertyValue(hprop_camroot_ori, tmpv4);
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	LoadPrototypes("Protectorate/Protectorate.c3protoa");
+
+	//hprop_scenario = FindProperty(self, "Scenario");
+	//scenario = GetPropertyValue(hprop_scenario);
+	scenario = "Protectorate_AlphaSector";
+	
+	var load_result = LoadObject(self, scenario + ".c3o");
+
+	// ***************************************************
+	hobj_camroot = GetRegisteredObject("camera.root");
+	hprop_camroot_pos = FindProperty(hobj_camroot, "Position");
+	hprop_camroot_ori = FindProperty(hobj_camroot, "Orientation");
+
+	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	SetPropertyValue(hprop_camroot_pos, tmpv3);
+	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	tmpv4 = EulerToQuat(tmpv3);
+	SetPropertyValue(hprop_camroot_ori, tmpv4);
+
+	// ***************************************************
+	hobj_camarm = GetRegisteredObject("camera.arm");
+	hprop_camarm_pos = FindProperty(hobj_camarm, "Position");
+	hprop_camarm_ori = FindProperty(hobj_camarm, "Orientation");
+
+	tmpv3.x = 0.0; tmpv3.y = -10.0; tmpv3.z = -3.0;
+	SetPropertyValue(hprop_camarm_pos, tmpv3);
+	tmpv3.x = -55.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	tmpv4 = EulerToQuat(tmpv3);
+	SetPropertyValue(hprop_camarm_ori, tmpv4);
+
+	// ***************************************************
+	hobj_cam = GetRegisteredObject("camera");
+	hprop_cam_pos = FindProperty(hobj_cam, "Position");
+	hprop_cam_ori = FindProperty(hobj_cam, "Orientation");
+	hprop_cam_orbitdist = FindProperty(hobj_cam, "OrbitDistance");
+	hprop_cam_farclip = FindProperty(hobj_cam, "FarClip");
+
+	tmpv3.x = 0.0; tmpv3.y = -15.0; tmpv3.z = 0.0;
+	SetPropertyValue(hprop_cam_pos, tmpv3);
+	tmpv3.x = 55.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	tmpv4 = EulerToQuat(tmpv3);
+	SetPropertyValue(hprop_cam_ori, tmpv4);
+	SetPropertyValue(hprop_cam_orbitdist, 0.0001);
+	SetPropertyValue(hprop_cam_farclip, 25000.0);
+	
+	// ***************************************************
+	hobj_player = FindFirstObjByName(self, "PLAYER", 0);
+	hprop_player_pos = FindProperty(hobj_player, "Position");
+	hprop_player_ori = FindProperty(hobj_player, "Orientation");
+	hprop_player_script = FindProperty(hobj_player, "SourceFile");
+	RegisterObject("player", hobj_player);
+
+	SetPropertyValue(hprop_player_script, "Protectorate/ProtectoratePlayerShip.c3js");
+	
+	if (load_result["success"] == 1)
+		Log("Scene loaded successfully!\n");
+	else
+		Log("Scene failed to load!\n");
+}

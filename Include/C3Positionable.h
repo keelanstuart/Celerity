@@ -85,13 +85,13 @@ namespace c3
 		virtual void AdjustRoll(float dr) = NULL;
 
 		// Gets the direction vector that "forward" for the Object. The identity facing vector is +Y
-		virtual const glm::fvec3 *GetFacingVector(glm::fvec3 *vec = nullptr) = NULL;
+		virtual const glm::fvec3 *GetFacingVector(glm::fvec3 *vec = nullptr) const = NULL;
 
 		// Gets the direction vector that is "up" for the Object. The identity up vector is +Z
-		virtual const glm::fvec3 *GetLocalUpVector(glm::fvec3 *vec = nullptr) = NULL;
+		virtual const glm::fvec3 *GetLocalUpVector(glm::fvec3 *vec = nullptr) const = NULL;
 
 		// Gets the direction vector that is "right" for the Object. The identity up vector is +X
-		virtual const glm::fvec3 *GetLocalRightVector(glm::fvec3 *vec = nullptr) = NULL;
+		virtual const glm::fvec3 *GetLocalRightVector(glm::fvec3 *vec = nullptr) const = NULL;
 
 
 		// *** SCALE FUNCTIONS *******************************

@@ -811,14 +811,14 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 	{
 		for (unsigned int texidx = 0; texidx < scene->mNumTextures; texidx++)
 		{
-			TCHAR textmp[8];
-			_itot_s(texidx, textmp, 10);
+			TCHAR idxtmp[8];
+			_itot_s(texidx, idxtmp, 10);
 
 			tstring texname = sourcename;
-			MakeTexFilename(texname, textmp);
+			MakeTexFilename(texname, idxtmp);
 			c3::Texture2D *pt = nullptr;
 
-			pr->GetSystem()->GetLog()->Print(_T("Embedded \"%s\"... "), texname.c_str());
+			pr->GetSystem()->GetLog()->Print(_T("\n\t- TEXTURE \"%s\""), texname.c_str());
 			DefaultTexture2DResourceType::Type()->ReadFromMemory(psys, texname.c_str(), (const BYTE *)scene->mTextures[texidx]->pcData, scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
 			if (pt)
 			{
@@ -826,6 +826,14 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			}
 		}
 	}
+
+	std::function<const TCHAR *(tstring &, const TCHAR *)> MakeAnimFilename = [&sourcename](tstring &out, const TCHAR *idx) -> const TCHAR *
+	{
+		out += _T(":anim[");
+		out += idx;
+		out += _T("]");
+		return out.c_str();
+	};
 
 	if (scene->HasAnimations())
 	{
@@ -837,11 +845,6 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			for (size_t aidx = 0; aidx < scene->mNumAnimations; aidx++)
 			{
 				aiAnimation *pa = scene->mAnimations[aidx];
-				if (aidx > 1)
-				{
-					pr->GetSystem()->GetLog()->Print(_T("Warning: ImportModel found more than one animation.\n"));
-					break;
-				}
 
 				float ticks = (pa->mTicksPerSecond == 0) ? 30.0f : (float)pa->mTicksPerSecond;
 
@@ -889,20 +892,25 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 					ptrack->SortKeys();
 				}
-			}
 
-			panim->BuildNodeHierarchy();
+				panim->BuildNodeHierarchy();
 
-			tstring animfilename = rootpath;
-			size_t extidx = animfilename.find_last_of(_T('.'), 0);
-			if (extidx < animfilename.size())
-			{
-				animfilename.replace(animfilename.begin() + extidx, animfilename.end(), _T(".c3anim"));
+				tstring animfilename = sourcename;
 
-				psys->GetResourceManager()->GetResource(animfilename.c_str(), RESF_CREATEENTRYONLY, RESOURCETYPE(Animation), panim);
+				{
+					TCHAR *nametmp;
+					CONVERT_MBCS2TCS(pa->mName.C_Str(), nametmp);
+					MakeAnimFilename(animfilename, nametmp);
+					psys->GetResourceManager()->GetResource(animfilename.c_str(), RESF_CREATEENTRYONLY, RESOURCETYPE(Animation), panim);
+					pr->GetSystem()->GetLog()->Print(_T("\n\t- ANIM \"%s\""), animfilename.c_str());
+				}
+
 			}
 		}
 	}
+
+	if (scene->HasAnimations() || scene->HasTextures())
+		pr->GetSystem()->GetLog()->Print(_T("\n"));
 
 	if (animation_only)
 		return pmi;

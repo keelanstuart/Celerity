@@ -282,13 +282,9 @@ BOOL C3EditApp::InitInstance()
 		{
 			do
 			{
-				tinyxml2::XMLDocument doc;
-				char *p;
 				tstring tpath = ppath;
 				tpath.append(fd.cFileName);
-				CONVERT_TCS2MBCS(tpath.c_str(), p);
-				doc.LoadFile(p);
-				pf->LoadPrototypes(doc.RootElement(), tpath.c_str());
+				pf->LoadPrototypes((tinyxml2::XMLDocument *)nullptr, tpath.c_str());
 			}
 			while (FindNextFile(hff, &fd));
 

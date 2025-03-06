@@ -107,9 +107,9 @@ namespace c3
 		// adjust the roll (in radians)
 		virtual void AdjustRoll(float dr);
 
-		virtual const glm::fvec3 *GetFacingVector(glm::fvec3 *vec = nullptr);
-		virtual const glm::fvec3 *GetLocalUpVector(glm::fvec3 *vec = nullptr);
-		virtual const glm::fvec3 *GetLocalRightVector(glm::fvec3 *vec = nullptr);
+		virtual const glm::fvec3 *GetFacingVector(glm::fvec3 *vec = nullptr) const;
+		virtual const glm::fvec3 *GetLocalUpVector(glm::fvec3 *vec = nullptr) const;
+		virtual const glm::fvec3 *GetLocalRightVector(glm::fvec3 *vec = nullptr) const;
 
 
 		// *** SCALE FUNCTIONS *******************************

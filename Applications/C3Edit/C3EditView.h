@@ -52,6 +52,7 @@ protected:
 #define BLURTARGS	4
 
 	c3::FrameBuffer *m_GBuf;
+	c3::FrameBuffer *m_EffectsBuf;
 	c3::FrameBuffer *m_LCBuf;
 	c3::FrameBuffer *m_AuxBuf;
 	c3::FrameBuffer *m_SSBuf;
@@ -149,6 +150,8 @@ public:
 	afx_msg void OnEditBrushSettings();
 	afx_msg void OnUpdateToolsRepath(CCmdUI *pCmdUI);
 	afx_msg void OnToolsRepath();
+    afx_msg void OnUpdateEditExport(CCmdUI *pCmdUI);
+    afx_msg void OnEditExport();
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

@@ -32,6 +32,7 @@ namespace c3
 
 		typedef props::TFlags64		ObjectFlags;
 
+		// ObjectFlags
 		#define OF_UPDATE			0x00000001					// Clearing this ensures the object won't update
 		#define OF_DRAW				0x00000002					// Clearing this ensures the object won't draw
 		#define OF_DRAWINEDITOR		0x00000004					// Setting this will make the object draw in the editor... note: it is up to a tool to handle this
@@ -58,6 +59,7 @@ namespace c3
 
 		typedef props::TFlags64		RenderFlags;
 
+		// RenderFlags
 		#define RF_EDITORDRAW		0x00000001					// Indicates this should be drawn as it would be in an editor
 		#define RF_LOCKSHADER		0x00000002					// Do not allow the shader to be changed
 		#define RF_LOCKMATERIAL		0x00000004					// Do not allow the material to be changed
@@ -68,6 +70,13 @@ namespace c3
 		#define RF_AUXILIARY		0x00000080					// Drawing the auxiliary surface
 		#define RF_GUI				0x00000100					// User Interface
 		#define RF_SELECTED			0x00000200					// Drawing as a selection
+		#define RF_EFFECT			0x00000400					// A special effect (drawn after everything else?!)
+
+
+		typedef props::TFlags64		SaveFlags;
+
+		// SaveFlags
+		#define SF_REFERENCEFILE	0x00000001					// Save as a reference file
 
 
 		/// Returns the Celerity System in which the Object exists
@@ -147,7 +156,7 @@ namespace c3
 		using CustomSaveFunc = std::function<void(genio::IOutputStream *os)>; // BeginBlock has been called already - load things yourself
 
 		/// Saves an Object to a stream
-		virtual bool Save(genio::IOutputStream *os, props::TFlags64 saveflags, MetadataSaveFunc savemd = nullptr, CameraSaveFunc savecam = nullptr, EnvironmentSaveFunc saveenv = nullptr, CustomSaveFunc savecust = nullptr) const = NULL;
+		virtual bool Save(genio::IOutputStream *os, SaveFlags saveflags, MetadataSaveFunc savemd = nullptr, CameraSaveFunc savecam = nullptr, EnvironmentSaveFunc saveenv = nullptr, CustomSaveFunc savecust = nullptr) const = NULL;
 
 		/// Called once Load has finished
 		virtual void PostLoad() = NULL;
