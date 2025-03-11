@@ -36,10 +36,13 @@ ObjectImpl::~ObjectImpl()
 	}
 	m_Components.clear();
 
-	for (auto child : m_Children)
+	size_t i = m_Children.size();
+	while (i)
 	{
-		child->Release();
+		Object *pchild = m_Children[--i];
+		pchild->Release();
 	}
+
 	if (m_pParent)
 		m_pParent->RemoveChild(this);
 
@@ -246,9 +249,14 @@ void ObjectImpl::Update(float elapsed_time)
 	if (!m_Flags.IsSet(OF_UPDATE))
 		return;
 
-	for (auto child : m_Children)
+	size_t i = m_Children.size();
+	while (i)
 	{
-		child->Update(elapsed_time);
+		Object *pc = m_Children[--i];
+		pc->Update(elapsed_time);
+
+		if (pc->Flags().IsSet(OF_KILL))
+			RemoveChild(pc, true);
 	}
 
 	for (const auto &it : m_Components)
@@ -309,7 +317,7 @@ bool ObjectImpl::Render(Object::RenderFlags flags, int draworder, const glm::fma
 }
 
 
-bool ObjectImpl::Load(genio::IInputStream *is, MetadataLoadFunc loadmd, CameraLoadFunc loadcam, EnvironmentLoadFunc loadenv, CustomLoadFunc loadcust)
+bool ObjectImpl::Load(genio::IInputStream *is, Object *parent, MetadataLoadFunc loadmd, CameraLoadFunc loadcam, EnvironmentLoadFunc loadenv, CustomLoadFunc loadcust)
 {
 	if (!is)
 		return false;
@@ -317,6 +325,8 @@ bool ObjectImpl::Load(genio::IInputStream *is, MetadataLoadFunc loadmd, CameraLo
 	genio::FOURCHARCODE b;
 
 	size_t celdepth = 0;
+
+	SetParent(parent);
 
 	b = is->NextBlockId();
 	if ((b != 'CEL0') && (b != 'OBJ0'))
@@ -372,7 +382,7 @@ bool ObjectImpl::Load(genio::IInputStream *is, MetadataLoadFunc loadmd, CameraLo
 					if (loadcam)
 					{
 						Object *pcam = m_pSys->GetFactory()->Build();
-						pcam->Load(is);
+						pcam->Load(is, nullptr);
 
 						float yaw, pitch;
 						is->ReadFloat(yaw);
@@ -414,7 +424,7 @@ bool ObjectImpl::Load(genio::IInputStream *is, MetadataLoadFunc loadmd, CameraLo
 					is->ReadUINT16(len);
 					if (len)
 					{
-						m_Name.resize(len, _T('#'));
+						m_Name.resize(len, _T('.'));
 						is->Read(m_Name.data(), sizeof(TCHAR) * len);
 					}
 
@@ -447,8 +457,7 @@ bool ObjectImpl::Load(genio::IInputStream *is, MetadataLoadFunc loadmd, CameraLo
 						Object *obj = m_pSys->GetFactory()->Build();
 						if (obj)
 						{
-							obj->Load(is, nullptr, nullptr, nullptr, loadcust);
-							AddChild(obj);
+							obj->Load(is, this, nullptr, nullptr, nullptr, loadcust);
 						}
 					}
 
@@ -700,7 +709,7 @@ void ObjectImpl::PropertyChanged(const props::IProperty *pprop)
 		if (is->Open())
 		{
 			Object *pco = m_pSys->GetFactory()->Build();
-			pco->Load(is);
+			pco->Load(is, m_pParent);
 
 			// mark all the objects we loaded as temporary... they're created on the fly
 			util::RecursiveObjectAction(pco, [&](Object *pobj)

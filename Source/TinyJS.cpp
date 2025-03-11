@@ -215,8 +215,16 @@ CScriptLex *CScriptLex::GetNew(const TCHAR *text, bool copy_text, size_t start_i
 	if (!ret)
 	{
 		size_t r = s_Store.size();
-		s_Store.resize(r + 8);
+		while (s_Store.size() < ((r + 4) * 2))
+			s_Store.emplace_back();
 		ret = &s_Store[r];
+	}
+
+	if (ret->dataOwned && ret->data)
+	{
+		free(ret->data);
+		ret->data = nullptr;
+		ret->dataOwned = false;
 	}
 
 	ret->dataOwned = copy_text;
@@ -247,10 +255,26 @@ CScriptLex::CScriptLex()
 	reset();
 }
 
+CScriptLex::CScriptLex(CScriptLex &o)
+{
+	data = o.data;
+	dataOwned = o.dataOwned;
+	dataStart = o.dataStart;
+	dataEnd = o.dataEnd;
+	m_bInUse = o.m_bInUse;
+	currCh = o.currCh;
+	nextCh = o.nextCh;
+	tk = o.tk;
+	tkStr = o.tkStr;
+	tokenEnd = o.tokenEnd;
+	tokenLastEnd = o.tokenLastEnd;
+	tokenStart = o.tokenStart;
+}
+
 CScriptLex::~CScriptLex(void)
 {
-	if (dataOwned)
-		free((void *)data);
+//	if (dataOwned)
+//		free((void *)data);
 }
 
 void CScriptLex::reset()
@@ -805,10 +829,14 @@ CScriptLex *CScriptLex::getSubLex(int64_t lastPosition)
 {
 	int64_t lastCharIdx = tokenLastEnd + 1;
 
+	CScriptLex *ret;
+
 	if (lastCharIdx < dataEnd)
-		return CScriptLex::GetNew(data, false, lastPosition, lastCharIdx);
+		ret = CScriptLex::GetNew(data, false, lastPosition, lastCharIdx);
 	else
-		return CScriptLex::GetNew(data, false, lastPosition, dataEnd);
+		ret = CScriptLex::GetNew(data, false, lastPosition, dataEnd);
+
+	return ret;
 }
 
 tstring CScriptLex::getPosition(int64_t pos)
@@ -1636,14 +1664,23 @@ bool CTinyJS::Execute(const TCHAR *code)
 	}
 	catch (CScriptException *e)
 	{
+		props::IProperty *psf = m_pObj ? m_pObj->GetProperties()->GetPropertyById('SRCF') : nullptr;
+
 		tstringstream msg;
-		msg << _T("Error ") << e->text;
+		msg << _T("\nError in script ");
+		if (psf)
+			msg << _T("\"") << psf->AsString() << _T("\"");
+		else
+			msg << _T("(OBJ: \"") << m_pObj->GetName() << _T("\")");
+		msg << _T("\n\t") << e->text;
 
 #ifdef TINYJS_CALL_STACK
+		msg << "\tCall stack:";
 		for (int64_t i = (int64_t)call_stack.size() - 1; i >= 0; i--)
-			msg << _T("\n") << i << _T(": ") << call_stack.at(i);
-#endif
+			msg << _T("\n\t") << i << _T(": ") << call_stack.at(i);
+#else
 		msg << _T(" at ") << l->getPosition();
+#endif
 		last_error = msg.str();
 
 		m_pSys->GetLog()->Print(last_error.c_str());
@@ -2506,7 +2543,7 @@ void CTinyJS::statement(bool &execute)
 	{
 		// Execute a simple statement that only contains basic arithmetic...
 		CLEAN(base(execute));
-		l->match(';');
+		l->match(_T(';'));
 	}
 	else if (l->tk == _T('{'))
 	{
@@ -2563,7 +2600,7 @@ void CTinyJS::statement(bool &execute)
 				l->match(_T(','));
 		}
 
-		l->match(';');
+		l->match(_T(';'));
 	}
 	else if (l->tk == LEX_R_IF)
 	{
@@ -2740,7 +2777,7 @@ void CTinyJS::statement(bool &execute)
 		}
 
 		CLEAN(result);
-		l->match(';');
+		l->match(_T(';'));
 	}
 	else if (l->tk == LEX_R_FUNCTION)
 	{

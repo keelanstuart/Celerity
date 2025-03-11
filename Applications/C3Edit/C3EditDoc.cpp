@@ -271,7 +271,7 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	if (m_RootObj)
 	{
 		m_RootObj->AddComponent(c3::Positionable::Type());
-		m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW | OF_EXPANDED);
+		m_RootObj->Flags().Set(OF_LIGHT | OF_CASTSHADOW | OF_CHECKCOLLISIONS | OF_EXPANDED);
 	}
 	m_OperationalRootObj = m_RootObj;
 
@@ -307,8 +307,10 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 
 	if (m_RootObj)
 	{
-		m_RootObj->Load(is, loadmd, loadcam, loadenv);
+		m_RootObj->Load(is, nullptr, loadmd, loadcam, loadenv);
 		m_RootObj->Flags().Set(OF_EXPANDED);
+
+		theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_WORLDROOT, m_RootObj);
 	}
 
 	is->Close();

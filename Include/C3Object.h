@@ -148,7 +148,7 @@ namespace c3
 		using CustomLoadFunc = std::function<void(genio::IInputStream *is)>; // BeginBlock has been called already - load things yourself
 
 		/// Loads the Object from a stream
-		virtual bool Load(genio::IInputStream *is, MetadataLoadFunc loadmd = nullptr, CameraLoadFunc loadcam = nullptr, EnvironmentLoadFunc loadenv = nullptr, CustomLoadFunc loadcust = nullptr) = NULL;
+		virtual bool Load(genio::IInputStream *is, Object *parent, MetadataLoadFunc loadmd = nullptr, CameraLoadFunc loadcam = nullptr, EnvironmentLoadFunc loadenv = nullptr, CustomLoadFunc loadcust = nullptr) = NULL;
 
 		using MetadataSaveFunc = std::function<void(tstring &name, tstring &description, tstring &author, tstring &website, tstring &copyright)>;
 		using CameraSaveFunc = std::function<void(Object **camera, float &yaw, float &pitch)>;

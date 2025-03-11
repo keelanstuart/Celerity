@@ -537,8 +537,7 @@ bool ModelImpl::IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const
 				   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const Model::InstanceData *inst, bool force) const
 {
 	const SNodeInfo *pnode = m_Nodes[nodeidx];
-
-	if (!pnode || (!force && !pnode->flags.IsSet(NodeFlag::COLLIDE)))
+	if (!pnode)
 		return false;
 
 	bool ret = false;
@@ -550,24 +549,27 @@ bool ModelImpl::IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const
 	if (!pDistance)
 		pDistance = &tmpdist;
 
-	float d = FLT_MAX;
-	for (const auto &mit : pnode->meshes)
+	if (force || pnode->flags.IsSet(NodeFlag::COLLIDE))
 	{
-		// render each of the meshes on this node
-		const SMeshInfo *mesh = m_Meshes[mit];
-		if (!mesh)
-			continue;
-
-		float tmpd = d;
-		if (mesh->pmesh->Intersect(pRayPos, pRayDir, &tmpd, pFaceIndex, pUV, &mat))
+		float d = FLT_MAX;
+		for (const auto &mit : pnode->meshes)
 		{
-			if (tmpd < d)
-				d = tmpd;
+			// render each of the meshes on this node
+			const SMeshInfo *mesh = m_Meshes[mit];
+			if (!mesh)
+				continue;
 
-			if (d < *pDistance)
+			float tmpd = d;
+			if (mesh->pmesh->Intersect(pRayPos, pRayDir, &tmpd, pFaceIndex, pUV, &mat))
 			{
-				*pDistance = d;
-				ret = true;
+				if (tmpd < d)
+					d = tmpd;
+
+				if (d < *pDistance)
+				{
+					*pDistance = d;
+					ret = true;
+				}
 			}
 		}
 	}
@@ -612,11 +614,6 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMat
 
 	TCHAR *name;
 	CONVERT_MBCS2TCS(pn->mName.C_Str(), name);
-
-#if 0
-	if (pm->FindNode(name, &nidx, true))
-		return;
-#endif
 
 	nidx = pm->AddNode();
 	nidxmap.insert(TNodeIndexMap::value_type(pn, nidx));
@@ -744,31 +741,6 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 		m = glm::identity<glm::fmat4x4>();
 	});
 
-#if 0
-	int upAxis = 0;
-	bool hasUpAxis = scene->mMetaData->Get<int>("UpAxis", upAxis);
-	int upAxisSign = 1;
-	scene->mMetaData->Get<int>("UpAxisSign", upAxisSign);
-
-	int frontAxis = 0;
-	bool hasFrontAxis = scene->mMetaData->Get<int>("FrontAxis", frontAxis);
-	int frontAxisSign = 1;
-	scene->mMetaData->Get<int>("FrontAxisSign", frontAxisSign);
-
-	int rightAxis = 0;
-	bool hasRightAxis = scene->mMetaData->Get<int>("RightAxis", rightAxis);
-	int rightAxisSign = 1;
-	scene->mMetaData->Get<int>("RightAxisSign", rightAxisSign);
-
-	aiVector3D upVec = upAxis == 0 ? aiVector3D(upAxisSign, 0, 0) : upAxis == 1 ? aiVector3D(0, upAxisSign, 0) : aiVector3D(0, 0, upAxisSign);
-	aiVector3D forwardVec = frontAxis == 0 ? aiVector3D(frontAxisSign, 0, 0) : frontAxis == 1 ? aiVector3D(0, frontAxisSign, 0) : aiVector3D(0, 0, frontAxisSign);
-	aiVector3D rightVec = rightAxis == 0 ? aiVector3D(rightAxisSign, 0, 0) : rightAxis == 1 ? aiVector3D(0, rightAxisSign, 0) : aiVector3D(0, 0, rightAxisSign);
-	aiMatrix4x4 mat(rightVec.x, rightVec.y, rightVec.z, 0.0f,
-					upVec.x, upVec.y, upVec.z, 0.0f,
-					forwardVec.x, forwardVec.y, forwardVec.z, 0.0f,
-					0.0f, 0.0f, 0.0f, 1.0f);
-#endif
-
 	bool any_colliders = false;
 	for (Model::NodeIndex ni = 0; ni < pmi->GetNodeCount(); ni++)
 	{
@@ -780,23 +752,14 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 		pmi->NodeVisibility(ni, !hidden);
 
 		bool collider = (pnn[0] && (pnn[0] == _T('$'))) || (pnn[1] && (pnn[1] == _T('$')));
+		pmi->NodeCollidability(ni, collider);
 		any_colliders |= collider;
 	}
 
-	if (any_colliders)
+	if (!any_colliders)
 	{
 		for (Model::NodeIndex ni = 0; ni < pmi->GetNodeCount(); ni++)
-		{
-			const TCHAR *pnn = pmi->GetNodeName(ni);
-			if (!pnn || !pmi->GetMeshCountOnNode(ni))	// if it's a dummy node, make sure sub-nodes are collided
-			{
-				pmi->NodeCollidability(ni, true);
-				continue;
-			}
-
-			bool collider = (pnn[0] && (pnn[0] == _T('$'))) || (pnn[1] && (pnn[1] == _T('$')));
-			pmi->NodeCollidability(ni, collider);
-		}
+			pmi->NodeCollidability(ni, true);
 	}
 
 	std::function<const TCHAR *(tstring &, const TCHAR *)> MakeTexFilename = [&sourcename](tstring &out, const TCHAR *idx) -> const TCHAR *

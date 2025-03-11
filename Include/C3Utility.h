@@ -24,10 +24,10 @@ namespace c3
 		using ObjectActionFuncBreakable = std::function<bool(Object *)>;
 
 		// Runs an ObjectActionFunc function on all objects in the hierarchy given, starting at proot
-		void C3_API RecursiveObjectAction(Object *proot, ObjectActionFunc action_func);
+		void C3_API RecursiveObjectAction(Object *proot, ObjectActionFunc action_func, bool action_first = true);
 
 		// Runs an ObjectActionFunc function on all objects in the hierarchy given, starting at proot... and it stops if you return false
-		bool C3_API RecursiveObjectActionBreakable(Object *proot, ObjectActionFuncBreakable action_func);
+		bool C3_API RecursiveObjectActionBreakable(Object *proot, ObjectActionFuncBreakable action_func, bool action_first = true);
 
 		// Runs an ObjectActionFunc function on all objects in give list
 		void C3_API ObjectArrayAction(TObjectArray &objs, ObjectActionFunc action_func);

@@ -78,7 +78,7 @@ namespace c3
 
 		virtual bool Render(Object::RenderFlags flags, int draworder, const glm::fmat4x4 *pmat = nullptr) final;
 
-		virtual bool Load(genio::IInputStream *is, MetadataLoadFunc loadmd, CameraLoadFunc loadcam, EnvironmentLoadFunc loadenv, CustomLoadFunc loadcust) final;
+		virtual bool Load(genio::IInputStream *is, Object *parent, MetadataLoadFunc loadmd, CameraLoadFunc loadcam, EnvironmentLoadFunc loadenv, CustomLoadFunc loadcust) final;
 
 		virtual bool Save(genio::IOutputStream *os, SaveFlags saveflags, MetadataSaveFunc savemd, CameraSaveFunc savecam, EnvironmentSaveFunc saveenv, CustomSaveFunc savecust) const final;
 

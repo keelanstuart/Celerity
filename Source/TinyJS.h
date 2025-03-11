@@ -136,11 +136,12 @@ typedef uint32_t	JSFlagsType;
 class CScriptLex
 {
 protected:
-	typedef std::vector<CScriptLex> TScriptLexStore;
+	typedef std::deque<CScriptLex> TScriptLexStore;
 	static TScriptLexStore s_Store;
 
 public:
 	CScriptLex();
+	CScriptLex(CScriptLex &o);
 	~CScriptLex();
 	static CScriptLex *GetNew(const TCHAR *text, bool copy_text = true, size_t start_idx = 0, size_t end_idx = TINYJS_GETALL);
 	void Release();

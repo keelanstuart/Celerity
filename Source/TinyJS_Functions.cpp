@@ -294,24 +294,24 @@ void scArrayJoin(CScriptVar *c, void *data)
 // ----------------------------------------------- Register Functions
 void registerFunctions(CTinyJS *tinyJS)
 {
+	tinyJS->AddNative(_T("function Array.contains(obj)"), scArrayContains, 0);
+	tinyJS->AddNative(_T("function Array.join(separator)"), scArrayJoin, 0);
+	tinyJS->AddNative(_T("function Array.remove(obj)"), scArrayRemove, 0);
+	tinyJS->AddNative(_T("function charToInt(ch)"), scCharToInt, 0); //  convert a character to an int - get its value
 	tinyJS->AddNative(_T("function exec(jsCode)"), scExec, tinyJS); // execute the given code
-	tinyJS->AddNative(_T("function trace()"), scTrace, tinyJS);
-	tinyJS->AddNative(_T("function Object.dump()"), scObjectDump, 0);
-	tinyJS->AddNative(_T("function Object.clone()"), scObjectClone, 0);
+	tinyJS->AddNative(_T("function Integer.parseInt(str)"), scIntegerParseInt, 0); // string to int
+	tinyJS->AddNative(_T("function Integer.valueOf(str)"), scIntegerValueOf, 0); // value of a single character
 	tinyJS->AddNative(_T("function Math.rand()"), scMathRand, 0);
 	tinyJS->AddNative(_T("function Math.randInt(min, max)"), scMathRandInt, 0);
-	tinyJS->AddNative(_T("function charToInt(ch)"), scCharToInt, 0); //  convert a character to an int - get its value
-	tinyJS->AddNative(_T("function String.indexOf(search)"), scStringIndexOf, 0); // find the position of a string in a string, -1 if not
-	tinyJS->AddNative(_T("function String.substring(lo,hi)"), scStringSubstring, 0);
+	tinyJS->AddNative(_T("function Object.clone()"), scObjectClone, 0);
+	tinyJS->AddNative(_T("function Object.dump()"), scObjectDump, 0);
 	tinyJS->AddNative(_T("function String.charAt(pos)"), scStringCharAt, 0);
 	tinyJS->AddNative(_T("function String.charCodeAt(pos)"), scStringCharCodeAt, 0);
 	tinyJS->AddNative(_T("function String.fromCharCode(char)"), scStringFromCharCode, 0);
-	tinyJS->AddNative(_T("function String.split(separator)"), scStringSplit, 0);
 	tinyJS->AddNative(_T("function String.includes(str, sensitive)"), scStringIncludes, 0);
-	tinyJS->AddNative(_T("function Integer.parseInt(str)"), scIntegerParseInt, 0); // string to int
-	tinyJS->AddNative(_T("function Integer.valueOf(str)"), scIntegerValueOf, 0); // value of a single character
-	tinyJS->AddNative(_T("function Array.contains(obj)"), scArrayContains, 0);
-	tinyJS->AddNative(_T("function Array.remove(obj)"), scArrayRemove, 0);
-	tinyJS->AddNative(_T("function Array.join(separator)"), scArrayJoin, 0);
+	tinyJS->AddNative(_T("function String.indexOf(search)"), scStringIndexOf, 0); // find the position of a string in a string, -1 if not
+	tinyJS->AddNative(_T("function String.split(separator)"), scStringSplit, 0);
+	tinyJS->AddNative(_T("function String.substring(lo,hi)"), scStringSubstring, 0);
+	tinyJS->AddNative(_T("function trace()"), scTrace, tinyJS);
 }
 

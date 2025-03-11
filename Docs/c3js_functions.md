@@ -59,6 +59,12 @@ This document provides an overview of JavaScript functions available in Celerity
 - `hobj` (handle): Object handle.  
 - `hnewparentobj` (handle): New parent object handle.
 
+### `GetObjectName(hobj)`
+**Description:** Retrieves the name of an object.  
+**Parameters:**  
+- `hobj` (handle): Object handle.  
+**Returns:** The name of the Object.
+
 ### `SetObjectName(hobj, newname)`
 **Description:** Renames an object.  
 **Parameters:**  
@@ -239,13 +245,13 @@ This document provides an overview of JavaScript functions available in Celerity
 **Description:** Creates a structure for storing collision results.  
 **Returns:** Collision results object.
 
-### `CheckCollisions(hrootobj, raypos, raydir, collinfo)`
+### `CheckCollisions(hrootobj, raypos, raydir, results)`
 **Description:** Checks for collisions along a ray.  
 **Parameters:**  
 - `hrootobj` (handle): Root object.  
 - `raypos` (object): Ray origin `{x, y, z}`.  
 - `raydir` (object): Ray direction `{x, y, z}`.  
-- `collinfo` (object): Collision results.
+- `results` (object): Collision results.
 
 ---
 

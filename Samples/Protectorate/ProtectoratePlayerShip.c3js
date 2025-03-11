@@ -1,5 +1,6 @@
 var runtime;
 
+var i = 0;
 var tmp = 0.0;
 var tmpv3 = { x: 0.0, y: 0.0, z:0.0 };
 var tmpv4 = { x: 0.0, y: 0.0, z:0.0, w: 0.0 };
@@ -42,16 +43,14 @@ var collision_info;
 var bullet_idx = 0;
 var bullet_max = 20;
 var hobj_bullet = [];
-var hprop_bullet_pos = [];
-var hprop_bullet_lvel = [];
+var bpos = { x: 0.0, y: 0.0, z:0.0 };
+var bvel = { x: 0.0, y: 0.0, z:0.0 };
 var bullet_cooldown_max = 0.33;
 var bullet_cooldown = 0.0;
 
 var missile_idx = 0;
 var missiles_max = 4;
 var hobj_missile = [];
-var hprop_missile_pos = [];
-var hprop_missile_lvel = [];
 
 function update(elapsed_seconds)
 {
@@ -154,31 +153,26 @@ function handle_input(action, value)
 	{
 		bullet_cooldown = bullet_cooldown_max;
 
-		SetObjFlag(hobj_bullet[bullet_idx], "UPDATE", 1);
-		SetObjFlag(hobj_bullet[bullet_idx], "DRAW", 1);
-		SetObjFlag(hobj_bullet[bullet_idx], "LIGHT", 1);
+		bvel = GetPropertyValue(hprop_facing.forward);
 
-		tmpv3 = GetPropertyValue(hprop_facing.forward);
-		tmpv3 = Vec3.mul(tmpv3, 900.0);
-		SetPropertyValue(hprop_bullet_lvel[bullet_idx], tmpv3);
+		tmpv3 = GetPropertyValue(hprop_facing.right);
 
-
-		bpos = GetPropertyValue(hprop_facing.right);
 		if (Math.even(bullet_idx))
-			bpos = Vec3.mul(bpos, -0.9);
+			tmpv3 = Vec3.mul(tmpv3, -0.9);
 		else
-			bpos = Vec3.mul(bpos, 0.9);
-		tmpv3 = GetPropertyValue(hprop_pos);
+			tmpv3 = Vec3.mul(tmpv3, 0.9);
+
+		bpos = GetPropertyValue(hprop_pos);
 		bpos = Vec3.add(bpos, tmpv3);
-		tmpv3 = GetPropertyValue(hprop_facing.forward);
-		bpos = Vec3.add(bpos, tmpv3);
-		SetPropertyValue(hprop_bullet_pos[bullet_idx], bpos);
+		bpos = Vec3.add(bpos, bvel);
+
+		bvel = Vec3.mul(bvel, 1000.0);
+
+		Execute(hobj_bullet[bullet_idx], "fire(" + bpos.x + "," + bpos.y + "," + bpos.z + "," + bvel.x + "," + bvel.y + "," + bvel.z + ");");
 
 		bullet_idx++;
 		if (bullet_idx >= bullet_max)
 			bullet_idx = 0;
-			
-		PlaySound("Protectorate/laser2.wav", 50.0, Math.random(0.95, 1.05), 0, tmp);
 	}
 	else if (action == "Fire 2")
 	{
@@ -203,17 +197,9 @@ function init()
 	hprop_rvel = FindProperty(self, "RotationalVelocity");
 	hprop_lvel = FindProperty(self, "LinearVelocity");
 
-	var i;
 	for (i = 0; i < bullet_max; i++)
 	{
-		hobj_bullet[i] = CreateObject("EnergyProjectile1", hobj_parent);
-		hprop_bullet_pos[i] = FindProperty(hobj_bullet[i], "Position");
-		hprop_bullet_lvel[i] = FindProperty(hobj_bullet[i], "LinearVelocity");
-
-		SetObjFlag(hobj_bullet[bullet_idx], "TEMPORARY", 1);
-		SetObjFlag(hobj_bullet[bullet_idx], "UPDATE", 0);
-		SetObjFlag(hobj_bullet[bullet_idx], "DRAW", 0);
-		SetObjFlag(hobj_bullet[bullet_idx], "LIGHT", 0);
+		hobj_bullet[i] = CreateObject("LaserBlast1", hobj_parent);
 	}
 
 	collision_info = CreateCollisionResults();

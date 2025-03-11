@@ -299,7 +299,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 			{
 				WGL_CONTEXT_MAJOR_VERSION_ARB,	(int)m_glVersionMaj,
 				WGL_CONTEXT_MINOR_VERSION_ARB,	(int)m_glVersionMin,
-#if defined(_DEBUG)
+#if defined(_DEBUG) && FALSE	// the NV driver is suuuper annoying and spams the console with nothing-burgers
 				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_DEBUG_BIT_ARB | WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,
 #else
 				WGL_CONTEXT_FLAGS_ARB,			WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB,

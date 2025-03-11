@@ -240,17 +240,20 @@ void PhysicalImpl::Update(float elapsed_time)
 		m_DeltaPos += u * m_LinVel.z;
 		m_DeltaPos *= elapsed_time;
 
+// prefer these things in scripts for now... maybe always?
+#if 0
 		Object *ppar = m_pOwner->GetParent();
 		if (ppar && m_pOwner->Flags().IsSet(OF_CHECKCOLLISIONS))
 		{
 			m_pOwner->Flags().Clear(OF_CHECKCOLLISIONS);
 
 			ModelRenderer *pmr = (ModelRenderer *)m_pOwner->FindComponent(ModelRenderer::Type());
+			const Model *pm = pmr ? pmr->GetModel() : nullptr;
 
-			if (pmr)
+			if (pm)
 			{
 				BoundingBoxImpl bb;
-				pmr->GetModel()->GetBounds(&bb);
+				pm->GetBounds(&bb);
 				bb.Align(m_pPositionable->GetTransformMatrix());
 				glm::fvec3 bsc = bb.GetAlignedCorners()[BoundingBoxImpl::CORNER::XYZ] - bb.GetAlignedCorners()[BoundingBoxImpl::CORNER::xyz];
 				bsc /= 2.0f;
@@ -272,6 +275,7 @@ void PhysicalImpl::Update(float elapsed_time)
 				m_pOwner->Flags().Set(OF_CHECKCOLLISIONS);
 			}
 		}
+#endif
 
 		m_pPositionable->AdjustPos(m_DeltaPos.x, m_DeltaPos.y, m_DeltaPos.z);
 		m_pPositionable->AdjustYaw(m_RotVel.z * elapsed_time);

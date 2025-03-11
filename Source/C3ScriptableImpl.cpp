@@ -114,6 +114,7 @@ void jcGetChild(CScriptVar *c, void *userdata);
 void jcFindObjByGUID(CScriptVar *c, void *userdata);
 void jcFindFirstObjByName(CScriptVar *c, void *userdata);
 void jcLog(CScriptVar *c, void *userdata);
+void jcExecute(CScriptVar *c, void *userdata);
 void jcFindProperty(CScriptVar *c, void *userdata);
 void jcGetPropertyValue(CScriptVar *c, void *userdata);
 void jcSetPropertyValue(CScriptVar *c, void *userdata);
@@ -121,6 +122,7 @@ void jcCreateObject(CScriptVar *c, void *userdata);
 void jcDeleteObject(CScriptVar *c, void *userdata);
 void jcGetParent(CScriptVar *c, void *userdata);
 void jcSetParent(CScriptVar *c, void *userdata);
+void jcGetObjectName(CScriptVar *c, void *userdata);
 void jcSetObjectName(CScriptVar *c, void *userdata);
 void jcLoadPrototypes(CScriptVar *c, void *userdata);
 void jcLoadObject(CScriptVar *c, void *userdata);
@@ -156,14 +158,7 @@ void jcUnloadPackfile(CScriptVar *c, void *userdata);
 
 void ScriptableImpl::ResetJS()
 {
-	if (m_JS)
-	{
-		if (FunctionExists(_T("free")))
-			Execute(_T("free();"));
-
-		delete m_JS;
-		m_JS = nullptr;
-	}
+	Release();
 
 	m_JS = new CTinyJS();
 
@@ -181,6 +176,8 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function Log(text)"),											jcLog, psys);
 
+	m_JS->AddNative(_T("function Execute(hobj, cmd)"),									jcExecute, psys);
+
 	m_JS->AddNative(_T("function FindProperty(hobj, name)"),							jcFindProperty, psys);
 	m_JS->AddNative(_T("function GetPropertyValue(hprop)"),								jcGetPropertyValue, psys);
 	m_JS->AddNative(_T("function SetPropertyValue(hprop, val)"),						jcSetPropertyValue, psys);
@@ -191,6 +188,7 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function GetParent(hobj)"),										jcGetParent, psys);
 	m_JS->AddNative(_T("function SetParent(hobj, hnewparentobj)"),						jcSetParent, psys);
 
+	m_JS->AddNative(_T("function GetObjectName(hobj)"),									jcGetObjectName, psys);
 	m_JS->AddNative(_T("function SetObjectName(hobj, newname)"),						jcSetObjectName, psys);
 
 	m_JS->AddNative(_T("function LoadPrototypes(filename)"),							jcLoadPrototypes, psys);
@@ -223,7 +221,7 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function CreateCollisionResults()"),							jcCreateCollisionResults, psys);
 	m_JS->AddNative(_T("function FreeCollisionResults(colres)"),						jcFreeCollisionResults, psys);
-	m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir, collinfo)"),	jcCheckCollisions, psys);
+	m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir, results)"),	jcCheckCollisions, psys);
 
 	m_JS->AddNative(_T("function PackColorFromIntVec(coloriv)"),						jcPackColorFromIntVec, psys);
 	m_JS->AddNative(_T("function PackColorFromFloatVec(colorfv)"),						jcPackColorFromFloatVec, psys);
@@ -232,7 +230,6 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function LoadPackfile(filename)"),								jcLoadPackfile, psys);
 	m_JS->AddNative(_T("function UnloadPackfile(filename)"),							jcUnloadPackfile, psys);
-
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -287,7 +284,8 @@ void ScriptableImpl::Update(float elapsed_time)
 
 		if (m_UpdateTime <= 0)
 		{
-			m_UpdateTime = m_UpdateRate + m_UpdateTime;
+			m_UpdateTime += m_UpdateRate;
+
 			if (m_UpdateTime < 0)
 				m_UpdateTime = m_UpdateRate;
 			Execute(_T("update(%0.3f);"), elapsed_time);
@@ -419,7 +417,7 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 		if (FunctionExists(_T("init")))
 			Execute(_T("init();"));
 
-		m_bHasUpdate = m_JS->GetScriptVariable(_T("update")) ? true : false;
+		m_bHasUpdate = FunctionExists(_T("update"));
 	}
 }
 
@@ -432,6 +430,17 @@ bool ScriptableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDi
 
 void ScriptableImpl::Execute(const TCHAR *pcmd, ...)
 {
+	// if we receive a "continue" command from the editor, say,
+	// then retry running the script if it had stopped...
+	if (!m_Continue)
+	{
+		static const TCHAR *contstr = _T("continue");
+		if (_tcsstr(contstr, pcmd) != contstr)
+			return;
+
+		m_Continue = true;
+	}
+
 	static tstring execbuf;
 
 	va_list marker;
@@ -446,7 +455,13 @@ void ScriptableImpl::Execute(const TCHAR *pcmd, ...)
 
 	_vsntprintf_s((TCHAR *)(execbuf.data()), execbuf.capacity(), execbuf.capacity(), pcmd, marker);
 
+	bool cont = m_Continue;
 	m_Continue = m_JS->Execute(execbuf.c_str());
+	if (cont != m_Continue)
+	{
+		if (!m_Continue)
+			m_pOwner->GetSystem()->GetLog()->Print(_T("\"%s\" no longer running scripts after command: \"%s\"\n"), m_pOwner->GetName(), execbuf.c_str());
+	}
 }
 
 bool ScriptableImpl::FunctionExists(const TCHAR *funcname)
@@ -590,10 +605,6 @@ void jcFindFirstObjByName(CScriptVar *c, void *userdata)
 
 void jcLog(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->GetReturnVar();
-	if (!ret)
-		return;
-
 	tstring text = c->GetParameter(_T("text"))->GetString();
 	System *psys = (System *)userdata;
 	assert(psys);
@@ -601,6 +612,19 @@ void jcLog(CScriptVar *c, void *userdata)
 	psys->GetLog()->Print(text.c_str());
 }
 
+
+void jcExecute(CScriptVar *c, void *userdata)
+{
+	Object *pobj = (Object *)(c->GetParameter(_T("hobj"))->GetInt());
+	if (!pobj)
+		return;
+
+	Scriptable *pscr = (Scriptable *)pobj->FindComponent(Scriptable::Type());
+	if (!pscr)
+		return;
+
+	pscr->Execute(c->GetParameter(_T("cmd"))->GetString());
+}
 
 void jcFindProperty(CScriptVar *c, void *userdata)
 {
@@ -912,8 +936,8 @@ void jcCreateObject(CScriptVar *c, void *userdata)
 
 	Prototype *pproto = psys->GetFactory()->FindPrototype(protoname.c_str(), false);
 	// if a particular prototype was specified and not found, inform the user
-	if (!protoname.empty() && !pproto)
-		psys->GetLog()->Print(_T("CreateObject could not find prototype: \"%\"\n"), protoname.c_str());
+	if (!pproto)
+		psys->GetLog()->Print(_T("CreateObject could not find prototype: \"%s\"\n"), protoname.c_str());
 
 	Object *pparentobj = dynamic_cast<Object *>((Object *)hparentobj);
 
@@ -974,6 +998,26 @@ void jcSetParent(CScriptVar *c, void *userdata)
 	{
 		pobj->SetParent(pnewparentobj);
 	}
+}
+
+
+//m_JS->AddNative(_T("function GetObjectName(hobj)"),						jcSetObjectName, psys);
+void jcGetObjectName(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (pobj)
+	{
+		ret->SetString(pobj->GetName());
+		return;
+	}
+
+	ret->SetString(_T("[unnamed object]"));
 }
 
 
@@ -1091,7 +1135,7 @@ void jcLoadObject(CScriptVar *c, void *userdata)
 						psvl->m_Var->SetFloat(fogdensity);
 				};
 
-				bool r = pobj->Load(is, loadmd, loadcam, loadenv);
+				bool r = pobj->Load(is, pobj->GetParent(), loadmd, loadcam, loadenv);
 
 				if (ret && (psvl = ret->FindChildOrCreate(_T("success"))))
 					psvl->m_Var->SetInt(r ? 1 : 0);
@@ -1883,11 +1927,21 @@ void jcCreateCollisionResults(CScriptVar *c, void *userdata)
 	if (!ret)
 		return;
 
-	ret->FindChildOrCreate(_T("distance"));
-	ret->FindChildOrCreate(_T("hobj"));
-	CScriptVarLink *pf = ret->FindChildOrCreate(_T("found"));
+	CScriptVarLink *pf;
+	pf = ret->FindChildOrCreate(_T("distance"));
+	pf->m_Owned = true;
+	CScriptVar *pdist = pf->m_Var;
+	pdist->SetFloat(0.0f);
 
-	pf->m_Var->SetInt(0);
+	pf = ret->FindChildOrCreate(_T("hobj"));
+	pf->m_Owned = true;
+	CScriptVar *phobj = pf->m_Var;
+	phobj->SetInt(0);
+
+	pf = ret->FindChildOrCreate(_T("found"));
+	pf->m_Owned = true;
+	CScriptVar *pfound = pf->m_Var;
+	pfound->SetInt(0);
 }
 
 
@@ -1898,25 +1952,23 @@ void jcFreeCollisionResults(CScriptVar *c, void *userdata)
 }
 
 
-// m_JS->AddNative(_T("function CheckCollisions(, nodeidx, b)"), jcSetModelNodeCollisions, psys);
+// m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir, results)"), jcSetModelNodeCollisions, psys);
 void jcCheckCollisions(CScriptVar *c, void *userdata)
 {
-	CScriptVar *ret = c->GetReturnVar();
-
 	System *psys = (System *)userdata;
 	assert(psys);
 
-	CScriptVar *phcollinfo = c->GetParameter(_T("collinfo"));
 	CScriptVar *phrootobj = c->GetParameter(_T("hrootobj"));
 	CScriptVar *praypos = c->GetParameter(_T("raypos"));
 	CScriptVar *praydir = c->GetParameter(_T("raydir"));
+	CScriptVar *ret = c->GetParameter(_T("results"));
 
-	if (!(phrootobj && praypos && praydir && phcollinfo))
+	if (!(phrootobj && praypos && praydir))
 		return;
 
-	CScriptVarLink *ret_dist = phcollinfo->FindChild(_T("distance"));
-	CScriptVarLink *ret_hobj = phcollinfo->FindChild(_T("hobj"));
-	CScriptVarLink *ret_found = phcollinfo->FindChild(_T("found"));
+	CScriptVarLink *ret_dist = ret->FindChild(_T("distance"));
+	CScriptVarLink *ret_hobj = ret->FindChild(_T("hobj"));
+	CScriptVarLink *ret_found = ret->FindChild(_T("found"));
 	if (!(ret_dist && ret_hobj && ret_found))
 	{
 		static bool errshown = false;
@@ -1970,9 +2022,6 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 			ret_hobj->m_Var->SetInt((int64_t)obj);
 			ret_dist->m_Var->SetFloat(dist);
 		}
-
-		if (ret)
-			ret->SetInt(ret_found->m_Var->GetInt());
 	}
 }
 

@@ -29,37 +29,46 @@ void util::ComputeFinalTransform(Object *proot, glm::fmat4x4 *pmat)
 }
 
 
-void util::RecursiveObjectAction(Object *proot, ObjectActionFunc action_func)
+void util::RecursiveObjectAction(Object *proot, ObjectActionFunc action_func, bool action_first)
 {
 	assert(action_func);
 
 	if (!proot)
 		return;
 
-	action_func(proot);
+	if (action_first)
+		action_func(proot);
 
-	for (size_t i = 0, maxi = proot->GetNumChildren(); i < maxi; i++)
+	size_t i = proot->GetNumChildren();
+	while (i)
 	{
-		Object *pchild = proot->GetChild(i);
-		RecursiveObjectAction(pchild, action_func);
+		Object *pchild = proot->GetChild(--i);
+		RecursiveObjectAction(pchild, action_func, action_first);
 	}
+
+	if (!action_first)
+		action_func(proot);
 }
 
 
-bool util::RecursiveObjectActionBreakable(Object *proot, ObjectActionFuncBreakable action_func)
+bool util::RecursiveObjectActionBreakable(Object *proot, ObjectActionFuncBreakable action_func, bool action_first)
 {
 	assert(action_func);
 
 	if (!proot)
 		return true;
 
-	bool ret = action_func(proot);
+	bool ret = action_first ? action_func(proot) : true;
 
-	for (size_t i = 0, maxi = proot->GetNumChildren(); (i < maxi) && ret; i++)
+	size_t i = proot->GetNumChildren();
+	while (ret && i)
 	{
-		Object *pchild = proot->GetChild(i);
-		ret &= RecursiveObjectActionBreakable(pchild, action_func);
+		Object *pchild = proot->GetChild(--i);
+		ret &= RecursiveObjectActionBreakable(pchild, action_func, action_first);
 	}
+
+	if (!action_first && ret)
+		ret &= action_func(proot);
 
 	return ret;
 }
@@ -81,11 +90,8 @@ void util::ObjectArrayAction(TObjectArray &objs, ObjectActionFunc action_func)
 
 bool util::IsInHeirarchyOf(Object *obj, Object *parent, size_t *depth)
 {
-	if (!obj || !parent)
-		return false;
-
 	size_t ret = 0;
-	while (obj != parent)
+	while (obj && (obj != parent))
 	{
 		obj = obj->GetParent();
 		ret++;

@@ -35,6 +35,9 @@ var zaxis = { x:0.0, y:0.0, z:1.0 };
 
 function update(elapsed_seconds)
 {
+	if (elapsed_seconds == 0.0)
+		return;
+
 	runtime += elapsed_seconds;
 
 	tmp = Math.range(10.0 * elapsed_seconds, 0.0, 1.0);
@@ -53,6 +56,8 @@ function update(elapsed_seconds)
 function init()
 {
 	runtime = 0.0;
+
+	SetObjectName(self, "WORLD_ROOT");
 
 	LoadPrototypes("Protectorate/Protectorate.c3protoa");
 

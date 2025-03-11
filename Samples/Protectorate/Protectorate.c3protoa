@@ -1,61 +1,4 @@
 <prototypes>
-    <prototype guid="{220D0673-FFE7-4745-96DA-203A7F5A1FEC}" name="EnergyProjectile1" group="Protectorate" flags="65539">
-        <components>
-            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
-            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
-            <component guid="{BE81DC6A-0962-4B77-A6DF-A9852B5F8A82}" name="ParticleEmitter"/>
-            <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
-            <component guid="{F8641B51-A0FC-4D93-892F-480B07BA2861}" name="Physical"/>
-        </components>
-        <powerprops:property_set>
-            <powerprops:property id="FUP" name="Facing.Up" type="FLOAT_V3">0.000000,0.000000,1.000000</powerprops:property>
-            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4">0.000000,0.000000,0.000000,1.000000</powerprops:property>
-            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">3.000000,3.000000,3.000000</powerprops:property>
-            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
-            <powerprops:property id="DPOS" name="DeltaPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="FFWD" name="Facing.Forward" type="FLOAT_V3">0.000000,1.000000,0.000000</powerprops:property>
-            <powerprops:property id="FRGT" name="Facing.Right" type="FLOAT_V3">1.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="GRAD" name="GradientTexture" type="STRING">[lineargradient.tex]</powerprops:property>
-            <powerprops:property id="LACC" name="LinearAcceleration" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="LATN" name="LightAttenuation" type="FLOAT">2.000000</powerprops:property>
-            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3">1.000000,0.341176,0.341176</powerprops:property>
-            <powerprops:property id="LSFF" name="LinearSpeedFalloffFactor" type="FLOAT">2.000000</powerprops:property>
-            <powerprops:property id="LVEL" name="LinearVelocity" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="MASS" name="Mass" type="FLOAT">0.000000</powerprops:property>
-            <powerprops:property id="MODF" name="ModelFile" type="STRING">[sphere_lo.model]</powerprops:property>
-            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.000000,0.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="MXLS" name="MaxLinearSpeed" type="FLOAT">1000.000000</powerprops:property>
-            <powerprops:property id="MXRS" name="MaxRotationalSpeed" type="FLOAT_V3">3.000000,3.000000,3.000000</powerprops:property>
-            <powerprops:property id="PEac" name="Acceleration" type="FLOAT_V2">0.000000,0.000000</powerprops:property>
-            <powerprops:property id="PEec" name="EndColor" type="INT">15793151</powerprops:property>
-            <powerprops:property id="PEes" name="EndScale" type="FLOAT">0.000000</powerprops:property>
-            <powerprops:property id="PEgr" name="Gravity" type="FLOAT">0.000000</powerprops:property>
-            <powerprops:property id="PElf" name="ParticleLife" type="FLOAT_V2">0.200000,0.200000</powerprops:property>
-            <powerprops:property id="PEmp" name="MaxParticles" type="INT">-3689348818177882360</powerprops:property>
-            <powerprops:property id="PEpc" name="PeakColor" type="INT">5724159</powerprops:property>
-            <powerprops:property id="PEpp" name="Peak" type="FLOAT">0.200000</powerprops:property>
-            <powerprops:property id="PEps" name="PeakScale" type="FLOAT">0.300000</powerprops:property>
-            <powerprops:property id="PErd" name="Radius" type="FLOAT_V2">0.000000,0.600000</powerprops:property>
-            <powerprops:property id="PErl" name="Roll" type="FLOAT_V2">0.000000,0.000000</powerprops:property>
-            <powerprops:property id="PErm" name="ParticleRenderMethod" type="STRING">particles.c3rm</powerprops:property>
-            <powerprops:property id="PErt" name="EmitRate" type="FLOAT_V2">900.000000,900.000000</powerprops:property>
-            <powerprops:property id="PEsc" name="StartColor" type="INT">128</powerprops:property>
-            <powerprops:property id="PEsh" name="Shape" type="ENUM">Sphere,Ray,Cone,Cylinder,Plane:1</powerprops:property>
-            <powerprops:property id="PEsp" name="EmitSpeed" type="FLOAT_V2">0.000000,0.000000</powerprops:property>
-            <powerprops:property id="PEss" name="StartScale" type="FLOAT">0.500000</powerprops:property>
-            <powerprops:property id="PEtx" name="Texture" type="STRING">laser1.tga</powerprops:property>
-            <powerprops:property id="PhCM" name="CollisionMode" type="ENUM">Static,Kinetic,Dynamic:2</powerprops:property>
-            <powerprops:property id="PhCT" name="ColliderShape" type="ENUM">None,Model Bounds,Model,Sphere,Cylinder,Capsule:2</powerprops:property>
-            <powerprops:property id="RACC" name="RotationalAcceleration" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="RVEL" name="RotationalVelocity" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="RVFF" name="RotationalVelocityFalloffFactor" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
-            <powerprops:property id="SRCF" name="SourceFile" type="STRING">Protectorate/Projectile.c3js</powerprops:property>
-            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.000000</powerprops:property>
-        </powerprops:property_set>
-    </prototype>
     <prototype guid="{A6839F6A-5179-4462-B895-C02F1117C2B9}" name="ArcadeMachine1" group="Protectorate" flags="131075">
         <components>
             <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
@@ -544,6 +487,76 @@
         <powerprops:property_set>
             <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
             <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Protectorate\Wall-Orange-SmWindows-Flat.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{5BB8DC59-A787-4113-8B25-4F601DE047C5}" name="ProtectorateCarrier" group="Protectorate" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="MODF" name="Model" type="STRING">D:\proj\Celerity\Samples\Protectorate\ProtectorateCarrier.glb</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{862872F5-A686-4620-90AB-980D790D67D2}" name="LaserBlast1" group="Protectorate" flags="2">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{BE81DC6A-0962-4B77-A6DF-A9852B5F8A82}" name="ParticleEmitter"/>
+            <component guid="{FC8732AD-580B-4A78-A2C9-FF01DF93956F}" name="OmniLight"/>
+            <component guid="{F8641B51-A0FC-4D93-892F-480B07BA2861}" name="Physical"/>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="LIFE" name="LifeTime" type="FLOAT">2.000000</powerprops:property>
+            <powerprops:property id="TIME" name="FlightTime" type="FLOAT">0.0000</powerprops:property>
+            <powerprops:property id="FUP" name="Facing.Up" type="FLOAT_V3">0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4" aspect="QUATERNION">0.000000,0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">884.775513,1607.190674,0.000000</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">3.000000,3.000000,3.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="DAMG" name="Damage" type="FLOAT">1.000000</powerprops:property>
+            <powerprops:property id="DPOS" name="DeltaPosition" type="FLOAT_V3">0.000000,24.043921,0.000000</powerprops:property>
+            <powerprops:property id="FFWD" name="Facing.Forward" type="FLOAT_V3">0.000000,1.000000,0.000000</powerprops:property>
+            <powerprops:property id="FRGT" name="Facing.Right" type="FLOAT_V3">1.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="GRAD" name="GradientTexture" type="STRING">[lineargradient.tex]</powerprops:property>
+            <powerprops:property id="LACC" name="LinearAcceleration" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="LATN" name="LightAttenuation" type="FLOAT">2.000000</powerprops:property>
+            <powerprops:property id="LCLR" name="LightColor" type="FLOAT_V3" aspect="COLOR_RGB">1.000000,0.341176,0.341176</powerprops:property>
+            <powerprops:property id="LSFF" name="LinearSpeedFalloffFactor" type="FLOAT">0.000000</powerprops:property>
+            <powerprops:property id="LVEL" name="LinearVelocity" type="FLOAT_V3">0.000000,800.000000,0.000000</powerprops:property>
+            <powerprops:property id="MASS" name="Mass" type="FLOAT">0.000000</powerprops:property>
+            <powerprops:property id="MODF" name="ModelFile" type="STRING">[sphere_lo.model]</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">0.000000,0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MXLS" name="MaxLinearSpeed" type="FLOAT">1000.000000</powerprops:property>
+            <powerprops:property id="MXRS" name="MaxRotationalSpeed" type="FLOAT_V3" aspect="51">3.000000,3.000000,3.000000</powerprops:property>
+            <powerprops:property id="PEac" name="Acceleration" type="FLOAT_V2">0.000000,0.000000</powerprops:property>
+            <powerprops:property id="PEec" name="EndColor" type="INT" aspect="COLOR_RGBA">2105472</powerprops:property>
+            <powerprops:property id="PEes" name="EndScale" type="FLOAT">0.600000</powerprops:property>
+            <powerprops:property id="PEgr" name="Gravity" type="FLOAT">0.000000</powerprops:property>
+            <powerprops:property id="PElf" name="ParticleLife" type="FLOAT_V2" aspect="53">0.200000,0.200000</powerprops:property>
+            <powerprops:property id="PEmp" name="MaxParticles" type="INT">-3689348818177882160</powerprops:property>
+            <powerprops:property id="PEpc" name="PeakColor" type="INT" aspect="COLOR_RGBA">2105472</powerprops:property>
+            <powerprops:property id="PEpp" name="Peak" type="FLOAT" aspect="50">0.200000</powerprops:property>
+            <powerprops:property id="PEps" name="PeakScale" type="FLOAT">0.600000</powerprops:property>
+            <powerprops:property id="PErd" name="Radius" type="FLOAT_V2">0.000000,0.000000</powerprops:property>
+            <powerprops:property id="PErl" name="Roll" type="FLOAT_V2" aspect="51">0.000000,0.000000</powerprops:property>
+            <powerprops:property id="PErm" name="ParticleRenderMethod" type="STRING">particles.c3rm</powerprops:property>
+            <powerprops:property id="PErt" name="EmitRate" type="FLOAT_V2">1000.000000,1000.000000</powerprops:property>
+            <powerprops:property id="PEsc" name="StartColor" type="INT" aspect="COLOR_RGBA">2105472</powerprops:property>
+            <powerprops:property id="PEsh" name="Shape" type="ENUM">Sphere,Ray,Cone,Cylinder,Plane:1</powerprops:property>
+            <powerprops:property id="PEsp" name="EmitSpeed" type="FLOAT_V2">0.000000,0.000000</powerprops:property>
+            <powerprops:property id="PEss" name="StartScale" type="FLOAT">0.600000</powerprops:property>
+            <powerprops:property id="PEtx" name="Texture" type="STRING">laser1.jpg</powerprops:property>
+            <powerprops:property id="PhCM" name="CollisionMode" type="ENUM">Static,Kinetic,Dynamic:2</powerprops:property>
+            <powerprops:property id="PhCT" name="ColliderShape" type="ENUM">None,Model Bounds,Model,Sphere,Cylinder,Capsule:0</powerprops:property>
+            <powerprops:property id="RACC" name="RotationalAcceleration" type="FLOAT_V3" aspect="51">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="RVEL" name="RotationalVelocity" type="FLOAT_V3" aspect="51">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="RVFF" name="RotationalVelocityFalloffFactor" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING" aspect="FILENAME">Protectorate/Projectile.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.000000</powerprops:property>
         </powerprops:property_set>
     </prototype>
 </prototypes>

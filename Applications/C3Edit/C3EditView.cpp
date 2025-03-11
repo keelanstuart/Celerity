@@ -405,7 +405,7 @@ void C3EditView::OnDraw(CDC *pDC)
 
 	pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
 
-	uint32_t renderflags = theApp.m_Config->GetBool(_T("environment.editordraw"), true) ? RF_EDITORDRAW : 0;
+	props::TFlags64 renderflags = theApp.m_Config->GetBool(_T("environment.editordraw"), true) ? RF_EDITORDRAW : 0;
 
 	bool advtime = theApp.m_Config->GetBool(_T("environment.advancetime"), true);
 
@@ -580,7 +580,12 @@ void C3EditView::OnDraw(CDC *pDC)
 
 			pDoc->DoForAllSelected([&](c3::Object *pobj)
 			{
-				pobj->Render(RF_FORCE | RF_LOCKSHADER | RF_LOCKMATERIAL | RF_AUXILIARY);
+				c3::Object::RenderFlags f = RF_LOCKSHADER | RF_LOCKMATERIAL | RF_AUXILIARY;
+				props::TFlags64 objflags = pobj->Flags();
+
+				if (!objflags.IsSet(OF_DRAW) && !(renderflags.IsSet(RF_EDITORDRAW) && !objflags.IsSet(OF_DRAWINEDITOR)))
+					f.Set(RF_FORCE);
+				pobj->Render(f);
 			});
 
 			if (pDoc->m_Brush)
@@ -780,12 +785,10 @@ void C3EditView::HandleInput(c3::Positionable *pcampos)
 
 	mv += *(pcampos->GetLocalRightVector()) * (mdr - mdl) * spd;
 
-	float mdu = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Q) +
-		theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSZ)) / 2.0f;
+	float mdu = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Q);
 	mv.z += mdu * spd;
 
-	float mdd = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Z) +
-		theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_NEGZ)) / 2.0f;
+	float mdd = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Z);
 	mv.z -= mdd * spd;
 
 	float ldu = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGY, 1);
@@ -906,7 +909,7 @@ c3::Object *C3EditView::Pick(POINT p, glm::fvec3 *picked_point, bool allow_root)
 	ComputePickRay(p, pickpos, pickray);
 
 	props::TFlags64 flagmask = OF_DRAW;
-	if (uint32_t renderflags = theApp.m_Config->GetBool(_T("environment.editordraw"), true))
+	if (theApp.m_Config->GetBool(_T("environment.editordraw"), true))
 		flagmask |= OF_DRAWINEDITOR;
 
 	float dist = FLT_MAX;
