@@ -71,61 +71,68 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 
 	ZeroMemory(m_ButtonState, sizeof(m_ButtonState));
 
+	auto Dampen = [](int val) -> int
+	{
+		float pct = (float)val / (float)InputDevice::BUTTONVAL_MAX;
+		pct *= pct;
+		return (int)(pct * (float)InputDevice::BUTTONVAL_MAX);
+	};
+
 	if (m_bAttached)
 	{
 		int32_t iminprop = (int32_t)(255.0f * m_MinProportion);
 		if (abs(state.lX) > (InputDevice::BUTTONVAL_MAX / 16))
 		{
 			if ((state.lX > 0) && (state.lX > iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSX] = abs(state.lX);	// right motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSX] = Dampen(abs(state.lX));	// right motion
 
 			if ((state.lX < 0) && (state.lX < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGX] = abs(state.lX);	// left motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGX] = Dampen(abs(state.lX));	// left motion
 		}
 
 		if (abs(state.lY) > (InputDevice::BUTTONVAL_MAX / 16))
 		{
 			if ((state.lY > 0) && (state.lY > iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGY] = abs(state.lY);	// right motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGY] = Dampen(abs(state.lY));	// right motion
 
 			if ((state.lY < 0) && (state.lY < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSY] = abs(state.lY);		// left motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSY] = Dampen(abs(state.lY));		// left motion
 		}
 
 		if (abs(state.lZ) > (InputDevice::BUTTONVAL_MAX / 16))
 		{
 			if ((state.lZ > 0) && (state.lZ > iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSZ] = abs(state.lZ);	// right motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSZ] = Dampen(abs(state.lZ));	// right motion
 
 			if ((state.lZ < 0) && (state.lZ < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGZ] = abs(state.lZ);	// left motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGZ] = Dampen(abs(state.lZ));	// left motion
 		}
 
 		if (abs(state.lRx) > (InputDevice::BUTTONVAL_MAX / 16))
 		{
 			if ((state.lRx > 0) && (state.lRx > iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSX] = abs(state.lRx);	// right motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSX] = Dampen(abs(state.lRx));	// right motion
 
 			if ((state.lRx < 0) && (state.lRx < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGX] = abs(state.lRx);	// left motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGX] = Dampen(abs(state.lRx));	// left motion
 		}
 
 		if (abs(state.lRy) > (InputDevice::BUTTONVAL_MAX / 16))
 		{
 			if ((state.lRy > 0) && (state.lRy > iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSY] = abs(state.lRy);	// right motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSY] = Dampen(abs(state.lRy));	// right motion
 
 			if ((state.lRy < 0) && (state.lRy < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGY] = abs(state.lRy);	// left motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGY] = Dampen(abs(state.lRy));	// left motion
 		}
 
 		if (abs(state.lRz) > (InputDevice::BUTTONVAL_MAX / 16))
 		{
 			if ((state.lRz > iminprop) && (state.lRz > 0))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSZ] = abs(state.lRz);	// right motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSZ] = Dampen(abs(state.lRz));	// right motion
 
 			if ((state.lRz < -iminprop) && (state.lRz < 0))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGZ] = abs(state.lRz);	// left motion
+				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGZ] = Dampen(abs(state.lRz));	// left motion
 		}
 
 		m_ButtonState[InputDevice::VirtualButton::THROTTLE1] = state.rglSlider[0];

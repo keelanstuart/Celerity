@@ -26,7 +26,7 @@ namespace c3
 
 		virtual ~PluginManagerImpl();
 
-		virtual RETURNCODE DiscoverPlugins(const TCHAR *path, const TCHAR *filespec, bool auto_activate, size_t *numfound);
+		virtual RETURNCODE LoadPlugin(const TCHAR *filename, bool activate = true);
 
 		virtual RETURNCODE UnloadPlugin(Plugin *pplug);
 
@@ -36,7 +36,9 @@ namespace c3
 
 		virtual Plugin *GetPlugin(size_t idx) const;
 
-		virtual bool PluginIsLoaded(const TCHAR *path, size_t *idx = nullptr) const;
+		virtual bool PluginIsLoaded(const TCHAR *filename, size_t *idx = nullptr) const;
+
+		virtual RETURNCODE DiscoverPlugins(const TCHAR *path, const TCHAR *filespec, bool auto_activate, size_t *numfound);
 
 	};
 

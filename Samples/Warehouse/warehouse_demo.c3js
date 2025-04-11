@@ -1,96 +1,196 @@
 var runtime;
 
-var hcam;
-var hcam_pos;
-var hcam_ori;
-var cam_pos;
-var cam_ori;
+var hobj_camroot;
+var hprop_camroot_pos;
+var hprop_camroot_ori;
 
-var hplayer;
-var hplayer_script;
-var hplayer_pos;
-var hplayer_ori;
-var player_pos;
-var player_ori;
-var hplayer_lvel;
-var hplayer_rvel;
-var hhead_rvel;
-var vec3a = { x:0.0, y:0.0, z:0.0 };
-var vec3b = { x:0.0, y:0.0, z:0.0 };
-var vec3c = { x:0.0, y:0.0, z:0.0 };
-var hplayer_facing;
-var player_facing;
-var hplayer_right;
-var player_right;
-var hcamarm;
-var hcam;
-var hprop;
-var run = 0.0;
+var hobj_camarm;
+var hprop_camarm_pos;
+var hprop_camarm_ori;
 
-var hspawn;
-var hspawn_pos;
-var spawn_pos;
-var hspawn_ori;
-var spawn_ori;
+var hobj_cam;
+var hprop_cam_ori;
+var hprop_cam_fov;
 
-var hwarehouse;
+var body_pos = { x:0.0, y:0.0, z:0.0 };
+var body_zrot = 0.0;
+var head_xrot = 0.0;
+
+var tmppos = { x:0.0, y:0.0, z:0.0 };
+var tmpori = { x:0.0, y:0.0, z:0.0, w:0.0 };
+
+var hprop_camroot_facing;
+var cam_facing = { x:0.0, y:0.0, z:0.0 };;
+
+var hprop_camroot_right;
+var cam_right = { x:0.0, y:0.0, z:0.0 };;
+
+var walk_speed = 400.0;
+var run_speed = 1000.0;
+var speed = walk_speed;
+var crouch = 0;
+var collision_info;
+
+var fov_normal = 72.0;
+var fov_zoom = 22.0;
+var fov_targ = fov_normal;
+var fov = fov_targ;
+
+var hobj_spawn;
+var hprop_spawn_pos;
+var hprop_spawn_ori;
+
+var hobj_warehouse;
 
 var load_result;
 
 var setup = 1;
+var xaxis = { x:1.0, y:0.0, z:0.0 };
+var zaxis = { x:0.0, y:0.0, z:1.0 };
+
+function respawn()
+{
+	if (Math.random(0, 10) < 5)
+		hobj_spawn = FindFirstObjByName(self, "SPAWN1", 1);
+	else
+		hobj_spawn = FindFirstObjByName(self, "SPAWN2", 1);
+
+	hprop_spawn_pos = FindProperty(hobj_spawn, "Position");
+	tmppos = GetPropertyValue(hprop_spawn_pos);
+	tmppos.z = 0.0;
+	SetPropertyValue(hprop_camroot_pos, tmppos);
+
+	hprop_spawn_ori = FindProperty(hobj_spawn, "Orientation");
+	tmpori = GetPropertyValue(hprop_spawn_ori);
+	SetPropertyValue(hprop_camroot_ori, tmpori);
+}
 
 function init()
 {
 	runtime = 0.0;
 
-	load_result = LoadObject(self, "Warehouse.c3o");
+	load_result = LoadObject(self, "Warehouse/Warehouse.c3o");
 
 	if (load_result["success"] == 1)
 		Log("Scene loaded successfully!\n");
-
 	else
 		Log("Scene failed to load!\n");
 
-	hplayer = GetRegisteredObject("camera.root");
-	hcamarm = GetRegisteredObject("camera.arm");
-	hcam = GetRegisteredObject("camera");
+	hobj_camroot = GetRegisteredObject("camera.root");
+	hobj_camarm = GetRegisteredObject("camera.arm");
+	hobj_cam = GetRegisteredObject("camera");
 
-	vec3a.x = 0.0;
-	vec3a.y = 0.0;
-	vec3a.z = 100.0;
-	hprop = FindProperty(hcamarm, "Position");
-	SetPropertyValue(hprop, vec3a);
+	hprop_camroot_pos = FindProperty(hobj_camroot, "Position");
+	hprop_camroot_ori = FindProperty(hobj_camroot, "Orientation");
 
-	// how quickly you come to a stop after you let go of the controls
-	hprop = FindProperty(hplayer, "LinearSpeedFalloffFactor");
-	SetPropertyValue(hprop, 10.0);
+	hprop_camarm_pos = FindProperty(hobj_camarm, "Position");
 
-	hplayer_lvel = FindProperty(hplayer, "LinearVelocity");
-	hplayer_rvel = FindProperty(hplayer, "RotationalVelocity");
-	hhead_rvel = FindProperty(hcam, "RotationalVelocity");
-	hplayer_facing = FindProperty(hplayer, "Facing.Forward");
-	hplayer_right = FindProperty(hplayer, "Facing.Right");
+	hprop_cam_ori = FindProperty(hobj_cam, "Orientation");
+	hprop_camroot_facing = FindProperty(hobj_camroot, "Facing.Forward");
+	hprop_camroot_right = FindProperty(hobj_camroot, "Facing.Right");
 
-	if (Math.random(0, 10) < 5)
-		hspawn = FindFirstObjByName(self, "SPAWN1", 1);
+	hprop_cam_fov = FindProperty(hobj_cam, "FOV(Perspective)");
+	hprop_cam_orbitdist = FindProperty(hobj_cam, "OrbitDistance");
+	hprop_cam_farclip = FindProperty(hobj_cam, "FarClip");
+	hprop_cam_facing = FindProperty(hobj_cam, "Facing.Forward");
+
+	SetPropertyValue(hprop_cam_farclip, 20000.0);
+	SetPropertyValue(hprop_cam_orbitdist, 0.01);
+
+	tmppos.x = 0.0;
+	tmppos.y = 0.0;
+	tmppos.z = 140.0;
+	SetPropertyValue(hprop_camarm_pos, tmppos);
+
+	respawn();
+
+	hobj_warehouse = FindFirstObjByName(self, "warehouse_bare", 1);
+
+	collision_info = CreateCollisionResults();
+
+	RegisterInputAction("Run", "", 0.0);
+	RegisterInputAction("Fire 1", "", 0.0);
+	RegisterInputAction("Aim", "", 0.0);
+	RegisterInputAction("Strafe Left", "", 0.0);
+	RegisterInputAction("Strafe Right", "", 0.0);
+	RegisterInputAction("Move Forward", "", 0.0);
+	RegisterInputAction("Move Backward", "", 0.0);
+	RegisterInputAction("Look Up", "", 0.0);
+	RegisterInputAction("Look Down", "", 0.0);
+	RegisterInputAction("Look Left", "", 0.0);
+	RegisterInputAction("Look Right", "", 0.0);
+	RegisterInputAction("Jump", "", 0.0);
+	RegisterInputAction("Crouch", "up", 0.0);
+	RegisterInputAction("Next Weapon", "", 0.5);
+	RegisterInputAction("Prev Weapon", "", 0.5);
+	RegisterInputAction("Use", "up", 0.0);
+	RegisterInputAction("Cycle View Mode", "up", 0.0);
+}
+
+function device_connected(device_type, device_name, naxes, nbuttons)
+{
+	Log("Registering " + device_name + " Controls... ");
+
+	if (device_type == "keyboard")
+	{
+		LinkInputToAction("Run", device_name, "l shift");
+		LinkInputToAction("Strafe Left", device_name, "a");
+		LinkInputToAction("Strafe Right", device_name, "d");
+		LinkInputToAction("Move Forward", device_name, "w");
+		LinkInputToAction("Move Backward", device_name, "s");
+		LinkInputToAction("Jump", device_name, "button 3");
+		LinkInputToAction("Crouch", device_name, "c");
+		LinkInputToAction("Use", device_name, "e");
+		LinkInputToAction("Cycle View Mode", device_name, "select");
+
+		Log("done.\n");
+	}
+	else if (device_type == "mouse")
+	{
+		LinkInputToAction("Fire 1", device_name, "button 1");
+		LinkInputToAction("Aim", device_name, "button 2");
+		LinkInputToAction("Look Up", device_name, "axis 2 +y");
+		LinkInputToAction("Look Down", device_name, "axis 2 -y");
+		LinkInputToAction("Look Left", device_name, "axis 2 -x");
+		LinkInputToAction("Look Right", device_name, "axis 2 +x");
+		LinkInputToAction("Next Weapon", device_name, "axis 2 +z");
+		LinkInputToAction("Prev Weapon", device_name, "axis 2 -z");
+
+		Log("done.\n");
+	}
+	else if (naxes > 1)
+	{
+		LinkInputToAction("Run", device_name, "button 9");
+		LinkInputToAction("Jump", device_name, "button 10");
+		LinkInputToAction("Move Forward", device_name, "axis 1 +y");
+		LinkInputToAction("Move Backward", device_name, "axis 1 -y");
+		LinkInputToAction("Strafe Left", device_name, "axis 1 -x");
+		LinkInputToAction("Strafe Right", device_name, "axis 1 +x");
+		LinkInputToAction("Look Down", device_name, "axis 2 -y");
+		LinkInputToAction("Look Up", device_name, "axis 2 +y");
+		LinkInputToAction("Look Left", device_name, "axis 2 -x");
+		LinkInputToAction("Look Right", device_name, "axis 2 +x");
+		LinkInputToAction("Use", device_name, "button 1");
+		LinkInputToAction("Aim", device_name, "button 5");
+		LinkInputToAction("Fire 1", device_name, "button 6");
+		LinkInputToAction("Next Weapon", device_name, "pov +x");
+		LinkInputToAction("Prev Weapon", device_name, "pov -x");
+		LinkInputToAction("Cycle View Mode", device_name, "button 4");
+
+		Log("done.\n");
+	}
 	else
-		hspawn = FindFirstObjByName(self, "SPAWN2", 1);
-
-	hspawn_pos = FindProperty(hspawn, "Position");
-	spawn_pos = GetPropertyValue(hspawn_pos);
-	hspawn_ori = FindProperty(hspawn, "Orientation");
-	spawn_ori = GetPropertyValue(hspawn_ori);
-
-	hplayer_pos = FindProperty(hplayer, "Position");
-	SetPropertyValue(hplayer_pos, spawn_pos);
-	SetPropertyValue(hplayer_ori, spawn_ori);
-	
-	hwarehouse = FindFirstObjByName(self, "warehouse", 1);
+	{
+		Log("device ignored.\n");
+	}
 }
 
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
+
+	fov = Math.lerp(fov, fov_targ, elapsed_seconds * 20.0);
+	SetPropertyValue(hprop_cam_fov, fov);
 
 	if (setup == 1)
 	{
@@ -107,61 +207,80 @@ function update(elapsed_seconds)
 			Log("Level Configured.\n");
 		}
 	}
+
+	cam_facing = GetPropertyValue(hprop_camroot_facing);
+	cam_right = GetPropertyValue(hprop_camroot_right);
+
+	tmppos = GetPropertyValue(hprop_camroot_pos);
+	body_pos = Vec3.mul(body_pos, speed * elapsed_seconds);
+	tmppos = Vec3.add(tmppos, body_pos);
+	SetPropertyValue(hprop_camroot_pos, tmppos);
+	body_pos.x = 0.0; body_pos.y = 0.0; body_pos.z = 0.0;
+
+	tmpori = GetPropertyValue(hprop_camroot_ori);
+	tmpori = AdjustQuat(tmpori, zaxis, Math.toRadians(body_zrot * 550.0 * elapsed_seconds));
+	SetPropertyValue(hprop_camroot_ori, tmpori);
+	body_zrot = 0.0;
+
+	tmpori = GetPropertyValue(hprop_cam_ori);
+	tmpori = AdjustQuat(tmpori, xaxis, Math.toRadians(head_xrot * 490.0 * elapsed_seconds));
+	SetPropertyValue(hprop_cam_ori, tmpori);
+	head_xrot = 0.0;
 	
-	run = 0.0;
+	speed = walk_speed;
+	fov_targ = fov_normal;
 }
 
 function handle_input(action, value)
 {
-	player_facing = GetPropertyValue(hplayer_facing);
-	player_right = GetPropertyValue(hplayer_right);
-	vec3a = GetPropertyValue(hplayer_lvel);
-	vec3b = GetPropertyValue(hplayer_rvel);
-	vec3c = GetPropertyValue(hhead_rvel);
-
-	var hlook = 85.0;
-	var vlook = 80.0;
-
-	var speed = 35.0 + (35.0 * run) * value;
-
-	if (action == "_Run")
+	if (action == "Run")
 	{
-		run = 1.0;
+		speed = run_speed;
 	}
 	else if (action == "Move Forward")
 	{
-		vec3a.y += speed;
+		tmppos = Vec3.mul(cam_facing, value);
+		body_pos = Vec3.add(body_pos, tmppos);
 	}
 	else if (action == "Move Backward")
 	{
-		vec3a.y -= speed;
+		tmppos = Vec3.mul(cam_facing, value);
+		body_pos = Vec3.sub(body_pos, tmppos);
 	}
 	else if (action == "Strafe Left")
 	{
-		vec3a.x -= speed;
+		tmppos = Vec3.mul(cam_right, value);
+		body_pos = Vec3.sub(body_pos, tmppos);
 	}
 	else if (action == "Strafe Right")
 	{
-		vec3a.x += speed;
+		tmppos = Vec3.mul(cam_right, value);
+		body_pos = Vec3.add(body_pos, tmppos);
 	}
 	else if (action == "Look Left")
 	{
-		vec3b.z += value * hlook;
+		body_zrot += value;
 	}
 	else if (action == "Look Right")
 	{
-		vec3b.z -= value * hlook;
+		body_zrot -= value;
 	}
 	else if (action == "Look Up")
 	{
-		vec3c.x -= value * vlook;
+		head_xrot -= value;
 	}
 	else if (action == "Look Down")
 	{
-		vec3c.x += value * vlook;
+		head_xrot += value;
 	}
+	else if (action == "Aim")
+	{
+		fov_targ = fov_zoom;
+		Log("AIM\n");
+	}
+}
 
-	SetPropertyValue(hplayer_lvel, vec3a);
-	SetPropertyValue(hplayer_rvel, vec3b);
-	SetPropertyValue(hhead_rvel, vec3c);
+function free()
+{
+	FreeCollisionResults(collision_info);
 }

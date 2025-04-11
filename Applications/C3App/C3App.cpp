@@ -27,6 +27,8 @@ C3App::C3App()
 	m_C3 = nullptr;
 	m_Config = nullptr;
 	m_StartScript = _T("c3demo.c3js");
+	m_AlwaysPaint = false;
+
 }
 
 
@@ -162,6 +164,15 @@ tstring ReplaceFileExtension(const tstring &filename, const tstring &newExtensio
 
 // C3App initialization
 
+using SettingCB = std::function<void(const TCHAR *)>;
+using SettingsTable = std::map<tstring, SettingCB>;
+
+SettingsTable gSettings =
+{
+	{ _T("alwayspaint"), [](const TCHAR *opts) { theApp.m_AlwaysPaint = true; } },
+	{ _T("resetlog"), [](const TCHAR *opts) { theApp.m_C3->GetLog()->Reset(); } },
+};
+
 BOOL C3App::InitInstance()
 {
 #if 0
@@ -175,35 +186,6 @@ BOOL C3App::InitInstance()
 	m_C3 = c3::System::Create(NULL, 0);
 	if (!m_C3)
 		return FALSE;
-
-	// Parse the command line into arguments
-	int argc = 0;
-	LPTSTR *argv = CommandLineToArgvW(m_lpCmdLine, &argc);
-	if (argv)
-	{
-		const TCHAR *fn = PathFindFileName(argv[0]);
-
-		if (__argc < 2)
-		{
-			m_StartScript = ReplaceFileExtension(fn, _T(".c3js"));
-		}
-		else if (argv > 0)
-		{
-			m_StartScript = argv[0];
-		}
-
-		tstring modpack = ReplaceFileExtension(fn, _T(".c3z"));
-		if (theApp.m_C3->GetResourceManager()->RegisterZipArchive(modpack.c_str()))
-		{
-			if (!PathFileExists(m_StartScript.c_str()))
-			{
-				m_StartScript.insert(m_StartScript.rfind(_T('.'), 0), _T("/main"));
-			}
-		}
-
-		// Free memory allocated by CommandLineToArgvW
-		LocalFree(argv);
-	}
 
 	// Get the user's home path for their configuration
 	CString appname;
@@ -262,6 +244,55 @@ BOOL C3App::InitInstance()
 	logpath += appname;
 	logpath += _T(".log");
 	m_C3->GetLog()->SetLogFile(logpath.c_str());
+
+	const TCHAR *fn = PathFindFileName(theApp.m_AppName.c_str());
+
+	m_StartScript = ReplaceFileExtension(fn, _T(".c3js"));
+
+	// Parse the command line into arguments
+	int argc = 0;
+	LPTSTR *argv = CommandLineToArgvW(m_lpCmdLine, &argc);
+	if (argv)
+	{
+		for (int a = 0; a < argc; a++)
+		{
+			// get options
+			if (*argv[a] == _T('-'))
+			{
+				tstring cmd = argv[a] + 1;
+				size_t opt_ofs = cmd.find(_T(':'));
+				const TCHAR *opt = nullptr;
+				if (opt_ofs != tstring::npos)
+				{
+					opt = cmd.c_str() + opt_ofs + 1;
+					cmd[opt_ofs] = _T('\0');
+				}
+				SettingsTable::const_iterator it = gSettings.find(cmd);
+				if (it != gSettings.end())
+				{
+					it->second(opt);
+				}
+				else
+				{
+					m_C3->GetLog()->Print(_T("Unrecognized command-line option: \"%s\"\n"), cmd);
+				}
+			}
+			else
+				m_StartScript = argv[a];
+		}
+
+		tstring modpack = ReplaceFileExtension(fn, _T(".c3z"));
+		if (theApp.m_C3->GetResourceManager()->RegisterZipArchive(modpack.c_str()))
+		{
+			if (!PathFileExists(m_StartScript.c_str()))
+			{
+				m_StartScript.insert(m_StartScript.rfind(_T('.'), 0), _T("/main"));
+			}
+		}
+
+		// Free memory allocated by CommandLineToArgvW
+		LocalFree(argv);
+	}
 
 	theApp.m_C3->GetLog()->Print(_T("Celerity3 system created\nC3App starting up...\n"));
 

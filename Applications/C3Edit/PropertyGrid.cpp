@@ -471,12 +471,30 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *pprops, PROPERTY_DE
 					yname = _T("Outer");
 				}
 
-				pwp->AddSubItem(new CWTFPropertyGridProperty(xname, (LONG)(p->AsVec2I()->x), NULL, NULL, NULL, NULL, _T("0123456789-")));
-				pwp->AddSubItem(new CWTFPropertyGridProperty(yname, (LONG)(p->AsVec2I()->y), NULL, NULL, NULL, NULL, _T("0123456789-")));
-				if (p->GetType() >= props::IProperty::PROPERTY_TYPE::PT_INT_V3)
-					pwp->AddSubItem(new CWTFPropertyGridProperty(zname, (LONG)(p->AsVec3I()->z), NULL, NULL, NULL, NULL, _T("0123456789-")));
-				if (p->GetType() == props::IProperty::PROPERTY_TYPE::PT_INT_V4)
-					pwp->AddSubItem(new CWTFPropertyGridProperty(wname, (LONG)(p->AsVec4I()->w), NULL, NULL, NULL, NULL, _T("0123456789-")));
+				if (p->GetType() == props::IProperty::PROPERTY_TYPE::PT_INT_V2)
+				{
+					props::TVec2I v2i;
+					p->AsVec2I(&v2i);
+					pwp->AddSubItem(new CWTFPropertyGridProperty(xname, (LONG)(v2i.x), NULL, NULL, NULL, NULL, _T("0123456789-")));
+					pwp->AddSubItem(new CWTFPropertyGridProperty(yname, (LONG)(v2i.y), NULL, NULL, NULL, NULL, _T("0123456789-")));
+				}
+				else if (p->GetType() == props::IProperty::PROPERTY_TYPE::PT_INT_V3)
+				{
+					props::TVec3I v3i;
+					p->AsVec3I(&v3i);
+					pwp->AddSubItem(new CWTFPropertyGridProperty(xname, (LONG)(v3i.x), NULL, NULL, NULL, NULL, _T("0123456789-")));
+					pwp->AddSubItem(new CWTFPropertyGridProperty(yname, (LONG)(v3i.y), NULL, NULL, NULL, NULL, _T("0123456789-")));
+					pwp->AddSubItem(new CWTFPropertyGridProperty(zname, (LONG)(v3i.z), NULL, NULL, NULL, NULL, _T("0123456789-")));
+				}
+				else if (p->GetType() == props::IProperty::PROPERTY_TYPE::PT_INT_V4)
+				{
+					props::TVec4I v4i;
+					p->AsVec4I(&v4i);
+					pwp->AddSubItem(new CWTFPropertyGridProperty(xname, (LONG)(v4i.x), NULL, NULL, NULL, NULL, _T("0123456789-")));
+					pwp->AddSubItem(new CWTFPropertyGridProperty(yname, (LONG)(v4i.y), NULL, NULL, NULL, NULL, _T("0123456789-")));
+					pwp->AddSubItem(new CWTFPropertyGridProperty(zname, (LONG)(v4i.z), NULL, NULL, NULL, NULL, _T("0123456789-")));
+					pwp->AddSubItem(new CWTFPropertyGridProperty(wname, (LONG)(v4i.w), NULL, NULL, NULL, NULL, _T("0123456789-")));
+				}
 
 				pwp->SetDescription(prop_desc ? prop_desc(p->GetID()) : _T(""));
 				break;

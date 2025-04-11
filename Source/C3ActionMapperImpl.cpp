@@ -103,7 +103,7 @@ void ActionMapperImpl::Update()
 					switch (a.trigger)
 					{
 						case TriggerType::DOWN_CONTINUOUS:
-							triggered = pid->ButtonPressed(it->second, a.delay);
+							triggered = pid->ButtonPressed(it->second);
 							break;
 
 						case TriggerType::DOWN_DELTA:
@@ -119,7 +119,7 @@ void ActionMapperImpl::Update()
 					{
 						size_t user;
 						pim->GetAssignedUser(pid, user);
-						a.func(pid, user, it->second, pid->ButtonPressedProportional(it->second), a.userdata);
+						a.func(a.name.c_str(), pid, user, it->second, pid->ButtonPressedProportional(it->second), a.userdata);
 						a.timeout = a.delay;
 						break;
 					}

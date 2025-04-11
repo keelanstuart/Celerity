@@ -742,6 +742,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 	});
 
 	bool any_colliders = false;
+	bool from_3dsmax = false;
 	for (Model::NodeIndex ni = 0; ni < pmi->GetNodeCount(); ni++)
 	{
 		const TCHAR *pnn = pmi->GetNodeName(ni);
@@ -749,6 +750,12 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			continue;
 
 		bool hidden = (pnn[0] && (pnn[0] == _T('#'))) || (pnn[1] && (pnn[1] == _T('#')));
+		if (_tcsstr(pnn, _T("Bip01")) == pnn)		// hide 3dsmax biped nodes
+		{
+			hidden = true;
+			from_3dsmax = true;
+		}
+
 		pmi->NodeVisibility(ni, !hidden);
 
 		bool collider = (pnn[0] && (pnn[0] == _T('$'))) || (pnn[1] && (pnn[1] == _T('$')));
@@ -809,7 +816,15 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			{
 				aiAnimation *pa = scene->mAnimations[aidx];
 
-				float ticks = (pa->mTicksPerSecond == 0) ? 30.0f : (float)pa->mTicksPerSecond;
+
+				float ticks = (float)pa->mTicksPerSecond;
+				if (pa->mTicksPerSecond == 0)
+				{
+					if (from_3dsmax)
+						ticks = 4800.0f;
+					else
+						ticks = 30.0f;
+				}
 
 				for (unsigned int aci = 0; aci < pa->mNumChannels; aci++)
 				{
@@ -861,9 +876,21 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 				tstring animfilename = sourcename;
 
 				{
-					TCHAR *nametmp;
-					CONVERT_MBCS2TCS(pa->mName.C_Str(), nametmp);
-					MakeAnimFilename(animfilename, nametmp);
+					// if the animation is named, use the name... otherwise, use the index
+
+					if (pa->mName.length)
+					{
+						TCHAR *nametmp;
+						CONVERT_MBCS2TCS(pa->mName.C_Str(), nametmp);
+						MakeAnimFilename(animfilename, nametmp);
+					}
+					else
+					{
+						TCHAR idxtmp[8];
+						_itot_s((int)aidx, idxtmp, 10);
+						MakeAnimFilename(animfilename, idxtmp);
+					}
+
 					psys->GetResourceManager()->GetResource(animfilename.c_str(), RESF_CREATEENTRYONLY, RESOURCETYPE(Animation), panim);
 					pr->GetSystem()->GetLog()->Print(_T("\n\t- ANIM \"%s\""), animfilename.c_str());
 				}

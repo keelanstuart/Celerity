@@ -35,6 +35,35 @@ void __cdecl ActivatePlugin(LPVOID param0, LPVOID param1, size_t task_number)
 	pp->Activate();
 }
 
+PluginManager::RETURNCODE PluginManagerImpl::LoadPlugin(const TCHAR *filename, bool activate)
+{
+	if (!filename)
+		return RETURNCODE::RET_BADFILESPEC;
+
+	if (PluginIsLoaded(filename))
+		return RETURNCODE::RET_OK;
+
+	Plugin *tmp = new PluginImpl(filename, m_pSys);
+
+	if (tmp->Loaded())
+	{
+		m_Plugins.push_back(tmp);
+
+		if (activate)
+		{
+#if 0
+			m_pSys->ThreadPool()->RunTask(ActivatePlugin, (LPVOID)tmp);
+#else
+			tmp->Activate();
+#endif
+		}
+
+		return RET_OK;
+	}
+
+	delete tmp;
+	return RETURNCODE::RET_NOTFOUND;
+}
 
 PluginManager::RETURNCODE PluginManagerImpl::DiscoverPlugins(const TCHAR *path, const TCHAR *filespec, bool auto_activate, size_t *numfound)
 {
@@ -91,27 +120,8 @@ PluginManager::RETURNCODE PluginManagerImpl::DiscoverPlugins(const TCHAR *path, 
 
 			if (!PluginIsLoaded(plugname))
 			{
-				Plugin *tmp = new PluginImpl(plugname, m_pSys);
-
-				if (tmp->Loaded())
-				{
+				if (LoadPlugin(plugname, auto_activate) == RET_OK)
 					ret++;
-
-					m_Plugins.push_back(tmp);
-
-					if (auto_activate)
-					{
-#if 0
-						m_pSys->ThreadPool()->RunTask(ActivatePlugin, (LPVOID)tmp);
-#else
-						tmp->Activate();
-#endif
-					}
-				}
-				else
-				{
-					delete tmp;
-				}
 			}
 		}
 		while (FindNextFile(hfind, &fd));

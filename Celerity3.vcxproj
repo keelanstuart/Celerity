@@ -37,6 +37,7 @@
     <ClCompile Include="Source\C3AnimTrackImpl.cpp" />
     <ClCompile Include="Source\C3BoundingBoxImpl.cpp" />
     <ClCompile Include="Source\C3CameraImpl.cpp" />
+    <ClCompile Include="Source\C3Component.cpp" />
     <ClCompile Include="Source\C3ConfigurationImpl.cpp" />
     <ClCompile Include="Source\C3CRC.cpp" />
     <ClCompile Include="source\C3DDSTextureImpl.cpp" />

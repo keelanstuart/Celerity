@@ -76,6 +76,10 @@ namespace c3
 
 		virtual const glm::fmat4x4 *GetMatrix(glm::fmat4x4 *mat = nullptr) const;
 
+		virtual void SetModelByResName(const TCHAR *resname);
+
+		virtual void SetModel(Model *pmod);
+
 		virtual const Model *GetModel() const;
 
 		virtual Model::InstanceData *GetModelInstanceData();

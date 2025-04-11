@@ -353,6 +353,24 @@ const Model *ModelRendererImpl::GetModel() const
 }
 
 
+void ModelRendererImpl::SetModelByResName(const TCHAR *resname)
+{
+	m_Mod.first = nullptr;
+	m_Mod.second = m_pOwner->GetSystem()->GetResourceManager()->GetResource(resname);
+	if (props::IProperty *pp = m_pOwner->GetProperties()->GetPropertyById('MODF'))
+		pp->SetString(resname);
+}
+
+
+void ModelRendererImpl::SetModel(Model *pmod)
+{
+	m_Mod.first = pmod;
+	if (props::IProperty *pp = m_pOwner->GetProperties()->GetPropertyById('MODF'))
+		pp->SetString(_T(""));
+	m_Mod.second = nullptr;
+}
+
+
 Model::InstanceData *ModelRendererImpl::GetModelInstanceData()
 {
 	return (Model::InstanceData *)m_Inst;

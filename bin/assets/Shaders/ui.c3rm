@@ -2,6 +2,7 @@
 
 	<technique name="image">
 		<pass>
+			<setting name="framebuffer"			value="InterfaceBuffer" />
 			<setting name="blendmode"			value="alpha" />
 			<setting name="cullmode"			value="disabled" />
 			<setting name="depthmode"			value="disabled" />
@@ -12,6 +13,7 @@
 
 	<technique name="text">
 		<pass>
+			<setting name="framebuffer"			value="InterfaceBuffer" />
 			<setting name="blendmode"			value="alpha" />
 			<setting name="cullmode"			value="disabled" />
 			<setting name="depthmode"			value="disabled" />

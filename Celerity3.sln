@@ -73,6 +73,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Pool", "third-party\Pool\Pool.vcxproj", "{65A60F8B-6615-4B8F-879A-4E950756E7FD}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PowerProps", "third-party\PowerProps\PowerProps.vcxproj", "{6BEE76CE-1EE0-4FE1-A88C-F18AE45FF9BF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{3E55E33C-4834-4D0A-A998-1A33A6B91B74} = {3E55E33C-4834-4D0A-A998-1A33A6B91B74}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mqme", "third-party\mqme\mqme.vcxproj", "{CF62610A-3667-40BD-8E11-30103DAA6EC0}"
 EndProject

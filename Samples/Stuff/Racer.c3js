@@ -75,11 +75,11 @@ function update(elapsed_seconds)
 
 function handle_input(action, value)
 {
-	if (action == "Strafe Left")
+	if (action == "Turn Left")
 	{
 		racc_accum.z += (turn_speed * value);
 	}
-	else if (action == "Strafe Right")
+	else if (action == "Turn Right")
 	{
 		racc_accum.z -= (turn_speed * value);
 	}
@@ -89,11 +89,11 @@ function handle_input(action, value)
 	else if (action == "Look Right")
 	{
 	}
-	else if (action == "Jump")
+	else if (action == "Accelerate")
 	{
 		lacc_accum.y += (acceleration * value);
 	}
-	else if (action == "Run")
+	else if (action == "Brake")
 	{
 		lacc_accum.y -= (braking * value);
 		SetObjFlag(hobj_brakelights, "DRAW", 1);

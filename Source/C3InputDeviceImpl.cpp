@@ -67,6 +67,12 @@ InputDeviceImpl::~InputDeviceImpl()
 }
 
 
+System *InputDeviceImpl::GetSystem() const
+{
+	return m_pSys;
+}
+
+
 const TCHAR *InputDeviceImpl::GetName() const
 {
 	return m_Name.c_str();
@@ -135,7 +141,7 @@ bool InputDeviceImpl::ButtonReleased(InputDevice::VirtualButton button) const
 
 bool InputDeviceImpl::Update(float elapsed_seconds)
 {
-	for(size_t i = 0; i < NUMBUTTONS; i++)
+	for (size_t i = 0; i < NUMBUTTONS; i++)
 	{
 		if (!m_ButtonState[i])
 		{
@@ -267,4 +273,110 @@ size_t InputDeviceImpl::GetNumAxes() const
 size_t InputDeviceImpl::GetNumButtons() const
 {
 	return m_DIDCaps.dwButtons;
+}
+
+
+const TCHAR *ButtonName[InputDevice::NUMBUTTONS] =
+{
+	_T("debug"),			//DEBUGBUTTON = 0,
+	_T("help"),				//HELP,
+	_T("start"),			//START,
+	_T("select"),			//SELECT,
+	_T("quit"),				//QUIT,
+	_T("axis 1 -y"),		//AXIS1_NEGY,
+	_T("axis 1 +y"),		//AXIS1_POSY,
+	_T("axis 1 -x"),		//AXIS1_NEGX,
+	_T("axis 1 +x"),		//AXIS1_POSX,
+	_T("axis 1 -z"),		//AXIS1_NEGZ,
+	_T("axis 1 +z"),		//AXIS1_POSZ,
+	_T("axis 2 -y"),		//AXIS2_NEGY,
+	_T("axis 2 +y"),		//AXIS2_POSY,
+	_T("axis 2 -x"),		//AXIS2_NEGX,
+	_T("axis 2 +x"),		//AXIS2_POSX,
+	_T("axis 2 -z"),		//AXIS2_NEGZ,
+	_T("axis 2 +z"),		//AXIS2_POSZ,
+	_T("pov +y"),			//POV_POSY,
+	_T("pov -y"),			//POV_NEGY,
+	_T("pov +x"),			//POV_POSX,
+	_T("pov -x"),			//POV_NEGX,
+	_T("button 1"),			//BUTTON1,
+	_T("button 2"),			//BUTTON2,
+	_T("button 3"),			//BUTTON3,
+	_T("button 4"),			//BUTTON4,
+	_T("button 5"),			//BUTTON5,
+	_T("button 6"),			//BUTTON6,
+	_T("button 7"),			//BUTTON7,
+	_T("button 8"),			//BUTTON8,
+	_T("button 9"),			//BUTTON9,
+	_T("button 10"),		//BUTTON10,
+	_T("button 11"),		//BUTTON11,
+	_T("button 12"),		//BUTTON12,
+	_T("throttle 1"),		//THROTTLE1,
+	_T("throttle 2"),		//THROTTLE2,
+	_T("l shift"),			//LSHIFT,
+	_T("r shift"),			//RSHIFT,
+	_T("l ctrl"),			//LCTRL,
+	_T("r ctrl"),			//RCTRL,
+	_T("a"),				//LETTER_A,
+	_T("b"),				//LETTER_B,
+	_T("c"),				//LETTER_C,
+	_T("d"),				//LETTER_D,
+	_T("e"),				//LETTER_E,
+	_T("f"),				//LETTER_F,
+	_T("g"),				//LETTER_G,
+	_T("h"),				//LETTER_H,
+	_T("i"),				//LETTER_I,
+	_T("j"),				//LETTER_J,
+	_T("k"),				//LETTER_K,
+	_T("l"),				//LETTER_L,
+	_T("m"),				//LETTER_M,
+	_T("n"),				//LETTER_N,
+	_T("o"),				//LETTER_O,
+	_T("p"),				//LETTER_P,
+	_T("q"),				//LETTER_Q,
+	_T("r"),				//LETTER_R,
+	_T("s"),				//LETTER_S,
+	_T("t"),				//LETTER_T,
+	_T("u"),				//LETTER_U,
+	_T("v"),				//LETTER_V,
+	_T("w"),				//LETTER_W,
+	_T("x"),				//LETTER_X,
+	_T("y"),				//LETTER_Y,
+	_T("z"),				//LETTER_Z,
+	_T("~"),				//TILDE,
+	_T("tab"),				//TAB,
+	_T("delete"),			//DELETEKEY,
+	_T("back"),				//NAV_BACK,
+	_T("forward"),			//NAV_FORWARD,
+	_T("0"),				//NUM0,
+	_T("1"),				//NUM1,
+	_T("2"),				//NUM2,
+	_T("3"),				//NUM3,
+	_T("4"),				//NUM4,
+	_T("5"),				//NUM5,
+	_T("6"),				//NUM6,
+	_T("7"),				//NUM7,
+	_T("8"),				//NUM8,
+	_T("9"),				//NUM9,
+	_T("save"),				//SAVE,
+	_T("load"),				//LOAD
+};
+
+const TCHAR *InputDevice::GetButtonName(VirtualButton b)
+{
+	return ButtonName[b];
+}
+
+bool InputDevice::GetButtonCodeByName(const TCHAR *name, InputDevice::VirtualButton &ret)
+{
+	for (size_t i = 0; i < InputDevice::NUMBUTTONS; i++)
+	{
+		if (!_tcsicmp(ButtonName[i], name))
+		{
+			ret = (VirtualButton)i;
+			return true;
+		}
+	}
+
+	return false;
 }

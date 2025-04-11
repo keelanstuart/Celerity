@@ -104,10 +104,12 @@ C3EditView::C3EditView() noexcept
 
 	m_GBuf = nullptr;
 	m_EffectsBuf = nullptr;
+	m_InterfaceBuf = nullptr;
 	m_LCBuf = nullptr;
 	m_AuxBuf = nullptr;
 	m_SSBuf = nullptr;
 	m_DepthTarg = nullptr;
+	m_InterfaceDepthTarg = nullptr;
 	m_ShadowTarg = nullptr;
 	m_BTex = { };
 	m_BBuf = { };
@@ -177,9 +179,13 @@ void C3EditView::DestroySurfaces()
 
 	C3_SAFERELEASE(m_EffectsBuf);
 
+	C3_SAFERELEASE(m_InterfaceBuf);
+
 	C3_SAFERELEASE(m_AuxBuf);
 
 	C3_SAFERELEASE(m_DepthTarg);
+
+	C3_SAFERELEASE(m_InterfaceDepthTarg);
 
 	for (auto p : m_BBuf)
 		C3_SAFERELEASE(p);
@@ -204,6 +210,9 @@ void C3EditView::CreateSurfaces()
 
 	if (!m_DepthTarg)
 		m_DepthTarg = prend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
+
+	if (!m_InterfaceDepthTarg)
+		m_InterfaceDepthTarg = prend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
 
 	bool gbok;
 
@@ -232,6 +241,20 @@ void C3EditView::CreateSurfaces()
 		m_EffectsBuf = prend->CreateFrameBuffer(0, _T("EffectsBuffer"));
 	if (m_EffectsBuf)
 		gbok = m_EffectsBuf->Setup(_countof(EffectsTargData), EffectsTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+	m_EffectsBuf->SetClearColor(0, c3::Color::fBlackFT);
+	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+	c3::FrameBuffer::TargetDesc InterfaceTargData[] =
+	{
+		{ _T("uSamplerInterfaceColor"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },	// diffuse color with alpha (rgba)
+	};
+
+	theApp.m_C3->GetLog()->Print(_T("Creating Interface Buffer... "));
+	if (!m_InterfaceBuf)
+		m_InterfaceBuf = prend->CreateFrameBuffer(0, _T("InterfaceBuffer"));
+	if (m_InterfaceBuf)
+		gbok = m_InterfaceBuf->Setup(_countof(InterfaceTargData), InterfaceTargData, m_InterfaceDepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+	m_InterfaceBuf->SetClearColor(0, c3::Color::fBlackFT);
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	for (size_t c = 0; c < BLURTARGS; c++)
@@ -442,7 +465,6 @@ void C3EditView::OnDraw(CDC *pDC)
 		float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
 
 		glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 0);
-		prend->SetClearColor(&cc);
 		m_GBuf->SetClearColor(0, cc);
 		m_GBuf->SetClearColor(2, glm::fvec4(0, 0, 0, farclip));
 
@@ -488,13 +510,17 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		if (prend->BeginScene(BSFLAG_SHOWGUI))
 		{
+			prend->SetClearColor(&c3::Color::fBlackFT);
+			prend->UseFrameBuffer(m_InterfaceBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL);
 			prend->UseFrameBuffer(m_EffectsBuf, UFBFLAG_CLEARCOLOR);
+
+			prend->SetClearColor(&cc);
 
 			// Solid color pass
 			prend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL | UFBFLAG_UPDATEVIEWPORT);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 			prend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
-			prend->SetAlphaPassRange(254.9f / 255.0f);
+			prend->SetAlphaPassRange(254.0f / 255.0f);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
 			prend->SetTextureTransformMatrix(nullptr);
@@ -1403,7 +1429,7 @@ void C3EditView::OnLButtonDown(UINT nFlags, CPoint point)
 
 		theApp.SetActiveObject(pickobj);
 	}
-	else
+	else if (pDoc->m_Brush)
 	{
 		c3::Object *root = pDoc->m_OperationalRootObj ? pDoc->m_OperationalRootObj : pDoc->m_RootObj;
 

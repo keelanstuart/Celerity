@@ -22,6 +22,11 @@ namespace c3
 	class C3_API Component
 	{
 
+	protected:
+
+		Component();
+
+
 	public:
 
 		virtual void Release() = NULL;
@@ -89,8 +94,8 @@ namespace c3
 	};
 
 
-	/// This is the standard way of registering your Component
-	/// Do your own thing, but beware!
+/// This is the standard way of registering your Component
+/// Do your own thing, but beware!
 
 #define COMPONENTTYPE_NAME(component_class) component_class##Type
 

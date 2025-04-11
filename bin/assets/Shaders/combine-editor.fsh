@@ -3,6 +3,7 @@ uniform sampler2D uSamplerNormalAmbOcc;
 uniform sampler2D uSamplerPosDepth;
 uniform sampler2D uSamplerEmissionRoughness;
 uniform sampler2D uSamplerEffectsColor;
+uniform sampler2D uSamplerInterfaceColor;
 uniform sampler2D uSamplerLights;
 uniform sampler2D uSamplerShadow;
 uniform sampler2D uSamplerAuxiliary;
@@ -24,12 +25,13 @@ vec3 acquireAdjacentNormal(sampler2D samp, vec2 uv, vec2 ofs, vec3 def)
 	if (t == vec3(0, 0, 0))
 		return def;
 
-	return normalize(t - 0.5 * 2.0);
+	return normalize(t * 2.0 - 1.0);
 }
 
 void main()
 {
 	vec4 texNormalAmbOcc = texture(uSamplerNormalAmbOcc, fTex0);
+	vec4 texInterfaceColor = texture(uSamplerInterfaceColor, fTex0);
 	
 	ivec2 aux_tex_size = textureSize(uSamplerAuxiliary, 0);
 	vec2 aux_texel_inc;
@@ -70,13 +72,16 @@ void main()
 
 	vec4 texEffectsColor = texture(uSamplerEffectsColor, fTex0);
 
+	vec3 cc;
+
 	if ( (texNormalAmbOcc.rgb == vec3(0, 0, 0)) || (texNormalAmbOcc.rgb == vec3(1, 1, 1)) )
 	{
-		oColor = vec4(texDiffuseMetalness.rgb + texEffectsColor.rgb + cloudiness + glow_color + (emissive * (1 - cloud_factor)), 1);
+		cc = texDiffuseMetalness.rgb + texEffectsColor.rgb + cloudiness + glow_color + (emissive * (1 - cloud_factor));
+		oColor = vec4(mix(cc, texInterfaceColor.rgb, texInterfaceColor.a), 1);
 		return;
 	}
 	
-	vec3 norm = normalize((normalize(texNormalAmbOcc.rgb) - 0.5) * 2.0);
+	vec3 norm = normalize(texNormalAmbOcc.rgb * 2.0 - 1.0);
 
 	vec3 sunlight = normalize(-uSunDirection);
 	float NdotL = max(dot(norm, sunlight), 0.0);
@@ -102,5 +107,6 @@ void main()
 	
 	float shade = (shadow_coords.z > (shadow + bias)) ? 0.0 : 1.0;
 
-	oColor = vec4(((mix(ambient, diffuse, NdotL * shade) + ((specular + cloudiness) * shade))) + (emissive * (1 - cloud_factor)) + lights + glow_color + texEffectsColor.rgb, 1);
+	cc = ((mix(ambient, diffuse, NdotL * shade) + ((specular + cloudiness) * shade))) + (emissive * (1 - cloud_factor)) + lights + glow_color + texEffectsColor.rgb;
+	oColor = vec4(mix(cc, texInterfaceColor.rgb, texInterfaceColor.a), 1);
 }

@@ -81,17 +81,21 @@ bool VirtualMouseImpl::Update(float elapsed_seconds)
 		}
 	}
 
-	m_ButtonState[InputDevice::VirtualButton::AXIS1_POSZ] = 0;
-	m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGZ] = 0;
+	m_ButtonState[InputDevice::VirtualButton::AXIS2_POSZ] = 0;
+	m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGZ] = 0;
+	m_ButtonDelta[InputDevice::VirtualButton::AXIS2_POSZ] = 0;
+	m_ButtonDelta[InputDevice::VirtualButton::AXIS2_NEGZ] = 0;
 
 	// Did we roll our mouse wheel?
 	if (state.lZ > 0)
 	{
-		m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGZ] = InputDevice::BUTTONVAL_MAX; //state.lZ;
+		m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGZ] = InputDevice::BUTTONVAL_MAX; //state.lZ;
+		m_ButtonDelta[InputDevice::VirtualButton::AXIS2_NEGZ] = InputDevice::BUTTONVAL_MAX; //state.lZ;
 	}
 	else if (state.lZ < 0)
 	{
-		m_ButtonState[InputDevice::VirtualButton::AXIS1_POSZ] = InputDevice::BUTTONVAL_MAX; //-state.lZ;
+		m_ButtonState[InputDevice::VirtualButton::AXIS2_POSZ] = InputDevice::BUTTONVAL_MAX; //-state.lZ;
+		m_ButtonDelta[InputDevice::VirtualButton::AXIS2_POSZ] = InputDevice::BUTTONVAL_MAX; //state.lZ;
 	}
 
 	for (uint32_t i = 0; i < 8; i++)

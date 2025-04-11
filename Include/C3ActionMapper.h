@@ -26,7 +26,7 @@ namespace c3
 		};
 
 		// a callback you provide when your action is triggered. gives you the device, user number, which button, and that button's value
-		typedef bool (__cdecl *ACTION_CALLBACK_FUNC)(InputDevice *from_device, size_t user, InputDevice::VirtualButton button, float value, void *userdata);
+		typedef bool (__cdecl *ACTION_CALLBACK_FUNC)(const TCHAR *action_name, InputDevice *from_device, size_t user, InputDevice::VirtualButton button, float value, void *userdata);
 
 		// registers an action with a name and your callback
 		virtual size_t RegisterAction(const TCHAR *name, TriggerType trigger, float delay, ACTION_CALLBACK_FUNC func, void *userdata) = NULL;

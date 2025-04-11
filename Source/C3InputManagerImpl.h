@@ -59,9 +59,11 @@ namespace c3
 
 		virtual void Reset();
 
-		virtual size_t GetNumDevices();
+		virtual size_t GetNumDevices() const;
 
-		virtual InputDevice* GetDevice(size_t idx);
+		virtual InputDevice* GetDevice(size_t idx) const;
+
+		virtual bool FindDevice(const TCHAR *name, size_t &idx) const;
 
 		void PlayForceFeedbackEffect(const TCHAR* filename, int32_t dir_offset = 0);
 

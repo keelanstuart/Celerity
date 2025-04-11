@@ -1,35 +1,38 @@
 var runtime;
-var hcam;
+
 var vec3 = { x:0.0, y:0.0, z:0.0 };
 var vec4 = { x:0.0, y:0.0, z:0.0, w:1.0 };
 var campos = { x:0.0, y:0.0, z:0.0 };
 var camori = { x:0.0, y:0.0, z:0.0, w:1.0 };
 var zaxis = { x:0.0, y:0.0, z:1.0 };
 
-var hprop;
-
-var hobj;
-
 var hobj_camroot;
-var hprop_camrootpos, hprop_camrootori;
+var hprop_camroot_pos, hprop_camroot_ori;
+
+var hobj_camarm;
+var hprop_camarm_pos, hprop_camarm_ori;
+
+var hobj_cam;
+var hprop_cam_pos, hprop_cam_ori, hprop_cam_orbitdist, hprop_cam_farclip;
 
 var hobj_player;
-var hprop_playerpos, hprop_playerori;
+var hprop_player_pos, hprop_player_ori;
+
+var track = "Racetrack1";
 
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 	
-	campos = GetPropertyValue(hprop_camrootpos);
-	vec3 = GetPropertyValue(hprop_playerpos);
+	campos = GetPropertyValue(hprop_camroot_pos);
+	vec3 = GetPropertyValue(hprop_player_pos);
 	campos = Math.lerp(campos, vec3, 0.7);
-	SetPropertyValue(hprop_camrootpos, campos);
+	SetPropertyValue(hprop_camroot_pos, campos);
 
-	camori = GetPropertyValue(hprop_camrootori);
-	vec4 = GetPropertyValue(hprop_playerori);
-	AdjustQuat(vec4, zaxis, Math.toRadians(90.0));
+	camori = GetPropertyValue(hprop_camroot_ori);
+	vec4 = GetPropertyValue(hprop_player_ori);
 	camori = Math.slerp(camori, vec4, 0.7);
-	SetPropertyValue(hprop_camrootori, camori);
+	SetPropertyValue(hprop_camroot_ori, camori);
 }
 
 function init()
@@ -38,43 +41,104 @@ function init()
 
 	LoadPackfile("Vehicles.c3z");
 
-	var load_result = LoadObject(self, "Racetrack1.c3o");
+	var load_result = LoadObject(self, "Stuff/" + track + ".c3o");
 
-	var hobj_camarm = GetRegisteredObject("camera.arm");
+	// ***************************************************
+	hobj_camroot = GetRegisteredObject("camera.root");
+	hprop_camroot_pos = FindProperty(hobj_camroot, "Position");
+	hprop_camroot_ori = FindProperty(hobj_camroot, "Orientation");
 
-	var hprop_camarmori = FindProperty(hobj_camarm, "Orientation");
-	vec3.x = -60.0; vec3.y = 0.0; vec3.z = 0.0;
+	// ***************************************************
+	hobj_camarm = GetRegisteredObject("camera.arm");
+	hprop_camarm_pos = FindProperty(hobj_camarm, "Position");
+	hprop_camarm_ori = FindProperty(hobj_camarm, "Orientation");
+
+	vec3.x = 0.0; vec3.y = -9.0; vec3.z = 0.0;
+	SetPropertyValue(hprop_camarm_pos, vec3);
+	vec3.x = -45.0; vec3.y = 0.0; vec3.z = 0.0;
 	vec4 = EulerToQuat(vec3);
-	SetPropertyValue(hprop_camarmori, vec4);
+	SetPropertyValue(hprop_camarm_ori, vec4);
 
-	var hprop_camarmpos = FindProperty(hobj_camarm, "Position");
-	vec3.x = 0.0; vec3.y = -10.0; vec3.z = 0.0;
-	SetPropertyValue(hprop_camarmpos, vec3);
-	
-	var hobj_cam = GetRegisteredObject("camera");
-	var hprop_camori = FindProperty(hobj_cam, "Orientation");
+	// ***************************************************
+	hobj_cam = GetRegisteredObject("camera");
+	hprop_cam_pos = FindProperty(hobj_cam, "Position");
+	hprop_cam_ori = FindProperty(hobj_cam, "Orientation");
+	hprop_cam_orbitdist = FindProperty(hobj_cam, "OrbitDistance");
+	hprop_cam_farclip = FindProperty(hobj_cam, "FarClip");
+
+	vec3.x = 0.0; vec3.y = -8.0; vec3.z = 0.0;
+	SetPropertyValue(hprop_cam_pos, vec3);
 	vec3.x = 45.0; vec3.y = 0.0; vec3.z = 0.0;
 	vec4 = EulerToQuat(vec3);
-	SetPropertyValue(hprop_camori, vec4);
-
-	hobj_camroot = GetRegisteredObject("camera.root");
-	hprop_camrootpos = FindProperty(hobj_camroot, "Position");
-	hprop_camrootori = FindProperty(hobj_camroot, "Orientation");
+	SetPropertyValue(hprop_cam_ori, vec4);
+	SetPropertyValue(hprop_cam_orbitdist, 0.1);
+	SetPropertyValue(hprop_cam_farclip, 5000.0);
 	
 	hobj_player = FindFirstObjByName(self, "Racer1", 0);
 	RegisterObject("player", hobj_player);
-	hprop_playerpos = FindProperty(hobj_player, "Position");
-	hprop_playerori = FindProperty(hobj_player, "Orientation");
+	hprop_player_pos = FindProperty(hobj_player, "Position");
+	hprop_player_ori = FindProperty(hobj_player, "Orientation");
 	
-	camori = GetPropertyValue(hprop_playerori);
-	AdjustQuat(camori, zaxis, Math.toRadians(90.0));
-	SetPropertyValue(hprop_camrootori, camori);
+	camori = GetPropertyValue(hprop_player_ori);
+	SetPropertyValue(hprop_camroot_ori, camori);
 
-	campos = GetPropertyValue(hprop_playerpos);
-	SetPropertyValue(hprop_camrootpos, campos);
+	campos = GetPropertyValue(hprop_player_pos);
+	SetPropertyValue(hprop_camroot_pos, campos);
 
 	if (load_result["success"] == 1)
 		Log("Scene loaded successfully!\n");
 	else
 		Log("Scene failed to load!\n");
+
+	RegisterInputAction("Turn Left", "", 0.0);
+	RegisterInputAction("Turn Right", "", 0.0);
+	RegisterInputAction("Look Left", "", 0.0);
+	RegisterInputAction("Look Right", "", 0.0);
+	RegisterInputAction("Accelerate", "", 0.0);
+	RegisterInputAction("Brake", "", 0.0);
+	RegisterInputAction("Cycle View Mode", "up", 0.0);
+}
+
+
+function device_connected(device_type, device_name, naxes, nbuttons)
+{
+	Log("Registering " + device_name + " Controls... ");
+
+	if (device_type == "keyboard")
+	{
+		LinkInputToAction("Turn Left", device_name, "a");
+		LinkInputToAction("Turn Right", device_name, "d");
+		LinkInputToAction("Look Left", device_name, "axis 1 -x");
+		LinkInputToAction("Look Right", device_name, "axis 1 +x");
+		LinkInputToAction("Accelerate", device_name, "w");
+		LinkInputToAction("Brake", device_name, "s");
+		LinkInputToAction("Cycle View Mode", device_name, "select");
+
+		Log("done.\n");
+	}
+	else if (device_type == "mouse")
+	{
+		LinkInputToAction("Turn Left", device_name, "axis 2 -x");
+		LinkInputToAction("Turn Right", device_name, "axis 2 +x");
+		LinkInputToAction("Accelerate", device_name, "button 1");
+		LinkInputToAction("Brake", device_name, "button 2");
+
+		Log("done.\n");
+	}
+	else if (naxes > 1)
+	{
+		LinkInputToAction("Turn Left", device_name, "axis 1 -x");
+		LinkInputToAction("Turn Right", device_name, "axis 1 +x");
+		LinkInputToAction("Look Left", device_name, "axis 2 -x");
+		LinkInputToAction("Look Right", device_name, "axis 2 +x");
+		LinkInputToAction("Accelerate", device_name, "button 1");
+		LinkInputToAction("Brake", device_name, "button 2");
+		LinkInputToAction("Cycle View Mode", device_name, "button 4");
+
+		Log("done.\n");
+	}
+	else
+	{
+		Log("device ignored.\n");
+	}
 }

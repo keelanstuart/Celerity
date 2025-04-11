@@ -498,6 +498,25 @@ void SoundPlayerImpl::SetChannelVolume(HCHANNEL hc, float volume)
 }
 
 
+void SoundPlayerImpl::SetChannelPitchMod(HCHANNEL hc, float pitchmult)
+{
+	if (!m_bInitialized)
+		return;
+
+	if (hc >= m_Channels.size())
+		return;
+
+	TChannelArray::iterator chit = m_Channels.begin() + hc;
+	if (chit->state != ChannelState::active)
+		return;
+
+	if (pitchmult < 0.1f)
+		pitchmult = 0.1f;
+
+	ma_sound_set_pitch(&chit->sound, pitchmult);
+}
+
+
 void SoundPlayerImpl::SetChannelPos(HCHANNEL hc, const glm::fvec3 *pos)
 {
 	if (!m_bInitialized)

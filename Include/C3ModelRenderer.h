@@ -69,6 +69,12 @@ namespace c3
 		// Returns the model that is being rendered
 		virtual const Model *GetModel() const = NULL;
 
+		// Sets the Model by Resource name (could be a filename, but could also be some other registered resource)
+		virtual void SetModelByResName(const TCHAR *resname) = NULL;
+
+		// Sets the Model directly
+		virtual void SetModel(Model *pmod) = NULL;
+
 		// Returns the InstanceData for the rendered Model
 		virtual Model::InstanceData *GetModelInstanceData() = NULL;
 

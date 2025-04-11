@@ -410,14 +410,14 @@ void InputManagerImpl::PlayForceFeedbackEffect(const TCHAR *filename, int32_t di
 }
 
 
-size_t InputManagerImpl::GetNumDevices()
+size_t InputManagerImpl::GetNumDevices() const
 {
 	return m_Devices.size();
 }
 
 
 
-InputDevice *InputManagerImpl::GetDevice(size_t idx)
+InputDevice *InputManagerImpl::GetDevice(size_t idx) const
 {
 	if (idx < m_Devices.size())
 	{
@@ -425,4 +425,19 @@ InputDevice *InputManagerImpl::GetDevice(size_t idx)
 	}
 
 	return nullptr;
+}
+
+
+bool InputManagerImpl::FindDevice(const TCHAR *name, size_t &idx) const
+{
+	for (size_t i = 0, maxi = m_Devices.size(); i < maxi; i++)
+	{
+		if (!_tcsicmp(m_Devices[i].first->GetName(), name))
+		{
+			idx = i;
+			return true;
+		}
+	}
+
+	return false;
 }

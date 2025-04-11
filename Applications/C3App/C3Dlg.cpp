@@ -11,6 +11,7 @@
 #include <C3Gui.h>
 #include <Pool.h>
 #include <C3Utility.h>
+#include <C3InputDevice.h>
 
 #include <C3CommonVertexDefs.h>
 
@@ -27,9 +28,11 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 
 	m_GBuf = nullptr;
 	m_LCBuf = nullptr;
+	m_InterfaceBuf = nullptr;
 	m_AuxBuf = nullptr;
 	m_SSBuf = nullptr;
 	m_DepthTarg = nullptr;
+	m_InterfaceDepthTarg = nullptr;
 	m_ShadowTarg = nullptr;
 	m_BTex = { };
 	m_BBuf = { };
@@ -118,38 +121,6 @@ BEGIN_MESSAGE_MAP(C3Dlg, CDialog)
 END_MESSAGE_MAP()
 
 
-void C3Dlg::RegisterAction(const TCHAR *name, c3::ActionMapper::ETriggerType tt, float delay)
-{
-	c3::ActionMapper *pam = theApp.m_C3->GetActionMapper();
-
-	pam->RegisterAction(name, tt, delay, [](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
-	{
-		if (theApp.GetMainWnd() != GetFocus())
-			return false;
-
-		if (theApp.m_pActiveWnd != GetCapture())
-			return false;
-
-		const TCHAR *name = (const TCHAR *)userdata;
-
-		c3::Object *inputobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_PLAYER);
-		if (!inputobj)
-			inputobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT);
-		if (inputobj)
-		{
-			c3::Scriptable *pscr = dynamic_cast<c3::Scriptable *>(inputobj->FindComponent(c3::Scriptable::Type()));
-			if (pscr)
-			{
-				if (pscr->FunctionExists(_T("handle_input")))
-					pscr->Execute(_T("handle_input(\"%s\", %0.5f);"), name, value);
-				return true;
-			}
-		}
-		return false;
-	}, (void *)name);
-};
-
-
 void C3Dlg::DestroySurfaces()
 {
 	c3::util::RecursiveObjectAction(m_WorldRoot, [](c3::Object *pobj)
@@ -196,6 +167,9 @@ void C3Dlg::CreateSurfaces()
 	if (!m_DepthTarg)
 		m_DepthTarg = prend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
 
+	if (!m_InterfaceDepthTarg)
+		m_InterfaceDepthTarg = prend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
+
 	bool gbok;
 
 	c3::FrameBuffer::TargetDesc GBufTargData[] =
@@ -223,6 +197,20 @@ void C3Dlg::CreateSurfaces()
 		m_EffectsBuf = prend->CreateFrameBuffer(0, _T("EffectsBuffer"));
 	if (m_EffectsBuf)
 		gbok = m_EffectsBuf->Setup(_countof(EffectsTargData), EffectsTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+	m_EffectsBuf->SetClearColor(0, c3::Color::fBlack);
+	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
+
+	c3::FrameBuffer::TargetDesc InterfaceTargData[] =
+	{
+		{ _T("uSamplerInterfaceColor"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },	// diffuse color with alpha (rgba)
+	};
+
+	theApp.m_C3->GetLog()->Print(_T("Creating Interface Buffer... "));
+	if (!m_InterfaceBuf)
+		m_InterfaceBuf = prend->CreateFrameBuffer(0, _T("InterfaceBuffer"));
+	if (m_InterfaceBuf)
+		gbok = m_InterfaceBuf->Setup(_countof(InterfaceTargData), InterfaceTargData, m_InterfaceDepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+	m_InterfaceBuf->SetClearColor(0, c3::Color::fBlackFT);
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	for (size_t c = 0; c < BLURTARGS; c++)
@@ -496,42 +484,14 @@ BOOL C3Dlg::OnInitDialog()
 
 	theApp.m_C3->GetLog()->Print(_T("Setting up actions... "));
 
-	RegisterAction(_T("Run"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Jump"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Fire 1"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Fire 2"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Move Forward"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Move Backward"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Strafe Left"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Strafe Right"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Look Up"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Look Down"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Look Left"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Look Right"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Ascend"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Descend"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Increase Velocity"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Decrease Velocity"), c3::ActionMapper::ETriggerType::DOWN_CONTINUOUS, 0);
-	RegisterAction(_T("Cycle View Mode"), c3::ActionMapper::ETriggerType::UP_DELTA, 0);
-
 	theApp.m_C3->GetActionMapper()->RegisterAction(_T("Toggle Debug"), c3::ActionMapper::ETriggerType::UP_DELTA, 0,
-		[](c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
+		[](const TCHAR *action_name, c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
 		{
 			*((bool *)userdata) ^= true;
 			return true;
 		},
 		&m_ShowDebug);
 
-	theApp.m_C3->GetLog()->Print(_T("ok\n"));
-
-	theApp.m_C3->GetLog()->Print(_T("Creating InputManager... "));
-	c3::InputManager::SetDeviceConnectionCallback(DeviceConnected, this);
-	c3::InputManager *inputman = theApp.m_C3->GetInputManager();
-	if (!inputman)
-	{
-		theApp.m_C3->GetLog()->Print(_T("failed\n"));
-		exit(-1);
-	}
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
 	InitializeGraphics();
@@ -639,6 +599,16 @@ BOOL C3Dlg::OnInitDialog()
 		}
 	}
 
+	theApp.m_C3->GetLog()->Print(_T("Creating InputManager... "));
+	c3::InputManager::SetDeviceConnectionCallback(DeviceConnected, this);
+	c3::InputManager *inputman = theApp.m_C3->GetInputManager();
+	if (!inputman)
+	{
+		theApp.m_C3->GetLog()->Print(_T("failed\n"));
+		exit(-1);
+	}
+	theApp.m_C3->GetLog()->Print(_T("ok\n"));
+
 	UINT_PTR timerid = SetTimer('DRAW', 17, nullptr);
 	assert(timerid);
 
@@ -727,10 +697,10 @@ void C3Dlg::OnPaint()
 
 				if (skybox)
 					skybox->Update(dt);
-
-				if (gui)
-					gui->Update(dt);
 			}
+
+			if (gui)
+				gui->Update(dt);
 
 			c3::Object *camobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA);
 			c3::Positionable *campos = m_Camera ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
@@ -773,13 +743,17 @@ void C3Dlg::OnPaint()
 
 			if (prend->BeginScene(BSFLAG_SHOWGUI))
 			{
+				prend->SetClearColor(&c3::Color::fBlackFT);
+				prend->UseFrameBuffer(m_InterfaceBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL);
 				prend->UseFrameBuffer(m_EffectsBuf, UFBFLAG_CLEARCOLOR);
+
+				prend->SetClearColor(&cc);
 
 				// Solid color pass
 				prend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL | UFBFLAG_UPDATEVIEWPORT);
 				prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 				prend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
-				prend->SetAlphaPassRange(254.9f / 255.0f);
+				prend->SetAlphaPassRange(254.0f / 255.0f);
 				prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
 				prend->SetTextureTransformMatrix(nullptr);
@@ -1022,128 +996,36 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 	if (!conn)
 		return false;
 
-	c3::ActionMapper *pam = theApp.m_C3->GetActionMapper();
+	static const TCHAR *devtypename[c3::InputDevice::DeviceType::UNKNOWN] = {_T("none"), _T("joystick"), _T("mouse"), _T("keyboard")};
 
-	size_t ai_mf = pam->FindActionIndex(_T("Move Forward"));
-	size_t ai_mb = pam->FindActionIndex(_T("Move Backward"));
-	size_t ai_sl = pam->FindActionIndex(_T("Strafe Left"));
-	size_t ai_sr = pam->FindActionIndex(_T("Strafe Right"));
-	size_t ai_lu = pam->FindActionIndex(_T("Look Up"));
-	size_t ai_ld = pam->FindActionIndex(_T("Look Down"));
-	size_t ai_ll = pam->FindActionIndex(_T("Look Left"));
-	size_t ai_lr = pam->FindActionIndex(_T("Look Right"));
-	size_t ai_a = pam->FindActionIndex(_T("Ascend"));
-	size_t ai_d = pam->FindActionIndex(_T("Descend"));
-	size_t ai_r = pam->FindActionIndex(_T("Run"));
-	size_t ai_j = pam->FindActionIndex(_T("Jump"));
-	size_t ai_cvm = pam->FindActionIndex(_T("Cycle View Mode"));
-	size_t ai_f1 = pam->FindActionIndex(_T("Fire 1"));
-	size_t ai_f2 = pam->FindActionIndex(_T("Fire 2"));
-	size_t ai_td = pam->FindActionIndex(_T("Toggle Debug"));
-	size_t ai_dv = pam->FindActionIndex(_T("Increase Velocity"));
-	size_t ai_iv = pam->FindActionIndex(_T("Decrease Velocity"));
+	c3::Scriptable *pscr = nullptr;
+	c3::Object *inputobj;
 
-	switch (device->GetType())
+	auto ConfirmInputObject = [&](c3::Object *obj) -> c3::Object *
 	{
-		case c3::InputDevice::DeviceType::KEYBOARD:
+		if (obj)
 		{
-			theApp.m_C3->GetInputManager()->AssignUser(device, 0);
-
-			pam->MakeAssociation(ai_r, device->GetUID(), c3::InputDevice::VirtualButton::LSHIFT);
-
-			pam->MakeAssociation(ai_mf, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSY);
-			pam->MakeAssociation(ai_mb, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGY);
-			pam->MakeAssociation(ai_sl, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGX);
-			pam->MakeAssociation(ai_sr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSX);
-
-			pam->MakeAssociation(ai_mf, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_W);
-			pam->MakeAssociation(ai_mb, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_S);
-			pam->MakeAssociation(ai_sl, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_A);
-			pam->MakeAssociation(ai_sr, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_D);
-
-			pam->MakeAssociation(ai_ld, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGY);
-			pam->MakeAssociation(ai_lu, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSY);
-			pam->MakeAssociation(ai_ll, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGX);
-			pam->MakeAssociation(ai_lr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSX);
-
-			pam->MakeAssociation(ai_a, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_Q);
-			pam->MakeAssociation(ai_d, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_Z);
-
-			pam->MakeAssociation(ai_f1, device->GetUID(), c3::InputDevice::VirtualButton::SELECT);
-			pam->MakeAssociation(ai_f2, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_X);
-
-			pam->MakeAssociation(ai_cvm, device->GetUID(), c3::InputDevice::VirtualButton::LETTER_C);
-
-			pam->MakeAssociation(ai_td, device->GetUID(), c3::InputDevice::VirtualButton::DEBUGBUTTON);
-
-			break;
+			pscr = dynamic_cast<c3::Scriptable *>(obj->FindComponent(c3::Scriptable::Type()));
+			if (pscr && pscr->FunctionExists(_T("device_connected")))
+				return obj;
 		}
 
-		case c3::InputDevice::DeviceType::MOUSE:
-		{
-			theApp.m_C3->GetInputManager()->AssignUser(device, 0);
+		return nullptr;
+	};
 
-			pam->MakeAssociation(ai_f1, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON1);
-			pam->MakeAssociation(ai_f2, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON2);
+	inputobj = ConfirmInputObject(theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_PLAYER));
+	if (!inputobj)
+		inputobj = ConfirmInputObject(theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT));
 
-			pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSZ);
-			pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGZ);
+	if (pscr)
+	{
+		pscr->Execute(_T("device_connected(\"%s\", \"%s\", %lld, %lld);"),
+			devtypename[device->GetType()], device->GetName(), device->GetNumAxes(), device->GetNumButtons());
 
-			pam->MakeAssociation(ai_lu, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSY);
-			pam->MakeAssociation(ai_ld, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGY);
-			pam->MakeAssociation(ai_ll, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGX);
-			pam->MakeAssociation(ai_lr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSX);
-
-			break;
-		}
-
-		case c3::InputDevice::DeviceType::JOYSTICK:
-		{
-			theApp.m_C3->GetInputManager()->AssignUser(device, 1);
-
-			if (device->GetNumAxes() > 1)
-			{
-				pam->MakeAssociation(ai_r, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON2);
-				pam->MakeAssociation(ai_mf, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSY);
-				pam->MakeAssociation(ai_mb, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGY);
-				pam->MakeAssociation(ai_sl, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGX);
-				pam->MakeAssociation(ai_sr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSX);
-
-				pam->MakeAssociation(ai_ld, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGY);
-				pam->MakeAssociation(ai_lu, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSY);
-				pam->MakeAssociation(ai_ll, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_NEGX);
-				pam->MakeAssociation(ai_lr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS2_POSX);
-
-				pam->MakeAssociation(ai_iv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSZ);
-				pam->MakeAssociation(ai_dv, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGZ);
-
-				pam->MakeAssociation(ai_j, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON1);
-				pam->MakeAssociation(ai_f1, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON3);
-				pam->MakeAssociation(ai_f2, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON4);
-
-				pam->MakeAssociation(ai_a, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON6);
-				pam->MakeAssociation(ai_d, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON5);
-
-				pam->MakeAssociation(ai_cvm, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON3);
-			}
-			else
-			{
-				pam->MakeAssociation(ai_mf, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON1);
-				pam->MakeAssociation(ai_mb, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON2);
-				pam->MakeAssociation(ai_sl, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON3);
-				pam->MakeAssociation(ai_sr, device->GetUID(), c3::InputDevice::VirtualButton::BUTTON4);
-
-				pam->MakeAssociation(ai_ld, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGY);
-				pam->MakeAssociation(ai_lu, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSY);
-				pam->MakeAssociation(ai_ll, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_NEGX);
-				pam->MakeAssociation(ai_lr, device->GetUID(), c3::InputDevice::VirtualButton::AXIS1_POSX);
-			}
-
-			break;
-		}
+		return true;
 	}
 
-	return true;
+	return false;
 }
 
 

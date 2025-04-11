@@ -36,7 +36,7 @@ var boost = 0;
 var boost_recharge = 0.3;
 
 var thruster_strength = 10.0;
-var turn_speed = Math.toRadians(1.0);
+var turn_speed = Math.toRadians(80.0);
 
 var collision_info;
 
@@ -47,6 +47,8 @@ var bpos = { x: 0.0, y: 0.0, z:0.0 };
 var bvel = { x: 0.0, y: 0.0, z:0.0 };
 var bullet_cooldown_max = 0.33;
 var bullet_cooldown = 0.0;
+
+var hsound_engine = 0;
 
 var missile_idx = 0;
 var missiles_max = 4;
@@ -69,13 +71,20 @@ function update(elapsed_seconds)
 	else if (boost_time < 0.0)
 		boost_time = 0.0;
 
-	speed = Math.range(speed, speed_min, speed_max);
-
 	if (boost == 0)
+	{
+		speed = Math.range(speed, speed_min, speed_max);
 		lvel_accum.y = speed;
+	}
 	else
-		lvel_accum.y = speed_max * 2.0;
-	
+	{
+		lvel_accum.y = speed_max * 3.0;
+	}
+
+	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	SetSoundPosition(hsound_engine, tmpv3);
+	SetSoundPitchMod(hsound_engine, (speed / speed_max) / 2.0 + 0.5);
+
 	if (lvel_accum.y <= 0.0)
 		SetObjFlag(hobj_thrust, "DRAW", 0);
 	else
@@ -89,9 +98,9 @@ function update(elapsed_seconds)
 	zaxis = GetPropertyValue(hprop_facing.up);
 	
 	ori = GetPropertyValue(hprop_ori);
-	ori = AdjustQuat(ori, xaxis, rvel_accum.x);
-	ori = AdjustQuat(ori, yaxis, rvel_accum.y);
-	ori = AdjustQuat(ori, zaxis, rvel_accum.z);
+	ori = AdjustQuat(ori, xaxis, rvel_accum.x * elapsed_seconds);
+	ori = AdjustQuat(ori, yaxis, rvel_accum.y * elapsed_seconds);
+	ori = AdjustQuat(ori, zaxis, rvel_accum.z * elapsed_seconds);
 	SetPropertyValue(hprop_ori, ori);
 
 	// clear the accumulators after each update
@@ -137,6 +146,14 @@ function handle_input(action, value)
 	{
 		rvel_accum.z -= (turn_speed * value);
 	}
+	else if (action == "Roll Left")
+	{
+		rvel_accum.y -= (turn_speed * value);
+	}
+	else if (action == "Roll Right")
+	{
+		rvel_accum.y += (turn_speed * value);
+	}
 	else if (action == "Increase Velocity")
 	{
 		speed += speed_step;
@@ -145,7 +162,7 @@ function handle_input(action, value)
 	{
 		speed -= speed_step;
 	}
-	else if (action == "Run")
+	else if (action == "Boost")
 	{
 		boost = 1;
 	}
@@ -203,9 +220,14 @@ function init()
 	}
 
 	collision_info = CreateCollisionResults();
+
+	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	hsound_engine = PlaySound("Protectorate/engine.wav", 255.0, 0.1, -1, tmpv3);
 }
 
 function free()
 {
 	FreeCollisionResults(collision_info);
+
+	StopSound(hsound_engine);
 }

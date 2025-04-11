@@ -346,18 +346,25 @@ void scMathLerp(CScriptVar *c, void *userdata)
 		return;
 
 	CScriptVar *pt = c->GetParameter(_T("t"));
-	float t = pt->GetFloat();
+	float t = glm::fclamp(pt->GetFloat(), 0.0f, 1.0f);
 
-	for (int64_t i = 0; i < elct; i++)
+	if (pa->IsFloat())
 	{
-		CScriptVarLink *pacomp = pa->GetChild(i);
-		CScriptVarLink *pbcomp = pb->GetChild(i);
-		CScriptVarLink *prcomp = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+		pr->SetFloat((pb->GetFloat() - pa->GetFloat()) * t + pa->GetFloat());
+	}
+	else
+	{
+		for (int64_t i = 0; i < elct; i++)
+		{
+			CScriptVarLink *pacomp = pa->GetChild(i);
+			CScriptVarLink *pbcomp = pb->GetChild(i);
+			CScriptVarLink *prcomp = pr->FindChildOrCreate(pacomp->m_Name.c_str());
 
-		float va = pacomp->m_Var->GetFloat();
-		float vb = pbcomp->m_Var->GetFloat();
+			float va = pacomp->m_Var->GetFloat();
+			float vb = pbcomp->m_Var->GetFloat();
 
-		prcomp->m_Var->SetFloat((vb - va) * t + va);
+			prcomp->m_Var->SetFloat((vb - va) * t + va);
+		}
 	}
 }
 

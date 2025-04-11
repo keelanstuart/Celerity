@@ -26,7 +26,7 @@ namespace c3
 		enum { BUTTONVAL_MIN = -127 };
 
 		// enumated indices into the button state/delta array
-		typedef enum
+		using VirtualButton = enum
 		{
 			DEBUGBUTTON = 0,
 
@@ -143,7 +143,7 @@ namespace c3
 			NUMBUTTONS,
 
 			ANY = NUMBUTTONS
-		} VirtualButton;
+		};
 
 		typedef enum 
 		{
@@ -156,6 +156,13 @@ namespace c3
 			UNKNOWN
 
 		} DeviceType;
+
+		static const TCHAR *GetButtonName(VirtualButton b);
+
+		static bool GetButtonCodeByName(const TCHAR *name, VirtualButton &ret);
+
+		// Returns the System that owns this Device
+		virtual System *GetSystem() const = NULL;
 
 		// Returns the name of the device
 		virtual const TCHAR *GetName() const = NULL;

@@ -30,8 +30,8 @@ namespace c3
 			#define DEFAULT_CELERITY_PLUGIN_EXT			_T("*.c3plug")
 		#endif
 
-		/// Discovers plug-ins matching the given filespec and can auto-activate them if desired
-		virtual RETURNCODE DiscoverPlugins(const TCHAR *path = nullptr, const TCHAR *filespec = DEFAULT_CELERITY_PLUGIN_EXT, bool auto_activate = true, size_t *numfound = nullptr) = NULL;
+		/// Loads a specific plug-in matching the given filename
+		virtual RETURNCODE LoadPlugin(const TCHAR *filename, bool activate = true) = NULL;
 
 		/// Unloads a specific plug-in
 		virtual RETURNCODE UnloadPlugin(Plugin *pplug) = NULL;
@@ -46,7 +46,10 @@ namespace c3
 		virtual Plugin *GetPlugin(size_t idx) const = NULL;
 
 		/// Returns true if a plug-in is already loaded, optionally tells you what index it is
-		virtual bool PluginIsLoaded(const TCHAR *path, size_t *idx = nullptr) const = NULL;
+		virtual bool PluginIsLoaded(const TCHAR *filename, size_t *idx = nullptr) const = NULL;
+
+		/// Discovers plug-ins matching the given filespec and can auto-activate them if desired
+		virtual RETURNCODE DiscoverPlugins(const TCHAR *path = nullptr, const TCHAR *filespec = DEFAULT_CELERITY_PLUGIN_EXT, bool auto_activate = true, size_t *numfound = nullptr) = NULL;
 
 	};
 

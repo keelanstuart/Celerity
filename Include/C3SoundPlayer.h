@@ -82,6 +82,8 @@ namespace c3
 
 		virtual void SetChannelVolume(HCHANNEL chidx, float volume) = NULL;
 
+		virtual void SetChannelPitchMod(HCHANNEL hc, float pitchmult) = NULL;
+
 		virtual void SetChannelPos(HCHANNEL hc, const glm::fvec3 *pos = nullptr) = NULL;
 
 	};

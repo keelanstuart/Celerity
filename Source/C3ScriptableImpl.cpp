@@ -134,6 +134,12 @@ void jcAdjustQuat(CScriptVar *c, void *userdata);
 void jcQuatToEuler(CScriptVar *c, void *userdata);
 void jcEulerToQuat(CScriptVar *c, void *userdata);
 void jcPlaySound(CScriptVar *c, void *userdata);
+void jcStopSound(CScriptVar *c, void *userdata);
+void jcPauseSound(CScriptVar *c, void *userdata);
+void jcResumeSound(CScriptVar *c, void *userdata);
+void jcSetSoundVolume(CScriptVar *c, void *userdata);
+void jcSetSoundPitchMod(CScriptVar *c, void *userdata);
+void jcSetSoundPosition(CScriptVar *c, void *userdata);
 void jcGetModelNodeIndex(CScriptVar *c, void *userdata);
 void jcGetModelNodeCount(CScriptVar *c, void *userdata);
 void jcGetModelInstNodePos(CScriptVar *c, void *userdata);
@@ -154,6 +160,14 @@ void jcUnpackColorToIntVec(CScriptVar *c, void *userdata);
 void jcUnpackColorToFloatVec(CScriptVar *c, void *userdata);
 void jcLoadPackfile(CScriptVar *c, void *userdata);
 void jcUnloadPackfile(CScriptVar *c, void *userdata);
+void jcLoadPlugin(CScriptVar *c, void *userdata);
+void jcUnloadPlugin(CScriptVar *c, void *userdata);
+void jcMessageBox(CScriptVar *c, void *userdata);
+void jcRegisterResourcePath(CScriptVar *c, void *userdata);
+void jcRegisterInputAction(CScriptVar *c, void *userdata);
+void jcUnregisterInputAction(CScriptVar *c, void *userdata);
+void jcFindInputAction(CScriptVar *c, void *userdata);
+void jcLinkInputToAction(CScriptVar *c, void *userdata);
 
 
 void ScriptableImpl::ResetJS()
@@ -206,6 +220,12 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function QuatToEuler(quat)"),									jcQuatToEuler, psys);
 
 	m_JS->AddNative(_T("function PlaySound(filename, volmod, pitchmod, loop, pos)"),	jcPlaySound, psys);
+	m_JS->AddNative(_T("function StopSound(hsound)"),									jcStopSound, psys);
+	m_JS->AddNative(_T("function PauseSound(hsound)"),									jcPauseSound, psys);
+	m_JS->AddNative(_T("function PauseSound(hsound)"),									jcResumeSound, psys);
+	m_JS->AddNative(_T("function SetSoundVolume(hsound, vol)"),							jcSetSoundVolume, psys);
+	m_JS->AddNative(_T("function SetSoundPitchMod(hsound, pitchmod)"),					jcSetSoundPitchMod, psys);
+	m_JS->AddNative(_T("function SetSoundPosition(hsound, pos)"),						jcSetSoundPosition, psys);
 
 	m_JS->AddNative(_T("function GetModelNodeIndex(hobj, nodename)"),					jcGetModelNodeIndex, psys);
 	m_JS->AddNative(_T("function GetModelNodeCount(hobj)"),								jcGetModelNodeCount, psys);
@@ -230,6 +250,19 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function LoadPackfile(filename)"),								jcLoadPackfile, psys);
 	m_JS->AddNative(_T("function UnloadPackfile(filename)"),							jcUnloadPackfile, psys);
+
+	m_JS->AddNative(_T("function LoadPlugin(filename)"),								jcLoadPlugin, psys);
+	m_JS->AddNative(_T("function UnloadPlugin(filename)"),								jcUnloadPlugin, psys);
+
+	m_JS->AddNative(_T("function MessageBox(caption, message, modestr)"),				jcMessageBox, psys);
+
+	m_JS->AddNative(_T("function RegisterResourcePath(ext, path)"),						jcRegisterResourcePath, psys);
+
+	m_JS->AddNative(_T("function RegisterInputAction(action_name, press_mode, delay)"),	jcRegisterInputAction, psys);
+	m_JS->AddNative(_T("function UnregisterInputAction(action_name)"),					jcUnregisterInputAction, psys);
+	m_JS->AddNative(_T("function FindInputAction(action_name)"),						jcFindInputAction, psys);
+	m_JS->AddNative(_T("function LinkInputToAction(action_name, device, input_name)"),	jcLinkInputToAction, psys);
+
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -1051,7 +1084,8 @@ void jcLoadPrototypes(CScriptVar *c, void *userdata)
 
 	if (psys->GetFileMapper()->FindFile(filename.c_str(), fullpath, MAX_PATH))
 	{
-		psys->GetFactory()->LoadPrototypes((genio::IInputStream *)nullptr, fullpath);
+		if (psys->GetFactory()->LoadPrototypes((const tinyxml2::XMLNode *)nullptr, fullpath))
+			ret->SetInt(1);
 	}
 }
 
@@ -1495,6 +1529,97 @@ void jcPlaySound(CScriptVar *c, void *userdata)
 	Resource *pres = psys->GetResourceManager()->GetResource(pfilename->GetString(), RESF_DEMANDLOAD);
 
 	ret->SetInt((int64_t)(psys->GetSoundPlayer()->Play(pres, SoundPlayer::SOUND_TYPE::ST_SFX, pvolmod ? pvolmod->GetFloat() : 0, ppitchmod ? ppitchmod->GetFloat() : 0, ploop ? ploop->GetInt() : 1, &pos)));
+}
+
+
+//m_JS->AddNative(_T("function StopSound(hsound)"),			jcStopSound, psys);
+void jcStopSound(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVar *phsound = c->GetParameter(_T("hsound"));
+
+	psys->GetSoundPlayer()->Stop(phsound->GetInt());
+}
+
+
+//m_JS->AddNative(_T("function PauseSound(hsound)"),			jcPauseSound, psys);
+void jcPauseSound(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVar *phsound = c->GetParameter(_T("hsound"));
+
+	psys->GetSoundPlayer()->Pause(phsound->GetInt());
+}
+
+
+//m_JS->AddNative(_T("function ResumeSound(hsound)"),			jcResumeSound, psys);
+void jcResumeSound(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVar *phsound = c->GetParameter(_T("hsound"));
+
+	psys->GetSoundPlayer()->Resume(phsound->GetInt());
+}
+
+
+//m_JS->AddNative(_T("function SetSoundVolume(hsound, vol)"),			jcSetSoundVolume, psys);
+void jcSetSoundVolume(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVar *phsound = c->GetParameter(_T("hsound"));
+	CScriptVar *pvol = c->GetParameter(_T("vol"));
+
+	float vol = pvol->GetFloat();
+	if (vol < 0)
+		vol = 0.0f;
+
+	psys->GetSoundPlayer()->SetChannelVolume(phsound->GetInt(), vol);
+}
+
+
+//m_JS->AddNative(_T("function SetSoundPitchMod(hsound, pitchmod)"),			jcSetSoundPitchMod, psys);
+void jcSetSoundPitchMod(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVar *phsound = c->GetParameter(_T("hsound"));
+	CScriptVar *ppitchmod = c->GetParameter(_T("pitchmod"));
+
+	psys->GetSoundPlayer()->SetChannelPitchMod(phsound->GetInt(), ppitchmod->GetFloat());
+}
+
+//m_JS->AddNative(_T("function SetSoundPosition(hsound, pos)"),			jcSetSoundPosition, psys);
+void jcSetSoundPosition(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVar *phsound = c->GetParameter(_T("hsound"));
+
+	glm::fvec3 pos(0, 0, 0);
+	CScriptVar *ppos = c->GetParameter(_T("pos"));
+	if (ppos)
+	{
+		CScriptVarLink *px = ppos->FindChild(_T("x"));
+		if (px)	pos.x = px->m_Var->GetFloat();
+
+		CScriptVarLink *py = ppos->FindChild(_T("y"));
+		if (py)	pos.y = py->m_Var->GetFloat();
+
+		CScriptVarLink *pz = ppos->FindChild(_T("z"));
+		if (pz)	pos.z = pz->m_Var->GetFloat();
+	}
+
+	psys->GetSoundPlayer()->SetChannelPos(phsound->GetInt(), &pos);
 }
 
 
@@ -2160,4 +2285,216 @@ void jcUnloadPackfile(CScriptVar *c, void *userdata)
 	tstring filename = c->GetParameter(_T("filename"))->GetString();
 
 	psys->GetResourceManager()->UnregisterZipArchive(filename.c_str());
+}
+
+
+//m_JS->AddNative(_T("function LoadPlugin(filename)"),				jcLoadPlugin, psys);
+void jcLoadPlugin(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	bool success = false;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring filename = c->GetParameter(_T("filename"))->GetString();
+
+	PluginManager *plugman = psys->GetPluginManager();
+
+	if (!plugman->PluginIsLoaded(filename.c_str()))
+	{
+		success = (plugman->LoadPlugin(filename.c_str(), true) == c3::PluginManager::RET_OK);
+	}
+
+	if (ret)
+		ret->SetInt(success ? 1 : 0);
+}
+
+
+//m_JS->AddNative(_T("function UnloadPlugin(filename)"),				jcUnloadPlugin, psys);
+void jcUnloadPlugin(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring filename = c->GetParameter(_T("filename"))->GetString();
+
+	PluginManager *plugman = psys->GetPluginManager();
+
+	size_t idx;
+	if (plugman->PluginIsLoaded(filename.c_str(), &idx))
+	{
+		plugman->UnloadPlugin(plugman->GetPlugin(idx));
+	}
+}
+
+
+//m_JS->AddNative(_T("function MessageBox(caption, message, modestr)"),				jcUnloadPlugin, psys);
+void jcMessageBox(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring caption = c->GetParameter(_T("caption"))->GetString();
+	tstring message = c->GetParameter(_T("message"))->GetString();
+	tstring modestr = c->GetParameter(_T("modestr"))->GetString();
+
+	PluginManager *plugman = psys->GetPluginManager();
+
+	if (!_tcsicmp(modestr.c_str(), _T("ok")))
+	{
+		::MessageBox(NULL, message.c_str(), caption.c_str(), MB_OK);
+		ret->SetInt(1);
+	}
+	else if (!_tcsicmp(modestr.c_str(), _T("okcancel")))
+	{
+		ret->SetInt((::MessageBox(NULL, message.c_str(), caption.c_str(), MB_OKCANCEL) == IDOK) ? 1 : 0);
+	}
+	if (!_tcsicmp(modestr.c_str(), _T("yesno")))
+	{
+		ret->SetInt((::MessageBox(NULL, message.c_str(), caption.c_str(), MB_YESNO) == IDYES) ? 1 : 0);
+	}
+}
+
+
+//m_JS->AddNative(_T("function RegisterResourcePath(ext, path)"),				jcRegisterResourcePath, psys);
+void jcRegisterResourcePath(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring ext = c->GetParameter(_T("ext"))->GetString();
+	tstring path = c->GetParameter(_T("path"))->GetString();
+
+	FileMapper *pfm = psys->GetFileMapper();
+	pfm->AddMapping(ext.c_str(), path.c_str());
+}
+
+
+
+void jcRegisterInputAction(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring action_name = c->GetParameter(_T("action_name"))->GetString();
+	tstring press_mode = c->GetParameter(_T("press_mode"))->GetString();
+	float delay = c->GetParameter(_T("delay"))->GetFloat();
+
+	// add more trigger types later? For specificity? But "" is continuous down, "down" is delta down, "up" delta up
+	ActionMapper::ETriggerType tt = ActionMapper::ETriggerType::DOWN_CONTINUOUS;
+	if (!_tcsicmp(press_mode.c_str(), _T("up")))
+	{
+		tt = ActionMapper::UP_DELTA;
+	}
+	else if (!_tcsicmp(press_mode.c_str(), _T("down")))
+	{
+		tt = ActionMapper::DOWN_DELTA;
+	}
+
+	c3::ActionMapper *pam = psys->GetActionMapper();
+
+	size_t ai = pam->RegisterAction(action_name.c_str(), tt, delay, [](const TCHAR *action_name, c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
+	{
+		System *psys = from_device->GetSystem();
+		assert(psys);
+
+		c3::Object *inputobj = psys->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_PLAYER);
+
+		if (!inputobj)
+			inputobj = psys->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT);
+
+		if (inputobj)
+		{
+			c3::Scriptable *pscr = dynamic_cast<c3::Scriptable *>(inputobj->FindComponent(c3::Scriptable::Type()));
+			if (pscr)
+			{
+				if (pscr->FunctionExists(_T("handle_input")))
+					pscr->Execute(_T("handle_input(\"%s\", %0.5f);"), action_name, value);
+				return true;
+			}
+		}
+		return false;
+	}, nullptr);
+
+	ret->SetInt(ai);
+}
+
+
+void jcUnregisterInputAction(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::ActionMapper *pam = psys->GetActionMapper();
+
+	CScriptVar *pact = c->GetParameter(_T("action_name"));
+	size_t actidx;
+	if (pact->IsString())
+		actidx = pam->FindActionIndex(pact->GetString());
+	else
+		actidx = pact->GetInt();
+
+	if (actidx != -1)
+		pam->UnregisterAction(actidx);
+}
+
+
+void jcFindInputAction(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring action_name = c->GetParameter(_T("action_name"))->GetString();
+
+	c3::ActionMapper *pam = psys->GetActionMapper();
+
+	size_t idx = pam->FindActionIndex(action_name.c_str());
+
+	ret->SetInt(idx);
+}
+
+
+void jcLinkInputToAction(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::ActionMapper *pam = psys->GetActionMapper();
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVar *pact = c->GetParameter(_T("action_name"));
+	size_t actidx;
+	if (pact->IsString())
+		actidx = pam->FindActionIndex(pact->GetString());
+	else
+		actidx = pact->GetInt();
+
+	CScriptVar *pdev = c->GetParameter(_T("device"));
+	size_t devidx;
+	if (pdev->IsString())
+		pim->FindDevice(pdev->GetString(), devidx);
+	else
+		devidx = pdev->GetInt();
+	InputDevice *pid = pim->GetDevice(devidx);
+
+	if (pid && (actidx != -1))
+	{
+		CScriptVar *pinp = c->GetParameter(_T("input_name"));
+		InputDevice::VirtualButton vb;
+		if (InputDevice::GetButtonCodeByName(pinp->GetString(), vb))
+		{
+			pam->MakeAssociation(actidx, pid->GetUID(), vb);
+		}
+	}
+
+	ret->SetInt((actidx == -1) ? 0 : 1);
 }

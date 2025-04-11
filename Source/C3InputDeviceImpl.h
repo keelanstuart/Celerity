@@ -41,6 +41,8 @@ namespace c3
 
 		virtual bool Update(float elapsed_seconds = 0.0f);
 
+		virtual System *GetSystem() const;
+
 		virtual const TCHAR *GetName() const;
 
 		virtual uint32_t GetUID() const;

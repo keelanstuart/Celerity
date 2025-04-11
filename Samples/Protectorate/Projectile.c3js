@@ -40,7 +40,7 @@ function update(elapsed_seconds)
 			pos = Vec3.add(pos, lvel);
 			lvel = Vec3.mul(lvel, 0.0);
 
-			Log("Hit " + GetObjectName(collision_info["hobj"]) + ", distance away: " + dist + "\n");
+			//Log("Hit " + GetObjectName(collision_info["hobj"]) + ", distance away: " + dist + "\n");
 
 			SetPropertyValue(hprop_lvel, lvel);
 			SetPropertyValue(hprop_pos, pos);
@@ -99,8 +99,8 @@ function fire(posx, posy, posz, velx, vely, velz)
 	SetObjFlag(self, "LIGHT", 1);
 	
 	runtime = 0.0;
-	tmpv3 = GetPropertyValue(hprop_campos);
-	tmpv3 = Vec3.sub(tmpv3, pos);
-	
-	PlaySound("Protectorate/laser2.wav", 50.0, Math.random(0.95, 1.05), 0, tmpv3);
+//	tmpv3 = GetPropertyValue(hprop_campos);
+//	tmpv3 = Vec3.sub(tmpv3, pos);
+	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	PlaySound("Protectorate/laser.wav", 255.0, Math.random(0.90, 1.1), 0, tmpv3);
 }

@@ -26,10 +26,13 @@ namespace c3
 		static void SetDeviceConnectionCallback(DEVICECONNECTION_CALLBACK_FUNC func, void *userdata);
 
 		// Returns the number of input devices that have been identified
-		virtual size_t GetNumDevices() = NULL;
+		virtual size_t GetNumDevices() const = NULL;
 
 		// Gets a Device by index
-		virtual InputDevice *GetDevice(size_t idx) = NULL;
+		virtual InputDevice *GetDevice(size_t idx) const = NULL;
+
+		// Finds a device by name. If found, returns true and sets idx, otherwise returns false
+		virtual bool FindDevice(const TCHAR *name, size_t &idx) const = NULL;
 
 		// The User paradigm can be useful for local multiplayer where 3 physical devices (mouse / keyboard pair and a joypad)
 		// supply input data for 2 players. AssignUser allows you to set that
