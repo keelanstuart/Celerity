@@ -28,8 +28,8 @@ Video Links:
 <img src="http://img.youtube.com/vi/Wi8DE7UJTM0/0.jpg" alt="Full hierarchies" width="300" height="225" border="50" />
 </a>
 
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=QzydaeRiJyw" target="_blank">
-<img src="http://img.youtube.com/vi/QzydaeRiJyw/0.jpg" alt="Simple Animation" width="300" height="225" border="50" />
+<a href="http://www.youtube.com/watch?feature=player_embedded&v=E4LTI0lLJOk" target="_blank">
+<img src="http://img.youtube.com/vi/E4LTI0lLJOk/0.jpg" alt="90's style demo" width="300" height="225" border="50" />
 </a>
 
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=UDmb0Wn8nBE" target="_blank">
