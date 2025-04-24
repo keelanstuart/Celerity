@@ -28,7 +28,7 @@ To start developing, download the latest SDK release and install it wherever you
 All the sub-systems of Celerity are made available through the c3::System interface. Create one like this:
 
 ```C++
-#include <C3.h>;
+#include <C3.h>
 
 void your_code()
 {
