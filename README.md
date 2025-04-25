@@ -4,21 +4,21 @@ Celerity is a flexible, modular engine built from the ground up in C++. Now in i
 
 
 ### Key Features
-- Modular & Generic Design
+- Modular & Generic Design:
 Celerity is built as a truly generic engine. You can use as much or as little of the system as needed in your own applications via a clean, well-structured API.
 
-- Extensible via Plug-ins
+- Extensible via Plug-ins:
 Easily extend functionality by writing custom plug-ins—for example, to support proprietary file formats or add new runtime object behaviors.
 
-- Embedded JavaScript
+- Embedded JavaScript:
 Access object properties, handle input, play sounds, respond to events... all using JavaScript.
 
-- Dual Architecture for Development & Content Creation
+- Dual Architecture for Development & Content Creation:
 The platform is split into two main parts:
 A generic host application, suitable for embedding or launching projects
 A fully-featured scene editor for creating and modifying game and simulation content
 
-- Robust Rendering & Simulation Framework
+- Robust Rendering & Simulation Framework:
 Built on OpenGL with a custom wrapper layer, Celerity includes tooling that generates rich, versioned wrapper code (with inline documentation) to simplify development and maximize compatibility.
 
 
