@@ -79,10 +79,10 @@ namespace c3
 		virtual RETURNCODE Seal() = NULL;
 
 		/// Sets the clear color for an individual target at the given position
-		virtual void SetClearColor(size_t position, glm::fvec4 color) = NULL;
+		virtual void SetClearColor(glm::fvec4 color, size_t target = -1) = NULL;
 
 		/// Gets the clear color for an individual target at the given position
-		virtual glm::fvec4 GetClearColor(size_t position) const = NULL;
+		virtual glm::fvec4 GetClearColor(size_t target = 0) const = NULL;
 
 		/// Sets the clear depth
 		virtual void SetClearDepth(float depth = 1.0f) = NULL;
@@ -98,25 +98,37 @@ namespace c3
 
 		/// Clears the FrameBuffer with the values given to the SetClearColor method
 		/// NOTE: Uses the same flags as Renderer::UserFrameBuffer for selecting what to clear
-		virtual void Clear(props::TFlags64 flags, int target = -1) = NULL;
+		virtual void Clear(props::TFlags64 flags) = NULL;
 
 		/// Sets the blend mode for this render target (or a specific attachment)
-		virtual void SetBlendMode(Renderer::BlendMode mode, int target = -1) = NULL;
+		virtual void SetBlendMode(Renderer::BlendMode mode, size_t target = -1) = NULL;
 
 		/// Gets the blend mode for this render target (or a specific attachment)
-		virtual Renderer::BlendMode GetBlendMode(int target = -1) const = NULL;
+		virtual Renderer::BlendMode GetBlendMode(size_t target = 0) const = NULL;
+
+		/// Sets the alpha blend mode for this render target (or a specific attachment)
+		virtual void SetAlphaBlendMode(Renderer::BlendMode mode, size_t target = -1) = NULL;
+
+		/// Gets the alpha blend mode for this render target (or a specific attachment)
+		virtual Renderer::BlendMode GetAlphaBlendMode(size_t target = 0) const = NULL;
 
 		/// Sets the blend equation for this render target
-		virtual void SetBlendEquation(Renderer::BlendEquation eq, int target = -1) = NULL;
+		virtual void SetBlendEquation(Renderer::BlendEquation eq, size_t target = -1) = NULL;
 
 		/// Gets the blend equation for this render target
-		virtual Renderer::BlendEquation GetBlendEquation(int target = -1) const = NULL;
+		virtual Renderer::BlendEquation GetBlendEquation(size_t target = 0) const = NULL;
+
+		/// Sets the alpha blend equation for this render target
+		virtual void SetAlphaBlendEquation(Renderer::BlendEquation eq, size_t target = -1) = NULL;
+
+		/// Gets the alpha blend equation for this render target
+		virtual Renderer::BlendEquation GetAlphaBlendEquation(size_t target = 0) const = NULL;
 
 		/// Sets the channel write mask for this render target (or a specific attachment)
-		virtual void SetChannelWriteMask(Renderer::ChannelMask mask, int target = -1) = NULL;
+		virtual void SetChannelWriteMask(Renderer::ChannelMask mask, size_t target = -1) = NULL;
 
 		/// Gets the channel write mask for this render target (or a specific attachment)
-		virtual Renderer::ChannelMask GetChannelWriteMask(int target = -1) const = NULL;
+		virtual Renderer::ChannelMask GetChannelWriteMask(size_t target = 0) const = NULL;
 
 	};
 

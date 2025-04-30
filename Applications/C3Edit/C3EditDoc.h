@@ -48,6 +48,8 @@ public:
 
 	TObjectArray m_Selected;
 
+	bool m_GuiMode;
+
 // Operations
 public:
 	SPerViewInfo *GetPerViewInfo(HWND h);

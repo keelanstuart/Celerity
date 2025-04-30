@@ -282,6 +282,13 @@ void CPropertiesWnd::SetActiveObject(c3::Object *pobj)
 	AdjustLayout();
 }
 
+
+c3::Object *CPropertiesWnd::GetActiveObject() const
+{
+	return m_pObj;
+}
+
+
 void CPropertiesWnd::SetActiveProperties(props::IPropertySet* props, bool readonly, const TCHAR* title)
 {
 	m_pObj = nullptr;

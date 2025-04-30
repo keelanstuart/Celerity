@@ -82,7 +82,11 @@ namespace c3
 
 		Renderer::BlendMode m_BlendMode[MAX_COLORTARGETS];
 		Renderer::BlendEquation m_BlendEq[MAX_COLORTARGETS];
+		Renderer::BlendMode m_AlphaBlendMode[MAX_COLORTARGETS];
+		Renderer::BlendEquation m_AlphaBlendEq[MAX_COLORTARGETS];
 		Renderer::ChannelMask m_ChannelMask[MAX_COLORTARGETS];
+
+		Renderer::RenderStateOverrideFlags m_DirtyStates[MAX_COLORTARGETS];
 
 		Publisher *m_Pub;
 
@@ -113,9 +117,9 @@ namespace c3
 
 		virtual RETURNCODE Seal();
 
-		virtual void SetClearColor(size_t position, glm::fvec4 color);
+		virtual void SetClearColor(glm::fvec4 color, size_t target = -1);
 
-		virtual glm::fvec4 GetClearColor(size_t position) const;
+		virtual glm::fvec4 GetClearColor(size_t target = 0) const;
 
 		virtual void SetClearDepth(float depth = 1.0f);
 
@@ -125,19 +129,27 @@ namespace c3
 
 		virtual int8_t GetClearStencil() const;
 
-		virtual void Clear(props::TFlags64 flags, int target = -1);
+		virtual void Clear(props::TFlags64 flags);
 
-		virtual void SetBlendMode(Renderer::BlendMode mode, int target = -1);
+		virtual void SetBlendMode(Renderer::BlendMode mode, size_t target = -1);
 
-		virtual Renderer::BlendMode GetBlendMode(int target = 0) const;
+		virtual Renderer::BlendMode GetBlendMode(size_t target = 0) const;
 
-		virtual void SetBlendEquation(Renderer::BlendEquation eq, int target = -1);
+		virtual void SetAlphaBlendMode(Renderer::BlendMode mode, size_t target = -1);
 
-		virtual Renderer::BlendEquation GetBlendEquation(int target = 0) const;
+		virtual Renderer::BlendMode GetAlphaBlendMode(size_t target = 0) const;
 
-		virtual void SetChannelWriteMask(Renderer::ChannelMask mask, int target = -1);
+		virtual void SetBlendEquation(Renderer::BlendEquation eq, size_t target = -1);
 
-		virtual Renderer::ChannelMask GetChannelWriteMask(int target = -1) const;
+		virtual Renderer::BlendEquation GetBlendEquation(size_t target = 0) const;
+
+		virtual void SetAlphaBlendEquation(Renderer::BlendEquation eq, size_t target = -1);
+
+		virtual Renderer::BlendEquation GetAlphaBlendEquation(size_t target = 0) const;
+
+		virtual void SetChannelWriteMask(Renderer::ChannelMask mask, size_t target = -1);
+
+		virtual Renderer::ChannelMask GetChannelWriteMask(size_t target = -1) const;
 
 		operator GLuint() const { return m_glID; }
 
@@ -145,13 +157,7 @@ namespace c3
 
 		void Unsubscribe(Subscription *sub);
 
-		void ApplySettings();
-
-		void _SetBlendMode(size_t target, Renderer::BlendMode mode);
-
-		void _SetBlendEquation(size_t target, Renderer::BlendEquation eq);
-
-		void _SetChannelWriteMask(size_t target, Renderer::ChannelMask mask);
+		void UpdateDirtyRenderStates(bool refresh = false);
 
 	};
 

@@ -28,11 +28,9 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 
 	m_GBuf = nullptr;
 	m_LCBuf = nullptr;
-	m_InterfaceBuf = nullptr;
 	m_AuxBuf = nullptr;
 	m_SSBuf = nullptr;
 	m_DepthTarg = nullptr;
-	m_InterfaceDepthTarg = nullptr;
 	m_ShadowTarg = nullptr;
 	m_BTex = { };
 	m_BBuf = { };
@@ -167,9 +165,6 @@ void C3Dlg::CreateSurfaces()
 	if (!m_DepthTarg)
 		m_DepthTarg = prend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
 
-	if (!m_InterfaceDepthTarg)
-		m_InterfaceDepthTarg = prend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
-
 	bool gbok;
 
 	c3::FrameBuffer::TargetDesc GBufTargData[] =
@@ -196,21 +191,12 @@ void C3Dlg::CreateSurfaces()
 	if (!m_EffectsBuf)
 		m_EffectsBuf = prend->CreateFrameBuffer(0, _T("EffectsBuffer"));
 	if (m_EffectsBuf)
-		gbok = m_EffectsBuf->Setup(_countof(EffectsTargData), EffectsTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
-	m_EffectsBuf->SetClearColor(0, c3::Color::fBlack);
-	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
-
-	c3::FrameBuffer::TargetDesc InterfaceTargData[] =
 	{
-		{ _T("uSamplerInterfaceColor"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },	// diffuse color with alpha (rgba)
-	};
-
-	theApp.m_C3->GetLog()->Print(_T("Creating Interface Buffer... "));
-	if (!m_InterfaceBuf)
-		m_InterfaceBuf = prend->CreateFrameBuffer(0, _T("InterfaceBuffer"));
-	if (m_InterfaceBuf)
-		gbok = m_InterfaceBuf->Setup(_countof(InterfaceTargData), InterfaceTargData, m_InterfaceDepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
-	m_InterfaceBuf->SetClearColor(0, c3::Color::fBlackFT);
+		gbok = m_EffectsBuf->Setup(_countof(EffectsTargData), EffectsTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+		m_EffectsBuf->SetClearColor(c3::Color::fBlackFT, 0);
+		m_EffectsBuf->SetBlendEquation(c3::Renderer::BlendEquation::BE_ADD, 0);
+		m_EffectsBuf->SetAlphaBlendEquation(c3::Renderer::BlendEquation::BE_ADD, 0);
+	}
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	for (size_t c = 0; c < BLURTARGS; c++)
@@ -233,7 +219,10 @@ void C3Dlg::CreateSurfaces()
 	if (!m_LCBuf)
 		m_LCBuf = prend->CreateFrameBuffer(0, _T("LightCombine"));
 	if (m_LCBuf)
+	{
 		gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+		m_LCBuf->SetClearColor(c3::Color::fBlack, 0);
+	}
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	CRect auxr = r;
@@ -267,19 +256,19 @@ void C3Dlg::UpdateShaderSurfaces()
 	if (m_SP_resolve)
 	{
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip0"));
-		m_SP_resolve->SetUniformTexture(m_BTex[0], ut);
+		m_SP_resolve->SetUniformTexture(m_BTex[0], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip1"));
-		m_SP_resolve->SetUniformTexture(m_BTex[1], ut);
+		m_SP_resolve->SetUniformTexture(m_BTex[1], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2"));
-		m_SP_resolve->SetUniformTexture(m_BTex[2], ut);
+		m_SP_resolve->SetUniformTexture(m_BTex[2], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip3"));
-		m_SP_resolve->SetUniformTexture(m_BTex[3], ut);
+		m_SP_resolve->SetUniformTexture(m_BTex[3], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerPosDepth"));
-		m_SP_resolve->SetUniformTexture(m_GBuf->GetColorTargetByName(_T("uSamplerPosDepth")), ut);
+		m_SP_resolve->SetUniformTexture(m_GBuf->GetColorTargetByName(_T("uSamplerPosDepth")), ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 	}
 
 	if (m_SP_combine)
@@ -290,14 +279,14 @@ void C3Dlg::UpdateShaderSurfaces()
 		{
 			c3::Texture2D* pt = m_GBuf->GetColorTarget(i);
 			ul = m_SP_combine->GetUniformLocation(pt->GetName());
-			m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : prend->GetBlackTexture());
+			m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : prend->GetBlackTexture(), ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 		}
 
 		for (i = 0; i < m_LCBuf->GetNumColorTargets(); i++)
 		{
 			c3::Texture2D* pt = m_LCBuf->GetColorTarget(i);
 			ul = m_SP_combine->GetUniformLocation(pt->GetName());
-			m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : prend->GetBlackTexture());
+			m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : prend->GetBlackTexture(), ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 		}
 
 		ul = m_SP_combine->GetUniformLocation(_T("uSamplerShadow"));
@@ -393,7 +382,7 @@ void C3Dlg::InitializeGraphics()
 		}
 
 		m_VS_combine = (c3::ShaderComponent*)((rm->GetResource(_T("combine.vsh"), RESF_DEMANDLOAD))->GetData());
-		m_FS_combine = (c3::ShaderComponent*)((rm->GetResource(_T("combine-editor.fsh"), RESF_DEMANDLOAD))->GetData());
+		m_FS_combine = (c3::ShaderComponent*)((rm->GetResource(_T("combine.fsh"), RESF_DEMANDLOAD))->GetData());
 		if (!m_SP_combine)
 			m_SP_combine = prend->CreateShaderProgram();
 		if (m_SP_combine)
@@ -497,6 +486,7 @@ BOOL C3Dlg::OnInitDialog()
 	InitializeGraphics();
 
 	m_WorldRoot = pfac->Build();
+	m_WorldRoot->SetName(_T("WORLD ROOT"));
 	m_WorldRoot->AddComponent(c3::Positionable::Type());
 	m_WorldRoot->AddComponent(c3::Scriptable::Type());
 	m_WorldRoot->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
@@ -504,6 +494,7 @@ BOOL C3Dlg::OnInitDialog()
 	theApp.m_C3->GetLog()->Print(_T("World root created and registered\n"));
 
 	m_GUIRoot = pfac->Build();
+	m_GUIRoot->SetName(_T("GUI ROOT"));
 	m_GUIRoot->AddComponent(c3::Positionable::Type());
 	m_GUIRoot->AddComponent(c3::Scriptable::Type());
 	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_GUI_ROOT, m_GUIRoot);
@@ -538,15 +529,16 @@ BOOL C3Dlg::OnInitDialog()
 
 	m_GUICamera = pfac->Build();
 	m_GUICamera->SetName(_T("GUI Camera"));
-	c3::Positionable *puicampos = dynamic_cast<c3::Positionable *>(m_GUICamera->AddComponent(c3::Positionable::Type()));
-	c3::Camera *puicam = dynamic_cast<c3::Camera *>(m_GUICamera->AddComponent(c3::Camera::Type()));
 
+	c3::Camera *puicam = dynamic_cast<c3::Camera *>(m_GUICamera->AddComponent(c3::Camera::Type()));
 	if (puicam)
 	{
 		puicam->SetProjectionMode(c3::Camera::EProjectionMode::PM_ORTHOGRAPHIC);
+		puicam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
 		puicam->SetPolarDistance(10.0f);
 	}
 
+	c3::Positionable *puicampos = dynamic_cast<c3::Positionable *>(m_GUICamera->AddComponent(c3::Positionable::Type()));
 	if (puicampos)
 	{
 		puicampos->AdjustPos(0, 0, 10.0f);
@@ -717,13 +709,19 @@ void C3Dlg::OnPaint()
 			theApp.m_C3->GetSoundPlayer()->SetListenerRadius(1000.0f, 10000.0f);
 
 			cam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
-			float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
-			float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
+			float farclip = cam->GetFarClipDistance();
+			float nearclip = cam->GetNearClipDistance();
 
 			glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 0);
 			prend->SetClearColor(&cc);
-			m_GBuf->SetClearColor(0, cc);
-			m_GBuf->SetClearColor(2, glm::fvec4(0, 0, 0, farclip));
+			m_GBuf->SetClearColor(cc, 0);
+			m_GBuf->SetClearColor(c3::Color::fBlack, 1);
+			m_GBuf->SetClearColor(glm::fvec4(0, 0, 0, farclip), 2);
+			m_GBuf->SetClearColor(c3::Color::fBlack, 3);
+			m_GBuf->SetClearDepth(1.0f);
+
+			m_GBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+			m_GBuf->SetAlphaBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 
 			prend->SetClearDepth(1.0f);
 
@@ -739,12 +737,9 @@ void C3Dlg::OnPaint()
 			m_SP_combine->SetUniform3(m_ulSunColor, penv->GetSunColor());
 			m_SP_combine->SetUniform3(m_ulSunDir, penv->GetSunDirection());
 
-			m_GBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-
 			if (prend->BeginScene(BSFLAG_SHOWGUI))
 			{
 				prend->SetClearColor(&c3::Color::fBlackFT);
-				prend->UseFrameBuffer(m_InterfaceBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL);
 				prend->UseFrameBuffer(m_EffectsBuf, UFBFLAG_CLEARCOLOR);
 
 				prend->SetClearColor(&cc);
@@ -756,8 +751,9 @@ void C3Dlg::OnPaint()
 				prend->SetAlphaPassRange(254.0f / 255.0f);
 				prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
-				prend->SetTextureTransformMatrix(nullptr);
+				prend->SetAlphaBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				props::TFlags64 renderflags = 0;
+
 				if (skybox)
 				{
 					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
@@ -768,6 +764,7 @@ void C3Dlg::OnPaint()
 					// draw the skybox objects and then clear the depth buffer
 					m_GBuf->Clear(UFBFLAG_CLEARDEPTH);
 				}
+
 				if (world)
 				{
 					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
@@ -778,23 +775,23 @@ void C3Dlg::OnPaint()
 
 				// after the main pass, clear everything with black...
 				prend->SetClearColor(&c3::Color::fBlack);
-				m_LCBuf->SetClearColor(0, c3::Color::fBlack);
+				m_LCBuf->SetClearColor(c3::Color::fBlack);
 
 				// Lighting pass(es)
 				prend->UseFrameBuffer(m_LCBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
 				prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 				prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 				prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
+				prend->SetAlphaBlendMode(c3::Renderer::BlendMode::BM_ADD);
 				if (world)
 				{
 					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 					{
 						world->Render((uint64_t)renderflags | RF_LIGHT, order);
 					});
-				}
 
-				// Shadow pass
-				{
+					// Shadow pass
+					
 					// use the sun direction to determine its position - in the opposite direction
 					static float sunposmult = -800.0f;
 
@@ -815,13 +812,11 @@ void C3Dlg::OnPaint()
 
 					prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 					prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
-					if (world)
+
+					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 					{
-						c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
-						{
-							world->Render((uint64_t)renderflags | RF_SHADOW, order);
-						});
-					}
+						world->Render((uint64_t)renderflags | RF_SHADOW, order);
+					});
 				}
 
 				// clear the render method and material
@@ -854,27 +849,34 @@ void C3Dlg::OnPaint()
 					prend->UseFrameBuffer(m_BBuf[b + 1], 0); // UFBFLAG_FINISHLAST);
 					prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 					prend->UseProgram(m_SP_blur);
-					m_SP_blur->SetUniformTexture(m_BTex[b], m_uBlurTex);
+					m_SP_blur->SetUniformTexture(m_BTex[b], m_uBlurTex, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 					m_SP_blur->SetUniform1(m_uBlurScale, bs);
 					m_SP_blur->ApplyUniforms(true);
 					prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 					bs *= 2.0f;
 				}
 
-				prend->UseFrameBuffer(nullptr, 0); // UFBFLAG_FINISHLAST);
+				prend->UseFrameBuffer(nullptr, 0);
+				prend->UseRenderMethod();	// no method now
+				prend->UseMaterial();
+
 				prend->UseProgram(m_SP_resolve);
 				glm::fmat4x4 revmat = glm::scale(glm::fvec3(-1, 1, 1));
 				prend->SetTextureTransformMatrix(&revmat);
 				m_SP_resolve->ApplyUniforms(true);
+
 				prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
 				if (gui && guicampos && guicam)
 				{
 					prend->SetViewMatrix(guicam->GetViewMatrix());
-					prend->SetProjectionMatrix(guicam->GetProjectionMatrix());
+					glm::fmat4x4 guiproj = *guicam->GetProjectionMatrix() * glm::scale(glm::vec3(-1, 1, 1));
+					prend->SetProjectionMatrix(&guiproj);
 					prend->SetEyePosition(guicam->GetEyePos());
 					glm::fvec3 eyedir = glm::normalize(*guicam->GetTargetPos() - *(guicam->GetEyePos()));
 					prend->SetEyeDirection(&eyedir);
+
+					prend->SetAlphaPassRange(0.0f);
 
 					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 					{

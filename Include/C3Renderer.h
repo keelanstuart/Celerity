@@ -222,23 +222,27 @@ namespace c3
 		// by a Material, RenderMethod Passes will return a set of RenderStateOverrideFlags indicating which states have been overridden
 		// and should therefore not be re-set by Materials. This is not really useful for most users of Materials or RenderMethods,
 		// but the flags are being defined here because the Apply interfaces are public-facing and these represent only the overlapping parts of both
-		using RenderStateOverrideFlags = props::TFlags32;
-		#define RSOF_WINDINGORDER	0x00001
-		#define RSOF_CULLMODE		0x00002
-		#define RSOF_FILLMODE		0x00004
-		#define RSOF_DEPTHMODE		0x00008
-		#define RSOF_DEPTHTEST		0x00010
-		#define RSOF_STENCIL		0x00020
-		#define RSOF_BLENDMODE		0x00040
-		#define RSOF_BLENDEQ		0x00080
-		#define RSOF_COLORAMB		0x00100
-		#define RSOF_COLORDIFF		0x00200
-		#define RSOF_COLOREMIS		0x00400
-		#define RSOF_TEXDIFF		0x01000
-		#define RSOF_TEXNORM		0x02000
-		#define RSOF_TEXEMIS		0x04000
-		#define RSOF_TEXSURF		0x08000
-		#define RSOF_COLORMASK		0x10000
+		using RenderStateOverrideFlags = props::TFlags64;
+		#define RSOF_WINDINGORDER		0x000001
+		#define RSOF_CULLMODE			0x000002
+		#define RSOF_FILLMODE			0x000004
+		#define RSOF_DEPTHMODE			0x000008
+		#define RSOF_DEPTHTEST			0x000010
+		#define RSOF_STENCIL			0x000020
+		#define RSOF_BLENDMODE			0x000040
+		#define RSOF_BLENDEQ			0x000080
+		#define RSOF_COLORAMB			0x000100
+		#define RSOF_COLORDIFF			0x000200
+		#define RSOF_COLOREMIS			0x000400
+		#define RSOF_TEXDIFF			0x001000
+		#define RSOF_TEXNORM			0x002000
+		#define RSOF_TEXEMIS			0x004000
+		#define RSOF_TEXSURF			0x008000
+		#define RSOF_COLORMASK			0x010000
+		#define RSOF_ALPHABLENDMODE		0x040000
+		#define RSOF_ALPHABLENDEQ		0x040000
+		#define RSOF_STENCILFUNC		0x080000
+		#define RSOF_STENCILOP			0x100000
 
 
 
@@ -353,6 +357,9 @@ namespace c3
 		virtual void SetBlendMode(BlendMode mode) = NULL;
 		virtual BlendMode GetBlendMode() const = NULL;
 
+		virtual void SetAlphaBlendMode(BlendMode mode) = NULL;
+		virtual BlendMode GetAlphaBlendMode() const = NULL;
+
 		// Sets the alpha range in which pixels will not be discarded
 		virtual void SetAlphaPassRange(float minalpha = 0.0f, float maxalpha = 1.0f) = NULL;
 
@@ -365,6 +372,9 @@ namespace c3
 
 		virtual void SetBlendEquation(BlendEquation eq) = NULL;
 		virtual BlendEquation GetBlendEquation() const = NULL;
+
+		virtual void SetAlphaBlendEquation(BlendEquation eq) = NULL;
+		virtual BlendEquation GetAlphaBlendEquation() const = NULL;
 
 		// Sets the write mask for output color channels, use bitwise OR to combine CM_RED, CM_GREEN, CM_BLUE, and CM_ALPHA
 		virtual void SetChannelWriteMask(ChannelMask mask) = NULL;

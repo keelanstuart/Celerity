@@ -39,6 +39,7 @@ C3EditDoc::C3EditDoc() noexcept
 	m_Brush = nullptr;
 	m_TimeWarp = 1.0f;
 	m_Paused = false;
+	m_GuiMode = false;
 
 	m_ClearColor = glm::fvec4(0, 0, 0, 1);
 	m_FogColor = glm::fvec4(0, 0, 0, 0);
@@ -133,28 +134,29 @@ C3EditDoc::SPerViewInfo *C3EditDoc::GetPerViewInfo(HWND h)
 		ppos->SetYawPitchRoll(0, 0, 0);
 	}
 
-	props::IProperty *campitch_min = pvi.m_Camera->GetProperties()->CreateProperty(_T("PitchCameraAngleMin"), 'PCAN');
-	campitch_min->SetFloat(-88.0f);
-	props::IProperty *campitch_max = pvi.m_Camera->GetProperties()->CreateProperty(_T("PitchCameraAngleMax"), 'PCAX');
-	campitch_max->SetFloat(88.0f);
-
-
 	pvi.m_GUICamera = pf->Build(pvi.m_Camera);
+	pvi.m_GUICamera->SetName(_T("GUI Camera"));
 
 	pcam = dynamic_cast<c3::Camera *>(pvi.m_GUICamera->FindComponent(c3::Camera::Type()));
 	if (pcam)
 	{
 		pcam->SetProjectionMode(c3::Camera::EProjectionMode::PM_ORTHOGRAPHIC);
 		pcam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
-		pcam->SetViewMode(c3::Camera::EViewMode::VM_LOOKAT);
+		pcam->SetViewMode(c3::Camera::EViewMode::VM_POLAR);
 	}
 
 	ppos = dynamic_cast<c3::Positionable *>(pvi.m_GUICamera->FindComponent(c3::Positionable::Type()));
 	if (ppos)
 	{
 		ppos->SetYawPitchRoll(0, glm::radians(-90.0f), 0);
-		ppos->SetPos((float)r.Width() / 2.0f, (float)r.Height() / 2.0f, 10.0f);
+		ppos->SetPos(0, 0, 10.0f);
 	}
+
+	// don't bother setting a min/max pitch for ortho mode
+	props::IProperty *campitch_min = pvi.m_Camera->GetProperties()->CreateProperty(_T("PitchCameraAngleMin"), 'PCAN');
+	campitch_min->SetFloat(-88.0f);
+	props::IProperty *campitch_max = pvi.m_Camera->GetProperties()->CreateProperty(_T("PitchCameraAngleMax"), 'PCAX');
+	campitch_max->SetFloat(88.0f);
 
 	auto ret = m_PerViewInfo.insert(TWndMappedObject::value_type(h, pvi));
 

@@ -90,6 +90,8 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_COMMAND(ID_TOOLS_REPATH, &C3EditView::OnToolsRepath)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_EXPORT, &C3EditView::OnUpdateEditExport)
 	ON_COMMAND(ID_EDIT_EXPORT, &C3EditView::OnEditExport)
+	ON_COMMAND(ID_GUITOGGLE, &C3EditView::OnGuiToggle)
+	ON_UPDATE_COMMAND_UI(ID_GUITOGGLE, &C3EditView::OnUpdateGuiToggle)
 END_MESSAGE_MAP()
 
 
@@ -104,12 +106,10 @@ C3EditView::C3EditView() noexcept
 
 	m_GBuf = nullptr;
 	m_EffectsBuf = nullptr;
-	m_InterfaceBuf = nullptr;
 	m_LCBuf = nullptr;
 	m_AuxBuf = nullptr;
 	m_SSBuf = nullptr;
 	m_DepthTarg = nullptr;
-	m_InterfaceDepthTarg = nullptr;
 	m_ShadowTarg = nullptr;
 	m_BTex = { };
 	m_BBuf = { };
@@ -179,13 +179,9 @@ void C3EditView::DestroySurfaces()
 
 	C3_SAFERELEASE(m_EffectsBuf);
 
-	C3_SAFERELEASE(m_InterfaceBuf);
-
 	C3_SAFERELEASE(m_AuxBuf);
 
 	C3_SAFERELEASE(m_DepthTarg);
-
-	C3_SAFERELEASE(m_InterfaceDepthTarg);
 
 	for (auto p : m_BBuf)
 		C3_SAFERELEASE(p);
@@ -210,9 +206,6 @@ void C3EditView::CreateSurfaces()
 
 	if (!m_DepthTarg)
 		m_DepthTarg = prend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
-
-	if (!m_InterfaceDepthTarg)
-		m_InterfaceDepthTarg = prend->CreateDepthBuffer(w, h, c3::Renderer::DepthType::U32_DS);
 
 	bool gbok;
 
@@ -240,21 +233,12 @@ void C3EditView::CreateSurfaces()
 	if (!m_EffectsBuf)
 		m_EffectsBuf = prend->CreateFrameBuffer(0, _T("EffectsBuffer"));
 	if (m_EffectsBuf)
-		gbok = m_EffectsBuf->Setup(_countof(EffectsTargData), EffectsTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
-	m_EffectsBuf->SetClearColor(0, c3::Color::fBlackFT);
-	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
-
-	c3::FrameBuffer::TargetDesc InterfaceTargData[] =
 	{
-		{ _T("uSamplerInterfaceColor"), c3::Renderer::TextureType::U8_4CH, TEXCREATEFLAG_RENDERTARGET },	// diffuse color with alpha (rgba)
-	};
-
-	theApp.m_C3->GetLog()->Print(_T("Creating Interface Buffer... "));
-	if (!m_InterfaceBuf)
-		m_InterfaceBuf = prend->CreateFrameBuffer(0, _T("InterfaceBuffer"));
-	if (m_InterfaceBuf)
-		gbok = m_InterfaceBuf->Setup(_countof(InterfaceTargData), InterfaceTargData, m_InterfaceDepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
-	m_InterfaceBuf->SetClearColor(0, c3::Color::fBlackFT);
+		gbok = m_EffectsBuf->Setup(_countof(EffectsTargData), EffectsTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+		m_EffectsBuf->SetClearColor(c3::Color::fBlackFT, 0);
+		m_EffectsBuf->SetBlendEquation(c3::Renderer::BlendEquation::BE_ADD, 0);
+		m_EffectsBuf->SetAlphaBlendEquation(c3::Renderer::BlendEquation::BE_ADD, 0);
+	}
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	for (size_t c = 0; c < BLURTARGS; c++)
@@ -279,7 +263,10 @@ void C3EditView::CreateSurfaces()
 	if (!m_LCBuf)
 		m_LCBuf = prend->CreateFrameBuffer(0, _T("LightCombine"));
 	if (m_LCBuf)
+	{
 		gbok = m_LCBuf->Setup(_countof(LCBufTargData), LCBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
+		m_LCBuf->SetClearColor(c3::Color::fBlack, 0);
+	}
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
 	CRect auxr = r;
@@ -310,19 +297,19 @@ void C3EditView::UpdateShaderSurfaces()
 	if (m_SP_resolve)
 	{
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip0"));
-		m_SP_resolve->SetUniformTexture(m_BTex[0], ut);
+		m_SP_resolve->SetUniformTexture(m_BTex[0], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip1"));
-		m_SP_resolve->SetUniformTexture(m_BTex[1], ut);
+		m_SP_resolve->SetUniformTexture(m_BTex[1], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2"));
-		m_SP_resolve->SetUniformTexture(m_BTex[2], ut);
+		m_SP_resolve->SetUniformTexture(m_BTex[2], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip3"));
-		m_SP_resolve->SetUniformTexture(m_BTex[3], ut);
+		m_SP_resolve->SetUniformTexture(m_BTex[3], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerPosDepth"));
-		m_SP_resolve->SetUniformTexture(m_GBuf->GetColorTargetByName(_T("uSamplerPosDepth")), ut);
+		m_SP_resolve->SetUniformTexture(m_GBuf->GetColorTargetByName(_T("uSamplerPosDepth")), ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 	}
 
 	if (m_SP_combine)
@@ -333,14 +320,14 @@ void C3EditView::UpdateShaderSurfaces()
 		{
 			c3::Texture2D* pt = m_GBuf->GetColorTarget(i);
 			ul = m_SP_combine->GetUniformLocation(pt->GetName());
-			m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : prend->GetBlackTexture());
+			m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : prend->GetBlackTexture(), ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 		}
 
 		for (i = 0; i < m_LCBuf->GetNumColorTargets(); i++)
 		{
 			c3::Texture2D* pt = m_LCBuf->GetColorTarget(i);
 			ul = m_SP_combine->GetUniformLocation(pt->GetName());
-			m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : prend->GetBlackTexture());
+			m_SP_combine->SetUniformTexture((ul != c3::ShaderProgram::INVALID_UNIFORM) ? pt : prend->GetBlackTexture(), ul, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 		}
 
 		ul = m_SP_combine->GetUniformLocation(_T("uSamplerShadow"));
@@ -417,8 +404,8 @@ void C3EditView::OnDraw(CDC *pDC)
 	C3EditFrame *pmf = (C3EditFrame *)theApp.GetMainWnd();
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+	c3::Object *camobj = pDoc->m_GuiMode ? pvi->m_GUICamera : pvi->m_Camera;
 
-	c3::Object *camobj = pvi->m_Camera;
 	c3::Positionable *pcampos = camobj ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
 	c3::Camera *pcam = camobj ? dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type())) : nullptr;
 	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, camobj);
@@ -454,23 +441,25 @@ void C3EditView::OnDraw(CDC *pDC)
 		c3::Environment *penv = theApp.m_C3->GetEnvironment();
 		assert(penv);
 
-		C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
-
 		if (camobj)
 			camobj->Update(dt);
 
 		int64_t active_tool = theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
 
-		float farclip = camobj->GetProperties()->GetPropertyById('C:FC')->AsFloat();
-		float nearclip = camobj->GetProperties()->GetPropertyById('C:NC')->AsFloat();
+		float farclip = pcam->GetFarClipDistance();
+		float nearclip = pcam->GetNearClipDistance();
 
 		glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 0);
-		m_GBuf->SetClearColor(0, cc);
-		m_GBuf->SetClearColor(2, glm::fvec4(0, 0, 0, farclip));
+		m_GBuf->SetClearColor(cc, 0);
+		m_GBuf->SetClearColor(c3::Color::fBlack, 1);
+		m_GBuf->SetClearColor(glm::fvec4(0, 0, 0, farclip), 2);
+		m_GBuf->SetClearColor(c3::Color::fBlack, 3);
+		m_GBuf->SetClearDepth(1.0f);
+
+		m_GBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+		m_GBuf->SetAlphaBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 
 		prend->SetClearDepth(1.0f);
-
-		m_EffectsBuf->SetClearColor(0, c3::Color::fBlack);
 
 		pDoc->m_RootObj->Update(paused ? 0 : dt);
 
@@ -483,8 +472,8 @@ void C3EditView::OnDraw(CDC *pDC)
 			m_bCenter = false;
 		}
 
-		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pvi->m_Camera->FindComponent(c3::Positionable::Type()));
-		c3::Camera *pcam = dynamic_cast<c3::Camera *>(pvi->m_Camera->FindComponent(c3::Camera::Type()));
+		c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
+		c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
 
 		if (pcam)
 		{
@@ -506,12 +495,10 @@ void C3EditView::OnDraw(CDC *pDC)
 			m_pRenderDoc->StartFrameCapture(NULL, NULL);
 		}
 
-		m_GBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-
 		if (prend->BeginScene(BSFLAG_SHOWGUI))
 		{
+			prend->SetTextureTransformMatrix(nullptr);
 			prend->SetClearColor(&c3::Color::fBlackFT);
-			prend->UseFrameBuffer(m_InterfaceBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL);
 			prend->UseFrameBuffer(m_EffectsBuf, UFBFLAG_CLEARCOLOR);
 
 			prend->SetClearColor(&cc);
@@ -523,7 +510,6 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetAlphaPassRange(254.0f / 255.0f);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
-			prend->SetTextureTransformMatrix(nullptr);
 			c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 			{
 				pDoc->m_RootObj->Render(renderflags, order);
@@ -539,7 +525,7 @@ void C3EditView::OnDraw(CDC *pDC)
 
 			// after the main pass, clear everything with black...
 			prend->SetClearColor(&c3::Color::fBlack);
-			m_LCBuf->SetClearColor(0, c3::Color::fBlack);
+			m_LCBuf->SetClearColor(c3::Color::fBlack, 0);
 
 			// Lighting pass(es)
 			prend->UseFrameBuffer(m_LCBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
@@ -622,6 +608,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			m_BBuf[0]->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH); // | UFBFLAG_FINISHLAST);
+			prend->SetWindingOrder(c3::Renderer::WindingOrder::WO_CW);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 			prend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
@@ -633,10 +620,10 @@ void C3EditView::OnDraw(CDC *pDC)
 			for (int b = 0; b < BLURTARGS - 1; b++)
 			{
 				m_BBuf[b + 1]->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-				prend->UseFrameBuffer(m_BBuf[b + 1], 0); // UFBFLAG_FINISHLAST);
+				prend->UseFrameBuffer(m_BBuf[b + 1]);
 				prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				prend->UseProgram(m_SP_blur);
-				m_SP_blur->SetUniformTexture(m_BTex[b], m_uBlurTex);
+				m_SP_blur->SetUniformTexture(m_BTex[b], m_uBlurTex, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 				m_SP_blur->SetUniform1(m_uBlurScale, bs);
 				m_SP_blur->ApplyUniforms(true);
 				prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
@@ -789,6 +776,11 @@ void C3EditView::InitializeGraphics()
 
 void C3EditView::HandleInput(c3::Positionable *pcampos)
 {
+	C3EditDoc* pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+	if (!pDoc)
+		return;
+
 	glm::vec3 mv(0, 0, 0);
 
 	bool run = false;
@@ -801,21 +793,33 @@ void C3EditView::HandleInput(c3::Positionable *pcampos)
 	float mdb = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_S) +
 		theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_NEGY)) / 2.0f;
 
-	mv += *(pcampos->GetFacingVector()) * (mdf - mdb) * spd;
-
 	float mdl = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_A) +
 		theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_NEGX)) / 2.0f;
 
 	float mdr = (theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_D) +
 		theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS1_POSX)) / 2.0f;
 
-	mv += *(pcampos->GetLocalRightVector()) * (mdr - mdl) * spd;
-
 	float mdu = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Q);
-	mv.z += mdu * spd;
 
 	float mdd = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::LETTER_Z);
-	mv.z -= mdd * spd;
+
+	float coaxial = mdf - mdb;
+	float horizontal = mdr - mdl;
+	float vertical = mdu - mdd;
+
+	if (horizontal != 0.0f)
+		mv += *(pcampos->GetLocalRightVector()) * horizontal * spd;
+
+	// swap up/down and forward/back for gui mode
+	if ((coaxial != 0.0f) || (vertical != 0.0f))
+	{
+#if 0
+		mv += *(pcampos->GetLocalUpVector()) * (pDoc->m_GuiMode ? coaxial : vertical) * spd;
+#else
+		mv += glm::fvec3(0, 0, 1) * (pDoc->m_GuiMode ? coaxial : vertical) * spd;
+#endif
+		mv += *(pcampos->GetFacingVector()) * (pDoc->m_GuiMode ? vertical : coaxial) * spd;
+	}
 
 	float ldu = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_NEGY, 1);
 	float ldd = theApp.m_C3->GetInputManager()->ButtonPressedProportional(c3::InputDevice::VirtualButton::AXIS2_POSY, 1);
@@ -885,8 +889,8 @@ void C3EditView::ComputePickRay(POINT screenpos, glm::fvec3 &pickpos, glm::fvec3
 	ASSERT_VALID(pDoc);
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+	c3::Object *camobj = pDoc->m_GuiMode ? pvi->m_GUICamera : pvi->m_Camera;
 
-	c3::Object *camobj = pvi->m_Camera;
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 
@@ -963,8 +967,8 @@ void C3EditView::AdjustYawPitch(float yawadj, float pitchadj, bool redraw)
 	ASSERT_VALID(pDoc);
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+	c3::Object *camobj = pDoc->m_GuiMode ? pvi->m_GUICamera : pvi->m_Camera;
 
-	c3::Object *camobj = pvi->m_Camera;
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 
@@ -1032,8 +1036,6 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	m_MousePos.x = point.x;
 	m_MousePos.y = point.y;
 
-	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
-
 	CRect r;
 	GetClientRect(&r);
 	ClientToScreen(&r);
@@ -1041,7 +1043,9 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 	float scrpctx = (float)point.x / (float)r.Width();
 	float scrpcty = (float)point.y / (float)r.Height();
 
-	c3::Object *camobj = pvi->m_Camera;
+	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+	c3::Object *camobj = pDoc->m_GuiMode ? pvi->m_GUICamera : pvi->m_Camera;
+
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 
@@ -1151,7 +1155,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 		pbp->SetPos(pf.x, pf.y, pf.z);
 	}
 
-	if ((nFlags & MK_SHIFT) && (deltax || deltay))// && !camori_lock)
+	if ((nFlags & MK_SHIFT) && (deltax || deltay) && !pDoc->m_GuiMode)// && !camori_lock)
 	{
 		// If the user is holding down the shift key, pan / tilt the camera
 
@@ -1201,7 +1205,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 					if (active_axis_t & C3EditApp::AT_X)
 					{
-						if (active_axis_t & C3EditApp::AT_SCREENREL)
+						if ((active_axis_t & C3EditApp::AT_SCREENREL) || pDoc->m_GuiMode)
 						{
 							mv += (rv * (float)(deltax));
 						}
@@ -1213,7 +1217,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 					if (active_axis_t & C3EditApp::AT_Y)
 					{
-						if (active_axis_t & C3EditApp::AT_SCREENREL)
+						if ((active_axis_t & C3EditApp::AT_SCREENREL) || pDoc->m_GuiMode)
 						{
 							mv += (uv * (float)(deltay));
 						}
@@ -1225,7 +1229,7 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 					if (active_axis_t & C3EditApp::AT_Z)
 					{
-						if (active_axis_t & C3EditApp::AT_SCREENREL)
+						if ((active_axis_t & C3EditApp::AT_SCREENREL) || pDoc->m_GuiMode)
 						{
 							mv += (fv * (float)(deltay));
 						}
@@ -1351,8 +1355,7 @@ BOOL C3EditView::OnMouseWheel(UINT nFlags, short zDelta, CPoint pt)
 	ASSERT_VALID(pDoc);
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
-
-	c3::Object *camobj = pvi->m_Camera;
+	c3::Object *camobj = pDoc->m_GuiMode ? pvi->m_GUICamera : pvi->m_Camera;
 
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
@@ -1649,7 +1652,7 @@ void C3EditView::OnEditDuplicate()
 	pDoc->DoForAllSelected([&](c3::Object *pobj)
 	{
 		c3::Object *pdo = theApp.m_C3->GetFactory()->Build(pobj, nullptr, pobj->GetParent(), true);
-		pdo->SetParent(pobj->GetParent());
+		pdo->SetParent(pDoc->m_OperationalRootObj);
 	});
 
 	((C3EditFrame *)(theApp.GetMainWnd()))->UpdateObjectList();
@@ -1805,8 +1808,8 @@ void C3EditView::CenterViewOnSelection()
 		return;
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+	c3::Object *camobj = pDoc->m_GuiMode ? pvi->m_GUICamera : pvi->m_Camera;
 
-	c3::Object *camobj = pvi->m_Camera;
 	c3::Positionable *pcampos = camobj ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
 
 	glm::fvec3 cpos;
@@ -1876,8 +1879,7 @@ void C3EditView::OnEditCameraSettings()
 		return;
 
 	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
-
-	c3::Object *camobj = pvi->m_Camera;
+	c3::Object *camobj = pDoc->m_GuiMode ? pvi->m_GUICamera : pvi->m_Camera;
 
 	theApp.SetActiveObject(camobj, false, _T("Camera"));
 }
@@ -2006,7 +2008,9 @@ void C3EditView::OnEditPaste()
 	c3::Positionable *pobjpos = (c3::Positionable *)(pobj->FindComponent(c3::Positionable::Type()));
 	if (pobjpos)
 	{
-		c3::Object *pcam = pDoc->GetPerViewInfo(GetSafeHwnd())->m_Camera;
+		C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+		c3::Object *pcam = pDoc->m_GuiMode ? pvi->m_GUICamera : pvi->m_Camera;
+
 		c3::Camera *pcampos = (c3::Camera *)(pcam->FindComponent(c3::Camera::Type()));
 		pcam->Update();
 
@@ -2235,4 +2239,30 @@ void C3EditView::OnEditExport()
 			});
 		}
 	}
+}
+
+
+void C3EditView::OnGuiToggle()
+{
+	C3EditDoc* pDoc = GetDocument();
+
+	C3EditDoc::SPerViewInfo *pvi = pDoc->GetPerViewInfo(GetSafeHwnd());
+	c3::Object *camobj = pDoc->m_GuiMode ? pvi->m_GUICamera : pvi->m_Camera;
+
+	pDoc->m_GuiMode ^= true;
+
+	if (theApp.GetActiveObject() == camobj)
+	{
+		camobj = pDoc->m_GuiMode ? pvi->m_GUICamera : pvi->m_Camera;
+		theApp.SetActiveObject(camobj);
+	}
+}
+
+
+void C3EditView::OnUpdateGuiToggle(CCmdUI *pCmdUI)
+{
+	C3EditDoc* pDoc = GetDocument();
+
+	pCmdUI->Enable();
+	pCmdUI->SetCheck(pDoc->m_GuiMode);
 }

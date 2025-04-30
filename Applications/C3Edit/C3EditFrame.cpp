@@ -970,6 +970,14 @@ void C3EditFrame::SetActiveObject(c3::Object *pobj, bool readonly, const TCHAR *
 		m_wndProperties.SetActiveObject(pobj);
 }
 
+c3::Object *C3EditFrame::GetActiveObject() const
+{
+	if (m_wndProperties.GetSafeHwnd())
+		return m_wndProperties.GetActiveObject();
+
+	return nullptr;
+}
+
 void C3EditFrame::RefreshActiveProperties()
 {
 	if (m_wndProperties.GetSafeHwnd())
@@ -1006,22 +1014,36 @@ void C3EditFrame::OnRunScript()
 		CString s;
 		m_wndScripting.GetImmediateScript(s);
 
+		auto ShowNoScriptables = []()
+		{
+			::MessageBox(NULL, _T("There are no Scriptable Objects currently selected."), _T("Celerity Scripting Alert"), MB_OK);
+		};
+
 		size_t maxi = pdoc->GetNumSelected();
 		if (!maxi)
 		{
 			c3::Scriptable *psc = (c3::Scriptable *)pSceneView->GetDocument()->m_RootObj->FindComponent(c3::Scriptable::Type());
 			if (psc)
 				psc->Execute((LPCTSTR)s);
+			else
+				ShowNoScriptables();
 
 			return;
 		}
 
+		bool fs = false;
 		pdoc->DoForAllSelected([&](c3::Object *pobj)
 		{
 			c3::Scriptable *psc = (c3::Scriptable *)pobj->FindComponent(c3::Scriptable::Type());
 			if (psc)
+			{
 				psc->Execute((LPCTSTR)s);
+				fs = true;
+			}
 		});
+
+		if (!fs)
+			ShowNoScriptables();
 	}
 }
 

@@ -86,8 +86,13 @@ function init()
 	hprop_camarm_pos = FindProperty(hobj_camarm, "Position");
 
 	hprop_cam_ori = FindProperty(hobj_cam, "Orientation");
+	hprop_cam_minpitch = FindProperty(hobj_cam, "PitchCameraAngleMin");
+	hprop_cam_maxpitch = FindProperty(hobj_cam, "PitchCameraAngleMin");
 	hprop_camroot_facing = FindProperty(hobj_camroot, "Facing.Forward");
 	hprop_camroot_right = FindProperty(hobj_camroot, "Facing.Right");
+
+	SetPropertyValue(hprop_cam_minpitch, -88.0);
+	SetPropertyValue(hprop_cam_maxpitch, 88.0);
 
 	hprop_cam_fov = FindProperty(hobj_cam, "FOV(Perspective)");
 	hprop_cam_orbitdist = FindProperty(hobj_cam, "OrbitDistance");

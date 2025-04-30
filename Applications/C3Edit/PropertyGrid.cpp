@@ -428,6 +428,27 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *pprops, PROPERTY_DE
 				const TCHAR *xname = _T("x"), *yname = _T("y"), *zname = _T("z"), *wname = _T("w");
 				switch (p->GetAspect())
 				{
+					case props::IProperty::PROPERTY_ASPECT::PA_DIMENSIONS:
+						xname = _T("Width");
+						yname = _T("Length");
+						zname = _T("Height");
+						wname = _T("Time? Really?");
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_RECT:
+						xname = _T("X1");
+						yname = _T("Y1");
+						zname = _T("X2");
+						wname = _T("Y2");
+						break;
+
+					case props::IProperty::PROPERTY_ASPECT::PA_RECT_TLBR:
+						xname = _T("Top");
+						yname = _T("Left");
+						zname = _T("Bottom");
+						wname = _T("Right");
+						break;
+
 					case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG:
 					case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD:
 						xname = _T("Pitch");
@@ -575,6 +596,27 @@ void CPropertyGrid::SetActiveProperties(props::IPropertySet *pprops, PROPERTY_DE
 					const TCHAR *xname = _T("x"), *yname = _T("y"), *zname = _T("z"), *wname = _T("w");
 					switch (p->GetAspect())
 					{
+						case props::IProperty::PROPERTY_ASPECT::PA_DIMENSIONS:
+							xname = _T("Width");
+							yname = _T("Length");
+							zname = _T("Height");
+							wname = _T("Time? Really?");
+							break;
+
+						case props::IProperty::PROPERTY_ASPECT::PA_RECT:
+							xname = _T("X1");
+							yname = _T("Y1");
+							zname = _T("X2");
+							wname = _T("Y2");
+							break;
+
+						case props::IProperty::PROPERTY_ASPECT::PA_RECT_TLBR:
+							xname = _T("Top");
+							yname = _T("Left");
+							zname = _T("Bottom");
+							wname = _T("Right");
+							break;
+
 						case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_DEG:
 						case props::IProperty::PROPERTY_ASPECT::PA_ROTATION_RAD:
 							xname = _T("Pitch");

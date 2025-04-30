@@ -50,12 +50,12 @@ void main()
 	fColor0 = uColorDiffuse;
 
 #if defined(SKIN)
-	fPosDepth = vec4(vec4(uMatrixM * skinnedPos).xyz, zpos.w);
+	fPosDepth = vec4(vec4(uMatrixM * skinnedPos).xyz, 1);
 	fN = normalize(uMatrixN * vec4(skinnedNorm, 0.0)).xyz;
 	fT = normalize(uMatrixN * vec4(skinnedTan, 0.0)).xyz;
 	fB = normalize(uMatrixN * vec4(skinnedBinorm, 0.0)).xyz;
 #else
-	fPosDepth = vec4(vec4(uMatrixM * wpos).xyz, zpos.w);
+	fPosDepth = vec4(vec4(uMatrixM * wpos).xyz, 1);
 	fN = normalize(uMatrixN * vec4(vNorm, 0.0)).xyz;
 	fT = normalize(uMatrixN * vec4(vTan, 0.0)).xyz;
 	fB = normalize(uMatrixN * vec4(vBinorm, 0.0)).xyz;

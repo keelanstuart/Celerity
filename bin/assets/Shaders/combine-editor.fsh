@@ -3,7 +3,6 @@ uniform sampler2D uSamplerNormalAmbOcc;
 uniform sampler2D uSamplerPosDepth;
 uniform sampler2D uSamplerEmissionRoughness;
 uniform sampler2D uSamplerEffectsColor;
-uniform sampler2D uSamplerInterfaceColor;
 uniform sampler2D uSamplerLights;
 uniform sampler2D uSamplerShadow;
 uniform sampler2D uSamplerAuxiliary;
@@ -31,7 +30,6 @@ vec3 acquireAdjacentNormal(sampler2D samp, vec2 uv, vec2 ofs, vec3 def)
 void main()
 {
 	vec4 texNormalAmbOcc = texture(uSamplerNormalAmbOcc, fTex0);
-	vec4 texInterfaceColor = texture(uSamplerInterfaceColor, fTex0);
 	
 	ivec2 aux_tex_size = textureSize(uSamplerAuxiliary, 0);
 	vec2 aux_texel_inc;
@@ -76,8 +74,8 @@ void main()
 
 	if ( (texNormalAmbOcc.rgb == vec3(0, 0, 0)) || (texNormalAmbOcc.rgb == vec3(1, 1, 1)) )
 	{
-		cc = texDiffuseMetalness.rgb + texEffectsColor.rgb + cloudiness + glow_color + (emissive * (1 - cloud_factor));
-		oColor = vec4(mix(cc, texInterfaceColor.rgb, texInterfaceColor.a), 1);
+		cc = texDiffuseMetalness.rgb + texEffectsColor.rgb + cloudiness + glow_color + emissive;//(emissive * (1 - cloud_factor));
+		oColor = vec4(cc, 1);
 		return;
 	}
 	
@@ -108,5 +106,5 @@ void main()
 	float shade = (shadow_coords.z > (shadow + bias)) ? 0.0 : 1.0;
 
 	cc = ((mix(ambient, diffuse, NdotL * shade) + ((specular + cloudiness) * shade))) + (emissive * (1 - cloud_factor)) + lights + glow_color + texEffectsColor.rgb;
-	oColor = vec4(mix(cc, texInterfaceColor.rgb, texInterfaceColor.a), 1);
+	oColor = vec4(cc, 1);
 }

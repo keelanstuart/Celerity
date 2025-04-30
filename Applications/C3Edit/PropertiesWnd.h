@@ -47,6 +47,7 @@ public:
 
 	void SetActivePrototype(c3::Prototype *pproto);
 	void SetActiveObject(c3::Object *pobj);
+	c3::Object *GetActiveObject() const;
 	void SetActiveProperties(props::IPropertySet* props, bool readonly, const TCHAR* title);
 	void UpdateCurrentProperties();
 

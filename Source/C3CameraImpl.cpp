@@ -172,10 +172,13 @@ void CameraImpl::Update(float elapsed_time)
 			case PM_ORTHOGRAPHIC:
 			{
 				glm::fvec2 halfdim = (m_dim + m_orbitdist) / 2.0f;
-				m_proj = glm::ortho(m_eyepos.x - halfdim.x, m_eyepos.x + halfdim.x, m_eyepos.y - halfdim.y, m_eyepos.y + halfdim.y, m_nearclip, m_farclip);
+				m_proj = glm::ortho(-halfdim.x, halfdim.x, -halfdim.y, halfdim.y, m_nearclip, m_farclip);
 				break;
 			}
 		}
+
+		// Flip X because OpenGL
+		//m_proj = m_proj * glm::scale(glm::vec3(-1, 1, 1));
 
 		m_Flags.Clear(CAMFLAG_REBUILDMATRICES);
 	}

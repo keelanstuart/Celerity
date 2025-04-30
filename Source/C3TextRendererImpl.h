@@ -27,6 +27,7 @@ namespace c3
 		Color::SRGBAColor m_ImgColor;
 		Color::SRGBAColor m_TextColor;
 
+		bool m_BackgroundEnabled;
 		Texture2D *m_pImage;
 		RenderMethod *m_pMethodImage;
 		size_t m_TechImage;
@@ -37,6 +38,7 @@ namespace c3
 		VertexBuffer *m_pTextVB;
 		Font *m_pFont;
 		size_t m_TextQuads;
+		glm::fvec4 m_ImageMargins;
 
 		math::FRect2D m_Rect;
 

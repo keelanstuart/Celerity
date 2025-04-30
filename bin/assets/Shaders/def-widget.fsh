@@ -9,7 +9,7 @@ layout (location=3) out vec4 oDefEmissiveRoughness;
 
 void main()
 {
-	oDefDiffuseMetalness = vec4(1,1,1,1);
+	oDefDiffuseMetalness = vec4(1, 1, 1, 1);
 	oDefNormalAmbOcc = vec4(1, 1, 1, 0);
 	oDefPosDepth = fPosDepth;
 	oDefEmissiveRoughness = vec4(uLightColor, 0);

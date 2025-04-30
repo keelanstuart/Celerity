@@ -149,7 +149,7 @@ void CDeferredPipeline::CreateSurfaces()
 		gbok = m_GBuf->Setup(_countof(GBufTargData), GBufTargData, m_DepthTarg, r) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	if (gbok)
 	{
-		m_GBuf->SetClearColor(3, c3::Color::fBlackFT);
+		m_GBuf->SetClearColor(c3::Color::fBlackFT, 3);
 	}
 	m_pSys->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 
@@ -191,7 +191,7 @@ void CDeferredPipeline::CreateSurfaces()
 		gbok = m_AuxBuf->Setup(_countof(AuxBufTargData), AuxBufTargData, m_DepthTarg, auxr) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	if (gbok)
 	{
-		m_AuxBuf->SetClearColor(0, c3::Color::fBlackFT);
+		m_AuxBuf->SetClearColor(c3::Color::fBlackFT, 0);
 		m_AuxBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 	}
 	m_pSys->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
@@ -323,8 +323,8 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 
 	glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 1.0f);
 	prend->SetClearColor(&cc);
-	m_GBuf->SetClearColor(0, cc);
-	m_GBuf->SetClearColor(2, glm::fvec4(0, 0, 0, farclip));
+	m_GBuf->SetClearColor(cc, 0);
+	m_GBuf->SetClearColor(glm::fvec4(0, 0, 0, farclip), 2);
 
 	prend->SetClearDepth(1.0f);
 
@@ -361,7 +361,7 @@ void CDeferredPipeline::OnDraw(CDC* pDC, c3::Object *root, TObjectArray *selecti
 
 		// after the main pass, clear everything with black...
 		prend->SetClearColor(&c3::Color::fBlack);
-		m_LCBuf->SetClearColor(0, c3::Color::fBlack);
+		m_LCBuf->SetClearColor(c3::Color::fBlack, 0);
 
 		// Lighting pass(es)
 		prend->UseFrameBuffer(m_LCBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);

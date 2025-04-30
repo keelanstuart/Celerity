@@ -13,12 +13,23 @@ layout (location=0) out vec4 oColor;
 
 void main()
 {
-	vec4 posd = texture(uSamplerPosDepth, fTex0);
+	vec2 uv = vec2(fTex0.x + 1, fTex0.y);
 
-	vec4 smip0 = texture(uSamplerSceneMip0, fTex0);
-	vec4 smip1 = texture(uSamplerSceneMip1, fTex0);
-	vec4 smip2 = texture(uSamplerSceneMip2, fTex0);
-	vec4 smip3 = texture(uSamplerSceneMip3, fTex0);
+	vec4 posd = texture(uSamplerPosDepth, uv);
+	vec4 smip0 = texture(uSamplerSceneMip0, uv);
+	vec4 smip1 = texture(uSamplerSceneMip1, uv);
+	vec4 smip2 = texture(uSamplerSceneMip2, uv);
+	vec4 smip3 = texture(uSamplerSceneMip3, uv);
 
-	oColor = vec4((smip0.rgb + smip1.rgb + (smip2.rgb * smip2.rgb) + (smip3.rgb * smip3.rgb * smip3.rgb)) * 0.4, smip0.a);
+	smip1 *= 0.5;
+
+	smip2 *= smip2;
+	smip2 *= 0.7;
+
+	smip3 *= smip3 * smip3;
+	smip3 *= 0.9;
+
+	vec3 cc = smip0.rgb + smip1.rgb + smip2.rgb + smip3.rgb;
+
+	oColor = vec4(cc, 1);
 }

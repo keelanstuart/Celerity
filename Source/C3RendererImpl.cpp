@@ -67,7 +67,11 @@ RendererImpl::RendererImpl(SystemImpl *psys)
 	m_CullMode = CullMode::CM_NUMMODES;
 	m_BlendMode = BlendMode::BM_NUMMODES;
 	m_BlendEq = BlendEquation::BE_NUMMODES;
+	m_AlphaBlendMode = BlendMode::BM_NUMMODES;
+	m_AlphaBlendEq = BlendEquation::BE_NUMMODES;
 	m_FillMode = FillMode::FM_FILL;
+
+	m_DirtyStates = 0;
 
 	m_AlphaPassMin = 0.2f;
 	m_AlphaPassMax = 1.0f;
@@ -418,6 +422,8 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 	SetBlendMode(BM_ALPHA);
 	SetBlendEquation(BE_ADD);
+	SetAlphaBlendMode(BM_ADD);
+	SetAlphaBlendEquation(BE_ADD);
 
 	// Initialize meshes
 	GetCubeMesh();
@@ -947,6 +953,199 @@ size_t RendererImpl::GetCurrentFrameNumber()
 }
 
 
+void RendererImpl::UpdateDirtyRenderStates(bool refresh)
+{
+	if (m_CurFB)
+		((FrameBufferImpl *)m_CurFB)->UpdateDirtyRenderStates(refresh);
+
+	// DEPTH MODE
+	if (m_DirtyStates.IsSet(RSOF_DEPTHMODE))
+	{
+		if ((m_DepthMode == DM_READWRITE) || (m_DepthMode == DM_WRITEONLY))
+			gl.DepthMask(GL_TRUE);
+		else
+			gl.DepthMask(GL_FALSE);
+
+		if ((m_DepthMode == DM_READWRITE) || (m_DepthMode == DM_READONLY))
+			gl.Enable(GL_DEPTH_TEST);
+		else
+			gl.Disable(GL_DEPTH_TEST);
+	}
+
+	// DEPTH TEST
+	if (m_DirtyStates.IsSet(RSOF_DEPTHTEST))
+	{
+		gl.DepthFunc(testvals[m_DepthTest]);
+	}
+
+	// FILL MODE
+	if (m_DirtyStates.IsSet(RSOF_FILLMODE))
+	{
+		switch (m_FillMode)
+		{
+			case FillMode::FM_FILL:
+				gl.PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+				break;
+
+			case FillMode::FM_WIRE:
+				gl.PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+				break;
+
+			case FillMode::FM_POINT:
+				gl.PolygonMode(GL_FRONT_AND_BACK, GL_POINT);
+				break;
+		}
+	}
+
+	// STENCIL ENABLED
+	if (m_DirtyStates.IsSet(RSOF_STENCIL))
+	{
+		if (m_StencilEnabled)
+			gl.Enable(GL_STENCIL_TEST);
+		else
+			gl.Disable(GL_STENCIL_TEST);
+	}
+
+	if (m_DirtyStates.IsSet(RSOF_STENCILFUNC))
+	{
+		gl.StencilFunc(testvals[m_StencilTest], m_StencilRef, this->m_StencilMask);
+	}
+
+	if (m_DirtyStates.IsSet(RSOF_STENCILOP))
+	{
+		gl.StencilOp(stencilvals[m_StencilFailOp], stencilvals[m_StencilZFailOp], stencilvals[m_StencilZPassOp]);
+	}
+
+	if (m_DirtyStates.IsSet(RSOF_WINDINGORDER))
+	{
+		gl.FrontFace((m_WindingOrder == WO_CW) ? GL_CW : GL_CCW);
+	}
+
+	if (m_DirtyStates.IsSet(RSOF_CULLMODE))
+	{
+		bool enable_cull = false;
+
+		switch (m_CullMode)
+		{
+			case CM_DISABLED:
+				enable_cull = false;
+				break;
+
+			case CM_FRONT:
+				enable_cull = true;
+				gl.CullFace(GL_FRONT);
+				break;
+
+			case CM_BACK:
+				enable_cull = true;
+				gl.CullFace(GL_BACK);
+				break;
+
+			case CM_ALL:
+				enable_cull = true;
+				gl.CullFace(GL_FRONT_AND_BACK);
+				break;
+		}
+
+		if (enable_cull)
+			gl.Enable(GL_CULL_FACE);
+		else
+			gl.Disable(GL_CULL_FACE);
+	}
+
+	if (m_DirtyStates.AnySet(RSOF_BLENDMODE | RSOF_ALPHABLENDMODE))
+	{
+		bool enable_blend;
+		bool enable_coverage = (m_BlendMode == BlendMode::BM_ALPHATOCOVERAGE);
+
+		auto GLEnumsFromMode = [](BlendMode mode, GLenum &src, GLenum &dst) -> bool
+		{
+			bool ret = true;
+			switch (mode)
+			{
+				case BlendMode::BM_ALPHA:
+					src = GL_SRC_ALPHA;
+					dst = GL_ONE_MINUS_SRC_ALPHA;
+					break;
+
+				case BlendMode::BM_ADD:
+					src = GL_ONE;
+					dst = GL_ONE;
+					break;
+
+				case BlendMode::BM_ADDALPHA:
+					src = GL_SRC_ALPHA;
+					dst = GL_ONE;
+					break;
+
+				default:
+				case BlendMode::BM_ALPHATOCOVERAGE:
+				case BlendMode::BM_REPLACE:
+					src = GL_ONE;
+					dst = GL_ZERO;
+					break;
+
+				case BlendMode::BM_DISABLED:
+					ret = false;
+					src = GL_ZERO;
+					dst = GL_ZERO;
+					break;
+			}
+
+			return ret;
+		};
+
+		GLenum color_src, color_dst;
+		GLenum alpha_src, alpha_dst;
+
+		enable_blend = GLEnumsFromMode(m_BlendMode, color_src, color_dst);
+		GLEnumsFromMode(m_AlphaBlendMode, alpha_src, alpha_dst);
+
+		gl.BlendFuncSeparate(color_src, color_dst, alpha_src, alpha_dst);
+
+		if (enable_blend)
+			gl.Enable(GL_BLEND);
+		else
+			gl.Disable(GL_BLEND);
+
+		if (enable_coverage)
+		{
+			gl.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			gl.SampleCoverage(m_AlphaCoverage, m_AlphaCoverageInv);
+		}
+		else
+			gl.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+	}
+
+	if (m_DirtyStates.IsSet(RSOF_BLENDEQ))
+	{
+		static GLenum GLFuncLU[BlendEquation::BE_NUMMODES + 1] =
+		{
+			GL_FUNC_ADD,
+			GL_FUNC_SUBTRACT,
+			GL_FUNC_REVERSE_SUBTRACT,
+			GL_MIN,
+			GL_MAX,
+			GL_FUNC_ADD
+		};
+
+		gl.BlendEquationSeparate(GLFuncLU[m_BlendEq], GLFuncLU[m_AlphaBlendEq]);
+	}
+
+	if (m_DirtyStates.IsSet(RSOF_COLORMASK))
+	{
+		GLboolean r = m_ChannelWriteMask.IsSet(CM_RED);
+		GLboolean g = m_ChannelWriteMask.IsSet(CM_GREEN);
+		GLboolean b = m_ChannelWriteMask.IsSet(CM_BLUE);
+		GLboolean a = m_ChannelWriteMask.IsSet(CM_ALPHA);
+
+		gl.ColorMask(r, g, b, a);
+	}
+
+	m_DirtyStates = 0;
+}
+
+
 void RendererImpl::SetClearColor(const glm::fvec4 *color)
 {
 	const static glm::fvec4 defcolor = glm::fvec4(0, 0, 0, 1);
@@ -1009,16 +1208,7 @@ void RendererImpl::SetDepthMode(DepthMode mode)
 {
 	if (mode != m_DepthMode)
 	{
-		if ((mode == DM_READWRITE) || (mode == DM_WRITEONLY))
-			gl.DepthMask(GL_TRUE);
-		else
-			gl.DepthMask(GL_FALSE);
-
-		if ((mode == DM_READWRITE) || (mode == DM_READONLY))
-			gl.Enable(GL_DEPTH_TEST);
-		else
-			gl.Disable(GL_DEPTH_TEST);
-
+		m_DirtyStates.Set(RSOF_DEPTHMODE);
 		m_DepthMode = mode;
 	}
 }
@@ -1034,8 +1224,7 @@ void RendererImpl::SetDepthTest(Test test)
 {
 	if (test != m_DepthTest)
 	{
-		gl.DepthFunc(testvals[test]);
-
+		m_DirtyStates.Set(RSOF_DEPTHTEST);
 		m_DepthTest = test;
 	}
 }
@@ -1051,21 +1240,7 @@ void RendererImpl::SetFillMode(FillMode mode)
 {
 	if (mode != m_FillMode)
 	{
-		switch (mode)
-		{
-			case FillMode::FM_FILL:
-				gl.PolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-				break;
-
-			case FillMode::FM_WIRE:
-				gl.PolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-				break;
-
-			case FillMode::FM_POINT:
-				gl.PolygonMode(GL_FRONT_AND_BACK, GL_POINT);
-				break;
-		}
-
+		m_DirtyStates.Set(RSOF_FILLMODE);
 		m_FillMode = mode;
 	}
 }
@@ -1080,11 +1255,7 @@ void RendererImpl::SetStencilEnabled(bool en)
 {
 	if (m_StencilEnabled != en)
 	{
-		if (en)
-			gl.Enable(GL_STENCIL_TEST);
-		else
-			gl.Disable(GL_STENCIL_TEST);
-
+		m_DirtyStates.Set(RSOF_STENCIL);
 		m_StencilEnabled = en;
 	}
 }
@@ -1100,7 +1271,7 @@ void RendererImpl::SetStencilTest(Test test, uint8_t ref, uint8_t mask)
 {
 	if ((m_StencilTest != test) || (m_StencilRef != ref) || (m_StencilMask != mask))
 	{
-		gl.StencilFunc(testvals[test], ref, mask);
+		m_DirtyStates.Set(RSOF_STENCILFUNC);
 
 		m_StencilTest = test;
 		m_StencilRef = ref;
@@ -1124,7 +1295,7 @@ void RendererImpl::SetStencilOperation(StencilOperation stencil_fail, StencilOpe
 {
 	if ((m_StencilFailOp != stencil_fail) || (m_StencilZFailOp != zfail) || (m_StencilZPassOp != zpass))
 	{
-		gl.StencilOp(stencilvals[stencil_fail], stencilvals[zfail], stencilvals[zpass]);
+		m_DirtyStates.Set(RSOF_STENCILOP);
 
 		m_StencilFailOp = stencil_fail;
 		m_StencilZFailOp = zfail;
@@ -1145,7 +1316,7 @@ void RendererImpl::SetWindingOrder(WindingOrder mode)
 {
 	if (mode != m_WindingOrder)
 	{
-		gl.FrontFace((mode == WO_CW) ? GL_CW : GL_CCW);
+		m_DirtyStates.Set(RSOF_WINDINGORDER);
 
 		m_WindingOrder = mode;
 	}
@@ -1162,25 +1333,7 @@ void RendererImpl::SetCullMode(CullMode mode)
 {
 	if (mode != m_CullMode)
 	{
-		if (mode == CM_DISABLED)
-			gl.Disable(GL_CULL_FACE);
-		else if ((m_CullMode == CM_DISABLED) || (m_CullMode == CM_NUMMODES))
-			gl.Enable(GL_CULL_FACE);
-
-		switch (mode)
-		{
-			case CM_FRONT:
-				gl.CullFace(GL_FRONT);
-				break;
-
-			case CM_BACK:
-				gl.CullFace(GL_BACK);
-				break;
-
-			case CM_ALL:
-				gl.CullFace(GL_FRONT_AND_BACK);
-				break;
-		}
+		m_DirtyStates.Set(RSOF_CULLMODE);
 
 		m_CullMode = mode;
 	}
@@ -1197,39 +1350,7 @@ void RendererImpl::SetBlendMode(BlendMode mode)
 {
 	if (mode != m_BlendMode)
 	{
-		if ((m_BlendMode != BM_ALPHA) && (m_BlendMode != BM_ADD) && (m_BlendMode != BM_ADDALPHA))
-			gl.Enable(GL_BLEND);
-		else if ((mode != BM_ALPHA) && (mode != BM_ADD) && (mode != BM_ADDALPHA))
-			gl.Disable(GL_BLEND);
-
-		if (m_BlendMode == BlendMode::BM_ALPHATOCOVERAGE)
-			gl.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-		else if (mode == BlendMode::BM_ALPHATOCOVERAGE)
-			gl.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-
-		switch (mode)
-		{
-			case BlendMode::BM_ALPHA:
-				gl.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				break;
-
-			case BlendMode::BM_ADD:
-				gl.BlendFunc(GL_ONE, GL_ONE);
-				break;
-
-			case BlendMode::BM_ADDALPHA:
-				gl.BlendFunc(GL_SRC_ALPHA, GL_ONE);
-				break;
-
-			case BlendMode::BM_ALPHATOCOVERAGE:
-			case BlendMode::BM_REPLACE:
-				gl.BlendFunc(GL_ONE, GL_ZERO);
-				break;
-
-			case BlendMode::BM_DISABLED:
-				gl.BlendFunc(GL_ZERO, GL_ZERO);
-				break;
-		}
+		m_DirtyStates.Set(RSOF_BLENDMODE);
 
 		m_BlendMode = mode;
 	}
@@ -1239,6 +1360,23 @@ void RendererImpl::SetBlendMode(BlendMode mode)
 Renderer::BlendMode RendererImpl::GetBlendMode() const
 {
 	return m_BlendMode;
+}
+
+
+void RendererImpl::SetAlphaBlendMode(BlendMode mode)
+{
+	if (mode != m_AlphaBlendMode)
+	{
+		m_DirtyStates.Set(RSOF_ALPHABLENDMODE);
+
+		m_AlphaBlendMode = mode;
+	}
+}
+
+
+Renderer::BlendMode RendererImpl::GetAlphaBlendMode() const
+{
+	return m_AlphaBlendMode;
 }
 
 
@@ -1262,8 +1400,6 @@ void RendererImpl::SetAlphaCoverage(float coverage, bool invert)
 	{
 		m_AlphaCoverage = coverage;
 		m_AlphaCoverageInv = invert;
-
-		gl.SampleCoverage(m_AlphaCoverage, m_AlphaCoverageInv);
 	}
 }
 
@@ -1279,28 +1415,7 @@ void RendererImpl::SetBlendEquation(Renderer::BlendEquation eq)
 {
 	if (eq != m_BlendEq)
 	{
-		switch (eq)
-		{
-			case BlendEquation::BE_ADD:
-				gl.BlendEquation(GL_FUNC_ADD);
-				break;
-
-			case BlendEquation::BE_SUBTRACT:
-				gl.BlendEquation(GL_FUNC_SUBTRACT);
-				break;
-
-			case BlendEquation::BE_REVERSE_SUBTRACT:
-				gl.BlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-				break;
-
-			case BlendEquation::BE_MIN:
-				gl.BlendEquation(GL_MIN);
-				break;
-
-			case BlendEquation::BE_MAX:
-				gl.BlendEquation(GL_MAX);
-				break;
-		}
+		m_DirtyStates.Set(RSOF_BLENDEQ);
 
 		m_BlendEq = eq;
 	}
@@ -1313,16 +1428,28 @@ Renderer::BlendEquation RendererImpl::GetBlendEquation() const
 }
 
 
+void RendererImpl::SetAlphaBlendEquation(Renderer::BlendEquation eq)
+{
+	if (eq != m_AlphaBlendEq)
+	{
+		m_DirtyStates.Set(RSOF_ALPHABLENDEQ);
+
+		m_AlphaBlendEq = eq;
+	}
+}
+
+
+Renderer::BlendEquation RendererImpl::GetAlphaBlendEquation() const
+{
+	return m_AlphaBlendEq;
+}
+
+
 void RendererImpl::SetChannelWriteMask(ChannelMask mask)
 {
 	if (mask != m_ChannelWriteMask)
 	{
-		GLboolean r = mask.IsSet(CM_RED);
-		GLboolean g = mask.IsSet(CM_GREEN);
-		GLboolean b = mask.IsSet(CM_BLUE);
-		GLboolean a = mask.IsSet(CM_ALPHA);
-
-		gl.ColorMask(r, g, b, a);
+		m_DirtyStates.Set(RSOF_COLORMASK);
 
 		m_ChannelWriteMask = mask;
 	}
@@ -1714,9 +1841,6 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 	{
 		c3::FrameBufferImpl &fb = (c3::FrameBufferImpl &)*pfb;
 		glid = fb;
-
-		// apply the FBO-specific settings
-		fb.ApplySettings();
 	}
 
 	if (flags.IsSet(UFBFLAG_FINISHLAST))
@@ -1775,18 +1899,31 @@ void RendererImpl::UseFrameBuffer(FrameBuffer *pfb, props::TFlags64 flags)
 
 		BlendMode bm = m_BlendMode;
 		SetBlendMode(BlendMode::BM_REPLACE);
+		if (m_CurFB)
+			m_CurFB->SetBlendMode(BlendMode::BM_REPLACE);
+
+		UpdateDirtyRenderStates(true);
 
 		if (!m_CurFB || isnv)
+		{
 			gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) |
-				(flags.IsSet(UFBFLAG_CLEARDEPTH) ? GL_DEPTH_BUFFER_BIT : 0) |
-				(flags.IsSet(UFBFLAG_CLEARSTENCIL) ? GL_STENCIL_BUFFER_BIT : 0));
+					 (flags.IsSet(UFBFLAG_CLEARDEPTH) ? GL_DEPTH_BUFFER_BIT : 0) |
+					 (flags.IsSet(UFBFLAG_CLEARSTENCIL) ? GL_STENCIL_BUFFER_BIT : 0));
+		}
+
 		if (m_CurFB)
+		{
 			m_CurFB->Clear((uint64_t)flags | (isnv ? UFBFLAG_STRICTCOMPLIANCE : 0));
+		}
 
 		SetBlendMode(bm);
 
 		if (changed_dm)
 			SetDepthMode(dm);
+	}
+	else
+	{
+		UpdateDirtyRenderStates(true);
 	}
 }
 
@@ -1861,69 +1998,80 @@ void RendererImpl::UseTexture(uint64_t texunit, Texture *ptex, props::TFlags32 t
 		GL_TEXTURE24, GL_TEXTURE25, GL_TEXTURE26, GL_TEXTURE27, GL_TEXTURE28, GL_TEXTURE29, GL_TEXTURE30, GL_TEXTURE31
 	};
 
-	if (ptex && (texflags != s_SamplerCache[texunit]))
+	if (ptex)
 	{
-		GLuint sampid;
-
-		TTexFlagsToSamplerMap::iterator it = m_TexFlagsToSampler.find((uint32_t)texflags);
-		if (it == m_TexFlagsToSampler.end())
+		if (texflags != s_SamplerCache[texunit])
 		{
-			//make a new sampler object
-			gl.GenSamplers(1, &sampid);
+			GLuint sampid;
 
-			if (texflags.IsSet(TEXFLAG_MIRROR_U | TEXFLAG_WRAP_U))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-			else if (texflags.IsSet(TEXFLAG_WRAP_U))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			else if (texflags.IsSet(TEXFLAG_MIRROR_U))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
+			TTexFlagsToSamplerMap::iterator it = m_TexFlagsToSampler.find((uint32_t)texflags);
+			if (it == m_TexFlagsToSampler.end())
+			{
+				//make a new sampler object
+				gl.GenSamplers(1, &sampid);
+
+				if (texflags.IsSet(TEXFLAG_MIRROR_U | TEXFLAG_WRAP_U))
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+				else if (texflags.IsSet(TEXFLAG_WRAP_U))
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				else if (texflags.IsSet(TEXFLAG_MIRROR_U))
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_MIRROR_CLAMP_TO_EDGE);
+				else
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+
+				if (texflags.IsSet(TEXFLAG_MIRROR_V | TEXFLAG_WRAP_V))
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+				else if (texflags.IsSet(TEXFLAG_WRAP_V))
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				else if (texflags.IsSet(TEXFLAG_MIRROR_V))
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_MIRROR_CLAMP_TO_EDGE);
+				else
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+				if (texflags.IsSet(TEXFLAG_MIRROR_W | TEXFLAG_WRAP_W))
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
+				else if (texflags.IsSet(TEXFLAG_WRAP_W))
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_REPEAT);
+				else if (texflags.IsSet(TEXFLAG_MIRROR_W))
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_MIRROR_CLAMP_TO_EDGE);
+				else
+					gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+				if (texflags.IsSet(TEXFLAG_MAGFILTER_LINEAR))
+					gl.SamplerParameteri(sampid, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+				else
+					gl.SamplerParameteri(sampid, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+				if (ptex->MipCount() > 1)
+				{
+					if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR))
+						gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+					else if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR))
+						gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+					else if (texflags.IsSet(TEXFLAG_MINFILTER_MIPLINEAR))
+						gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+					else
+						gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+				}
+				else
+				{
+					if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR))
+						gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+					else
+						gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+				}
+
+				m_TexFlagsToSampler.insert(TTexFlagsToSamplerMap::value_type((uint32_t)texflags, sampid));
+			}
 			else
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			{
+				sampid = it->second;
+			}
 
-			if (texflags.IsSet(TEXFLAG_MIRROR_V | TEXFLAG_WRAP_V))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
-			else if (texflags.IsSet(TEXFLAG_WRAP_V))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			else if (texflags.IsSet(TEXFLAG_MIRROR_V))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_MIRROR_CLAMP_TO_EDGE);
-			else
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			gl.BindSampler((GLuint)texunit, sampid);
 
-			if (texflags.IsSet(TEXFLAG_MIRROR_W | TEXFLAG_WRAP_W))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_MIRRORED_REPEAT);
-			else if (texflags.IsSet(TEXFLAG_WRAP_W))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_REPEAT);
-			else if (texflags.IsSet(TEXFLAG_MIRROR_W))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_MIRROR_CLAMP_TO_EDGE);
-			else
-				gl.SamplerParameteri(sampid, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-			if (texflags.IsSet(TEXFLAG_MAGFILTER_LINEAR))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			else
-				gl.SamplerParameteri(sampid, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-			if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			else if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-			else if (texflags.IsSet(TEXFLAG_MINFILTER_LINEAR))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-			else if (texflags.IsSet(TEXFLAG_MINFILTER_MIPLINEAR))
-				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
-			else
-				gl.SamplerParameteri(sampid, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
-
-			m_TexFlagsToSampler.insert(TTexFlagsToSamplerMap::value_type((uint32_t)texflags, sampid));
+			s_SamplerCache[texunit] = texflags;
 		}
-		else
-		{
-			sampid = it->second;
-		}
-
-		gl.BindSampler((GLuint)texunit, sampid);
-
-		s_SamplerCache[texunit] = texflags;
 	}
 
 	if (s_TexCache[texunit] == ptex)
@@ -1989,6 +2137,8 @@ bool RendererImpl::DrawPrimitives(PrimType type, size_t count)
 
 				m_CurProg->ApplyUniforms();
 			}
+
+			UpdateDirtyRenderStates();
 
 			gl.DrawArrays(typelu[type], 0, (GLsizei)count);
 		};
@@ -2082,6 +2232,8 @@ bool RendererImpl::DrawIndexedPrimitives(PrimType type, size_t offset, size_t co
 
 			m_CurProg->ApplyUniforms();
 		}
+
+		UpdateDirtyRenderStates();
 
 		gl.DrawElements(typelu[type], (GLsizei)count, glidxs, NULL);
 	};
@@ -2843,11 +2995,11 @@ Mesh *RendererImpl::GetGuiRectMesh()
 		{
 			static const Vertex::PNYT1::s v[4] =
 			{
-				// GUI Rect (on the x/z plane)
-				{ { 0, 0, 0 }, { 0, -1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 0, 0 } },
-				{ { 0, 0, 1 }, { 0, -1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 0, 1 } },
-				{ { 1, 0, 1 }, { 0, -1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 1, 1 } },
-				{ { 1, 0, 0 }, { 0, -1, 0 }, { 1, 0, 0 }, { 0, 0, 1 }, { 1, 0 } }
+				// GUI Rect (on the x/y plane)
+				{ { 0, 0, 0 }, { 0, 0, -1 }, { 1, 0, 0 }, { 0, 1, 0 }, { 0, 0 } },
+				{ { 0, 1, 0 }, { 0, 0, -1 }, { 1, 0, 0 }, { 0, 1, 0 }, { 0, 1 } },
+				{ { 1, 1, 0 }, { 0, 0, -1 }, { 1, 0, 0 }, { 0, 1, 0 }, { 1, 1 } },
+				{ { 1, 0, 0 }, { 0, 0, -1 }, { 1, 0, 0 }, { 0, 1, 0 }, { 1, 0 } }
 			};
 
 			if (pvb->Lock(&buf, 4, Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
@@ -2863,7 +3015,7 @@ Mesh *RendererImpl::GetGuiRectMesh()
 		{
 			static const uint16_t i[2][3] =
 			{
-				 { 0, 1, 2 }, {  0, 2, 3  }
+				 { 0, 2, 1 }, {  0, 3, 2  }
 			};
 
 			if (pib->Lock(&buf, 2 * 3, IndexBuffer::IndexSize::IS_16BIT, IBLOCKFLAG_WRITE | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)

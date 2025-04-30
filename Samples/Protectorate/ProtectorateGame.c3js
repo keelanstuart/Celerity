@@ -67,6 +67,9 @@ function init()
 	//hprop_scenario = FindProperty(self, "Scenario");
 	//scenario = GetPropertyValue(hprop_scenario);
 	scenario = "Protectorate_AlphaSector";
+
+	var gui_root = GetRegisteredObject("gui.root");
+	var gui_load_result = LoadObject(gui_root, "Protectorate/Protectorate_HUD.c3o");
 	
 	var load_result = LoadObject(self, "Protectorate/" + scenario + ".c3o");
 

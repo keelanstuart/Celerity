@@ -276,7 +276,7 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 
 	size_t length = 0;
 	for (const TCHAR *c = text; *c != _T('\0'); c++)
-		if (std::isprint(*c) && !_istspace(*c))
+		if (!_istspace(*c))
 			length++;
 
 	float sx = 0;
@@ -328,9 +328,9 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 
 	size_t d = 0;
 
-	glm::fvec3 vn(0, 1, 0);
-	glm::fvec3 vt(1, 0, 0);
-	glm::fvec3 vb(0, 0, 1);
+	glm::fvec3 vn(0, 0, 1);
+	glm::fvec3 vt(0, 1, 0);
+	glm::fvec3 vb(1, 0, 0);
 
 	if (pverts->Lock((void **)&v, length * 6, Vertex::PNYT1::d, VBLOCKFLAG_WRITE | VBLOCKFLAG_DYNAMIC) == VertexBuffer::RETURNCODE::RET_OK)
 	{
@@ -358,15 +358,14 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 				}
 
 				default:
-					if (_istprint(*text))
 					{
 						auto it = m_GlyphInfo.find(*text);
 
 						if (it != m_GlyphInfo.end())
 						{
 							v->pos.x = corg.x + topshift;
-							v->pos.y = 0.0f;
-							v->pos.z = corg.y;
+							v->pos.y = corg.y;
+							v->pos.z = 0.0f;
 							memcpy(&(v->norm), &vn, sizeof(float) * 3);
 							memcpy(&(v->tang), &vt, sizeof(float) * 3);
 							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
@@ -375,8 +374,8 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 							v++;
 
 							v->pos.x = corg.x + it->second.w + topshift;
-							v->pos.y = 0.0f;
-							v->pos.z = corg.y;
+							v->pos.y = corg.y;
+							v->pos.z = 0.0f;
 							memcpy(&(v->norm), &vn, sizeof(float) * 3);
 							memcpy(&(v->tang), &vt, sizeof(float) * 3);
 							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
@@ -385,8 +384,8 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 							v++;
 
 							v->pos.x = corg.x;
-							v->pos.y = 0.0f;
-							v->pos.z = corg.y - it->second.h;
+							v->pos.y = corg.y - it->second.h;
+							v->pos.z = 0.0f;
 							memcpy(&(v->norm), &vn, sizeof(float) * 3);
 							memcpy(&(v->tang), &vt, sizeof(float) * 3);
 							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
@@ -395,8 +394,8 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 							v++;
 
 							v->pos.x = corg.x;
-							v->pos.y = 0.0f;
-							v->pos.z = corg.y - it->second.h;
+							v->pos.y = corg.y - it->second.h;
+							v->pos.z = 0.0f;
 							memcpy(&(v->norm), &vn, sizeof(float) * 3);
 							memcpy(&(v->tang), &vt, sizeof(float) * 3);
 							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
@@ -405,8 +404,8 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 							v++;
 
 							v->pos.x = corg.x + it->second.w + topshift;
-							v->pos.y = 0.0f;
-							v->pos.z = corg.y;
+							v->pos.y = corg.y;
+							v->pos.z = 0.0f;
 							memcpy(&(v->norm), &vn, sizeof(float) * 3);
 							memcpy(&(v->tang), &vt, sizeof(float) * 3);
 							memcpy(&(v->binorm), &vb, sizeof(float) * 3);
@@ -415,8 +414,8 @@ size_t FontImpl::RenderText(const TCHAR *text, VertexBuffer *pverts, props::TFla
 							v++;
 
 							v->pos.x = corg.x + it->second.w;
-							v->pos.y = 0.0f;
-							v->pos.z = corg.y - it->second.h;
+							v->pos.y = corg.y - it->second.h;
+							v->pos.z = 0.0f;
 							memcpy(&(v->norm), &vn, sizeof(float) * 3);
 							memcpy(&(v->tang), &vt, sizeof(float) * 3);
 							memcpy(&(v->binorm), &vb, sizeof(float) * 3);

@@ -4,6 +4,7 @@
 		<pass>
 			<setting name="framebuffer"			value="EffectsBuffer" />
 			<setting name="depthmode"			value="readonly" />
+			<setting name="depthtest"			value="lesserequal" />
 			<setting name="blendmode"			value="addalpha" />
 			<setting name="cullmode"			value="disabled" />
 			<setting name="shader.geometry"		value="def-part.gsh" />

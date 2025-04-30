@@ -191,11 +191,19 @@ void BoundingBoxImpl::SetAsFrustum(const glm::fmat4x4 *viewmat, const glm::fmat4
 	glm::fvec3 bn = glm::unProject(glm::fvec3(mx, y1, 0), *viewmat, *projmat, v);
 	glm::fvec3 bf = glm::unProject(glm::fvec3(mx, y1, 1), *viewmat, *projmat, v);
 
+#if 0
+	glm::fvec3 lno = ln - cn; // left near offset
+	glm::fvec3 lfo = lf - cf; // left far offset
+
+	glm::fvec3 rno = rn - cn; // right near offset
+	glm::fvec3 rfo = rf - cf; // right far offset
+#else
 	glm::fvec3 lno = cn - ln; // left near offset
 	glm::fvec3 lfo = cf - lf; // left far offset
 
 	glm::fvec3 rno = cn - rn; // right near offset
 	glm::fvec3 rfo = cf - rf; // right far offset
+#endif
 
 	glm::fvec3 tno = tn - cn; // top near offset
 	glm::fvec3 tfo = tf - cf; // top far offset

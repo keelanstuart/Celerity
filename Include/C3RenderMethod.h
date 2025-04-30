@@ -37,8 +37,14 @@ namespace c3
 			virtual void SetBlendMode(Renderer::BlendMode blendmode = Renderer::BlendMode::BM_REPLACE) = NULL;
 			virtual bool GetBlendMode(Renderer::BlendMode &blendmode) const = NULL;
 
-			virtual void SetEquation(Renderer::BlendEquation blendeq = Renderer::BlendEquation::BE_ADD) = NULL;
+			virtual void SetBlendEquation(Renderer::BlendEquation blendeq = Renderer::BlendEquation::BE_ADD) = NULL;
 			virtual bool GetBlendEquation(Renderer::BlendEquation &blendeq) const = NULL;
+
+			virtual void SetAlphaBlendMode(Renderer::BlendMode blendmode = Renderer::BlendMode::BM_REPLACE) = NULL;
+			virtual bool GetAlphaBlendMode(Renderer::BlendMode &blendmode) const = NULL;
+
+			virtual void SetAlphaBlendEquation(Renderer::BlendEquation blendeq = Renderer::BlendEquation::BE_ADD) = NULL;
+			virtual bool GetAlphaBlendEquation(Renderer::BlendEquation &blendeq) const = NULL;
 
 			virtual void SetCullMode(Renderer::CullMode cullmode = Renderer::CullMode::CM_BACK) = NULL;
 			virtual bool GetCullMode(Renderer::CullMode &cullmode) const = NULL;
@@ -48,6 +54,9 @@ namespace c3
 
 			virtual void SetDepthMode(Renderer::DepthMode depthmode = Renderer::DepthMode::DM_READWRITE) = NULL;
 			virtual bool GetDepthMode(Renderer::DepthMode &depthmode) const = NULL;
+
+			virtual void SetDepthTest(Renderer::Test depthtest = Renderer::Test::DT_LESSER) = NULL;
+			virtual bool GetDepthTest(Renderer::Test &depthtest) const = NULL;
 
 			virtual void SetFillMode(Renderer::FillMode fillmode = Renderer::FillMode::FM_FILL) = NULL;
 			virtual bool GetFillMode(Renderer::FillMode &fillmode) const = NULL;

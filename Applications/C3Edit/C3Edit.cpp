@@ -575,6 +575,14 @@ void C3EditApp::SetActiveObject(c3::Object *pobj, bool readonly, const TCHAR *ti
 		((C3EditFrame *)m_pMainWnd)->SetActiveObject(pobj, readonly, title);
 }
 
+c3::Object *C3EditApp::GetActiveObject() const
+{
+	if (m_pMainWnd && m_pMainWnd->GetSafeHwnd())
+		return ((C3EditFrame *)m_pMainWnd)->GetActiveObject();
+
+	return nullptr;
+}
+
 void C3EditApp::RefreshActiveProperties()
 {
 	if (m_pMainWnd && m_pMainWnd->GetSafeHwnd())

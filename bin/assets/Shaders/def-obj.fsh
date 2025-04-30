@@ -40,7 +40,7 @@ void main()
 	// encode ambient occlusion as normal.a
 	oDefNormalAmbOcc = vec4(N * 0.5 + 0.5, texSurfaceDesc.r);
 
-	oDefPosDepth = fPosDepth;
+	oDefPosDepth = vec4(fPosDepth.xyz, gl_FragCoord.z);
 
 	// encode roughness as emissive.a
 	oDefEmissiveRoughness = vec4(texEmissive.rgb * fColor0.a, texSurfaceDesc.g);

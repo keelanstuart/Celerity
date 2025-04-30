@@ -107,6 +107,8 @@ namespace c3
 		CullMode m_CullMode;
 		BlendMode m_BlendMode;
 		BlendEquation m_BlendEq;
+		BlendMode m_AlphaBlendMode;
+		BlendEquation m_AlphaBlendEq;
 		FillMode m_FillMode;
 		ChannelMask m_ChannelWriteMask;
 
@@ -182,6 +184,10 @@ namespace c3
 		LOG_FUNC m_LogFunc;
 
 		float m_DepthBias;
+
+		// defer setting render states until we actually draw / clear something...
+		RenderStateOverrideFlags m_DirtyStates;
+		void UpdateDirtyRenderStates(bool refresh = false);
 
 	public:
 
@@ -269,6 +275,9 @@ namespace c3
 		virtual void SetBlendMode(BlendMode mode);
 		virtual BlendMode GetBlendMode() const;
 
+		virtual void SetAlphaBlendMode(BlendMode mode);
+		virtual BlendMode GetAlphaBlendMode() const;
+
 		virtual void SetAlphaPassRange(float minalpha, float maxalpha);
 		virtual void GetAlphaPassRange(float &minalpha, float &maxalpha);
 
@@ -277,6 +286,9 @@ namespace c3
 
 		virtual void SetBlendEquation(BlendEquation eq);
 		virtual BlendEquation GetBlendEquation() const;
+
+		virtual void SetAlphaBlendEquation(BlendEquation eq);
+		virtual BlendEquation GetAlphaBlendEquation() const;
 
 		virtual void SetChannelWriteMask(ChannelMask mask);
 		virtual ChannelMask GetChannelWriteMask() const;

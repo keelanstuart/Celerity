@@ -17,8 +17,9 @@ void main()
 {
 	vec2 uv = (gl_FragCoord.xy / uScreenSize);
 
-	vec3 ppos = texture(uSamplerPosDepth, uv).xyz;
-	vec3 tolight = uLightPos - ppos;
+	vec4 posdepth = texture(uSamplerPosDepth, uv);
+
+	vec3 tolight = uLightPos - posdepth.xyz;
 	float dist = length(tolight);
 	if (dist > uLightRadius)
 		discard;
@@ -35,7 +36,7 @@ void main()
 
 	float ndl = clamp(dot(pnorm, normalize(tolight)), 0, 1);
 
-	vec3 view = normalize(ppos - uEyePosition);
+	vec3 view = normalize(posdepth.xyz - uEyePosition);
 	vec3 refl = normalize(-reflect(tolight, pnorm));
 	float spec = pow(max(dot(view, refl), 0.0), roughness * 16.0);
     vec3 specular = spec * mix(uLightColor, texDiffuseMetalness.rgb, 1 - metalness);

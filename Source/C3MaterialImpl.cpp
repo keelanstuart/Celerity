@@ -48,7 +48,7 @@ MaterialImpl::MaterialImpl(MaterialManager *pmatman, Renderer *prend, const Mate
 		m_StencilTest = Renderer::Test::DT_ALWAYS;
 		m_StencilFailOp = Renderer::StencilOperation::SO_KEEP;
 		m_StencilZFailOp = Renderer::StencilOperation::SO_KEEP;
-		m_StencilZPassOp = Renderer::StencilOperation::SO_REPLACE;
+		m_StencilZPassOp = Renderer::StencilOperation::SO_KEEP;
 		m_StencilRef = 0;
 		m_StencilMask = 0xff;
 
@@ -295,8 +295,16 @@ bool MaterialImpl::Apply(ShaderProgram *shader, Renderer::RenderStateOverrideFla
 	if (!overridden.IsSet(RSOF_STENCIL))
 	{
 		m_pRend->SetStencilEnabled(m_StencilEnabled);
+	}
+
+	if (!overridden.IsSet(RSOF_STENCILFUNC))
+	{
 		m_pRend->SetStencilTest(m_StencilTest, m_StencilRef, m_StencilMask);
-		m_pRend->SetStencilOperation(m_StencilFailOp, m_StencilZFailOp, m_StencilZPassOp);
+	}
+
+	if (!overridden.IsSet(RSOF_STENCILOP))
+	{
+			m_pRend->SetStencilOperation(m_StencilFailOp, m_StencilZFailOp, m_StencilZPassOp);
 	}
 
 	if (!overridden.IsSet(RSOF_WINDINGORDER))

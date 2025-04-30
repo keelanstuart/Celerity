@@ -23,9 +23,7 @@ protected:
 	c3::FrameBuffer *m_AuxBuf;
 	c3::FrameBuffer *m_SSBuf;
 	c3::FrameBuffer *m_EffectsBuf;
-	c3::FrameBuffer *m_InterfaceBuf;
 	c3::DepthBuffer *m_DepthTarg;
-	c3::DepthBuffer *m_InterfaceDepthTarg;
 	c3::DepthBuffer *m_ShadowTarg;
 	std::vector<c3::Texture2D *> m_BTex;
 	std::vector<c3::FrameBuffer *> m_BBuf;

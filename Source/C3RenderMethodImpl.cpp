@@ -102,6 +102,18 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 				ret.Set(RSOF_BLENDEQ);
 			}
 
+			if (m_AlphaBlendModeCh[i].has_value())
+			{
+				//m_FrameBuffer->SetAlphaBlendMode(*m_AlphaBlendModeCh[i], (int)i);
+				ret.Set(RSOF_BLENDMODE);
+			}
+
+			if (m_AlphaBlendEqCh[i].has_value())
+			{
+				//m_FrameBuffer->SetAlphaBlendEquation(*m_AlphaBlendEqCh[i], (int)i);
+				ret.Set(RSOF_BLENDEQ);
+			}
+
 			if (m_ChannelWriteMaskCh[i].has_value())
 			{
 				m_FrameBuffer->SetChannelWriteMask(*m_ChannelWriteMaskCh[i], (int)i);
@@ -122,6 +134,18 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 	if (m_BlendEq.has_value())
 	{
 		prend->SetBlendEquation(*m_BlendEq);
+		ret.Set(RSOF_BLENDEQ);
+	}
+
+	if (m_AlphaBlendMode.has_value())
+	{
+		prend->SetAlphaBlendMode(*m_BlendMode);
+		ret.Set(RSOF_BLENDMODE);
+	}
+
+	if (m_AlphaBlendEq.has_value())
+	{
+		prend->SetAlphaBlendEquation(*m_BlendEq);
 		ret.Set(RSOF_BLENDEQ);
 	}
 
@@ -147,6 +171,12 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 	{
 		prend->SetDepthMode(*m_DepthMode);
 		ret.Set(RSOF_DEPTHMODE);
+	}
+
+	if (m_DepthTest.has_value())
+	{
+		prend->SetDepthTest(*m_DepthTest);
+		ret.Set(RSOF_DEPTHTEST);
 	}
 
 	if (m_FillMode.has_value())
@@ -281,7 +311,7 @@ bool RenderMethodImpl::PassImpl::GetBlendMode(Renderer::BlendMode &blendmode) co
 }
 
 
-void RenderMethodImpl::PassImpl::SetEquation(Renderer::BlendEquation blendeq)
+void RenderMethodImpl::PassImpl::SetBlendEquation(Renderer::BlendEquation blendeq)
 {
 	m_BlendEq = std::make_optional<Renderer::BlendEquation>(blendeq);
 }
@@ -293,6 +323,38 @@ bool RenderMethodImpl::PassImpl::GetBlendEquation(Renderer::BlendEquation &blend
 		return false;
 
 	blendeq = *m_BlendEq;
+	return true;
+}
+
+
+void RenderMethodImpl::PassImpl::SetAlphaBlendMode(Renderer::BlendMode blendmode)
+{
+	m_AlphaBlendMode = std::make_optional<Renderer::BlendMode>(blendmode);
+}
+
+
+bool RenderMethodImpl::PassImpl::GetAlphaBlendMode(Renderer::BlendMode &blendmode) const
+{
+	if (!m_AlphaBlendMode.has_value())
+		return false;
+
+	blendmode = *m_AlphaBlendMode;
+	return true;
+}
+
+
+void RenderMethodImpl::PassImpl::SetAlphaBlendEquation(Renderer::BlendEquation blendeq)
+{
+	m_AlphaBlendEq = std::make_optional<Renderer::BlendEquation>(blendeq);
+}
+
+
+bool RenderMethodImpl::PassImpl::GetAlphaBlendEquation(Renderer::BlendEquation &blendeq) const
+{
+	if (!m_AlphaBlendEq.has_value())
+		return false;
+
+	blendeq = *m_AlphaBlendEq;
 	return true;
 }
 
@@ -341,6 +403,22 @@ bool RenderMethodImpl::PassImpl::GetDepthMode(Renderer::DepthMode &depthmode) co
 		return false;
 
 	depthmode = *m_DepthMode;
+	return true;
+}
+
+
+void RenderMethodImpl::PassImpl::SetDepthTest(Renderer::Test depthtest)
+{
+	m_DepthTest = std::make_optional<Renderer::Test>(depthtest);
+}
+
+
+bool RenderMethodImpl::PassImpl::GetDepthTest(Renderer::Test &depthtest) const
+{
+	if (!m_DepthTest.has_value())
+		return false;
+
+	depthtest = *m_DepthTest;
 	return true;
 }
 
@@ -444,8 +522,14 @@ void RenderMethodImpl::TechniqueImpl::End()
 		if (m_OldState.IsSet(RSOF_BLENDMODE))
 			m_pOwner->m_pRend->SetBlendMode(m_OldBlendMode);
 
+		if (m_OldState.IsSet(RSOF_ALPHABLENDMODE))
+			m_pOwner->m_pRend->SetAlphaBlendMode(m_OldAlphaBlendMode);
+
 		if (m_OldState.IsSet(RSOF_BLENDEQ))
 			m_pOwner->m_pRend->SetBlendEquation(m_OldBlendEq);
+
+		if (m_OldState.IsSet(RSOF_ALPHABLENDEQ))
+			m_pOwner->m_pRend->SetAlphaBlendEquation(m_OldAlphaBlendEq);
 
 		if (m_OldState.IsSet(RSOF_CULLMODE))
 			m_pOwner->m_pRend->SetCullMode(m_OldCullMode);
@@ -455,6 +539,9 @@ void RenderMethodImpl::TechniqueImpl::End()
 
 		if (m_OldState.IsSet(RSOF_DEPTHMODE))
 			m_pOwner->m_pRend->SetDepthMode(m_OldDepthMode);
+
+		if (m_OldState.IsSet(RSOF_DEPTHTEST))
+			m_pOwner->m_pRend->SetDepthTest(m_OldDepthTest);
 
 		if (m_OldState.IsSet(RSOF_FILLMODE))
 			m_pOwner->m_pRend->SetFillMode(m_OldFillMode);
@@ -840,12 +927,68 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_DISABLED);
 		}
 	}
+	else if (name == _T("alphablendmode"))
+	{
+		if (persist)
+			m_StateRestorationMask.Clear(RSOF_ALPHABLENDMODE);
+
+		std::optional<Renderer::BlendMode> &blendmode = (fbtarget < 0) ? m_AlphaBlendMode : m_AlphaBlendModeCh[fbtarget];
+
+		if (value == _T("add"))
+		{
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ADD);
+		}
+		else if (value == _T("alpha"))
+		{
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ALPHA);
+		}
+		else if (value == _T("addalpha"))
+		{
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_ADDALPHA);
+		}
+		else if (value == _T("replace"))
+		{
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_REPLACE);
+		}
+		else if (value == _T("disabled"))
+		{
+			blendmode = std::make_optional<Renderer::BlendMode>(Renderer::BlendMode::BM_DISABLED);
+		}
+	}
 	else if (name == _T("blendeq"))
 	{
 		if (persist)
 			m_StateRestorationMask.Clear(RSOF_BLENDEQ);
 
 		std::optional<Renderer::BlendEquation> &blendeq = (fbtarget < 0) ? m_BlendEq : m_BlendEqCh[fbtarget];
+
+		if (value == _T("add"))
+		{
+			blendeq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_ADD);
+		}
+		else if (value == _T("subtract"))
+		{
+			blendeq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_SUBTRACT);
+		}
+		else if (value == _T("revsubtract"))
+		{
+			blendeq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_REVERSE_SUBTRACT);
+		}
+		else if (value == _T("min"))
+		{
+			blendeq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_MIN);
+		}
+		else if (value == _T("max"))
+		{
+			blendeq = std::make_optional<Renderer::BlendEquation>(Renderer::BlendEquation::BE_MAX);
+		}
+	}
+	else if (name == _T("alphablendeq"))
+	{
+		if (persist)
+			m_StateRestorationMask.Clear(RSOF_ALPHABLENDEQ);
+
+		std::optional<Renderer::BlendEquation> &blendeq = (fbtarget < 0) ? m_AlphaBlendEq : m_AlphaBlendEqCh[fbtarget];
 
 		if (value == _T("add"))
 		{
@@ -938,6 +1081,44 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 		else if (value == _T("disabled"))
 		{
 			m_DepthMode = std::make_optional<Renderer::DepthMode>(Renderer::DepthMode::DM_DISABLED);
+		}
+	}
+	else if (name == _T("depthtest"))
+	{
+		if (persist)
+			m_StateRestorationMask.Clear(RSOF_DEPTHTEST);
+
+		if (value == _T("never"))
+		{
+			m_DepthTest = std::make_optional<Renderer::Test>(Renderer::Test::DT_NEVER);
+		}
+		else if (value == _T("lesser"))
+		{
+			m_DepthTest = std::make_optional<Renderer::Test>(Renderer::Test::DT_LESSER);
+		}
+		else if (value == _T("lesserequal"))
+		{
+			m_DepthTest = std::make_optional<Renderer::Test>(Renderer::Test::DT_LESSEREQUAL);
+		}
+		else if (value == _T("equal"))
+		{
+			m_DepthTest = std::make_optional<Renderer::Test>(Renderer::Test::DT_EQUAL);
+		}
+		else if (value == _T("notequal"))
+		{
+			m_DepthTest = std::make_optional<Renderer::Test>(Renderer::Test::DT_NOTEQUAL);
+		}
+		else if (value == _T("greaterequal"))
+		{
+			m_DepthTest = std::make_optional<Renderer::Test>(Renderer::Test::DT_GREATEREQUAL);
+		}
+		else if (value == _T("greater"))
+		{
+			m_DepthTest = std::make_optional<Renderer::Test>(Renderer::Test::DT_GREATER);
+		}
+		else if (value == _T("always"))
+		{
+			m_DepthTest = std::make_optional<Renderer::Test>(Renderer::Test::DT_ALWAYS);
 		}
 	}
 	else if (name == _T("fillmode"))

@@ -45,13 +45,18 @@ namespace c3
 			Renderer::RenderStateOverrideFlags m_StateRestorationMask;
 			std::optional<Renderer::BlendMode> m_BlendMode;
 			std::optional<Renderer::BlendEquation> m_BlendEq;
+			std::optional<Renderer::BlendMode> m_AlphaBlendMode;
+			std::optional<Renderer::BlendEquation> m_AlphaBlendEq;
 			std::optional<Renderer::ChannelMask> m_ChannelWriteMask;
 			std::optional<Renderer::BlendMode> m_BlendModeCh[FrameBuffer::MAX_COLORTARGETS];
 			std::optional<Renderer::BlendEquation> m_BlendEqCh[FrameBuffer::MAX_COLORTARGETS];
+			std::optional<Renderer::BlendMode> m_AlphaBlendModeCh[FrameBuffer::MAX_COLORTARGETS];
+			std::optional<Renderer::BlendEquation> m_AlphaBlendEqCh[FrameBuffer::MAX_COLORTARGETS];
 			std::optional<Renderer::ChannelMask> m_ChannelWriteMaskCh[FrameBuffer::MAX_COLORTARGETS];
 			std::optional<Renderer::CullMode> m_CullMode;
 			std::optional<Renderer::WindingOrder> m_WindingOrder;
 			std::optional<Renderer::DepthMode> m_DepthMode;
+			std::optional<Renderer::Test> m_DepthTest;
 			std::optional<Renderer::FillMode> m_FillMode;
 			RenderMethod *m_pOwner;
 
@@ -77,8 +82,14 @@ namespace c3
 			virtual void SetBlendMode(Renderer::BlendMode blendmode = Renderer::BlendMode::BM_REPLACE);
 			virtual bool GetBlendMode(Renderer::BlendMode &blendmode) const;
 
-			virtual void SetEquation(Renderer::BlendEquation blendeq = Renderer::BlendEquation::BE_ADD);
+			virtual void SetBlendEquation(Renderer::BlendEquation blendeq = Renderer::BlendEquation::BE_ADD);
 			virtual bool GetBlendEquation(Renderer::BlendEquation &blendeq) const;
+
+			virtual void SetAlphaBlendMode(Renderer::BlendMode blendmode = Renderer::BlendMode::BM_REPLACE);
+			virtual bool GetAlphaBlendMode(Renderer::BlendMode &blendmode) const;
+
+			virtual void SetAlphaBlendEquation(Renderer::BlendEquation blendeq = Renderer::BlendEquation::BE_ADD);
+			virtual bool GetAlphaBlendEquation(Renderer::BlendEquation &blendeq) const;
 
 			virtual void SetCullMode(Renderer::CullMode cullmode = Renderer::CullMode::CM_BACK);
 			virtual bool GetCullMode(Renderer::CullMode &cullmode) const;
@@ -88,6 +99,9 @@ namespace c3
 
 			virtual void SetDepthMode(Renderer::DepthMode depthmode = Renderer::DepthMode::DM_READWRITE);
 			virtual bool GetDepthMode(Renderer::DepthMode &depthmode) const;
+
+			virtual void SetDepthTest(Renderer::Test depthtest = Renderer::Test::DT_LESSER);
+			virtual bool GetDepthTest(Renderer::Test &depthtest) const;
 
 			virtual void SetFillMode(Renderer::FillMode fillmode = Renderer::FillMode::FM_FILL);
 			virtual bool GetFillMode(Renderer::FillMode &fillmode) const;
@@ -112,9 +126,12 @@ namespace c3
 			Renderer::RenderStateOverrideFlags m_OldState;
 			Renderer::BlendMode m_OldBlendMode;
 			Renderer::BlendEquation m_OldBlendEq;
+			Renderer::BlendMode m_OldAlphaBlendMode;
+			Renderer::BlendEquation m_OldAlphaBlendEq;
 			Renderer::CullMode m_OldCullMode;
 			Renderer::WindingOrder m_OldWindingOrder;
 			Renderer::DepthMode m_OldDepthMode;
+			Renderer::Test m_OldDepthTest;
 			Renderer::FillMode m_OldFillMode;
 
 		public:

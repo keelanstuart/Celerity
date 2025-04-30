@@ -24,6 +24,7 @@ TextRendererImpl::TextRendererImpl()
 	m_pMethodImage = m_pMethodText = nullptr;
 	m_TechText = m_TechImage = 0;
 	m_pFont = nullptr;
+	m_BackgroundEnabled = true;
 }
 
 
@@ -35,18 +36,6 @@ TextRendererImpl::~TextRendererImpl()
 
 void TextRendererImpl::Release()
 {
-	props::IPropertySet *pps = m_pOwner->GetProperties();
-	props::IProperty *pp;
-
-	pp = pps->GetPropertyById('ITva');
-	if (pp) pp->ExternalizeReference();
-
-	pp = pps->GetPropertyById('ITha');
-	if (pp) pp->ExternalizeReference();
-
-	pp = pps->GetPropertyById('ITMi');
-	if (pp) pp->ExternalizeReference();
-
 	delete this;
 }
 
@@ -74,10 +63,23 @@ bool TextRendererImpl::Initialize(Object *pobject)
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
 	}
 
+	if (pp = ps->CreateProperty(_T("Background.Show"), 'IIen'))
+	{
+		pp->SetBool(true);
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_BOOL_YESNO);
+	}
+
 	if (pp = ps->CreateProperty(_T("Image.RenderMethod"), 'IIrm'))
 	{
 		pp->SetString(_T("std.c3rm"));
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FILENAME);
+	}
+
+	// Image margins around the text
+	if (pp = ps->CreateProperty(_T("Image.Margins"), 'IIMr'))
+	{
+		pp->SetVec4F(props::TVec4F(0, 0, 0, 0));
+		pp->SetAspect(props::IProperty::PA_RECT_TLBR);
 	}
 
 	m_ImgColor = Color::iWhite;
@@ -93,7 +95,6 @@ bool TextRendererImpl::Initialize(Object *pobject)
 		pp->SetEnumProvider(this);
 		pp->SetEnumVal(m_VAlign);
 	}
-
 
 	if (pp = ps->CreateProperty(_T("Text"), 'ITxt'))
 	{
@@ -257,7 +258,7 @@ void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pma
 					m_pMethodImage = (RenderMethod *)(pres->GetData());
 
 				if (m_pMethodImage)
-					m_pMethodImage->FindTechnique(_T("textbg"), m_TechImage);
+					m_pMethodImage->FindTechnique(_T("image"), m_TechImage);
 			}
 		}
 
@@ -285,24 +286,29 @@ void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pma
 
 	if (!flags.IsSet(RF_LOCKSHADER))
 	{
-		m_pMethodImage->SetActiveTechnique(m_TechImage);
-		pr->UseRenderMethod(m_pMethodImage);
+		pr->UseRenderMethod(m_pMethodImage, m_TechImage);
 	}
 
 	if (!flags.IsSet(RF_LOCKMATERIAL))
 		pr->UseMaterial(m_pImgMtl);
 
-	glm::fmat4x4 transmat = glm::translate(glm::fvec3(m_Rect.left, 0.0f, m_Rect.top));
-	glm::fmat4x4 sclmat = glm::scale(glm::fvec3(m_Rect.Width(), 1.0f, -m_Rect.Height()));
+	glm::fmat4x4 transmat = glm::translate(glm::fvec3(m_Rect.left - m_ImageMargins.x,
+													  m_Rect.top + m_ImageMargins.y,
+													  0.0f));
+
+	glm::fmat4x4 sclmat = glm::scale(glm::fvec3(m_Rect.Width() + m_ImageMargins.x + m_ImageMargins.z,
+												-(m_Rect.Height() + m_ImageMargins.y + m_ImageMargins.w),
+												1.0f));
+
 	glm::fmat4x4 mat = *pmat * (transmat * sclmat);
-	pmod->Draw(&mat, false);
+	if (m_BackgroundEnabled)
+		pmod->Draw(&mat, false);
 
 	if (m_pTextVB && *s && m_pFont)
 	{
 		if (!flags.IsSet(RF_LOCKSHADER))
 		{
-			m_pMethodText->SetActiveTechnique(m_TechText);
-			pr->UseRenderMethod(m_pMethodText);
+			pr->UseRenderMethod(m_pMethodText, m_TechText);
 		}
 
 		if (!flags.IsSet(RF_LOCKMATERIAL))
@@ -311,26 +317,7 @@ void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pma
 		pr->UseVertexBuffer(m_pTextVB);
 		pr->SetWorldMatrix(pmat);
 
-		//pr->SetDepthBias(0.1f);
-
-		Renderer::BlendMode bm = pr->GetActiveFrameBuffer()->GetBlendMode(0);
-		pr->GetActiveFrameBuffer()->SetBlendMode(Renderer::BM_ALPHA, 0);
-
-		Renderer::ChannelMask cm[4];
-		for (size_t i = 0; i < 4; i++)
-			cm[i] = pr->GetActiveFrameBuffer()->GetChannelWriteMask((int)i);
-
-		pr->GetActiveFrameBuffer()->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE, 0);
-		pr->GetActiveFrameBuffer()->SetChannelWriteMask(CM_ALPHA, 1);
-		pr->GetActiveFrameBuffer()->SetChannelWriteMask(0, 2);
-		pr->GetActiveFrameBuffer()->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE | CM_ALPHA, 3);
-
 		pr->DrawPrimitives(Renderer::PrimType::TRILIST, m_TextQuads * 6);
-
-		for (size_t i = 0; i < 4; i++)
-			pr->GetActiveFrameBuffer()->SetChannelWriteMask(cm[i], (int)i);
-		pr->GetActiveFrameBuffer()->SetBlendMode(bm, 0);
-		//pr->SetDepthBias(0);
 	}
 }
 
@@ -380,6 +367,14 @@ void TextRendererImpl::PropertyChanged(const props::IProperty *pprop)
 			m_TextColor.i = (uint32_t)pprop->AsInt();
 			m_TextColor.a = 255;
 			break;
+
+		case 'IIMr':
+			pprop->AsVec4F((props::TVec4F *)&m_ImageMargins);
+			break;
+
+		case 'IIen':
+			m_BackgroundEnabled = pprop->AsBool();
+			break;
 	}
 }
 
@@ -402,10 +397,10 @@ bool TextRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRay
 
 	bool ret = false;
 
-	glm::fvec3 v_lt = glm::vec4(m_Rect.left, 0, m_Rect.top, 0);
-	glm::fvec3 v_lb = glm::vec4(m_Rect.left, 0, m_Rect.bottom, 0);
-	glm::fvec3 v_rb = glm::vec4(m_Rect.right, 0, m_Rect.bottom, 0);
-	glm::fvec3 v_rt = glm::vec4(m_Rect.right, 0, m_Rect.top, 0);
+	glm::fvec3 v_lt = glm::vec4(m_Rect.left, m_Rect.top, 0, 0);
+	glm::fvec3 v_lb = glm::vec4(m_Rect.left, m_Rect.bottom, 0, 0);
+	glm::fvec3 v_rb = glm::vec4(m_Rect.right, m_Rect.bottom, 0, 0);
+	glm::fvec3 v_rt = glm::vec4(m_Rect.right, m_Rect.top, 0, 0);
 
 	glm::vec2 luv;
 	float ldist;

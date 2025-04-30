@@ -53,12 +53,10 @@ protected:
 
 	c3::FrameBuffer *m_GBuf;
 	c3::FrameBuffer *m_EffectsBuf;
-	c3::FrameBuffer *m_InterfaceBuf;
 	c3::FrameBuffer *m_LCBuf;
 	c3::FrameBuffer *m_AuxBuf;
 	c3::FrameBuffer *m_SSBuf;
 	c3::DepthBuffer *m_DepthTarg;
-	c3::DepthBuffer *m_InterfaceDepthTarg;
 	c3::DepthBuffer *m_ShadowTarg;
 	std::vector<c3::Texture2D *> m_BTex;
 	std::vector<c3::FrameBuffer *> m_BBuf;
@@ -154,6 +152,8 @@ public:
 	afx_msg void OnToolsRepath();
     afx_msg void OnUpdateEditExport(CCmdUI *pCmdUI);
     afx_msg void OnEditExport();
+    afx_msg void OnGuiToggle();
+    afx_msg void OnUpdateGuiToggle(CCmdUI *pCmdUI);
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp
