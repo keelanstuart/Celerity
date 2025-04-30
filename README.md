@@ -14,9 +14,9 @@ Easily extend functionality by writing custom plug-ins—for example, to support
 Access object properties, handle input, play sounds, respond to events... all using JavaScript.
 
 - Dual Architecture for Development & Content Creation:
-The platform is split into two main parts:
-A generic host application, suitable for embedding or launching projects
-A fully-featured scene editor for creating and modifying game and simulation content
+The platform is split into two main parts:<br>
+   - A generic host application, suitable for embedding or launching projects<br>
+   - A fully-featured scene editor for creating and modifying game and simulation content
 
 - Robust Rendering & Simulation Framework:
 Built on OpenGL with a custom wrapper layer, Celerity includes tooling that generates rich, versioned wrapper code (with inline documentation) to simplify development and maximize compatibility.
