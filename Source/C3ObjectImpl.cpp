@@ -623,7 +623,7 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, c
 	glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
 	if (!pmat)
 	{
-		const Object *ppar = this;
+		const Object *ppar = GetParent();
 		while (ppar)
 		{
 			Positionable *ppos = dynamic_cast<Positionable *>(ppar->FindComponent(Positionable::Type()));

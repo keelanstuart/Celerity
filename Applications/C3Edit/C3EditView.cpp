@@ -444,6 +444,10 @@ void C3EditView::OnDraw(CDC *pDC)
 		if (camobj)
 			camobj->Update(dt);
 
+		glm::fvec3 pickpos, pickvec;
+		ComputePickRay(m_MousePos, pickpos, pickvec);
+		theApp.m_C3->GetInputManager()->SetPickRay(pickpos, pickvec);
+
 		int64_t active_tool = theApp.m_Config->GetInt(_T("environment.active.tool"), C3EditApp::TT_SELECT);
 
 		float farclip = pcam->GetFarClipDistance();
@@ -588,6 +592,7 @@ void C3EditView::OnDraw(CDC *pDC)
 			m_AuxBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
+			//prend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
 			prend->UseProgram(m_SP_bounds);
 
 			pDoc->DoForAllSelected([&](c3::Object *pobj)
@@ -1048,10 +1053,6 @@ void C3EditView::OnMouseMove(UINT nFlags, CPoint point)
 
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type()));
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type()));
-
-	glm::fvec3 pickpos, pickvec;
-	ComputePickRay(m_MousePos, pickpos, pickvec);
-	theApp.m_C3->GetInputManager()->SetPickRay(pickpos, pickvec);
 
 	// Wrap the cursor around to the other side if we've Captured the mouse and it's gone beyond the client rect...
 	if (this == GetCapture())

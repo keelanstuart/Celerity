@@ -414,6 +414,41 @@ void C3Dlg::InitializeGraphics()
 	}
 }
 
+void C3Dlg::ComputePickRay(c3::Object *cam, POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const
+{
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(cam->FindComponent(c3::Camera::Type()));
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(cam->FindComponent(c3::Positionable::Type()));
+
+	glm::fmat4x4 viewmat, projmat;
+
+	// Get the current projection and view matrices from d3d
+	pcam->GetViewMatrix(&viewmat);
+	pcam->GetProjectionMatrix(&projmat);
+
+	CRect r;
+	GetClientRect(&r);
+	ClientToScreen(&r);
+	float pctx = 1.0f - ((float)screenpos.x / (float)r.Width());
+	float pcty = 1.0f - ((float)screenpos.y / (float)r.Height());
+
+	size_t w = (size_t)((float)r.Width() / m_WindowsUIScale);
+	size_t h = (size_t)((float)r.Height() / m_WindowsUIScale);
+
+	float rposx = pctx * w;
+	float rposy = pcty * h;
+
+	// Construct a viewport that desribes our view metric
+	glm::fvec4 viewport(0, 0, w, h);
+
+	glm::fvec3 pos3d_near(rposx, rposy, 0.0f);
+	glm::fvec3 pos3d_far(rposx, rposy, 1.0f);
+
+	pickpos = glm::unProject(pos3d_near, viewmat, projmat, viewport);
+	pos3d_far = glm::unProject(pos3d_far, viewmat, projmat, viewport);
+
+	pickvec = glm::normalize(pos3d_far - pickpos);
+}
+
 
 BOOL C3Dlg::OnInitDialog()
 {
@@ -677,23 +712,6 @@ void C3Dlg::OnPaint()
 			c3::Object *camrootobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA_ROOT);
 			if (camrootobj)
 				camrootobj->Update(dt);
-
-			c3::Object *world = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT);
-			c3::Object *skybox = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_SKYBOXROOT);
-			c3::Object *gui = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_ROOT);
-
-			if (!m_bMouseCursorEnabled)
-			{
-				if (world)
-					world->Update(dt);
-
-				if (skybox)
-					skybox->Update(dt);
-			}
-
-			if (gui)
-				gui->Update(dt);
-
 			c3::Object *camobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA);
 			c3::Positionable *campos = m_Camera ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
 			c3::Camera *cam = camobj ? dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type())) : nullptr;
@@ -711,6 +729,28 @@ void C3Dlg::OnPaint()
 			cam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
 			float farclip = cam->GetFarClipDistance();
 			float nearclip = cam->GetNearClipDistance();
+
+			glm::fvec3 pickpos, pickdir;
+
+			c3::Object *world = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT);
+			c3::Object *skybox = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_SKYBOXROOT);
+			c3::Object *gui = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_ROOT);
+
+			if (!m_bMouseCursorEnabled)
+			{
+				if (skybox)
+					skybox->Update(dt);
+
+				ComputePickRay(camobj, m_MousePos, pickpos, pickdir);
+				theApp.m_C3->GetInputManager()->SetPickRay(pickpos, pickdir);
+				if (world)
+					world->Update(dt);
+			}
+
+			ComputePickRay(guicamobj, m_MousePos, pickpos, pickdir);
+			theApp.m_C3->GetInputManager()->SetPickRay(pickpos, pickdir);
+			if (gui)
+				gui->Update(dt);
 
 			glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 0);
 			prend->SetClearColor(&cc);
@@ -877,6 +917,8 @@ void C3Dlg::OnPaint()
 					prend->SetEyeDirection(&eyedir);
 
 					prend->SetAlphaPassRange(0.0f);
+
+					
 
 					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 					{

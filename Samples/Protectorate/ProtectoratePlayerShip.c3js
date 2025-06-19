@@ -146,13 +146,13 @@ function handle_input(action, value)
 	{
 		rvel_accum.z -= (turn_speed * value);
 	}
-	else if (action == "Roll Left")
-	{
-		rvel_accum.y -= (turn_speed * value);
-	}
 	else if (action == "Roll Right")
 	{
 		rvel_accum.y += (turn_speed * value);
+	}
+	else if (action == "Roll Left")
+	{
+		rvel_accum.y -= (turn_speed * value);
 	}
 	else if (action == "Increase Velocity")
 	{

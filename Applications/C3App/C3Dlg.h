@@ -98,6 +98,8 @@ protected:
 
 	void UpdateShaderSurfaces();
 
+	void ComputePickRay(c3::Object *cam, POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const;
+
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
 	afx_msg void OnPaint();

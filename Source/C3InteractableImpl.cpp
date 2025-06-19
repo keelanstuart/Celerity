@@ -47,60 +47,96 @@ bool InteractableImpl::Initialize(Object *pobject)
 }
 
 
+// we want to pass messages like this up to the highest level parent that has a function
+// by the given name... so, for example, if the button itself has an enter/exit handler, call it
+// so you can override behaviors... but, if say you wanted to handle click messages at the root
+// menu object so all messages go through one place, send it there.
+void ExecuteDeepest(Object *pobj, const TCHAR *funcname, const TCHAR *args, ...)
+{
+	Scriptable *ps = nullptr;
+	do
+	{
+		ps = (Scriptable *)(pobj->FindComponent(Scriptable::Type()));
+		if (!ps || !ps->FunctionExists(funcname))
+		{
+			ps = nullptr;
+			pobj = pobj->GetParent();
+		}
+	}
+	while (pobj && !ps);
+	if (!ps)
+		return;
+
+	static tstring execbuf;
+
+	va_list marker;
+	va_start(marker, args);
+
+	int sz = _vsctprintf(args, marker);
+	if (sz > (int)execbuf.capacity())
+	{
+		execbuf.reserve((sz * 2) + 1);
+	}
+	execbuf.resize(sz + 1);
+
+	_vsntprintf_s((TCHAR *)(execbuf.data()), execbuf.capacity(), execbuf.capacity(), args, marker);
+
+	ps->Execute(execbuf.c_str());
+}
+
 void InteractableImpl::Update(float elapsed_time)
 {
-	Scriptable *ps = (Scriptable *)m_pOwner->FindComponent(Scriptable::Type());
-	Positionable *pp = (Positionable *)m_pOwner->FindComponent(Positionable::Type());
+	System *psys = m_pOwner->GetSystem();
+	InputManager *pim = psys->GetInputManager();
 
-	if (ps && pp)
+	props::IProperty *pup = m_pOwner->GetProperties()->GetPropertyById('USER');
+	InputManager::UserID uid = pup ? pup->AsInt() : InputManager::USER_DEFAULT;
+
+	int32_t mx, my;
+	pim->GetMousePos(mx, my);
+
+	glm::fvec3 pickpos, pickdir;
+	pim->GetPickRay(pickpos, pickdir);
+
+	// see if our pick ray (ostensibly the mouse) intersects with whatever we've got
+	bool picked = m_pOwner->Intersect(&pickpos, &pickdir, nullptr, nullptr, nullptr, OF_DRAW, -1);
+	if (picked)
 	{
-		System *psys = m_pOwner->GetSystem();
-		InputManager *pim = psys->GetInputManager();
-
-		props::IProperty *pup = m_pOwner->GetProperties()->GetPropertyById('USER');
-		InputManager::UserID uid = pup ? pup->AsInt() : InputManager::USER_DEFAULT;
-
-		int32_t mx, my;
-		pim->GetMousePos(mx, my);
-
-		glm::fvec3 pickpos, pickdir;
-		pim->GetPickRay(pickpos, pickdir);
-
-		// see if our pick ray (ostensibly the mouse) intersects with whatever we've got
-		bool picked = m_pOwner->Intersect(&pickpos, &pickdir, nullptr, nullptr, nullptr, OF_DRAW, -1);
-		if (picked)
+		// if picked and newly-so, call the mouse_enter script function
+		if (!m_Flags.IsSet(IF_PICKED))
 		{
-			// if picked and newly-so, call the mouse_enter script function
-			if (!m_Flags.IsSet(IF_PICKED) && ps->FunctionExists(_T("mouse_enter")))
-			{
-				ps->Execute(_T("mouse_enter();"));
-			}
-
-			m_Flags.Set(IF_PICKED);
-		}
-		else
-		{
-			// if picked and newly-so, call the mouse_enter script function
-			if (m_Flags.IsSet(IF_PICKED) && ps->FunctionExists(_T("mouse_exit")))
-			{
-				ps->Execute(_T("mouse_exit();"));
-			}
-
-			m_Flags.Clear(IF_PICKED | IF_ACTIVATED);
+			ExecuteDeepest(m_pOwner, _T("mouse_enter"), _T("mouse_enter();"));
 		}
 
+		m_Flags.Set(IF_PICKED);
+	}
+	else
+	{
+		// if picked and newly-so, call the mouse_enter script function
 		if (m_Flags.IsSet(IF_PICKED))
+		{
+			ExecuteDeepest(m_pOwner, _T("mouse_exit"), _T("mouse_exit();"));
+		}
+
+		m_Flags.Clear(IF_PICKED | IF_ACTIVATED);
+	}
+
+	if (m_Flags.IsSet(IF_PICKED))
+	{
+		const TCHAR *name = m_pOwner->GetName();
+
+		auto EvalClick = [&](InputDevice::VirtualButton button, const TCHAR *buttonname)
 		{
 			bool genclick = false;
 
-			if (pim->ButtonPressed(InputDevice::VirtualButton::BUTTON1))
+			if (pim->ButtonPressed(button))
 			{
-				if (pim->ButtonChange(InputDevice::VirtualButton::BUTTON1))
+				if (pim->ButtonChange(button))
 					genclick = true;
 
 				m_Flags.Set(IF_ACTIVATED);
 			}
-			else if (pim->ButtonReleased(InputDevice::VirtualButton::BUTTON1))
+			else if (pim->ButtonReleased(button))
 			{
 				if (m_Flags.IsSet(IF_ACTIVATED))
 					genclick = true;
@@ -109,8 +145,16 @@ void InteractableImpl::Update(float elapsed_time)
 			}
 
 			if (genclick)
-				ps->Execute(_T("mouse_click(\"%s\", %d, %d);"), "left", mx, my);
-		}
+			{
+				ExecuteDeepest(m_pOwner, _T("mouse_click"), _T("mouse_click(\"%s\", \"%s\", %d, %d);"), name, buttonname, mx, my);
+			}
+		};
+
+		EvalClick(InputDevice::VirtualButton::BUTTON1, _T("left"));
+		EvalClick(InputDevice::VirtualButton::BUTTON2, _T("right"));
+		EvalClick(InputDevice::VirtualButton::BUTTON3, _T("middle"));
+		EvalClick(InputDevice::VirtualButton::AXIS2_NEGZ, _T("wheelup"));
+		EvalClick(InputDevice::VirtualButton::AXIS2_POSZ, _T("wheeldown"));
 	}
 }
 

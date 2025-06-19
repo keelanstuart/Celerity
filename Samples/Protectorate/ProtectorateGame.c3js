@@ -70,7 +70,7 @@ function init()
 
 	var gui_root = GetRegisteredObject("gui.root");
 	var gui_load_result = LoadObject(gui_root, "Protectorate/Protectorate_HUD.c3o");
-	
+
 	var load_result = LoadObject(self, "Protectorate/" + scenario + ".c3o");
 
 	// ***************************************************
@@ -191,8 +191,8 @@ function device_connected(device_type, device_name, naxes, nbuttons)
 		LinkInputToAction("Look Up", device_name, "axis 2 +y");
 		LinkInputToAction("Look Left", device_name, "axis 2 -x");
 		LinkInputToAction("Look Right", device_name, "axis 2 +x");
-		LinkInputToAction("Roll Right", device_name, "axis 1 +z");
-		LinkInputToAction("Roll Left", device_name, "axis 1 -z");
+		LinkInputToAction("Roll Left", device_name, "axis 1 +z");
+		LinkInputToAction("Roll Right", device_name, "axis 1 -z");
 		LinkInputToAction("Fire 1", device_name, "button 1");
 		LinkInputToAction("Fire 2", device_name, "button 3");
 		LinkInputToAction("Ascend", device_name, "button 6");
