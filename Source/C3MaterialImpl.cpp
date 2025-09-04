@@ -122,7 +122,7 @@ const glm::fvec4 *MaterialImpl::GetColor(ColorComponentType comptype, glm::fvec4
 }
 
 
-void MaterialImpl::SetTexture(TextureComponentType comptype, Texture *ptex, props::TFlags32 texflags)
+void MaterialImpl::SetTexture(TextureComponentType comptype, const Texture *ptex, props::TFlags32 texflags)
 {
 	m_tex[comptype].first = ptex;
 
@@ -133,7 +133,7 @@ void MaterialImpl::SetTexture(TextureComponentType comptype, Texture *ptex, prop
 }
 
 
-void MaterialImpl::SetTexture(TextureComponentType comptype, Resource *ptexres, props::TFlags32 texflags)
+void MaterialImpl::SetTexture(TextureComponentType comptype, const Resource *ptexres, props::TFlags32 texflags)
 {
 	m_tex[comptype].second = ptexres;
 
@@ -141,14 +141,14 @@ void MaterialImpl::SetTexture(TextureComponentType comptype, Resource *ptexres, 
 }
 
 
-Texture *MaterialImpl::GetTexture(TextureComponentType comptype, props::TFlags32 *texflags) const
+const Texture *MaterialImpl::GetTexture(TextureComponentType comptype, props::TFlags32 *texflags) const
 {
-	Texture *ret = nullptr;
+	const Texture *ret = nullptr;
 
 	if (m_tex[comptype].second && (m_tex[comptype].second->GetStatus() == Resource::Status::RS_LOADED))
 	{
 		// if the resource is loaded and actually a texture, then return it
-		Texture *pt = dynamic_cast<Texture *>((Texture *)(m_tex[comptype].second->GetData()));
+		const Texture *pt = dynamic_cast<Texture *>((Texture *)(m_tex[comptype].second->GetData()));
 		if (pt)
 			ret = pt;
 	}
@@ -331,35 +331,35 @@ bool MaterialImpl::Apply(ShaderProgram *shader, Renderer::RenderStateOverrideFla
 		int32_t ul_texdiff = shader->GetUniformLocation(_T("uSamplerDiffuse"));
 		if (ul_texdiff != ShaderProgram::INVALID_UNIFORM)
 		{
-			Texture *ptex = GetTexture(TCT_DIFFUSE, &texflags);
+			const Texture *ptex = GetTexture(TCT_DIFFUSE, &texflags);
 			shader->SetUniformTexture(ptex, ul_texdiff, -1, texflags);
 		}
 
 		int32_t ul_texnorm = shader->GetUniformLocation(_T("uSamplerNormal"));
 		if (ul_texnorm != ShaderProgram::INVALID_UNIFORM)
 		{
-			Texture *ptex = GetTexture(TCT_NORMAL, &texflags);
+			const Texture *ptex = GetTexture(TCT_NORMAL, &texflags);
 			shader->SetUniformTexture(ptex, ul_texnorm, -1, texflags);
 		}
 
 		int32_t ul_texsurf = shader->GetUniformLocation(_T("uSamplerSurfaceDesc"));
 		if (ul_texsurf != ShaderProgram::INVALID_UNIFORM)
 		{
-			Texture *ptex = GetTexture(TCT_SURFACEDESC, &texflags);
+			const Texture *ptex = GetTexture(TCT_SURFACEDESC, &texflags);
 			shader->SetUniformTexture(ptex, ul_texsurf, -1, texflags);
 		}
 
 		int32_t ul_texemis = shader->GetUniformLocation(_T("uSamplerEmissive"));
 		if (ul_texemis != ShaderProgram::INVALID_UNIFORM)
 		{
-			Texture *ptex = GetTexture(TCT_EMISSIVE, &texflags);
+			const Texture *ptex = GetTexture(TCT_EMISSIVE, &texflags);
 			shader->SetUniformTexture(ptex, ul_texemis, -1, texflags);
 		}
 
 		int32_t ul_texdepth = shader->GetUniformLocation(_T("uSamplerPosDepth"));
 		if (ul_texdepth != ShaderProgram::INVALID_UNIFORM)
 		{
-			Texture *ptex = GetTexture(TCT_POSITIONDEPTH, &texflags);
+			const Texture *ptex = GetTexture(TCT_POSITIONDEPTH, &texflags);
 			shader->SetUniformTexture(ptex, ul_texdepth, -1, texflags);
 		}
 	}

@@ -56,7 +56,7 @@ namespace c3
 		// pUV, if provided, will be filled with the UV coordinates where the collision occurred
 		// pMat, indicates how the Mesh may have been transformed
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
-			float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV,
+			float *pDistance, glm::fvec3 *pNormal, size_t *pFaceIndex, glm::vec2 *pUV,
 			const glm::fmat4x4 *pMat = nullptr) const = NULL;
 
 		// Returns true if the mesh is a skin

@@ -170,7 +170,7 @@ using SettingsTable = std::map<tstring, SettingCB>;
 SettingsTable gSettings =
 {
 	{ _T("alwayspaint"), [](const TCHAR *opts) { theApp.m_AlwaysPaint = true; } },
-	{ _T("resetlog"), [](const TCHAR *opts) { theApp.m_C3->GetLog()->Reset(); } },
+	{ _T("resetlog"), [](const TCHAR* opts) { theApp.m_C3->GetLog()->Reset(); }},
 };
 
 BOOL C3App::InitInstance()
@@ -274,7 +274,7 @@ BOOL C3App::InitInstance()
 				}
 				else
 				{
-					m_C3->GetLog()->Print(_T("Unrecognized command-line option: \"%s\"\n"), cmd);
+					m_C3->GetLog()->Print(_T("Unrecognized command-line option: \"%hs\"\n"), cmd);
 				}
 			}
 			else
@@ -313,7 +313,7 @@ BOOL C3App::InitInstance()
 
 	respaths = m_Config->GetString(_T("resources.models.paths"), _T("./;./assets;./assets/models"));
 	respaths += path_extra;
-	resexts = m_Config->GetString(_T("resources.models.extensions"), _T("fbx;gltf;glb;obj;3ds;dae;x"));
+	resexts = m_Config->GetString(_T("resources.models.extensions"), _T("fbx;gltf;glb;obj;3ds;dae;x;c3terr"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.shaders.paths"), _T("./;./assets;./assets/shaders"));

@@ -12,10 +12,6 @@
 using namespace c3;
 
 
-#define LOCK_ZIPS { WaitForSingleObject(ZipMutex, INFINITE); }
-#define UNLOCK_ZIPS { ReleaseMutex(ZipMutex); }
-#define UNLOCK_ZIP_RETURN(v) { UNLOCK_ZIPS return (v); }
-
 #define MAXPATHLEN 256
 
 #define ZIPLOCALHEADER_SIGNATURE		(0x04034b50)

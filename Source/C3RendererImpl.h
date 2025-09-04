@@ -189,6 +189,8 @@ namespace c3
 		RenderStateOverrideFlags m_DirtyStates;
 		void UpdateDirtyRenderStates(bool refresh = false);
 
+		static void __cdecl GLLogWrapper(const wchar_t *msg, void *userdata);
+
 	public:
 
 		COpenGL gl;

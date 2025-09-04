@@ -178,3 +178,23 @@ bool ActionMapperImpl::BreakAssociation(size_t actionidx, uint32_t devid, InputD
 	return false;
 }
 
+
+bool ActionMapperImpl::FindAssociation(InputDevice::VirtualButton button, uint32_t devid, size_t *actionidx)
+{
+	for (TActionsArray::const_iterator it = m_Actions.cbegin(), lastit = m_Actions.cend(); it != lastit; it++)
+	{
+		for (sAction::TDevToTrigger::const_iterator ait = it->trigmap.cbegin(), lastait = it->trigmap.cend(); ait != lastait; ait++)
+		{
+			if (((devid != -1) && (ait->first == devid)) || (ait->second == button))
+			{
+				if (actionidx)
+					*actionidx = std::distance(it, m_Actions.cbegin());
+
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+

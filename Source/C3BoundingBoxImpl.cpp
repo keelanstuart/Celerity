@@ -371,7 +371,7 @@ bool BoundingBoxImpl::IsSphereInside(const glm::fvec3 *centroid, float radius) c
 }
 
 
-bool BoundingBoxImpl::CheckCollision(const glm::fvec3 *raypos, const glm::fvec3 *rayvec, float *dist) const
+bool BoundingBoxImpl::CheckCollision(const glm::fvec3 *raypos, const glm::fvec3 *rayvec, float *dist, float *norm) const
 {
 	const float EPSILON = 1e-6f;
 

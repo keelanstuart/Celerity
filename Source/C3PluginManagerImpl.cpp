@@ -24,7 +24,6 @@ PluginManagerImpl::PluginManagerImpl(System *psys)
 
 PluginManagerImpl::~PluginManagerImpl()
 {
-	UnloadAllPlugins();
 }
 
 

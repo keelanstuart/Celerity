@@ -49,6 +49,11 @@ namespace c3
 		// removes an association 
 		virtual bool BreakAssociation(size_t actionidx, uint32_t devid, InputDevice::VirtualButton button) = NULL;
 
+		// finds an action associated with the given button.
+		// returns true if one was found and will fill out actionidx if supplied, false otherwise
+		// if devid is -1, it will not be used as a filter and will return the first action
+		virtual bool FindAssociation(InputDevice::VirtualButton button, uint32_t devid = -1, size_t *actionidx = nullptr) = NULL;
+
 	};
 
 };

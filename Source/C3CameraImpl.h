@@ -90,7 +90,7 @@ namespace c3
 		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *mat);
 		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *mat);
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, glm::fvec3 *pNormal, bool force) const;
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 

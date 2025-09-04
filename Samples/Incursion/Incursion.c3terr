@@ -1,0 +1,27 @@
+<c3.terrain name="incursion" heightmap="incursion/incursion_elevation.tga"
+            xdim="256" ydim="256" xdimtex="1024" ydimtex="1024"
+            minz="-30.0" maxz="80.0" sampledist="5.0">
+
+  <layers>
+
+    <layer opacity="1.0" tiling="8.0">
+      <tex.diffuse>incursion/stones.jpg</tex.diffuse>
+      <tex.normal>incursion/stones_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/stones_surf.tga</tex.surfdesc>
+    </layer>
+
+    <layer opacity="0.8" tiling="7.0" tex.opacity="incursion/incursion_mask_rock.tga">
+      <tex.diffuse>incursion/rock.jpg</tex.diffuse>
+      <tex.normal>incursion/rock_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/rock_surf.tga</tex.surfdesc>
+    </layer>
+
+    <layer opacity="0.75" tiling="11.0" tex.opacity="incursion/incursion_mask_grass.tga">
+      <tex.diffuse>incursion/grass.jpg</tex.diffuse>
+      <tex.normal>incursion/grass_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/grass_surf.tga</tex.surfdesc>
+    </layer>
+
+  </layers>
+
+</c3.terrain>

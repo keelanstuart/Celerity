@@ -329,7 +329,12 @@ public:
 	CScriptVar *m_Root;   /// m_Root of symbol table
 	c3::System *m_pSys;
 	c3::Object *m_pObj;
+
+	bool ExecutingNow();
+
 private:
+
+	bool m_Executing;
 
 	CScriptLex *l;             /// current lexer
 	std::vector<CScriptVar *> scopes; /// stack of scopes when parsing

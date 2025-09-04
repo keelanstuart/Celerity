@@ -22,4 +22,15 @@
 		</pass>
 	</technique>
 
+	<technique name="cursor">
+		<pass>
+			<setting name="blendmode"			value="alpha" />
+			<setting name="alphablendmode"		value="add" />
+			<setting name="cullmode"			value="disabled" />
+			<setting name="depthmode"			value="disabled" />
+			<setting name="shader.vertex"		value="def-obj.vsh" />
+			<setting name="shader.fragment"		value="ui.fsh" />
+		</pass>
+	</technique>
+
 </render_method>

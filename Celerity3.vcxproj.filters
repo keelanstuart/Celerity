@@ -180,7 +180,7 @@
     <ClCompile Include="source\C3ActionMapperImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\C3QuadTerrainImpl.cpp">
+    <ClCompile Include="Source\C3TerrainImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="source\C3ParticleEmitterImpl.cpp">
@@ -536,11 +536,8 @@
     <ClInclude Include="source\C3ActionMapperImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
-    <ClInclude Include="Source\C3QuadTerrainImpl.h">
+    <ClInclude Include="Source\C3TerrainImpl.h">
       <Filter>Header Files\Private</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\C3QuadTerrain.h">
-      <Filter>Header Files\Public</Filter>
     </ClInclude>
     <ClInclude Include="include\C3ParticleEmitter.h">
       <Filter>Header Files\Public</Filter>
@@ -648,6 +645,9 @@
       <Filter>Header Files\Public</Filter>
     </ClInclude>
     <ClInclude Include="source\C3PhysicsManagerImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TRaster.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>

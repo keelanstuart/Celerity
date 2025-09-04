@@ -17,7 +17,7 @@
 #include <C3PositionableImpl.h>
 #include <C3CameraImpl.h>
 #include <C3ModelRendererImpl.h>
-#include <C3QuadTerrainImpl.h>
+#include <C3TerrainImpl.h>
 #include <C3OmniLightImpl.h>
 #include <C3ParticleEmitterImpl.h>
 #include <C3ScriptableImpl.h>
@@ -112,6 +112,9 @@ SystemImpl::~SystemImpl()
 
 void SystemImpl::Release()
 {
+	if (m_PluginManager)
+		m_PluginManager->UnloadAllPlugins();
+
 	if (m_ResourceManager)
 	{
 		/// UNREGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES

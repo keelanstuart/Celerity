@@ -37,6 +37,8 @@ namespace c3
 
 		virtual bool BreakAssociation(size_t actionidx, uint32_t devid, InputDevice::VirtualButton button);
 
+		virtual bool FindAssociation(InputDevice::VirtualButton button, uint32_t devid, size_t *actionidx);
+
 		virtual void Update();
 
 		virtual bool Save() const;

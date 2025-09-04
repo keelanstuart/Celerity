@@ -60,6 +60,8 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 
 	m_Camera = m_CameraRoot = m_CameraArm = m_GUICamera = nullptr;
 	m_WorldRoot = m_GUIRoot = nullptr;
+
+	c3::InputManager::SetDeviceConnectionCallback(DeviceConnected, this);
 }
 
 
@@ -488,6 +490,8 @@ BOOL C3Dlg::OnInitDialog()
 
 	MoveWindow(r);
 
+	GetClientRect(r);
+
 	theApp.m_C3->SetOwner(GetSafeHwnd());
 
 	theApp.m_C3->GetSoundPlayer()->Initialize();
@@ -505,6 +509,15 @@ BOOL C3Dlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	c3::Factory *pfac = theApp.m_C3->GetFactory();
+
+	theApp.m_C3->GetLog()->Print(_T("Creating InputManager... "));
+	c3::InputManager *inputman = theApp.m_C3->GetInputManager();
+	if (!inputman)
+	{
+		theApp.m_C3->GetLog()->Print(_T("failed\n"));
+		exit(-1);
+	}
+	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
 	theApp.m_C3->GetLog()->Print(_T("Setting up actions... "));
 
@@ -554,7 +567,7 @@ BOOL C3Dlg::OnInitDialog()
 	m_CameraArm->AddChild(m_Camera);
 	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->AddComponent(c3::Positionable::Type()));
 	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->AddComponent(c3::Camera::Type()));
-	m_Camera->AddComponent(c3::Physical::Type());
+	//m_Camera->AddComponent(c3::Physical::Type());
 
 	if (pcam)
 	{
@@ -626,22 +639,20 @@ BOOL C3Dlg::OnInitDialog()
 		}
 	}
 
-	theApp.m_C3->GetLog()->Print(_T("Creating InputManager... "));
-	c3::InputManager::SetDeviceConnectionCallback(DeviceConnected, this);
-	c3::InputManager *inputman = theApp.m_C3->GetInputManager();
-	if (!inputman)
-	{
-		theApp.m_C3->GetLog()->Print(_T("failed\n"));
-		exit(-1);
-	}
-	theApp.m_C3->GetLog()->Print(_T("ok\n"));
+	inputman->Reset();
+
+	ShowCursor(false);
+
+	c3::InputManager::CursorID curid = inputman->RegisterCursor(_T("default_cursor_sm.tga"),
+		std::make_optional<glm::ivec2>(3, 2), _T("Default"));
+
+	inputman->SetCursor(curid);
 
 	UINT_PTR timerid = SetTimer('DRAW', 17, nullptr);
 	assert(timerid);
 
-	m_bMouseCursorEnabled = false;
-	SetCapture();
-	ShowCursor(FALSE);
+	inputman->CaptureMouse();
+	inputman->EnableMouse(false);
 
 	theApp.m_pActiveWnd = this;
 
@@ -736,7 +747,9 @@ void C3Dlg::OnPaint()
 			c3::Object *skybox = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_SKYBOXROOT);
 			c3::Object *gui = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_ROOT);
 
-			if (!m_bMouseCursorEnabled)
+			c3::InputManager *inputman = theApp.m_C3->GetInputManager();
+
+			if (!inputman->MouseEnabled())
 			{
 				if (skybox)
 					skybox->Update(dt);
@@ -746,11 +759,13 @@ void C3Dlg::OnPaint()
 				if (world)
 					world->Update(dt);
 			}
-
-			ComputePickRay(guicamobj, m_MousePos, pickpos, pickdir);
-			theApp.m_C3->GetInputManager()->SetPickRay(pickpos, pickdir);
-			if (gui)
-				gui->Update(dt);
+			else
+			{
+				ComputePickRay(guicamobj, m_MousePos, pickpos, pickdir);
+				theApp.m_C3->GetInputManager()->SetPickRay(pickpos, pickdir);
+				if (gui)
+					gui->Update(dt);
+			}
 
 			glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 0);
 			prend->SetClearColor(&cc);
@@ -918,12 +933,12 @@ void C3Dlg::OnPaint()
 
 					prend->SetAlphaPassRange(0.0f);
 
-					
-
 					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
 					{
 						gui->Render((uint64_t)renderflags, order);
 					});
+
+					theApp.m_C3->GetInputManager()->DrawMouseCursor(prend);
 				}
 
 				if (m_ShowDebug)
@@ -974,7 +989,11 @@ BOOL C3Dlg::PreTranslateMessage(MSG* pMsg)
 {
 	if ((pMsg->message == WM_KEYDOWN) && (pMsg->wParam == VK_ESCAPE))
 	{
-		SetMouseEnabled(!m_bMouseCursorEnabled);
+		if (theApp.m_C3->GetActionMapper()->FindAssociation(c3::InputDevice::VirtualButton::QUIT))
+		{
+			c3::InputManager *inputman = theApp.m_C3->GetInputManager();
+			SetMouseEnabled(!inputman->MouseEnabled());
+		}
 
 		return TRUE;
 	}
@@ -1015,21 +1034,9 @@ void C3Dlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 
 void C3Dlg::SetMouseEnabled(bool b)
 {
-	m_bMouseCursorEnabled = b;
-
-	if (this != GetFocus())
-		return;
-
-	if (m_bMouseCursorEnabled && (this == GetCapture()))
-		ReleaseCapture();
-	else if (this != GetCapture())
-		SetCapture();
-
-	CURSORINFO ci = { 0 };
-	ci.cbSize = sizeof(CURSORINFO);
-	GetCursorInfo(&ci);
-	if (m_bMouseCursorEnabled != ((ci.flags & CURSOR_SHOWING) ? true : false))
-		ShowCursor(m_bMouseCursorEnabled ? TRUE : FALSE);
+	c3::InputManager *inputman = theApp.m_C3->GetInputManager();
+	inputman->EnableMouse(b);
+	inputman->CaptureMouse(!b);
 }
 
 
@@ -1077,10 +1084,9 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	CDialog::OnMouseMove(nFlags, point);
 
+	m_MousePos.x = point.x;
+	m_MousePos.y = point.y;
 	theApp.m_C3->GetInputManager()->SetMousePos(point.x, point.y);
-
-	if ((m_bMouseCursorEnabled) || (this != GetCapture()))
-		return;
 
 	CRect r;
 	GetClientRect(&r);
@@ -1091,7 +1097,9 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 	int deltax = cpc.x - point.x;
 	int deltay = cpc.y - point.y;
 
-	SetCursorPos(cp.x, cp.y);
+	c3::InputManager *inputman = theApp.m_C3->GetInputManager();
+	if (inputman->MouseCaptured())
+		SetCursorPos(cp.x, cp.y);
 }
 
 
@@ -1231,7 +1239,7 @@ void C3Dlg::OnSize(UINT nType, int cx, int cy)
 	CDialog::OnSize(nType, cx, cy);
 
 	CRect r;
-	GetWindowRect(&r);
+	GetClientRect(&r);
 	theApp.m_Config->SetRect(_T("window.rect"), r);
 
 	UINT_PTR timerid = SetTimer('SIZE', 500, nullptr);

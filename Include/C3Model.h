@@ -107,7 +107,7 @@ namespace c3
 		virtual void Draw(const glm::fmat4x4 *pmat = nullptr, bool allow_material_changes = true, const InstanceData *instance_data = nullptr, bool force = false) const = NULL;
 
 		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, size_t *pMeshIndex,
-							   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const InstanceData *inst, bool force = false) const = NULL;
+							   float *pDistance, glm::fvec3 *pNormal, size_t *pFaceIndex, glm::vec2 *pUV, const InstanceData *inst, bool force = false) const = NULL;
 
 		virtual const Animation *GetDefaultAnim() const = NULL;
 

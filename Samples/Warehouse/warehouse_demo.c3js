@@ -12,11 +12,15 @@ var hobj_cam;
 var hprop_cam_ori;
 var hprop_cam_fov;
 
+var vert_acc;
+var body_vel = { x:0.0, y:0.0, z:0.0 };
 var body_pos = { x:0.0, y:0.0, z:0.0 };
 var body_zrot = 0.0;
 var head_xrot = 0.0;
+var jumped = 0;
 
 var tmppos = { x:0.0, y:0.0, z:0.0 };
+var tmpvec = { x:0.0, y:0.0, z:0.0 };
 var tmpori = { x:0.0, y:0.0, z:0.0, w:0.0 };
 
 var hprop_camroot_facing;
@@ -25,13 +29,21 @@ var cam_facing = { x:0.0, y:0.0, z:0.0 };;
 var hprop_camroot_right;
 var cam_right = { x:0.0, y:0.0, z:0.0 };;
 
-var walk_speed = 400.0;
-var run_speed = 1000.0;
-var speed = walk_speed;
-var crouch = 0;
+var crouch_speed = 100.0;
+var walk_speed = 200.0;
+var run_speed = 800.0;
+var speed_targ = walk_speed;
+var speed = speed_targ;
+
+var walk_height = 140.0;
+var crouch_height = 80.0;
+var max_step_height = 30.0;
+var height_targ = walk_height;
+var height = height_targ;
+
 var collision_info;
 
-var fov_normal = 72.0;
+var fov_normal = 62.0;
 var fov_zoom = 22.0;
 var fov_targ = fov_normal;
 var fov = fov_targ;
@@ -40,7 +52,7 @@ var hobj_spawn;
 var hprop_spawn_pos;
 var hprop_spawn_ori;
 
-var hobj_warehouse;
+var hobj_levelroot;
 
 var load_result;
 
@@ -48,28 +60,33 @@ var setup = 1;
 var xaxis = { x:1.0, y:0.0, z:0.0 };
 var zaxis = { x:0.0, y:0.0, z:1.0 };
 
+var i, maxi;
+var nodename;
+
 function respawn()
 {
 	if (Math.random(0, 10) < 5)
-		hobj_spawn = FindFirstObjByName(self, "SPAWN1", 1);
+		hobj_spawn = FindFirstObjByName(hobj_levelroot, "SPAWN1", 1);
 	else
-		hobj_spawn = FindFirstObjByName(self, "SPAWN2", 1);
+		hobj_spawn = FindFirstObjByName(hobj_levelroot, "SPAWN2", 1);
 
 	hprop_spawn_pos = FindProperty(hobj_spawn, "Position");
 	tmppos = GetPropertyValue(hprop_spawn_pos);
-	tmppos.z = 0.0;
 	SetPropertyValue(hprop_camroot_pos, tmppos);
 
 	hprop_spawn_ori = FindProperty(hobj_spawn, "Orientation");
 	tmpori = GetPropertyValue(hprop_spawn_ori);
 	SetPropertyValue(hprop_camroot_ori, tmpori);
+
+	Log("Spawned at: (" + tmppos.x + ", " + tmppos.y + ", " + tmppos.z + ")\n");
 }
 
 function init()
 {
 	runtime = 0.0;
 
-	load_result = LoadObject(self, "Warehouse/Warehouse.c3o");
+	hobj_levelroot = CreateObject("", self);
+	load_result = LoadObject(hobj_levelroot, "Warehouse/Warehouse.c3o");
 
 	if (load_result["success"] == 1)
 		Log("Scene loaded successfully!\n");
@@ -104,12 +121,10 @@ function init()
 
 	tmppos.x = 0.0;
 	tmppos.y = 0.0;
-	tmppos.z = 140.0;
+	tmppos.z = height;
 	SetPropertyValue(hprop_camarm_pos, tmppos);
 
 	respawn();
-
-	hobj_warehouse = FindFirstObjByName(self, "warehouse_bare", 1);
 
 	collision_info = CreateCollisionResults();
 
@@ -130,6 +145,7 @@ function init()
 	RegisterInputAction("Prev Weapon", "", 0.5);
 	RegisterInputAction("Use", "up", 0.0);
 	RegisterInputAction("Cycle View Mode", "up", 0.0);
+	RegisterInputAction("Quit", "up", 0.0);
 }
 
 function device_connected(device_type, device_name, naxes, nbuttons)
@@ -144,9 +160,10 @@ function device_connected(device_type, device_name, naxes, nbuttons)
 		LinkInputToAction("Move Forward", device_name, "w");
 		LinkInputToAction("Move Backward", device_name, "s");
 		LinkInputToAction("Jump", device_name, "button 3");
-		LinkInputToAction("Crouch", device_name, "c");
+		LinkInputToAction("Crouch", device_name, "l ctrl");
 		LinkInputToAction("Use", device_name, "e");
-		LinkInputToAction("Cycle View Mode", device_name, "select");
+		LinkInputToAction("Cycle View Mode", device_name, "quit");
+		LinkInputToAction("Quit", device_name, "select");
 
 		Log("done.\n");
 	}
@@ -194,18 +211,14 @@ function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 
-	fov = Math.lerp(fov, fov_targ, elapsed_seconds * 20.0);
-	SetPropertyValue(hprop_cam_fov, fov);
-
 	if (setup == 1)
 	{
-		var maxi = GetModelNodeCount(hwarehouse);
+		maxi = GetModelNodeCount(hobj_levelroot);
 		if (maxi > 0)
 		{
-			var i;
 			for (i = 0; i < maxi; i++)
 			{
-				var nodename = GetModelNodeName(hwarehouse, i);
+				nodename = GetModelNodeName(hobj_levelroot, i);
 			}
 
 			setup = 0;
@@ -213,14 +226,31 @@ function update(elapsed_seconds)
 		}
 	}
 
+	fov = Math.lerp(fov, fov_targ, elapsed_seconds * 20.0);
+	height = Math.lerp(height, height_targ, elapsed_seconds * 20.0);
+	speed = Math.lerp(speed, speed_targ, elapsed_seconds * 20.0);
+
 	cam_facing = GetPropertyValue(hprop_camroot_facing);
 	cam_right = GetPropertyValue(hprop_camroot_right);
 
-	tmppos = GetPropertyValue(hprop_camroot_pos);
-	body_pos = Vec3.mul(body_pos, speed * elapsed_seconds);
-	tmppos = Vec3.add(tmppos, body_pos);
-	SetPropertyValue(hprop_camroot_pos, tmppos);
-	body_pos.x = 0.0; body_pos.y = 0.0; body_pos.z = 0.0;
+	body_pos = GetPropertyValue(hprop_camroot_pos);
+
+	if (HandleFPSMovement(hobj_levelroot, body_pos, body_vel, speed, elapsed_seconds, max_step_height, height) != 0)
+	{
+		body_vel.z = 0.0;
+		jumped = 0;
+	}
+
+	SetPropertyValue(hprop_camroot_pos, body_pos);
+
+	if (jumped == 0)
+	{
+		body_vel.x = 0.0;
+		body_vel.y = 0.0;
+		speed_targ = walk_speed;
+	}
+	vert_acc = -9.8;
+	body_vel.z += vert_acc;
 
 	tmpori = GetPropertyValue(hprop_camroot_ori);
 	tmpori = AdjustQuat(tmpori, zaxis, Math.toRadians(body_zrot * 550.0 * elapsed_seconds));
@@ -231,8 +261,14 @@ function update(elapsed_seconds)
 	tmpori = AdjustQuat(tmpori, xaxis, Math.toRadians(head_xrot * 490.0 * elapsed_seconds));
 	SetPropertyValue(hprop_cam_ori, tmpori);
 	head_xrot = 0.0;
+
+	tmppos.x = 0.0;
+	tmppos.y = 0.0;
+	tmppos.z = height;
+	SetPropertyValue(hprop_camarm_pos, tmppos);
+	SetPropertyValue(hprop_cam_fov, fov);
 	
-	speed = walk_speed;
+	height_targ = walk_height;
 	fov_targ = fov_normal;
 }
 
@@ -240,27 +276,41 @@ function handle_input(action, value)
 {
 	if (action == "Run")
 	{
-		speed = run_speed;
+		if (jumped == 0)
+			speed_targ = run_speed;
+	}
+	else if (action == "Jump")
+	{
+		if (jumped == 0)
+		{
+			body_vel.z += 1500.0;
+			jumped = 1;
+		}
+	}
+	else if (action == "Crouch")
+	{
+		speed_targ = crouch_speed;
+		height_targ = crouch_height;
 	}
 	else if (action == "Move Forward")
 	{
 		tmppos = Vec3.mul(cam_facing, value);
-		body_pos = Vec3.add(body_pos, tmppos);
+		body_vel = Vec3.add(body_vel, tmppos);
 	}
 	else if (action == "Move Backward")
 	{
 		tmppos = Vec3.mul(cam_facing, value);
-		body_pos = Vec3.sub(body_pos, tmppos);
+		body_vel = Vec3.sub(body_vel, tmppos);
 	}
 	else if (action == "Strafe Left")
 	{
 		tmppos = Vec3.mul(cam_right, value);
-		body_pos = Vec3.sub(body_pos, tmppos);
+		body_vel = Vec3.sub(body_vel, tmppos);
 	}
 	else if (action == "Strafe Right")
 	{
 		tmppos = Vec3.mul(cam_right, value);
-		body_pos = Vec3.add(body_pos, tmppos);
+		body_vel = Vec3.add(body_vel, tmppos);
 	}
 	else if (action == "Look Left")
 	{
@@ -272,16 +322,25 @@ function handle_input(action, value)
 	}
 	else if (action == "Look Up")
 	{
-		head_xrot -= value;
+		SetPropertyValue(hprop_cam_ori, tmpori);
+		tmpvec = QuatToEuler(tmpori);
+		if (tmpvec.z > -88.0)
+			head_xrot -= value;
 	}
 	else if (action == "Look Down")
 	{
-		head_xrot += value;
+		SetPropertyValue(hprop_cam_ori, tmpori);
+		tmpvec = QuatToEuler(tmpori);
+		if (tmpvec.z < 88.0)
+			head_xrot += value;
 	}
 	else if (action == "Aim")
 	{
 		fov_targ = fov_zoom;
-		Log("AIM\n");
+	}
+	else if (action == "Quit")
+	{
+		
 	}
 }
 

@@ -377,7 +377,7 @@ Model::InstanceData *ModelRendererImpl::GetModelInstanceData()
 }
 
 
-bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const
+bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, glm::fvec3 *pNormal, bool force) const
 {
 	bool ret = false;
 
@@ -387,12 +387,13 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 	{
 		size_t meshidx;
 		float dist;
+		glm::fvec3 norm;
 		size_t faceidx;
 		glm::vec2 uv;
 
 		glm::fmat4x4 mat = pmat ? (*pmat * *GetMatrix()) : *GetMatrix();
 
-		ret = pmod->Intersect(pRayPos, pRayDir, &mat, &meshidx, &dist, &faceidx, &uv, (const Model::InstanceData *)m_Inst, force);
+		ret = pmod->Intersect(pRayPos, pRayDir, &mat, &meshidx, &dist, &norm, &faceidx, &uv, (const Model::InstanceData *)m_Inst, force);
 		if (ret && pDistance)
 		{
 			if (dist < *pDistance)

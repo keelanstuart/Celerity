@@ -13,6 +13,7 @@
 #include <C3AnimationImpl.h>
 #include <C3Math.h>
 #include <C3BoundingBoxImpl.h>
+#include <C3TerrainImpl.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/Exporter.hpp>
@@ -482,7 +483,7 @@ bool ModelImpl::DrawNode(NodeIndex nodeidx, const glm::fmat4x4 *pmat, bool allow
 
 // TODO: add a way to pass the normal of the face we collided with throughout the collision pipeline
 bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, size_t *pMeshIndex,
-							float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const InstanceData *inst, bool force) const
+							float *pDistance, glm::fvec3 *pNormal, size_t *pFaceIndex, glm::vec2 *pUV, const InstanceData *inst, bool force) const
 {
 #if 0
 	auto tb = std::chrono::high_resolution_clock::now();
@@ -509,7 +510,7 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, co
 		// from this point, only draw top-level nodes
 		if (m_Nodes[ni]->parent == NO_PARENT)
 		{
-			ret = IntersectNode(ni, pRayPos, pRayDir, pmat, &d, pFaceIndex, pUV, inst, force);
+			ret = IntersectNode(ni, pRayPos, pRayDir, pmat, &d, pNormal, pFaceIndex, pUV, inst, force);
 
 			if (ret && (d < mindist))
 			{
@@ -534,7 +535,7 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, co
 }
 
 bool ModelImpl::IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat,
-				   float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const Model::InstanceData *inst, bool force) const
+				   float *pDistance, glm::fvec3 *pNormal, size_t *pFaceIndex, glm::vec2 *pUV, const Model::InstanceData *inst, bool force) const
 {
 	const SNodeInfo *pnode = m_Nodes[nodeidx];
 	if (!pnode)
@@ -560,7 +561,7 @@ bool ModelImpl::IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const
 				continue;
 
 			float tmpd = d;
-			if (mesh->pmesh->Intersect(pRayPos, pRayDir, &tmpd, pFaceIndex, pUV, &mat))
+			if (mesh->pmesh->Intersect(pRayPos, pRayDir, &tmpd, pNormal, pFaceIndex, pUV, &mat))
 			{
 				if (tmpd < d)
 					d = tmpd;
@@ -577,7 +578,7 @@ bool ModelImpl::IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const
 	for (auto cit : pnode->children)
 	{
 		// recursively intersect each of the child nodes here
-		ret |= IntersectNode(cit, pRayPos, pRayDir, &mat, pDistance, pFaceIndex, pUV, inst, force);
+		ret |= IntersectNode(cit, pRayPos, pRayDir, &mat, pDistance, pNormal, pFaceIndex, pUV, inst, force);
 	}
 
 	return ret;
@@ -1418,32 +1419,47 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 		CONVERT_TCS2MBCS(filename, s);
 		std::string fn = s;
 
-		Assimp::Importer import;
-		bool animation_only = false;
-		bool keep_rootxform = false;
-		const aiScene *scene = import.ReadFile(fn, MakeImportFlags(options, animation_only, keep_rootxform));
-		if (!scene)
+		const TCHAR *ext = PathFindExtension(filename);
+		if (ext && !_tcsicmp(ext, _T(".c3terr")))
 		{
-			TCHAR *err;
-			CONVERT_MBCS2TCS(import.GetErrorString(), err);
-			psys->GetLog()->Print(_T(" ("));
-			psys->GetLog()->Print(err);
-			psys->GetLog()->Print(_T(") - "));
+			TerrainDescription td;
+
+			tinyxml2::XMLDocument xdoc;
+			xdoc.LoadFile(fn.c_str());
+
+			if (td.Load(&xdoc))
+				*returned_data = (ModelImpl *)(td.GenerateTerrain(psys));
 		}
 		else
 		{
-			TCHAR modbasepath[MAX_PATH];
-			_tcscpy_s(modbasepath, filename);
-			TCHAR *c = modbasepath;
-			while (*c) { if (*c == _T('/')) { *c = _T('\\'); } c++; }
-			c = _tcsrchr(modbasepath, _T('\\'));
-			if (c)
-			{
-				*c = _T('\0');
-				c++;
-			}
 
-			*returned_data = ImportModel(psys, scene, modbasepath, c, animation_only, keep_rootxform);
+			Assimp::Importer import;
+			bool animation_only = false;
+			bool keep_rootxform = false;
+			const aiScene * scene = import.ReadFile(fn, MakeImportFlags(options, animation_only, keep_rootxform));
+			if (!scene)
+			{
+				TCHAR *err;
+				CONVERT_MBCS2TCS(import.GetErrorString(), err);
+				psys->GetLog()->Print(_T(" ("));
+				psys->GetLog()->Print(err);
+				psys->GetLog()->Print(_T(") - "));
+			}
+			else
+			{
+				TCHAR modbasepath[MAX_PATH];
+				_tcscpy_s(modbasepath, filename);
+				TCHAR *c = modbasepath;
+				while (*c) { if (*c == _T('/')) { *c = _T('\\'); } c++; }
+				c = _tcsrchr(modbasepath, _T('\\'));
+				if (c)
+				{
+					*c = _T('\0');
+					c++;
+				}
+
+				*returned_data = ImportModel(psys, scene, modbasepath, c, animation_only, keep_rootxform);
+			}
 		}
 
 		if (!*returned_data)

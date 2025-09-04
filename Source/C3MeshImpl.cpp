@@ -13,6 +13,21 @@
 using namespace c3;
 
 
+struct IndexFetcher
+{
+	using Thunk = uint32_t(*)(const void *, size_t);
+
+	const void *base = nullptr;
+
+	Thunk thunk = nullptr;
+
+	uint32_t operator[] (size_t i) const { return thunk(base, i); }
+
+	static uint32_t get8 (const void *b, size_t i) { return (uint32_t)((uint8_t *)b)[i]; }
+	static uint32_t get16(const void *b, size_t i) { return (uint32_t)((uint16_t *)b)[i]; }
+	static uint32_t get32(const void *b, size_t i) { return (uint32_t)((uint32_t *)b)[i]; }
+};
+
 std::vector<MeshImpl::OctreeNode *> MeshImpl::s_OctreeNodeCache;
 
 MeshImpl::MeshImpl(RendererImpl *prend)
@@ -256,7 +271,7 @@ Mesh::RETURNCODE MeshImpl::Draw(Renderer::PrimType type) const
 static glm::fmat4x4 identMat = glm::identity<glm::fmat4x4>();
 
 
-bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance, size_t *pFaceIndex, glm::vec2 *pUV, const glm::fmat4x4 *pMat) const
+bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, float *pDistance, glm::fvec3 *pNormal, size_t *pFaceIndex, glm::vec2 *pUV, const glm::fmat4x4 *pMat) const
 {
 	if (!pRayPos || !pRayDir)
 		return false;
@@ -281,12 +296,22 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 	{
 		size_t vsz = m_VB->VertexSize();
 
-		uint16_t *pib = nullptr;
-		if (m_IB && m_IB->Lock((void **)&pib, 0, IndexBuffer::IS_16BIT, IBLOCKFLAG_READ) == S_OK)
+		void *pib = nullptr;
+
+		if (m_IB && m_IB->Lock(&pib, 0, IndexBuffer::IS_NONE, IBLOCKFLAG_READ) == S_OK)
 		{
+			IndexFetcher fetch = {};
+			switch (m_IB->GetIndexSize())
+			{
+				case IndexBuffer::IS_8BIT:  fetch = { pib, &IndexFetcher::get8 }; break;
+				case IndexBuffer::IS_16BIT: fetch = { pib, &IndexFetcher::get16 }; break;
+				case IndexBuffer::IS_32BIT: fetch = { pib, &IndexFetcher::get32 }; break;
+			}
+
 			float closestDistance = FLT_MAX;
 			size_t closestFace = 0;
-			glm::vec2 closestUV(0, 0);
+			glm::fvec2 closestUV(0, 0);
+			glm::fvec3 closestNormal;
 
 			std::function<void(const OctreeNode *)> CollideOctree;
 			CollideOctree = [&](const OctreeNode *root)
@@ -303,11 +328,11 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 						// Assume the first element in the vertex is position
 						glm::vec3 v[3];
 
-						v[0] = *(glm::vec3 *)(pvb + (vsz * pib[baseidx]));
-						v[1] = *(glm::vec3 *)(pvb + (vsz * pib[baseidx + 1]));
-						v[2] = *(glm::vec3 *)(pvb + (vsz * pib[baseidx + 2]));
+						v[0] = *(glm::vec3 *)(pvb + (vsz * fetch[baseidx]));
+						v[1] = *(glm::vec3 *)(pvb + (vsz * fetch[baseidx + 1]));
+						v[2] = *(glm::vec3 *)(pvb + (vsz * fetch[baseidx + 2]));
 
-						glm::vec2 uv;
+						glm::fvec2 uv;
 						float distance;
 
 						// Check for a collision using the local ray
@@ -316,8 +341,8 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 						if (hit)
 						{
 							// Transform distance back to the original coordinate space
-							glm::vec3 hitPoint = localRayPos + distance * localRayDir;
-							glm::vec3 transformedHitPoint = glm::vec3(*pMat * glm::vec4(hitPoint, 1.0f));
+							glm::fvec3 hitPoint = localRayPos + distance * localRayDir;
+							glm::fvec3 transformedHitPoint = glm::fvec3(*pMat * glm::fvec4(hitPoint, 1.0f));
 							float worldDistance = glm::length(transformedHitPoint - *pRayPos);
 
 							// Get the nearest collision
@@ -326,6 +351,11 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 								closestDistance = worldDistance;
 								closestFace = face;
 								closestUV = uv;
+
+								glm::fvec3 hitNorm = glm::cross(glm::normalize(v[1] - v[0]), glm::normalize(v[2] - v[0]));
+								glm::fvec3 transformedHitNorm = glm::fvec3(glm::inverseTranspose(*pMat) * glm::fvec4(hitNorm, 0.0f));
+								closestNormal = glm::normalize(transformedHitNorm);
+
 								ret = true;
 							}
 						}
@@ -339,8 +369,10 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 			{
 				if (pDistance)
 					*pDistance = closestDistance;
+
 				if (pFaceIndex)
 					*pFaceIndex = closestFace;
+
 				if (pUV)
 					*pUV = closestUV;
 			}
@@ -513,9 +545,17 @@ void MeshImpl::InitializeOctree() const
 	{
 		size_t vsz = m_VB->VertexSize();
 
-		uint16_t *pib = nullptr;
-		if (m_IB && m_IB->Lock((void **)&pib, 0, IndexBuffer::IS_16BIT, IBLOCKFLAG_READ) == S_OK)
+		void *pib = nullptr;
+		if (m_IB && m_IB->Lock((void **)&pib, 0, IndexBuffer::IS_NONE, IBLOCKFLAG_READ | IBLOCKFLAG_CACHE) == S_OK)
 		{
+			IndexFetcher fetch = {};
+			switch (m_IB->GetIndexSize())
+			{
+				case IndexBuffer::IS_8BIT:  fetch = { pib, &IndexFetcher::get8 }; break;
+				case IndexBuffer::IS_16BIT: fetch = { pib, &IndexFetcher::get16 }; break;
+				case IndexBuffer::IS_32BIT: fetch = { pib, &IndexFetcher::get32 }; break;
+			}
+
 			float closestDistance = FLT_MAX;
 			size_t closestFace = 0;
 			glm::vec2 closestUV(0, 0);
@@ -524,9 +564,9 @@ void MeshImpl::InitializeOctree() const
 			{
 				// Assume the first element in the vertex is position
 				OctreeNode *n = FindOctreeSubNodeFromPoints(nullptr, &m_Octree.front(),
-					(const glm::fvec3 *)(pvb + (vsz * pib[i++])),
-					(const glm::fvec3 *)(pvb + (vsz * pib[i++])),
-					(const glm::fvec3 *)(pvb + (vsz * pib[i++])));
+					(const glm::fvec3 *)(pvb + (vsz * fetch[i++])),
+					(const glm::fvec3 *)(pvb + (vsz * fetch[i++])),
+					(const glm::fvec3 *)(pvb + (vsz * fetch[i++])));
 
 				// store the node in the cache and increment the number of faces in that node
 				s_OctreeNodeCache.push_back(n);

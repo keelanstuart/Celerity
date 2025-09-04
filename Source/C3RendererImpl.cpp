@@ -330,11 +330,11 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	if (!gl.Initialize())
 		return false;
 
-	gl.SetLogFunc([&](const TCHAR *msg)
+	SetLogFunc([psys = m_pSys](const TCHAR *msg)
 	{
-		m_pSys->GetLog()->Print(L"[GL] ");
-		m_pSys->GetLog()->Print(msg);
-		m_pSys->GetLog()->Print(L"\n");
+		psys->GetLog()->Print(L"[GL] ");
+		psys->GetLog()->Print(msg);
+		psys->GetLog()->Print(L"\n");
 	});
 
 	// make use of opengl messages, log them
@@ -617,10 +617,19 @@ Renderer::LOG_FUNC RendererImpl::GetLogFunc() const
 }
 
 
+void __cdecl RendererImpl::GLLogWrapper(const wchar_t *msg, void *userdata)
+{
+	RendererImpl *_this = (RendererImpl *)userdata;
+	assert(_this);
+
+	_this->m_LogFunc(msg);
+}
+
 void RendererImpl::SetLogFunc(Renderer::LOG_FUNC logfunc)
 {
 	m_LogFunc = logfunc;
-	gl.SetLogFunc(logfunc);
+
+	gl.SetLogFunc(GLLogWrapper, this);
 }
 
 
@@ -3415,7 +3424,7 @@ Texture2D *RendererImpl::GetDefaultDescTexture()
 				{
 					for (size_t x = 0, maxx = li.width; x < maxx; x++)
 					{
-						buf[x] = 0x00A020FF;
+						buf[x] = 0x00A0FFFF;
 					}
 
 					buf = (uint32_t *)((BYTE *)buf + li.stride);

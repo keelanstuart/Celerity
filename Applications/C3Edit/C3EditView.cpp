@@ -948,7 +948,8 @@ c3::Object *C3EditView::Pick(POINT p, glm::fvec3 *picked_point, bool allow_root)
 		flagmask |= OF_DRAWINEDITOR;
 
 	float dist = FLT_MAX;
-	pDoc->m_RootObj->Intersect(&pickpos, &pickray, nullptr, &dist, &ret, flagmask, -1, false);
+	glm::fvec3 norm;
+	pDoc->m_RootObj->Intersect(&pickpos, &pickray, nullptr, &dist, &norm, &ret, flagmask, -1, false);
 
 	c3::Object *stop_obj = pDoc->m_OperationalRootObj;
 	if (allow_root)
