@@ -35,6 +35,7 @@ bool PhysicsManagerImpl::Initialize()
 {
 	bool ret = true;
 
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 	dInitODE2(0);
 
 	m_World = dWorldCreate();
@@ -52,6 +53,7 @@ bool PhysicsManagerImpl::Initialize()
 	dWorldSetContactSurfaceLayer(m_World, 0.001f);
 
 	dWorldSetAutoDisableFlag(m_World, 1);
+#endif
 
 	return ret;
 }
@@ -59,6 +61,7 @@ bool PhysicsManagerImpl::Initialize()
 
 void PhysicsManagerImpl::Shutdown()
 {
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 	if (m_Joints)
 	{
 		dJointGroupDestroy(m_Joints);
@@ -78,11 +81,13 @@ void PhysicsManagerImpl::Shutdown()
 	}
 
 	dCloseODE();
+#endif
 }
 
 
 void PhysicsManagerImpl::Update(float time)
 {
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 	// if there's no world, time is paused, or there are no dynamic objects, don't bother with this...
 	if ((time == 0.0f) || !m_World || m_Dynamics.empty())
 		return;
@@ -130,6 +135,7 @@ void PhysicsManagerImpl::Update(float time)
 			ppos->SetOriQuat((glm::fquat *)_of);
 		}
 	}
+#endif
 }
 
 
@@ -138,6 +144,7 @@ bool PhysicsManagerImpl::CreateCollisionMesh(const Model *pmod, dTriMeshDataID &
 	if (!pmod)
 		return false;
 
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 	// permanently allocate some space for vertices
 	static std::vector<float> verts;
 	// permanently allocate some space for indices
@@ -258,12 +265,14 @@ bool PhysicsManagerImpl::CreateCollisionMesh(const Model *pmod, dTriMeshDataID &
 	}
 
 	ret = it->second;
+#endif
 	return true;
 }
 
 
 bool PhysicsManagerImpl::AddObject(const Object *pobj)
 {
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 	DynamicObjectMap::iterator it = m_Dynamics.find(pobj);
 	if (it == m_Dynamics.end())
 	{
@@ -405,6 +414,7 @@ bool PhysicsManagerImpl::AddObject(const Object *pobj)
 
 		return true;
 	}
+#endif
 
 	return false;
 }
@@ -412,6 +422,7 @@ bool PhysicsManagerImpl::AddObject(const Object *pobj)
 
 bool PhysicsManagerImpl::RemoveObject(const Object *pobj)
 {
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 	DynamicObjectMap::iterator it = m_Dynamics.find(pobj);
 	if (it != m_Dynamics.end())
 	{
@@ -423,6 +434,7 @@ bool PhysicsManagerImpl::RemoveObject(const Object *pobj)
 
 		return true;
 	}
+#endif
 
 	return false;
 }
@@ -430,6 +442,7 @@ bool PhysicsManagerImpl::RemoveObject(const Object *pobj)
 
 bool PhysicsManagerImpl::MakeObjectKinetic(const Object *pobj, bool kinematic)
 {
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 	DynamicObjectMap::iterator it = m_Dynamics.find(pobj);
 	if (it != m_Dynamics.end())
 	{
@@ -444,6 +457,7 @@ bool PhysicsManagerImpl::MakeObjectKinetic(const Object *pobj, bool kinematic)
 			return true;
 		}
 	}
+#endif
 
 	return false;
 }
@@ -451,6 +465,7 @@ bool PhysicsManagerImpl::MakeObjectKinetic(const Object *pobj, bool kinematic)
 
 void PhysicsManagerImpl::UpdateObject(const Object *pobj)
 {
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 	PhysicalImpl *pphys = (PhysicalImpl *)pobj->FindComponent(Physical::Type());
 	if (!pphys)
 		return;
@@ -484,4 +499,5 @@ void PhysicsManagerImpl::UpdateObject(const Object *pobj)
 #endif
 			break;
 	}
+#endif
 }

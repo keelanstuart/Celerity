@@ -1642,8 +1642,15 @@ void CTinyJS::Trace()
 	m_Root->Trace();
 }
 
+bool CTinyJS::ExecutingNow()
+{
+	return m_Executing;
+}
+
 bool CTinyJS::Execute(const TCHAR *code)
 {
+	m_Executing = true;
+
 	bool ret = true;
 
 	CScriptLex *oldLex = l;
@@ -1692,6 +1699,8 @@ bool CTinyJS::Execute(const TCHAR *code)
 	l->Release();
 	l = oldLex;
 	scopes = oldScopes;
+
+	m_Executing = false;
 
 	return ret;
 }

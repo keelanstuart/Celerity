@@ -664,6 +664,45 @@ void scVec3Div(CScriptVar *c, void *userdata)
 }
 
 
+// multiply-add
+void scVec3Madd(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pc = c->GetParameter(_T("c"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct != 3))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec3 va, vb, vc, vr;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec3::length_type)i] = pbcomp ? pbcomp->m_Var->GetFloat() : pb->GetFloat();
+
+		CScriptVarLink *pccomp = pc->GetChild(i);
+		vc[(glm::fvec3::length_type)i] = pccomp ? pccomp->m_Var->GetFloat() : pc->GetFloat();
+
+		prcomp[(glm::fvec3::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = (va * vb) + vc;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec3::length_type)i]);
+	}
+}
+
+
 // ----------------------------------------------- Register Functions
 void registerMathFunctions(CTinyJS *tinyJS)
 {
@@ -715,4 +754,5 @@ void registerMathFunctions(CTinyJS *tinyJS)
 	tinyJS->AddNative(_T("function Vec3.sub(a, b)"), scVec3Sub, 0);
 	tinyJS->AddNative(_T("function Vec3.mul(a, b)"), scVec3Mul, 0);
 	tinyJS->AddNative(_T("function Vec3.div(a, b)"), scVec3Div, 0);
+	tinyJS->AddNative(_T("function Vec3.madd(a, b, c)"), scVec3Madd, 0);
 }

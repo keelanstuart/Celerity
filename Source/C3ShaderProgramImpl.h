@@ -47,8 +47,8 @@ namespace c3
 		virtual bool SetUniform2(int32_t location, const glm::fvec2 *v2);
 		virtual bool SetUniform3(int32_t location, const glm::fvec3 *v3);
 		virtual bool SetUniform4(int32_t location, const glm::fvec4 *v4);
-		virtual bool SetUniformTexture(Texture *tex, int32_t location = -1, int32_t texunit = -1, props::TFlags32 texflags = TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
-		virtual bool SetUniformTexture(Resource *texres, int32_t location = -1, int32_t texunit = -1, props::TFlags32 texflags = TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
+		virtual bool SetUniformTexture(const Texture *tex, int32_t location = -1, int32_t texunit = -1, props::TFlags32 texflags = TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
+		virtual bool SetUniformTexture(const Resource *texres, int32_t location = -1, int32_t texunit = -1, props::TFlags32 texflags = TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
 
 		virtual void ApplyUniforms(bool update_globals = true);
 

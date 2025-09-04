@@ -587,7 +587,7 @@ const glm::fmat4x4 *PositionableImpl::GetTransformMatrixNormal(glm::fmat4x4 *mat
 }
 
 
-bool PositionableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const
+bool PositionableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, glm::fvec3 *pNormal, bool force) const
 {
 	return false;
 }

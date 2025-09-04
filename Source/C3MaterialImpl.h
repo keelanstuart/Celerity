@@ -21,7 +21,7 @@ namespace c3
 		Renderer *m_pRend;
 
 		props::TFlags64 m_flags;
-		typedef std::pair<Texture *, Resource *> TTexOrRes;
+		typedef std::pair<const Texture *, const Resource *> TTexOrRes;
 		TTexOrRes m_tex[TextureComponentType::NUM_TEXTURETYPES];
 		props::TFlags32 m_texflags[TextureComponentType::NUM_TEXTURETYPES];
 		glm::fvec4 m_color[ColorComponentType::NUM_COLORTYPES];
@@ -55,11 +55,11 @@ namespace c3
 
 		virtual const glm::fvec4 *GetColor(ColorComponentType comptype, glm::fvec4 *pcolor = nullptr) const;
 
-		virtual void SetTexture(TextureComponentType comptype, Texture *ptex, props::TFlags32 texflags = TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR | TEXFLAG_WRAP_U | TEXFLAG_WRAP_V);
+		virtual void SetTexture(TextureComponentType comptype, const Texture *ptex, props::TFlags32 texflags = TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR | TEXFLAG_WRAP_U | TEXFLAG_WRAP_V);
 
-		virtual void SetTexture(TextureComponentType comptype, Resource *ptexres, props::TFlags32 texflags = TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR | TEXFLAG_WRAP_U | TEXFLAG_WRAP_V);
+		virtual void SetTexture(TextureComponentType comptype, const Resource *ptexres, props::TFlags32 texflags = TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR | TEXFLAG_WRAP_U | TEXFLAG_WRAP_V);
 
-		virtual Texture *GetTexture(TextureComponentType comptype, props::TFlags32 *texflags = nullptr) const;
+		virtual const Texture *GetTexture(TextureComponentType comptype, props::TFlags32 *texflags = nullptr) const;
 
 		virtual props::TFlags64 &RenderModeFlags();
 

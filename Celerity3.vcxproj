@@ -72,7 +72,7 @@
     <ClCompile Include="Source\C3PrototypeImpl.cpp" />
     <ClCompile Include="Source\C3PublisherImpl.cpp" />
     <ClCompile Include="Source\C3ModelRendererImpl.cpp" />
-    <ClCompile Include="Source\C3QuadTerrainImpl.cpp" />
+    <ClCompile Include="Source\C3TerrainImpl.cpp" />
     <ClCompile Include="Source\C3RendererImpl.cpp" />
     <ClCompile Include="source\C3RenderMethodImpl.cpp" />
     <ClCompile Include="Source\C3ResourceManagerImpl.cpp" />
@@ -196,7 +196,6 @@
     <ClInclude Include="Include\C3Prototype.h" />
     <ClInclude Include="Include\C3Publisher.h" />
     <ClInclude Include="Include\C3ModelRenderer.h" />
-    <ClInclude Include="Include\C3QuadTerrain.h" />
     <ClInclude Include="Include\C3Renderer.h" />
     <ClInclude Include="include\C3RenderMethod.h" />
     <ClInclude Include="Include\C3Resource.h" />
@@ -252,7 +251,7 @@
     <ClInclude Include="Source\C3PrototypeImpl.h" />
     <ClInclude Include="Source\C3PublisherImpl.h" />
     <ClInclude Include="Source\C3ModelRendererImpl.h" />
-    <ClInclude Include="Source\C3QuadTerrainImpl.h" />
+    <ClInclude Include="Source\C3TerrainImpl.h" />
     <ClInclude Include="Source\C3RendererImpl.h" />
     <ClInclude Include="source\C3RenderMethodImpl.h" />
     <ClInclude Include="Source\C3ResourceImpl.h" />
@@ -280,6 +279,7 @@
     <ClInclude Include="Source\TinyJS.h" />
     <ClInclude Include="Source\TinyJS_Functions.h" />
     <ClInclude Include="Source\TinyJS_MathFunctions.h" />
+    <ClInclude Include="Source\TRaster.h" />
     <ClInclude Include="Source\wglext.h" />
     <ClInclude Include="third-party\imgui\imgui.h" />
     <ClInclude Include="third-party\imgui\imgui_internal.h" />

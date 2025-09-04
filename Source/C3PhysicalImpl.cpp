@@ -210,6 +210,9 @@ bool PhysicalImpl::Initialize(Object *pobject)
 
 void PhysicalImpl::Update(float elapsed_time)
 {
+	constexpr float thirtieth = 1.0f / 30.0f;
+	elapsed_time = std::min(elapsed_time, thirtieth);
+
 	if (!m_pPositionable)
 		m_pPositionable = dynamic_cast<Positionable *>(m_pOwner->FindComponent(Positionable::Type()));
 
@@ -353,7 +356,7 @@ void PhysicalImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool PhysicalImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const
+bool PhysicalImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, glm::fvec3 *pNormal, bool force) const
 {
 	return false;
 }

@@ -114,7 +114,10 @@ void jcGetChild(CScriptVar *c, void *userdata);
 void jcFindObjByGUID(CScriptVar *c, void *userdata);
 void jcFindFirstObjByName(CScriptVar *c, void *userdata);
 void jcLog(CScriptVar *c, void *userdata);
+void jcExit(CScriptVar *c, void *userdata);
 void jcExecute(CScriptVar *c, void *userdata);
+void jcCreateProperty(CScriptVar* c, void* userdata);
+void jcDeleteProperty(CScriptVar* c, void* userdata);
 void jcFindProperty(CScriptVar *c, void *userdata);
 void jcGetPropertyValue(CScriptVar *c, void *userdata);
 void jcSetPropertyValue(CScriptVar *c, void *userdata);
@@ -126,6 +129,7 @@ void jcGetObjectName(CScriptVar *c, void *userdata);
 void jcSetObjectName(CScriptVar *c, void *userdata);
 void jcLoadPrototypes(CScriptVar *c, void *userdata);
 void jcLoadObject(CScriptVar *c, void *userdata);
+void jcSaveObject(CScriptVar *c, void *userdata);
 void jcGetRegisteredObject(CScriptVar *c, void *userdata);
 void jcRegisterObject(CScriptVar *c, void *userdata);
 void jcIsObjFlagSet(CScriptVar *c, void *userdata);
@@ -154,6 +158,7 @@ void jcSetModelNodeCollisions(CScriptVar *c, void *userdata);
 void jcCreateCollisionResults(CScriptVar *c, void *userdata);
 void jcFreeCollisionResults(CScriptVar *c, void *userdata);
 void jcCheckCollisions(CScriptVar *c, void *userdata);
+void jcHandleFPSMovement(CScriptVar *c, void *userdata);
 void jcPackColorFromIntVec(CScriptVar *c, void *userdata);
 void jcPackColorFromFloatVec(CScriptVar *c, void *userdata);
 void jcUnpackColorToIntVec(CScriptVar *c, void *userdata);
@@ -190,8 +195,12 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function Log(text)"),											jcLog, psys);
 
+	m_JS->AddNative(_T("function Exit()"),											jcExit, psys);
+
 	m_JS->AddNative(_T("function Execute(hobj, cmd)"),									jcExecute, psys);
 
+	m_JS->AddNative(_T("function CreateProperty(hobj, name, fcc)"),							jcCreateProperty, psys);
+	m_JS->AddNative(_T("function DeleteProperty(hprop)"),								jcDeleteProperty, psys);
 	m_JS->AddNative(_T("function FindProperty(hobj, name)"),							jcFindProperty, psys);
 	m_JS->AddNative(_T("function GetPropertyValue(hprop)"),								jcGetPropertyValue, psys);
 	m_JS->AddNative(_T("function SetPropertyValue(hprop, val)"),						jcSetPropertyValue, psys);
@@ -208,6 +217,7 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function LoadPrototypes(filename)"),							jcLoadPrototypes, psys);
 
 	m_JS->AddNative(_T("function LoadObject(hobj, filename)"),							jcLoadObject, psys);
+	m_JS->AddNative(_T("function SaveObject(hobj, filename)"),							jcSaveObject, psys);
 
 	m_JS->AddNative(_T("function GetRegisteredObject(designation)"),					jcGetRegisteredObject, psys);
 	m_JS->AddNative(_T("function RegisterObject(designation, hobj)"),					jcRegisterObject, psys);
@@ -242,6 +252,7 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function CreateCollisionResults()"),							jcCreateCollisionResults, psys);
 	m_JS->AddNative(_T("function FreeCollisionResults(colres)"),						jcFreeCollisionResults, psys);
 	m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir, results)"),	jcCheckCollisions, psys);
+	m_JS->AddNative(_T("function HandleFPSMovement(hrootobj, pos, move_dir, speed, elapsed_time, low_height, high_height)"), jcHandleFPSMovement, psys);
 
 	m_JS->AddNative(_T("function PackColorFromIntVec(coloriv)"),						jcPackColorFromIntVec, psys);
 	m_JS->AddNative(_T("function PackColorFromFloatVec(colorfv)"),						jcPackColorFromFloatVec, psys);
@@ -412,7 +423,7 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 			Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(pprop->AsString(), RESF_DEMANDLOAD);
 			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
 			{
-				if (m_Code != ((Script *)(pres->GetData()))->m_Code)
+				if (!m_JS->ExecutingNow() && (m_Code != ((Script *)(pres->GetData()))->m_Code))
 				{
 					ResetJS();
 
@@ -427,7 +438,7 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 		}
 
 		case 'SRC':
-			if (m_Code != pprop->AsString())
+			if (!m_JS->ExecutingNow() && (m_Code != pprop->AsString()))
 			{
 				ResetJS();
 
@@ -455,7 +466,7 @@ void ScriptableImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool ScriptableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const
+bool ScriptableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, glm::fvec3 *pNormal, bool force) const
 {
 	return false;
 }
@@ -646,6 +657,12 @@ void jcLog(CScriptVar *c, void *userdata)
 }
 
 
+void jcExit(CScriptVar *c, void *userdata)
+{
+	exit(0);
+}
+
+
 void jcExecute(CScriptVar *c, void *userdata)
 {
 	Object *pobj = (Object *)(c->GetParameter(_T("hobj"))->GetInt());
@@ -658,6 +675,44 @@ void jcExecute(CScriptVar *c, void *userdata)
 
 	pscr->Execute(c->GetParameter(_T("cmd"))->GetString());
 }
+
+void jcCreateProperty(CScriptVar* c, void* userdata)
+{
+	CScriptVar* ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	ret->SetInt(0);
+
+	Object* pobj = (Object*)(c->GetParameter(_T("hobj"))->GetInt());
+	if (!pobj)
+		return;
+
+	tstring name = c->GetParameter(_T("name"))->GetString();
+
+	props::IProperty* p = pobj->GetProperties()->GetPropertyByName(name.c_str());
+	ret->SetInt((int64_t)p);
+}
+
+
+void jcDeleteProperty(CScriptVar* c, void* userdata)
+{
+	CScriptVar* ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	ret->SetInt(0);
+
+	Object* pobj = (Object*)(c->GetParameter(_T("hobj"))->GetInt());
+	if (!pobj)
+		return;
+
+	tstring name = c->GetParameter(_T("name"))->GetString();
+
+	props::IProperty* p = pobj->GetProperties()->GetPropertyByName(name.c_str());
+	ret->SetInt((int64_t)p);
+}
+
 
 void jcFindProperty(CScriptVar *c, void *userdata)
 {
@@ -969,7 +1024,7 @@ void jcCreateObject(CScriptVar *c, void *userdata)
 
 	Prototype *pproto = psys->GetFactory()->FindPrototype(protoname.c_str(), false);
 	// if a particular prototype was specified and not found, inform the user
-	if (!pproto)
+	if (!protoname.empty() && !pproto)
 		psys->GetLog()->Print(_T("CreateObject could not find prototype: \"%s\"\n"), protoname.c_str());
 
 	Object *pparentobj = dynamic_cast<Object *>((Object *)hparentobj);
@@ -1177,6 +1232,39 @@ void jcLoadObject(CScriptVar *c, void *userdata)
 
 			is->Release();
 		}
+	}
+}
+
+
+//m_JS->AddNative(_T("function SaveObject(hobj, filename)"),				jcSaveObject, psys);
+void jcSaveObject(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	if (ret)
+		ret->SetInt(0);
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	tstring filename = c->GetParameter(_T("filename"))->GetString();
+	TCHAR fullpath[MAX_PATH];
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+
+	genio::IOutputStream *os = genio::IOutputStream::Create();
+	if (os)
+	{
+		if (os->Assign(fullpath) && os->Open())
+		{
+			bool r = pobj->Save(os, 0);
+
+			if (ret)
+				ret->SetInt(r ? 1 : 0);
+		}
+
+		os->Release();
 	}
 }
 
@@ -1488,9 +1576,12 @@ void jcQuatToEuler(CScriptVar *c, void *userdata)
 	psvl->m_Owned = true;
 	CScriptVar *prz = psvl->m_Var;
 
-	prx->SetFloat(glm::degrees(c3::math::GetPitch(&q)));
-	pry->SetFloat(glm::degrees(c3::math::GetRoll(&q)));
-	prz->SetFloat(glm::degrees(c3::math::GetYaw(&q)));
+	float pitch = glm::degrees(c3::math::GetPitch(&q));
+	float yaw = glm::degrees(c3::math::GetRoll(&q));
+	float roll = glm::degrees(c3::math::GetYaw(&q));
+	prx->SetFloat(pitch);
+	pry->SetFloat(roll);
+	prz->SetFloat(yaw);
 }
 
 
@@ -2067,6 +2158,16 @@ void jcCreateCollisionResults(CScriptVar *c, void *userdata)
 	pf->m_Owned = true;
 	CScriptVar *pfound = pf->m_Var;
 	pfound->SetInt(0);
+
+	pf = ret->FindChildOrCreate(_T("normal"));
+	pf->m_Owned = true;
+	CScriptVar *pnorm = pf->m_Var;
+	CScriptVarLink *px = pnorm->FindChildOrCreate(_T("x"));
+	CScriptVarLink *py = pnorm->FindChildOrCreate(_T("y"));
+	CScriptVarLink *pz = pnorm->FindChildOrCreate(_T("z"));
+	px->m_Var->SetFloat(0.0f);
+	py->m_Var->SetFloat(0.0f);
+	pz->m_Var->SetFloat(1.0f);
 }
 
 
@@ -2077,7 +2178,7 @@ void jcFreeCollisionResults(CScriptVar *c, void *userdata)
 }
 
 
-// m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir, results)"), jcSetModelNodeCollisions, psys);
+// m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir, results)"), jcCheckCollisions, psys);
 void jcCheckCollisions(CScriptVar *c, void *userdata)
 {
 	System *psys = (System *)userdata;
@@ -2087,14 +2188,51 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 	CScriptVar *praypos = c->GetParameter(_T("raypos"));
 	CScriptVar *praydir = c->GetParameter(_T("raydir"));
 	CScriptVar *ret = c->GetParameter(_T("results"));
+	if (c->GetReturnVar())
+		c->GetReturnVar()->SetInt(0);
 
 	if (!(phrootobj && praypos && praydir))
 		return;
 
+	CScriptVarLink *ret_found = ret->FindChild(_T("found"));
+	if (!ret_found)
+		return;
+
+	glm::fvec3 raypos, raydir;
+
+	{
+		CScriptVarLink *px = praydir->FindChild(_T("x"));
+		CScriptVarLink *py = praydir->FindChild(_T("y"));
+		CScriptVarLink *pz = praydir->FindChild(_T("z"));
+		if (!(px && py && pz))
+			return;
+
+		raydir.x = px->m_Var->GetFloat();
+		raydir.y = py->m_Var->GetFloat();
+		raydir.z = pz->m_Var->GetFloat();
+	}
+
+	{
+		CScriptVarLink *px = praypos->FindChild(_T("x"));
+		CScriptVarLink *py = praypos->FindChild(_T("y"));
+		CScriptVarLink *pz = praypos->FindChild(_T("z"));
+		if (!(px && py && pz))
+			return;
+
+		raypos.x = px->m_Var->GetFloat();
+		raypos.y = py->m_Var->GetFloat();
+		raypos.z = pz->m_Var->GetFloat();
+		if (glm::length(raydir) < 0.0001)
+		{
+			ret_found->m_Var->SetInt(0);
+			return;
+		}
+	}
+
 	CScriptVarLink *ret_dist = ret->FindChild(_T("distance"));
 	CScriptVarLink *ret_hobj = ret->FindChild(_T("hobj"));
-	CScriptVarLink *ret_found = ret->FindChild(_T("found"));
-	if (!(ret_dist && ret_hobj && ret_found))
+	CScriptVarLink *ret_norm = ret->FindChild(_T("normal"));
+	if (!(ret_dist && ret_hobj))
 	{
 		static bool errshown = false;
 		if (!errshown)
@@ -2111,42 +2249,150 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
 	Object *prootobj = dynamic_cast<Object *>((Object *)hrootobj);
 
-	glm::fvec3 raypos, raydir;
-
-	{
-		CScriptVarLink *px = praypos->FindChild(_T("x"));
-		CScriptVarLink *py = praypos->FindChild(_T("y"));
-		CScriptVarLink *pz = praypos->FindChild(_T("z"));
-		if (!(px && py && pz))
-			return;
-
-		raypos.x = px->m_Var->GetFloat();
-		raypos.y = py->m_Var->GetFloat();
-		raypos.z = pz->m_Var->GetFloat();
-	}
-
-	{
-		CScriptVarLink *px = praydir->FindChild(_T("x"));
-		CScriptVarLink *py = praydir->FindChild(_T("y"));
-		CScriptVarLink *pz = praydir->FindChild(_T("z"));
-		if (!(px && py && pz))
-			return;
-
-		raydir.x = px->m_Var->GetFloat();
-		raydir.y = py->m_Var->GetFloat();
-		raydir.z = pz->m_Var->GetFloat();
-	}
-
 	if (prootobj)
 	{
 		Object *obj = nullptr;
 		float dist = FLT_MAX;
-		if (prootobj->Intersect(&raypos, &raydir, nullptr, &dist, &obj, OF_CHECKCOLLISIONS, 1))
+		glm::fvec3 norm(0, 0, 0);
+		float len = glm::length(raydir);
+		raydir = glm::normalize(raydir);
+		if (prootobj->Intersect(&raypos, &raydir, nullptr, &dist, &norm, &obj, OF_CHECKCOLLISIONS, -1) && (dist < len))
 		{
 			ret_found->m_Var->SetInt(1);
 			ret_hobj->m_Var->SetInt((int64_t)obj);
 			ret_dist->m_Var->SetFloat(dist);
+
+			CScriptVarLink *px = ret_norm->m_Var->FindChild(_T("x"));
+			CScriptVarLink *py = ret_norm->m_Var->FindChild(_T("y"));
+			CScriptVarLink *pz = ret_norm->m_Var->FindChild(_T("z"));
+
+			px->m_Var->SetFloat(norm.x);
+			py->m_Var->SetFloat(norm.y);
+			pz->m_Var->SetFloat(norm.z);
+
+			if (c->GetReturnVar())
+				c->GetReturnVar()->SetInt(1);
 		}
+	}
+}
+
+
+// m_JS->AddNative(_T("function HandleFPSMovement(hrootobj, pos, move_dir, speed, elapsed_time, low_height, high_height)"), jcHandleFPSMovement, psys);
+void jcHandleFPSMovement(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVar *phrootobj = c->GetParameter(_T("hrootobj"));
+	CScriptVar *ppos = c->GetParameter(_T("pos"));
+	CScriptVar *pmovedir = c->GetParameter(_T("move_dir"));
+	CScriptVar *pspeed = c->GetParameter(_T("speed"));
+	CScriptVar *peltime = c->GetParameter(_T("elapsed_time"));
+	CScriptVar *plowh = c->GetParameter(_T("low_height"));
+	CScriptVar *phighh = c->GetParameter(_T("high_height"));
+
+	if (c->GetReturnVar())
+		c->GetReturnVar()->SetInt(0);
+
+	if (!(phrootobj && ppos && pmovedir && pspeed && peltime && plowh && phighh))
+		return;
+
+	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
+	Object *prootobj = dynamic_cast<Object *>((Object *)hrootobj);
+
+	if (prootobj)
+	{
+		glm::fvec3 raypos, raydir;
+
+		CScriptVarLink *pposx = ppos->FindChild(_T("x"));
+		CScriptVarLink *pposy = ppos->FindChild(_T("y"));
+		CScriptVarLink *pposz = ppos->FindChild(_T("z"));
+		if (!(pposx && pposy && pposz))
+			return;
+
+		raypos.x = pposx->m_Var->GetFloat();
+		raypos.y = pposy->m_Var->GetFloat();
+		raypos.z = pposz->m_Var->GetFloat();
+
+		CScriptVarLink *pdirx = pmovedir->FindChild(_T("x"));
+		CScriptVarLink *pdiry = pmovedir->FindChild(_T("y"));
+		CScriptVarLink *pdirz = pmovedir->FindChild(_T("z"));
+		if (!(pdirx && pdiry && pdirz))
+			return;
+
+		raydir.x = pdirx->m_Var->GetFloat();
+		raydir.y = pdiry->m_Var->GetFloat();
+		raydir.z = pdirz->m_Var->GetFloat();
+		if (glm::length(raydir) < 0.0001f)
+			return;
+
+		raydir = glm::normalize(raydir);
+
+		float eltime = peltime->GetFloat();
+		float speed = pspeed->GetFloat();
+
+		if ((eltime == 0.0f) && (speed == 0.0f))
+			return;
+
+		float lowtest = plowh->GetFloat();
+		float hightest = phighh->GetFloat();
+
+		Object *obj = nullptr;
+		glm::fvec3 norm(0, 0, 0);
+		float len = speed * eltime;
+		raydir = glm::normalize(raydir);
+		glm::fvec3 raydirf = glm::fvec3(raydir.x, raydir.y, 0);
+
+		bool horzhit;
+
+#define ESB		0.001f
+
+		float dist = FLT_MAX;
+		glm::fvec3 poslow(raypos.x, raypos.y, raypos.z + lowtest);
+		horzhit = prootobj->Intersect(&poslow, &raydirf, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1) && (dist < len);
+
+		if (!horzhit)
+		{
+			dist = FLT_MAX;
+			glm::fvec3 poshigh(raypos.x, raypos.y, raypos.z + hightest);
+			horzhit = prootobj->Intersect(&poshigh, &raydirf, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1) && (dist < len);
+		}
+
+		if (horzhit)
+		{
+			// Stop before the surface:
+			float allowed = std::max<float>(0, dist - ESB);
+			glm::fvec3 hitpos = raypos + (raydirf * allowed);
+
+			float remaining = std::max<float>(0.0, len - allowed);
+			glm::fvec3 normf = glm::normalize(glm::fvec3(norm.x, norm.y, 0));
+			glm::fvec3 tangential = (raydirf - glm::dot(raydirf, normf) * normf);
+			glm::fvec3 slidedir = glm::normalize(tangential);
+			raypos = hitpos + (slidedir * remaining);  // or only if dot(dir, n) < 0
+		}
+		else
+			raypos += (raydir * len);
+
+		static glm::fvec3 negz(0, 0, -1);
+
+		dist = FLT_MAX;
+		raypos.z += hightest;
+		if (prootobj->Intersect(&raypos, &negz, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1) && (dist < hightest))
+		{
+			raypos.z -= dist + ESB;
+			if (c->GetReturnVar())
+				c->GetReturnVar()->SetInt(1);
+		}
+		else
+		{
+			raypos.z -= hightest;
+			if (c->GetReturnVar())
+				c->GetReturnVar()->SetInt(0);
+		}
+
+		pposx->m_Var->SetFloat(raypos.x);
+		pposy->m_Var->SetFloat(raypos.y);
+		pposz->m_Var->SetFloat(raypos.z);
 	}
 }
 

@@ -110,7 +110,7 @@ namespace c3
 		virtual bool IsBoxInside(const BoundingBox *pbox) const;
 		virtual bool IsSphereInside(const glm::fvec3 *centroid, float radius) const;
 
-		virtual bool CheckCollision(const glm::fvec3 *raypos, const glm::fvec3 *rayvec, float *dist = nullptr) const;
+		virtual bool CheckCollision(const glm::fvec3 *raypos, const glm::fvec3 *rayvec, float *dist = nullptr, float *norm = nullptr) const;
 
 		// this will adjust the current bounding box by pbox's aligned bounds
 		virtual void IncludeBounds(const BoundingBox *pbox);

@@ -99,7 +99,7 @@ void InteractableImpl::Update(float elapsed_time)
 	pim->GetPickRay(pickpos, pickdir);
 
 	// see if our pick ray (ostensibly the mouse) intersects with whatever we've got
-	bool picked = m_pOwner->Intersect(&pickpos, &pickdir, nullptr, nullptr, nullptr, OF_DRAW, -1);
+	bool picked = m_pOwner->Intersect(&pickpos, &pickdir, nullptr, nullptr, nullptr, nullptr, OF_DRAW, -1);
 	if (picked)
 	{
 		// if picked and newly-so, call the mouse_enter script function
@@ -131,9 +131,6 @@ void InteractableImpl::Update(float elapsed_time)
 
 			if (pim->ButtonPressed(button))
 			{
-				if (pim->ButtonChange(button))
-					genclick = true;
-
 				m_Flags.Set(IF_ACTIVATED);
 			}
 			else if (pim->ButtonReleased(button))
@@ -209,7 +206,7 @@ void InteractableImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool InteractableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *mats, float *pDistance, bool force) const
+bool InteractableImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *mats, float *pDistance, glm::fvec3 *pNormal, bool force) const
 {
 	bool ret = false;
 

@@ -9,9 +9,11 @@
 #include <C3.h>
 #include <C3Physical.h>
 
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 #include <ode\ode.h>
 #include <ode\objects.h>
 #include <ode\collision_space.h>
+#endif
 
 #define USE_PHYSICS_MANAGER		FALSE
 
@@ -44,6 +46,7 @@ namespace c3
 		ColliderShape m_ColliderShape;
 		CollisionMode m_CollisionMode;
 
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 		union
 		{
 			dBodyID u_ODEBody;
@@ -52,6 +55,7 @@ namespace c3
 
 		// TODO
 		dMass m_ODEMass;
+#endif
 		float m_Mass;
 
 	public:
@@ -76,7 +80,7 @@ namespace c3
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 
-		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const;
+		virtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, glm::fvec3 *pNormal, bool force) const;
 
 		virtual size_t GetNumValues(const props::IProperty *pprop) const;
 

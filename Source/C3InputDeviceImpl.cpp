@@ -42,9 +42,9 @@ InputDeviceImpl::InputDeviceImpl(System *sys, LPDIRECTINPUTDEVICE8 pdid)
 	m_pDIDevice->GetDeviceInfo(&m_DIDInst);
 
 	m_Name = m_DIDInst.tszProductName;
-	m_Name += _T(" (");
-	m_Name += m_DIDInst.tszInstanceName;
-	m_Name += _T(")");
+//	m_Name += _T(" (");
+//	m_Name += m_DIDInst.tszInstanceName;
+//	m_Name += _T(")");
 
 	m_UID = c3::Crc32::CalculateString(m_Name.c_str());
 

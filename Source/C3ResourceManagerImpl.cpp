@@ -37,18 +37,6 @@ ResourceManagerImpl::~ResourceManagerImpl()
 	m_ZipFileRegistry.clear();
 }
 
-pool::IThreadPool::TASK_RETURN ResourceManagerImpl::LoadingThreadProc(void *presmanimpl, void *pres, size_t task_number)
-{
-	assert(presmanimpl);
-
-	if (!pres)
-		return pool::IThreadPool::TR_OK;
-
-	((Resource *)pres)->AddRef();
-
-	return pool::IThreadPool::TR_OK;
-}
-
 
 Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype, const void *data)
 {
@@ -149,6 +137,17 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 		{
 			if (pres->GetStatus() == Resource::Status::RS_NONE)
 			{
+				std::function<pool::IThreadPool::TASK_RETURN(size_t task_number)> LoadingThreadProc =
+				[res = pres](size_t task_number) -> pool::IThreadPool::TASK_RETURN
+				{
+					if (!res)
+						return pool::IThreadPool::TR_OK;
+
+					((Resource *)res)->AddRef();
+
+					return pool::IThreadPool::TR_OK;
+				};
+
 				if (flags.IsSet(RESF_DEMANDLOAD) || !pres->GetType()->Flags().IsSet(RTFLAG_RUNBYRENDERER))
 				{
 					if (flags.IsSet(RESF_DEMANDLOAD))
@@ -159,12 +158,12 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 					else
 					{
 						// Since we didn't demand that this get loaded right now, schedule it on the thread pool.
-						m_pSys->GetThreadPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
+						m_pSys->GetThreadPool()->RunTask(LoadingThreadProc);
 					}
 				}
 				else
 				{
-					((RendererImpl *)(m_pSys->GetRenderer()))->GetTaskPool()->RunTask(LoadingThreadProc, (void *)this, (void *)pres);
+					((RendererImpl *)(m_pSys->GetRenderer()))->GetTaskPool()->RunTask(LoadingThreadProc);
 				}
 			}
 		}

@@ -1,0 +1,45 @@
+var runtime;
+
+function update(elapsed_seconds)
+{
+	if (elapsed_seconds == 0.0)
+		return;
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	//var gui_root = GetRegisteredObject("gui.root");
+	//var gui_load_result = LoadObject(gui_root, "Protectorate/Protectorate_MainMenu.c3o");
+
+	//var load_result = LoadObject(self, "Protectorate/Protectorate_MainMenuBG.c3o");
+}
+
+function free()
+{
+}
+
+function mouse_click(control_name, button, mx, my)
+{
+	if (control_name == "New Game")
+	{
+	
+	}
+	else if (control_name == "Continue")
+	{
+	
+	}
+	else if (control_name == "Load Game")
+	{
+	
+	}
+	else if (control_name == "Settings")
+	{
+	
+	}
+	else if (control_name == "Quit")
+	{
+		Exit();
+	}
+}

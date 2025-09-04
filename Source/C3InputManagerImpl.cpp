@@ -36,6 +36,21 @@ InputManagerImpl::InputManagerImpl(System *sys)
 	m_pDI = nullptr;
 
 	m_PlugCheckTime = 0.0f;
+
+	m_MouseEnabled = false;
+	m_MouseCaptured = false;
+	m_MousePos = { 0, 0 };
+	m_MouseTransform = glm::identity<glm::fmat4x4>();
+	m_MouseCursor = m_Cursors.cend();
+	m_LastCursorID = -1;
+
+	Resource *pres = m_pSys->GetResourceManager()->GetResource(_T("ui.c3rm"), RESF_DEMANDLOAD);
+	if (pres && (pres->GetStatus() == Resource::RS_LOADED))
+	{
+		m_CursorRM = dynamic_cast<RenderMethod *>((RenderMethod *)pres->GetData());
+		if (m_CursorRM)
+			m_CursorRM->FindTechnique(_T("cursor"), m_CursorRMTech);
+	}
 }
 
 
@@ -135,10 +150,186 @@ void InputManagerImpl::SetMousePos(int32_t x, int32_t y)
 }
 
 
-void InputManagerImpl::GetMousePos(int32_t& x, int32_t& y)
+void InputManagerImpl::GetMousePos(int32_t& x, int32_t& y) const
 {
 	x = m_MousePos.x;
 	y = m_MousePos.y;
+}
+
+
+void InputManagerImpl::EnableMouse(bool enabled)
+{
+	m_MouseEnabled = enabled;
+}
+
+
+bool InputManagerImpl::MouseEnabled() const
+{
+	return m_MouseEnabled;
+}
+
+
+bool InputManagerImpl::CaptureMouse(bool capture)
+{
+	if (capture != m_MouseCaptured)
+	{
+		if (capture)
+		{
+			if (GetCapture() == NULL)
+				SetCapture(m_pSys->GetOwner());
+			else
+				capture = false;
+		}
+		else
+		{
+			if (GetCapture() == m_pSys->GetOwner())
+				ReleaseCapture();
+		}
+
+		m_MouseCaptured = capture;
+	}
+
+	return m_MouseCaptured;
+}
+
+
+bool InputManagerImpl::MouseCaptured() const
+{
+	return m_MouseCaptured;
+}
+
+
+InputManager::CursorID InputManagerImpl::RegisterCursor(const Texture2D *ptex, std::optional<glm::ivec2> hotspot, const TCHAR *name)
+{
+	if (!ptex)
+		return CURSOR_INVALID;
+
+	// Get the current cursor before we modify the tree so we can restore it later
+	CursorID cur = (m_MouseCursor != m_Cursors.cend()) ? (m_MouseCursor->first) : CURSOR_INVALID;
+
+	CursorID ret = m_LastCursorID + 1;
+	auto [it, inserted] = m_Cursors.emplace(ret, CursorInfo{});
+	if (inserted)
+	{
+		it->second.ptex = ptex;
+		it->second.pmtl = m_pSys->GetRenderer()->GetMaterialManager()->CreateMaterial();
+		if (it->second.pmtl)
+		{
+			it->second.pmtl->SetTexture(Material::TCT_DIFFUSE, ptex);
+			it->second.pmtl->SetCullMode(Renderer::CM_DISABLED);
+		}
+
+		if (name)
+			it->second.name = name;
+		else
+			it->second.name = std::format(_T("Cursor{0}"), ret);
+
+		if (hotspot.has_value())
+			it->second.hotspot = *hotspot;
+		else
+			it->second.hotspot = { 0, 0 };
+	}
+
+	m_MouseCursor = m_Cursors.find(cur);
+
+	return ret;
+}
+
+
+InputManager::CursorID InputManagerImpl::RegisterCursor(const TCHAR *filename, std::optional<glm::ivec2> hotspot, const TCHAR *name)
+{
+	Resource *pres = m_pSys->GetResourceManager()->GetResource(filename, RESF_DEMANDLOAD);
+	if (pres && (pres->GetStatus() == Resource::RS_LOADED))
+	{
+		Texture2D *ptex = dynamic_cast<Texture2D *>((Texture2D *)pres->GetData());
+		if (ptex)
+			return RegisterCursor(ptex, hotspot, name);
+	}
+
+	return CURSOR_INVALID;
+}
+
+
+void InputManagerImpl::UnregisterCursor(InputManager::CursorID cursor_id)
+{
+	// Get the current cursor before we modify the tree so we can restore it later
+	CursorID cur = (m_MouseCursor != m_Cursors.cend()) ? (m_MouseCursor->first) : -1;
+
+	m_Cursors.erase(cursor_id);
+
+	if (cur != cursor_id)
+		m_MouseCursor = m_Cursors.find(cur);
+	else
+		m_MouseCursor = m_Cursors.cend();
+}
+
+
+size_t InputManagerImpl::GetNumCursors() const
+{
+	return m_Cursors.size();
+}
+
+
+const TCHAR *InputManagerImpl::GetCursorName(CursorID id) const
+{
+	CursorRegistry::const_iterator it = m_Cursors.find(id);
+
+	return (it != m_Cursors.cend()) ? it->second.name.c_str() : nullptr;
+}
+
+
+bool InputManagerImpl::SetCursor(CursorID cursor_id)
+{
+	m_MouseCursor = m_Cursors.find(cursor_id);
+
+	return (m_MouseCursor == m_Cursors.cend()) ? false : true;
+}
+
+
+InputManager::CursorID InputManagerImpl::GetCursor() const
+{
+	if (m_MouseCursor == m_Cursors.cend())
+		return -1;
+
+	return m_MouseCursor->first;
+}
+
+
+void InputManagerImpl::SetCursorTransform(std::optional<glm::fmat4x4> mat)
+{
+	m_MouseTransform = mat.has_value() ? *mat : glm::identity<glm::fmat4x4>();
+}
+
+
+void InputManagerImpl::DrawMouseCursor(Renderer *prend)
+{
+	if (m_MouseCursor == m_Cursors.cend())
+		return;
+
+	if (!m_MouseEnabled)
+		return;
+
+	RECT r;
+	GetClientRect(m_pSys->GetOwner(), &r);
+	int w = r.right - r.left;
+	int h = r.bottom - r.top;
+
+	const float sx = (float)((Texture2D *)(m_MouseCursor->second.ptex))->Width();
+	const float sy = (float)((Texture2D *)(m_MouseCursor->second.ptex))->Height();
+
+	glm::fvec3 mpos;
+	mpos.x = (float)(m_MousePos.x - (w / 2) - m_MouseCursor->second.hotspot.x);
+	mpos.y = (float)(h - m_MousePos.y - (h / 2) - m_MouseCursor->second.hotspot.y) - sy;
+	mpos.z = 0.0f;
+
+	glm::fmat4x4 mat = glm::translate(mpos) * (m_MouseTransform * glm::scale(glm::fvec3(sx, sy, 1.0f)));
+
+	prend->UseMaterial(m_MouseCursor->second.pmtl);
+	prend->UseRenderMethod(m_CursorRM, m_CursorRMTech);
+
+	Resource *pres = m_pSys->GetResourceManager()->GetResource(_T("[guirect.model]"));
+	Model *pmod = (Model *)pres->GetData();
+	pmod->Draw(&mat, false);
 }
 
 
@@ -394,7 +585,6 @@ void InputManagerImpl::Reset()
 	HRESULT hr;
 	devcount = 1;
 	hr = m_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, &scratch, DIEDFL_ATTACHEDONLY);
-	//hr = m_pDI->EnumDevices(DI8DEVCLASS_DEVICE, EnumJoysticksCallback, &scratch, DIEDFL_ATTACHEDONLY);
 }
 
 void InputManagerImpl::PlayForceFeedbackEffect(const TCHAR *filename, int32_t dir_offset)

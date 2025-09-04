@@ -223,7 +223,7 @@ bool ShaderProgramImpl::SetUniform4(int32_t location, const glm::fvec4 *v4)
 }
 
 
-bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_t texunit, props::TFlags32 texflags)
+bool ShaderProgramImpl::SetUniformTexture(const Texture *tex, int32_t location, int32_t texunit, props::TFlags32 texflags)
 {
 	if (!tex)
 	{
@@ -250,7 +250,7 @@ bool ShaderProgramImpl::SetUniformTexture(Texture *tex, int32_t location, int32_
 }
 
 
-bool ShaderProgramImpl::SetUniformTexture(Resource *texres, int32_t location, int32_t texunit, props::TFlags32 texflags)
+bool ShaderProgramImpl::SetUniformTexture(const Resource *texres, int32_t location, int32_t texunit, props::TFlags32 texflags)
 {
 	texflags.Set(TEXFLAG_RESOURCE);
 

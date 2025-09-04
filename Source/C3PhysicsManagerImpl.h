@@ -7,10 +7,17 @@
 #include <C3.h>
 #include <C3PhysicsManager.h>
 
+#if defined(ODE_SUPPORT) && ODE_SUPPORT
 #include <ode\ode.h>
 #include <ode\objects.h>
 #include <ode\collision_space.h>
-
+#else
+using dTriMeshDataID = int *;
+using dWorldID = int *;
+using dSpaceID = int *;
+using dJointGroupID = int *;
+using dBodyID = int *;
+#endif
 
 #pragma once
 

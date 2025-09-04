@@ -30,7 +30,33 @@ namespace c3
 
 		virtual void SetMousePos(int32_t x, int32_t y);
 
-		virtual void GetMousePos(int32_t &x, int32_t &y);
+		virtual void GetMousePos(int32_t &x, int32_t &y) const;
+
+		virtual void EnableMouse(bool enabled = true);
+
+		virtual bool MouseEnabled() const;
+
+		virtual bool CaptureMouse(bool capture);
+
+		virtual bool MouseCaptured() const;
+
+		virtual CursorID RegisterCursor(const Texture2D *ptex, std::optional<glm::ivec2> hotspot, const TCHAR *name);
+
+		virtual CursorID RegisterCursor(const TCHAR *filename, std::optional<glm::ivec2> hotspot, const TCHAR *name);
+
+		virtual void UnregisterCursor(CursorID cursor_id);
+
+		virtual size_t GetNumCursors() const;
+
+		virtual const TCHAR *GetCursorName(CursorID id) const;
+
+		virtual bool SetCursor(CursorID cursor_id);
+
+		virtual CursorID GetCursor() const;
+
+		virtual void SetCursorTransform(std::optional<glm::fmat4x4> mat);
+
+		virtual void DrawMouseCursor(Renderer *prend);
 
 		virtual void SetPickRay(const glm::fvec3 &pos, const glm::fvec3 &dir, UserID user = USER_DEFAULT);
 
@@ -92,10 +118,25 @@ namespace c3
 		using UserPickRayDataMap = std::map<UserID, PickRayData>;
 		UserPickRayDataMap m_PickData;
 
-		struct
+		using CursorInfo = struct
 		{
-			int32_t x, y;
-		} m_MousePos;
+			tstring name;
+			const Texture2D *ptex;
+			Material *pmtl;
+			glm::ivec2 hotspot;
+		};
+
+		using CursorRegistry = std::map<CursorID, CursorInfo>;
+
+		bool m_MouseEnabled;
+		bool m_MouseCaptured;
+		glm::ivec2 m_MousePos;
+		glm::fmat4x4 m_MouseTransform;
+		CursorRegistry m_Cursors;
+		CursorRegistry::const_iterator m_MouseCursor;
+		CursorID m_LastCursorID;
+		RenderMethod *m_CursorRM;
+		size_t m_CursorRMTech;
 
 	public:
 		static DEVICECONNECTION_CALLBACK_FUNC s_DevConnCB;

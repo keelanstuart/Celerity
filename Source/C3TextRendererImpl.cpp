@@ -285,9 +285,7 @@ void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pma
 	Model *pmod = (Model *)pres->GetData();
 
 	if (!flags.IsSet(RF_LOCKSHADER))
-	{
 		pr->UseRenderMethod(m_pMethodImage, m_TechImage);
-	}
 
 	if (!flags.IsSet(RF_LOCKMATERIAL))
 		pr->UseMaterial(m_pImgMtl);
@@ -379,7 +377,7 @@ void TextRendererImpl::PropertyChanged(const props::IProperty *pprop)
 }
 
 
-bool TextRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, bool force) const
+bool TextRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *pmat, float *pDistance, glm::fvec3 *pNormal, bool force) const
 {
 	if (!pRayPos || !pRayDir)
 		return false;
