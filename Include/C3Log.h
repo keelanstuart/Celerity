@@ -17,16 +17,16 @@ namespace c3
 
 	public:
 
+		using RedirectFunction = std::function<void(const TCHAR *)>;
+
 		/// Returns the System used to create this Log
 		virtual System *GetSystem() = NULL;
 
 		/// Opens a text file in append mode
 		virtual bool SetLogFile(const TCHAR *filename) = NULL;
 
-		typedef void (__cdecl *REDIRECT_FUNCTION)(void *userdata, const TCHAR *msg);
-
 		/// Use SetRedirectFunction to pipe your log output to a debug window, etc.
-		virtual bool SetRedirectFunction(REDIRECT_FUNCTION pcb, void *userdata) = NULL;
+		virtual bool SetRedirectFunction(RedirectFunction rf) = NULL;
 
 		/// Essentially closes an open output file, deletes it, then reopens it
 		virtual void Reset() = NULL;

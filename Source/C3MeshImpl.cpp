@@ -373,6 +373,9 @@ bool MeshImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, flo
 				if (pFaceIndex)
 					*pFaceIndex = closestFace;
 
+				if (pNormal)
+					*pNormal = closestNormal;
+
 				if (pUV)
 					*pUV = closestUV;
 			}

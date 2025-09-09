@@ -159,6 +159,7 @@ void jcCreateCollisionResults(CScriptVar *c, void *userdata);
 void jcFreeCollisionResults(CScriptVar *c, void *userdata);
 void jcCheckCollisions(CScriptVar *c, void *userdata);
 void jcHandleFPSMovement(CScriptVar *c, void *userdata);
+void jcGetGravity(CScriptVar *c, void *userdata);
 void jcPackColorFromIntVec(CScriptVar *c, void *userdata);
 void jcPackColorFromFloatVec(CScriptVar *c, void *userdata);
 void jcUnpackColorToIntVec(CScriptVar *c, void *userdata);
@@ -173,6 +174,25 @@ void jcRegisterInputAction(CScriptVar *c, void *userdata);
 void jcUnregisterInputAction(CScriptVar *c, void *userdata);
 void jcFindInputAction(CScriptVar *c, void *userdata);
 void jcLinkInputToAction(CScriptVar *c, void *userdata);
+
+void jcSetMousePos(CScriptVar *c, void *userdata);
+void jcGetMousePos(CScriptVar *c, void *userdata);
+void jcEnableMouse(CScriptVar *c, void *userdata);
+void jcMouseEnabled(CScriptVar *c, void *userdata);
+void jcEnableSystemMouse(CScriptVar *c, void *userdata);
+void jcSystemMouseEnabled(CScriptVar *c, void *userdata);
+void jcCaptureMouse(CScriptVar *c, void *userdata);
+void jcMouseCaptured(CScriptVar *c, void *userdata);
+void jcRegisterCursor(CScriptVar *c, void *userdata);
+void jcUnregisterCursor(CScriptVar *c, void *userdata);
+void jcGetNumCursors(CScriptVar *c, void *userdata);
+void jcGetCursorName(CScriptVar *c, void *userdata);
+void jcSetCursor(CScriptVar *c, void *userdata);
+void jcGetCursor(CScriptVar *c, void *userdata);
+void jcSetCursorTransform(CScriptVar *c, void *userdata);
+
+void jcPauseGame(CScriptVar *c, void *userdata);
+void jcGamePaused(CScriptVar *c, void *userdata);
 
 
 void ScriptableImpl::ResetJS()
@@ -195,7 +215,7 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function Log(text)"),											jcLog, psys);
 
-	m_JS->AddNative(_T("function Exit()"),											jcExit, psys);
+	m_JS->AddNative(_T("function Exit()"),												jcExit, psys);
 
 	m_JS->AddNative(_T("function Execute(hobj, cmd)"),									jcExecute, psys);
 
@@ -252,7 +272,8 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function CreateCollisionResults()"),							jcCreateCollisionResults, psys);
 	m_JS->AddNative(_T("function FreeCollisionResults(colres)"),						jcFreeCollisionResults, psys);
 	m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir, results)"),	jcCheckCollisions, psys);
-	m_JS->AddNative(_T("function HandleFPSMovement(hrootobj, pos, move_dir, speed, elapsed_time, low_height, high_height)"), jcHandleFPSMovement, psys);
+	m_JS->AddNative(_T("function HandleFPSMovement(hrootobj, pos, user_vel, user_acc, elapsed_time, low_height, high_height)"), jcHandleFPSMovement, psys);
+	m_JS->AddNative(_T("function GetGravity()"),										jcGetGravity, psys);
 
 	m_JS->AddNative(_T("function PackColorFromIntVec(coloriv)"),						jcPackColorFromIntVec, psys);
 	m_JS->AddNative(_T("function PackColorFromFloatVec(colorfv)"),						jcPackColorFromFloatVec, psys);
@@ -274,6 +295,24 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function FindInputAction(action_name)"),						jcFindInputAction, psys);
 	m_JS->AddNative(_T("function LinkInputToAction(action_name, device, input_name)"),	jcLinkInputToAction, psys);
 
+	m_JS->AddNative(_T("function SetMousePos(pos)"),									jcSetMousePos, psys);
+	m_JS->AddNative(_T("function GetMousePos()"),										jcGetMousePos, psys);
+	m_JS->AddNative(_T("function EnableMouse(enabled)"),									jcEnableMouse, psys);
+	m_JS->AddNative(_T("function MouseEnabled()"),										jcMouseEnabled, psys);
+	m_JS->AddNative(_T("function EnableSystemMouse(enabled)"),							jcEnableSystemMouse, psys);
+	m_JS->AddNative(_T("function SystemMouseEnabled()"),								jcSystemMouseEnabled, psys);
+	m_JS->AddNative(_T("function CaptureMouse(capture)"),								jcCaptureMouse, psys);
+	m_JS->AddNative(_T("function MouseCaptured()"),										jcMouseCaptured, psys);
+	m_JS->AddNative(_T("function RegisterCursor(filename, hotspot, cursorname)"),		jcRegisterCursor, psys);
+	m_JS->AddNative(_T("function UnregisterCursor(cursorid)"),							jcUnregisterCursor, psys);
+	m_JS->AddNative(_T("function GetNumCursors()"),										jcGetNumCursors, psys);
+	m_JS->AddNative(_T("function GetCursorName(cursorid)"),								jcGetCursorName, psys);
+	m_JS->AddNative(_T("function SetCursor(cursorid)"),									jcSetCursor, psys);
+	m_JS->AddNative(_T("function GetCursor()"),											jcGetCursor, psys);
+	m_JS->AddNative(_T("function SetCursorTransform(pos, rot, scl)"),					jcSetCursorTransform, psys);
+
+	m_JS->AddNative(_T("function PauseGame(paused)"),									jcPauseGame, psys);
+	m_JS->AddNative(_T("function GamePaused()"),										jcGamePaused, psys);
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -2277,123 +2316,265 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 }
 
 
-// m_JS->AddNative(_T("function HandleFPSMovement(hrootobj, pos, move_dir, speed, elapsed_time, low_height, high_height)"), jcHandleFPSMovement, psys);
+// m_JS->AddNative(_T("function HandleFPSMovement(hrootobj, pos, user_vel, user_acc, elapsed_time, low_height, high_height)"), jcHandleFPSMovement, psys);
 void jcHandleFPSMovement(CScriptVar *c, void *userdata)
 {
 	System *psys = (System *)userdata;
 	assert(psys);
 
 	CScriptVar *phrootobj = c->GetParameter(_T("hrootobj"));
-	CScriptVar *ppos = c->GetParameter(_T("pos"));
-	CScriptVar *pmovedir = c->GetParameter(_T("move_dir"));
-	CScriptVar *pspeed = c->GetParameter(_T("speed"));
-	CScriptVar *peltime = c->GetParameter(_T("elapsed_time"));
-	CScriptVar *plowh = c->GetParameter(_T("low_height"));
-	CScriptVar *phighh = c->GetParameter(_T("high_height"));
+	CScriptVar *ppos      = c->GetParameter(_T("pos"));
+	CScriptVar *puservel  = c->GetParameter(_T("user_vel"));
+	CScriptVar *puseracc  = c->GetParameter(_T("user_acc"));
+	CScriptVar *peltime   = c->GetParameter(_T("elapsed_time"));
+	CScriptVar *plowh     = c->GetParameter(_T("low_height"));
+	CScriptVar *phighh    = c->GetParameter(_T("high_height"));
 
 	if (c->GetReturnVar())
 		c->GetReturnVar()->SetInt(0);
+	if (!(phrootobj && ppos && puservel && puseracc && peltime && plowh && phighh))
+		return;
 
-	if (!(phrootobj && ppos && pmovedir && pspeed && peltime && plowh && phighh))
+	const float dt = peltime->GetFloat();
+	if (dt == 0.0f)
 		return;
 
 	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
 	Object *prootobj = dynamic_cast<Object *>((Object *)hrootobj);
+	if (!prootobj)
+		return;
 
-	if (prootobj)
+	// --- Fetch pos/vel/acc from script ---
+	glm::fvec3 pos, vel, acc;
 	{
-		glm::fvec3 raypos, raydir;
-
 		CScriptVarLink *pposx = ppos->FindChild(_T("x"));
 		CScriptVarLink *pposy = ppos->FindChild(_T("y"));
 		CScriptVarLink *pposz = ppos->FindChild(_T("z"));
 		if (!(pposx && pposy && pposz))
 			return;
 
-		raypos.x = pposx->m_Var->GetFloat();
-		raypos.y = pposy->m_Var->GetFloat();
-		raypos.z = pposz->m_Var->GetFloat();
+		pos = { pposx->m_Var->GetFloat(), pposy->m_Var->GetFloat(), pposz->m_Var->GetFloat() };
 
-		CScriptVarLink *pdirx = pmovedir->FindChild(_T("x"));
-		CScriptVarLink *pdiry = pmovedir->FindChild(_T("y"));
-		CScriptVarLink *pdirz = pmovedir->FindChild(_T("z"));
-		if (!(pdirx && pdiry && pdirz))
+		CScriptVarLink *pvelx = puservel->FindChild(_T("x"));
+		CScriptVarLink *pvely = puservel->FindChild(_T("y"));
+		CScriptVarLink *pvelz = puservel->FindChild(_T("z"));
+		if (!(pvelx && pvely && pvelz))
 			return;
 
-		raydir.x = pdirx->m_Var->GetFloat();
-		raydir.y = pdiry->m_Var->GetFloat();
-		raydir.z = pdirz->m_Var->GetFloat();
-		if (glm::length(raydir) < 0.0001f)
+		vel = { pvelx->m_Var->GetFloat(), pvely->m_Var->GetFloat(), pvelz->m_Var->GetFloat() };
+
+		CScriptVarLink *paccx = puseracc->FindChild(_T("x"));
+		CScriptVarLink *paccy = puseracc->FindChild(_T("y"));
+		CScriptVarLink *paccz = puseracc->FindChild(_T("z"));
+		if (!(paccx && paccy && paccz))
 			return;
 
-		raydir = glm::normalize(raydir);
+		acc = { paccx->m_Var->GetFloat(), paccy->m_Var->GetFloat(), paccz->m_Var->GetFloat() };
+	}
 
-		float eltime = peltime->GetFloat();
-		float speed = pspeed->GetFloat();
+	// helpers
+	auto safeNorm = [](const glm::fvec3 &v)
+	{
+		float L = glm::length(v);
+		return (L > 0.0f) ? (v / L) : glm::fvec3(0);
+	};
 
-		if ((eltime == 0.0f) && (speed == 0.0f))
-			return;
+	auto proj = [](const glm::fvec3 &v, const glm::fvec3 &nUnit)
+	{
+		return glm::dot(v, nUnit) * nUnit; // nUnit must be normalized
+	};
 
-		float lowtest = plowh->GetFloat();
-		float hightest = phighh->GetFloat();
+	auto reject = [&](const glm::fvec3 &v, const glm::fvec3 &nUnit)
+	{
+		return v - proj(v, nUnit);
+	};
 
-		Object *obj = nullptr;
-		glm::fvec3 norm(0, 0, 0);
-		float len = speed * eltime;
-		raydir = glm::normalize(raydir);
-		glm::fvec3 raydirf = glm::fvec3(raydir.x, raydir.y, 0);
+	// Tunables
+	constexpr float kSkin     = 0.5f;   // small clearance from ground/walls
+	constexpr float kSnapDist = 4.0f;   // snap-to-ground tolerance
+	constexpr float kMinVVel  = 1e-3f;  // dead-zone for vertical velocity
 
-		bool horzhit;
+	const float lowtest  = plowh->GetFloat();   // lower ray height (from your script)
+	const float hightest = phighh->GetFloat();  // upper ray height (capsule-ish)
 
-#define ESB		0.001f
+	// Gravity
+	glm::fvec3 grav;
+	psys->GetEnvironment()->GetGravity(&grav);
+	glm::fvec3 gravdir = safeNorm(grav);
+	if (gravdir == glm::fvec3(0))
+		gravdir = glm::fvec3(0, 0, -1); // fallback
 
+	// Integrate velocity
+	vel += (acc + grav) * dt;
+
+	// Proposed displacement this frame:
+	glm::fvec3 move = vel * dt;
+
+	// Horizontal pass (orthogonal to gravity) with slide/capsule-ish rays
+	{
+		glm::fvec3 moveH = reject(move, gravdir);
+		float lenH = glm::length(moveH);
+		if (lenH > 0.0f)
+		{
+			glm::fvec3 dirH = moveH / lenH;
+
+			float dist = FLT_MAX;
+			glm::fvec3 norm(0);
+			bool horzHit = false;
+
+			// Ray from "feet" height
+			glm::fvec3 poslow  = pos - (gravdir * lowtest);
+			horzHit = prootobj->Intersect(&poslow, &dirH, nullptr, &dist, &norm, nullptr,
+				OF_CHECKCOLLISIONS, -1) && (dist < lenH);
+
+			// Ray from "head/waist" height if feet ray didn't hit
+			if (!horzHit) {
+				dist = FLT_MAX;
+				glm::fvec3 poshigh = pos - (gravdir * hightest);
+				horzHit = prootobj->Intersect(&poshigh, &dirH, nullptr, &dist, &norm, nullptr,
+					OF_CHECKCOLLISIONS, -1) && (dist < lenH);
+			}
+
+			if (horzHit)
+			{
+				// stop short of the hit by a tiny skin
+				float allowed = std::max(0.0f, dist - kSkin);
+				glm::fvec3 hitpos = pos + dirH * allowed;
+
+				float remaining = std::max(0.0f, lenH - allowed);
+
+				// slide direction: horizontalize normal and slide along it
+				glm::fvec3 norm_no_g = safeNorm(reject(norm, gravdir));
+				glm::fvec3 slide_dir = safeNorm(reject(dirH, norm_no_g));
+
+				pos = hitpos + slide_dir * remaining;
+
+				// after sliding, zero horizontal velocity (keep only vertical)
+				vel = proj(vel, gravdir);
+			}
+			else
+			{
+				pos += moveH; // no hit: apply full horizontal displacement
+			}
+		}
+	}
+
+	// Vertical resolve
+	bool grounded = false;
+	{
 		float dist = FLT_MAX;
-		glm::fvec3 poslow(raypos.x, raypos.y, raypos.z + lowtest);
-		horzhit = prootobj->Intersect(&poslow, &raydirf, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1) && (dist < len);
+		glm::fvec3 norm(0);
 
-		if (!horzhit)
+		if (prootobj->Intersect(&pos, &gravdir, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1))
 		{
-			dist = FLT_MAX;
-			glm::fvec3 poshigh(raypos.x, raypos.y, raypos.z + hightest);
-			horzhit = prootobj->Intersect(&poshigh, &raydirf, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1) && (dist < len);
-		}
+			// distance along gravity from current pos to ground
+			// consider close-enough to ground if within clearance + snap
+			if (dist <= hightest + kSnapDist)
+			{
+				grounded = true;
 
-		if (horzhit)
-		{
-			// Stop before the surface:
-			float allowed = std::max<float>(0, dist - ESB);
-			glm::fvec3 hitpos = raypos + (raydirf * allowed);
+				// current vertical velocity sign (>0 = down; <0 = up/jumping)
+				float vdotg = glm::dot(vel, gravdir);
 
-			float remaining = std::max<float>(0.0, len - allowed);
-			glm::fvec3 normf = glm::normalize(glm::fvec3(norm.x, norm.y, 0));
-			glm::fvec3 tangential = (raydirf - glm::dot(raydirf, normf) * normf);
-			glm::fvec3 slidedir = glm::normalize(tangential);
-			raypos = hitpos + (slidedir * remaining);  // or only if dot(dir, n) < 0
+				// Only perform push/snap when not moving upward (avoid killing jump)
+				if (vdotg >= -kMinVVel)
+				{
+					// push up if too close (maintain clearance minus skin)
+					if (dist < hightest - kSkin)
+					{
+						pos -= gravdir * (hightest - kSkin - dist);
+					}
+					// snap down gently if slightly above target clearance
+					else if (dist > hightest + kSkin && dist <= hightest + kSnapDist)
+					{
+						pos += gravdir * (dist - (hightest + kSkin)); // gravdir points "down"
+					}
+				}
+
+				// Kill downward velocity only (leave upward jump intact)
+				if (vdotg > kMinVVel)
+				{
+					vel -= gravdir * vdotg;
+				}
+				// If we’re clearly moving up, consider airborne for this frame
+				else if (vdotg < -kMinVVel)
+				{
+					grounded = false;
+				}
+
+				if (c->GetReturnVar())
+					c->GetReturnVar()->SetInt(grounded ? 1 : 0);
+			}
+			else
+			{
+				if (c->GetReturnVar())
+					c->GetReturnVar()->SetInt(0);
+			}
 		}
 		else
-			raypos += (raydir * len);
-
-		static glm::fvec3 negz(0, 0, -1);
-
-		dist = FLT_MAX;
-		raypos.z += hightest;
-		if (prootobj->Intersect(&raypos, &negz, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1) && (dist < hightest))
 		{
-			raypos.z -= dist + ESB;
-			if (c->GetReturnVar())
-				c->GetReturnVar()->SetInt(1);
-		}
-		else
-		{
-			raypos.z -= hightest;
 			if (c->GetReturnVar())
 				c->GetReturnVar()->SetInt(0);
 		}
-
-		pposx->m_Var->SetFloat(raypos.x);
-		pposy->m_Var->SetFloat(raypos.y);
-		pposz->m_Var->SetFloat(raypos.z);
 	}
+
+	// If not grounded, apply vertical displacement from this frame
+	if (!grounded)
+	{
+		glm::fvec3 moveV = proj(move, gravdir);
+		pos += moveV;
+	}
+
+	// Write back to script vars
+	{
+		CScriptVarLink *pposx = ppos->FindChild(_T("x"));
+		CScriptVarLink *pposy = ppos->FindChild(_T("y"));
+		CScriptVarLink *pposz = ppos->FindChild(_T("z"));
+
+		CScriptVarLink *pvelx = puservel->FindChild(_T("x"));
+		CScriptVarLink *pvely = puservel->FindChild(_T("y"));
+		CScriptVarLink *pvelz = puservel->FindChild(_T("z"));
+
+		pposx->m_Var->SetFloat(pos.x);
+		pposy->m_Var->SetFloat(pos.y);
+		pposz->m_Var->SetFloat(pos.z);
+
+		pvelx->m_Var->SetFloat(vel.x);
+		pvely->m_Var->SetFloat(vel.y);
+		pvelz->m_Var->SetFloat(vel.z);
+	}
+}
+
+
+void jcGetGravity(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVarLink *psvl;
+
+	psvl = ret->FindChildOrCreate(_T("x"));
+	psvl->m_Owned = true;
+	CScriptVar *prx = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("y"));
+	psvl->m_Owned = true;
+	CScriptVar *pry = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("z"));
+	psvl->m_Owned = true;
+	CScriptVar *prz = psvl->m_Var;
+
+	glm::fvec3 grav;
+	psys->GetEnvironment()->GetGravity(&grav);
+
+	prx->SetFloat(grav.x);
+	pry->SetFloat(grav.y);
+	prz->SetFloat(grav.z);
 }
 
 
@@ -2641,6 +2822,10 @@ void jcRegisterInputAction(CScriptVar *c, void *userdata)
 	{
 		tt = ActionMapper::DOWN_DELTA;
 	}
+	else if (!_tcsicmp(press_mode.c_str(), _T("delta")))
+	{
+		tt = ActionMapper::ANY_DELTA;
+	}
 
 	c3::ActionMapper *pam = psys->GetActionMapper();
 
@@ -2743,4 +2928,309 @@ void jcLinkInputToAction(CScriptVar *c, void *userdata)
 	}
 
 	ret->SetInt((actidx == -1) ? 0 : 1);
+}
+
+
+void jcSetMousePos(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVar *ppos = c->GetParameter(_T("pos"));
+
+	CScriptVarLink *pposx = ppos->FindChild(_T("x"));
+	CScriptVarLink *pposy = ppos->FindChild(_T("y"));
+	if (!(pposx && pposy))
+		return;
+
+	pim->SetMousePos((int32_t)(pposx->m_Var->GetInt()), (int32_t)(pposy->m_Var->GetInt()));
+}
+
+
+void jcGetMousePos(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVarLink *pposx = ret->FindChild(_T("x"));
+	CScriptVarLink *pposy = ret->FindChild(_T("y"));
+	if (!(pposx && pposy))
+		return;
+
+	glm::ivec2 p;
+	pim->GetMousePos(p.x, p.y);
+
+	pposx->m_Var->SetInt(p.x);
+	pposy->m_Var->SetInt(p.y);
+}
+
+
+void jcEnableMouse(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVar *pen = c->GetParameter(_T("enabled"));
+	if (!pen)
+		return;
+
+	pim->EnableMouse((pen->GetInt() == 0) ? false : true);
+}
+
+
+void jcMouseEnabled(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	ret->SetInt(pim->MouseEnabled() ? 1 : 0);
+}
+
+
+void jcEnableSystemMouse(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVar *pen = c->GetParameter(_T("enabled"));
+	if (!pen)
+		return;
+
+	ShowCursor((pen->GetInt() == 0) ? FALSE : TRUE);
+}
+
+
+void jcSystemMouseEnabled(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CURSORINFO cinfo;
+	cinfo.cbSize = sizeof(CURSORINFO);
+	GetCursorInfo(&cinfo);
+
+	ret->SetInt(!cinfo.flags ? 0 : 1);
+}
+
+
+void jcCaptureMouse(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVar *pcap = c->GetParameter(_T("capture"));
+	if (!pcap)
+		return;
+
+	pim->CaptureMouse((pcap->GetInt() == 0) ? false : true);
+}
+
+
+void jcMouseCaptured(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	ret->SetInt(pim->MouseCaptured() ? 1 : 0);
+}
+
+
+void jcRegisterCursor(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVar *pfilename = c->GetParameter(_T("filename"));
+	CScriptVar *photspot = c->GetParameter(_T("hotspot"));
+	CScriptVar *pname = c->GetParameter(_T("cursorname"));
+	if (!(pfilename && photspot && pname))
+		return;
+
+	CScriptVarLink *pposx = photspot->FindChild(_T("x"));
+	CScriptVarLink *pposy = photspot->FindChild(_T("y"));
+	if (!(pposx && pposy))
+		return;
+
+	InputManager::CursorID cid = pim->RegisterCursor(pfilename->GetString(),
+		glm::ivec2(pposx->m_Var->GetInt(), pposy->m_Var->GetInt()), pname->GetString());
+
+	if (ret)
+		ret->SetInt(cid);
+}
+
+
+void jcUnregisterCursor(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVar *pid = c->GetParameter(_T("cursorid"));
+	if (!pid)
+		return;
+
+	pim->UnregisterCursor((InputManager::CursorID)(pid->GetInt()));
+}
+
+
+void jcGetNumCursors(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+	ret->SetInt(pim->GetNumCursors());
+}
+
+
+void jcGetCursorName(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVar *pid = c->GetParameter(_T("cursorid"));
+	if (!pid)
+		return;
+
+	const TCHAR *pname = pim->GetCursorName((InputManager::CursorID)(pid->GetInt()));
+	ret->SetString(pname ? pname : _T(""));
+}
+
+
+void jcSetCursor(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVar *pid = c->GetParameter(_T("cursorid"));
+	if (!pid)
+		return;
+
+	pim->SetCursor((InputManager::CursorID)(pid->GetInt()));
+}
+
+
+void jcGetCursor(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	ret->SetInt(pim->GetCursor());
+}
+
+
+void jcSetCursorTransform(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::InputManager *pim = psys->GetInputManager();
+
+	CScriptVar *ppos = c->GetParameter(_T("pos"));
+	CScriptVar *prot = c->GetParameter(_T("rot"));
+	CScriptVar *pscl = c->GetParameter(_T("scl"));
+	if (!(ppos && prot && pscl))
+		return;
+
+	glm::fvec2 pos;
+	CScriptVarLink *pposx = ppos->FindChild(_T("x"));
+	CScriptVarLink *pposy = ppos->FindChild(_T("y"));
+	if (pposx && pposy)
+	{
+		pos.x = pposx->m_Var->GetFloat();
+		pos.y = pposy->m_Var->GetFloat();
+	}
+	else
+	{
+		pos.x = pos.y = ppos->GetFloat();
+	}
+
+	float rot = prot->GetFloat();
+
+	glm::fvec2 scl;
+	CScriptVarLink *psclx = pscl->FindChild(_T("x"));
+	CScriptVarLink *pscly = pscl->FindChild(_T("y"));
+	if (psclx && pscly)
+	{
+		scl.x = psclx->m_Var->GetFloat();
+		scl.y = pscly->m_Var->GetFloat();
+	}
+	else
+	{
+		scl.x = scl.y = pscl->GetFloat();
+	}
+
+	glm::fmat4x4 mat = glm::translate(glm::fvec3(pos, 1.0f)) * (glm::rotate(glm::radians(rot), glm::fvec3(0, 0, 1.0f)) * glm::scale(glm::fvec3(scl, 1.0f)));
+	pim->SetCursorTransform(mat);
+}
+
+
+void jcPauseGame(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	CScriptVar *pp = c->GetParameter(_T("paused"));
+	if (!pp)
+		return;
+}
+
+
+void jcGamePaused(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	ret->SetInt(0);
 }

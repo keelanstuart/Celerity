@@ -103,15 +103,21 @@ void ActionMapperImpl::Update()
 					switch (a.trigger)
 					{
 						case TriggerType::DOWN_CONTINUOUS:
-							triggered = pid->ButtonPressed(it->second);
+							// button pressed should always generate an event, but a release should
+							// also generate a 0.0 value event once
+							triggered = (pid->ButtonPressed(it->second) || pid->ButtonReleased(it->second));
 							break;
 
 						case TriggerType::DOWN_DELTA:
-							triggered = (pid->ButtonChange(it->second) > 0) ? true : false;
+							triggered = (pid->ButtonChange(it->second) > (InputDevice::BUTTONVAL_MAX / 2)) ? true : false;
 							break;
 
 						case TriggerType::UP_DELTA:
 							triggered = pid->ButtonReleased(it->second);
+							break;
+
+						case TriggerType::ANY_DELTA:
+							triggered = (abs(pid->ButtonChange(it->second)) > (InputDevice::BUTTONVAL_MAX / 2)) ? true : false;
 							break;
 					}
 

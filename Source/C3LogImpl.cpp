@@ -18,7 +18,6 @@ LogImpl::LogImpl(SystemImpl *psys)
 	m_pSys = psys;
 
 	m_File = nullptr;
-	m_pUserData = nullptr;
 	m_pcbRedirect = nullptr;
 }
 
@@ -62,10 +61,9 @@ bool LogImpl::SetLogFile(const TCHAR *filename)
 }
 
 
-bool LogImpl::SetRedirectFunction(REDIRECT_FUNCTION pcb, void *userdata)
+bool LogImpl::SetRedirectFunction(RedirectFunction rf)
 {
-	m_pcbRedirect = pcb;
-	m_pUserData = userdata;
+	m_pcbRedirect = rf;
 
 	return true;
 }
@@ -104,11 +102,5 @@ void LogImpl::Print(const TCHAR *format, ...)
 	}
 
 	if (m_pcbRedirect)
-		m_pcbRedirect(m_pUserData, buf);
-
-#if defined(UNICODE)
-	_RPTW0(_CRT_WARN, buf);
-#else
-	_RPT0(_CRT_WARN, buf);
-#endif
+		m_pcbRedirect(buf);
 }

@@ -53,7 +53,7 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_uBlurTex = -1;
 	m_uBlurScale = -1;
 
-	m_ShowDebug = false;
+	m_ShowDebug = true;
 
 	m_bSurfacesCreated = false;
 	m_bSurfacesReady = false;
@@ -641,18 +641,8 @@ BOOL C3Dlg::OnInitDialog()
 
 	inputman->Reset();
 
-	ShowCursor(false);
-
-	c3::InputManager::CursorID curid = inputman->RegisterCursor(_T("default_cursor_sm.tga"),
-		std::make_optional<glm::ivec2>(3, 2), _T("Default"));
-
-	inputman->SetCursor(curid);
-
-	UINT_PTR timerid = SetTimer('DRAW', 17, nullptr);
+	UINT_PTR timerid = SetTimer('DRAW', 16, nullptr);
 	assert(timerid);
-
-	inputman->CaptureMouse();
-	inputman->EnableMouse(false);
 
 	theApp.m_pActiveWnd = this;
 
@@ -989,12 +979,6 @@ BOOL C3Dlg::PreTranslateMessage(MSG* pMsg)
 {
 	if ((pMsg->message == WM_KEYDOWN) && (pMsg->wParam == VK_ESCAPE))
 	{
-		if (theApp.m_C3->GetActionMapper()->FindAssociation(c3::InputDevice::VirtualButton::QUIT))
-		{
-			c3::InputManager *inputman = theApp.m_C3->GetInputManager();
-			SetMouseEnabled(!inputman->MouseEnabled());
-		}
-
 		return TRUE;
 	}
 
@@ -1011,10 +995,6 @@ void C3Dlg::OnCaptureChanged(CWnd* pWnd)
 void C3Dlg::OnActivateApp(BOOL bActive, DWORD dwThreadID)
 {
 	CDialog::OnActivateApp(bActive, dwThreadID);
-	if (!bActive)
-	{
-		SetMouseEnabled(true);
-	}
 }
 
 
@@ -1027,18 +1007,9 @@ void C3Dlg::OnActivate(UINT nState, CWnd* pWndOther, BOOL bMinimized)
 	}
 	else if (!theApp.m_C3->IsSplashWnd(pWndOther->GetSafeHwnd()))
 	{
-		SetMouseEnabled(true);
 		theApp.m_C3->GetInputManager()->UnacquireAll();
 	}
 }
-
-void C3Dlg::SetMouseEnabled(bool b)
-{
-	c3::InputManager *inputman = theApp.m_C3->GetInputManager();
-	inputman->EnableMouse(b);
-	inputman->CaptureMouse(!b);
-}
-
 
 bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *userdata)
 {

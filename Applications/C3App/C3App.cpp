@@ -28,7 +28,6 @@ C3App::C3App()
 	m_Config = nullptr;
 	m_StartScript = _T("c3demo.c3js");
 	m_AlwaysPaint = false;
-
 }
 
 
@@ -170,15 +169,25 @@ using SettingsTable = std::map<tstring, SettingCB>;
 SettingsTable gSettings =
 {
 	{ _T("alwayspaint"), [](const TCHAR *opts) { theApp.m_AlwaysPaint = true; } },
+	{ _T("dbglog"), [](const TCHAR *opts)
+		{
+			if (IsDebuggerPresent())
+			{
+				theApp.m_C3->GetLog()->SetRedirectFunction([&](const TCHAR *str)
+				{
+					OutputDebugString(str);
+				});
+			}
+		} },
 	{ _T("resetlog"), [](const TCHAR* opts) { theApp.m_C3->GetLog()->Reset(); }},
+	{ _T("waitdbg"), [](const TCHAR *opts)
+		{
+			MessageBox(NULL, L"Attach debugger and click OK when ready.", L"Celerity", MB_OK);
+		} },
 };
 
 BOOL C3App::InitInstance()
 {
-#if 0
-	MessageBox(NULL, L"attach graphics debugger", L"debug", MB_OK);
-#endif
-
 	CWinApp::InitInstance();
 
 	srand(GetTickCount());

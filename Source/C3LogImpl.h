@@ -22,8 +22,7 @@ namespace c3
 		FILE *m_File;
 		tstring m_Filename;
 
-		REDIRECT_FUNCTION m_pcbRedirect;
-		void *m_pUserData;
+		RedirectFunction m_pcbRedirect;
 
 	public:
 
@@ -33,7 +32,7 @@ namespace c3
 		virtual System *GetSystem();
 
 		virtual bool SetLogFile(const TCHAR *filename);
-		virtual bool SetRedirectFunction(REDIRECT_FUNCTION pcb, void *userdata);
+		virtual bool SetRedirectFunction(RedirectFunction rf);
 
 		virtual void Reset();
 		virtual void Print(const TCHAR *format, ...);

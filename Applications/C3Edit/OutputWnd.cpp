@@ -70,16 +70,16 @@ int COutputWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_hUIThread = GetCurrentThreadId();
 
-	theApp.m_C3->GetLog()->SetRedirectFunction([](void *userdata, const TCHAR *msg)
+	theApp.m_C3->GetLog()->SetRedirectFunction([&](const TCHAR *msg)
 	{
-		COutputWnd *_this = (COutputWnd *)userdata;
+		OutputDebugString(msg);
 
-		if (_this->m_hUIThread != GetCurrentThreadId())
+		if (m_hUIThread != GetCurrentThreadId())
 			return;
 
 		assert(msg);
 
-		CEdit *pw = &_this->m_wndOutputDebug;
+		CEdit *pw = &m_wndOutputDebug;
 		CPoint cpos = pw->GetCaretPos();
 
 		// we have to replace all '\n' with "\r\n" pairs
@@ -108,7 +108,7 @@ int COutputWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		pw->SetSel(-1, -1);
 		pw->ReplaceSel(m);
 		pw->SetSel(-1, -1);
-	}, this);
+	});
 
 	return 0;
 }
@@ -134,7 +134,7 @@ void COutputWnd::UpdateFonts()
 
 BOOL COutputWnd::DestroyWindow()
 {
-	theApp.m_C3->GetLog()->SetRedirectFunction(nullptr, nullptr);
+	theApp.m_C3->GetLog()->SetRedirectFunction(nullptr);
 
 	return CDockablePane::DestroyWindow();
 }
@@ -142,7 +142,7 @@ BOOL COutputWnd::DestroyWindow()
 
 void COutputWnd::OnClose()
 {
-	theApp.m_C3->GetLog()->SetRedirectFunction(nullptr, nullptr);
+	theApp.m_C3->GetLog()->SetRedirectFunction(nullptr);
 
 	CDockablePane::OnClose();
 }

@@ -397,7 +397,10 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 		if (ret && pDistance)
 		{
 			if (dist < *pDistance)
+			{
 				*pDistance = dist;
+				*pNormal = norm;
+			}
 			else
 				ret = false;
 		}

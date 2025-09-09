@@ -619,6 +619,8 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, c
 	if (!pRayPos || !pRayDir)
 		return false;
 
+	glm::fvec3 raydir = glm::normalize(*pRayDir);
+
 	// If no transform was provided, build it from the parent hierarchy
 	glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
 	if (!pmat)
@@ -657,7 +659,7 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, c
 	{
 		float compDist = dist;
 		glm::fvec3 compNorm;
-		if (comp->Intersect(pRayPos, pRayDir, &mat, &compDist, &compNorm, force))
+		if (comp->Intersect(pRayPos, &raydir, &mat, &compDist, &compNorm, force))
 		{
 			if (compDist < *pDistance)
 			{
@@ -679,7 +681,7 @@ bool ObjectImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, c
 	{
 		for (auto child : m_Children)
 		{
-			if (child->Intersect(pRayPos, pRayDir, &mat, pDistance, pNormal, ppHitObj, flagmask, child_depth - 1, force))
+			if (child->Intersect(pRayPos, &raydir, &mat, pDistance, pNormal, ppHitObj, flagmask, child_depth - 1, force))
 			{
 				ret = true;
 			}

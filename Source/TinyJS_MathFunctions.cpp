@@ -702,6 +702,153 @@ void scVec3Madd(CScriptVar *c, void *userdata)
 	}
 }
 
+// project v onto n (n is normalized inside; zero-safe)
+// return: vector with same child layout as 'v' (x, y, z)
+void scVec3Project(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pv = c->GetParameter(_T("v"));
+	CScriptVar *pn = c->GetParameter(_T("n"));
+	CScriptVar *pr = c->GetReturnVar();
+	if (!pv || !pn || !pr)
+		return;
+
+	int64_t elct = pv->GetNumChildren();
+	if (elct != 3)
+		return;
+
+	glm::fvec3 v, n;
+
+	// read v
+	for (int64_t i = 0; i < elct; ++i)
+	{
+		CScriptVarLink *pvcomp = pv->GetChild(i);
+		v[(glm::fvec3::length_type)i] = pvcomp->m_Var->GetFloat();
+	}
+
+	// read n (allow scalar-or-vector, like madd does)
+	if (pn->GetNumChildren() == 3)
+	{
+		for (int64_t i = 0; i < 3; ++i)
+		{
+			CScriptVarLink *pncomp = pn->GetChild(i);
+			n[(glm::fvec3::length_type)i] = pncomp->m_Var->GetFloat();
+		}
+	}
+	else
+	{
+		// if scalar, treat it as a scale on v's axis? Not meaningful for projection.
+		// Fallback: use (pn,0,0) so callers don't crash; better to always pass a vector.
+		n = glm::fvec3(pn->GetFloat(), 0.0f, 0.0f);
+	}
+
+	glm::fvec3 r(0);
+	float nlen2 = glm::dot(n, n);
+	if (nlen2 > 0.0f)
+	{
+		glm::fvec3 nhat = n * (1.0f / std::sqrt(nlen2));
+		r = glm::dot(v, nhat) * nhat;
+	} // else stays zero
+
+	// write result children using names from 'v'
+	for (int64_t i = 0; i < elct; ++i)
+	{
+		CScriptVarLink *pvcomp = pv->GetChild(i);
+		CScriptVarLink *prcomp = pr->FindChildOrCreate(pvcomp->m_Name.c_str());
+		prcomp->m_Var->SetFloat(r[(glm::fvec3::length_type)i]);
+	}
+}
+
+
+// reject v from n = v - project(v, n)  (n normalized inside; zero-safe)
+void scVec3Reject(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pv = c->GetParameter(_T("v"));
+	CScriptVar *pn = c->GetParameter(_T("n"));
+	CScriptVar *pr = c->GetReturnVar();
+	if (!pv || !pn || !pr)
+		return;
+
+	int64_t elct = pv->GetNumChildren();
+	if (elct != 3)
+		return;
+
+	glm::fvec3 v, n;
+
+	for (int64_t i = 0; i < elct; ++i)
+	{
+		CScriptVarLink *pvcomp = pv->GetChild(i);
+		v[(glm::fvec3::length_type)i] = pvcomp->m_Var->GetFloat();
+	}
+
+	if (pn->GetNumChildren() == 3)
+	{
+		for (int64_t i = 0; i < 3; ++i)
+		{
+			CScriptVarLink *pncomp = pn->GetChild(i);
+			n[(glm::fvec3::length_type)i] = pncomp->m_Var->GetFloat();
+		}
+	}
+	else
+	{
+		n = glm::fvec3(pn->GetFloat(), 0.0f, 0.0f);
+	}
+
+	glm::fvec3 r = v;
+	float nlen2 = glm::dot(n, n);
+	if (nlen2 > 0.0f)
+	{
+		glm::fvec3 nhat = n * (1.0f / std::sqrt(nlen2));
+		r -= glm::dot(v, nhat) * nhat;
+	}
+
+	for (int64_t i = 0; i < elct; ++i)
+	{
+		CScriptVarLink *pvcomp = pv->GetChild(i);
+		CScriptVarLink *prcomp = pr->FindChildOrCreate(pvcomp->m_Name.c_str());
+		prcomp->m_Var->SetFloat(r[(glm::fvec3::length_type)i]);
+	}
+}
+
+
+// scalar projection length: (v, n); returns float in the return var
+void scVec3ProjLen(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pv = c->GetParameter(_T("v"));
+	CScriptVar *pn = c->GetParameter(_T("n"));
+	CScriptVar *pr = c->GetReturnVar();
+	if (!pv || !pn || !pr)
+		return;
+
+	size_t elct = pv->GetNumChildren();
+	if (elct != 3)
+		return;
+
+	glm::fvec3 v, n;
+	for (size_t i = 0; i < elct; ++i)
+		v[(uint32_t)i] = pv->GetChild(i)->m_Var->GetFloat();
+
+	if (pn->GetNumChildren() == 3)
+	{
+		for (size_t i = 0; i < 3; ++i)
+			n[(uint32_t)i] = pn->GetChild(i)->m_Var->GetFloat();
+	}
+	else
+	{
+		n = glm::fvec3(pn->GetFloat(), 0.0f, 0.0f);
+	}
+
+	float d = 0.f;
+	float nlen2 = glm::dot(n, n);
+	if (nlen2 > 0.0f)
+	{
+		glm::fvec3 nhat = n * (1.0f / std::sqrt(nlen2));
+		d = glm::dot(v, nhat);
+	}
+
+	pr->SetFloat(d);
+}
+
+
 
 // ----------------------------------------------- Register Functions
 void registerMathFunctions(CTinyJS *tinyJS)
@@ -755,4 +902,7 @@ void registerMathFunctions(CTinyJS *tinyJS)
 	tinyJS->AddNative(_T("function Vec3.mul(a, b)"), scVec3Mul, 0);
 	tinyJS->AddNative(_T("function Vec3.div(a, b)"), scVec3Div, 0);
 	tinyJS->AddNative(_T("function Vec3.madd(a, b, c)"), scVec3Madd, 0);
+	tinyJS->AddNative(_T("function Vec3.project(v, n)"), scVec3Project, 0);
+	tinyJS->AddNative(_T("function Vec3.reject(v, n)"), scVec3Reject, 0);
+	tinyJS->AddNative(_T("function Vec3.projlen(v, n)"), scVec3ProjLen, 0);
 }

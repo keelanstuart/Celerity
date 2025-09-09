@@ -1105,7 +1105,7 @@ void C3EditFrame::OnMove(int x, int y)
 
 void C3EditFrame::OnClose()
 {
-	theApp.m_C3->GetLog()->SetRedirectFunction(nullptr, nullptr);
+	theApp.m_C3->GetLog()->SetRedirectFunction(nullptr);
 	//UnregisterScaleChangeEvent([in]  HANDLE    hEvent, [out] DWORD_PTR *pdwCookie);
 
 	CFrameWndEx::OnClose();

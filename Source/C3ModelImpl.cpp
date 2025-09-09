@@ -510,7 +510,8 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, co
 		// from this point, only draw top-level nodes
 		if (m_Nodes[ni]->parent == NO_PARENT)
 		{
-			ret = IntersectNode(ni, pRayPos, pRayDir, pmat, &d, pNormal, pFaceIndex, pUV, inst, force);
+			glm::fvec3 n;
+			ret = IntersectNode(ni, pRayPos, pRayDir, pmat, &d, &n, pFaceIndex, pUV, inst, force);
 
 			if (ret && (d < mindist))
 			{
@@ -519,6 +520,9 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, co
 
 				if (pDistance)
 					*pDistance = d;
+
+				if (pNormal)
+					*pNormal = n;
 
 				mindist = d;
 			}
@@ -561,7 +565,8 @@ bool ModelImpl::IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const
 				continue;
 
 			float tmpd = d;
-			if (mesh->pmesh->Intersect(pRayPos, pRayDir, &tmpd, pNormal, pFaceIndex, pUV, &mat))
+			glm::fvec3 n;
+			if (mesh->pmesh->Intersect(pRayPos, pRayDir, &tmpd, &n, pFaceIndex, pUV, &mat))
 			{
 				if (tmpd < d)
 					d = tmpd;
@@ -569,6 +574,10 @@ bool ModelImpl::IntersectNode(NodeIndex nodeidx, const glm::vec3 *pRayPos, const
 				if (d < *pDistance)
 				{
 					*pDistance = d;
+
+					if (pNormal)
+						*pNormal = n;
+
 					ret = true;
 				}
 			}
