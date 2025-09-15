@@ -322,10 +322,17 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 
 				ma_sound_set_at_end(&(pch->sound), false);
 			}
-			else
-			{
-				pch->state = ChannelState::finished;
-			}
+		}
+
+		if (!pch->loop_count)
+		{
+			ma_sound_stop(&(pch->sound));
+
+			ma_sound_seek_to_pcm_frame(&(pch->sound), 0);
+
+			ma_sound_set_at_end(&(pch->sound), false);
+
+			pch->state = ChannelState::finished;
 		}
 	};
 

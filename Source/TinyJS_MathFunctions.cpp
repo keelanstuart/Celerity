@@ -492,7 +492,34 @@ void scVec3Length(CScriptVar *c, void *userdata)
 		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
 	}
 
-	float r = glm::fastLength(va);
+	float r = glm::length(va);
+
+	pr->SetFloat(r);
+}
+
+
+void scVec3Distance(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct != 3))
+		return;
+
+	glm::fvec3 va, vb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pa->GetChild(i);
+		vb[(glm::fvec3::length_type)i] = pbcomp->m_Var->GetFloat();
+	}
+
+	float r = glm::distance(va, vb);
 
 	pr->SetFloat(r);
 }
@@ -896,6 +923,7 @@ void registerMathFunctions(CTinyJS *tinyJS)
 	tinyJS->AddNative(_T("function Vec3.dot(a, b)"), scVec3Dot, 0);
 	tinyJS->AddNative(_T("function Vec3.cross(a, b)"), scVec3Cross, 0);
 	tinyJS->AddNative(_T("function Vec3.length(a)"), scVec3Length, 0);
+	tinyJS->AddNative(_T("function Vec3.distance(a, b)"), scVec3Distance, 0);
 	tinyJS->AddNative(_T("function Vec3.normalize(a)"), scVec3Normalize, 0);
 	tinyJS->AddNative(_T("function Vec3.add(a, b)"), scVec3Add, 0);
 	tinyJS->AddNative(_T("function Vec3.sub(a, b)"), scVec3Sub, 0);

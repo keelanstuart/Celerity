@@ -16,8 +16,79 @@
 
 using namespace c3;
 
-
 DECLARE_RESOURCETYPE(Script);
+
+inline bool ExtractVec3FromVar(CScriptVar *pvl, glm::fvec3 &v)
+{
+	assert(pvl);
+
+	CScriptVarLink *px = pvl->FindChild(_T("x"));
+	CScriptVarLink *py = pvl->FindChild(_T("y"));
+	CScriptVarLink *pz = pvl->FindChild(_T("z"));
+
+	if (!(px && py && pz))
+		return false;
+
+	v.x = px->m_Var->GetFloat();
+	v.y = py->m_Var->GetFloat();
+	v.z = pz->m_Var->GetFloat();
+	return true;
+}
+
+inline bool PlaceVec3InVar(CScriptVar *pvl, glm::fvec3 &v)
+{
+	assert(pvl);
+
+	CScriptVarLink *px = pvl->FindChildOrCreate(_T("x"));
+	CScriptVarLink *py = pvl->FindChildOrCreate(_T("y"));
+	CScriptVarLink *pz = pvl->FindChildOrCreate(_T("z"));
+
+	if (!(px && py && pz))
+		return false;
+
+	px->m_Owned = true; px->m_Var->SetFloat(v.x);
+	py->m_Owned = true; py->m_Var->SetFloat(v.y);
+	pz->m_Owned = true; pz->m_Var->SetFloat(v.z);
+	return true;
+}
+
+inline bool ExtractVec4FromVar(CScriptVar *pvl, glm::fvec4 &v)
+{
+	assert(pvl);
+
+	CScriptVarLink *px = pvl->FindChild(_T("x"));
+	CScriptVarLink *py = pvl->FindChild(_T("y"));
+	CScriptVarLink *pz = pvl->FindChild(_T("z"));
+	CScriptVarLink *pw = pvl->FindChild(_T("w"));
+
+	if (!(px && py && pz && pw))
+		return false;
+
+	v.x = px->m_Var->GetFloat();
+	v.y = py->m_Var->GetFloat();
+	v.z = pz->m_Var->GetFloat();
+	v.w = pw->m_Var->GetFloat();
+	return true;
+}
+
+inline bool PlaceVec4InVar(CScriptVar *pvl, glm::fvec4 &v)
+{
+	assert(pvl);
+
+	CScriptVarLink *px = pvl->FindChildOrCreate(_T("x"));
+	CScriptVarLink *py = pvl->FindChildOrCreate(_T("y"));
+	CScriptVarLink *pz = pvl->FindChildOrCreate(_T("z"));
+	CScriptVarLink *pw = pvl->FindChildOrCreate(_T("w"));
+
+	if (!(px && py && pz && pw))
+		return false;
+
+	px->m_Owned = true; px->m_Var->SetFloat(v.x);
+	py->m_Owned = true; py->m_Var->SetFloat(v.y);
+	pz->m_Owned = true; pz->m_Var->SetFloat(v.z);
+	pw->m_Owned = true; pw->m_Var->SetFloat(v.w);
+	return true;
+}
 
 c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
@@ -272,7 +343,7 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function CreateCollisionResults()"),							jcCreateCollisionResults, psys);
 	m_JS->AddNative(_T("function FreeCollisionResults(colres)"),						jcFreeCollisionResults, psys);
 	m_JS->AddNative(_T("function CheckCollisions(hrootobj, raypos, raydir, results)"),	jcCheckCollisions, psys);
-	m_JS->AddNative(_T("function HandleFPSMovement(hrootobj, pos, user_vel, user_acc, elapsed_time, low_height, high_height)"), jcHandleFPSMovement, psys);
+	m_JS->AddNative(_T("function HandleFPSMovement(hrootobj, pos, horz_vel, vert_vel, horz_acc, vert_acc, elapsed_time, low_height, high_height)"), jcHandleFPSMovement, psys);
 	m_JS->AddNative(_T("function GetGravity()"),										jcGetGravity, psys);
 
 	m_JS->AddNative(_T("function PackColorFromIntVec(coloriv)"),						jcPackColorFromIntVec, psys);
@@ -1645,16 +1716,7 @@ void jcPlaySound(CScriptVar *c, void *userdata)
 	glm::fvec3 pos(0, 0, 0);
 	CScriptVar *ppos = c->GetParameter(_T("pos"));
 	if (ppos)
-	{
-		CScriptVarLink *px = ppos->FindChild(_T("x"));
-		if (px)	pos.x = px->m_Var->GetFloat();
-
-		CScriptVarLink *py = ppos->FindChild(_T("y"));
-		if (py)	pos.y = py->m_Var->GetFloat();
-
-		CScriptVarLink *pz = ppos->FindChild(_T("z"));
-		if (pz)	pos.z = pz->m_Var->GetFloat();
-	}
+		ExtractVec3FromVar(ppos, pos);
 
 	Resource *pres = psys->GetResourceManager()->GetResource(pfilename->GetString(), RESF_DEMANDLOAD);
 
@@ -2239,33 +2301,16 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 
 	glm::fvec3 raypos, raydir;
 
+	if (!ExtractVec3FromVar(praydir, raydir))
+		return;
+
+	if (!ExtractVec3FromVar(praypos, raypos))
+		return;
+
+	if (glm::length(raydir) < 0.0001)
 	{
-		CScriptVarLink *px = praydir->FindChild(_T("x"));
-		CScriptVarLink *py = praydir->FindChild(_T("y"));
-		CScriptVarLink *pz = praydir->FindChild(_T("z"));
-		if (!(px && py && pz))
-			return;
-
-		raydir.x = px->m_Var->GetFloat();
-		raydir.y = py->m_Var->GetFloat();
-		raydir.z = pz->m_Var->GetFloat();
-	}
-
-	{
-		CScriptVarLink *px = praypos->FindChild(_T("x"));
-		CScriptVarLink *py = praypos->FindChild(_T("y"));
-		CScriptVarLink *pz = praypos->FindChild(_T("z"));
-		if (!(px && py && pz))
-			return;
-
-		raypos.x = px->m_Var->GetFloat();
-		raypos.y = py->m_Var->GetFloat();
-		raypos.z = pz->m_Var->GetFloat();
-		if (glm::length(raydir) < 0.0001)
-		{
-			ret_found->m_Var->SetInt(0);
-			return;
-		}
+		ret_found->m_Var->SetInt(0);
+		return;
 	}
 
 	CScriptVarLink *ret_dist = ret->FindChild(_T("distance"));
@@ -2301,13 +2346,7 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 			ret_hobj->m_Var->SetInt((int64_t)obj);
 			ret_dist->m_Var->SetFloat(dist);
 
-			CScriptVarLink *px = ret_norm->m_Var->FindChild(_T("x"));
-			CScriptVarLink *py = ret_norm->m_Var->FindChild(_T("y"));
-			CScriptVarLink *pz = ret_norm->m_Var->FindChild(_T("z"));
-
-			px->m_Var->SetFloat(norm.x);
-			py->m_Var->SetFloat(norm.y);
-			pz->m_Var->SetFloat(norm.z);
+			PlaceVec3InVar(ret_norm->m_Var, norm);
 
 			if (c->GetReturnVar())
 				c->GetReturnVar()->SetInt(1);
@@ -2316,7 +2355,7 @@ void jcCheckCollisions(CScriptVar *c, void *userdata)
 }
 
 
-// m_JS->AddNative(_T("function HandleFPSMovement(hrootobj, pos, user_vel, user_acc, elapsed_time, low_height, high_height)"), jcHandleFPSMovement, psys);
+// m_JS->AddNative(_T("function HandleFPSMovement(hrootobj, pos, horz_vel, vert_vel, horz_acc, vert_acc, elapsed_time, low_height, high_height)"), jcHandleFPSMovement, psys);
 void jcHandleFPSMovement(CScriptVar *c, void *userdata)
 {
 	System *psys = (System *)userdata;
@@ -2324,20 +2363,22 @@ void jcHandleFPSMovement(CScriptVar *c, void *userdata)
 
 	CScriptVar *phrootobj = c->GetParameter(_T("hrootobj"));
 	CScriptVar *ppos      = c->GetParameter(_T("pos"));
-	CScriptVar *puservel  = c->GetParameter(_T("user_vel"));
-	CScriptVar *puseracc  = c->GetParameter(_T("user_acc"));
+	CScriptVar *phvel     = c->GetParameter(_T("horz_vel"));
+	CScriptVar *pvvel     = c->GetParameter(_T("vert_vel"));
+	CScriptVar *phacc     = c->GetParameter(_T("horz_acc"));
+	CScriptVar *pvacc     = c->GetParameter(_T("vert_acc"));
 	CScriptVar *peltime   = c->GetParameter(_T("elapsed_time"));
 	CScriptVar *plowh     = c->GetParameter(_T("low_height"));
 	CScriptVar *phighh    = c->GetParameter(_T("high_height"));
 
 	if (c->GetReturnVar())
 		c->GetReturnVar()->SetInt(0);
-	if (!(phrootobj && ppos && puservel && puseracc && peltime && plowh && phighh))
+	if (!(phrootobj && ppos && phvel && pvvel && phacc && pvacc && peltime && plowh && phighh))
 		return;
 
 	const float dt = peltime->GetFloat();
-	if (dt == 0.0f)
-		return;
+	//if (dt == 0.0f)
+	//	return;
 
 	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
 	Object *prootobj = dynamic_cast<Object *>((Object *)hrootobj);
@@ -2345,32 +2386,22 @@ void jcHandleFPSMovement(CScriptVar *c, void *userdata)
 		return;
 
 	// --- Fetch pos/vel/acc from script ---
-	glm::fvec3 pos, vel, acc;
-	{
-		CScriptVarLink *pposx = ppos->FindChild(_T("x"));
-		CScriptVarLink *pposy = ppos->FindChild(_T("y"));
-		CScriptVarLink *pposz = ppos->FindChild(_T("z"));
-		if (!(pposx && pposy && pposz))
-			return;
+	glm::fvec3 pos, hvel, vvel, hacc, vacc;
 
-		pos = { pposx->m_Var->GetFloat(), pposy->m_Var->GetFloat(), pposz->m_Var->GetFloat() };
+	if (!ExtractVec3FromVar(ppos, pos))
+		return;
 
-		CScriptVarLink *pvelx = puservel->FindChild(_T("x"));
-		CScriptVarLink *pvely = puservel->FindChild(_T("y"));
-		CScriptVarLink *pvelz = puservel->FindChild(_T("z"));
-		if (!(pvelx && pvely && pvelz))
-			return;
+	if (!ExtractVec3FromVar(phvel, hvel))
+		return;
 
-		vel = { pvelx->m_Var->GetFloat(), pvely->m_Var->GetFloat(), pvelz->m_Var->GetFloat() };
+	if (!ExtractVec3FromVar(pvvel, vvel))
+		return;
 
-		CScriptVarLink *paccx = puseracc->FindChild(_T("x"));
-		CScriptVarLink *paccy = puseracc->FindChild(_T("y"));
-		CScriptVarLink *paccz = puseracc->FindChild(_T("z"));
-		if (!(paccx && paccy && paccz))
-			return;
+	if (!ExtractVec3FromVar(phacc, hacc))
+		return;
 
-		acc = { paccx->m_Var->GetFloat(), paccy->m_Var->GetFloat(), paccz->m_Var->GetFloat() };
-	}
+	if (!ExtractVec3FromVar(pvacc, vacc))
+		return;
 
 	// helpers
 	auto safeNorm = [](const glm::fvec3 &v)
@@ -2390,10 +2421,7 @@ void jcHandleFPSMovement(CScriptVar *c, void *userdata)
 	};
 
 	// Tunables
-	constexpr float kSkin     = 0.5f;   // small clearance from ground/walls
-	constexpr float kSnapDist = 4.0f;   // snap-to-ground tolerance
-	constexpr float kMinVVel  = 1e-3f;  // dead-zone for vertical velocity
-
+	constexpr float skin = 0.5f;   // small clearance from ground/walls
 	const float lowtest  = plowh->GetFloat();   // lower ray height (from your script)
 	const float hightest = phighh->GetFloat();  // upper ray height (capsule-ish)
 
@@ -2401,60 +2429,61 @@ void jcHandleFPSMovement(CScriptVar *c, void *userdata)
 	glm::fvec3 grav;
 	psys->GetEnvironment()->GetGravity(&grav);
 	glm::fvec3 gravdir = safeNorm(grav);
-	if (gravdir == glm::fvec3(0))
-		gravdir = glm::fvec3(0, 0, -1); // fallback
+
+	vacc += grav;
 
 	// Integrate velocity
-	vel += (acc + grav) * dt;
-
-	// Proposed displacement this frame:
-	glm::fvec3 move = vel * dt;
+	hvel += hacc * dt;
+	vvel += vacc * dt;
 
 	// Horizontal pass (orthogonal to gravity) with slide/capsule-ish rays
 	{
-		glm::fvec3 moveH = reject(move, gravdir);
-		float lenH = glm::length(moveH);
-		if (lenH > 0.0f)
+		const float hlen = glm::length(hvel);
+		if (hlen > 0.0f)
 		{
-			glm::fvec3 dirH = moveH / lenH;
+			const glm::fvec3 hdir = hvel / hlen;
+			const float moveLen = hlen * dt;
 
 			float dist = FLT_MAX;
 			glm::fvec3 norm(0);
 			bool horzHit = false;
 
-			// Ray from "feet" height
-			glm::fvec3 poslow  = pos - (gravdir * lowtest);
-			horzHit = prootobj->Intersect(&poslow, &dirH, nullptr, &dist, &norm, nullptr,
-				OF_CHECKCOLLISIONS, -1) && (dist < lenH);
+			// steppable
+			glm::fvec3 poslow = pos - gravdir * lowtest;
+			horzHit = prootobj->Intersect(&poslow, &hdir, nullptr, &dist, &norm, nullptr,
+				OF_CHECKCOLLISIONS, -1) && (dist < moveLen);
 
-			// Ray from "head/waist" height if feet ray didn't hit
-			if (!horzHit) {
+			// duckable
+			if (!horzHit)
+			{
 				dist = FLT_MAX;
-				glm::fvec3 poshigh = pos - (gravdir * hightest);
-				horzHit = prootobj->Intersect(&poshigh, &dirH, nullptr, &dist, &norm, nullptr,
-					OF_CHECKCOLLISIONS, -1) && (dist < lenH);
+				glm::fvec3 poshigh = pos - gravdir * hightest;
+				horzHit = prootobj->Intersect(&poshigh, &hdir, nullptr, &dist, &norm, nullptr,
+					OF_CHECKCOLLISIONS, -1) && (dist < moveLen);
 			}
 
 			if (horzHit)
 			{
-				// stop short of the hit by a tiny skin
-				float allowed = std::max(0.0f, dist - kSkin);
-				glm::fvec3 hitpos = pos + dirH * allowed;
+				// stop before wall by skin, clamp to this frame’s move
+				float allowed = std::max(0.0f, dist - skin);
+				allowed = std::min(allowed, moveLen);
+				glm::fvec3 hitpos = pos + hdir * allowed;
 
-				float remaining = std::max(0.0f, lenH - allowed);
+				float remaining = std::max(0.0f, moveLen - allowed);
 
-				// slide direction: horizontalize normal and slide along it
-				glm::fvec3 norm_no_g = safeNorm(reject(norm, gravdir));
-				glm::fvec3 slide_dir = safeNorm(reject(dirH, norm_no_g));
+				// slide along the contact plane (project desired move onto plane)
+				glm::fvec3 slide_dir = safeNorm(hdir - glm::dot(hdir, norm) * norm);
 
-				pos = hitpos + slide_dir * remaining;
+				pos = hitpos;
+				if (glm::length(slide_dir) > 0)
+					pos = hitpos + slide_dir * remaining;
 
-				// after sliding, zero horizontal velocity (keep only vertical)
-				vel = proj(vel, gravdir);
+				// preserve plane-parallel momentum
+				//hvel = hvel - glm::dot(hvel, norm) * norm;
 			}
 			else
 			{
-				pos += moveH; // no hit: apply full horizontal displacement
+				pos += hvel * dt; // no hit
 			}
 		}
 	}
@@ -2464,85 +2493,56 @@ void jcHandleFPSMovement(CScriptVar *c, void *userdata)
 	{
 		float dist = FLT_MAX;
 		glm::fvec3 norm(0);
-
-		if (prootobj->Intersect(&pos, &gravdir, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1))
+		float vlen = glm::length(vvel);
+		//if (vlen != 0.0f)
 		{
-			// distance along gravity from current pos to ground
-			// consider close-enough to ground if within clearance + snap
-			if (dist <= hightest + kSnapDist)
+			glm::fvec3 vdir = vvel / vlen;
+			float vdotg = glm::dot(vdir, gravdir);
+			glm::fvec3 poshigh = pos - (gravdir * hightest);
+
+			// moving "down"
+			if (vdotg > 0)
 			{
-				grounded = true;
-
-				// current vertical velocity sign (>0 = down; <0 = up/jumping)
-				float vdotg = glm::dot(vel, gravdir);
-
-				// Only perform push/snap when not moving upward (avoid killing jump)
-				if (vdotg >= -kMinVVel)
+				if (prootobj->Intersect(&poshigh, &gravdir, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1))
 				{
-					// push up if too close (maintain clearance minus skin)
-					if (dist < hightest - kSkin)
+					// distance along gravity from current pos to ground
+					if (dist <= (hightest + skin))
 					{
-						pos -= gravdir * (hightest - kSkin - dist);
-					}
-					// snap down gently if slightly above target clearance
-					else if (dist > hightest + kSkin && dist <= hightest + kSnapDist)
-					{
-						pos += gravdir * (dist - (hightest + kSkin)); // gravdir points "down"
+						grounded = true;
+
+						// push up and kill velocity
+						pos -= gravdir * (hightest - dist);
+						vvel.x = vvel.y = vvel.z = 0.0f;
 					}
 				}
-
-				// Kill downward velocity only (leave upward jump intact)
-				if (vdotg > kMinVVel)
-				{
-					vel -= gravdir * vdotg;
-				}
-				// If we’re clearly moving up, consider airborne for this frame
-				else if (vdotg < -kMinVVel)
-				{
-					grounded = false;
-				}
-
-				if (c->GetReturnVar())
-					c->GetReturnVar()->SetInt(grounded ? 1 : 0);
 			}
-			else
+			else if (vlen > 0.0f)
 			{
-				if (c->GetReturnVar())
-					c->GetReturnVar()->SetInt(0);
+				if (prootobj->Intersect(&poshigh, &vdir, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1))
+				{
+					// distance along gravity from current pos to ground
+					if (dist <= hightest)
+					{
+						// push down
+						pos += gravdir * (hightest - dist);
+						vvel.x = vvel.y = vvel.z = 0.0f;
+					}
+				}
 			}
-		}
-		else
-		{
-			if (c->GetReturnVar())
-				c->GetReturnVar()->SetInt(0);
 		}
 	}
+
+	if (c->GetReturnVar())
+		c->GetReturnVar()->SetInt(grounded ? 1 : 0);
 
 	// If not grounded, apply vertical displacement from this frame
 	if (!grounded)
-	{
-		glm::fvec3 moveV = proj(move, gravdir);
-		pos += moveV;
-	}
+		pos += vvel * dt;
 
 	// Write back to script vars
-	{
-		CScriptVarLink *pposx = ppos->FindChild(_T("x"));
-		CScriptVarLink *pposy = ppos->FindChild(_T("y"));
-		CScriptVarLink *pposz = ppos->FindChild(_T("z"));
-
-		CScriptVarLink *pvelx = puservel->FindChild(_T("x"));
-		CScriptVarLink *pvely = puservel->FindChild(_T("y"));
-		CScriptVarLink *pvelz = puservel->FindChild(_T("z"));
-
-		pposx->m_Var->SetFloat(pos.x);
-		pposy->m_Var->SetFloat(pos.y);
-		pposz->m_Var->SetFloat(pos.z);
-
-		pvelx->m_Var->SetFloat(vel.x);
-		pvely->m_Var->SetFloat(vel.y);
-		pvelz->m_Var->SetFloat(vel.z);
-	}
+	PlaceVec3InVar(ppos, pos);
+	PlaceVec3InVar(phvel, hvel);
+	PlaceVec3InVar(pvvel, vvel);
 }
 
 

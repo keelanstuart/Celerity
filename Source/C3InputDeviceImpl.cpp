@@ -25,7 +25,8 @@ InputDeviceImpl::InputDeviceImpl(System *sys, LPDIRECTINPUTDEVICE8 pdid)
 	memset(m_ButtonDelta, 0, sizeof(int32_t) * MAXBUTTONS);
 
 	// reset the button times
-	memset(m_ButtonTime, 0xFF, sizeof(int32_t) * MAXBUTTONS);
+	for (size_t i = 0; i < MAXBUTTONS; i++)
+		m_ButtonTime[i] = 0.0f;
 
 	m_bActive = true;
 

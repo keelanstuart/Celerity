@@ -68,8 +68,10 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 	memset(&state, 0, sizeof(DIJOYSTATE2));
 	if (m_bAttached)
 		hr = m_pDIDevice->GetDeviceState(sizeof(DIJOYSTATE2), &state);
+	else
+		ZeroMemory(m_ButtonState, sizeof(m_ButtonState));
 
-	ZeroMemory(m_ButtonState, sizeof(m_ButtonState));
+	ZeroMemory(m_ButtonDelta, sizeof(m_ButtonDelta));
 
 	auto Dampen = [](int val) -> int
 	{
@@ -78,110 +80,133 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 		return (int)(pct * (float)InputDevice::BUTTONVAL_MAX);
 	};
 
-	if (m_bAttached)
+	auto SetButton = [&](size_t butidx, int val)
 	{
-		int32_t iminprop = (int32_t)(255.0f * m_MinProportion);
-		if (abs(state.lX) > (InputDevice::BUTTONVAL_MAX / 16))
+		if (val != m_ButtonState[butidx])
 		{
-			if ((state.lX > 0) && (state.lX > iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSX] = Dampen(abs(state.lX));	// right motion
-
-			if ((state.lX < 0) && (state.lX < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGX] = Dampen(abs(state.lX));	// left motion
+			// Signed delta: positive on press, negative on release
+			m_ButtonDelta[butidx] = val - m_ButtonState[butidx];
+		}
+		else
+		{
+			m_ButtonDelta[butidx] = 0;
 		}
 
-		if (abs(state.lY) > (InputDevice::BUTTONVAL_MAX / 16))
+		m_ButtonState[butidx] = val;
+	};
+
+	constexpr LONG deadzone = (InputDevice::BUTTONVAL_MAX / 16);
+
+	int32_t iminprop = (int32_t)(255.0f * m_MinProportion);
+	if (abs(state.lX) > deadzone)
+	{
+		if ((state.lX > 0) && (state.lX > iminprop))
+			SetButton(InputDevice::VirtualButton::AXIS1_POSX, Dampen(abs(state.lX)));	// right motion
+		else if ((state.lX < 0) && (state.lX < -iminprop))
+			SetButton(InputDevice::VirtualButton::AXIS1_NEGX, Dampen(abs(state.lX)));	// left motion
+		else
 		{
-			if ((state.lY > 0) && (state.lY > iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGY] = Dampen(abs(state.lY));	// right motion
-
-			if ((state.lY < 0) && (state.lY < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSY] = Dampen(abs(state.lY));		// left motion
+			SetButton(InputDevice::VirtualButton::AXIS1_NEGX, 0);
+			SetButton(InputDevice::VirtualButton::AXIS1_POSX, 0);
 		}
-
-		if (abs(state.lZ) > (InputDevice::BUTTONVAL_MAX / 16))
-		{
-			if ((state.lZ > 0) && (state.lZ > iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_POSZ] = Dampen(abs(state.lZ));	// right motion
-
-			if ((state.lZ < 0) && (state.lZ < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS1_NEGZ] = Dampen(abs(state.lZ));	// left motion
-		}
-
-		if (abs(state.lRx) > (InputDevice::BUTTONVAL_MAX / 16))
-		{
-			if ((state.lRx > 0) && (state.lRx > iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSX] = Dampen(abs(state.lRx));	// right motion
-
-			if ((state.lRx < 0) && (state.lRx < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGX] = Dampen(abs(state.lRx));	// left motion
-		}
-
-		if (abs(state.lRy) > (InputDevice::BUTTONVAL_MAX / 16))
-		{
-			if ((state.lRy > 0) && (state.lRy > iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSY] = Dampen(abs(state.lRy));	// right motion
-
-			if ((state.lRy < 0) && (state.lRy < -iminprop))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGY] = Dampen(abs(state.lRy));	// left motion
-		}
-
-		if (abs(state.lRz) > (InputDevice::BUTTONVAL_MAX / 16))
-		{
-			if ((state.lRz > iminprop) && (state.lRz > 0))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_POSZ] = Dampen(abs(state.lRz));	// right motion
-
-			if ((state.lRz < -iminprop) && (state.lRz < 0))
-				m_ButtonState[InputDevice::VirtualButton::AXIS2_NEGZ] = Dampen(abs(state.lRz));	// left motion
-		}
-
-		m_ButtonState[InputDevice::VirtualButton::THROTTLE1] = state.rglSlider[0];
-		m_ButtonState[InputDevice::VirtualButton::THROTTLE2] = state.rglSlider[1];
 	}
+
+	if (abs(state.lY) > deadzone)
+	{
+		if ((state.lY > 0) && (state.lY > iminprop))
+			SetButton(InputDevice::VirtualButton::AXIS1_NEGY, Dampen(abs(state.lY)));	// right motion
+		else if ((state.lY < 0) && (state.lY < -iminprop))
+			SetButton(InputDevice::VirtualButton::AXIS1_POSY, Dampen(abs(state.lY)));	// left motion
+		else
+		{
+			SetButton(InputDevice::VirtualButton::AXIS1_NEGY, 0);
+			SetButton(InputDevice::VirtualButton::AXIS1_POSY, 0);
+		}
+	}
+
+	if (abs(state.lZ) > deadzone)
+	{
+		if ((state.lZ > 0) && (state.lZ > iminprop))
+			SetButton(InputDevice::VirtualButton::AXIS1_POSZ, Dampen(abs(state.lZ)));	// right motion
+		else if ((state.lZ < 0) && (state.lZ < -iminprop))
+			SetButton(InputDevice::VirtualButton::AXIS1_NEGZ, Dampen(abs(state.lZ)));	// left motion
+		else
+		{
+			SetButton(InputDevice::VirtualButton::AXIS1_NEGZ, 0);
+			SetButton(InputDevice::VirtualButton::AXIS1_POSZ, 0);
+		}
+	}
+
+	if (abs(state.lRx) > deadzone)
+	{
+		if ((state.lRx > 0) && (state.lRx > iminprop))
+			SetButton(InputDevice::VirtualButton::AXIS2_POSX, Dampen(abs(state.lRx)));	// right motion
+		else if ((state.lRx < 0) && (state.lRx < -iminprop))
+			SetButton(InputDevice::VirtualButton::AXIS2_NEGX, Dampen(abs(state.lRx)));	// left motion
+		else
+		{
+			SetButton(InputDevice::VirtualButton::AXIS2_NEGX, 0);
+			SetButton(InputDevice::VirtualButton::AXIS2_POSX, 0);
+		}
+	}
+
+	if (abs(state.lRy) > deadzone)
+	{
+		if ((state.lRy > 0) && (state.lRy > iminprop))
+			SetButton(InputDevice::VirtualButton::AXIS2_POSY, Dampen(abs(state.lRy)));	// right motion
+		else if ((state.lRy < 0) && (state.lRy < -iminprop))
+			SetButton(InputDevice::VirtualButton::AXIS2_NEGY, Dampen(abs(state.lRy)));	// left motion
+		else
+		{
+			SetButton(InputDevice::VirtualButton::AXIS2_NEGY, 0);
+			SetButton(InputDevice::VirtualButton::AXIS2_POSY, 0);
+		}
+	}
+
+	if (abs(state.lRz) > deadzone)
+	{
+		if ((state.lRz > iminprop) && (state.lRz > 0))
+			SetButton(InputDevice::VirtualButton::AXIS2_POSZ, Dampen(abs(state.lRz)));	// right motion
+		else if ((state.lRz < -iminprop) && (state.lRz < 0))
+			SetButton(InputDevice::VirtualButton::AXIS2_NEGZ, Dampen(abs(state.lRz)));	// left motion
+		else
+		{
+			SetButton(InputDevice::VirtualButton::AXIS2_NEGZ, 0);
+			SetButton(InputDevice::VirtualButton::AXIS2_POSZ, 0);
+		}
+	}
+
+	SetButton(InputDevice::VirtualButton::THROTTLE1, state.rglSlider[0]);
+	SetButton(InputDevice::VirtualButton::THROTTLE2, state.rglSlider[1]);
 
 	switch (state.rgdwPOV[0])
 	{
 		case 0:
-			m_ButtonState[InputDevice::VirtualButton::POV_POSY] = InputDevice::BUTTONVAL_MAX;
+			SetButton(InputDevice::VirtualButton::POV_POSY, InputDevice::BUTTONVAL_MAX);
 			break;
-
+	
 		case 18000:
-			m_ButtonState[InputDevice::VirtualButton::POV_NEGY] = InputDevice::BUTTONVAL_MAX;
+			SetButton(InputDevice::VirtualButton::POV_NEGY, InputDevice::BUTTONVAL_MAX);
 			break;
-
+	
 		case 9000:
-			m_ButtonState[InputDevice::VirtualButton::POV_POSX] = InputDevice::BUTTONVAL_MAX;
+			SetButton(InputDevice::VirtualButton::POV_POSX, InputDevice::BUTTONVAL_MAX);
 			break;
-
+	
 		case 27000:
-			m_ButtonState[InputDevice::VirtualButton::POV_NEGX] = InputDevice::BUTTONVAL_MAX;
+			SetButton(InputDevice::VirtualButton::POV_NEGX, InputDevice::BUTTONVAL_MAX);
 			break;
 	}
 
-	for (uint32_t i = 0; i < InputDevice::MAXBUTTONS; i++)
+	constexpr size_t DI_BUTTON1 = 21;
+
+	for (uint32_t i = InputDevice::BUTTON1, j = 0; i <= InputDevice::BUTTON12; i++, j++)
 	{
-		if (state.rgbButtons[i] >= (InputDevice::BUTTONVAL_MAX / 16))	// if the high-order bit is set, the button is being pressed.
-		{
-			if (!m_ButtonState[InputDevice::VirtualButton::BUTTON1 + i])
-				m_ButtonDelta[InputDevice::VirtualButton::BUTTON1 + i] = InputDevice::BUTTONVAL_MAX;
-			else
-				m_ButtonDelta[InputDevice::VirtualButton::BUTTON1 + i] = 0;
-
-			m_ButtonState[InputDevice::VirtualButton::BUTTON1 + i] = InputDevice::BUTTONVAL_MAX;
-		}
+		if (state.rgbButtons[j])
+			SetButton(i, InputDevice::BUTTONVAL_MAX);
 		else
-		{
-			if (m_ButtonState[InputDevice::VirtualButton::BUTTON1 + i])
-				m_ButtonDelta[InputDevice::VirtualButton::BUTTON1 + i] = InputDevice::BUTTONVAL_MAX;
-			else
-				m_ButtonDelta[InputDevice::VirtualButton::BUTTON1 + i] = 0;
-
-			m_ButtonState[InputDevice::VirtualButton::BUTTON1 + i] = 0;
-		}
+			SetButton(i, 0);
 	}
-
-	m_ButtonState[InputDevice::VirtualButton::LSHIFT] = m_ButtonState[InputDevice::VirtualButton::BUTTON9];
-	m_ButtonDelta[InputDevice::VirtualButton::RSHIFT] = m_ButtonDelta[InputDevice::VirtualButton::BUTTON10];
 
 	__super::Update(elapsed_seconds);
 

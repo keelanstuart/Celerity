@@ -53,7 +53,7 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_uBlurTex = -1;
 	m_uBlurScale = -1;
 
-	m_ShowDebug = true;
+	m_ShowDebug = false;
 
 	m_bSurfacesCreated = false;
 	m_bSurfacesReady = false;
