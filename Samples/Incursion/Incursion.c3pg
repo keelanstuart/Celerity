@@ -1,4 +1,4 @@
-<c3.terrain name="incursion" heightmap="incursion/incursion_elevation.tga"
+<c3pg:terrain name="incursion" heightmap="incursion/incursion_elevation.tga"
             xdim="256" ydim="256" xdimtex="1024" ydimtex="1024"
             minz="-30.0" maxz="80.0" sampledist="5.0">
 
@@ -24,4 +24,4 @@
 
   </layers>
 
-</c3.terrain>
+</c3pg:terrain>

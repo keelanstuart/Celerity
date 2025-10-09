@@ -1,0 +1,35 @@
+var runtime;
+var hworldroot;
+
+function update(elapsed_seconds)
+{
+	if (elapsed_seconds == 0.0)
+		return;
+}
+
+function init()
+{
+	runtime = 0.0;
+	hworldroot = GetRegisteredObject("worldroot");
+}
+
+function free()
+{
+}
+
+function mouse_click(control_name, button, mx, my)
+{
+	if (control_name == "Restart")
+	{
+		Execute(hworldroot, "enable_menu(0);");
+		Execute(hworldroot, "respawn();");
+	}
+	else if (control_name == "Settings")
+	{
+	
+	}
+	else if (control_name == "Quit")
+	{
+		Exit();
+	}
+}

@@ -183,6 +183,6 @@ namespace c3
 
 	};
 
-	DEFINE_RESOURCETYPE(Model, RTFLAG_RUNBYRENDERER, GUID({0x2ea22c05, 0xbf99, 0x493c, { 0xb7, 0xa, 0x26, 0x6f, 0x89, 0xaf, 0x30, 0x91 }}), "Model", "3D Models", "3ds;dae;fbx;gltb;gltf;glb;obj;x", "fbx");
+	DEFINE_RESOURCETYPE(Model, RTFLAG_RUNBYRENDERER, GUID({0x2ea22c05, 0xbf99, 0x493c, { 0xb7, 0xa, 0x26, 0x6f, 0x89, 0xaf, 0x30, 0x91 }}), "Model", "3D Models", "3ds;c3pg;dae;fbx;gltb;gltf;glb;obj;x", "fbx");
 
 };

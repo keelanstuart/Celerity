@@ -150,7 +150,7 @@ Texture::RETURNCODE Texture2DImpl::Lock(void **buffer, Texture2D::SLockInfo &loc
 
 	assert(m_Rend);
 
-	if (flags.IsSet(IBLOCKFLAG_READ) && !flags.IsSet(IBLOCKFLAG_WRITE) && !m_Cache.empty())
+	if (flags.IsSet(TEXLOCKFLAG_READ) && !flags.IsSet(TEXLOCKFLAG_WRITE) && !m_Cache.empty())
 	{
 		*buffer = m_Cache.data();
 		return RET_OK;

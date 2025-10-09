@@ -525,3 +525,9 @@ void ResourceManagerImpl::UpdateLastFrameChanged()
 {
 	m_LastFrameChanged.fetch_add(1, std::memory_order_relaxed);
 }
+
+
+System *ResourceManagerImpl::GetSystem() const
+{
+	return m_pSys;
+}

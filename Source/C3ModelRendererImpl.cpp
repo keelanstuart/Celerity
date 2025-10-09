@@ -386,7 +386,7 @@ bool ModelRendererImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRa
 	if (pmod)
 	{
 		size_t meshidx;
-		float dist;
+		float dist = FLT_MAX;
 		glm::fvec3 norm;
 		size_t faceidx;
 		glm::vec2 uv;

@@ -1,0 +1,56 @@
+<c3pg:extrusion name="nvadr4a" map="nvadrz\nvadr4a.tga">
+
+  <surface dir="z-">
+    <variant tiling.u="0.25" tiling.v="0.25">
+      <tex.diffuse>nvadrz\nvadr.jpg</tex.diffuse>
+      <tex.normal>nvadrz\nvadr_norm.jpg</tex.normal>
+      <tex.emissive>nvadrz\nvadr_emis.jpg</tex.emissive>
+      <tex.surfdesc>nvadrz\nvadr_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="z+">
+    <variant tiling.u="0.25" tiling.v="0.25">
+      <tex.diffuse>nvadrz\nvadr.jpg</tex.diffuse>
+      <tex.normal>nvadrz\nvadr_norm.jpg</tex.normal>
+      <tex.emissive>nvadrz\nvadr_emis.jpg</tex.emissive>
+      <tex.surfdesc>nvadrz\nvadr_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="y+">
+    <variant tiling.u="0.25" tiling.v="0.25">
+      <tex.diffuse>nvadrz\nvadr.jpg</tex.diffuse>
+      <tex.normal>nvadrz\nvadr_norm.jpg</tex.normal>
+      <tex.emissive>nvadrz\nvadr_emis.jpg</tex.emissive>
+      <tex.surfdesc>nvadrz\nvadr_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="y-">
+    <variant tiling.u="0.25" tiling.v="0.25">
+      <tex.diffuse>nvadrz\nvadr.jpg</tex.diffuse>
+      <tex.normal>nvadrz\nvadr_norm.jpg</tex.normal>
+      <tex.emissive>nvadrz\nvadr_emis.jpg</tex.emissive>
+      <tex.surfdesc>nvadrz\nvadr_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="x+">
+    <variant tiling.u="0.25" tiling.v="0.25">
+      <tex.diffuse>nvadrz\nvadr.jpg</tex.diffuse>
+      <tex.normal>nvadrz\nvadr_norm.jpg</tex.normal>
+      <tex.emissive>nvadrz\nvadr_emis.jpg</tex.emissive>
+      <tex.surfdesc>nvadrz\nvadr_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="x-">
+    <variant tiling.u="0.25" tiling.v="0.25">
+      <tex.diffuse>nvadrz\nvadr.jpg</tex.diffuse>
+      <tex.normal>nvadrz\nvadr_norm.jpg</tex.normal>
+      <tex.surfdesc>nvadrz\nvadr_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+</c3pg:extrusion>

@@ -1,0 +1,127 @@
+<prototypes>
+    <prototype guid="{3436EFB3-248D-404D-826A-1A998D54D4B3}" name="nvadr1" group="Nvadrz" flags="131075">
+        <components>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FUP" name="Facing.Up" type="FLOAT_V3">0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4">0.000000,0.000000,-0.000000,1.000000</powerprops:property>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="FFWD" name="Facing.Forward" type="FLOAT_V3">0.000000,1.000000,0.000000</powerprops:property>
+            <powerprops:property id="FRGT" name="Facing.Right" type="FLOAT_V3">1.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MODF" name="ModelFile" type="STRING">nvadrz\nvadr1a.c3pg</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">-0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">-0.750000,0.000000,0.450000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.100000,0.100000,0.100000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">nvadr.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.016700</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{F07A7392-AF98-433C-A46D-9E7FC7BE3C5A}" name="nvadr2" group="Nvadrz" flags="131075">
+        <components>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FUP" name="Facing.Up" type="FLOAT_V3">0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4">0.000000,0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="FFWD" name="Facing.Forward" type="FLOAT_V3">0.000000,1.000000,0.000000</powerprops:property>
+            <powerprops:property id="FRGT" name="Facing.Right" type="FLOAT_V3">1.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MODF" name="ModelFile" type="STRING">nvadrz\nvadr2a.c3pg</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">-0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">-0.900000,-0.000000,0.500000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.100000,0.100000,0.100000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">nvadr.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.016700</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{E1AE3F6D-4E48-46A7-95BD-8E2E4DC6AB74}" name="nvadr3" group="Nvadrz" flags="131075">
+        <components>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FUP" name="Facing.Up" type="FLOAT_V3">0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4">0.000000,0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="FFWD" name="Facing.Forward" type="FLOAT_V3">0.000000,1.000000,0.000000</powerprops:property>
+            <powerprops:property id="FRGT" name="Facing.Right" type="FLOAT_V3">1.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MODF" name="ModelFile" type="STRING">nvadrz\nvadr3a.c3pg</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">-0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">-0.650000,0.000000,0.450000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.100000,0.100000,0.100000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">nvadr.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.016700</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{940FEC9B-1FF1-435A-B99C-8B1CCA8B22A7}" name="nvadr4" group="Nvadrz" flags="131075">
+        <components>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FUP" name="Facing.Up" type="FLOAT_V3">0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4">0.000000,0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="FFWD" name="Facing.Forward" type="FLOAT_V3">0.000000,1.000000,0.000000</powerprops:property>
+            <powerprops:property id="FRGT" name="Facing.Right" type="FLOAT_V3">1.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MODF" name="ModelFile" type="STRING">nvadrz\nvadr4a.c3pg</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4">-0.707107,0.000000,0.000000,0.707107</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">-0.700000,0.000000,0.500000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.100000,0.100000,0.100000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING">nvadr.c3js</powerprops:property>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.016700</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{1560041C-2FEB-4A82-A69B-AB397DABEF53}" name="explosion" group="Nvadrz" flags="131075">
+        <components>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{BE81DC6A-0962-4B77-A6DF-A9852B5F8A82}" name="ParticleEmitter"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FUP" name="Facing.Up" type="FLOAT_V3">0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4" aspect="QUATERNION">0.000000,0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">15.000000,0.000000,-6.000000</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="FFWD" name="Facing.Forward" type="FLOAT_V3">0.000000,1.000000,0.000000</powerprops:property>
+            <powerprops:property id="FRGT" name="Facing.Right" type="FLOAT_V3">1.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MODF" name="ModelFile" type="STRING">[sphere_lo.model]</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">-1998397155538108416.000000,-1998397155538108416.000000,-1998397155538108416.000000,-1998397155538108416.000000</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">-1998397155538108416.000000,-1998397155538108416.000000,-1998397155538108416.000000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">-1998397155538108416.000000,-1998397155538108416.000000,-1998397155538108416.000000</powerprops:property>
+            <powerprops:property id="PEac" name="Acceleration" type="FLOAT_V2">1.400000,2.000000</powerprops:property>
+            <powerprops:property id="PEec" name="EndColor" type="INT" aspect="COLOR_RGBA">15335423</powerprops:property>
+            <powerprops:property id="PEes" name="EndScale" type="FLOAT">0.000000</powerprops:property>
+            <powerprops:property id="PEgr" name="Gravity" type="FLOAT">0.800000</powerprops:property>
+            <powerprops:property id="PElf" name="ParticleLife" type="FLOAT_V2" aspect="53">0.500000,1.200000</powerprops:property>
+            <powerprops:property id="PEmp" name="MaxParticles" type="INT">-3689348818177883960</powerprops:property>
+            <powerprops:property id="PEpc" name="PeakColor" type="INT" aspect="COLOR_RGBA">5734655</powerprops:property>
+            <powerprops:property id="PEpp" name="Peak" type="FLOAT" aspect="50">0.250000</powerprops:property>
+            <powerprops:property id="PEps" name="PeakScale" type="FLOAT">2.000000</powerprops:property>
+            <powerprops:property id="PErd" name="Radius" type="FLOAT_V2">0.200000,0.700000</powerprops:property>
+            <powerprops:property id="PErl" name="Roll" type="FLOAT_V2" aspect="51">0.000000,0.000000</powerprops:property>
+            <powerprops:property id="PErm" name="ParticleRenderMethod" type="STRING">particles.c3rm</powerprops:property>
+            <powerprops:property id="PErt" name="EmitRate" type="FLOAT_V2">40.000000,60.000000</powerprops:property>
+            <powerprops:property id="PEsc" name="StartColor" type="INT" aspect="COLOR_RGBA">4224</powerprops:property>
+            <powerprops:property id="PEsh" name="Shape" type="ENUM">Sphere,Ray,Cone,Cylinder,Plane:0</powerprops:property>
+            <powerprops:property id="PEsp" name="EmitSpeed" type="FLOAT_V2">1.000000,2.200000</powerprops:property>
+            <powerprops:property id="PEss" name="StartScale" type="FLOAT">1.000000</powerprops:property>
+            <powerprops:property id="PEtx" name="Texture" type="STRING">softparticle.tga</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

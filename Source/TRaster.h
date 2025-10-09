@@ -1,9 +1,7 @@
-#include <vector>
-#include <optional>
-#include <functional>
-#include <glm/glm.hpp>
+#include <C3.h>
+#include <C3ResourceManager.h>
+
 #include <stb_image.h>
-#include <tchar.h>
 #include <iostream>
 
 
@@ -161,10 +159,13 @@ public:
 		// TODO: temp buffer allocation, alignment, etc
 		m_Dim.x = (uint32_t)xdim;
 		m_Dim.y = (uint32_t)ydim;
+
+		size_t sz = m_Dim.x * m_Dim.y;
+
 		if (fillval.has_value())
-			m_Image.resize(xdim * ydim, *fillval);
+			m_Image.resize(sz, *fillval);
 		else
-			m_Image.resize(xdim * ydim);
+			m_Image.resize(sz);
 	}
 
 	void SetPixel(size_t x, size_t y, T val)
@@ -361,4 +362,18 @@ public:
 	std::vector<T> m_Image;
 	glm::uvec2 m_Dim;
 
+};
+
+using U8Raster = TRaster<uint8_t>;
+using RGBRaster = TRaster<glm::u8vec3>;
+using RGBARaster = TRaster<glm::u8vec4>;
+
+namespace c3
+{
+	namespace util
+	{
+		void LoadU8Image(ResourceManager *rm, const TCHAR *filename, U8Raster &img);
+		void LoadRGBImage(ResourceManager *rm, const TCHAR *filename, RGBRaster &img);
+		void LoadRGBAImage(ResourceManager *rm, const TCHAR *filename, RGBARaster &img);
+	};
 };

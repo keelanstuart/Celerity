@@ -100,7 +100,7 @@ void MeshImpl::ComputeBounds()
 		void *vbuf = nullptr;
 		glm::fvec3 *ppos;
 
-		if (m_VB->Lock(&vbuf, -1, nullptr, VBLOCKFLAG_READ) == VertexBuffer::RETURNCODE::RET_OK)
+		if (m_VB->Lock(&vbuf, -1, nullptr, VBLOCKFLAG_READ | VBLOCKFLAG_CACHE) == VertexBuffer::RETURNCODE::RET_OK)
 		{
 			size_t vofs = 0; // TODO: find the POS component's offset; currently assume POS is the first component
 
@@ -110,7 +110,7 @@ void MeshImpl::ComputeBounds()
 			if (m_IB)
 			{
 				void *ibuf = nullptr;
-				if (m_IB->Lock(&ibuf, -1, IndexBuffer::IndexSize::IS_NONE, IBLOCKFLAG_READ) == IndexBuffer::RETURNCODE::RET_OK)
+				if (m_IB->Lock(&ibuf, -1, IndexBuffer::IndexSize::IS_NONE, IBLOCKFLAG_READ | IBLOCKFLAG_CACHE) == IndexBuffer::RETURNCODE::RET_OK)
 				{
 					switch (m_IB->GetIndexSize())
 					{
@@ -410,7 +410,7 @@ void MeshImpl::InitializeOctree() const
 	// reserve some space for building our octree...
 	// place the octree node we fall in the cache by face index, then split it out after that
 	uint32_t face_count = (uint32_t)(m_IB->Count() / 3);
-	if (face_count > s_OctreeNodeCache.max_size())
+	if (face_count > s_OctreeNodeCache.size())
 		s_OctreeNodeCache.reserve(face_count);
 	s_OctreeNodeCache.clear();
 

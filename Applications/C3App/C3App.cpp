@@ -322,7 +322,7 @@ BOOL C3App::InitInstance()
 
 	respaths = m_Config->GetString(_T("resources.models.paths"), _T("./;./assets;./assets/models"));
 	respaths += path_extra;
-	resexts = m_Config->GetString(_T("resources.models.extensions"), _T("fbx;gltf;glb;obj;3ds;dae;x;c3terr"));
+	resexts = m_Config->GetString(_T("resources.models.extensions"), _T("fbx;gltf;glb;obj;3ds;dae;x;c3pg"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.shaders.paths"), _T("./;./assets;./assets/shaders"));

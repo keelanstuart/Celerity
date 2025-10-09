@@ -14,6 +14,8 @@
 #include <C3Math.h>
 #include <C3BoundingBoxImpl.h>
 #include <C3TerrainImpl.h>
+#include <C3MazeImpl.h>
+#include <C3ExtrusionImpl.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/Exporter.hpp>
@@ -493,7 +495,7 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, co
 
 	float d = FLT_MAX;
 
-	float mindist = FLT_MAX;
+	float mindist = pDistance ? *pDistance : FLT_MAX;
 
 	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
 	if (!pmat)
@@ -511,10 +513,12 @@ bool ModelImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, co
 		if (m_Nodes[ni]->parent == NO_PARENT)
 		{
 			glm::fvec3 n;
-			ret = IntersectNode(ni, pRayPos, pRayDir, pmat, &d, &n, pFaceIndex, pUV, inst, force);
+			bool r = IntersectNode(ni, pRayPos, pRayDir, pmat, &d, &n, pFaceIndex, pUV, inst, force);
 
-			if (ret && (d < mindist))
+			if (r && (d < mindist))
 			{
+				ret |= r;
+
 				if (pMeshIndex)
 					*pMeshIndex = ni;
 
@@ -1429,15 +1433,41 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 		std::string fn = s;
 
 		const TCHAR *ext = PathFindExtension(filename);
-		if (ext && !_tcsicmp(ext, _T(".c3terr")))
-		{
-			TerrainDescription td;
 
+		// "c3pg" C3 Procedural Geometry - various procedural model descriptions
+		// in similar XML containers
+		if (ext && !_tcsicmp(ext, _T(".c3pg")))
+		{
 			tinyxml2::XMLDocument xdoc;
 			xdoc.LoadFile(fn.c_str());
 
-			if (td.Load(&xdoc))
-				*returned_data = (ModelImpl *)(td.GenerateTerrain(psys));
+			tinyxml2::XMLElement *xr = xdoc.RootElement();
+			if (xr)
+			{
+				if (!_stricmp(xr->Name(), "c3pg:maze"))
+				{
+					MazeDescription md;
+
+					bool b = md.Load(&xdoc);
+					if (b)
+						*returned_data = (ModelImpl *)(md.GenerateMaze(psys));
+				}
+				if (!_stricmp(xr->Name(), "c3pg:extrusion"))
+				{
+					ExtrusionDescription ed;
+
+					bool b = ed.Load(&xdoc);
+					if (b)
+						*returned_data = (ModelImpl *)(ed.GenerateExtrusion(psys));
+				}
+				else if (!_stricmp(xr->Name(), "c3pg:terrain"))
+				{
+					TerrainDescription td;
+
+					if (td.Load(&xdoc))
+						*returned_data = (ModelImpl *)(td.GenerateTerrain(psys));
+				}
+			}
 		}
 		else
 		{

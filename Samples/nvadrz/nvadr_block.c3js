@@ -1,0 +1,48 @@
+var hpos;
+
+var move_speed = 4.0;
+var drop_speed = 0.5;
+
+var tmp = 0.0;
+var vec3 = { x:0.0, y:0.0, z:0.0 };
+
+var left_edge = -5.0;
+var right_edge = 5.0;
+
+function init()
+{
+	hpos = FindProperty(self, "Position");
+}
+
+function update(elapsed_seconds)
+{
+	// get the position
+	vec3 = GetPropertyValue(hpos);
+
+	// move the block of nvadrz some
+	tmp = move_speed * elapsed_seconds;
+	vec3.x += tmp;
+
+	// if they're out of bounds:
+	//  - set their position TO the bounds
+	//  - reverse direction
+	//  - move down
+
+	if ((move_speed > 0.0) && (vec3.x > right_edge))
+	{
+		vec3.x = right_edge;
+		move_speed += 0.5;
+		move_speed *= -1.0;
+		vec3.z -= drop_speed;
+	}
+	else if ((move_speed < 0.0) && (vec3.x < left_edge))
+	{
+		vec3.x = left_edge;
+		move_speed *= -1.0;
+		move_speed += 0.5;
+		vec3.z -= drop_speed;
+	}
+
+	// update the position
+	SetPropertyValue(hpos, vec3);
+}

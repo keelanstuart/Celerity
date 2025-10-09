@@ -1,0 +1,28 @@
+var hemitrate;
+
+var emit_time = 1.0;
+var life_time = 3.0;
+
+var vec2 = { x:0.0, y:0.0 };
+var vec3 = { x:0.0, y:0.0, z:0.0 };
+
+function init()
+{
+	hemitrate = FindProperty(self, "EmitRate");
+}
+
+function update(elapsed_seconds)
+{
+	emit_time -= elapsed_seconds;
+	life_time -= elapsed_seconds;
+
+	if (emit_time < 0.0)
+	{
+		SetPropertyValue(hemitrate, vec2);
+	}
+
+	if (life_time < 0.0)
+	{
+		SetObjFlag(hexplosion, "KILL", 1);
+	}
+}

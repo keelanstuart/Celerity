@@ -2521,10 +2521,10 @@ void jcHandleFPSMovement(CScriptVar *c, void *userdata)
 				if (prootobj->Intersect(&poshigh, &vdir, nullptr, &dist, &norm, nullptr, OF_CHECKCOLLISIONS, -1))
 				{
 					// distance along gravity from current pos to ground
-					if (dist <= hightest)
+					if (dist <= (hightest - lowtest))
 					{
 						// push down
-						pos += gravdir * (hightest - dist);
+						pos += gravdir * ((hightest - lowtest) - dist);
 						vvel.x = vvel.y = vvel.z = 0.0f;
 					}
 				}

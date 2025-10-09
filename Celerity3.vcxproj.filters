@@ -243,6 +243,15 @@
     <ClCompile Include="Source\C3Component.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3MazeImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3BlobImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\C3ExtrusionImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -648,6 +657,18 @@
       <Filter>Header Files\Private</Filter>
     </ClInclude>
     <ClInclude Include="Source\TRaster.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3MazeImpl.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Include\C3Blob.h">
+      <Filter>Header Files\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3BlobImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3ExtrusionImpl.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>

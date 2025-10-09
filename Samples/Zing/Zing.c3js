@@ -1,0 +1,528 @@
+// There are as many globals here as possible... this is to
+// minimize dynamic allocation in the script interpreter
+
+var runtime = 0.0;
+var menu_active = 0;
+
+// Scene + camera handles
+var hobj_levelroot;
+var hobj_camroot, hprop_camroot_pos, hprop_camroot_ori;
+var hobj_camarm,  hprop_camarm_pos;
+var hobj_cam,     hprop_cam_ori, hprop_cam_fov;
+var hprop_camroot_facing, hprop_camroot_right;
+
+var collision_info;
+
+// Movement state
+var pos       = { x:0.0, y:0.0, z:0.0 };
+var horz_vel       = { x:0.0, y:0.0, z:0.0 };
+var vert_vel       = { x:0.0, y:0.0, z:0.0 };
+var horz_acc       = { x:0.0, y:0.0, z:0.0 };
+var vert_acc       = { x:0.0, y:0.0, z:0.0 };
+
+// Decomposed (orthogonal vs along gravity) — derived when needed
+var grav      = { x:0.0, y:0.0, z:0.0 };
+var grav_dir  = { x:0.0, y:0.0, z:0.0 }; // normalized gravity (down)
+
+var vlat      = { x:0.0, y:0.0, z:0.0 };
+
+// Camera/controls
+var cam_facing       = { x:0.0, y:0.0, z:0.0 };
+var cam_right        = { x:0.0, y:0.0, z:0.0 };
+var cam_facing_flat  = { x:0.0, y:0.0, z:0.0 }; // orthogonal to gravity
+var cam_right_flat   = { x:0.0, y:0.0, z:0.0 }; // orthogonal to gravity
+
+// Input state (press/release handled via explicit "Up" actions)
+var running       = 0;
+var crouching     = 0;
+var jumped        = 0;
+var move_forward  = 0.0;
+var move_backward = 0.0;
+var strafe_left   = 0.0;
+var strafe_right  = 0.0;
+var look_left     = 0.0;
+var look_right    = 0.0;
+var look_up       = 0.0;
+var look_down     = 0.0;
+
+var move_mag      = 0.0;
+var strafe_mag    = 0.0;
+
+var aiming        = 0;
+var grounded      = 1;
+var jump_count    = 0;    // double-jump counter (0..2 between ground contacts)
+
+// Eye height (interpolated)
+var walk_height   = 10.0;
+var crouch_height = 5.0;
+var height_targ   = walk_height;
+var height        = height_targ;
+
+// Capsule-ish sweep heights (forward checks are done in native code)
+var low_height  = 2.5;	// above position
+var high_height = 0.5; // above height
+
+// Speeds & dynamics
+var walk_speed      = 100.0;
+var run_mult        = 3.4;
+var crouch_mult     = 0.25;
+var air_control     = 0.02;		// fraction of lateral accel when airborne
+var move_mult		= 1.0;
+var ground_friction = -14.0;	// lateral damping on ground
+var air_friction 	= -0.5;	// lateral damping in air
+var friction		= ground_friction;
+var jump_power      = -10.0;
+
+// Camera / FOV
+var fov_normal = 62.0;
+var fov_zoom   = 22.0;
+var fov_targ   = fov_normal;
+var fov        = fov_targ;
+
+// Look deltas (applied each frame)
+var head_init_ori = { x:0.0, y:0.0, z:0.0, w:1.0 };
+var body_zrot = 0.0;
+var head_xrot = 0.0;
+var xaxis     = { x:1.0, y:0.0, z:0.0 };
+var zaxis     = { x:0.0, y:0.0, z:1.0 };
+var tmpori    = { x:0.0, y:0.0, z:0.0, w:1.0 };
+var tmppos    = { x:0.0, y:0.0, z:0.0 };
+var tmpvec    = { x:0.0, y:0.0, z:0.0 };
+var tmp       = 0.0;
+
+var ofs          = { x:0.0, y:0.0, z:0.0 };
+var stepdist     = 0.0;
+var laststeptime = 0.0;
+var steprate     = 100.0;
+var stepside     = 0;
+
+var setup = 1;
+
+var hmusic = 0;
+
+function init()
+{
+	runtime = 0.0;
+	
+	PlaySound("Zing/Armani.wav", 0.05, 1.0, -1, ofs);
+
+	var cur = RegisterCursor("default_cursor_sm.tga", {x:3, y:2}, "Default");
+	SetCursor(cur);
+
+	EnableMouse(0);
+	EnableSystemMouse(0);
+	CaptureMouse(1);
+
+	hobj_levelroot = CreateObject("", self);
+	var load_result = LoadObject(hobj_levelroot, "Zing/Level-Office1.c3o");
+	if (load_result["success"] == 1)
+		Log("Level loaded.\n");
+	else
+		Log("Level failed to load!\n");
+
+	hobj_guiroot = GetRegisteredObject("gui.root");
+	hobj_mainmenu = CreateObject("", hobj_guiroot);
+	LoadObject(hobj_mainmenu, "Zing/MainMenu.c3o");
+	SetObjFlag(hobj_mainmenu, "UPDATE", menu_active);
+	SetObjFlag(hobj_mainmenu, "DRAW", menu_active);
+	if (load_result["success"] == 1)
+		Log("Main menu loaded successfully!\n");
+	else
+		Log("Main menu failed to load!\n");
+
+	hobj_camroot = GetRegisteredObject("camera.root");
+	hobj_camarm  = GetRegisteredObject("camera.arm");
+	hobj_cam     = GetRegisteredObject("camera");
+	
+	hprop_camroot_pos = FindProperty(hobj_camroot, "Position");
+	hprop_camroot_ori = FindProperty(hobj_camroot, "Orientation");
+	hprop_camarm_pos  = FindProperty(hobj_camarm , "Position");
+	
+	hprop_cam_ori      = FindProperty(hobj_cam, "Orientation");
+	head_init_ori      = GetPropertyValue(hprop_cam_ori);
+
+	var hprop_cam_minp = FindProperty(hobj_cam, "PitchCameraAngleMin");
+	var hprop_cam_maxp = FindProperty(hobj_cam, "PitchCameraAngleMax");
+	hprop_camroot_facing = FindProperty(hobj_camroot, "Facing.Forward");
+	hprop_camroot_right  = FindProperty(hobj_camroot, "Facing.Right");
+	
+	SetPropertyValue(hprop_cam_minp, -88.0);
+	SetPropertyValue(hprop_cam_maxp,  88.0);
+	
+	hprop_cam_fov       = FindProperty(hobj_cam, "FOV(Perspective)");
+	var hprop_cam_orbit = FindProperty(hobj_cam, "OrbitDistance");
+	var hprop_cam_far   = FindProperty(hobj_cam, "FarClip");
+	SetPropertyValue(hprop_cam_far, 20000.0);
+	SetPropertyValue(hprop_cam_orbit, 0.01);
+	
+	tmppos = { x:0, y:0, z:height };
+	SetPropertyValue(hprop_camarm_pos, tmppos);
+	
+	collision_info = CreateCollisionResults();
+	
+	// -------- Input actions --------
+	// Press events
+	RegisterInputAction("Run", "delta", 0.0);
+	RegisterInputAction("Crouch", "down", 0.0);
+	RegisterInputAction("Jump", "down", 0.25);
+	RegisterInputAction("Move Forward", "", 0.0);
+	RegisterInputAction("Move Backward", "", 0.0);
+	RegisterInputAction("Strafe Left", "", 0.0);
+	RegisterInputAction("Strafe Right", "", 0.0);
+	RegisterInputAction("Aim", "", 0.0);
+	RegisterInputAction("Look Up", "", 0.0);
+	RegisterInputAction("Look Down", "", 0.0);
+	RegisterInputAction("Look Left", "", 0.0);
+	RegisterInputAction("Look Right", "", 0.0);
+	RegisterInputAction("Quit", "up", 0.0);
+}
+
+// ---------- Respawn ----------
+function respawn()
+{
+	jump_count = 0;
+	running = 0;
+	crouching = 0;
+	grounded = 0;
+
+	var spawn = "SPAWN" + Math.random(1, 4);
+	var hobj_spawn = FindFirstObjByName(hobj_levelroot, spawn, 1);
+	
+	var hprop_spawn_pos = FindProperty(hobj_spawn, "Position");
+	var hprop_spawn_ori = FindProperty(hobj_spawn, "Orientation");
+	
+	tmppos = GetPropertyValue(hprop_spawn_pos);
+	SetPropertyValue(hprop_camroot_pos, tmppos);
+	
+	tmpori = GetPropertyValue(hprop_spawn_ori);
+	SetPropertyValue(hprop_camroot_ori, tmpori);
+	
+	pos = tmppos;
+	horz_vel = { x:0.0, y:0.0, z:0.0 };
+	vert_vel = { x:0.0, y:0.0, z:0.0 };
+	horz_acc = { x:0.0, y:0.0, z:0.0 };
+	vert_acc = { x:0.0, y:0.0, z:0.0 };
+
+	height_targ	= walk_height;	
+	height = height_targ;
+
+	Log("Spawned at: " + spawn + " (" + tmppos.x + ", " + tmppos.y + ", " + tmppos.z + ")\n");
+}
+
+function first_update()
+{
+	respawn();
+}
+
+// ---------- Main update ----------
+function update(elapsed_seconds)
+{
+	if (setup == 1)
+	{
+		setup = 0;
+		elapsed_seconds = 0.0;
+		first_update();
+	}
+
+	runtime += elapsed_seconds;
+
+	// Gravity & camera bases
+	grav = GetGravity();
+	tmp = Vec3.length(grav);
+	if (tmp > 0.0)
+		grav_dir = Vec3.div(grav, tmp);
+	else
+		grav_dir = Vec3.mul(zaxis, -1.0);
+	
+	cam_facing = GetPropertyValue(hprop_camroot_facing);
+	cam_right  = GetPropertyValue(hprop_camroot_right);
+
+	cam_facing_flat = Vec3.normalize(Vec3.reject(cam_facing, grav_dir));
+	cam_right_flat  = Vec3.normalize(Vec3.reject(cam_right,  grav_dir));
+	
+	// Eyepoint + FOV smoothing
+	if (crouching == 0)
+		height_targ = walk_height;
+	else
+		height_targ = crouch_height;
+
+	if (aiming == 0)
+		fov_targ = fov_normal;
+	else
+		fov_targ = fov_zoom;
+
+	fov    = Math.lerp(fov, fov_targ, elapsed_seconds * 20.0);
+	height = Math.lerp(height, height_targ, elapsed_seconds * 20.0);
+
+	move_mag = (move_forward - move_backward);
+	strafe_mag = (strafe_right - strafe_left);
+
+	// Build lateral acceleration from input flags
+	horz_acc = Vec3.mul(cam_facing_flat, move_mag);
+	horz_acc = Vec3.madd(cam_right_flat, strafe_mag, horz_acc);
+
+	// if we're moving, then normalize and re-mult by the move speed
+	horz_acc_len = Vec3.length(horz_acc);
+	if (horz_acc_len > 0.0001)
+	{
+		// Apply run/crouch to lateral accel only; reduce in air
+		move_mult = Math.max(Math.abs(move_mag), Math.abs(strafe_mag));
+
+		if (grounded == 1)
+		{
+			if (running == 1)
+				move_mult *= run_mult;
+
+			if (crouching == 1)
+				move_mult *= crouch_mult;
+		}
+		else
+		{
+			move_mult *= air_control;
+		}
+
+		horz_acc = Vec3.mul(horz_acc, walk_speed * move_mult / horz_acc_len);
+	}
+	
+	if (jumped == 1)
+	{
+		jumped = 0;
+		vert_vel = Vec3.madd(grav_dir, jump_power, vert_vel);
+	}
+	else
+	{
+		vert_acc = { x:0.0, y:0.0, z:0.0 };
+	}
+
+	// Pull pos from camera root (engine provides current transform)
+	pos = GetPropertyValue(hprop_camroot_pos);
+
+	// do the heavy lifting in native code (capsule-ish low/high checks, sliding, ground detect)
+	if (HandleFPSMovement(hobj_levelroot, pos, horz_vel, vert_vel, horz_acc, vert_acc, elapsed_seconds, low_height, height + high_height) == 1)
+	{
+		if (grounded == 0)
+		{
+			PlaySound("step1l.wav", Math.random(1.5, 2.5), Math.random(0.8, 1.1), 0, ofs);
+			PlaySound("step1r.wav", Math.random(1.5, 2.5), Math.random(0.8, 1.1), 0, ofs);
+			laststeptime = runtime;
+			stepdist = 0.0;
+		}
+		else
+		{
+			stepdist += (Vec3.length(horz_vel) * move_mult * elapsed_seconds);
+		}
+
+		grounded = 1;
+		friction = ground_friction;
+		jump_count = 0; // reset jump
+	}
+	else
+	{
+		grounded = 0;
+		friction = air_friction;
+	}
+
+	if ((grounded == 1) && (stepdist > 0.01))
+	{
+		if ((stepdist >= (steprate * move_mult)) && ((runtime - laststeptime) > 0.2))
+		{
+			PlaySound((stepside == 1) ? "step1r.wav" : "step1l.wav", Math.random(0.4, 0.8), Math.random(0.8, 1.1), 0, ofs);
+			stepdist = 0.0;
+			laststeptime = runtime;
+			stepside = stepside ^ 1;
+		}
+	}
+
+	// Ground/air post-processing on velocity (with friction)
+	horz_vel = Vec3.madd(horz_vel, friction * elapsed_seconds, horz_vel);
+
+	// Write back updated position
+	SetPropertyValue(hprop_camroot_pos, pos);
+	
+	// Apply camera look deltas
+
+	// make looking around slower when you're zoomed
+	tmp = (fov / fov_normal);
+	tmp *= tmp;
+
+	body_zrot = ((look_left - look_right) * elapsed_seconds) * tmp;
+
+	tmpori = GetPropertyValue(hprop_camroot_ori);
+	tmpori = AdjustQuat(tmpori, zaxis, Math.toRadians(body_zrot * 550.0));
+	SetPropertyValue(hprop_camroot_ori, tmpori);
+	
+	tmpori = GetPropertyValue(hprop_cam_ori);
+	tmpvec = QuatToEuler(tmpori);
+
+	head_xrot = Math.range(head_xrot + ((look_down - look_up) * elapsed_seconds * tmp), -0.16, 0.16);
+
+	tmpori = AdjustQuat(head_init_ori, xaxis, Math.toRadians(head_xrot * 490.0));
+	SetPropertyValue(hprop_cam_ori, tmpori);
+	
+	// Eyepoint height & FOV writeback
+	tmppos = { x:0.0, y:0.0, z:height };
+	SetPropertyValue(hprop_camarm_pos, tmppos);
+	SetPropertyValue(hprop_cam_fov, fov);
+
+	look_up = 0.0;
+	look_down = 0.0;
+	look_left = 0.0;
+	look_right = 0.0;
+	move_forward = 0.0;
+	move_backward = 0.0;
+	strafe_left = 0.0;
+	strafe_right = 0.0;
+}
+
+
+function enable_menu(enabled)
+{
+	menu_active = enabled;
+	SetObjFlag(hobj_levelroot, "UPDATE", menu_active ^ 1);
+	SetObjFlag(hobj_mainmenu, "UPDATE", menu_active);
+	SetObjFlag(hobj_mainmenu, "DRAW", menu_active);
+	EnableMouse(menu_active);
+	CaptureMouse(menu_active ^ 1);
+}
+
+
+// ---------- Input ----------
+function handle_input(action, value)
+{
+	if (action == "Run")
+	{
+		if (value > 0.5)
+			running = 1;
+		else
+			running = 0;
+	}
+	else if (action == "Crouch")
+	{
+		crouching = crouching ^ 1;
+	}
+	else if (action == "Move Forward")
+	{
+		move_forward = value;
+	}
+	else if (action == "Move Backward")
+	{
+		move_backward = value;
+	}
+	else if (action == "Strafe Left")
+	{
+		strafe_left = value;
+	}
+	else if (action == "Strafe Right")
+	{
+		strafe_right = value;
+	}
+	else if (action == "Aim")
+	{
+		if (value > 0.5)
+			aiming = 1;
+		else
+			aiming = 0;
+	}
+	else if (action == "Jump")
+	{
+		// Allow two jumps between ground contacts
+		if (jump_count <= 1)
+		{
+			jumped = 1;
+			jump_count += 1;
+		}
+	}
+	// Mouse look (accumulate; applied in update)
+	else if (action == "Look Left")
+	{
+		look_left = value;
+	}
+	else if (action == "Look Right")
+	{
+		look_right = value;
+	}
+	else if (action == "Look Up")
+	{
+		look_up = value;
+	}
+	else if (action == "Look Down")
+	{
+		look_down = value;
+	}
+	else if (action == "Quit")
+	{
+		enable_menu(menu_active ^ 1);
+	}
+}
+
+
+// This is called at start-up and when a new device is detected
+function device_connected(device_type, device_name, naxes, nbuttons)
+{
+	Log("Registering " + device_name + " Controls... ");
+
+	if (device_type == "keyboard")
+	{
+		LinkInputToAction("Run", device_name, "l shift");
+		LinkInputToAction("Strafe Left", device_name, "a");
+		LinkInputToAction("Strafe Right", device_name, "d");
+		LinkInputToAction("Move Forward", device_name, "w");
+		LinkInputToAction("Move Backward", device_name, "s");
+		LinkInputToAction("Jump", device_name, "button 3");
+		LinkInputToAction("Crouch", device_name, "c");
+		LinkInputToAction("Use", device_name, "e");
+		LinkInputToAction("Cycle View Mode", device_name, "select");
+		LinkInputToAction("Quit", device_name, "quit");
+
+		Log("done.\n");
+	}
+	else if (device_type == "mouse")
+	{
+		LinkInputToAction("Fire 1", device_name, "button 1");
+		LinkInputToAction("Aim", device_name, "button 2");
+		LinkInputToAction("Look Up", device_name, "axis 2 +y");
+		LinkInputToAction("Look Down", device_name, "axis 2 -y");
+		LinkInputToAction("Look Left", device_name, "axis 2 -x");
+		LinkInputToAction("Look Right", device_name, "axis 2 +x");
+		LinkInputToAction("Next Weapon", device_name, "axis 2 +z");
+		LinkInputToAction("Prev Weapon", device_name, "axis 2 -z");
+
+		Log("done.\n");
+	}
+	else if (naxes > 1)
+	{
+		LinkInputToAction("Run", device_name, "button 9");
+		LinkInputToAction("Jump", device_name, "button 10");
+		LinkInputToAction("Move Forward", device_name, "axis 1 +y");
+		LinkInputToAction("Move Backward", device_name, "axis 1 -y");
+		LinkInputToAction("Strafe Left", device_name, "axis 1 -x");
+		LinkInputToAction("Strafe Right", device_name, "axis 1 +x");
+		LinkInputToAction("Look Down", device_name, "axis 2 -y");
+		LinkInputToAction("Look Up", device_name, "axis 2 +y");
+		LinkInputToAction("Look Left", device_name, "axis 2 -x");
+		LinkInputToAction("Look Right", device_name, "axis 2 +x");
+		LinkInputToAction("Use", device_name, "button 1");
+		LinkInputToAction("Crouch", device_name, "button 2");
+		LinkInputToAction("Aim", device_name, "button 5");
+		LinkInputToAction("Fire 1", device_name, "button 6");
+		LinkInputToAction("Next Weapon", device_name, "pov +x");
+		LinkInputToAction("Prev Weapon", device_name, "pov -x");
+		LinkInputToAction("Cycle View Mode", device_name, "button 4");
+
+		Log("done.\n");
+	}
+	else
+	{
+		Log("device ignored.\n");
+	}
+}
+
+
+// ---------- Shutdown ----------
+function free()
+{
+  CaptureMouse(0);
+  EnableSystemMouse(1);
+  FreeCollisionResults(collision_info);
+}
+

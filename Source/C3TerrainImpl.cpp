@@ -146,7 +146,7 @@ bool TerrainDescription::Load(tinyxml2::XMLDocument *pdoc)
 		return ret;
 	};
 
-	tinyxml2::XMLElement *pel = pdoc->FirstChildElement("c3.terrain");
+	tinyxml2::XMLElement *pel = pdoc->FirstChildElement("c3pg:terrain");
 	bool ret = pel != nullptr;
 
 	TCHAR *tmp;
@@ -190,131 +190,12 @@ bool TerrainDescription::Load(tinyxml2::XMLDocument *pdoc)
 	while (pel)
 	{
 		ret &= LoadLayers(pel->FirstChildElement("layers"));
-		pel = pel->NextSiblingElement("c3.terrain");
+		pel = pel->NextSiblingElement("c3pg:terrain");
 	}
 
 	return ret;
 }
 
-using U8Raster = TRaster<uint8_t>;
-using RGBRaster = TRaster<glm::u8vec3>;
-using RGBARaster = TRaster<glm::u8vec4>;
-
-void LoadU8Image(ResourceManager *rm, const TCHAR *filename, U8Raster &img)
-{
-	Resource *hr = rm->GetResource(filename, RESF_DEMANDLOAD);
-
-	Texture2D *readtex = nullptr;
-	void *readbuf = nullptr;
-	Texture2D::SLockInfo readli;
-
-	if (hr && (hr->GetStatus() == Resource::RS_LOADED))
-	{
-		readtex = dynamic_cast<Texture2D *>((Texture2D *)(hr->GetData()));
-		if (readtex && ((readtex->Width() > 1) && (readtex->Height() > 1) && (readtex->Format() == Renderer::U8_1CH)) &&
-			(readtex->Lock(&readbuf, readli, 0, TEXLOCKFLAG_READ | TEXLOCKFLAG_CACHE) == Texture::RET_OK))
-		{
-			img.Resize(readtex->Width(), readtex->Height());
-			memcpy(img.m_Image.data(), readbuf, img.m_Image.size());
-
-			readtex->Unlock();
-		}
-
-		hr->DelRef();
-	}
-}
-
-void LoadRGBImage(ResourceManager *rm, const TCHAR *filename, RGBRaster &img)
-{
-	Resource *hr = rm->GetResource(filename, RESF_DEMANDLOAD);
-
-	Texture2D *readtex = nullptr;
-	void *readbuf = nullptr;
-	Texture2D::SLockInfo readli;
-
-	if (hr && (hr->GetStatus() == Resource::RS_LOADED))
-	{
-		readtex = dynamic_cast<Texture2D *>((Texture2D *)(hr->GetData()));
-		if (readtex && ((readtex->Width() > 1) && (readtex->Height() > 1) && (readtex->Format() == Renderer::U8_3CH)) &&
-			(readtex->Lock(&readbuf, readli, 0, TEXLOCKFLAG_READ | TEXLOCKFLAG_CACHE) == Texture::RET_OK))
-		{
-			img.Resize(readtex->Width(), readtex->Height());
-
-			if (readtex->Format() == Renderer::U8_3CH)
-			{
-				memcpy(img.m_Image.data(), readbuf, img.m_Image.size() * sizeof(glm::u8vec3));
-			}
-			else if (readtex->Format() == Renderer::U8_1CH)
-			{
-				uint8_t *s = (uint8_t *)readbuf;
-				glm::u8vec3 *d = img.m_Image.data();
-				for (size_t i = 0; i < img.m_Image.size(); i++, s++, d++)
-					*d = glm::u8vec3(*s, *s, *s);
-			}
-			else if (readtex->Format() == Renderer::U8_4CH)
-			{
-				glm::u8vec4 *s = (glm::u8vec4 *)readbuf;
-				glm::u8vec3 *d = img.m_Image.data();
-				for (size_t i = 0; i < img.m_Image.size(); i++, s++, d++)
-					*d = *s;
-			}
-
-			readtex->Unlock();
-		}
-
-		hr->DelRef();
-	}
-	else
-	{
-		img.Resize(16, 16);
-	}
-}
-
-void LoadRGBAImage(ResourceManager *rm, const TCHAR *filename, RGBARaster &img)
-{
-	Resource *hr = rm->GetResource(filename, RESF_DEMANDLOAD);
-
-	Texture2D *readtex = nullptr;
-	void *readbuf = nullptr;
-	Texture2D::SLockInfo readli;
-
-	if (hr && (hr->GetStatus() == Resource::RS_LOADED))
-	{
-		readtex = dynamic_cast<Texture2D *>((Texture2D *)(hr->GetData()));
-		if (readtex && ((readtex->Width() > 1) && (readtex->Height() > 1)) &&
-			(readtex->Lock(&readbuf, readli, 0, TEXLOCKFLAG_READ | TEXLOCKFLAG_CACHE) == Texture::RET_OK))
-		{
-			img.Resize(readtex->Width(), readtex->Height());
-
-			if (readtex->Format() == Renderer::U8_4CH)
-			{
-				memcpy(img.m_Image.data(), readbuf, img.m_Image.size() * sizeof(glm::u8vec4));
-			}
-			else if (readtex->Format() == Renderer::U8_1CH)
-			{
-				uint8_t *s = (uint8_t *)readbuf;
-				glm::u8vec4 *d = img.m_Image.data();
-				for (size_t i = 0; i < img.m_Image.size(); i++, s++, d++)
-					*d = glm::u8vec4(*s, *s, *s, 255);
-			}
-			else if (readtex->Format() == Renderer::U8_3CH)
-			{
-				glm::u8vec3 *s = (glm::u8vec3 *)readbuf;
-				glm::u8vec4 *d = img.m_Image.data();
-				for (size_t i = 0; i < img.m_Image.size(); i++, s++, d++)
-					*d = glm::u8vec4(*s, 255);
-			}
-
-			readtex->Unlock();
-		}
-
-		hr->DelRef();
-	}
-	else
-	{
-		img.Resize(16, 16);
-	}
-}
 
 Model *TerrainDescription::GenerateTerrain(System *psys)
 {
@@ -328,7 +209,7 @@ Model *TerrainDescription::GenerateTerrain(System *psys)
 	U8Raster raw_heights;
 
 	if (m_HeightmapFile.has_value())
-		LoadU8Image(rm, m_HeightmapFile->c_str(), raw_heights);
+		util::LoadU8Image(rm, m_HeightmapFile->c_str(), raw_heights);
 
 	// We're going to build a lattice that looks like this:
 	/*
@@ -648,7 +529,7 @@ bool TerrainDescription::CompositeTextures(System *psys, Material *pmtl)
 		if (layer.m_LayerOpacityFile.has_value())
 		{
 			TRaster<uint8_t> tmp;
-			LoadU8Image(rm, layer.m_LayerOpacityFile->c_str(), tmp);
+			util::LoadU8Image(rm, layer.m_LayerOpacityFile->c_str(), tmp);
 			opac.Fill([&](size_t x, size_t y) -> uint8_t
 			{
 				glm::fvec2 opacuv((float)x / (float)m_TexDim.x, (float)y / (float)m_TexDim.y);
@@ -662,7 +543,7 @@ bool TerrainDescription::CompositeTextures(System *psys, Material *pmtl)
 		if (layer.m_TexFile[Material::TCT_DIFFUSE].has_value())
 		{
 			RGBARaster diff;
-			LoadRGBAImage(rm, layer.m_TexFile[Material::TCT_DIFFUSE]->c_str(), diff);
+			util::LoadRGBAImage(rm, layer.m_TexFile[Material::TCT_DIFFUSE]->c_str(), diff);
 
 			thcount.fetch_add(1, std::memory_order_relaxed);
 			psys->GetThreadPool()->RunTask(
@@ -705,7 +586,7 @@ bool TerrainDescription::CompositeTextures(System *psys, Material *pmtl)
 		if (layer.m_TexFile[Material::TCT_NORMAL].has_value())
 		{
 			RGBRaster norm;
-			LoadRGBImage(rm, layer.m_TexFile[Material::TCT_NORMAL]->c_str(), norm);
+			util::LoadRGBImage(rm, layer.m_TexFile[Material::TCT_NORMAL]->c_str(), norm);
 
 			thcount.fetch_add(1, std::memory_order_relaxed);
 			psys->GetThreadPool()->RunTask(
@@ -748,7 +629,7 @@ bool TerrainDescription::CompositeTextures(System *psys, Material *pmtl)
 		if (layer.m_TexFile[Material::TCT_SURFACEDESC].has_value())
 		{
 			RGBRaster surfdesc;
-			LoadRGBImage(rm, layer.m_TexFile[Material::TCT_SURFACEDESC]->c_str(), surfdesc);
+			util::LoadRGBImage(rm, layer.m_TexFile[Material::TCT_SURFACEDESC]->c_str(), surfdesc);
 
 			thcount.fetch_add(1, std::memory_order_relaxed);
 			psys->GetThreadPool()->RunTask(

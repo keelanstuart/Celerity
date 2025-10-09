@@ -88,6 +88,8 @@ namespace c3
 
 		virtual uint64_t GetLastFrameChanged();
 
+		virtual System *GetSystem() const;
+
 		void UpdateLastFrameChanged();
 
 	};

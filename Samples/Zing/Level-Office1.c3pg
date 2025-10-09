@@ -1,0 +1,53 @@
+<c3pg:maze name="Office1" map="Zing\Level-Office1.tga"
+            minwallz="0.0" maxwallz="20.0" floorz="0.0" ceilingz="20.0">
+
+  <surface dir="floor">
+    <variant tiling.u="0.25" tiling.v="0.25">
+      <tex.diffuse>Zing\Carpet02.jpg</tex.diffuse>
+      <tex.normal>Zing\Carpet02_norm.jpg</tex.normal>
+      <tex.surfdesc>Zing\Carpet02_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="ceiling">
+    <variant tiling.u="0.25" tiling.v="0.25">
+      <tex.diffuse>Zing\OfficeCeiling01.jpg</tex.diffuse>
+      <tex.normal>Zing\OfficeCeiling01_norm.jpg</tex.normal>
+      <tex.emissive>Zing\OfficeCeiling01_emis.jpg</tex.emissive>
+      <tex.surfdesc>Zing\OfficeCeiling01_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="north">
+    <variant tiling.v="4.0">
+      <tex.diffuse>Zing\Bricks01.jpg</tex.diffuse>
+      <tex.normal>Zing\Bricks01_norm.jpg</tex.normal>
+      <tex.surfdesc>Zing\Bricks01_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="south">
+    <variant tiling.v="4.0">
+      <tex.diffuse>Zing\Bricks01.jpg</tex.diffuse>
+      <tex.normal>Zing\Bricks01_norm.jpg</tex.normal>
+      <tex.surfdesc>Zing\Bricks01_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="east">
+    <variant tiling.v="4.0">
+      <tex.diffuse>Zing\Bricks01.jpg</tex.diffuse>
+      <tex.normal>Zing\Bricks01_norm.jpg</tex.normal>
+      <tex.surfdesc>Zing\Bricks01_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="west">
+    <variant tiling.v="4.0">
+      <tex.diffuse>Zing\Bricks01.jpg</tex.diffuse>
+      <tex.normal>Zing\Bricks01_norm.jpg</tex.normal>
+      <tex.surfdesc>Zing\Bricks01_surf.jpg</tex.surfdesc>
+    </variant>
+  </surface>
+
+</c3pg:maze>

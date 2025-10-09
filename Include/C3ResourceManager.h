@@ -24,6 +24,7 @@ namespace c3
 		#define RESF_CREATEENTRYONLY	0x00000002			// Creates an empty Resource in the table (or replaces the current resource with data)
 		#define RESF_ZIPRES				0x00000004			// Indicates that the resource comes from a zipfile (loads only from memory)
 		#define RESF_FINDENTRYONLY		0x00000008			// Only check to see if the resource exists - don't create an new entry or attempt to load anything!
+		#define RESF_CACHENATIVE		0x00000010			// For GPU resources, will keep a CPU-side cache
 
 
 		/// ResTypeFlagMode is used in ForAllResourceDo calls
@@ -90,6 +91,8 @@ namespace c3
 		virtual Resource *GetResourceByIndex(size_t index) = NULL;
 
 		virtual uint64_t GetLastFrameChanged() = NULL;
+
+		virtual System *GetSystem() const = NULL;
 
 	};
 

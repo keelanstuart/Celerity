@@ -9,6 +9,8 @@
 #include <C3Utility.h>
 #include <C3Positionable.h>
 #include <filesystem>
+#include <TRaster.h>
+#include <C3BlobImpl.h>
 
 using namespace c3;
 
@@ -224,4 +226,122 @@ bool util::FindShortestRelativePath(const std::vector<tstring> &relative_paths,
 	return false;
 
 #endif
+}
+
+
+void util::LoadU8Image(ResourceManager *rm, const TCHAR *filename, U8Raster &img)
+{
+	Resource *hr = rm->GetResource(filename, RESF_DEMANDLOAD, RESOURCETYPE(Blob));
+
+	if (hr && (hr->GetStatus() == Resource::RS_LOADED))
+	{
+		c3::Blob *pblob = dynamic_cast<Blob *>((Blob *)hr->GetData());
+
+		int w, h, c;
+		if (stbi_info_from_memory(pblob->Data(), (int)pblob->Size(), &w, &h, &c) && w && h && (c == 1))
+		{
+			stbi_uc *src = stbi_load_from_memory(pblob->Data(), (int)pblob->Size(), &w, &h, &c, 0);
+			if (src)
+			{
+				img.Resize(w, h);
+				memcpy(img.m_Image.data(), src, img.m_Image.size());
+				free(src);
+			}
+		}
+
+		hr->DelRef();
+	}
+}
+
+
+void util::LoadRGBImage(c3::ResourceManager *rm, const TCHAR *filename, RGBRaster &img)
+{
+	Resource *hr = rm->GetResource(filename, RESF_DEMANDLOAD);
+
+	Texture2D *readtex = nullptr;
+	void *readbuf = nullptr;
+	Texture2D::SLockInfo readli;
+
+	if (hr && (hr->GetStatus() == Resource::RS_LOADED))
+	{
+		readtex = dynamic_cast<Texture2D *>((Texture2D *)(hr->GetData()));
+		if (readtex && ((readtex->Width() > 1) && (readtex->Height() > 1) && (readtex->Format() == Renderer::U8_3CH)) &&
+			(readtex->Lock(&readbuf, readli, 0, TEXLOCKFLAG_READ | TEXLOCKFLAG_CACHE) == Texture::RET_OK))
+		{
+			img.Resize(readtex->Width(), readtex->Height());
+
+			if (readtex->Format() == Renderer::U8_3CH)
+			{
+				memcpy(img.m_Image.data(), readbuf, img.m_Image.size() * sizeof(glm::u8vec3));
+			}
+			else if (readtex->Format() == Renderer::U8_1CH)
+			{
+				uint8_t *s = (uint8_t *)readbuf;
+				glm::u8vec3 *d = img.m_Image.data();
+				for (size_t i = 0; i < img.m_Image.size(); i++, s++, d++)
+					*d = glm::u8vec3(*s, *s, *s);
+			}
+			else if (readtex->Format() == Renderer::U8_4CH)
+			{
+				glm::u8vec4 *s = (glm::u8vec4 *)readbuf;
+				glm::u8vec3 *d = img.m_Image.data();
+				for (size_t i = 0; i < img.m_Image.size(); i++, s++, d++)
+					*d = *s;
+			}
+
+			readtex->Unlock();
+		}
+
+		hr->DelRef();
+	}
+	else
+	{
+		img.Resize(16, 16);
+	}
+}
+
+void util::LoadRGBAImage(c3::ResourceManager *rm, const TCHAR *filename, RGBARaster &img)
+{
+	Resource *hr = rm->GetResource(filename, RESF_DEMANDLOAD);
+
+	Texture2D *readtex = nullptr;
+	void *readbuf = nullptr;
+	Texture2D::SLockInfo readli;
+
+	if (hr && (hr->GetStatus() == Resource::RS_LOADED))
+	{
+		readtex = dynamic_cast<Texture2D *>((Texture2D *)(hr->GetData()));
+		if (readtex && ((readtex->Width() > 1) && (readtex->Height() > 1)) &&
+			(readtex->Lock(&readbuf, readli, 0, TEXLOCKFLAG_READ | TEXLOCKFLAG_CACHE) == Texture::RET_OK))
+		{
+			img.Resize(readtex->Width(), readtex->Height());
+
+			if (readtex->Format() == Renderer::U8_4CH)
+			{
+				memcpy(img.m_Image.data(), readbuf, img.m_Image.size() * sizeof(glm::u8vec4));
+			}
+			else if (readtex->Format() == Renderer::U8_1CH)
+			{
+				uint8_t *s = (uint8_t *)readbuf;
+				glm::u8vec4 *d = img.m_Image.data();
+				for (size_t i = 0; i < img.m_Image.size(); i++, s++, d++)
+					*d = glm::u8vec4(*s, *s, *s, 255);
+			}
+			else if (readtex->Format() == Renderer::U8_3CH)
+			{
+				glm::u8vec3 *s = (glm::u8vec3 *)readbuf;
+				glm::u8vec4 *d = img.m_Image.data();
+				for (size_t i = 0; i < img.m_Image.size(); i++, s++, d++)
+					*d = glm::u8vec4(*s, 255);
+			}
+
+			readtex->Unlock();
+		}
+
+		hr->DelRef();
+	}
+	else
+	{
+		img.Resize(16, 16);
+	}
 }

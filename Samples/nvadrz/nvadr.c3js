@@ -1,0 +1,44 @@
+var hmod;
+var hscl;
+var hparent;
+var hexplosion;
+var tmp;
+
+var dying = 0;
+var time_left = 1.0;
+var vec3 = { x:0.0, y:0.0, z:0.0 };
+
+function init()
+{
+	hmod = FindProperty(self, "ModelFile");
+	hscl = FindProperty(self, "Scale");
+	hparent = GetParent(self);
+}
+
+function update(elapsed_seconds)
+{
+	if (dying == 1)
+	{
+		time_left -= elapsed_seconds;
+		if (time_left < 0.0)
+		{
+			time_left = 0.0;
+			SetObjFlag(self, "KILL", 1);
+			SetObjFlag(hexplosion, "KILL", 1);
+		}
+		
+		vec3.x = time_left;
+		vec3.y = time_left;
+		vec3.z = time_left;
+		SetPropertyValue(hscl, vec3);
+	}
+}
+
+function hit()
+{
+	dying = 1;
+	hexplosion = CreateObject("explosion", hparent);
+	vec3 = GetPropertyValue(hpos);
+	tmp = FindProperty(hexplosion, "Position");
+	SetPropertyValue(tmp, vec3);
+}
