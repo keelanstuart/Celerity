@@ -1,19 +1,13 @@
 var runtime;
 var hpos;
 
-var Quat = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
-
 var irotor;
-var rotor_ori = new Quat();
-
-var Facing = { forward: -1, right: -1, up: -1 };
-var hfacing = new Facing();
-
-var hlacc;
-var hrvel;
 
 var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
 var tmpv4 = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+
+var zaxis = { x: 0.0, y: 0.0, z: 1.0 };
+var zrot = 0.0;
 
 function update(elapsed_seconds)
 {
@@ -22,98 +16,13 @@ function update(elapsed_seconds)
 	irotor = GetModelNodeIndex(self, "Rotor");
 	if (irotor >= 0)
 	{
-		rotor_ori = GetModelInstNodeOri(self, irotor);
-		rotor_ori.w += elapsed_seconds;
-		SetModelInstNodeOri(self, irotor, rotor_ori);
-	}
-}
-
-
-function handle_input(action, value)
-{
-	//Log("input: " + action + ": " + value + "\n");
-
-	if (action == "Move Forward")
-	{
-		dir = GetPropertyValue(hlacc);
-		tmpv3 = GetPropertyValue(hfacing.forward);
-		dir.x += (tmpv3.x * 2.0 * value);
-		dir.y += (tmpv3.y * 2.0 * value);
-		dir.z += (tmpv3.z * 2.0 * value);
-		SetPropertyValue(hlacc, dir);
-	}
-	else if (action == "Move Backward")
-	{
-		dir = GetPropertyValue(hlacc);
-		tmpv3 = GetPropertyValue(hfacing.forward);
-		dir.x -= (tmpv3.x * 2.0 * value);
-		dir.y -= (tmpv3.y * 2.0 * value);
-		dir.z -= (tmpv3.z * 2.0 * value);
-		SetPropertyValue(hlacc, dir);
-	}
-	else if (action == "Strafe Left")
-	{
-		dir = GetPropertyValue(hlacc);
-		tmpv3 = GetPropertyValue(hfacing.right);
-		dir.x -= (tmpv3.x * 2.0 * value);
-		dir.y -= (tmpv3.y * 2.0 * value);
-		dir.z -= (tmpv3.z * 2.0 * value);
-		SetPropertyValue(hlacc, dir);
-	}
-	else if (action == "Strafe Right")
-	{
-		dir = GetPropertyValue(hlacc);
-		tmpv3 = GetPropertyValue(hfacing.right);
-		dir.x += (tmpv3.x * 2.0 * value);
-		dir.y += (tmpv3.y * 2.0 * value);
-		dir.z += (tmpv3.z * 2.0 * value);
-		SetPropertyValue(hlacc, dir);
-	}
-	else if (action == "Look Down")
-	{
-	}
-	else if (action == "Look Up")
-	{
-	}
-	else if (action == "Look Left")
-	{
-		rot = GetPropertyValue(hrvel);
-		rot.z -= (value * 0.005);
-		SetPropertyValue(hrvel, rot);
-	}
-	else if (action == "Look Right")
-	{
-		rot = GetPropertyValue(hrvel);
-		rot.z += (value * 0.005);
-		SetPropertyValue(hrvel, rot);
-	}
-	else if (action == "Ascend")
-	{
-	}
-	else if (action == "Descend")
-	{
-	}
-	else if (action == "Run")
-	{
-	}
-	else if (action == "Jump")
-	{
-	}
-	else if (action == "Fire 1")
-	{
-	}
-	else if (action == "Fire 2")
-	{
+	    zrot = -1000.0 * runtime;
+		tmpv4 = AxisAngleToQuat(zaxis, zrot);
+		SetModelInstNodeOri(self, irotor, tmpv4);
 	}
 }
 
 function init()
 {
 	runtime = 0.0;
-
-	hpos = FindProperty(self, "Position");
-
-	hfacing.forward = FindProperty(self, "Facing.Forward");
-	hfacing.right = FindProperty(self, "Facing.Right");
-	hfacing.up = FindProperty(self, "Facing.Up");
 }

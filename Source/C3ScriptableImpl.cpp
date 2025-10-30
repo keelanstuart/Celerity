@@ -208,6 +208,7 @@ void jcSetObjFlag(CScriptVar *c, void *userdata);
 void jcAdjustQuat(CScriptVar *c, void *userdata);
 void jcQuatToEuler(CScriptVar *c, void *userdata);
 void jcEulerToQuat(CScriptVar *c, void *userdata);
+void jcAxisAngleToQuat(CScriptVar *c, void *userdata);
 void jcPlaySound(CScriptVar *c, void *userdata);
 void jcStopSound(CScriptVar *c, void *userdata);
 void jcPauseSound(CScriptVar *c, void *userdata);
@@ -319,6 +320,7 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function AdjustQuat(quat, axis, angle)"),						jcAdjustQuat, psys);
 	m_JS->AddNative(_T("function EulerToQuat(euler)"),									jcEulerToQuat, psys);
 	m_JS->AddNative(_T("function QuatToEuler(quat)"),									jcQuatToEuler, psys);
+	m_JS->AddNative(_T("function AxisAngleToQuat(axis, angle)"),						jcAxisAngleToQuat, psys);
 
 	m_JS->AddNative(_T("function PlaySound(filename, volmod, pitchmod, loop, pos)"),	jcPlaySound, psys);
 	m_JS->AddNative(_T("function StopSound(hsound)"),									jcStopSound, psys);
@@ -1622,6 +1624,55 @@ void jcEulerToQuat(CScriptVar *c, void *userdata)
 
 	float yaw = glm::radians(pz->m_Var->GetFloat());
 	q = glm::normalize(glm::angleAxis(yaw, glm::fvec3(0, 0, 1)) * q);
+
+	CScriptVarLink *psvl;
+
+	psvl = ret->FindChildOrCreate(_T("x"));
+	psvl->m_Owned = true;
+	CScriptVar *prx = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("y"));
+	psvl->m_Owned = true;
+	CScriptVar *pry = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("z"));
+	psvl->m_Owned = true;
+	CScriptVar *prz = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("w"));
+	psvl->m_Owned = true;
+	CScriptVar *prw = psvl->m_Var;
+
+	prx->SetFloat(q.x);
+	pry->SetFloat(q.y);
+	prz->SetFloat(q.z);
+	prw->SetFloat(q.w);
+}
+
+
+//m_JS->AddNative(_T("function AxisAngleToQuat(axis, angle)"),			jcAxisAngleToQuat, psys);
+void jcAxisAngleToQuat(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	CScriptVar *paxis = c->GetParameter(_T("axis"));
+	if (!paxis)
+		return;
+
+	CScriptVarLink *px = paxis->FindChild(_T("x"));
+	CScriptVarLink *py = paxis->FindChild(_T("y"));
+	CScriptVarLink *pz = paxis->FindChild(_T("z"));
+	if (!(px && py && pz))
+		return;
+
+	CScriptVar *pangle = c->GetParameter(_T("angle"));
+	if (!pangle)
+		return;
+
+	glm::fquat q = glm::angleAxis(glm::radians(pangle->GetFloat()),
+		glm::fvec3(px->m_Var->GetFloat(), py->m_Var->GetFloat(), pz->m_Var->GetFloat()));;
 
 	CScriptVarLink *psvl;
 
