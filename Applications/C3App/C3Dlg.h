@@ -47,6 +47,9 @@ protected:
 	int32_t m_uBlurTex;
 	int32_t m_uBlurScale;
 
+	bool m_MotionBlur;
+	size_t m_MotionUpdateIdx;
+
 	bool m_bSurfacesCreated, m_bSurfacesReady;
 	bool m_ShowDebug;
 

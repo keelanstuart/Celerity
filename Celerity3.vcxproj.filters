@@ -252,6 +252,9 @@
     <ClCompile Include="Source\C3ExtrusionImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Source\C3SpaceMouseImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Include\C3FrameBuffer.h">
@@ -670,6 +673,9 @@
     </ClInclude>
     <ClInclude Include="Source\C3ExtrusionImpl.h">
       <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\C3SpaceMouseImpl.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

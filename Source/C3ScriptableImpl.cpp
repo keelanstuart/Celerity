@@ -209,6 +209,7 @@ void jcAdjustQuat(CScriptVar *c, void *userdata);
 void jcQuatToEuler(CScriptVar *c, void *userdata);
 void jcEulerToQuat(CScriptVar *c, void *userdata);
 void jcAxisAngleToQuat(CScriptVar *c, void *userdata);
+void jcQuatFromTo(CScriptVar *c, void *userdata);
 void jcPlaySound(CScriptVar *c, void *userdata);
 void jcStopSound(CScriptVar *c, void *userdata);
 void jcPauseSound(CScriptVar *c, void *userdata);
@@ -321,6 +322,7 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function EulerToQuat(euler)"),									jcEulerToQuat, psys);
 	m_JS->AddNative(_T("function QuatToEuler(quat)"),									jcQuatToEuler, psys);
 	m_JS->AddNative(_T("function AxisAngleToQuat(axis, angle)"),						jcAxisAngleToQuat, psys);
+	m_JS->AddNative(_T("function QuatFromTo(src, dst)"),								jcQuatFromTo, psys);
 
 	m_JS->AddNative(_T("function PlaySound(filename, volmod, pitchmod, loop, pos)"),	jcPlaySound, psys);
 	m_JS->AddNative(_T("function StopSound(hsound)"),									jcStopSound, psys);
@@ -444,7 +446,10 @@ void ScriptableImpl::Update(float elapsed_time)
 
 			if (m_UpdateTime < 0)
 				m_UpdateTime = m_UpdateRate;
-			Execute(_T("update(%0.3f);"), elapsed_time);
+
+			// ALL the precision here... release mode might have very small frame times!
+			// The previous %0.3f value was giving dead updates sometimes.
+			Execute(_T("update(%0.8f);"), elapsed_time);
 		}
 	}
 }
@@ -1746,6 +1751,95 @@ void jcQuatToEuler(CScriptVar *c, void *userdata)
 }
 
 
+// m_JS->AddNative(_T("function QuatFromTo(src, dst)"), jcQuatFromTo, psys);
+void jcQuatFromTo(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	CScriptVar *psrc = c->GetParameter(_T("src"));
+	CScriptVar *pdst = c->GetParameter(_T("dst"));
+	if (!(psrc && pdst))
+		return;
+
+	CScriptVarLink *pv1x = psrc->FindChild(_T("x"));
+	CScriptVarLink *pv1y = psrc->FindChild(_T("y"));
+	CScriptVarLink *pv1z = psrc->FindChild(_T("z"));
+	if (!(pv1x && pv1y && pv1z))
+		return;
+
+	CScriptVarLink *pv2x = pdst->FindChild(_T("x"));
+	CScriptVarLink *pv2y = pdst->FindChild(_T("y"));
+	CScriptVarLink *pv2z = pdst->FindChild(_T("z"));
+	if (!(pv2x && pv2y && pv2z))
+		return;
+
+	glm::fvec3 v1, v2;
+	v1.x = pv1x->m_Var->GetFloat();
+	v1.y = pv1y->m_Var->GetFloat();
+	v1.z = pv1z->m_Var->GetFloat();
+
+	v2.x = pv2x->m_Var->GetFloat();
+	v2.y = pv2y->m_Var->GetFloat();
+	v2.z = pv2z->m_Var->GetFloat();
+
+	// Normalize input vectors
+	v1 = glm::normalize(v1);
+	v2 = glm::normalize(v2);
+
+	float dot = glm::dot(v1, v2);
+	glm::vec3 axis;
+	glm::quat q;
+
+	// Handle nearly identical or opposite vectors
+	if (dot > 0.9999f)
+	{
+		q = glm::identity<glm::fquat>();
+	}
+	else if (dot < -0.9999f)
+	{
+		// choose an arbitrary orthogonal axis
+		axis = glm::cross(v1, glm::vec3(1.0f, 0.0f, 0.0f));
+		if (glm::length2(axis) < 1e-6f)
+			axis = glm::cross(v1, glm::vec3(0.0f, 1.0f, 0.0f));
+		axis = glm::normalize(axis);
+		q = glm::angleAxis(glm::pi<float>(), axis);
+	}
+	else
+	{
+		axis = glm::normalize(glm::cross(v1, v2));
+		float angle = acosf(glm::clamp(dot, -1.0f, 1.0f));
+		q = glm::angleAxis(angle, axis);
+	}
+
+	// Return quaternion
+	CScriptVarLink *psvl;
+
+	psvl = ret->FindChildOrCreate(_T("x"));
+	psvl->m_Owned = true;
+	CScriptVar *prx = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("y"));
+	psvl->m_Owned = true;
+	CScriptVar *pry = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("z"));
+	psvl->m_Owned = true;
+	CScriptVar *prz = psvl->m_Var;
+
+	psvl = ret->FindChildOrCreate(_T("w"));
+	psvl->m_Owned = true;
+	CScriptVar *prw = psvl->m_Var;
+
+	prx->SetFloat(q.x);
+	pry->SetFloat(q.y);
+	prz->SetFloat(q.z);
+	prw->SetFloat(q.w);
+}
+
+
+
 //m_JS->AddNative(_T("function PlaySound(filename, volmod, pitchmod, loop, pos)"),			jcPlaySound, psys);
 void jcPlaySound(CScriptVar *c, void *userdata)
 {
@@ -2091,32 +2185,36 @@ void jcSetModelInstNodePos(CScriptVar *c, void *userdata)
 	if (!(px && py && pz))
 		return;
 
+	glm::fmat4x4 t;
 	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
 	if (pobj)
 	{
 		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
 		if (pmr)
 		{
-			glm::fmat4x4 t;
-			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			Model::InstanceData *minstdata = pmr->GetModelInstanceData();
+			if (minstdata)
 			{
-				glm::fvec3 scl;
-				glm::fquat ori;
-				glm::fvec3 pos;
-				glm::fvec3 skew;
-				glm::fvec4 perspective;
-				glm::decompose(t, scl, ori, pos, skew, perspective);
+				if (minstdata->GetTransform(ni, t))
+				{
+					glm::fvec3 scl;
+					glm::fquat ori;
+					glm::fvec3 pos;
+					glm::fvec3 skew;
+					glm::fvec4 perspective;
+					glm::decompose(t, scl, ori, pos, skew, perspective);
 
-				pos.x = px->m_Var->GetFloat();
-				pos.y = py->m_Var->GetFloat();
-				pos.z = pz->m_Var->GetFloat();
+					pos.x = px->m_Var->GetFloat();
+					pos.y = py->m_Var->GetFloat();
+					pos.z = pz->m_Var->GetFloat();
 
-				t = glm::scale(glm::identity<glm::fmat4x4>(), scl) * (glm::fmat4x4)(ori);
+					t = glm::scale(glm::identity<glm::fmat4x4>(), scl) * (glm::fmat4x4)(ori);
 
-				// Then translate last... 
-				t = glm::translate(glm::identity<glm::fmat4x4>(), pos) * t;
+					// Then translate last... 
+					t = glm::translate(glm::identity<glm::fmat4x4>(), pos) * t;
 
-				pmr->GetModelInstanceData()->SetTransform(ni, t);
+					pmr->GetModelInstanceData()->SetTransform(ni, t);
+				}
 			}
 		}
 	}
@@ -2139,33 +2237,37 @@ void jcSetModelInstNodeOri(CScriptVar *c, void *userdata)
 	if (!(px && py && pz && pw))
 		return;
 
+	glm::fmat4x4 t;
 	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
 	if (pobj)
 	{
 		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
 		if (pmr)
 		{
-			glm::fmat4x4 t;
-			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			Model::InstanceData *minstdata = pmr->GetModelInstanceData();
+			if (minstdata)
 			{
-				glm::fvec3 scl;
-				glm::fquat ori;
-				glm::fvec3 pos;
-				glm::fvec3 skew;
-				glm::fvec4 perspective;
-				glm::decompose(t, scl, ori, pos, skew, perspective);
+				if (minstdata->GetTransform(ni, t))
+				{
+					glm::fvec3 scl;
+					glm::fquat ori;
+					glm::fvec3 pos;
+					glm::fvec3 skew;
+					glm::fvec4 perspective;
+					glm::decompose(t, scl, ori, pos, skew, perspective);
 
-				ori.x = px->m_Var->GetFloat();
-				ori.y = py->m_Var->GetFloat();
-				ori.z = pz->m_Var->GetFloat();
-				ori.w = pw->m_Var->GetFloat();
+					ori.x = px->m_Var->GetFloat();
+					ori.y = py->m_Var->GetFloat();
+					ori.z = pz->m_Var->GetFloat();
+					ori.w = pw->m_Var->GetFloat();
 
-				t = glm::scale(glm::identity<glm::fmat4x4>(), scl) * (glm::fmat4x4)(ori);
+					t = glm::scale(glm::identity<glm::fmat4x4>(), scl) * (glm::fmat4x4)(ori);
 
-				// Then translate last... 
-				t = glm::translate(glm::identity<glm::fmat4x4>(), pos) * t;
+					// Then translate last... 
+					t = glm::translate(glm::identity<glm::fmat4x4>(), pos) * t;
 
-				pmr->GetModelInstanceData()->SetTransform(ni, t);
+					pmr->GetModelInstanceData()->SetTransform(ni, t);
+				}
 			}
 		}
 	}
@@ -2187,32 +2289,36 @@ void jcSetModelInstNodeScl(CScriptVar *c, void *userdata)
 	if (!(px && py && pz))
 		return;
 
+	glm::fmat4x4 t;
 	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
 	if (pobj)
 	{
 		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(pobj->FindComponent(ModelRenderer::Type()));
 		if (pmr)
 		{
-			glm::fmat4x4 t;
-			if (pmr->GetModelInstanceData()->GetTransform(ni, t))
+			Model::InstanceData *minstdata = pmr->GetModelInstanceData();
+			if (minstdata)
 			{
-				glm::fvec3 scl;
-				glm::fquat ori;
-				glm::fvec3 pos;
-				glm::fvec3 skew;
-				glm::fvec4 perspective;
-				glm::decompose(t, scl, ori, pos, skew, perspective);
+				if (minstdata->GetTransform(ni, t))
+				{
+					glm::fvec3 scl;
+					glm::fquat ori;
+					glm::fvec3 pos;
+					glm::fvec3 skew;
+					glm::fvec4 perspective;
+					glm::decompose(t, scl, ori, pos, skew, perspective);
 
-				scl.x = px->m_Var->GetFloat();
-				scl.y = py->m_Var->GetFloat();
-				scl.z = pz->m_Var->GetFloat();
+					scl.x = px->m_Var->GetFloat();
+					scl.y = py->m_Var->GetFloat();
+					scl.z = pz->m_Var->GetFloat();
 
-				t = glm::scale(glm::identity<glm::fmat4x4>(), scl) * (glm::fmat4x4)(ori);
+					t = glm::scale(glm::identity<glm::fmat4x4>(), scl) * (glm::fmat4x4)(ori);
 
-				// Then translate last... 
-				t = glm::translate(glm::identity<glm::fmat4x4>(), pos) * t;
+					// Then translate last... 
+					t = glm::translate(glm::identity<glm::fmat4x4>(), pos) * t;
 
-				pmr->GetModelInstanceData()->SetTransform(ni, t);
+					pmr->GetModelInstanceData()->SetTransform(ni, t);
+				}
 			}
 		}
 	}

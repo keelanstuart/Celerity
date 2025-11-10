@@ -61,6 +61,9 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_Camera = m_CameraRoot = m_CameraArm = m_GUICamera = nullptr;
 	m_WorldRoot = m_GUIRoot = nullptr;
 
+	m_MotionBlur = true;
+	m_MotionUpdateIdx = 0;
+
 	c3::InputManager::SetDeviceConnectionCallback(DeviceConnected, this);
 }
 
@@ -212,6 +215,21 @@ void C3Dlg::CreateSurfaces()
 		h /= 2;
 	}
 
+	if (m_MotionBlur)
+	{
+		// These are my pseudo-motion-blur targets
+		w = m_BTex[BLURTARGS / 2]->Width();
+		h = m_BTex[BLURTARGS / 2]->Height();
+		for (size_t c = 0; c < BLURTARGS; c++)
+		{
+			m_BTex.push_back(prend->CreateTexture2D(w, h, c3::Renderer::TextureType::U8_3CH, 0, TEXCREATEFLAG_RENDERTARGET));
+			m_BBuf.push_back(prend->CreateFrameBuffer());
+			m_BBuf.back()->AttachDepthTarget(m_DepthTarg);
+			m_BBuf.back()->AttachColorTarget(m_BTex.back(), 0);
+			m_BBuf.back()->Seal();
+		}
+	}
+
 	c3::FrameBuffer::TargetDesc LCBufTargData[] =
 	{
 		{ _T("uSamplerLights"), c3::Renderer::TextureType::F16_3CH, TEXCREATEFLAG_RENDERTARGET },
@@ -265,6 +283,18 @@ void C3Dlg::UpdateShaderSurfaces()
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2"));
 		m_SP_resolve->SetUniformTexture(m_BTex[2], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+
+		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2_1"));
+		m_SP_resolve->SetUniformTexture(m_BTex[4], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+
+		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2_2"));
+		m_SP_resolve->SetUniformTexture(m_BTex[5], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+
+		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2_3"));
+		m_SP_resolve->SetUniformTexture(m_BTex[6], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+
+		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip2_4"));
+		m_SP_resolve->SetUniformTexture(m_BTex[7], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 
 		ut = m_SP_resolve->GetUniformLocation(_T("uSamplerSceneMip3"));
 		m_SP_resolve->SetUniformTexture(m_BTex[3], ut, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
@@ -364,7 +394,7 @@ void C3Dlg::InitializeGraphics()
 		}
 
 		m_VS_resolve = (c3::ShaderComponent*)((rm->GetResource(_T("resolve.vsh"), RESF_DEMANDLOAD))->GetData());
-		m_FS_resolve = (c3::ShaderComponent*)((rm->GetResource(_T("resolve.fsh"), RESF_DEMANDLOAD))->GetData());
+		m_FS_resolve = (c3::ShaderComponent*)((rm->GetResource(m_MotionBlur ? _T("resolve_mb.fsh") : _T("resolve.fsh"), RESF_DEMANDLOAD))->GetData());
 		if (!m_SP_resolve)
 			m_SP_resolve = prend->CreateShaderProgram();
 		if (m_SP_resolve)
@@ -887,19 +917,53 @@ void C3Dlg::OnPaint()
 				prend->UseVertexBuffer(prend->GetFullscreenPlaneVB());
 				prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 
+				c3::FrameBuffer *mbfb[] =
+				{
+					m_BBuf[BLURTARGS / 2],
+					m_BBuf[BLURTARGS],
+					m_BBuf[BLURTARGS + 1],
+					m_BBuf[BLURTARGS + 2],
+					m_BBuf[BLURTARGS + 3]
+				};
+
+				c3::Texture2D *mbtx[] =
+				{
+					m_BTex[BLURTARGS / 2],
+					m_BTex[BLURTARGS],
+					m_BTex[BLURTARGS + 1],
+					m_BTex[BLURTARGS + 2],
+					m_BTex[BLURTARGS + 3]
+				};
+
+				c3::Texture2D *curtex;
+				c3::FrameBuffer *curfb;
+
 				float bs = 2.0f;
 				for (int b = 0; b < BLURTARGS - 1; b++)
 				{
-					m_BBuf[b + 1]->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-					prend->UseFrameBuffer(m_BBuf[b + 1], 0); // UFBFLAG_FINISHLAST);
+					if (m_MotionBlur)
+					{
+						curfb = ((b + 1) != (BLURTARGS / 2)) ? m_BBuf[b + 1] : mbfb[m_MotionUpdateIdx];
+						curtex = (b != (BLURTARGS / 2)) ? m_BTex[b] : mbtx[m_MotionUpdateIdx];
+					}
+					else
+					{
+						curfb = m_BBuf[b];
+						curtex = m_BTex[b + 1];
+					}
+
+					curfb->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+					prend->UseFrameBuffer(curfb);
 					prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 					prend->UseProgram(m_SP_blur);
-					m_SP_blur->SetUniformTexture(m_BTex[b], m_uBlurTex, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+					m_SP_blur->SetUniformTexture(curtex, m_uBlurTex, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
 					m_SP_blur->SetUniform1(m_uBlurScale, bs);
 					m_SP_blur->ApplyUniforms(true);
 					prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 					bs *= 2.0f;
 				}
+
+				m_MotionUpdateIdx = (m_MotionUpdateIdx + 1) % (BLURTARGS - 1);
 
 				prend->UseFrameBuffer(nullptr, 0);
 				prend->UseRenderMethod();	// no method now

@@ -73,6 +73,9 @@ protected:
 	c3::ShaderComponent *m_FS_bounds;
 	c3::ShaderProgram *m_SP_bounds;
 
+	bool m_MotionBlur;
+	size_t m_MotionUpdateIdx;
+
 	int32_t m_ulSunDir;
 	int32_t m_ulSunColor;
 	int32_t m_ulAmbientColor;

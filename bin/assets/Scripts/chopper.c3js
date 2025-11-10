@@ -1,28 +1,120 @@
 var runtime;
 var hpos;
 
+var hobj_parent;
+
 var irotor;
 
+var hpos;
+var oldpos = { x: 0.0, y: 0.0, z: 0.0 };
+var curpos = { x: 0.0, y: 0.0, z: 0.0 };
+
+var hori;
+var ori = { x: 1.0, y: 0.0, z: 0.0, w: 0.0 };
+var rot = { x: 1.0, y: 0.0, z: 0.0 };
+
+var haltitude;
+var altitude = 1000.0;
+
+var localdown = { x: 0.0, y: 0.0, z: 0.0 };
 var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
 var tmpv4 = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+var q = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
 
 var zaxis = { x: 0.0, y: 0.0, z: 1.0 };
 var zrot = 0.0;
+
+var collision_info;
+var dist;
+
+function init()
+{
+	runtime = 0.0;
+	irotor = -1;	// a bogus number, init
+
+	hpos = FindProperty(self, "Position");
+	oldpos = GetPropertyValue(hpos);
+
+	hori = FindProperty(self, "Orientation");
+
+	haltitude = FindProperty(self, "Altitude");
+
+	hobj_parent = GetParent(self);
+}
 
 function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 
-	irotor = GetModelNodeIndex(self, "Rotor");
+	collision_info = CreateCollisionResults();
+
+	if (irotor < 0)
+	{
+		irotor = GetModelNodeIndex(self, "Rotor");
+
+		if (irotor < 0)
+		{
+			irotor = GetModelNodeIndex(self, "mainRotor_offset_$AssimpFbx$_Rotation");
+		}
+	}
+
 	if (irotor >= 0)
 	{
-	    zrot = -1000.0 * runtime;
-		tmpv4 = AxisAngleToQuat(zaxis, zrot);
+		tmpv4 = AxisAngleToQuat(zaxis, runtime * 100000.0);
 		SetModelInstNodeOri(self, irotor, tmpv4);
 	}
+
+	oldpos = curpos;
+	curpos = GetPropertyValue(hpos);
+	ori = GetPropertyValue(hori);
+	rot = QuatToEuler(ori);
+	zrot = Math.toRadians(rot.y);
+
+	tmpv3.z = 5.0;
+	tmpv3.x = oldpos.x - curpos.x;
+	tmpv3.y = oldpos.y - curpos.y;
+
+	tmpv3 = Vec3.normalize(tmpv3);
+	localdown.x = (Math.cos(zrot) * tmpv3.x) - (Math.sin(zrot) * tmpv3.y);
+	localdown.y = (Math.sin(zrot) * tmpv3.x) + (Math.cos(zrot) * tmpv3.y);
+	localdown.z = tmpv3.z;
+
+	q = GetModelInstNodeOri(self, 1);
+
+	if ((localdown.x == 0.0) && (localdown.y == 0.0))
+	{
+		tmpv4.x = 0.0;
+		tmpv4.y = 0.0;
+		tmpv4.z = 0.0;
+		tmpv4.w = 1.0;
+		q = Math.slerp(q, tmpv4, 0.25);
+	}
+	else
+	{
+		tmpv4 = QuatFromTo(zaxis, localdown);
+		q = Math.slerp(q, tmpv4, 0.75);
+	}
+
+	SetModelInstNodeOri(self, 1, q);
+
+	curpos.z = 1000.0;
+	tmpv3.x = 0.0;
+	tmpv3.y = 0.0;
+	tmpv3.z = -2000.0;
+	CheckCollisions(hobj_parent, curpos, tmpv3, collision_info);
+	if (collision_info["found"] == 1)
+	{
+		dist = collision_info["distance"];
+		curpos.z = 1000.0 - dist;
+		SetPropertyValue(hpos, curpos);
+	}
+
+	altitude = GetPropertyValue(haltitude);
+	tmpv3.z = altitude;
+	SetModelInstNodePos(self, 0, tmpv3);
 }
 
-function init()
+function free()
 {
-	runtime = 0.0;
+	FreeCollisionResults(collision_info);
 }

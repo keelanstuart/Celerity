@@ -9,6 +9,7 @@
 #include <C3VirtualKeyboardImpl.h>
 #include <C3VirtualMouseImpl.h>
 #include <C3VirtualJoystickImpl.h>
+#include <C3SpaceMouseImpl.h>
 #include <C3ResourceManager.h>
 #include <C3FileMapper.h>
 #include <C3System.h>
@@ -527,6 +528,64 @@ void InputManagerImpl::UnacquireAll()
 	}
 }
 
+bool InputManagerImpl::FindFirstMultiAxisPath(tstring &out_path)
+{
+	GUID hidGuid; HidD_GetHidGuid(&hidGuid);
+	HDEVINFO devs = SetupDiGetClassDevs(&hidGuid, nullptr, nullptr, DIGCF_DEVICEINTERFACE | DIGCF_PRESENT);
+	if (devs == INVALID_HANDLE_VALUE)
+		return false;
+
+	SP_DEVICE_INTERFACE_DATA ifdata{ sizeof(SP_DEVICE_INTERFACE_DATA) };
+	DWORD index = 0;
+	bool found = false;
+
+	while (SetupDiEnumDeviceInterfaces(devs, nullptr, &hidGuid, index++, &ifdata))
+	{
+		DWORD needed = 0;
+		SetupDiGetDeviceInterfaceDetail(devs, &ifdata, nullptr, 0, &needed, nullptr);
+
+		std::vector<BYTE> buf(needed);
+
+		auto detail = (PSP_DEVICE_INTERFACE_DETAIL_DATA)buf.data();
+		detail->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+		if (!SetupDiGetDeviceInterfaceDetail(devs, &ifdata, detail, needed, nullptr, nullptr))
+			continue;
+
+		HANDLE h = CreateFile(detail->DevicePath, GENERIC_READ | GENERIC_WRITE,
+			FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL, nullptr);
+
+		if (h == INVALID_HANDLE_VALUE)
+			continue;
+
+		PHIDP_PREPARSED_DATA pp = nullptr;
+		HIDP_CAPS caps{};
+
+		if (HidD_GetPreparsedData(h, &pp))
+		{
+			if ((HidP_GetCaps(pp, &caps) == HIDP_STATUS_SUCCESS) &&
+				(caps.UsagePage == HID_USAGE_PAGE_GENERIC) &&
+				(caps.Usage == 0x08) /* Multi-axis Controller */)
+			{
+				out_path = detail->DevicePath;
+				found = true;
+				HidD_FreePreparsedData(pp);
+				CloseHandle(h);
+				break;
+			}
+			HidD_FreePreparsedData(pp);
+		}
+
+		CloseHandle(h);
+	}
+
+	SetupDiDestroyDeviceInfoList(devs);
+
+	return found;
+}
+
+
 void InputManagerImpl::Reset()
 {
 	for (auto pdev : m_Devices)
@@ -542,6 +601,8 @@ void InputManagerImpl::Reset()
 	InputDevice *pdev_keyboard = nullptr;
 	InputDevice *pdev_mouse = nullptr;
 
+#if 0
+	// WHY?
 	for (auto pdev : m_Devices)
 	{
 		switch (pdev.first->GetType())
@@ -555,6 +616,7 @@ void InputManagerImpl::Reset()
 				break;
 		}
 	}
+#endif
 
 	LPDIRECTINPUTDEVICE8 pdid;
 
@@ -585,6 +647,15 @@ void InputManagerImpl::Reset()
 	HRESULT hr;
 	devcount = 1;
 	hr = m_pDI->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoysticksCallback, &scratch, DIEDFL_ATTACHEDONLY);
+
+	tstring out_path;
+	if (FindFirstMultiAxisPath(out_path))
+	{
+		SpaceMouseImpl *pspacemouse = new SpaceMouseImpl(m_pSys);
+		m_Devices.push_back(TDeviceArray::value_type(pspacemouse, USER_DEFAULT));
+		if (s_DevConnCB)
+			s_DevConnCB(pspacemouse, true, s_DevConnUserData);
+	}
 }
 
 void InputManagerImpl::PlayForceFeedbackEffect(const TCHAR *filename, int32_t dir_offset)

@@ -105,6 +105,8 @@ namespace c3
 
 		static BOOL FAR PASCAL EnumJoysticksCallback(const DIDEVICEINSTANCE* did_instance, void* context);
 
+		static bool FindFirstMultiAxisPath(tstring &out_path);	// SpaceMouse
+
 		// We need these to determine our level of device cooperation and for DI to know who to deal with
 		HWND m_hwnd;
 		HINSTANCE m_hinst;

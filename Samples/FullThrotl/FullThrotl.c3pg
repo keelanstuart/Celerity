@@ -1,0 +1,56 @@
+<c3pg:maze name="Throtl" map="FullThrotl\FullThrotl.tga"
+            minwallz="0.0" maxwallz="20.0" floorz="0.0" ceilingz="20.0">
+
+  <surface dir="floor">
+    <variant>
+      <tex.diffuse>incursion/stones.jpg</tex.diffuse>
+      <tex.normal>incursion/stones_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/stones_surf.tga</tex.surfdesc>
+    </variant>
+  </surface>
+
+<!--
+
+  <surface dir="ceiling">
+    <variant>
+      <tex.diffuse>incursion/stones.jpg</tex.diffuse>
+      <tex.normal>incursion/stones_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/stones_surf.tga</tex.surfdesc>
+    </variant>
+  </surface>
+
+-->
+
+  <surface dir="north">
+    <variant>
+      <tex.diffuse>incursion/stones.jpg</tex.diffuse>
+      <tex.normal>incursion/stones_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/stones_surf.tga</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="south">
+    <variant>
+      <tex.diffuse>incursion/stones.jpg</tex.diffuse>
+      <tex.normal>incursion/stones_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/stones_surf.tga</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="east">
+    <variant>
+      <tex.diffuse>incursion/stones.jpg</tex.diffuse>
+      <tex.normal>incursion/stones_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/stones_surf.tga</tex.surfdesc>
+    </variant>
+  </surface>
+
+  <surface dir="west">
+    <variant>
+      <tex.diffuse>incursion/stones.jpg</tex.diffuse>
+      <tex.normal>incursion/stones_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/stones_surf.tga</tex.surfdesc>
+    </variant>
+  </surface>
+
+</c3pg:maze>
