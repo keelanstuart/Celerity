@@ -878,7 +878,7 @@ void C3Dlg::OnPaint()
 
 					glm::fvec3 eyepos;
 					cam->GetEyePos(&eyepos);
-					glm::fmat4x4 depthViewMatrix = glm::lookAt(sunpos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+					glm::fmat4x4 depthViewMatrix = glm::lookAt(eyepos + sunpos, eyepos, glm::vec3(0, 1, 0));
 					glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
 
 					prend->SetSunShadowMatrix(&depthMVP);

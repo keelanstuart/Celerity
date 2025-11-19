@@ -588,7 +588,7 @@ void C3EditView::OnDraw(CDC *pDC)
 
 				glm::fvec3 campos;
 				pcam->GetEyePos(&campos);
-				glm::fmat4x4 depthViewMatrix = glm::lookAt(sunpos, glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
+				glm::fmat4x4 depthViewMatrix = glm::lookAt(campos + sunpos, campos, glm::vec3(0, 1, 0));
 				glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
 
 				prend->SetSunShadowMatrix(&depthMVP);

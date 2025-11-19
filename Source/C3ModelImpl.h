@@ -116,7 +116,7 @@ namespace c3
 
 		virtual InstanceData *CloneInstanceData();
 
-		virtual NodeIndex AddNode();
+		virtual NodeIndex AddNode(const TCHAR *name = nullptr);
 
 		virtual void RemoveNode(NodeIndex nidx);
 

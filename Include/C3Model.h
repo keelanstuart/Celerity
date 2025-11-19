@@ -54,34 +54,49 @@ namespace c3
 
 		};
 
+		// Creates a new Model given a Renderer
 		static C3_API Model *Create(Renderer *prend);
 
+		// Releases the Model's resources
 		virtual void Release() = NULL;
 
-		virtual NodeIndex AddNode() = NULL;
+		// Adds a new Node to the Model - Nodes contain transforms and Mesh references
+		virtual NodeIndex AddNode(const TCHAR *name = nullptr) = NULL;
 
+		// Removes a Node by index
 		virtual void RemoveNode(NodeIndex nidx) = NULL;
 
+		// Get the number or Nodes in this Model
 		virtual size_t GetNodeCount() const = NULL;
 
+		// Looks for a Node by name; returns true and sets the value at pidx if found
 		virtual bool FindNode(const TCHAR *name, NodeIndex *pidx = nullptr, bool case_sensitive = false) const = NULL;
 
+		// Sets the Node Name
 		virtual void SetNodeName(NodeIndex nidx, const TCHAR *name) = NULL;
 
+		// Gets the Node name
 		virtual const TCHAR *GetNodeName(NodeIndex nidx) const = NULL;
 
+		// Sets the visibility of the given Node. If visible is undefined, the default is true
 		virtual bool NodeVisibility(NodeIndex nidx, std::optional<bool> visible = std::nullopt) = NULL;
 
+		// Sets the Collidability of the given Node. If collide is undefined, the default is true
 		virtual bool NodeCollidability(NodeIndex nidx, std::optional<bool> collide = std::nullopt) = NULL;
 
+		// Sets the transform matrix on the given Node
 		virtual void SetTransform(NodeIndex nidx, const glm::fmat4x4 *pmat) = NULL;
 
+		// Gets the transform matrix for the given Node
 		virtual const glm::fmat4x4 *GetTransform(NodeIndex nidx, glm::fmat4x4 *pmat = nullptr) const = NULL;
 
+		// Sets the parent Node for the given Node 
 		virtual void SetParentNode(NodeIndex nidx, NodeIndex parent_nidx = NO_PARENT) = NULL;
 
+		// Returns the index of the Node's Parent - or NO_PARENT if it is at the top level of the hierarchy
 		virtual NodeIndex GetParentNode(NodeIndex nidx) const = NULL;
 
+		// Assigns a Mesh to the given Node. When the Model is drawn, the Mesh will have the Node's transform hierarchy applied
 		virtual SubMeshIndex AssignMeshToNode(NodeIndex nidx, MeshIndex midx) = NULL;
 
 		virtual MeshIndex GetMeshFromNode(NodeIndex nidx, SubMeshIndex midx) const = NULL;

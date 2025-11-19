@@ -67,10 +67,12 @@ Model::InstanceData *ModelImpl::CloneInstanceData()
 }
 
 
-Model::NodeIndex ModelImpl::AddNode()
+Model::NodeIndex ModelImpl::AddNode(const TCHAR *name)
 {
 	SNodeInfo *pni = new SNodeInfo();
 	pni->flags.Set(NodeFlag::VISIBLE | NodeFlag::COLLIDE);
+	if (name)
+		pni->name = name;
 
 	NodeIndex ret = m_Nodes.size();
 	m_Nodes.push_back(pni);
@@ -629,10 +631,8 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMat
 	TCHAR *name;
 	CONVERT_MBCS2TCS(pn->mName.C_Str(), name);
 
-	nidx = pm->AddNode();
+	nidx = pm->AddNode(name);
 	nidxmap.insert(TNodeIndexMap::value_type(pn, nidx));
-
-	pm->SetNodeName(nidx, name);
 
 	glm::fmat4x4 t;
 	if (pnxform)

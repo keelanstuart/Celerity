@@ -1676,8 +1676,9 @@ void jcAxisAngleToQuat(CScriptVar *c, void *userdata)
 	if (!pangle)
 		return;
 
-	glm::fquat q = glm::angleAxis(glm::radians(pangle->GetFloat()),
-		glm::fvec3(px->m_Var->GetFloat(), py->m_Var->GetFloat(), pz->m_Var->GetFloat()));;
+	glm::fvec3 v = glm::fvec3(px->m_Var->GetFloat(), py->m_Var->GetFloat(), pz->m_Var->GetFloat());
+	float a = glm::radians(pangle->GetFloat());
+	glm::fquat q = glm::angleAxis(a, v);
 
 	CScriptVarLink *psvl;
 
@@ -2955,7 +2956,6 @@ void jcRegisterResourcePath(CScriptVar *c, void *userdata)
 	FileMapper *pfm = psys->GetFileMapper();
 	pfm->AddMapping(ext.c_str(), path.c_str());
 }
-
 
 
 void jcRegisterInputAction(CScriptVar *c, void *userdata)

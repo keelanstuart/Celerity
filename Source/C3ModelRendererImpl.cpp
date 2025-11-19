@@ -7,6 +7,7 @@
 #include "pch.h"
 
 #include <C3ModelRendererImpl.h>
+#include <C3ScriptableImpl.h>
 
 using namespace c3;
 
@@ -210,9 +211,17 @@ void ModelRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pm
 				m_Inst = nullptr;
 			}
 
-			// make new instance data for this new model
+			// make new instance data for this new model...
+			// ...this also lets us know that a model finished loading
+			// so, notify any Scriptables
 			if (!m_Inst)
+			{
 				m_Inst = (ModelImpl::InstanceDataImpl *)(((ModelImpl *)pmod)->CloneInstanceData());
+
+				ScriptableImpl *pscr = dynamic_cast<ScriptableImpl *>(m_pOwner->FindComponent(Scriptable::Type()));
+				if (pscr && pscr->FunctionExists(_T("model_loaded")))
+					pscr->Execute(_T("model_loaded();"));
+			}
 		}
 	}
 

@@ -41,8 +41,8 @@ var tmppos = { x:0.0, y:0.0, z:0.0 };
 var tmpvec = { x:0.0, y:0.0, z:0.0 };
 var tmpori = { x:0.0, y:0.0, z:0.0, w:0.0 };
 
-var speed = 80.0;
-var turnspeed = 180.0;
+var speed = 140.0;
+var turnspeed = 170.0;
 
 var collision_info;
 
@@ -50,17 +50,19 @@ var i, maxi;
 var nodename;
 
 var menu_active = 0;
+var camera_tracks = 1;
+var camera_turnvel = 0.0;
 
 function init()
 {
 	runtime = 0.0;
 
 	hobj_levelroot = CreateObject("", self);
-	load_result = LoadObject(hobj_levelroot, "Incursion/Incursion_hi.c3o");
+	load_result = LoadObject(hobj_levelroot, "Incursion/Incursion.c3o");
 
 	hobj_guiroot = GetRegisteredObject("gui.root");
 	hobj_mainmenu = CreateObject("", hobj_guiroot);
-	LoadObject(hobj_mainmenu, "Protectorate/Protectorate_MainMenu.c3o");
+	LoadObject(hobj_mainmenu, "Incursion/MainMenu.c3o");
 	SetObjFlag(hobj_mainmenu, "UPDATE", menu_active);
 	SetObjFlag(hobj_mainmenu, "DRAW", menu_active);
 
@@ -92,8 +94,8 @@ function init()
 	hprop_cam_fov = FindProperty(hobj_cam, "FOV(Perspective)");
 
 	tmppos.x = 0.0;
-	tmppos.y = -50.0;
-	tmppos.z = 280.0;
+	tmppos.y = -40.0;
+	tmppos.z = 250.0;
 	SetPropertyValue(hprop_camarm_pos, tmppos);
 
 	tmppos.x = -65.0;
@@ -102,7 +104,7 @@ function init()
 	tmpori = EulerToQuat(tmppos);
 	SetPropertyValue(hprop_cam_ori, tmpori);
 
-	SetPropertyValue(hprop_cam_fov, 80.0);
+	SetPropertyValue(hprop_cam_fov, 70.0);
 
 	SetPropertyValue(hprop_cam_orbitdist, 0.1);
 
@@ -123,7 +125,7 @@ function init()
 	RegisterInputAction("Fire 1", "", 0.25);
 	RegisterInputAction("Fire 2", "", 0.8);
 	RegisterInputAction("Fire 3", "", 1.6);
-	RegisterInputAction("Fire 4", "", 2.0);
+	RegisterInputAction("Fire 4", "up", 0.0);
 	RegisterInputAction("Cycle View Mode", "up", 0.0);
 	RegisterInputAction("Look Left", "", 0.0);
 	RegisterInputAction("Look Right", "", 0.0);
@@ -174,10 +176,10 @@ function device_connected(device_type, device_name, naxes, nbuttons)
 		LinkInputToAction("Fire 2", device_name, "button 2");
 		LinkInputToAction("Fire 3", device_name, "button 3");
 		LinkInputToAction("Fire 4", device_name, "button 4");
-		LinkInputToAction("Cycle View Mode", device_name, "select");
+		LinkInputToAction("Cycle View Mode", device_name, "button 7");
 		LinkInputToAction("Look Left", device_name, "axis 2 -x");
 		LinkInputToAction("Look Right", device_name, "axis 2 +x");
-		LinkInputToAction("Quit", device_name, "start");
+		LinkInputToAction("Quit", device_name, "button 8");
 
 		Log("done.\n");
 	}
@@ -185,6 +187,86 @@ function device_connected(device_type, device_name, naxes, nbuttons)
 	{
 		Log("device ignored.\n");
 	}
+}
+
+function handle_input(action, value)
+{
+	if (action == "Move Forward")
+	{
+		tmppos = Vec3.mul(player_facing, value);
+		player_vel = Vec3.add(player_vel, tmppos);
+	}
+	else if (action == "Move Backward")
+	{
+		tmppos = Vec3.mul(player_facing, value);
+		player_vel = Vec3.sub(player_vel, tmppos);
+	}
+	else if (action == "Strafe Left")
+	{
+		tmppos = Vec3.mul(player_right, value);
+		player_vel = Vec3.sub(player_vel, tmppos);
+	}
+	else if (action == "Strafe Right")
+	{
+		tmppos = Vec3.mul(player_right, value);
+		player_vel = Vec3.add(player_vel, tmppos);
+	}
+	else if (action == "Turn Left")
+	{
+		player_turnvel += value;
+	}
+	else if (action == "Turn Right")
+	{
+		player_turnvel -= value;
+	}
+	else if (action == "Look Left")
+	{
+		camera_turnvel += value;
+	}
+	else if (action == "Look Right")
+	{
+		camera_turnvel -= value;
+	}
+	else if (action == "Cycle View Mode")
+	{
+		if (camera_tracks == 1)
+			camera_tracks = 0;
+		else
+			camera_tracks = 1;
+
+		tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+		PlaySound("Incursion/bloop.wav", 1.0, 1.0, 0, tmpv3);
+	}
+	else if (action == "Fire 1")
+	{
+		Execute(hobj_player, "report();");
+	}
+	else if (action == "Fire 2")
+	{
+		Execute(hobj_player, "report();");
+	}
+	else if (action == "Fire 3")
+	{
+		Execute(hobj_player, "report();");
+	}
+	else if (action == "Fire 4")
+	{
+		Execute(hobj_player, "report();");
+	}
+	else if (action == "Quit")
+	{
+		enable_menu(menu_active ^ 1);
+	}
+}
+
+function enable_menu(enabled)
+{
+	menu_active = enabled;
+	SetObjFlag(hobj_levelroot, "UPDATE", menu_active ^ 1);
+	SetObjFlag(hobj_mainmenu, "UPDATE", menu_active);
+	SetObjFlag(hobj_mainmenu, "DRAW", menu_active);
+	EnableMouse(menu_active);
+	CaptureMouse(menu_active ^ 1);
 }
 
 function update(elapsed_seconds)
@@ -230,61 +312,21 @@ function update(elapsed_seconds)
 	tmppos = GetPropertyValue(hprop_camroot_pos);
 	tmppos = Math.lerp(tmppos, player_pos, elapsed_seconds * 10.0);
 	SetPropertyValue(hprop_camroot_pos, tmppos);
-	
+
 	tmpori = GetPropertyValue(hprop_camroot_ori);
-	tmpori = Math.slerp(tmpori, player_ori, elapsed_seconds * 10.0);
+	if (camera_tracks == 1)
+	{
+		tmpori = Math.slerp(tmpori, player_ori, elapsed_seconds * 10.0);
+	}
+	else
+	{
+		tmpori = AdjustQuat(tmpori, zaxis, Math.toRadians(camera_turnvel * turnspeed * elapsed_seconds));
+		camera_turnvel = 0.0;
+	}
 	SetPropertyValue(hprop_camroot_ori, tmpori);
 	
 	player_facing = GetPropertyValue(hprop_player_facing);
 	player_right = GetPropertyValue(hprop_player_right);
-}
-
-function handle_input(action, value)
-{
-	if (action == "Move Forward")
-	{
-		tmppos = Vec3.mul(player_facing, value);
-		player_vel = Vec3.add(player_vel, tmppos);
-	}
-	else if (action == "Move Backward")
-	{
-		tmppos = Vec3.mul(player_facing, value);
-		player_vel = Vec3.sub(player_vel, tmppos);
-	}
-	else if (action == "Strafe Left")
-	{
-		tmppos = Vec3.mul(player_right, value);
-		player_vel = Vec3.sub(player_vel, tmppos);
-	}
-	else if (action == "Strafe Right")
-	{
-		tmppos = Vec3.mul(player_right, value);
-		player_vel = Vec3.add(player_vel, tmppos);
-	}
-	else if (action == "Turn Left")
-	{
-		player_turnvel += value;
-	}
-	else if (action == "Turn Right")
-	{
-		player_turnvel -= value;
-	}
-	else if (action == "Look Left")
-	{
-	}
-	else if (action == "Look Right")
-	{
-	}
-	else if (action == "Quit")
-	{
-		if (menu_active == 1)
-			menu_active = 0;
-		else
-			menu_active = 1;
-
-		SetObjFlag(hobj_mainmenu, "UPDATE", menu_active);
-		SetObjFlag(hobj_mainmenu, "DRAW", menu_active);
-	}
 }
 
 function free()

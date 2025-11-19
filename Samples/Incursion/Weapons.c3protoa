@@ -1,0 +1,68 @@
+<prototypes>
+    <prototype guid="{1C2135BF-E15C-46D4-8FD9-E64DE1543EC8}" name="Bullet" group="Incursion" flags="131075">
+        <components>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FUP" name="Facing.Up" type="FLOAT_V3">0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4" aspect="QUATERNION">0.000000,0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">0.500000,0.500000,0.500000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="FFWD" name="Facing.Forward" type="FLOAT_V3">0.000000,1.000000,0.000000</powerprops:property>
+            <powerprops:property id="FRGT" name="Facing.Right" type="FLOAT_V3">1.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MODF" name="ModelFile" type="STRING">[sphere_lo.model]</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.000000,0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING" aspect="FILENAME"/>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{C1590281-9A29-476A-89E9-9491D4E98BC7}" name="Hydra" group="Incursion" flags="131075">
+        <components>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FUP" name="Facing.Up" type="FLOAT_V3">0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4" aspect="QUATERNION">0.000000,0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="FFWD" name="Facing.Forward" type="FLOAT_V3">0.000000,1.000000,0.000000</powerprops:property>
+            <powerprops:property id="FRGT" name="Facing.Right" type="FLOAT_V3">1.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MODF" name="ModelFile" type="STRING">Incursion/Hydra.glb</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.000000,0.000000,0.707107,0.707107</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.050000,0.050000,0.050000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING" aspect="FILENAME"/>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+    <prototype guid="{51EF315A-C912-44FC-BD9E-2B729C46CD84}" name="Hellfire" group="Incursion" flags="131075">
+        <components>
+            <component guid="{1F1D4B43-8B2A-44DE-BAB5-D24D8AC32BEC}" name="Scriptable"/>
+            <component guid="{26D446CA-DA21-4272-B666-16C2CBF35F69}" name="Positionable"/>
+            <component guid="{15558C71-E301-4911-A1A9-8D886C3C45D1}" name="ModelRenderer"/>
+        </components>
+        <powerprops:property_set>
+            <powerprops:property id="FUP" name="Facing.Up" type="FLOAT_V3">0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="ORI" name="Orientation" type="FLOAT_V4" aspect="QUATERNION">0.000000,0.000000,0.000000,1.000000</powerprops:property>
+            <powerprops:property id="POS" name="Position" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="SCL" name="Scale" type="FLOAT_V3">1.000000,1.000000,1.000000</powerprops:property>
+            <powerprops:property id="C3RM" name="RenderMethod" type="STRING">std.c3rm</powerprops:property>
+            <powerprops:property id="FFWD" name="Facing.Forward" type="FLOAT_V3">0.000000,1.000000,0.000000</powerprops:property>
+            <powerprops:property id="FRGT" name="Facing.Right" type="FLOAT_V3">1.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MODF" name="ModelFile" type="STRING">Incursion/Hellfire.glb</powerprops:property>
+            <powerprops:property id="MORI" name="ModelOrientation" type="FLOAT_V4" aspect="QUATERNION">0.000000,0.000000,0.707107,0.707107</powerprops:property>
+            <powerprops:property id="MPOS" name="ModelPosition" type="FLOAT_V3">0.000000,0.000000,0.000000</powerprops:property>
+            <powerprops:property id="MSCL" name="ModelScale" type="FLOAT_V3">0.050000,0.050000,0.050000</powerprops:property>
+            <powerprops:property id="SRCF" name="SourceFile" type="STRING" aspect="FILENAME"/>
+            <powerprops:property id="SUDR" name="ScriptUpdateRate" type="FLOAT">0.000000</powerprops:property>
+        </powerprops:property_set>
+    </prototype>
+</prototypes>

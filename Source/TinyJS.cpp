@@ -2202,16 +2202,35 @@ CScriptVarLink *CTinyJS::unary(bool &execute)
 
 	if (l->tk == _T('!'))
 	{
-		l->match(_T('!')); // binary not
+		// logical not
+		l->match(_T('!'));
 		a = factor(execute);
 
 		if (execute)
 		{
 			CScriptVar zero(0ll);
 			CScriptVar *res = a->m_Var->MathsOp(&zero, LEX_EQUAL);
-
 			CREATE_LINK(a, res);
 		}
+	}
+	else if (l->tk == _T('-'))
+	{
+		// unary minus
+		l->match(_T('-'));
+		a = unary(execute);  // recurse so we can chain: --x, -!x, etc.
+
+		if (execute)
+		{
+			CScriptVar zero(0ll);
+			CScriptVar *res = zero.MathsOp(a->m_Var, _T('-'));
+			CREATE_LINK(a, res);
+		}
+	}
+	else if (l->tk == _T('+'))
+	{
+		// unary plus (just evaluate the sub-expression)
+		l->match(_T('+'));
+		a = unary(execute);
 	}
 	else
 	{
