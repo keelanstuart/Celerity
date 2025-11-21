@@ -43,6 +43,8 @@ public:
 	afx_msg void OnEditDuplicate();
 	afx_msg void OnUpdateEditAssignRoot(CCmdUI *pCmdUI);
 	afx_msg void OnEditAssignRoot();
+	afx_msg void OnUpdateEditExport(CCmdUI *pCmdUI);
+	afx_msg void OnEditExport();
 	afx_msg void OnUpdateEditGroup(CCmdUI *pCmdUI);
 	afx_msg void OnEditGroup();
 	afx_msg void OnUpdateEditUngroup(CCmdUI *pCmdUI);

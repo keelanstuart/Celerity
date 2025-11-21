@@ -1705,6 +1705,22 @@ bool ValidSelection_OnlyOne(C3EditDoc *pd)
 }
 
 
+bool ValidSelection_OnlyOneRoot(C3EditDoc *pd)
+{
+	// Only allow 1 selection to be ungrouped -- and it can't be the root
+
+	size_t c = pd ? pd->GetNumSelected() : 0;
+	if (c != 1)
+		return false;
+
+	c3::Object *o = pd->GetSelection(0);
+	if (!o->GetParent())
+		return false;
+
+	return true;
+}
+
+
 void C3EditView::OnUpdateEditDuplicate(CCmdUI *pCmdUI)
 {
 	C3EditDoc* pDoc = GetDocument();
@@ -2284,7 +2300,7 @@ void C3EditView::OnUpdateEditExport(CCmdUI *pCmdUI)
 {
 	C3EditDoc* pDoc = GetDocument();
 
-	pCmdUI->Enable(ValidSelection_NoParentAndChild(pDoc));
+	pCmdUI->Enable(ValidSelection_OnlyOneRoot(pDoc));
 }
 
 

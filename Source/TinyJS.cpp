@@ -1417,21 +1417,23 @@ CScriptVar *CScriptVar::MathsOp(CScriptVar *b, int64_t op)
 
 			switch (op)
 			{
-				case _T('+'):		return new CScriptVar(da + db);
-				case _T('-'):		return new CScriptVar(da - db);
-				case _T('*'):		return new CScriptVar(da * db);
-				case _T('/'):		return new CScriptVar(da / db);
-				case _T('&'):		return new CScriptVar(da & db);
-				case _T('|'):		return new CScriptVar(da | db);
-				case _T('^'):		return new CScriptVar(da ^ db);
-				case _T('%'):		return new CScriptVar(da % db);
-				case LEX_EQUAL:		return new CScriptVar((da == db) ? 1ll : 0ll);
-				case LEX_NEQUAL:	return new CScriptVar((da != db) ? 1ll : 0ll);
-				case _T('<'):		return new CScriptVar((da < db) ? 1ll : 0ll);
-				case LEX_LEQUAL:	return new CScriptVar((da <= db) ? 1ll : 0ll);
-				case _T('>'):		return new CScriptVar((da > db) ? 1ll : 0ll);
-				case LEX_GEQUAL:	return new CScriptVar((da >= db) ? 1ll : 0ll);
-				default:			throw new CScriptException(_T("Operation ") + CScriptLex::getTokenStr(op) + _T(" not supported on the Int datatype"));
+				case _T('+'):			return new CScriptVar(da + db);
+				case _T('-'):			return new CScriptVar(da - db);
+				case _T('*'):			return new CScriptVar(da * db);
+				case _T('/'):			return new CScriptVar(da / db);
+				case _T('&'):			return new CScriptVar(da & db);
+				case _T('|'):			return new CScriptVar(da | db);
+				case _T('^'):			return new CScriptVar(da ^ db);
+				case _T('%'):			return new CScriptVar(da % db);
+				case LEX_EQUAL:			return new CScriptVar((da == db) ? 1ll : 0ll);
+				case LEX_NEQUAL:		return new CScriptVar((da != db) ? 1ll : 0ll);
+				case _T('<'):			return new CScriptVar((da < db) ? 1ll : 0ll);
+				case LEX_LEQUAL:		return new CScriptVar((da <= db) ? 1ll : 0ll);
+				case _T('>'):			return new CScriptVar((da > db) ? 1ll : 0ll);
+				case LEX_GEQUAL:		return new CScriptVar((da >= db) ? 1ll : 0ll);
+				case LEX_RSHIFTEQUAL:	return new CScriptVar(da >> db);
+				case LEX_LSHIFTEQUAL:	return new CScriptVar(da << db);
+				default:				throw new CScriptException(_T("Operation ") + CScriptLex::getTokenStr(op) + _T(" not supported on the Int datatype"));
 			}
 		}
 		else
@@ -2523,6 +2525,26 @@ CScriptVarLink *CTinyJS::base(bool &execute)
 			else if (op == LEX_MODEQUAL)
 			{
 				CScriptVar *res = lhs->m_Var->MathsOp(rhs->m_Var, _T('%'));
+				lhs->ReplaceWith(res);
+			}
+			else if (op == LEX_ANDEQUAL)
+			{
+				CScriptVar *res = lhs->m_Var->MathsOp(rhs->m_Var, _T('&'));
+				lhs->ReplaceWith(res);
+			}
+			else if (op == LEX_XOREQUAL)
+			{
+				CScriptVar *res = lhs->m_Var->MathsOp(rhs->m_Var, _T('^'));
+				lhs->ReplaceWith(res);
+			}
+			else if (op == LEX_RSHIFTEQUAL)
+			{
+				CScriptVar *res = lhs->m_Var->MathsOp(rhs->m_Var, LEX_RSHIFTEQUAL);
+				lhs->ReplaceWith(res);
+			}
+			else if (op == LEX_LSHIFTEQUAL)
+			{
+				CScriptVar *res = lhs->m_Var->MathsOp(rhs->m_Var, LEX_LSHIFTEQUAL);
 				lhs->ReplaceWith(res);
 			}
 		}

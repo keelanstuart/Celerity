@@ -13,9 +13,31 @@ var hobj_parent;
 var hobj_cam;
 var hprop_campos;
 var collision_info;
-var coll_init = 0;
 
-var hobj_sparks;
+function init()
+{
+	runtime = 0.0;
+
+	// cache property handles now so value access is cheaper later
+
+	hprop_pos = FindProperty(self, "Position");
+	hprop_lvel = FindProperty(self, "LinearVelocity");
+
+	collision_info = CreateCollisionResults();
+	hobj_parent = GetParent(self);
+	hobj_cam = GetRegisteredObject("camera.root");
+	hprop_campos = FindProperty(hobj_cam, "Position");
+
+	SetObjFlag(self, "TEMPORARY", 1);
+	SetObjFlag(self, "UPDATE", 0);
+	SetObjFlag(self, "DRAW", 0);
+	SetObjFlag(self, "LIGHT", 0);
+}
+
+function free()
+{
+	FreeCollisionResults(collision_info);
+}
 
 function update(elapsed_seconds)
 {
@@ -57,30 +79,7 @@ function update(elapsed_seconds)
 	}
 }
 
-function init()
-{
-	runtime = 0.0;
 
-	// cache property handles now so value access is cheaper later
-
-	hprop_pos = FindProperty(self, "Position");
-	hprop_lvel = FindProperty(self, "LinearVelocity");
-
-	collision_info = CreateCollisionResults();
-	hobj_parent = GetParent(self);
-	hobj_cam = GetRegisteredObject("camera.root");
-	hprop_campos = FindProperty(hobj_cam, "Position");
-
-	SetObjFlag(self, "TEMPORARY", 1);
-	SetObjFlag(self, "UPDATE", 0);
-	SetObjFlag(self, "DRAW", 0);
-	SetObjFlag(self, "LIGHT", 0);
-}
-
-function free()
-{
-	FreeCollisionResults(collision_info);
-}
 
 function fire(posx, posy, posz, velx, vely, velz)
 {

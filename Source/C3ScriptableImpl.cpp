@@ -193,6 +193,7 @@ void jcFindProperty(CScriptVar *c, void *userdata);
 void jcGetPropertyValue(CScriptVar *c, void *userdata);
 void jcSetPropertyValue(CScriptVar *c, void *userdata);
 void jcCreateObject(CScriptVar *c, void *userdata);
+void jcCloneObject(CScriptVar *c, void *userdata);
 void jcDeleteObject(CScriptVar *c, void *userdata);
 void jcGetParent(CScriptVar *c, void *userdata);
 void jcSetParent(CScriptVar *c, void *userdata);
@@ -266,6 +267,7 @@ void jcSetCursorTransform(CScriptVar *c, void *userdata);
 
 void jcPauseGame(CScriptVar *c, void *userdata);
 void jcGamePaused(CScriptVar *c, void *userdata);
+void jcInEditor(CScriptVar *c, void *userdata);
 
 
 void ScriptableImpl::ResetJS()
@@ -292,13 +294,14 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function Execute(hobj, cmd)"),									jcExecute, psys);
 
-	m_JS->AddNative(_T("function CreateProperty(hobj, name, fcc)"),							jcCreateProperty, psys);
+	m_JS->AddNative(_T("function CreateProperty(hobj, name, fcc)"),						jcCreateProperty, psys);
 	m_JS->AddNative(_T("function DeleteProperty(hprop)"),								jcDeleteProperty, psys);
 	m_JS->AddNative(_T("function FindProperty(hobj, name)"),							jcFindProperty, psys);
 	m_JS->AddNative(_T("function GetPropertyValue(hprop)"),								jcGetPropertyValue, psys);
 	m_JS->AddNative(_T("function SetPropertyValue(hprop, val)"),						jcSetPropertyValue, psys);
 
 	m_JS->AddNative(_T("function CreateObject(protoname, hparentobj)"),					jcCreateObject, psys);
+	m_JS->AddNative(_T("function CloneObject(hobj, hparentobj)"),						jcCloneObject, psys);
 	m_JS->AddNative(_T("function DeleteObject(hobj)"),									jcDeleteObject, psys);
 
 	m_JS->AddNative(_T("function GetParent(hobj)"),										jcGetParent, psys);
@@ -388,6 +391,7 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function PauseGame(paused)"),									jcPauseGame, psys);
 	m_JS->AddNative(_T("function GamePaused()"),										jcGamePaused, psys);
+	m_JS->AddNative(_T("function InEditor()"),											jcInEditor, psys);
 
 	TCHAR make_self_cmd[64];
 	_stprintf_s(make_self_cmd, _T("var self = %lld;"), (int64_t)m_pOwner);
@@ -1147,6 +1151,30 @@ void jcCreateObject(CScriptVar *c, void *userdata)
 	Object *pparentobj = dynamic_cast<Object *>((Object *)hparentobj);
 
 	pretobj = psys->GetFactory()->Build(pproto, nullptr, pparentobj);
+
+	ret->SetInt((int64_t)pretobj);
+}
+
+
+//m_JS->AddNative(_T("function CloneObject(hobj, hparentobj)"),				jcCloneObject, psys);
+void jcCloneObject(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	ret->SetInt(0);
+
+	int64_t hcloneobj = c->GetParameter(_T("hobj"))->GetInt();
+	int64_t hparentobj = c->GetParameter(_T("hparentobj"))->GetInt();
+
+	Object *pcloneobj = dynamic_cast<Object *>((Object *)hcloneobj);
+	Object *pparentobj = dynamic_cast<Object *>((Object *)hparentobj);
+
+	Object *pretobj = psys->GetFactory()->Build(pcloneobj, nullptr, pparentobj, true);
 
 	ret->SetInt((int64_t)pretobj);
 }
@@ -3390,4 +3418,17 @@ void jcGamePaused(CScriptVar *c, void *userdata)
 	assert(psys);
 
 	ret->SetInt(0);
+}
+
+
+void jcInEditor(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	ret->SetInt(psys->EditorMode() ? 1 : 0);
 }

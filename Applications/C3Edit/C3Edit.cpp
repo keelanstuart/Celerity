@@ -195,6 +195,8 @@ BOOL C3EditApp::InitInstance()
 	if (!m_C3)
 		return FALSE;
 
+	m_C3->SetEditorMode(true);
+
 	PWSTR appdata = nullptr;
 	if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appdata) == S_OK)
 	{

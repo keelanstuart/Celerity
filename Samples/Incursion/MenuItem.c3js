@@ -10,6 +10,8 @@ var hbshow;
 var active = 0;
 var s = 0.0;
 
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+
 function update(elapsed_seconds)
 {
 	if (elapsed_seconds == 0.0)
@@ -49,6 +51,9 @@ function mouse_enter()
 {
 	active = 1;
 	SetPropertyValue(hbshow, active);
+
+	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	PlaySound("Incursion/ui_rollover.wav", 1.0, 1.0, 0, tmpv3);
 }
 
 function mouse_exit()

@@ -47,6 +47,7 @@ namespace c3
 		SoundPlayerImpl *m_SoundPlayer;
 		ScreenManager *m_ScreenManager;
 		PhysicsManager *m_PhysicsManager;
+		bool m_bEditorMode;
 
 		LARGE_INTEGER m_PerfFreq, m_PerfCount, m_PerfDelta;
 		float m_CurrentTime;
@@ -101,6 +102,10 @@ namespace c3
 		virtual float GetElapsedTime();
 
 		virtual void UpdateTime(bool paused);
+
+		virtual void SetEditorMode(bool b);
+
+		virtual bool EditorMode();
 
 	};
 

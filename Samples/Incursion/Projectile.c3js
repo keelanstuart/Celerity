@@ -1,0 +1,133 @@
+var runtime;
+
+var hprop_lifetime;
+var lifetime = 4.0;
+
+var tmp = 0.0;
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+
+var hprop_facing;
+var facing = { x: 0.0, y: 0.0, z: 0.0 };
+var lvel = { x: 0.0, y: 0.0, z: 0.0 };
+
+var hprop_ori;
+var ori = { x: 0.0, y: 0.0, z: 0.0, w:0.0 };
+
+var hprop_pos;
+var oldpos = { x: 0.0, y: 0.0, z: 0.0 };
+var curpos = { x: 0.0, y: 0.0, z: 0.0 };
+var diffpos = { x: 0.0, y: 0.0, z: 0.0 };
+
+var hprop_maxspeed;
+var maxspeed;
+
+var hobj_parent;
+var collision_info;
+var coll_init = 0;
+
+var hobj_sparks;
+
+function update(elapsed_seconds)
+{
+	if (elapsed_seconds == 0.0)
+		return;
+
+	if (InEditor() == 1)
+		return;
+
+	runtime += elapsed_seconds;
+
+	facing = GetPropertyValue(hprop_facing);
+	oldpos = GetPropertyValue(hprop_pos);
+	tmp = maxspeed * elapsed_seconds;
+	curpos = Vec3.madd(facing, tmp, oldpos);
+	diffpos = Vec3.sub(curpos, oldpos);
+	SetPropertyValue(hprop_pos, curpos);
+	Log("\nupdate: " + maxspeed + " * " + elapsed_seconds + " = " + tmp + " ; (" + curpos.x + ", " + curpos.y + ")");
+
+/*
+	CheckCollisions(hobj_parent, pos, lvel, collision_info);
+	if (collision_info["found"] == 1)
+	{
+		dist = collision_info["distance"];
+		if  (dist <= tmp)
+		{
+			lvel = Vec3.normalize(lvel);
+			lvel = Vec3.mul(lvel, dist);
+			pos = Vec3.add(pos, lvel);
+			lvel = Vec3.mul(lvel, 0.0);
+
+			Log("Hit " + GetObjectName(collision_info["hobj"]) + ", distance away: " + dist + "\n");
+
+			SetPropertyValue(hprop_lvel, lvel);
+			SetPropertyValue(hprop_pos, pos);
+
+			// TODO: spawn sparks maybe? we hit something!
+		}
+	}
+*/
+
+	if (runtime >= lifetime)
+	{
+		SetObjFlag(self, "DRAW", 0);
+		SetObjFlag(self, "UPDATE", 0);
+		SetObjFlag(self, "LIGHT", 0);
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	// cache property handles now so value access is cheaper later
+
+	collision_info = CreateCollisionResults();
+	hobj_parent = GetParent(self);
+
+	if (InEditor() == 0)
+	{
+		SetObjFlag(self, "TEMPORARY", 1);
+		SetObjFlag(self, "UPDATE", 0);
+		SetObjFlag(self, "DRAW", 0);
+		SetObjFlag(self, "LIGHT", 0);
+	}
+}
+
+function free()
+{
+	FreeCollisionResults(collision_info);
+}
+
+function fire(hprop_fromori, hprop_frompos, ofsx, ofsy, ofsz)
+{
+	runtime = 0.0;
+	SetObjFlag(self, "UPDATE", 1);
+	SetObjFlag(self, "DRAW", 1);
+	SetObjFlag(self, "LIGHT", 1);
+
+	hprop_ori = FindProperty(self, "Orientation");
+	hprop_pos = FindProperty(self, "Position");
+	hprop_facing = FindProperty(self, "Facing.Forward");
+
+	hprop_lifetime = FindProperty(self, "Lifetime");
+	if (hprop_lifetime != 0)
+		lifetime = GetPropertyValue(hprop_lifetime);
+
+	hprop_maxspeed = FindProperty(self, "MaxLinearSpeed");
+	maxspeed = GetPropertyValue(hprop_maxspeed);
+
+	ori = GetPropertyValue(hprop_fromori);
+	SetPropertyValue(hprop_ori, ori);
+
+	curpos = GetPropertyValue(hprop_frompos);
+	curpos.x += ofsx;
+	curpos.y += ofsy;
+	curpos.z += ofsz;
+	SetPropertyValue(hprop_pos, curpos);
+
+/*
+	Log("\nprojectile::fire\n");
+	Log(" - pos: {" + pos.x + ", " + pos.y + ", " + pos.z + "}\n");
+	Log(" - ofs: {" + ofsx + ", " + ofsy + ", " + ofsz + "}\n");
+*/
+}

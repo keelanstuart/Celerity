@@ -61,6 +61,9 @@ BEGIN_MESSAGE_MAP(C3ObjectListCtrl, CListCtrl)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_UNGROUP, &C3ObjectListCtrl::OnUpdateEditUngroup)
 	ON_COMMAND(ID_EDIT_UNGROUP, &C3ObjectListCtrl::OnEditUngroup)
 
+	ON_UPDATE_COMMAND_UI(ID_EDIT_EXPORT, &C3ObjectListCtrl::OnUpdateEditExport)
+	ON_COMMAND(ID_EDIT_EXPORT, &C3ObjectListCtrl::OnEditExport)
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_CENTERCAMERAON, &C3ObjectListCtrl::OnUpdateEditCenterCamera)
 	ON_COMMAND(ID_EDIT_CENTERCAMERAON, &C3ObjectListCtrl::OnEditCenterCamera)
 
@@ -505,6 +508,28 @@ void C3ObjectListCtrl::OnEditAssignRoot()
 	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
 
 	pv->OnEditAssignRoot();
+}
+
+
+void C3ObjectListCtrl::OnUpdateEditExport(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditExport(pCmdUI);
+}
+
+
+void C3ObjectListCtrl::OnEditExport()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditExport();
 }
 
 

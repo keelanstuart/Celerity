@@ -97,6 +97,8 @@ SystemImpl::SystemImpl()
 	m_ElapsedTime = 0.0f;
 
 	srand(timeGetTime());
+
+	m_bEditorMode = false;
 }
 
 
@@ -443,4 +445,16 @@ void SystemImpl::UpdateTime(bool paused)
 
 	if (m_PhysicsManager)
 		m_PhysicsManager->Update(paused ? 0 : m_ElapsedTime);
+}
+
+
+void SystemImpl::SetEditorMode(bool b)
+{
+	m_bEditorMode = b;
+}
+
+
+bool SystemImpl::EditorMode()
+{
+	return m_bEditorMode;
 }

@@ -67,6 +67,10 @@ namespace c3
 
 		virtual void UpdateTime(bool paused = false) = NULL;
 
+		virtual void SetEditorMode(bool b) = NULL;
+
+		virtual bool EditorMode() = NULL;
+
 	};
 
 };

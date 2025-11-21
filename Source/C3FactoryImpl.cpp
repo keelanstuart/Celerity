@@ -52,6 +52,10 @@ Object *FactoryImpl::Build(const Prototype *pproto, GUID *override_guid, Object 
 		o->SetName(pproto->GetName());
 		o->Flags().SetAll(((c3::Prototype *)pproto)->Flags());
 
+		// make sure the UPDATE flag is set prior to initialization of components
+		bool uf = o->Flags().IsSet(OF_UPDATE);
+		o->Flags().Set(OF_UPDATE);
+
 		// add all components first, before intializing them...
 		for (size_t i = 0, maxi = pproto->GetNumComponents(); i < maxi; i++)
 		{
@@ -69,6 +73,8 @@ Object *FactoryImpl::Build(const Prototype *pproto, GUID *override_guid, Object 
 		}
 
 		o->GetProperties()->AppendPropertySet(((c3::Prototype *)pproto)->GetProperties());
+		if (!uf)
+			o->Flags().Clear(OF_UPDATE);
 	}
 
 	o->PostLoad();
@@ -86,10 +92,16 @@ Object *FactoryImpl::Build(const Object *pobject, GUID *override_guid, Object *p
 	Object *o = new ObjectImpl(m_pSys, override_guid ? *override_guid : guid);
 	o->SetParent(pparent);
 
+	bool uf = true;
+
 	if (pobject)
 	{
 		o->SetName(pobject->GetName());
 		o->Flags().SetAll(((c3::Object *)pobject)->Flags());
+
+		// make sure the UPDATE flag is set prior to initialization of components
+		uf = o->Flags().IsSet(OF_UPDATE);
+		o->Flags().Set(OF_UPDATE);
 
 		for (size_t i = 0, maxi = pobject->GetNumComponents(); i < maxi; i++)
 		{
@@ -116,12 +128,15 @@ Object *FactoryImpl::Build(const Object *pobject, GUID *override_guid, Object *p
 			for (size_t i = 0, maxi = pobject->GetNumChildren(); i < maxi; i++)
 			{
 				Object *pchild = pobject->GetChild(i);
-				Build(pchild, nullptr, o);
+				Build(pchild, nullptr, o, true);
 			}
 		}
 	}
 
 	o->PostLoad();
+
+	if (!uf)
+		o->Flags().Clear(OF_UPDATE);
 
 	return o;
 }

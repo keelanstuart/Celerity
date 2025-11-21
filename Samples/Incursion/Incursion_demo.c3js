@@ -57,6 +57,9 @@ function init()
 {
 	runtime = 0.0;
 
+	tmppos = Vec3.mul(tmppos, 0.0);
+	PlaySound("Incursion/AQUA.wav", 0.6, 1.0, -1, tmppos);
+
 	hobj_levelroot = CreateObject("", self);
 	load_result = LoadObject(hobj_levelroot, "Incursion/Incursion.c3o");
 
@@ -72,6 +75,7 @@ function init()
 		Log("Scene failed to load!\n");
 
 	hobj_player = FindFirstObjByName(hobj_levelroot, "PLAYER", 1);
+	hobj_playervehicle = FindFirstObjByName(hobj_player, "PLAYER_VEHICLE", 1);
 	hprop_player_pos = FindProperty(hobj_player, "Position");
 	hprop_player_ori = FindProperty(hobj_player, "Orientation");
 	hprop_player_facing = FindProperty(hobj_player, "Facing.Forward");
@@ -122,8 +126,8 @@ function init()
 	RegisterInputAction("Strafe Right", "", 0.0);
 	RegisterInputAction("Turn Left", "", 0.0);
 	RegisterInputAction("Turn Right", "", 0.0);
-	RegisterInputAction("Fire 1", "", 0.25);
-	RegisterInputAction("Fire 2", "", 0.8);
+	RegisterInputAction("Fire 1", "", 0.1);
+	RegisterInputAction("Fire 2", "", 0.6);
 	RegisterInputAction("Fire 3", "", 1.6);
 	RegisterInputAction("Fire 4", "up", 0.0);
 	RegisterInputAction("Cycle View Mode", "up", 0.0);
@@ -235,23 +239,23 @@ function handle_input(action, value)
 			camera_tracks = 1;
 
 		tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
-		PlaySound("Incursion/bloop.wav", 1.0, 1.0, 0, tmpv3);
+		PlaySound("Incursion/toggle_view.wav", 1.0, 1.0, 0, tmpv3);
 	}
 	else if (action == "Fire 1")
 	{
-		Execute(hobj_player, "report();");
+		Execute(hobj_playervehicle, "fire_weapon(1);");
 	}
 	else if (action == "Fire 2")
 	{
-		Execute(hobj_player, "report();");
+		Execute(hobj_playervehicle, "fire_weapon(2);");
 	}
 	else if (action == "Fire 3")
 	{
-		Execute(hobj_player, "report();");
+		Execute(hobj_playervehicle, "fire_weapon(3);");
 	}
 	else if (action == "Fire 4")
 	{
-		Execute(hobj_player, "report();");
+		Execute(hobj_playervehicle, "report();");
 	}
 	else if (action == "Quit")
 	{

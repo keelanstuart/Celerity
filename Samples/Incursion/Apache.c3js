@@ -1,0 +1,301 @@
+var runtime;
+var i;
+var hprop_pos;
+
+var hobj_parent;
+var hobj_tmp;
+
+var irotor_main;
+var irotor_tail;
+
+var hobj_pitch;
+var hprop_pitch;
+var targ_pitch = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+var pitch = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+var ident_pitch = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+
+var hobj_roll;
+var hprop_roll;
+var targ_roll = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+var roll = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+var ident_roll = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+
+var hobj_playerroot;
+var hprop_facing;
+var facing = { x: 0.0, y: 1.0, z: 0.0 };
+var hprop_right;
+var right = { x: 1.0, y: 0.0, z: 0.0 };
+
+var hprop_ori;
+var oldpos = { x: 0.0, y: 0.0, z: 0.0 };
+var curpos = { x: 0.0, y: 0.0, z: 0.0 };
+var diffpos = { x: 0.0, y: 0.0, z: 0.0 };
+
+var haltitude;
+var altitude = 100.0;
+
+var tmp = 0.0;
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+var tmpv4 = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+var node_ori = { x: 0.0, y: 0.0, z: 0.0, w: 1.0 };
+
+var xaxis = { x: 1.0, y: 0.0, z: 0.0 };
+var yaxis = { x: 0.0, y: 1.0, z: 0.0 };
+var zaxis = { x: 0.0, y: 0.0, z: 1.0 };
+var epsilon = 0.001;
+
+var collision_info;
+var dist;
+
+var hsound_rotor = 0;
+
+// weapons
+
+var bullet_cur = 0;
+var bullet_max = 50;
+var hobj_bullet = [];
+var bullet_ammo = 500;
+
+var hydra_cur = 0;
+var hydra_max = 10;
+var hobj_hydra = [];
+var hydra_ammo = 38;
+
+var hellfire_cur = 0;
+var hellfire_max = 5;
+var hobj_hellfire = [];
+var hellfire_ammo = 8;
+
+var s;
+
+function init()
+{
+	runtime = 0.0;
+	irotor_main = -1;	// a bogus number, init
+	irotor_tail = -1;	// a bogus number, init
+
+	// First there's the Object that has the script, self...
+	// above that is the roll Object, then pitch, then position (root)
+
+	hobj_roll = GetParent(self);
+	hobj_pitch = GetParent(hobj_roll);
+	hobj_playerroot = GetParent(hobj_pitch);
+
+	hprop_ori = FindProperty(hobj_playerroot, "Orientation");
+
+	hprop_roll = FindProperty(hobj_roll, "Orientation");
+	ident_roll = GetPropertyValue(hprop_roll);
+
+	hprop_pitch = FindProperty(hobj_pitch, "Orientation");
+	ident_pitch = GetPropertyValue(hprop_pitch);
+
+	hprop_facing = FindProperty(hobj_playerroot, "Facing.Forward");
+	hprop_right  = FindProperty(hobj_playerroot, "Facing.Right");
+	haltitude = FindProperty(hobj_playerroot, "Altitude");
+	hprop_pos = FindProperty(hobj_playerroot, "Position");
+	curpos = GetPropertyValue(hprop_pos);
+	oldpos = curpos;
+
+	hobj_parent = GetParent(hobj_playerroot);
+
+	collision_info = CreateCollisionResults();
+
+	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	hsound_rotor = PlaySound("Incursion/chopper.wav", 0.4, 1.0, -1, tmpv3);
+
+	if (InEditor() == 0)
+	{
+		var load_result;
+
+		hobj_bullet[0] = CreateObject("Bullet", hobj_parent);
+		load_result = LoadObject(hobj_bullet[0], "Incursion/Bullet.c3o");
+		if (load_result["success"] == 1)
+		{
+			for (i = 1; i < bullet_max; i++)
+			{
+				hobj_bullet[i] = CloneObject(hobj_bullet[0], hobj_parent);
+			}
+		}
+
+		hobj_hydra[0] = CreateObject("Hydra", hobj_parent);
+		load_result = LoadObject(hobj_hydra[0], "Incursion/Hydra.c3o");
+		if (load_result["success"] == 1)
+		{
+			for (i = 1; i < hydra_max; i++)
+			{
+				hobj_hydra[i] = CloneObject(hobj_hydra[0], hobj_parent);
+			}
+		}
+
+		hobj_hellfire[0] = CreateObject("Hellfire", hobj_parent);
+		load_result = LoadObject(hobj_hellfire[0], "Incursion/Hellfire.c3o");
+		if (load_result["success"] == 1)
+		{
+			for (i = 1; i < hellfire_max; i++)
+			{
+				hobj_hellfire[i] = CloneObject(hobj_hellfire[0], hobj_parent);
+			}
+		}
+	}
+}
+
+function model_loaded()
+{
+	irotor_main = GetModelNodeIndex(self, "rotor");
+	irotor_tail = GetModelNodeIndex(self, "tail_rotor");
+}
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	// spin the rotors
+
+	if (irotor_main >= 0)
+	{
+		node_ori = AxisAngleToQuat(zaxis, runtime * 800.0);
+		SetModelInstNodeOri(self, irotor_main, node_ori);
+	}
+
+	if (irotor_tail >= 0)
+	{
+		node_ori = AxisAngleToQuat(yaxis, runtime * 1200.0);
+		SetModelInstNodeOri(self, irotor_tail, node_ori);
+	}
+
+	// do movement-based tilting of the chopper
+
+	facing = GetPropertyValue(hprop_facing);
+	right = GetPropertyValue(hprop_right);
+
+	oldpos = curpos;
+	curpos = GetPropertyValue(hprop_pos);
+	diffpos = Vec3.sub(curpos, oldpos);
+
+	if ((Math.abs(diffpos.x) > epsilon) || (Math.abs(diffpos.y) > epsilon))
+	{
+		diffpos.z = 0.4;
+		diffpos = Vec3.normalize(diffpos);
+
+		targ_roll = AxisAngleToQuat(yaxis, Vec3.dot(diffpos, right) * 60.0);
+		tmpv4 = Math.lerp(ident_roll, targ_roll, 0.2);
+		SetPropertyValue(hprop_roll, tmpv4);
+
+		targ_pitch = AxisAngleToQuat(xaxis, Vec3.dot(diffpos, facing) * -120.0);
+		tmpv4 = Math.lerp(ident_pitch, targ_pitch, 0.2);
+		SetPropertyValue(hprop_pitch, tmpv4);
+	}
+	else
+	{
+		// we didn't move, so slowly return to the default orientation
+
+		targ_roll = GetPropertyValue(hprop_roll);
+		tmpv4 = Math.lerp(ident_roll, targ_roll, 0.015);
+		SetPropertyValue(hprop_roll, tmpv4);
+
+		targ_pitch = GetPropertyValue(hprop_pitch);
+		tmpv4 = Math.lerp(ident_pitch, targ_pitch, 0.015);
+		SetPropertyValue(hprop_pitch, tmpv4);
+	}
+
+	// set the altitude of the chopper to some amount (defined by the
+	// "Altitude" property) above the terrain below
+
+	curpos.z = 1000.0;
+	tmpv3.x = 0.0;
+	tmpv3.y = 0.0;
+	tmpv3.z = -2000.0;
+	CheckCollisions(hobj_parent, curpos, tmpv3, collision_info);
+	if (collision_info["found"] == 1)
+	{
+		altitude = GetPropertyValue(haltitude);
+		dist = collision_info["distance"];
+		curpos.z = 1000.0 - dist + altitude;
+		SetPropertyValue(hprop_pos, curpos);
+	}
+
+	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	SetSoundPosition(hsound_rotor, tmpv3);
+	SetSoundPitchMod(hsound_rotor, Math.random(0.8, 1.2));
+}
+
+function fire_weapon(idx)
+{
+	hobj_tmp = 0;
+
+	tmpv3 = facing;
+
+	if ((idx == 1) && (bullet_ammo > 0))
+	{
+		PlaySound("Incursion/fire_gun.wav", 0.2, Math.random(0.9, 1.1), 0, tmpv3);
+
+		hobj_tmp = hobj_bullet[bullet_cur];
+		bullet_cur = (bullet_cur + 1) % bullet_max;
+		bullet_ammo--;
+
+		tmpv3 = Vec3.mul(tmpv3, 10.0);
+
+		Log("\nfire(bullet) [" + hobj_tmp + "] - bullet_cur:" + bullet_cur + " bullet_ammo:" + bullet_ammo);
+	}
+	else if ((idx == 2) && (hydra_ammo > 0))
+	{
+		PlaySound("Incursion/fire_hydra.wav", 0.6, Math.random(0.9, 1.1), 0, tmpv3);
+
+		hobj_tmp = hobj_hydra[hydra_cur];
+		hydra_cur = (hydra_cur + 1) % hydra_max;
+		hydra_ammo--;
+
+		tmpv3 = Vec3.mul(tmpv3, 4.0);
+		if (Math.even(hydra_cur) == 1)
+			tmpv3 = Vec3.madd(right, 10.3, tmpv3);
+		else
+			tmpv3 = Vec3.madd(right, -10.3, tmpv3);
+		tmpv3.z = 3.0;
+
+		Log("\nfire(hydra) - hydra_cur:" + hydra_cur + " hydra_ammo:" + hydra_ammo);
+	}
+	else if ((idx == 3) && (hellfire_ammo > 0))
+	{
+		PlaySound("Incursion/fire_hellfire.wav", 0.9, Math.random(0.8, 1.2), 0, tmpv3);
+
+		hobj_tmp = hobj_hellfire[hellfire_cur];
+		hellfire_cur = (hellfire_cur + 1) % hellfire_max;
+		hellfire_ammo--;
+
+		tmpv3 = Vec3.mul(tmpv3, 3.5);
+		if (Math.even(hellfire_cur) == 1)
+			tmpv3 = Vec3.madd(right, 7.7, tmpv3);
+		else
+			tmpv3 = Vec3.madd(right, -7.7, tmpv3);
+		tmpv3.z = 3.0;
+
+		Log("\nfire(hellfire) - hellfire_cur:" + hellfire_cur + " hellfire_ammo:" + hellfire_ammo);
+	}
+
+	if (hobj_tmp != 0)
+	{
+		Execute(hobj_tmp, "fire(" + hprop_ori + ", " + hprop_pos + ", " + tmpv3.x + ", " + tmpv3.y + ", " + tmpv3.z + ");");
+	}
+	else
+	{
+		PlaySound("Incursion/fire_empty.wav", 1.0, Math.random(0.8, 1.2), 0, tmpv3);
+	}
+}
+
+function report()
+{
+	Log("\n--- report ---");
+	Log("\nfacing: {" + facing.x + ", " + facing.y + ", " + facing.z + "}");
+	Log("\nright: {" + right.x + ", " + right.y + ", " + right.z + "}");
+	Log("\ncurpos: {" + curpos.x + ", " + curpos.y + ", " + curpos.z + "}");
+	Log("\ndiffpos: {" + diffpos.x + ", " + diffpos.y + ", " + diffpos.z + "}");
+	tmpv3 = QuatToEuler(node_ori);
+	Log("\nrot: {" + tmpv3.x + ", " + tmpv3.y + ", " + tmpv3.z + "}");
+}
+
+function free()
+{
+	FreeCollisionResults(collision_info);
+
+	StopSound(hsound_rotor);
+}
