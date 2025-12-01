@@ -345,3 +345,62 @@ void util::LoadRGBAImage(c3::ResourceManager *rm, const TCHAR *filename, RGBARas
 		img.Resize(16, 16);
 	}
 }
+
+
+bool util::SnapTo(Object *obj, util::SnapDirection sd)
+{
+	if (!obj)
+		return true;
+
+	Object *root = nullptr, *par = obj->GetParent();
+	while (par)
+	{
+		root = par;
+		par = par->GetParent();
+	}
+	if (!root)
+		return true;
+
+	c3::Positionable *pobjpos = (c3::Positionable *)(obj->FindComponent(c3::Positionable::Type()));
+	if (!pobjpos)
+		return true;
+
+	// save our old flags to restore later... then clear them - we don't want to hit ourselves!
+	c3::Object::ObjectFlags oldflags = obj->Flags();
+	obj->Flags().SetAll(0);
+
+	glm::fvec3 pos;
+	pobjpos->GetPosVec(&pos);
+
+	// debug!
+	c3::Object *ret = nullptr;
+
+	// maybe useful to only look at visible things - keep for now
+	props::TFlags64 flagmask = OF_DRAW | OF_CHECKCOLLISIONS;
+
+	static glm::fvec3 dir[SnapDirection::NUMDIRS] =
+	{
+		{ 0,  0,  1},
+		{ 0,  0, -1},
+		{ 0,  1,  0},
+		{ 0, -1,  0},
+		{ 1,  0,  0},
+		{-1,  0,  0}
+	};
+
+	float dist = FLT_MAX;
+	glm::fvec3 rd = dir[sd];
+	glm::fvec3 norm;
+	bool hit = root->Intersect(&pos, &rd, nullptr, &dist, &norm, &ret, flagmask, -1, false);
+
+	if (hit)
+	{
+		// move the object along the direction we looked by the distance to the collision
+		pos = (rd * dist) + pos;
+
+		pobjpos->SetPosVec(&pos);
+	}
+
+	obj->Flags() = oldflags;
+	return hit;
+}

@@ -18,6 +18,8 @@
 
 #include <propkey.h>
 
+#include <C3Utility.h>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -488,6 +490,16 @@ void C3EditDoc::DoForAllSelectedBreakable(SelectionFunctionBreakable func)
 		if (o && !func(o))
 			return;
 	}
+}
+
+
+void C3EditDoc::SnapSelectionToGround()
+{
+	DoForAllSelected([&](c3::Object *pobj)
+	{
+		if (!c3::util::SnapTo(pobj, c3::util::SnapDirection::NEGZ))
+			c3::util::SnapTo(pobj, c3::util::SnapDirection::POSZ);
+	});
 }
 
 

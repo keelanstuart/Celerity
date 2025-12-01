@@ -1,6 +1,6 @@
 <c3pg:terrain name="incursion" heightmap="incursion/incursion_elevation.tga"
-            xdim="256" ydim="256" xdimtex="1024" ydimtex="1024"
-            minz="-30.0" maxz="80.0" sampledist="5.0">
+            xdim="320" ydim="320" xdimtex="2048" ydimtex="2048"
+            minz="-10.0" maxz="118.0" sampledist="7.0">
 
   <layers>
 
@@ -10,16 +10,34 @@
       <tex.surfdesc>incursion/stones_surf.tga</tex.surfdesc>
     </layer>
 
-    <layer opacity="0.8" tiling="7.0" tex.opacity="incursion/incursion_mask_rock.tga">
+    <layer opacity="0.7" tiling="8.0" tex.opacity="incursion/incursion_mask_rock.tga">
       <tex.diffuse>incursion/rock.jpg</tex.diffuse>
       <tex.normal>incursion/rock_norm.tga</tex.normal>
       <tex.surfdesc>incursion/rock_surf.tga</tex.surfdesc>
     </layer>
 
-    <layer opacity="0.75" tiling="11.0" tex.opacity="incursion/incursion_mask_grass.tga">
+    <layer opacity="0.9" tiling="10.0" tex.opacity="incursion/incursion_mask_grass.tga">
       <tex.diffuse>incursion/grass.jpg</tex.diffuse>
       <tex.normal>incursion/grass_norm.tga</tex.normal>
       <tex.surfdesc>incursion/grass_surf.tga</tex.surfdesc>
+    </layer>
+
+    <layer opacity="0.8" tiling="8.0" tex.opacity="incursion/incursion_mask_ground.tga">
+      <tex.diffuse>incursion/ground.jpg</tex.diffuse>
+      <tex.normal>incursion/ground_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/ground_surf.tga</tex.surfdesc>
+    </layer>
+
+    <layer opacity="1.0" tiling="8.0" tex.opacity="incursion/incursion_mask_concrete.tga">
+      <tex.diffuse>incursion/concrete.jpg</tex.diffuse>
+      <tex.normal>incursion/concrete_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/concrete_surf.tga</tex.surfdesc>
+    </layer>
+
+    <layer opacity="1.0" tiling="8.0" tex.opacity="incursion/incursion_mask_asphalt.tga">
+      <tex.diffuse>incursion/asphalt.jpg</tex.diffuse>
+      <tex.normal>incursion/asphalt_norm.tga</tex.normal>
+      <tex.surfdesc>incursion/asphalt_surf.tga</tex.surfdesc>
     </layer>
 
   </layers>

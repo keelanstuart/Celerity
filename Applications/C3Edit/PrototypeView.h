@@ -27,6 +27,7 @@ public:
 
 	void AdjustLayout();
 	void OnChangeVisualStyle();
+	void ChangeSelection(int num);
 
 protected:
 	CViewTree m_wndPrototypeView;

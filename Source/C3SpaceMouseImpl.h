@@ -89,10 +89,6 @@ namespace c3
 		// Mapping / helpers
 		int m_deadzone = InputDevice::BUTTONVAL_MAX / 16; // match VirtualJoystickImpl default feel
 
-		static float Normalize(LONG v, LONG lo, LONG hi);
-
-		static int ToButtonRange(float n); // [-1..1] -> [0..127] (magnitude), sign handled in mapping
-
 		void ApplyStateToButtons(const HidState &s);
 	};
 

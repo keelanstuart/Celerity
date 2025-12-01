@@ -15,6 +15,7 @@ public:
 
 protected:
 	std::optional<CPoint> m_HoverPos;
+	int m_LastClicked;
 
 	DECLARE_MESSAGE_MAP()
 
@@ -57,6 +58,8 @@ public:
 	afx_msg void OnUpdateEditCut(CCmdUI *pCmdUI);
 	afx_msg void OnEditPaste();
 	afx_msg void OnUpdateEditPaste(CCmdUI *pCmdUI);
+	afx_msg void OnEditSnapGround();
+	afx_msg void OnUpdateEditSnapGround(CCmdUI *pCmdUI);
 
 	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);

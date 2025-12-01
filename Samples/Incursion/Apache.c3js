@@ -223,7 +223,8 @@ function fire_weapon(idx)
 {
 	hobj_tmp = 0;
 
-	tmpv3 = facing;
+	// flip the sound location so it's correct
+	tmpv3 = Vec3.mul(facing, -1.0);
 
 	if ((idx == 1) && (bullet_ammo > 0))
 	{
@@ -235,7 +236,7 @@ function fire_weapon(idx)
 
 		tmpv3 = Vec3.mul(tmpv3, 10.0);
 
-		Log("\nfire(bullet) [" + hobj_tmp + "] - bullet_cur:" + bullet_cur + " bullet_ammo:" + bullet_ammo);
+		//Log("\nfire(bullet) [" + hobj_tmp + "] - bullet_cur:" + bullet_cur + " bullet_ammo:" + bullet_ammo);
 	}
 	else if ((idx == 2) && (hydra_ammo > 0))
 	{
@@ -252,7 +253,7 @@ function fire_weapon(idx)
 			tmpv3 = Vec3.madd(right, -10.3, tmpv3);
 		tmpv3.z = 3.0;
 
-		Log("\nfire(hydra) - hydra_cur:" + hydra_cur + " hydra_ammo:" + hydra_ammo);
+		//Log("\nfire(hydra) - hydra_cur:" + hydra_cur + " hydra_ammo:" + hydra_ammo);
 	}
 	else if ((idx == 3) && (hellfire_ammo > 0))
 	{
@@ -269,7 +270,7 @@ function fire_weapon(idx)
 			tmpv3 = Vec3.madd(right, -7.7, tmpv3);
 		tmpv3.z = 3.0;
 
-		Log("\nfire(hellfire) - hellfire_cur:" + hellfire_cur + " hellfire_ammo:" + hellfire_ammo);
+		//Log("\nfire(hellfire) - hellfire_cur:" + hellfire_cur + " hellfire_ammo:" + hellfire_ammo);
 	}
 
 	if (hobj_tmp != 0)

@@ -687,6 +687,31 @@ BOOL CPrototypeView::PreTranslateMessage(MSG* pMsg)
 	return CDockablePane::PreTranslateMessage(pMsg);
 }
 
+void CPrototypeView::ChangeSelection(int num)
+{
+	assert(abs(num) <= 10);
+
+	HTREEITEM sel = m_wndPrototypeView.GetSelectedItem();
+	if (sel)
+	{
+		int i = (num < 0) ? 1 : -1;
+
+		while (num)
+		{
+			HTREEITEM next = (num < 0) ?
+				m_wndPrototypeView.GetPrevVisibleItem(sel) :
+				m_wndPrototypeView.GetNextVisibleItem(sel);
+
+			if (next)
+				m_wndPrototypeView.SelectItem(next);
+			else
+				break;
+
+			num += i;
+		}
+	}
+}
+
 
 void CPrototypeView::OnPrototypeSearch()
 {

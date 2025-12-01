@@ -11,6 +11,27 @@
 
 using namespace c3;
 
+// ------------------ Helpers ------------------
+inline int ToButtonRange(float n)
+{
+	// map [-1..1] -> 0..127 magnitude (sign handled by which virtual button we drive)
+	int ret = (int)(std::max(-1.0f, std::min(n, 1.0f)) * (float)InputDevice::BUTTONVAL_MAX);
+	if (abs(ret) <= (InputDevice::BUTTONVAL_MAX / 16))
+		ret = 0;
+
+	return ret;
+}
+
+inline float Normalize(LONG v, LONG lo, LONG hi)
+{
+	if (hi == lo)
+		return 0.0f;
+
+	const float mid = (float)lo + (float)(hi - lo) / 2.0f;
+
+	return (float)((v - mid) / ((hi - lo) / 2.0)); // -> [-1..1]
+}
+
 
 static inline void SafeClose(HANDLE &h)
 {
@@ -174,13 +195,6 @@ DWORD WINAPI SpaceMouseImpl::ReaderThreadThunk(LPVOID p)
 
 DWORD SpaceMouseImpl::ReaderThread()
 {
-	// Usages we care about
-	static const USAGE wanted[6] =
-	{
-		HID_USAGE_GENERIC_X, HID_USAGE_GENERIC_Y, HID_USAGE_GENERIC_Z,
-		HID_USAGE_GENERIC_RX, HID_USAGE_GENERIC_RY, HID_USAGE_GENERIC_RZ
-	};
-
 	HANDLE waits[2] = { m_hStopEvent, m_ov.hEvent };
 
 	while (WaitForSingleObject(m_hStopEvent, 0) == WAIT_TIMEOUT)
@@ -209,29 +223,88 @@ DWORD SpaceMouseImpl::ReaderThread()
 
 		// Parse values
 		float axes[6] = { 0, 0, 0, 0, 0, 0 };
-		int   ax_i = 0;
 
-		// Track last seen logical limits (fall back to symmetric if not present)
-		LONG lo = -350, hi = 350;
-
-		for (const auto &vc : m_valCaps)
+		// Usages we care about
+		static const USAGE wanted[6] =
 		{
-			// Scan for our six usages
-			for (USAGE u : wanted)
+			HID_USAGE_GENERIC_X, HID_USAGE_GENERIC_Y, HID_USAGE_GENERIC_Z,
+			HID_USAGE_GENERIC_RX, HID_USAGE_GENERIC_RY, HID_USAGE_GENERIC_RZ
+		};
+
+		// Scan for our six usages
+		for (size_t i = 0; i < _countof(wanted); i++)
+		{
+			int ci = -1;
+
+			for (size_t j = 0; j < m_valCaps.size(); ++j)
 			{
-				if ((vc.UsagePage == HID_USAGE_PAGE_GENERIC) &&
-					((u > vc.Range.UsageMin) && (u < vc.Range.UsageMax)))
+				auto &vc = m_valCaps[j];
+
+				if (vc.UsagePage != HID_USAGE_PAGE_GENERIC)
+					continue;
+
+				bool matches = false;
+
+				if (vc.IsRange)
 				{
-					ULONG value = 0;
-					if (HidP_GetUsageValue(HidP_Input, vc.UsagePage, vc.LinkUsage,
-						u, &value, m_pp, (PCHAR)m_report.data(), (ULONG)m_report.size()) == HIDP_STATUS_SUCCESS)
-					{
-						lo = vc.LogicalMin;
-						hi = vc.LogicalMax;
-						if (ax_i < 6)
-							axes[ax_i++] = Normalize((LONG)value, lo, hi);
-					}
+					matches = (wanted[i] >= vc.Range.UsageMin &&
+						wanted[i] <= vc.Range.UsageMax);
 				}
+				else
+				{
+					matches = (wanted[i] == vc.NotRange.Usage);
+				}
+
+				if (matches)
+				{
+					ci = (int)j;
+					break;
+				}
+			}
+
+			if (ci < 0)
+				continue; // or break; depending on how strict you want to be
+
+			auto &vc = m_valCaps[ci];
+
+			ULONG raw = 0;
+			auto status = HidP_GetUsageValue(
+				HidP_Input,
+				vc.UsagePage,
+				vc.LinkCollection,   // <-- use the same collection you matched above
+				wanted[i],
+				&raw,
+				m_pp,
+				(PCHAR)m_report.data(),
+				(ULONG)m_report.size()
+			);
+
+			if (status == HIDP_STATUS_SUCCESS)
+			{
+				LONG lo = m_valCaps[ci].LogicalMin;
+				LONG hi = m_valCaps[ci].LogicalMax;
+
+				// If logical min < 0, sign-extend based on BitSize
+				LONG v;
+				if (lo < 0)
+				{
+					ULONG bits = m_valCaps[ci].BitSize;
+					ULONG signBit = 1u << (bits - 1);
+					if (raw & signBit)
+						v = (LONG)(raw | (~((1u << bits) - 1u))); // sign-extend
+					else
+						v = (LONG)raw;
+				}
+				else
+				{
+					// purely non-negative logical range
+					v = (LONG)raw;
+				}
+
+				LONG diff = hi - lo;
+				LONG thresh = diff / 20;
+				if (std::abs(v) > thresh)
+					axes[i] = Normalize(v, lo, hi);
 			}
 		}
 
@@ -263,37 +336,7 @@ DWORD SpaceMouseImpl::ReaderThread()
 	return 0;
 }
 
-// ------------------ Helpers ------------------
 
-float SpaceMouseImpl::Normalize(LONG v, LONG lo, LONG hi)
-{
-	if (hi == lo)
-		return 0.0f;
-
-	const double mid = (double)lo + (double)(hi - lo) / 2.0;
-
-	return (float)((v - mid) / ((hi - lo) / 2.0)); // -> [-1..1]
-}
-
-static inline int DampenMagnitudeTo127(int rawAbs /*0..127*/)
-{
-	// match the feel from VirtualJoystickImpl
-
-	float pct = (float)rawAbs / (float)c3::InputDevice::BUTTONVAL_MAX;
-	pct *= pct;
-
-	return (int)(pct * (float)c3::InputDevice::BUTTONVAL_MAX);
-}
-
-int SpaceMouseImpl::ToButtonRange(float n)
-{
-	// map [-1..1] -> 0..127 magnitude (sign handled by which virtual button we drive)
-	float mag = std::min(1.0f, std::max(0.0f, std::fabs(n)));
-
-	int v = (int)(mag * (float)InputDevice::BUTTONVAL_MAX + 0.5f);
-
-	return DampenMagnitudeTo127(v);
-}
 
 void SpaceMouseImpl::ApplyStateToButtons(const HidState &s)
 {
@@ -315,24 +358,15 @@ void SpaceMouseImpl::ApplyStateToButtons(const HidState &s)
 	auto HandleAxis = [&](float n, InputDevice::VirtualButton negBtn, InputDevice::VirtualButton posBtn)
 	{
 		const int val = ToButtonRange(n);
-		const bool pos = (n > 0.0f);
-		const bool neg = (n < 0.0f);
-		if (val > std::max(m_deadzone, iminprop))
+
+		if (val > 0)
 		{
-			if (pos)
-			{
-				SetButton(posBtn, val);
-				SetButton(negBtn, 0);
-			}
-			else if (neg)
-			{
-				SetButton(negBtn, val);
-				SetButton(posBtn, 0);
-			}
-		}
-		else
-		{
+			SetButton(posBtn, val);
 			SetButton(negBtn, 0);
+		}
+		else if (val < 0)
+		{
+			SetButton(negBtn, abs(val));
 			SetButton(posBtn, 0);
 		}
 	};

@@ -74,6 +74,8 @@ public:
 	using SelectionFunctionBreakable = std::function< bool(c3::Object *) >;
 	void DoForAllSelectedBreakable(SelectionFunctionBreakable func);
 
+	void SnapSelectionToGround();
+
 // Overrides
 public:
 	virtual BOOL OnNewDocument();

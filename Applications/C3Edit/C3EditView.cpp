@@ -54,6 +54,9 @@ BEGIN_MESSAGE_MAP(C3EditView, CView)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DUPLICATE, &C3EditView::OnUpdateEditDuplicate)
 	ON_COMMAND(ID_EDIT_DUPLICATE, &C3EditView::OnEditDuplicate)
 
+	ON_UPDATE_COMMAND_UI(ID_EDIT_SNAPGROUND, &C3EditView::OnUpdateEditSnapGround)
+	ON_COMMAND(ID_EDIT_SNAPGROUND, &C3EditView::OnEditSnapGround)
+
 	ON_UPDATE_COMMAND_UI(ID_EDIT_ASSIGNROOT, &C3EditView::OnUpdateEditAssignRoot)
 	ON_COMMAND(ID_EDIT_ASSIGNROOT, &C3EditView::OnEditAssignRoot)
 
@@ -636,7 +639,7 @@ void C3EditView::OnDraw(CDC *pDC)
 				pobj->Render(f);
 			});
 
-			if (pDoc->m_Brush)
+			if ((active_tool == C3EditApp::ToolType::TT_WAND) && pDoc->m_Brush)
 				pDoc->m_Brush->Render(RF_FORCE | RF_LOCKSHADER | RF_LOCKMATERIAL | RF_AUXILIARY);
 
 			// Resolve
@@ -1743,6 +1746,25 @@ void C3EditView::OnEditDuplicate()
 }
 
 
+void C3EditView::OnUpdateEditSnapGround(CCmdUI *pCmdUI)
+{
+	C3EditDoc *pDoc = GetDocument();
+
+	pCmdUI->Enable(pDoc->GetNumSelected() ? true : false);
+}
+
+
+void C3EditView::OnEditSnapGround()
+{
+	C3EditDoc *pDoc = GetDocument();
+	ASSERT_VALID(pDoc);
+	if (!pDoc)
+		return;
+
+	pDoc->SnapSelectionToGround();
+}
+
+
 void C3EditView::OnUpdateEditGroup(CCmdUI *pCmdUI)
 {
 	C3EditDoc* pDoc = GetDocument();
@@ -1814,6 +1836,7 @@ void C3EditView::OnEditUngroup()
 void C3EditView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	C3EditFrame *pmf = (C3EditFrame *)theApp.GetMainWnd();
+
 	switch (nChar)
 	{
 		case VK_OEM_3:	// '~'
@@ -1825,6 +1848,26 @@ void C3EditView::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 			pmf->SetAxes(a);
 			break;
 		}
+
+		case _T('T'):
+			pmf->EnableTime(!pmf->TimeEnabled());
+			break;
+
+		case _T('Y'):
+			pmf->EnableEditorDraw(!pmf->EditorDrawEnabled());
+			break;
+
+		case _T('X'):
+			GetDocument()->SnapSelectionToGround();
+			break;
+
+		case VK_OEM_4:
+			pmf->m_wndProtoView.ChangeSelection(-1);
+			break;
+
+		case VK_OEM_6:
+			pmf->m_wndProtoView.ChangeSelection(1);
+			break;
 
 		case _T('1'):
 			pmf->SetActiveTool(C3EditApp::TT_SELECT);

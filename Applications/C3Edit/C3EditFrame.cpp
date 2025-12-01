@@ -705,6 +705,69 @@ BOOL C3EditFrame::AxisActive(props::TFlags64 axis)
 	return axis.IsSet(GetAxes());
 }
 
+CMFCToolBarButton *FindButtonByID(CMFCToolBar *ptoolbar, UINT id, INT &index)
+{
+	assert(ptoolbar);
+
+	for (UINT i = 0; i < ptoolbar->GetAllButtons().GetCount(); i++)
+	{
+		CMFCToolBarButton *pb = ptoolbar->GetButton(i);
+		if (pb->m_nID == id)
+		{
+			index = i;
+			return pb;
+		}
+	}
+
+	return nullptr;
+}
+void C3EditFrame::EnableTime(bool en)
+{
+	INT i = 0;
+	CMFCToolBarButton *pb = FindButtonByID(&m_wndToolBar, ID_APP_ADVANCETIME, i);
+
+	if (pb)
+	{
+		UINT bstyle = pb->m_nStyle;
+		if (en)
+			bstyle |= TBBS_CHECKED;
+		else
+			bstyle &= ~TBBS_CHECKED;
+
+		m_wndToolBar.SetButtonStyle(i, bstyle);
+	}
+
+	theApp.m_Config->SetBool(_T("environment.advancetime"), en);
+}
+
+bool C3EditFrame::TimeEnabled()
+{
+	return theApp.m_Config->GetBool(_T("environment.advancetime"), true);
+}
+
+void C3EditFrame::EnableEditorDraw(bool en)
+{
+	INT i = 0;
+	CMFCToolBarButton *pb = FindButtonByID(&m_wndToolBar, ID_APP_EDITORDRAW, i);
+
+	if (pb)
+	{
+		UINT bstyle = pb->m_nStyle;
+		if (en)
+			bstyle |= TBBS_CHECKED;
+		else
+			bstyle &= ~TBBS_CHECKED;
+
+		m_wndToolBar.SetButtonStyle(i, bstyle);
+	}
+
+	theApp.m_Config->SetBool(_T("environment.editordraw"), en);
+}
+
+bool C3EditFrame::EditorDrawEnabled()
+{
+	return theApp.m_Config->GetBool(_T("environment.editordraw"), true);
+}
 
 CMFCToolBarButton *C3EditFrame::GetToolButtonByID(CMFCToolBar *toolbar, DWORD butid)
 {

@@ -1603,7 +1603,7 @@ void jcAdjustQuat(CScriptVar *c, void *userdata)
 	float angle = (float)pangle->GetFloat();
 	r = glm::angleAxis(angle, axis);
 
-	q = r * q;
+	q = q * r;
 
 	CScriptVarLink *psvl;
 

@@ -157,6 +157,8 @@ public:
     afx_msg void OnEditExport();
     afx_msg void OnGuiToggle();
     afx_msg void OnUpdateGuiToggle(CCmdUI *pCmdUI);
+	afx_msg void OnUpdateEditSnapGround(CCmdUI *pCmdUI);
+	afx_msg void OnEditSnapGround();
 };
 
 #ifndef _DEBUG  // debug version in C3EditView.cpp

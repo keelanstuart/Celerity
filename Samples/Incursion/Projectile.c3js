@@ -27,6 +27,8 @@ var coll_init = 0;
 
 var hobj_sparks;
 
+var xaxis = {x:1.0, y:0.0, z:0.0};
+
 function update(elapsed_seconds)
 {
 	if (elapsed_seconds == 0.0)
@@ -43,7 +45,7 @@ function update(elapsed_seconds)
 	curpos = Vec3.madd(facing, tmp, oldpos);
 	diffpos = Vec3.sub(curpos, oldpos);
 	SetPropertyValue(hprop_pos, curpos);
-	Log("\nupdate: " + maxspeed + " * " + elapsed_seconds + " = " + tmp + " ; (" + curpos.x + ", " + curpos.y + ")");
+	//Log("\nupdate: " + maxspeed + " * " + elapsed_seconds + " = " + tmp + " ; (" + curpos.x + ", " + curpos.y + ")");
 
 /*
 	CheckCollisions(hobj_parent, pos, lvel, collision_info);
@@ -117,6 +119,7 @@ function fire(hprop_fromori, hprop_frompos, ofsx, ofsy, ofsz)
 	maxspeed = GetPropertyValue(hprop_maxspeed);
 
 	ori = GetPropertyValue(hprop_fromori);
+	ori = AdjustQuat(ori, xaxis, Math.toRadians(-10.0));
 	SetPropertyValue(hprop_ori, ori);
 
 	curpos = GetPropertyValue(hprop_frompos);

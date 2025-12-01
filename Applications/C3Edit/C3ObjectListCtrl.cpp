@@ -22,7 +22,7 @@ IMPLEMENT_DYNAMIC(C3ObjectListCtrl, CListCtrl)
 
 C3ObjectListCtrl::C3ObjectListCtrl()
 {
-
+	m_LastClicked = 0;
 }
 
 C3ObjectListCtrl::~C3ObjectListCtrl()
@@ -75,6 +75,9 @@ BEGIN_MESSAGE_MAP(C3ObjectListCtrl, CListCtrl)
 
 	ON_COMMAND(ID_EDIT_PASTE, &C3ObjectListCtrl::OnEditPaste)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_PASTE, &C3ObjectListCtrl::OnUpdateEditPaste)
+
+	ON_COMMAND(ID_EDIT_SNAPGROUND, &C3ObjectListCtrl::OnEditSnapGround)
+	ON_UPDATE_COMMAND_UI(ID_EDIT_SNAPGROUND, &C3ObjectListCtrl::OnUpdateEditSnapGround)
 
 	ON_WM_KEYUP()
 	ON_WM_KEYDOWN()
@@ -399,27 +402,65 @@ void C3ObjectListCtrl::OnNMClick(NMHDR *pNMHDR, LRESULT *pResult)
 
 	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
 	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
-	const c3::Object *pobj = ((CObjectWnd *)GetParent())->GetItemByIndex(pdoc->m_RootObj, pNMItemActivate->iItem);
 
 	POSITION vp = pdoc->GetFirstViewPosition();
 	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
 
-	if (!(pNMItemActivate->uKeyFlags & LVKF_CONTROL))
+	int i = pNMItemActivate->iItem;
+
+	// if there is a selection already and shift was pressed, then 
+	if (pdoc->GetNumSelected() && (pNMItemActivate->uKeyFlags & LVKF_SHIFT))
 	{
-		pdoc->ClearSelection();
-		pdoc->AddToSelection(pobj);
 	}
 	else
 	{
-		if (pdoc->IsSelected(pobj))
-			pdoc->RemoveFromSelection(pobj);
-		else
-			pdoc->AddToSelection(pobj);
+		if (!(pNMItemActivate->uKeyFlags & LVKF_CONTROL))
+			pdoc->ClearSelection();
+
+		m_LastClicked = pNMItemActivate->iItem;
 	}
+
+	int d = i - m_LastClicked;
+	int j = !d ? 0 : (d > 0) ? -1 : 1;
+
+	do
+	{
+		const c3::Object *pobj = ((CObjectWnd *)GetParent())->GetItemByIndex(pdoc->m_RootObj, i);
+
+		if (!(pNMItemActivate->uKeyFlags & LVKF_CONTROL))
+		{
+			// if the user is holding down alt, remove from selection, otherwise add
+			if (pNMItemActivate->uKeyFlags & LVKF_ALT)
+			{
+				if (pdoc->IsSelected(pobj))
+					pdoc->RemoveFromSelection(pobj);
+			}
+			else
+				pdoc->AddToSelection(pobj);
+		}
+		else
+		{
+			// if the user isn't holding down shift, then toggle... otherwise, add to the selection
+			if (!d)
+			{
+				if (pdoc->IsSelected(pobj))
+					pdoc->RemoveFromSelection(pobj);
+				else
+					pdoc->AddToSelection(pobj);
+			}
+			else
+				pdoc->AddToSelection(pobj);
+		}
+
+		i += j;
+	}
+	while (i != m_LastClicked);
 
 	UpdateData();
 
 	*pResult = 0;
+
+	m_LastClicked = pNMItemActivate->iItem;
 }
 
 
@@ -662,6 +703,28 @@ void C3ObjectListCtrl::OnEditPaste()
 	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
 
 	pv->OnEditPaste();
+}
+
+
+void C3ObjectListCtrl::OnEditSnapGround()
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnEditSnapGround();
+}
+
+
+void C3ObjectListCtrl::OnUpdateEditSnapGround(CCmdUI *pCmdUI)
+{
+	C3EditFrame *pfrm = (C3EditFrame *)(theApp.GetMainWnd());
+	C3EditDoc *pdoc = (C3EditDoc *)(pfrm->GetActiveDocument());
+	POSITION vp = pdoc->GetFirstViewPosition();
+	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
+
+	pv->OnUpdateEditSnapGround(pCmdUI);
 }
 
 

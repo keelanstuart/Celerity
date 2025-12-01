@@ -41,6 +41,23 @@ namespace c3
 		// Returns if the obj is in the hierarchy of parent (and optionally the depth)
 		bool C3_API IsInHeirarchyOf(Object *obj, Object *parent, size_t *depth = nullptr);
 
+		using SnapDirection = enum
+		{
+			POSZ = 0,
+			NEGZ,
+
+			POSY,
+			NEGY,
+
+			POSX,
+			NEGX,
+
+			NUMDIRS
+		};
+
+		// Moves the given Object to a position that is on the surface of the near collidable Object in the given direction
+		bool C3_API SnapTo(Object *obj, SnapDirection sd);
+
 	};
 
 };

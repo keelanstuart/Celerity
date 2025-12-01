@@ -57,6 +57,12 @@ public:
 	props::TFlags64 GetAxes();
 	BOOL AxisActive(props::TFlags64 axis);
 
+	void EnableTime(bool en);
+	bool TimeEnabled();
+
+	void EnableEditorDraw(bool en);
+	bool EditorDrawEnabled();
+
 	void SetActiveProperties(props::IPropertySet *props, bool readonly = false, const TCHAR *title = nullptr);
 	void SetActivePrototype(c3::Prototype *pproto, bool readonly = false, const TCHAR *title = nullptr);
 	void SetActiveObject(c3::Object *pobj, bool readonly = false, const TCHAR *title = nullptr);
