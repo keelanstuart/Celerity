@@ -54,42 +54,13 @@ To build Celerity from source:
 Pull requests are welcome! Contributions that improve flexibility, compatibility, performance, or ease of use are encouraged.
 
 <br>
-Images:
-<br>
-<img src="https://github.com/keelanstuart/Celerity/blob/master/Media/screen_20230128.png" width="300" height="225" border="50"/><img src="https://github.com/keelanstuart/Celerity/blob/master/Media/screen_ed_20240209.png" width="300" height="225" border="50"/>
-
-<br>
 Video Links:
 <br>
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=K8VkbBgpvhg" target="_blank">
+<a href="https://www.youtube.com/playlist?list=PLaed72lE3UjhVFmb2GQAxGLLvyB35kld-&feature=player_embedded" target="_blank">
 <img src="http://img.youtube.com/vi/K8VkbBgpvhg/0.jpg" alt="2025 Demos" width="600" height="450" border="50" />
 </a>
 <br>
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=Zks2R8NChQM" target="_blank">
-<img src="http://img.youtube.com/vi/Zks2R8NChQM/0.jpg" alt="Warehouse Flythrough" width="300" height="225" border="50" />
-</a>
-
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=Wi8DE7UJTM0" target="_blank">
-<img src="http://img.youtube.com/vi/Wi8DE7UJTM0/0.jpg" alt="Full hierarchies" width="300" height="225" border="50" />
-</a>
-
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=E4LTI0lLJOk" target="_blank">
-<img src="http://img.youtube.com/vi/E4LTI0lLJOk/0.jpg" alt="90's style demo" width="300" height="225" border="50" />
-</a>
-
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=UDmb0Wn8nBE" target="_blank">
-<img src="http://img.youtube.com/vi/UDmb0Wn8nBE/0.jpg" alt="Floating Fountain" width="300" height="225" border="50" />
-</a>
-
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=v6H-AJ6Iizc" target="_blank">
-<img src="http://img.youtube.com/vi/v6H-AJ6Iizc/0.jpg" alt="Turbo Teaser 1" width="300" height="225" border="50" />
-</a>
-
-<a href="http://www.youtube.com/watch?feature=player_embedded&v=gavOlOR2wtU" target="_blank">
-<img src="http://img.youtube.com/vi/gavOlOR2wtU/0.jpg" alt="Turbo Teaser 2" width="300" height="225" border="50" />
-</a>
-
-<br>
 ______________________________________________
+<br>
 
 To see some of the things Celerity has been used to create, check out this promotional video from my old company, Inventoractive: https://www.youtube.com/watch?v=mlXiiIEqRsw
