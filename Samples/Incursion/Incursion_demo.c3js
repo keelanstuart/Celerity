@@ -58,7 +58,7 @@ function init()
 	runtime = 0.0;
 
 	tmppos = Vec3.mul(tmppos, 0.0);
-	PlaySound("Incursion/AQUA.wav", 0.25, 1.0, -1, tmppos);
+	PlaySound("Incursion/sovereign.mp3", 0.25, 1.0, -1, tmppos);
 
 	hobj_levelroot = CreateObject("", self);
 	load_result = LoadObject(hobj_levelroot, "Incursion/Incursion.c3o");

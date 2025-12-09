@@ -132,6 +132,11 @@ C3EditView::C3EditView() noexcept
 	m_ulSunDir = -1;
 	m_ulSunColor = -1;
 	m_ulAmbientColor = -1;
+	m_ulFogColor = -1;
+	m_ulFogDensity = -1;
+	m_ulFogStart = -1;
+	m_ulFogEnd = -1;
+
 	m_uBlurTex = -1;
 	m_uBlurScale = -1;
 
@@ -517,6 +522,8 @@ void C3EditView::OnDraw(CDC *pDC)
 		{
 			prend->SetViewMatrix(pcam->GetViewMatrix());
 			prend->SetProjectionMatrix(pcam->GetProjectionMatrix());
+			prend->SetNearClipDistance(pcam->GetNearClipDistance());
+			prend->SetFarClipDistance(pcam->GetFarClipDistance());
 			prend->SetEyePosition(pcam->GetEyePos());
 			prend->SetEyeDirection(pcampos->GetFacingVector());
 		}
@@ -524,6 +531,10 @@ void C3EditView::OnDraw(CDC *pDC)
 		m_SP_combine->SetUniform3(m_ulAmbientColor, penv->GetAmbientColor());
 		m_SP_combine->SetUniform3(m_ulSunColor, penv->GetSunColor());
 		m_SP_combine->SetUniform3(m_ulSunDir, penv->GetSunDirection());
+		m_SP_combine->SetUniform4(m_ulFogColor, penv->GetFogColor());
+		m_SP_combine->SetUniform1(m_ulFogDensity, penv->GetFogDensity());
+		m_SP_combine->SetUniform1(m_ulFogStart, penv->GetFogStart());
+		m_SP_combine->SetUniform1(m_ulFogEnd, penv->GetFogEnd());
 
 		bool capturing = false;
 		if (m_pRenderDoc && m_RenderDocCaptureFrame)
@@ -535,9 +546,22 @@ void C3EditView::OnDraw(CDC *pDC)
 
 		if (prend->BeginScene(BSFLAG_SHOWGUI))
 		{
-			prend->SetTextureTransformMatrix(nullptr);
 			prend->SetClearColor(&c3::Color::fBlackFT);
+			prend->SetTextureTransformMatrix(nullptr);
 			prend->UseFrameBuffer(m_EffectsBuf, UFBFLAG_CLEARCOLOR);
+
+			// selection: 0.0, near fog: 1.0, far fog: 0.0, cos fog norm: 0.0
+			float fogstart = penv->GetFogStart();
+			float fogend = penv->GetFogEnd();
+			if (fogstart == fogend)
+			{
+				fogstart = prend->GetNearClipDistance();
+				fogend = prend->GetFarClipDistance();
+			}
+			glm::fvec4 auxcc(0, fogstart, fogend, 0);
+			prend->SetClearColor(&auxcc);
+			prend->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE | CM_ALPHA);
+			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_CLEARCOLOR);
 
 			prend->SetClearColor(&cc);
 
@@ -597,6 +621,8 @@ void C3EditView::OnDraw(CDC *pDC)
 				prend->SetSunShadowMatrix(&depthMVP);
 				prend->SetViewMatrix(&depthViewMatrix);
 				prend->SetProjectionMatrix(&depthProjectionMatrix);
+				prend->SetNearClipDistance(pcam->GetNearClipDistance());
+				prend->SetFarClipDistance(pcam->GetFarClipDistance());
 
 				prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 				prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
@@ -617,6 +643,8 @@ void C3EditView::OnDraw(CDC *pDC)
 			{
 				prend->SetViewMatrix(pcam->GetViewMatrix());
 				prend->SetProjectionMatrix(pcam->GetProjectionMatrix());
+				prend->SetNearClipDistance(pcam->GetNearClipDistance());
+				prend->SetFarClipDistance(pcam->GetFarClipDistance());
 				prend->SetEyePosition(pcam->GetEyePos());
 				prend->SetEyeDirection(pcampos->GetFacingVector());
 			}
@@ -624,9 +652,9 @@ void C3EditView::OnDraw(CDC *pDC)
 			// Selection hilighting
 			prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 			m_AuxBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
+			prend->SetChannelWriteMask(CM_RED);
+			prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
 			prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
-			//prend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
 			prend->UseProgram(m_SP_bounds);
 
 			pDoc->DoForAllSelected([&](c3::Object *pobj)
@@ -641,6 +669,8 @@ void C3EditView::OnDraw(CDC *pDC)
 
 			if ((active_tool == C3EditApp::ToolType::TT_WAND) && pDoc->m_Brush)
 				pDoc->m_Brush->Render(RF_FORCE | RF_LOCKSHADER | RF_LOCKMATERIAL | RF_AUXILIARY);
+
+			prend->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE | CM_ALPHA);
 
 			// Resolve
 			prend->UseMaterial();
@@ -807,7 +837,7 @@ void C3EditView::InitializeGraphics()
 		}
 
 		m_VS_combine = (c3::ShaderComponent*)((rm->GetResource(_T("combine.vsh"), RESF_DEMANDLOAD))->GetData());
-		m_FS_combine = (c3::ShaderComponent*)((rm->GetResource(_T("combine-editor.fsh"), RESF_DEMANDLOAD))->GetData());
+		m_FS_combine = (c3::ShaderComponent*)((rm->GetResource(_T("combine.fsh"), RESF_DEMANDLOAD))->GetData());
 		if (!m_SP_combine)
 			m_SP_combine = prend->CreateShaderProgram();
 		if (m_SP_combine)
@@ -819,6 +849,10 @@ void C3EditView::InitializeGraphics()
 				m_ulSunDir = m_SP_combine->GetUniformLocation(_T("uSunDirection"));
 				m_ulSunColor = m_SP_combine->GetUniformLocation(_T("uSunColor"));
 				m_ulAmbientColor = m_SP_combine->GetUniformLocation(_T("uAmbientColor"));
+				m_ulFogColor = m_SP_combine->GetUniformLocation(_T("uFogColor"));
+				m_ulFogDensity = m_SP_combine->GetUniformLocation(_T("uFogDensity"));
+				m_ulFogStart = m_SP_combine->GetUniformLocation(_T("uFogStart"));
+				m_ulFogEnd = m_SP_combine->GetUniformLocation(_T("uFogEnd"));
 			}
 		}
 

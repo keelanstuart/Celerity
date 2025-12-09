@@ -25,8 +25,8 @@ namespace c3
 	//		'eSNC' - Sun Color, Color aspect, sets the color of the global sun light
 	//		'eFGC' - Fog Color, Color aspect, sets the color of any fog
 	//		'eFGD' - Fog Desnity, float type [0..1], sets the density of any fog 
-	//		'eFGS' - Fog Start, float type, sets the starting depth of any fog
-	//		'eFGE' - Fog End, float type, sets the ending depth of any fog (max density)
+	//		'eFGS' - Fog Start, float type, sets the starting depth of any fog [0..1]
+	//		'eFGE' - Fog End, float type, sets the ending depth of any fog (max density) [0..1]
 
 	class C3_API EnvironmentModifier : public Component
 	{

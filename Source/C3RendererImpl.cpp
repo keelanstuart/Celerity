@@ -2485,6 +2485,30 @@ const glm::fmat4x4 *RendererImpl::GetSunShadowMatrix(glm::fmat4x4 *m)
 }
 
 
+void RendererImpl::SetNearClipDistance(float d)
+{
+	m_NearClipDist = d;
+}
+
+
+void RendererImpl::SetFarClipDistance(float d)
+{
+	m_FarClipDist = d;
+}
+
+
+float RendererImpl::GetNearClipDistance()
+{
+	return m_NearClipDist;
+}
+
+
+float RendererImpl::GetFarClipDistance()
+{
+	return m_FarClipDist;
+}
+
+
 const glm::fmat4x4 *RendererImpl::GetTextureTransformMatrix(glm::fmat4x4 *m)
 {
 	if (!m)

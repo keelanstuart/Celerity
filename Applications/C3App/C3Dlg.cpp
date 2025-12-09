@@ -50,6 +50,11 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_ulSunDir = -1;
 	m_ulSunColor = -1;
 	m_ulAmbientColor = -1;
+	m_ulFogColor = -1;
+	m_ulFogDensity = -1;
+	m_ulFogStart = -1;
+	m_ulFogEnd = -1;
+
 	m_uBlurTex = -1;
 	m_uBlurScale = -1;
 
@@ -252,7 +257,6 @@ void C3Dlg::CreateSurfaces()
 		{ _T("uSamplerAuxiliary"), c3::Renderer::TextureType::F32_4CH, TEXCREATEFLAG_RENDERTARGET },
 	};
 
-#if 0
 	theApp.m_C3->GetLog()->Print(_T("Creating auxiliary buffer... "));
 	if (!m_AuxBuf)
 		m_AuxBuf = prend->CreateFrameBuffer(0, _T("Aux"));
@@ -260,7 +264,6 @@ void C3Dlg::CreateSurfaces()
 		gbok = m_AuxBuf->Setup(_countof(AuxBufTargData), AuxBufTargData, m_DepthTarg, auxr) == c3::FrameBuffer::RETURNCODE::RET_OK;
 	theApp.m_C3->GetLog()->Print(_T("%s\n"), gbok ? _T("ok") : _T("failed"));
 	m_AuxBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-#endif
 
 	UpdateShaderSurfaces();
 }
@@ -426,6 +429,10 @@ void C3Dlg::InitializeGraphics()
 				m_ulSunDir = m_SP_combine->GetUniformLocation(_T("uSunDirection"));
 				m_ulSunColor = m_SP_combine->GetUniformLocation(_T("uSunColor"));
 				m_ulAmbientColor = m_SP_combine->GetUniformLocation(_T("uAmbientColor"));
+				m_ulFogColor = m_SP_combine->GetUniformLocation(_T("uFogColor"));
+				m_ulFogDensity = m_SP_combine->GetUniformLocation(_T("uFogDensity"));
+				m_ulFogStart = m_SP_combine->GetUniformLocation(_T("uFogStart"));
+				m_ulFogEnd = m_SP_combine->GetUniformLocation(_T("uFogEnd"));
 			}
 		}
 
@@ -804,6 +811,8 @@ void C3Dlg::OnPaint()
 			{
 				prend->SetViewMatrix(cam->GetViewMatrix());
 				prend->SetProjectionMatrix(cam->GetProjectionMatrix());
+				prend->SetNearClipDistance(cam->GetNearClipDistance());
+				prend->SetFarClipDistance(cam->GetFarClipDistance());
 				prend->SetEyePosition(cam->GetEyePos());
 				prend->SetEyeDirection(campos->GetFacingVector());
 			}
@@ -811,11 +820,29 @@ void C3Dlg::OnPaint()
 			m_SP_combine->SetUniform3(m_ulAmbientColor, penv->GetAmbientColor());
 			m_SP_combine->SetUniform3(m_ulSunColor, penv->GetSunColor());
 			m_SP_combine->SetUniform3(m_ulSunDir, penv->GetSunDirection());
+			m_SP_combine->SetUniform4(m_ulFogColor, penv->GetFogColor());
+			m_SP_combine->SetUniform1(m_ulFogDensity, penv->GetFogDensity());
+			m_SP_combine->SetUniform1(m_ulFogStart, penv->GetFogStart());
+			m_SP_combine->SetUniform1(m_ulFogEnd, penv->GetFogEnd());
 
 			if (prend->BeginScene(BSFLAG_SHOWGUI))
 			{
 				prend->SetClearColor(&c3::Color::fBlackFT);
+				prend->SetTextureTransformMatrix(nullptr);
 				prend->UseFrameBuffer(m_EffectsBuf, UFBFLAG_CLEARCOLOR);
+
+				// selection: 0.0, near fog: 1.0, far fog: 0.0, cos fog norm: 0.0
+				float fogstart = penv->GetFogStart();
+				float fogend = penv->GetFogEnd();
+				if (fogstart == fogend)
+				{
+					fogstart = prend->GetNearClipDistance();
+					fogend = prend->GetFarClipDistance();
+				}
+				glm::fvec4 auxcc(0, fogstart, fogend, 0);
+				prend->SetClearColor(&auxcc);
+				prend->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE | CM_ALPHA);
+				prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_CLEARCOLOR);
 
 				prend->SetClearColor(&cc);
 
@@ -826,7 +853,6 @@ void C3Dlg::OnPaint()
 				prend->SetAlphaPassRange(254.0f / 255.0f);
 				prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
-				prend->SetAlphaBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				props::TFlags64 renderflags = 0;
 
 				if (skybox)
@@ -850,14 +876,13 @@ void C3Dlg::OnPaint()
 
 				// after the main pass, clear everything with black...
 				prend->SetClearColor(&c3::Color::fBlack);
-				m_LCBuf->SetClearColor(c3::Color::fBlack);
+				m_LCBuf->SetClearColor(c3::Color::fBlack, 0);
 
 				// Lighting pass(es)
 				prend->UseFrameBuffer(m_LCBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
 				prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
 				prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
 				prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-				prend->SetAlphaBlendMode(c3::Renderer::BlendMode::BM_ADD);
 				if (world)
 				{
 					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
@@ -884,6 +909,8 @@ void C3Dlg::OnPaint()
 					prend->SetSunShadowMatrix(&depthMVP);
 					prend->SetViewMatrix(&depthViewMatrix);
 					prend->SetProjectionMatrix(&depthProjectionMatrix);
+					prend->SetNearClipDistance(cam->GetNearClipDistance());
+					prend->SetFarClipDistance(cam->GetFarClipDistance());
 
 					prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
 					prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
@@ -902,6 +929,8 @@ void C3Dlg::OnPaint()
 				{
 					prend->SetViewMatrix(cam->GetViewMatrix());
 					prend->SetProjectionMatrix(cam->GetProjectionMatrix());
+					prend->SetNearClipDistance(cam->GetNearClipDistance());
+					prend->SetFarClipDistance(cam->GetFarClipDistance());
 					prend->SetEyePosition(cam->GetEyePos());
 					prend->SetEyeDirection(campos->GetFacingVector());
 				}
@@ -910,6 +939,7 @@ void C3Dlg::OnPaint()
 				prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				m_BBuf[0]->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 				prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
+				prend->SetWindingOrder(c3::Renderer::WindingOrder::WO_CW);
 				prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
 				prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
 				prend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
@@ -963,7 +993,7 @@ void C3Dlg::OnPaint()
 					bs *= 2.0f;
 				}
 
-				m_MotionUpdateIdx = (m_MotionUpdateIdx + 1) % (BLURTARGS - 1);
+				m_MotionUpdateIdx = (m_MotionUpdateIdx + 1) % (BLURTARGS + 1);
 
 				prend->UseFrameBuffer(nullptr, 0);
 				prend->UseRenderMethod();	// no method now
@@ -981,6 +1011,8 @@ void C3Dlg::OnPaint()
 					prend->SetViewMatrix(guicam->GetViewMatrix());
 					glm::fmat4x4 guiproj = *guicam->GetProjectionMatrix() * glm::scale(glm::vec3(-1, 1, 1));
 					prend->SetProjectionMatrix(&guiproj);
+					prend->SetNearClipDistance(guicam->GetNearClipDistance());
+					prend->SetFarClipDistance(guicam->GetFarClipDistance());
 					prend->SetEyePosition(guicam->GetEyePos());
 					glm::fvec3 eyedir = glm::normalize(*guicam->GetTargetPos() - *(guicam->GetEyePos()));
 					prend->SetEyeDirection(&eyedir);

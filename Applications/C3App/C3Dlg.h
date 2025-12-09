@@ -43,6 +43,10 @@ protected:
 	int32_t m_ulSunDir;
 	int32_t m_ulSunColor;
 	int32_t m_ulAmbientColor;
+	int32_t m_ulFogColor;
+	int32_t m_ulFogDensity;
+	int32_t m_ulFogStart;
+	int32_t m_ulFogEnd;
 
 	int32_t m_uBlurTex;
 	int32_t m_uBlurScale;

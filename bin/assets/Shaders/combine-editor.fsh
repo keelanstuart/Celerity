@@ -9,6 +9,10 @@ uniform sampler2D uSamplerAuxiliary;
 uniform vec3 uSunDirection;
 uniform vec3 uSunColor;
 uniform vec3 uAmbientColor;
+uniform vec4 uFogColor;
+uniform float uFogDensity;
+uniform float uFogStart;
+uniform float uFogEnd;
 uniform mat4 uMatrixS;
 uniform float uElapsedTime;
 uniform vec3 uEyePosition;
@@ -61,12 +65,13 @@ void main()
 
 	vec3 glow_color = vec3((1.0 - aux[4].r) * sin(aux_avg.r * 1.5707) * 2.0);
 
-	float cloud_depth = max(0, min(aux[4].a, texPositionDepth.a) - aux[4].b);
+	float cloud_depth = max(0.0, min(texPositionDepth.a, aux[4].b) - aux[4].g);
 	// replace cloud_max and cloud_color with uniforms
-	float cloud_max = 100.0;
-	vec3 cloud_color = vec3(1, 1, 1);
-	float cloud_factor = clamp(cloud_depth / cloud_max, 0, 1);
-	vec3 cloudiness = cloud_color * cloud_factor;
+	vec3 cloud_color = mix(uFogColor.rgb * uSunColor, uAmbientColor, aux[4].a);
+	float cloud_factor = 0;//clamp(uFogDensity / (cloud_depth + 0.0001), 0, 1);
+	vec3 cloudiness = cloud_color * cloud_factor * uFogColor.a;
+
+	float fog = clamp((texPositionDepth.a - uFogStart) / max(uFogEnd - uFogStart, 1e-6) * uFogDensity, 0.0, 1.0);
 
 	vec4 texEffectsColor = texture(uSamplerEffectsColor, fTex0);
 
@@ -105,6 +110,6 @@ void main()
 	
 	float shade = (shadow_coords.z > (shadow + bias)) ? 0.0 : 1.0;
 
-	cc = ((mix(ambient, diffuse, NdotL * shade) + ((specular + cloudiness) * shade))) + (emissive * (1 - cloud_factor)) + lights + glow_color + texEffectsColor.rgb;
+	cc = mix((((mix(ambient, diffuse, NdotL * shade) + ((specular + cloudiness) * shade))) + (emissive * (1 - cloud_factor)) + lights + glow_color + texEffectsColor.rgb), uFogColor.rgb, fog);
 	oColor = vec4(cc, 1);
 }

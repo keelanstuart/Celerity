@@ -26,12 +26,15 @@ namespace c3
 		constexpr glm::fvec4 fDarkGrey(0.25f, 0.25f, 0.25f, 1.0f);
 		constexpr glm::fvec4 fVeryDarkGrey(0.1f, 0.1f, 0.1f, 1.0f);
 		constexpr glm::fvec4 fRed(1.0f, 0.0f, 0.0f, 1.0f);
+		constexpr glm::fvec4 fRedFT(1.0f, 0.0f, 0.0f, 0.0f);
 		constexpr glm::fvec4 fDarkRed(0.5f, 0.0f, 0.0f, 1.0f);
 		constexpr glm::fvec4 fVeryDarkRed(0.25f, 0.0f, 0.0f, 1.0f);
 		constexpr glm::fvec4 fGreen(0.0f, 1.0f, 0.0f, 1.0f);
+		constexpr glm::fvec4 fGreenFT(0.0f, 1.0f, 0.0f, 0.0f);
 		constexpr glm::fvec4 fDarkGreen(0.0f, 0.5f, 0.0f, 1.0f);
 		constexpr glm::fvec4 fVeryDarkGreen(0.0f, 0.25f, 0.0f, 1.0f);
 		constexpr glm::fvec4 fBlue(0.0f, 0.0f, 1.0f, 1.0f);
+		constexpr glm::fvec4 fBlueFT(0.0f, 0.0f, 1.0f, 0.0f);
 		constexpr glm::fvec4 fDarkBlue(0.0f, 0.0f, 0.5f, 1.0f);
 		constexpr glm::fvec4 fVeryDarkBlue(0.0f, 0.0f, 0.25f, 1.0f);
 		constexpr glm::fvec4 fMagenta(1.0f, 0.0f, 1.0f, 1.0f);

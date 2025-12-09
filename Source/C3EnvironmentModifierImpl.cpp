@@ -19,7 +19,11 @@ EnvironmentModifierImpl::EnvironmentModifierImpl() :
 	m_BackgroundColor(Color::fBlack),
 	m_AmbColor(Color::fDarkGrey),
 	m_SunColor(Color::fNaturalSunlight),
-	m_SunDir(glm::normalize(glm::fvec3(0.2, 0.1, -0.7)))
+	m_SunDir(glm::normalize(glm::fvec3(0.2, 0.1, -0.7))),
+	m_FogColor(Color::fWhite),
+	m_FogDensity(0.0f),
+	m_FogStart(0.0f),
+	m_FogEnd(0.0f)
 {
 	m_pPos = nullptr;
 
@@ -95,6 +99,38 @@ bool EnvironmentModifierImpl::Initialize(Object *pobject)
 	if (pp)
 		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SUN_DIRECTION);
 
+	pp = ps->GetPropertyById('eFGC');
+	if (!pp && ((pp = ps->CreateProperty(_T("uFogColor"), 'eFGC')) && pp))
+		pp->SetVec4F(*(props::TVec4F *)&m_FogColor);
+	else
+		PropertyChanged(pp);
+	if (pp)
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_COLOR_RGBA);
+
+	pp = ps->GetPropertyById('eFGD');
+	if (!pp && ((pp = ps->CreateProperty(_T("uFogDensity"), 'eFGD')) && pp))
+		pp->SetFloat(m_FogDensity);
+	else
+		PropertyChanged(pp);
+	if (pp)
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_GENERIC);
+
+	pp = ps->GetPropertyById('eFGS');
+	if (!pp && ((pp = ps->CreateProperty(_T("uFogStart"), 'eFGS')) && pp))
+		pp->SetFloat(m_FogStart);
+	else
+		PropertyChanged(pp);
+	if (pp)
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_GENERIC);
+
+	pp = ps->GetPropertyById('eFGE');
+	if (!pp && ((pp = ps->CreateProperty(_T("uFogEnd"), 'eFGE')) && pp))
+		pp->SetFloat(m_FogEnd);
+	else
+		PropertyChanged(pp);
+	if (pp)
+		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_GENERIC);
+
 	pp = ps->GetPropertyById('GRAV');
 	if (!pp && ((pp = ps->CreateProperty(_T("Gravity"), 'GRAV')) && pp))
 		pp->SetVec3F(*(props::TVec3F *)&m_Gravity);
@@ -157,6 +193,10 @@ void EnvironmentModifierImpl::Update(float elapsed_time)
 		penv->SetSunColor(m_SunColor);
 		penv->SetSunDirection(m_SunDir);
 		penv->SetGravity(m_Gravity);
+		penv->SetFogColor(m_FogColor);
+		penv->SetFogDensity(m_FogDensity);
+		penv->SetFogStart(m_FogStart);
+		penv->SetFogEnd(m_FogEnd);
 	}
 
 	m_bCameraInside = apply;
@@ -286,6 +326,22 @@ void EnvironmentModifierImpl::PropertyChanged(const props::IProperty *pprop)
 
 		case 'eSND':
 			pprop->AsVec3F((props::TVec3F *)&m_SunDir);
+			break;
+
+		case 'eFGC':
+			pprop->AsVec4F((props::TVec4F *)&m_FogColor);
+			break;
+
+		case 'eFGD':
+			pprop->AsFloat(&m_FogDensity);
+			break;
+
+		case 'eFGS':
+			pprop->AsFloat(&m_FogStart);
+			break;
+
+		case 'eFGE':
+			pprop->AsFloat(&m_FogEnd);
 			break;
 
 		case 'GRAV':

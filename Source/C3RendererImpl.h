@@ -70,6 +70,7 @@ namespace c3
 		glm::fvec3 m_eyepos, m_eyedir;
 		glm::fmat4x4 m_proj, m_view, m_world, m_worldview, m_normal, m_viewproj, m_worldviewproj, m_sunshadow, m_texturetransform, m_worldproj;
 		props::TFlags32 m_matupflags;
+		float m_NearClipDist, m_FarClipDist;
 
 		glm::fvec4 m_clearColor;
 		float m_clearZ;
@@ -348,6 +349,8 @@ namespace c3
 		virtual void SetWorldMatrix(const glm::fmat4x4 *m);
 		virtual void SetSunShadowMatrix(const glm::fmat4x4 *m);
 		virtual void SetTextureTransformMatrix(const glm::fmat4x4 *m);
+		virtual void SetNearClipDistance(float d);
+		virtual void SetFarClipDistance(float d);
 
 		virtual const glm::fmat4x4 *GetProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetViewMatrix(glm::fmat4x4 *m = nullptr);
@@ -359,6 +362,8 @@ namespace c3
 		virtual const glm::fmat4x4 *GetWorldProjectionMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetSunShadowMatrix(glm::fmat4x4 *m = nullptr);
 		virtual const glm::fmat4x4 *GetTextureTransformMatrix(glm::fmat4x4 *m = nullptr);
+		virtual float GetNearClipDistance();
+		virtual float GetFarClipDistance();
 
 		virtual void SetEyePosition(const glm::fvec3 *pos);
 		virtual void SetEyeDirection(const glm::fvec3 *dir);

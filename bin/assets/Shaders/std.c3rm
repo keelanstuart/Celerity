@@ -61,4 +61,11 @@
 		</pass>
 	</technique>
 
+	<technique name="a" draworder="4">
+		<pass>
+			<setting name="shader.vertex"		value="def-obj.vsh" />
+			<setting name="shader.fragment"		value="def-obj-atmos.fsh" />
+		</pass>
+	</technique>
+
 </render_method>

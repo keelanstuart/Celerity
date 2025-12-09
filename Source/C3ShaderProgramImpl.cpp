@@ -386,6 +386,10 @@ void ShaderProgramImpl::CaptureUniforms()
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_ALPHAPASS);
 				else if (!_tcscmp(n, _T("uElapsedTime")))
 					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS);
+				else if (!_tcscmp(n, _T("uNearClipDistance")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_NEARCLIPDIST);
+				else if (!_tcscmp(n, _T("uFarClipDistance")))
+					p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_FARCLIPDIST);
 				break;
 
 			case GL_INT:
@@ -433,6 +437,16 @@ void ShaderProgramImpl::UpdateGlobalUniforms()
 					case props::IProperty::PROPERTY_ASPECT::PA_TIME_SECONDS:
 					{
 						SetUniform1(p->GetID(), m_Rend->GetSystem()->GetCurrentRunTime());
+						break;
+					}
+					case props::IProperty::PROPERTY_ASPECT::PA_NEARCLIPDIST:
+					{
+						SetUniform1(p->GetID(), m_Rend->GetNearClipDistance());
+						break;
+					}
+					case props::IProperty::PROPERTY_ASPECT::PA_FARCLIPDIST:
+					{
+						SetUniform1(p->GetID(), m_Rend->GetFarClipDistance());
 						break;
 					}
 				}

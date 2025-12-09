@@ -36,7 +36,7 @@ EnvironmentImpl::EnvironmentImpl() :
 	m_FogColor(Color::fGrey, fvec4_interp),
 	m_FogDensity(0.0f, float_interp),
 	m_FogStart(0.0f, float_interp),
-	m_FogEnd(1.0f, float_interp)
+	m_FogEnd(0.0f, float_interp)
 {
 }
 

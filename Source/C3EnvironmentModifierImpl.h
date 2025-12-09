@@ -31,6 +31,10 @@ namespace c3
 		glm::fvec3 m_SunColor;
 		glm::fvec3 m_SunDir;
 		glm::fvec3 m_Gravity;
+		glm::fvec4 m_FogColor;
+		float m_FogDensity;
+		float m_FogStart;
+		float m_FogEnd;
 
 		size_t m_LastFrameNum;
 		Texture2D *m_pSkyTexture;
