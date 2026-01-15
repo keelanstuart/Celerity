@@ -27,6 +27,7 @@ namespace c3
 			OD_GUI_ROOT,
 			OD_GUI_CAMERA,
 			OD_PLAYER,
+			OD_INPUT_TARGET,
 
 			OD_NUMDESIGNATIONS
 		} ObjectDesignation;

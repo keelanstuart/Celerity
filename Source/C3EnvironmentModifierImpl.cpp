@@ -46,7 +46,7 @@ void EnvironmentModifierImpl::Release()
 }
 
 
-props::TFlags64 EnvironmentModifierImpl::Flags() const
+props::TFlags64 &EnvironmentModifierImpl::Flags()
 {
 	return m_Flags;
 }
@@ -203,7 +203,7 @@ void EnvironmentModifierImpl::Update(float elapsed_time)
 }
 
 
-bool EnvironmentModifierImpl::Prerender(Object::RenderFlags flags, int draworder)
+bool EnvironmentModifierImpl::Prerender(RenderFlags flags, int draworder)
 {
 	size_t curframe = m_pOwner->GetSystem()->GetRenderer()->GetCurrentFrameNumber();
 	if (m_LastFrameNum != curframe)
@@ -216,7 +216,7 @@ bool EnvironmentModifierImpl::Prerender(Object::RenderFlags flags, int draworder
 }
 
 
-void EnvironmentModifierImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
+void EnvironmentModifierImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();

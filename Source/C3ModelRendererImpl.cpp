@@ -43,7 +43,7 @@ void ModelRendererImpl::Release()
 }
 
 
-props::TFlags64 ModelRendererImpl::Flags() const
+props::TFlags64 &ModelRendererImpl::Flags()
 {
 	return m_Flags;
 }
@@ -104,7 +104,7 @@ void ModelRendererImpl::Update(float elapsed_time)
 }
 
 
-bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
+bool ModelRendererImpl::Prerender(RenderFlags flags, int draworder)
 {
 	if (!m_pMethod)
 	{
@@ -192,7 +192,7 @@ bool ModelRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void ModelRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
+void ModelRendererImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 	c3::Renderer *prend = m_pOwner->GetSystem()->GetRenderer();
 

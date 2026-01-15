@@ -58,17 +58,8 @@ protected:
 	bool m_ShowDebug;
 
 	CPoint m_MousePos;
-	glm::fvec3 m_BasePickPos;
-	glm::fvec3 m_BasePickVec;
 
 	float m_WindowsUIScale;
-
-	c3::Object *m_WorldRoot;
-	c3::Object *m_CameraRoot, *m_CameraArm, *m_Camera;
-	c3::Object *m_GUIRoot;
-	c3::Object *m_GUICamera;
-
-	bool m_bMouseCursorEnabled;
 
 	static bool __cdecl DeviceConnected(c3::InputDevice *device, bool conn, void *userdata);
 
@@ -105,7 +96,7 @@ protected:
 
 	void UpdateShaderSurfaces();
 
-	void ComputePickRay(c3::Object *cam, POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const;
+	void ComputePickRay(const c3::Object *cam, POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();

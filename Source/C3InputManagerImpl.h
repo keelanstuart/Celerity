@@ -140,6 +140,8 @@ namespace c3
 		RenderMethod *m_CursorRM;
 		size_t m_CursorRMTech;
 
+		const Object *m_PickingCamera;
+
 	public:
 		static DEVICECONNECTION_CALLBACK_FUNC s_DevConnCB;
 		static void *s_DevConnUserData;

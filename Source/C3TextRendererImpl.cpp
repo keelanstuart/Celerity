@@ -40,7 +40,7 @@ void TextRendererImpl::Release()
 }
 
 
-props::TFlags64 TextRendererImpl::Flags() const
+props::TFlags64 &TextRendererImpl::Flags()
 {
 	return m_Flags;
 }
@@ -66,7 +66,6 @@ bool TextRendererImpl::Initialize(Object *pobject)
 	if (pp = ps->CreateProperty(_T("Background.Show"), 'IIen'))
 	{
 		pp->SetBool(true);
-		pp->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_BOOL_YESNO);
 	}
 
 	if (pp = ps->CreateProperty(_T("Image.RenderMethod"), 'IIrm'))
@@ -142,13 +141,13 @@ void TextRendererImpl::Update(float elapsed_time)
 }
 
 
-bool TextRendererImpl::Prerender(Object::RenderFlags flags, int draworder)
+bool TextRendererImpl::Prerender(RenderFlags flags, int draworder)
 {
 	return true;
 }
 
 
-void TextRendererImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
+void TextRendererImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
 	ResourceManager *prm = m_pOwner->GetSystem()->GetResourceManager();

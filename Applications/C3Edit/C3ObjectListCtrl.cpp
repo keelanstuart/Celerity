@@ -735,6 +735,8 @@ void C3ObjectListCtrl::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 	POSITION vp = pdoc->GetFirstViewPosition();
 	C3EditView *pv = (C3EditView *)pdoc->GetNextView(vp);
 
+	const bool ctrl_down = (::GetKeyState(VK_CONTROL) & 0x8000) != 0;
+
 	switch (nChar)
 	{
 		case VK_ESCAPE:
@@ -743,6 +745,20 @@ void C3ObjectListCtrl::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 		case VK_DELETE:
 			OnEditDelete();
+			break;
+
+		case VK_UP:
+			if (ctrl_down && (pdoc->GetNumSelected() == 1))
+			{
+				c3::Object *psel = pdoc->GetSelection(0);
+			}
+			break;
+
+		case VK_DOWN:
+			if (ctrl_down && (pdoc->GetNumSelected() == 1))
+			{
+
+			}
 			break;
 
 		default:

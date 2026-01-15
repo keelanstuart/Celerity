@@ -8,11 +8,12 @@
 
 #include <C3.h>
 #include <C3Utility.h>
+#include <C3SystemImpl.h>
 
 namespace c3
 {
 
-	class ObjectImpl : public Object
+	class ObjectImpl : public virtual Object
 	{
 
 	protected:
@@ -76,7 +77,7 @@ namespace c3
 
 		virtual void Update(float elapsed_time = 0.0f) final;
 
-		virtual bool Render(Object::RenderFlags flags, int draworder, const glm::fmat4x4 *pmat = nullptr) final;
+		virtual bool Render(RenderFlags flags, int draworder, const glm::fmat4x4 *pmat = nullptr) final;
 
 		virtual bool Load(genio::IInputStream *is, Object *parent, MetadataLoadFunc loadmd, CameraLoadFunc loadcam, EnvironmentLoadFunc loadenv, CustomLoadFunc loadcust) final;
 

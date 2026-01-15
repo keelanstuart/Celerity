@@ -44,11 +44,14 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 	m_ListenerMinRadius = 10.0f;
 	m_ListenerMaxRadius = 100.0f;
 
+	// create and configure miniaudio's resource manager
 	m_ResManConfig = ma_resource_manager_config_init();
 
 	m_ResManConfig.decodedFormat = SOUND_FORMAT_DEFAULT;
 	m_ResManConfig.decodedChannels = SOUND_CHANNELS_DEFAULT;				
 	m_ResManConfig.decodedSampleRate = SOUND_RATE_DEFAULT;
+
+	// no threading - Celerity's own resource manager is already multi-threaded
 	m_ResManConfig.flags = MA_RESOURCE_MANAGER_FLAG_NO_THREADING;
 
 	ma_resource_manager_init(&m_ResManConfig, &m_ResMan);
@@ -59,6 +62,7 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 	m_pDeviceInfo = nullptr;
 	m_DeviceCount = 0;
 
+	// get information about all the audio devices available
 	ma_context_get_devices(&m_Context, &m_pDeviceInfo, &m_DeviceCount, nullptr, nullptr);
 
 	m_DeviceName.resize(m_DeviceCount);
@@ -73,6 +77,7 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 			m_DefaultDevice = i;
 	}
 
+	// initialize all the playback channels
 	for (size_t i = 0; i < m_Channels.size(); i++)
 	{
 		m_Channels[i].state = ChannelState::inactive;
@@ -113,6 +118,7 @@ bool SoundPlayerImpl::Initialize(size_t devidx)
 	if (devidx > m_DeviceCount)
 		devidx = m_DefaultDevice;
 
+	// initialize the given device
 	ma_engine_config ecfg;
 	ecfg = ma_engine_config_init();
 	ecfg.pResourceManager = &m_ResMan;
@@ -133,8 +139,10 @@ bool SoundPlayerImpl::Initialize(size_t devidx)
 			break;
 	}
 
+	// "up" is +z
 	ma_engine_listener_set_world_up(&m_Engine, 0, 0, 0, 1);
 
+	// default cone
 	ma_engine_listener_set_cone(&m_Engine, 0, glm::radians(80.0f), glm::radians(120.f), 0.75f);
 
 	ma_sound_group_config grpcfg[SOUND_TYPE::SOUND_TYPES];
@@ -145,7 +153,8 @@ bool SoundPlayerImpl::Initialize(size_t devidx)
 	{
 		ma_sound_group_init(&m_Engine, 0, nullptr, &m_Group[i]);
 
-		// disable spatialization for everything except sound effects
+		// disable spatialization for everything except sound effects...
+		// ...music uses its own stereo separation or is mono
 		ma_sound_group_set_spatialization_enabled(&m_Group[i], (i == SOUND_TYPE::ST_SFX) ? true : false);
 	}
 
@@ -248,6 +257,8 @@ void SoundPlayerImpl::Update(float elapsed_seconds)
 	if (!m_bInitialized)
 		return;
 
+	// called intermittently to update the listener's position and orientation
+
 	ma_engine_listener_set_position(&m_Engine, 0, m_ListenerPos.x, m_ListenerPos.y, m_ListenerPos.z);
 
 	ma_engine_listener_set_direction(&m_Engine, 0, m_ListenerDir.x, m_ListenerDir.y, m_ListenerDir.z);
@@ -259,12 +270,15 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 	if (!m_bInitialized)
 		return INVALID_HCHANNEL;
 
+	// make sure that the resource given is a sound - and loaded
 	if (!pres || (pres->GetType() != &SoundResourceType::self) || (pres->GetStatus() != Resource::RS_LOADED))
 		return INVALID_HSAMPLE;
 
 	const ma_sound *hs = (const ma_sound *)pres->GetData();
 	if (!hs)
 		return INVALID_HSAMPLE;
+
+	// find an available channel for playback
 
 	size_t chidx = 0;
 	TChannel *pch = m_Channels.data();
@@ -295,6 +309,8 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 
 	ma_sound *ps = &(pch->sound);
 
+	// configure the sound
+
 	ma_sound_set_volume(ps, volume);
 
 	ma_sound_set_looping(ps, (loopcount == LOOP_INFINITE) ? 1 : 0);
@@ -304,6 +320,9 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 	ma_sound_set_pitch(ps, pitchmult);
 
 	ps->pEndCallbackUserData = pch;
+
+	// this is called by miniaudio when the sample is finished playing back...
+	// ...it handles looping for a finite count
 	ps->endCallback = [](void *userdata, ma_sound *psound)
 	{
 		TChannel *pch = (TChannel *)userdata;
@@ -324,6 +343,7 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 			}
 		}
 
+		// if the playback counter is 0, stop playback
 		if (!pch->loop_count)
 		{
 			ma_sound_stop(&(pch->sound));
@@ -793,6 +813,7 @@ void SoundPlayerImpl::DisableCDAudio()
 
 DECLARE_RESOURCETYPE(Sound);
 
+// this function is called back by the ResourceManager to load a sound resource from a file
 c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
@@ -820,6 +841,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromFile(c3::System *p
 }
 
 
+// this function is called back by the ResourceManager to load a sound resource from a location in memory
 c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	SoundPlayerImpl *sp = (SoundPlayerImpl *)psys->GetSoundPlayer();

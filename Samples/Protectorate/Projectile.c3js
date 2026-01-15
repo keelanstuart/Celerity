@@ -101,6 +101,6 @@ function fire(posx, posy, posz, velx, vely, velz)
 	runtime = 0.0;
 //	tmpv3 = GetPropertyValue(hprop_campos);
 //	tmpv3 = Vec3.sub(tmpv3, pos);
-	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
-	PlaySound("Protectorate/laser.wav", 255.0, Math.random(0.90, 1.1), 0, tmpv3);
+	tmpv3.x = GetListenerPosition();
+	PlaySound("Protectorate/laser.wav", 1.0, Math.random(0.90, 1.1), 0, tmpv3);
 }

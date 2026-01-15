@@ -38,7 +38,7 @@ void PositionableImpl::Release()
 }
 
 
-props::TFlags64 PositionableImpl::Flags() const
+props::TFlags64 &PositionableImpl::Flags()
 {
 	return m_Flags;
 }
@@ -164,7 +164,7 @@ void PositionableImpl::Update(float elapsed_time)
 }
 
 
-bool PositionableImpl::Prerender(Object::RenderFlags flags, int draworder)
+bool PositionableImpl::Prerender(RenderFlags flags, int draworder)
 {
 #if 0
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();
@@ -183,7 +183,7 @@ bool PositionableImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void PositionableImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
+void PositionableImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 #if 0
 	Renderer *pr = m_pOwner->GetSystem()->GetRenderer();

@@ -413,6 +413,40 @@ void scMathSlerp(CScriptVar *c, void *userdata)
 	}
 }
 
+//Quat.mul(a, b) - multiply two quaternions
+void scQuatMul(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (elct != pb->GetNumChildren() || !pr || (elct != 4))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fquat qa, qb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		qa[(glm::fquat::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		qb[(glm::fquat::length_type)i] = pbcomp->m_Var->GetFloat();
+
+		prcomp[(glm::fquat::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	glm::fquat qr = qa * qb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(qr[(glm::fquat::length_type)i]);
+	}
+}
 
 void scVec3Dot(CScriptVar *c, void *userdata)
 {
@@ -919,6 +953,7 @@ void registerMathFunctions(CTinyJS *tinyJS)
 
 	tinyJS->AddNative(_T("function Math.lerp(a, b, t)"), scMathLerp, 0);
 	tinyJS->AddNative(_T("function Math.slerp(a, b, t)"), scMathSlerp, 0);
+	tinyJS->AddNative(_T("function Quat.mul(a, b)"), scQuatMul, 0);
 
 	tinyJS->AddNative(_T("function Vec3.dot(a, b)"), scVec3Dot, 0);
 	tinyJS->AddNative(_T("function Vec3.cross(a, b)"), scVec3Cross, 0);

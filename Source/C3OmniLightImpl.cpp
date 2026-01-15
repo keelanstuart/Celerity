@@ -46,7 +46,7 @@ void OmniLightImpl::Release()
 }
 
 
-props::TFlags64 OmniLightImpl::Flags() const
+props::TFlags64 &OmniLightImpl::Flags()
 {
 	return m_Flags;
 }
@@ -91,7 +91,7 @@ void OmniLightImpl::Update(float elapsed_time)
 }
 
 
-bool OmniLightImpl::Prerender(Object::RenderFlags flags, int draworder)
+bool OmniLightImpl::Prerender(RenderFlags flags, int draworder)
 {
 	if (!m_pMethod)
 	{
@@ -158,7 +158,7 @@ bool OmniLightImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void OmniLightImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
+void OmniLightImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
 	if (!pmat)

@@ -659,7 +659,7 @@ void C3EditView::OnDraw(CDC *pDC)
 
 			pDoc->DoForAllSelected([&](c3::Object *pobj)
 			{
-				c3::Object::RenderFlags f = RF_LOCKSHADER | RF_LOCKMATERIAL | RF_AUXILIARY;
+				c3::RenderFlags f = RF_LOCKSHADER | RF_LOCKMATERIAL | RF_AUXILIARY;
 				props::TFlags64 objflags = pobj->Flags();
 
 				if (!objflags.IsSet(OF_DRAW) && !(renderflags.IsSet(RF_EDITORDRAW) && !objflags.IsSet(OF_DRAWINEDITOR)))

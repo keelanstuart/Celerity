@@ -366,7 +366,7 @@ bool util::SnapTo(Object *obj, util::SnapDirection sd)
 		return true;
 
 	// save our old flags to restore later... then clear them - we don't want to hit ourselves!
-	c3::Object::ObjectFlags oldflags = obj->Flags();
+	ObjectFlags oldflags = obj->Flags();
 	obj->Flags().SetAll(0);
 
 	glm::fvec3 pos;

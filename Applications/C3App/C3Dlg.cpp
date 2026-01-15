@@ -1,6 +1,8 @@
-
-// C3Dlg.cpp : implementation file
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
 //
+// Copyright © 2001-2025, Keelan Stuart
+
 
 #include "pch.h"
 #include "framework.h"
@@ -63,9 +65,6 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 	m_bSurfacesCreated = false;
 	m_bSurfacesReady = false;
 
-	m_Camera = m_CameraRoot = m_CameraArm = m_GUICamera = nullptr;
-	m_WorldRoot = m_GUIRoot = nullptr;
-
 	m_MotionBlur = true;
 	m_MotionUpdateIdx = 0;
 
@@ -75,11 +74,6 @@ C3Dlg::C3Dlg(CWnd* pParent /*=nullptr*/)
 
 C3Dlg::~C3Dlg()
 {
-	C3_SAFERELEASE(m_WorldRoot);
-	C3_SAFERELEASE(m_CameraRoot);
-	C3_SAFERELEASE(m_GUIRoot);
-	C3_SAFERELEASE(m_GUICamera);
-
 	DestroySurfaces();
 
 	C3_SAFERELEASE(m_SSBuf);
@@ -131,6 +125,7 @@ END_MESSAGE_MAP()
 
 void C3Dlg::DestroySurfaces()
 {
+#if 0
 	c3::util::RecursiveObjectAction(m_WorldRoot, [](c3::Object *pobj)
 	{
 		pobj->PropertyChanged(pobj->GetProperties()->GetPropertyById('C3RM'));
@@ -140,6 +135,7 @@ void C3Dlg::DestroySurfaces()
 	{
 		pobj->PropertyChanged(pobj->GetProperties()->GetPropertyById('C3RM'));
 	});
+#endif
 
 	C3_SAFERELEASE(m_GBuf);
 
@@ -453,10 +449,10 @@ void C3Dlg::InitializeGraphics()
 	}
 }
 
-void C3Dlg::ComputePickRay(c3::Object *cam, POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const
+void C3Dlg::ComputePickRay(const c3::Object *pc_cam, POINT screenpos, glm::fvec3 &pickpos, glm::fvec3 &pickvec) const
 {
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(cam->FindComponent(c3::Camera::Type()));
-	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(cam->FindComponent(c3::Positionable::Type()));
+	c3::Camera *pcam = dynamic_cast<c3::Camera *>(pc_cam->FindComponent(c3::Camera::Type()));
+	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(pc_cam->FindComponent(c3::Positionable::Type()));
 
 	glm::fmat4x4 viewmat, projmat;
 
@@ -545,7 +541,7 @@ BOOL C3Dlg::OnInitDialog()
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
-	c3::Factory *pfac = theApp.m_C3->GetFactory();
+	InitializeGraphics();
 
 	theApp.m_C3->GetLog()->Print(_T("Creating InputManager... "));
 	c3::InputManager *inputman = theApp.m_C3->GetInputManager();
@@ -555,6 +551,11 @@ BOOL C3Dlg::OnInitDialog()
 		exit(-1);
 	}
 	theApp.m_C3->GetLog()->Print(_T("ok\n"));
+
+	tstring screen_name = PathFindFileName(theApp.m_StartScript.c_str());
+	PathRemoveExtension(screen_name.data());
+	c3::ScreenManager *pscrman = theApp.m_C3->GetScreenManager();
+	pscrman->PushScreen(screen_name.c_str(), theApp.m_StartScript.c_str());
 
 	theApp.m_C3->GetLog()->Print(_T("Setting up actions... "));
 
@@ -566,117 +567,9 @@ BOOL C3Dlg::OnInitDialog()
 		},
 		&m_ShowDebug);
 
-	theApp.m_C3->GetLog()->Print(_T("ok\n"));
-
-	InitializeGraphics();
-
-	m_WorldRoot = pfac->Build();
-	m_WorldRoot->SetName(_T("WORLD ROOT"));
-	m_WorldRoot->AddComponent(c3::Positionable::Type());
-	m_WorldRoot->AddComponent(c3::Scriptable::Type());
-	m_WorldRoot->Flags().Set(OF_LIGHT | OF_CASTSHADOW);
-	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_WORLDROOT, m_WorldRoot);
-	theApp.m_C3->GetLog()->Print(_T("World root created and registered\n"));
-
-	m_GUIRoot = pfac->Build();
-	m_GUIRoot->SetName(_T("GUI ROOT"));
-	m_GUIRoot->AddComponent(c3::Positionable::Type());
-	m_GUIRoot->AddComponent(c3::Scriptable::Type());
-	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_GUI_ROOT, m_GUIRoot);
-	theApp.m_C3->GetLog()->Print(_T("GUI root created and registered\n"));
-
-	m_CameraRoot = pfac->Build();
-	m_CameraRoot->SetName(_T("CameraRoot"));
-	m_CameraRoot->AddComponent(c3::Positionable::Type());
-
-	m_CameraArm = pfac->Build();
-	m_CameraArm->SetName(_T("CameraArm"));
-	m_CameraRoot->AddChild(m_CameraArm);
-	m_CameraArm->AddComponent(c3::Positionable::Type());
-	c3::Positionable *parmpos = dynamic_cast<c3::Positionable *>(m_CameraArm->FindComponent(c3::Positionable::Type()));
-	if (parmpos)
-	{
-		parmpos->AdjustPitch(glm::radians(0.01f));
-	}
-
-	m_Camera = pfac->Build();
-	m_Camera->SetName(_T("Camera"));
-	m_CameraArm->AddChild(m_Camera);
-	c3::Positionable *pcampos = dynamic_cast<c3::Positionable *>(m_Camera->AddComponent(c3::Positionable::Type()));
-	c3::Camera *pcam = dynamic_cast<c3::Camera *>(m_Camera->AddComponent(c3::Camera::Type()));
-	//m_Camera->AddComponent(c3::Physical::Type());
-
-	if (pcam)
-	{
-		pcam->SetFOV(65.0f);
-		pcam->SetPolarDistance(0.01f);
-	}
-
-	m_GUICamera = pfac->Build();
-	m_GUICamera->SetName(_T("GUI Camera"));
-
-	c3::Camera *puicam = dynamic_cast<c3::Camera *>(m_GUICamera->AddComponent(c3::Camera::Type()));
-	if (puicam)
-	{
-		puicam->SetProjectionMode(c3::Camera::EProjectionMode::PM_ORTHOGRAPHIC);
-		puicam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
-		puicam->SetPolarDistance(10.0f);
-	}
-
-	c3::Positionable *puicampos = dynamic_cast<c3::Positionable *>(m_GUICamera->AddComponent(c3::Positionable::Type()));
-	if (puicampos)
-	{
-		puicampos->AdjustPos(0, 0, 10.0f);
-		puicampos->SetYawPitchRoll(0, glm::radians(-90.0f), 0);
-	}
-
-	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA_ROOT, m_CameraRoot);
-	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA_ARM, m_CameraArm);
-	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, m_Camera);
-	theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_GUI_CAMERA, m_GUICamera);
-	theApp.m_C3->GetLog()->Print(_T("Camera hierarchy created and registered\n"));
-
-	// maybe we're supposed to start a script...
-	const TCHAR *ext = PathFindExtension(theApp.m_StartScript.c_str());
-	if (!_tcsicmp(ext, _T(".c3js")))
-	{
-		props::IProperty *psp = m_WorldRoot->GetProperties()->GetPropertyById('SRCF');
-		if (psp)
-		{
-			psp->SetString(theApp.m_StartScript.c_str());
-		}
-	}
-	// ...but maybe we're supposed to load a level.
-	else if (!_tcsicmp(ext, _T(".c3o")))
-	{
-		genio::IInputStream *is = genio::IInputStream::Create();
-		if (is)
-		{
-			is->Assign(theApp.m_StartScript.c_str());
-			if (is->Open())
-			{
-				// use the camera from the editor to start
-				c3::Object::CameraLoadFunc loadcam = [&](c3::Object *camera, float yaw, float pitch)
-				{
-					// release the old camera
-					if (m_Camera)
-						m_Camera->Release();
-
-					// use the one we loaded
-					m_Camera = camera;
-					m_CameraArm->AddChild(m_Camera);
-					theApp.m_C3->GetGlobalObjectRegistry()->RegisterObject(c3::GlobalObjectRegistry::OD_CAMERA, m_Camera);
-				};
-
-				m_WorldRoot->Load(is, nullptr, nullptr);
-				is->Close();
-			}
-
-			is->Release();
-		}
-	}
-
 	inputman->Reset();
+
+	theApp.m_C3->GetLog()->Print(_T("ok\n"));
 
 	UINT_PTR timerid = SetTimer('DRAW', 16, nullptr);
 	assert(timerid);
@@ -721,8 +614,6 @@ void C3Dlg::OnPaint()
 
 		if (prend && prend->Initialized())
 		{
-
-#ifndef TIMERS_WORK
 			// see if we need to resize the drawing surface
 			size_t w = (size_t)((float)r.Width() / m_WindowsUIScale);
 			size_t h = (size_t)((float)r.Height() / m_WindowsUIScale);
@@ -736,7 +627,6 @@ void C3Dlg::OnPaint()
 					OnTimer('SIZE');
 				}
 			}
-#endif
 
 			theApp.m_C3->UpdateTime();
 			float dt = theApp.m_C3->GetElapsedTime();
@@ -744,295 +634,304 @@ void C3Dlg::OnPaint()
 			prend->SetOverrideHwnd(GetSafeHwnd());
 			prend->SetViewport(r);
 
+			c3::ScreenManager *pscrman = theApp.m_C3->GetScreenManager();
+
 			c3::Environment *penv = theApp.m_C3->GetEnvironment();
 			assert(penv);
 
-			c3::Object *camrootobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA_ROOT);
-			if (camrootobj)
-				camrootobj->Update(dt);
-			c3::Object *camobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA);
-			c3::Positionable *campos = m_Camera ? dynamic_cast<c3::Positionable *>(camobj->FindComponent(c3::Positionable::Type())) : nullptr;
-			c3::Camera *cam = camobj ? dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type())) : nullptr;
-
-			c3::Object *guicamobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_CAMERA);
-			if (guicamobj)
-				guicamobj->Update(dt);
-			c3::Positionable *guicampos = m_Camera ? dynamic_cast<c3::Positionable *>(guicamobj->FindComponent(c3::Positionable::Type())) : nullptr;
-			c3::Camera *guicam = camobj ? dynamic_cast<c3::Camera *>(guicamobj->FindComponent(c3::Camera::Type())) : nullptr;
-
-			theApp.m_C3->GetSoundPlayer()->SetListenerPos(campos->GetPosVec());
-			theApp.m_C3->GetSoundPlayer()->SetListenerDir(campos->GetFacingVector());
-			theApp.m_C3->GetSoundPlayer()->SetListenerRadius(1000.0f, 10000.0f);
-
-			cam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
-			float farclip = cam->GetFarClipDistance();
-			float nearclip = cam->GetNearClipDistance();
-
-			glm::fvec3 pickpos, pickdir;
-
-			c3::Object *world = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT);
-			c3::Object *skybox = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_SKYBOXROOT);
-			c3::Object *gui = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_ROOT);
-
-			c3::InputManager *inputman = theApp.m_C3->GetInputManager();
-
-			if (!inputman->MouseEnabled())
+//			pscrman->Update(dt);
+			pscrman->Render([&](c3::GlobalObjectRegistry *objreg)
 			{
+				c3::Object *po_camroot = objreg->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA_ROOT);
+				if (po_camroot)
+					po_camroot->Update(dt);
+				c3::Object *po_cam = objreg->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA);
+				c3::Positionable *pc_campos = po_cam ? dynamic_cast<c3::Positionable *>(po_cam->FindComponent(c3::Positionable::Type())) : nullptr;
+				c3::Camera *pc_cam = po_cam ? dynamic_cast<c3::Camera *>(po_cam->FindComponent(c3::Camera::Type())) : nullptr;
+
+				c3::Object *po_guicamroot = objreg->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_CAMERA);
+				if (po_guicamroot)
+					po_guicamroot->Update(dt);
+				c3::Positionable *pc_guicampos = po_guicamroot ? dynamic_cast<c3::Positionable *>(po_guicamroot->FindComponent(c3::Positionable::Type())) : nullptr;
+				c3::Camera *pc_guicam = po_guicamroot ? dynamic_cast<c3::Camera *>(po_guicamroot->FindComponent(c3::Camera::Type())) : nullptr;
+
+				theApp.m_C3->GetSoundPlayer()->SetListenerPos(pc_campos->GetPosVec());
+				theApp.m_C3->GetSoundPlayer()->SetListenerDir(pc_campos->GetFacingVector());
+				theApp.m_C3->GetSoundPlayer()->SetListenerRadius(1000.0f, 10000.0f);
+
+				pc_cam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
+				float farclip = pc_cam->GetFarClipDistance();
+				float nearclip = pc_cam->GetNearClipDistance();
+
+				pc_guicam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
+
+				glm::fvec3 pickpos, pickdir;
+
+				c3::Object *world = objreg->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT);
+				c3::Object *skybox = objreg->GetRegisteredObject(c3::GlobalObjectRegistry::OD_SKYBOXROOT);
+				c3::Object *gui = objreg->GetRegisteredObject(c3::GlobalObjectRegistry::OD_GUI_ROOT);
+
+				c3::InputManager *inputman = theApp.m_C3->GetInputManager();
+
 				if (skybox)
 					skybox->Update(dt);
 
-				ComputePickRay(camobj, m_MousePos, pickpos, pickdir);
+				ComputePickRay(po_cam, m_MousePos, pickpos, pickdir);
 				theApp.m_C3->GetInputManager()->SetPickRay(pickpos, pickdir);
 				if (world)
 					world->Update(dt);
-			}
-			else
-			{
-				ComputePickRay(guicamobj, m_MousePos, pickpos, pickdir);
+
+				ComputePickRay(po_guicamroot, m_MousePos, pickpos, pickdir);
 				theApp.m_C3->GetInputManager()->SetPickRay(pickpos, pickdir);
 				if (gui)
 					gui->Update(dt);
-			}
 
-			glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 0);
-			prend->SetClearColor(&cc);
-			m_GBuf->SetClearColor(cc, 0);
-			m_GBuf->SetClearColor(c3::Color::fBlack, 1);
-			m_GBuf->SetClearColor(glm::fvec4(0, 0, 0, farclip), 2);
-			m_GBuf->SetClearColor(c3::Color::fBlack, 3);
-			m_GBuf->SetClearDepth(1.0f);
-
-			m_GBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-			m_GBuf->SetAlphaBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-
-			prend->SetClearDepth(1.0f);
-
-			if (cam)
-			{
-				prend->SetViewMatrix(cam->GetViewMatrix());
-				prend->SetProjectionMatrix(cam->GetProjectionMatrix());
-				prend->SetNearClipDistance(cam->GetNearClipDistance());
-				prend->SetFarClipDistance(cam->GetFarClipDistance());
-				prend->SetEyePosition(cam->GetEyePos());
-				prend->SetEyeDirection(campos->GetFacingVector());
-			}
-
-			m_SP_combine->SetUniform3(m_ulAmbientColor, penv->GetAmbientColor());
-			m_SP_combine->SetUniform3(m_ulSunColor, penv->GetSunColor());
-			m_SP_combine->SetUniform3(m_ulSunDir, penv->GetSunDirection());
-			m_SP_combine->SetUniform4(m_ulFogColor, penv->GetFogColor());
-			m_SP_combine->SetUniform1(m_ulFogDensity, penv->GetFogDensity());
-			m_SP_combine->SetUniform1(m_ulFogStart, penv->GetFogStart());
-			m_SP_combine->SetUniform1(m_ulFogEnd, penv->GetFogEnd());
-
-			if (prend->BeginScene(BSFLAG_SHOWGUI))
-			{
-				prend->SetClearColor(&c3::Color::fBlackFT);
-				prend->SetTextureTransformMatrix(nullptr);
-				prend->UseFrameBuffer(m_EffectsBuf, UFBFLAG_CLEARCOLOR);
-
-				// selection: 0.0, near fog: 1.0, far fog: 0.0, cos fog norm: 0.0
-				float fogstart = penv->GetFogStart();
-				float fogend = penv->GetFogEnd();
-				if (fogstart == fogend)
-				{
-					fogstart = prend->GetNearClipDistance();
-					fogend = prend->GetFarClipDistance();
-				}
-				glm::fvec4 auxcc(0, fogstart, fogend, 0);
-				prend->SetClearColor(&auxcc);
-				prend->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE | CM_ALPHA);
-				prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_CLEARCOLOR);
-
+				glm::fvec4 cc = glm::fvec4(*penv->GetBackgroundColor(), 0);
 				prend->SetClearColor(&cc);
+				m_GBuf->SetClearColor(cc, 0);
+				m_GBuf->SetClearColor(c3::Color::fBlack, 1);
+				m_GBuf->SetClearColor(glm::fvec4(0, 0, 0, farclip), 2);
+				m_GBuf->SetClearColor(c3::Color::fBlack, 3);
+				m_GBuf->SetClearDepth(1.0f);
 
-				// Solid color pass
-				prend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL | UFBFLAG_UPDATEVIEWPORT);
-				prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
-				prend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
-				prend->SetAlphaPassRange(254.0f / 255.0f);
-				prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-				prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
-				props::TFlags64 renderflags = 0;
+				m_GBuf->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+				m_GBuf->SetAlphaBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
 
-				if (skybox)
+				prend->SetClearDepth(1.0f);
+
+				if (pc_cam)
 				{
-					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
-					{
-						skybox->Render(renderflags, order);
-					});
-
-					// draw the skybox objects and then clear the depth buffer
-					m_GBuf->Clear(UFBFLAG_CLEARDEPTH);
+					prend->SetViewMatrix(pc_cam->GetViewMatrix());
+					prend->SetProjectionMatrix(pc_cam->GetProjectionMatrix());
+					prend->SetNearClipDistance(pc_cam->GetNearClipDistance());
+					prend->SetFarClipDistance(pc_cam->GetFarClipDistance());
+					prend->SetEyePosition(pc_cam->GetEyePos());
+					prend->SetEyeDirection(pc_campos->GetFacingVector());
 				}
 
-				if (world)
+				m_SP_combine->SetUniform3(m_ulAmbientColor, penv->GetAmbientColor());
+				m_SP_combine->SetUniform3(m_ulSunColor, penv->GetSunColor());
+				m_SP_combine->SetUniform3(m_ulSunDir, penv->GetSunDirection());
+				m_SP_combine->SetUniform4(m_ulFogColor, penv->GetFogColor());
+				m_SP_combine->SetUniform1(m_ulFogDensity, penv->GetFogDensity());
+				m_SP_combine->SetUniform1(m_ulFogStart, penv->GetFogStart());
+				m_SP_combine->SetUniform1(m_ulFogEnd, penv->GetFogEnd());
+
+				if (prend->BeginScene(BSFLAG_SHOWGUI))
 				{
-					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+					prend->SetClearColor(&c3::Color::fBlackFT);
+					prend->SetTextureTransformMatrix(nullptr);
+					prend->UseFrameBuffer(m_EffectsBuf, UFBFLAG_CLEARCOLOR);
+
+					// selection: 0.0, near fog: 1.0, far fog: 0.0, cos fog norm: 0.0
+					float fogstart = penv->GetFogStart();
+					float fogend = penv->GetFogEnd();
+					if (fogstart == fogend)
 					{
-						world->Render(renderflags, order);
-					});
-				}
+						fogstart = prend->GetNearClipDistance();
+						fogend = prend->GetFarClipDistance();
+					}
+					glm::fvec4 auxcc(0, fogstart, fogend, 0);
+					prend->SetClearColor(&auxcc);
+					prend->SetChannelWriteMask(CM_RED | CM_GREEN | CM_BLUE | CM_ALPHA);
+					prend->UseFrameBuffer(m_AuxBuf, UFBFLAG_CLEARCOLOR);
 
-				// after the main pass, clear everything with black...
-				prend->SetClearColor(&c3::Color::fBlack);
-				m_LCBuf->SetClearColor(c3::Color::fBlack, 0);
+					prend->SetClearColor(&cc);
 
-				// Lighting pass(es)
-				prend->UseFrameBuffer(m_LCBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
-				prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
-				prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
-				prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-				if (world)
-				{
-					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
-					{
-						world->Render((uint64_t)renderflags | RF_LIGHT, order);
-					});
-
-					// Shadow pass
-					
-					// use the sun direction to determine its position - in the opposite direction
-					static float sunposmult = -800.0f;
-
-					// Set up our shadow transforms
-					glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-800, 800, -800, 800, nearclip, farclip);
-					glm::fvec3 sunpos;
-					penv->GetSunDirection(&sunpos);
-					sunpos *= sunposmult;
-
-					glm::fvec3 eyepos;
-					cam->GetEyePos(&eyepos);
-					glm::fmat4x4 depthViewMatrix = glm::lookAt(eyepos + sunpos, eyepos, glm::vec3(0, 1, 0));
-					glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
-
-					prend->SetSunShadowMatrix(&depthMVP);
-					prend->SetViewMatrix(&depthViewMatrix);
-					prend->SetProjectionMatrix(&depthProjectionMatrix);
-					prend->SetNearClipDistance(cam->GetNearClipDistance());
-					prend->SetFarClipDistance(cam->GetFarClipDistance());
-
+					// Solid color pass
+					prend->UseFrameBuffer(m_GBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL | UFBFLAG_UPDATEVIEWPORT);
 					prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
-					prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
+					prend->SetDepthTest(c3::Renderer::Test::DT_LESSER);
+					prend->SetAlphaPassRange(254.0f / 255.0f);
+					prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+					prend->SetCullMode(c3::Renderer::CullMode::CM_BACK);
+					props::TFlags64 renderflags = 0;
 
-					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+					if (skybox)
 					{
-						world->Render((uint64_t)renderflags | RF_SHADOW, order);
-					});
-				}
+						c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+						{
+							skybox->Render(renderflags, order);
+						});
 
-				// clear the render method and material
-				prend->UseRenderMethod();
-				prend->UseMaterial();
+						// draw the skybox objects and then clear the depth buffer
+						m_GBuf->Clear(UFBFLAG_CLEARDEPTH);
+					}
 
-				if (cam)
-				{
-					prend->SetViewMatrix(cam->GetViewMatrix());
-					prend->SetProjectionMatrix(cam->GetProjectionMatrix());
-					prend->SetNearClipDistance(cam->GetNearClipDistance());
-					prend->SetFarClipDistance(cam->GetFarClipDistance());
-					prend->SetEyePosition(cam->GetEyePos());
-					prend->SetEyeDirection(campos->GetFacingVector());
-				}
-
-				// Resolve
-				prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-				m_BBuf[0]->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-				prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
-				prend->SetWindingOrder(c3::Renderer::WindingOrder::WO_CW);
-				prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
-				prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
-				prend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
-				prend->UseProgram(m_SP_combine);
-				prend->UseVertexBuffer(prend->GetFullscreenPlaneVB());
-				prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
-
-				c3::FrameBuffer *mbfb[] =
-				{
-					m_BBuf[BLURTARGS / 2],
-					m_BBuf[BLURTARGS],
-					m_BBuf[BLURTARGS + 1],
-					m_BBuf[BLURTARGS + 2],
-					m_BBuf[BLURTARGS + 3]
-				};
-
-				c3::Texture2D *mbtx[] =
-				{
-					m_BTex[BLURTARGS / 2],
-					m_BTex[BLURTARGS],
-					m_BTex[BLURTARGS + 1],
-					m_BTex[BLURTARGS + 2],
-					m_BTex[BLURTARGS + 3]
-				};
-
-				c3::Texture2D *curtex;
-				c3::FrameBuffer *curfb;
-
-				float bs = 2.0f;
-				for (int b = 0; b < BLURTARGS - 1; b++)
-				{
-					if (m_MotionBlur)
+					if (world)
 					{
-						curfb = ((b + 1) != (BLURTARGS / 2)) ? m_BBuf[b + 1] : mbfb[m_MotionUpdateIdx];
-						curtex = (b != (BLURTARGS / 2)) ? m_BTex[b] : mbtx[m_MotionUpdateIdx];
+						c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+						{
+							world->Render(renderflags, order);
+						});
+					}
+
+					// after the main pass, clear everything with black...
+					prend->SetClearColor(&c3::Color::fBlack);
+					m_LCBuf->SetClearColor(c3::Color::fBlack, 0);
+
+					// Lighting pass(es)
+					prend->UseFrameBuffer(m_LCBuf, UFBFLAG_CLEARCOLOR | UFBFLAG_UPDATEVIEWPORT); // | UFBFLAG_FINISHLAST);
+					prend->SetDepthMode(c3::Renderer::DepthMode::DM_READONLY);
+					prend->SetDepthTest(c3::Renderer::Test::DT_ALWAYS);
+					prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
+					if (world)
+					{
+						c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+						{
+							world->Render((uint64_t)renderflags | RF_LIGHT, order);
+						});
+
+						// Shadow pass
+
+						// use the sun direction to determine its position - in the opposite direction
+						static float sunposmult = -800.0f;
+
+						// Set up our shadow transforms
+						glm::fmat4x4 depthProjectionMatrix = glm::ortho<float>(-800, 800, -800, 800, nearclip, farclip);
+						glm::fvec3 sunpos;
+						penv->GetSunDirection(&sunpos);
+						sunpos *= sunposmult;
+
+						glm::fvec3 eyepos;
+						pc_cam->GetEyePos(&eyepos);
+						glm::fmat4x4 depthViewMatrix = glm::lookAt(eyepos + sunpos, eyepos, glm::vec3(0, 1, 0));
+						glm::fmat4x4 depthMVP = depthProjectionMatrix * depthViewMatrix;
+
+						prend->SetSunShadowMatrix(&depthMVP);
+						prend->SetViewMatrix(&depthViewMatrix);
+						prend->SetProjectionMatrix(&depthProjectionMatrix);
+						prend->SetNearClipDistance(pc_cam->GetNearClipDistance());
+						prend->SetFarClipDistance(pc_cam->GetFarClipDistance());
+
+						prend->SetDepthMode(c3::Renderer::DepthMode::DM_READWRITE);
+						prend->UseFrameBuffer(m_SSBuf, UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
+
+						c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+						{
+							world->Render((uint64_t)renderflags | RF_SHADOW, order);
+						});
+
+						// clear the render method and material
+						prend->UseRenderMethod();
+						prend->UseMaterial();
+
+						if (pc_cam)
+						{
+							prend->SetViewMatrix(pc_cam->GetViewMatrix());
+							prend->SetProjectionMatrix(pc_cam->GetProjectionMatrix());
+							prend->SetNearClipDistance(pc_cam->GetNearClipDistance());
+							prend->SetFarClipDistance(pc_cam->GetFarClipDistance());
+							prend->SetEyePosition(pc_cam->GetEyePos());
+							prend->SetEyeDirection(pc_campos->GetFacingVector());
+						}
+
+						// Resolve
+						prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+						m_BBuf[0]->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+						prend->UseFrameBuffer(m_BBuf[0], UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_UPDATEVIEWPORT);
+						prend->SetWindingOrder(c3::Renderer::WindingOrder::WO_CW);
+						prend->SetDepthMode(c3::Renderer::DepthMode::DM_DISABLED);
+						prend->SetBlendMode(c3::Renderer::BlendMode::BM_ADD);
+						prend->SetCullMode(c3::Renderer::CullMode::CM_DISABLED);
+						prend->UseProgram(m_SP_combine);
+						prend->UseVertexBuffer(prend->GetFullscreenPlaneVB());
+						prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
+
+						c3::FrameBuffer *mbfb[] =
+						{
+							m_BBuf[BLURTARGS / 2],
+							m_BBuf[BLURTARGS],
+							m_BBuf[BLURTARGS + 1],
+							m_BBuf[BLURTARGS + 2],
+							m_BBuf[BLURTARGS + 3]
+						};
+
+						c3::Texture2D *mbtx[] =
+						{
+							m_BTex[BLURTARGS / 2],
+							m_BTex[BLURTARGS],
+							m_BTex[BLURTARGS + 1],
+							m_BTex[BLURTARGS + 2],
+							m_BTex[BLURTARGS + 3]
+						};
+
+						c3::Texture2D *curtex;
+						c3::FrameBuffer *curfb;
+
+						float bs = 2.0f;
+						for (int b = 0; b < BLURTARGS - 1; b++)
+						{
+							if (m_MotionBlur)
+							{
+								curfb = ((b + 1) != (BLURTARGS / 2)) ? m_BBuf[b + 1] : mbfb[m_MotionUpdateIdx];
+								curtex = (b != (BLURTARGS / 2)) ? m_BTex[b] : mbtx[m_MotionUpdateIdx];
+							}
+							else
+							{
+								curfb = m_BBuf[b];
+								curtex = m_BTex[b + 1];
+							}
+
+							curfb->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+							prend->UseFrameBuffer(curfb);
+							prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
+							prend->UseProgram(m_SP_blur);
+							m_SP_blur->SetUniformTexture(curtex, m_uBlurTex, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
+							m_SP_blur->SetUniform1(m_uBlurScale, bs);
+							m_SP_blur->ApplyUniforms(true);
+							prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
+							bs *= 2.0f;
+						}
+
+						m_MotionUpdateIdx = (m_MotionUpdateIdx + 1) % (BLURTARGS + 1);
+
+						prend->UseFrameBuffer(nullptr, 0);
+						prend->UseRenderMethod();	// no method now
+						prend->UseMaterial();
+
+						prend->UseProgram(m_SP_resolve);
+						glm::fmat4x4 revmat = glm::scale(glm::fvec3(-1, 1, 1));
+						prend->SetTextureTransformMatrix(&revmat);
+						m_SP_resolve->ApplyUniforms(true);
+
+						prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
 					}
 					else
 					{
-						curfb = m_BBuf[b];
-						curtex = m_BTex[b + 1];
+						prend->UseFrameBuffer(nullptr, 0);
+						prend->UseRenderMethod();	// no method now
+						prend->UseMaterial();
 					}
 
-					curfb->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-					prend->UseFrameBuffer(curfb);
-					prend->SetBlendMode(c3::Renderer::BlendMode::BM_REPLACE);
-					prend->UseProgram(m_SP_blur);
-					m_SP_blur->SetUniformTexture(curtex, m_uBlurTex, -1, TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR);
-					m_SP_blur->SetUniform1(m_uBlurScale, bs);
-					m_SP_blur->ApplyUniforms(true);
-					prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
-					bs *= 2.0f;
-				}
-
-				m_MotionUpdateIdx = (m_MotionUpdateIdx + 1) % (BLURTARGS + 1);
-
-				prend->UseFrameBuffer(nullptr, 0);
-				prend->UseRenderMethod();	// no method now
-				prend->UseMaterial();
-
-				prend->UseProgram(m_SP_resolve);
-				glm::fmat4x4 revmat = glm::scale(glm::fvec3(-1, 1, 1));
-				prend->SetTextureTransformMatrix(&revmat);
-				m_SP_resolve->ApplyUniforms(true);
-
-				prend->DrawPrimitives(c3::Renderer::PrimType::TRISTRIP, 4);
-
-				if (gui && guicampos && guicam)
-				{
-					prend->SetViewMatrix(guicam->GetViewMatrix());
-					glm::fmat4x4 guiproj = *guicam->GetProjectionMatrix() * glm::scale(glm::vec3(-1, 1, 1));
-					prend->SetProjectionMatrix(&guiproj);
-					prend->SetNearClipDistance(guicam->GetNearClipDistance());
-					prend->SetFarClipDistance(guicam->GetFarClipDistance());
-					prend->SetEyePosition(guicam->GetEyePos());
-					glm::fvec3 eyedir = glm::normalize(*guicam->GetTargetPos() - *(guicam->GetEyePos()));
-					prend->SetEyeDirection(&eyedir);
-
-					prend->SetAlphaPassRange(0.0f);
-
-					c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+					if (gui && pc_guicampos && pc_guicam)
 					{
-						gui->Render((uint64_t)renderflags, order);
-					});
+						prend->SetViewMatrix(pc_guicam->GetViewMatrix());
+						glm::fmat4x4 guiproj = *pc_guicam->GetProjectionMatrix() * glm::scale(glm::vec3(-1, 1, 1));
+						prend->SetProjectionMatrix(&guiproj);
+						prend->SetNearClipDistance(pc_guicam->GetNearClipDistance());
+						prend->SetFarClipDistance(pc_guicam->GetFarClipDistance());
+						prend->SetEyePosition(pc_guicam->GetEyePos());
+						glm::fvec3 eyedir = glm::normalize(*pc_guicam->GetTargetPos() - *(pc_guicam->GetEyePos()));
+						prend->SetEyeDirection(&eyedir);
 
-					theApp.m_C3->GetInputManager()->DrawMouseCursor(prend);
+						prend->SetAlphaPassRange(0.0f);
+
+						c3::RenderMethod::ForEachOrderedDrawDo([&](int order)
+						{
+							gui->Render((uint64_t)renderflags, order);
+						});
+					}
 				}
+			});
 
-				if (m_ShowDebug)
-					prend->GetGui()->ShowDebugWindow(&m_ShowDebug);
+			theApp.m_C3->GetInputManager()->DrawMouseCursor(prend);
 
-				prend->EndScene(BSFLAG_SHOWGUI);
-				prend->Present();
-			}
+			if (m_ShowDebug)
+				prend->GetGui()->ShowDebugWindow(&m_ShowDebug);
+
+			prend->EndScene(BSFLAG_SHOWGUI);
+			prend->Present();
 		}
 
 		RedrawWindow(nullptr, nullptr, RDW_NOERASE);
@@ -1151,12 +1050,14 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 {
 	CDialog::OnMouseMove(nFlags, point);
 
-	m_MousePos.x = point.x;
-	m_MousePos.y = point.y;
-	theApp.m_C3->GetInputManager()->SetMousePos(point.x, point.y);
-
 	CRect r;
 	GetClientRect(&r);
+
+	m_MousePos.x = point.x;
+	m_MousePos.y = point.y;
+
+	// because opengl - invert the x/y coordinates of the mouse
+	theApp.m_C3->GetInputManager()->SetMousePos(r.Width() - point.x, r.Height() - point.y);
 
 	CPoint cp = r.CenterPoint(), cpc = cp;
 	ClientToScreen(&cp);
@@ -1165,7 +1066,7 @@ void C3Dlg::OnMouseMove(UINT nFlags, CPoint point)
 	int deltay = cpc.y - point.y;
 
 	c3::InputManager *inputman = theApp.m_C3->GetInputManager();
-	if (inputman->MouseCaptured())
+	if (inputman->MouseCaptured() && !inputman->MouseEnabled())
 		SetCursorPos(cp.x, cp.y);
 }
 
@@ -1312,8 +1213,8 @@ void C3Dlg::OnSize(UINT nType, int cx, int cy)
 	UINT_PTR timerid = SetTimer('SIZE', 500, nullptr);
 	assert(timerid);
 
-	c3::Object *camobj = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA);
-	c3::Camera *cam = camobj ? dynamic_cast<c3::Camera *>(camobj->FindComponent(c3::Camera::Type())) : nullptr;
-	if (cam)
-		cam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
+	c3::Object *po_cam = theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_CAMERA);
+	c3::Camera *pc_cam = po_cam ? dynamic_cast<c3::Camera *>(po_cam->FindComponent(c3::Camera::Type())) : nullptr;
+	if (pc_cam)
+		pc_cam->SetOrthoDimensions((float)r.Width(), (float)r.Height());
 }

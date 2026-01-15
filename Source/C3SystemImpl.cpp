@@ -68,7 +68,7 @@ bool SystemImpl::IsSplashWnd(HWND h) const
 void InitializeCrc16Table();
 void InitializeCrc32Table();
 
-SystemImpl::SystemImpl()
+SystemImpl::SystemImpl() : m_GlobalObjectRegistry(this)
 {
 	// Initialize out CRC tables before we get rollin'
 	InitializeCrc16Table();

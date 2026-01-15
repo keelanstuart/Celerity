@@ -11,8 +11,10 @@
 using namespace c3;
 
 
-GlobalObjectRegistryImpl::GlobalObjectRegistryImpl()
+GlobalObjectRegistryImpl::GlobalObjectRegistryImpl(System *psys)
 {
+	m_pSys = psys;
+
 	memset(m_RegisteredObjects, 0, sizeof(Object *) * GlobalObjectRegistry::OD_NUMDESIGNATIONS);
 }
 
@@ -24,7 +26,13 @@ GlobalObjectRegistryImpl::~GlobalObjectRegistryImpl()
 
 bool GlobalObjectRegistryImpl::RegisterObject(ObjectDesignation designation, Object *obj)
 {
-	m_RegisteredObjects[designation] = obj;
+	Object *po_screen = m_pSys ? m_pSys->GetScreenManager()->GetActiveScreen() : nullptr;
+	Screen *pc_screen = po_screen ? dynamic_cast<Screen *>((Screen *)po_screen->FindComponent(Screen::Type())) : nullptr;
+
+	if (!pc_screen)
+		m_RegisteredObjects[designation] = obj;
+	else
+		pc_screen->GetObjectRegistry()->RegisterObject(designation, obj);
 
 	return true;
 }
@@ -32,5 +40,13 @@ bool GlobalObjectRegistryImpl::RegisterObject(ObjectDesignation designation, Obj
 
 Object *GlobalObjectRegistryImpl::GetRegisteredObject(ObjectDesignation designation) const
 {
-	return m_RegisteredObjects[designation];
+	Object *po_screen = m_pSys ? m_pSys->GetScreenManager()->GetActiveScreen() : nullptr;
+	Screen *pc_screen = po_screen ? dynamic_cast<Screen *>((Screen *)po_screen->FindComponent(Screen::Type())) : nullptr;
+
+	if (!pc_screen)
+		return m_RegisteredObjects[designation];
+	else
+		return pc_screen->GetObjectRegistry()->GetRegisteredObject(designation);
+
+	return nullptr;
 }

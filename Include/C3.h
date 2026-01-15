@@ -36,6 +36,13 @@
 #include <glm/ext.hpp>						// https://github.com/g-truc/glm				==> third-party/glm
 #include <glm/gtx/matrix_decompose.hpp>		// https://github.com/g-truc/glm				==> third-party/glm
 
+namespace c3
+{
+	using ObjectFlags = props::TFlags64;
+	using RenderFlags = props::TFlags64;
+	using SaveFlags = props::TFlags64;
+};
+
 #include <C3MatrixStack.h>
 #include <C3BoundingBox.h>
 #include <C3Texture.h>

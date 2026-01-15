@@ -336,7 +336,7 @@ BOOL C3EditApp::InitInstance()
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
 	SetRegistryKey(_T("Celerity\\C3Edit"));
-	LoadStdProfileSettings(4);  // Load standard INI file options (including MRU)
+	LoadStdProfileSettings(10);  // Load standard INI file options (including MRU)
 
 
 	InitContextMenuManager();

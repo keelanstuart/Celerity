@@ -44,6 +44,7 @@ InputManagerImpl::InputManagerImpl(System *sys)
 	m_MouseTransform = glm::identity<glm::fmat4x4>();
 	m_MouseCursor = m_Cursors.cend();
 	m_LastCursorID = -1;
+	m_PickingCamera = nullptr;
 
 	Resource *pres = m_pSys->GetResourceManager()->GetResource(_T("ui.c3rm"), RESF_DEMANDLOAD);
 	if (pres && (pres->GetStatus() == Resource::RS_LOADED))
@@ -319,8 +320,10 @@ void InputManagerImpl::DrawMouseCursor(Renderer *prend)
 	const float sy = (float)((Texture2D *)(m_MouseCursor->second.ptex))->Height();
 
 	glm::fvec3 mpos;
-	mpos.x = (float)(m_MousePos.x - (w / 2) - m_MouseCursor->second.hotspot.x);
-	mpos.y = (float)(h - m_MousePos.y - (h / 2) - m_MouseCursor->second.hotspot.y) - sy;
+
+	// window (0,0 bottom-right) -> GUI (0,0 center, +Y up)
+	mpos.x = (float)(w * 0.5f - m_MousePos.x) - (float)m_MouseCursor->second.hotspot.x;
+	mpos.y = (float)(m_MousePos.y - h * 0.5f) + (float)m_MouseCursor->second.hotspot.y;
 	mpos.z = 0.0f;
 
 	glm::fmat4x4 mat = glm::translate(mpos) * (m_MouseTransform * glm::scale(glm::fvec3(sx, sy, 1.0f)));
@@ -330,6 +333,7 @@ void InputManagerImpl::DrawMouseCursor(Renderer *prend)
 
 	Resource *pres = m_pSys->GetResourceManager()->GetResource(_T("[guirect.model]"));
 	Model *pmod = (Model *)pres->GetData();
+
 	pmod->Draw(&mat, false);
 }
 

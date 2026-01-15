@@ -8,6 +8,7 @@
 
 #include <C3ScreenManager.h>
 #include <PowerProps.h>
+#include <C3Utility.h>
 
 namespace c3
 {
@@ -22,11 +23,15 @@ namespace c3
 
 		System *m_pSys;
 
-		using TScreenRegistry = std::deque<Screen *>;
-		TScreenRegistry m_ScreenReg;
-
-		using TScreenStack = std::deque<std::pair<Screen *, TScreenFlags>>;
+		using TScreenStack = std::deque<std::pair<Object *, TScreenFlags>>;
 		TScreenStack m_ScreenStack;
+
+		TObjectArray m_Cleanup;
+
+		size_t m_StartUpdateIndex;
+		size_t m_StartRenderIndex;
+
+		void ComputeStartIndices();
 
 	public:
 
@@ -34,29 +39,20 @@ namespace c3
 
 		virtual ~ScreenManagerImpl();
 
-		/// Adds your screen to the ScreenManager's registry
-		virtual bool RegisterScreen(const Screen *pscreen);
-
-		/// Removes your Screen from the ScreenManager's registry
-		virtual bool UnregisterScreen(const Screen *pscreen);
-
-		/// Returns the number of registered Screens
-		virtual size_t RegisteredScreenCount();
-
-		/// Gets the Screen at the given index
-		virtual Screen *GetRegisteredScreen(size_t idx);
-
-		/// Updates the screens by the given amount of elapsed time (in seconds)
+		// Updates the screens by the given amount of elapsed time (in seconds)
 		virtual void Update(float elapsed_time = 0.0f);
 
-		/// Called to render the screen stack; returns true if Postrender should be called, false if not
-		virtual void Render();
+		// Called to render the screen stack; returns true if Postrender should be called, false if not
+		virtual void Render(ScreenFunc render_func);
 
-		/// Pushes a screen type that was registered
-		virtual bool PushScreen(const TCHAR *screen_name, TScreenFlags flags = 0);
+		// Pushes a screen type that was registered
+		virtual bool PushScreen(const TCHAR *screen_name, const TCHAR *script_filename = nullptr, TScreenFlags flags = 0);
 
-		///  Pops the top-level screen
+		// Pops the top-level screen
 		virtual bool PopScreen();
+
+		// Gets the Screen Object at the top of the Screen Stack - optionally, go down the stack with offset
+		virtual Object *GetActiveScreen(size_t offset = 0) const;
 
 	};
 

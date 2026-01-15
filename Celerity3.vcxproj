@@ -75,6 +75,7 @@
     <ClCompile Include="Source\C3PrototypeImpl.cpp" />
     <ClCompile Include="Source\C3PublisherImpl.cpp" />
     <ClCompile Include="Source\C3ModelRendererImpl.cpp" />
+    <ClCompile Include="Source\C3ScreenImpl.cpp" />
     <ClCompile Include="Source\C3SpaceMouseImpl.cpp" />
     <ClCompile Include="Source\C3TerrainImpl.cpp" />
     <ClCompile Include="Source\C3RendererImpl.cpp" />
@@ -259,6 +260,7 @@
     <ClInclude Include="Source\C3PrototypeImpl.h" />
     <ClInclude Include="Source\C3PublisherImpl.h" />
     <ClInclude Include="Source\C3ModelRendererImpl.h" />
+    <ClInclude Include="Source\C3ScreenImpl.h" />
     <ClInclude Include="Source\C3SpaceMouseImpl.h" />
     <ClInclude Include="Source\C3TerrainImpl.h" />
     <ClInclude Include="Source\C3RendererImpl.h" />

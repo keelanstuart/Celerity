@@ -6,6 +6,7 @@ var menu_active = 0;
 
 // Scene + camera handles
 var hobj_levelroot;
+var hobj_guiroot, hobj_mainmenu;
 var hobj_camroot, hprop_camroot_pos, hprop_camroot_ori;
 var hobj_camarm,  hprop_camarm_pos;
 var hobj_cam,     hprop_cam_ori, hprop_cam_fov;
@@ -119,16 +120,18 @@ function init()
 		Log("Level loaded.\n");
 	else
 		Log("Level failed to load!\n");
+	SetObjFlag(hobj_levelroot, "ACCEPTINPUT", 1);
 
 	hobj_guiroot = GetRegisteredObject("gui.root");
 	hobj_mainmenu = CreateObject("", hobj_guiroot);
 	LoadObject(hobj_mainmenu, "Warehouse/MainMenu.c3o");
-	SetObjFlag(hobj_mainmenu, "UPDATE", menu_active);
-	SetObjFlag(hobj_mainmenu, "DRAW", menu_active);
 	if (load_result["success"] == 1)
 		Log("Main menu loaded successfully!\n");
 	else
 		Log("Main menu failed to load!\n");
+	SetObjFlag(hobj_mainmenu, "UPDATE", 0);
+	SetObjFlag(hobj_mainmenu, "DRAW", 0);
+	SetObjFlag(hobj_mainmenu, "ACCEPTINPUT", 0);
 
 	hobj_camroot = GetRegisteredObject("camera.root");
 	hobj_camarm  = GetRegisteredObject("camera.arm");
@@ -353,7 +356,7 @@ function update(elapsed_seconds)
 	body_zrot = ((look_left - look_right) * elapsed_seconds) * tmp;
 
 	tmpori = GetPropertyValue(hprop_camroot_ori);
-	tmpori = AdjustQuat(tmpori, zaxis, Math.toRadians(body_zrot * 550.0));
+	tmpori = AdjustQuat(tmpori, zaxis, Math.toRadians(body_zrot * 400.0));
 	SetPropertyValue(hprop_camroot_ori, tmpori);
 	
 	tmpori = GetPropertyValue(hprop_cam_ori);
@@ -361,7 +364,7 @@ function update(elapsed_seconds)
 
 	head_xrot = Math.range(head_xrot + ((look_down - look_up) * elapsed_seconds * tmp), -0.16, 0.16);
 
-	tmpori = AdjustQuat(head_init_ori, xaxis, Math.toRadians(head_xrot * 490.0));
+	tmpori = AdjustQuat(head_init_ori, xaxis, Math.toRadians(head_xrot * 300.0));
 	SetPropertyValue(hprop_cam_ori, tmpori);
 	
 	// Eyepoint height & FOV writeback
@@ -384,8 +387,10 @@ function enable_menu(enabled)
 {
 	menu_active = enabled;
 	SetObjFlag(hobj_levelroot, "UPDATE", menu_active ^ 1);
+	SetObjFlag(hobj_levelroot, "ACCEPTINPUT", menu_active ^ 1);
 	SetObjFlag(hobj_mainmenu, "UPDATE", menu_active);
 	SetObjFlag(hobj_mainmenu, "DRAW", menu_active);
+	SetObjFlag(hobj_mainmenu, "ACCEPTINPUT", menu_active);
 	EnableMouse(menu_active);
 	CaptureMouse(menu_active ^ 1);
 }
@@ -394,6 +399,9 @@ function enable_menu(enabled)
 // ---------- Input ----------
 function handle_input(action, value)
 {
+	if (menu_active == 1)
+		return;
+
 	if (action == "Run")
 	{
 		if (value > 0.5)

@@ -51,15 +51,15 @@ namespace c3
 
 		virtual const ComponentType *GetType() const;
 
-		virtual props::TFlags64 Flags() const;
+		virtual props::TFlags64 &Flags();
 
 		virtual bool Initialize(Object *pobject);
 
 		virtual void Update(float elapsed_time = 0.0f);
 
-		virtual bool Prerender(Object::RenderFlags flags, int draworder);
+		virtual bool Prerender(RenderFlags flags, int draworder);
 
-		virtual void Render(Object::RenderFlags rendflags, const glm::fmat4x4 *pmat);
+		virtual void Render(RenderFlags rendflags, const glm::fmat4x4 *pmat);
 
 		virtual void PropertyChanged(const props::IProperty *pprop);
 

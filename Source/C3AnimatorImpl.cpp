@@ -53,7 +53,7 @@ void AnimatorImpl::Release()
 }
 
 
-props::TFlags64 AnimatorImpl::Flags() const
+props::TFlags64 &AnimatorImpl::Flags()
 {
 	return m_Flags;
 }
@@ -368,13 +368,13 @@ void AnimatorImpl::Update(float elapsed_time)
 }
 
 
-bool AnimatorImpl::Prerender(Object::RenderFlags flags, int draworder)
+bool AnimatorImpl::Prerender(RenderFlags flags, int draworder)
 {
 	return false;
 }
 
 
-void AnimatorImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
+void AnimatorImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 
 }

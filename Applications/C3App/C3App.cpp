@@ -28,6 +28,7 @@ C3App::C3App()
 	m_Config = nullptr;
 	m_StartScript = _T("c3demo.c3js");
 	m_AlwaysPaint = false;
+	m_Launched = false;
 }
 
 
@@ -184,6 +185,43 @@ SettingsTable gSettings =
 		{
 			MessageBox(NULL, L"Attach debugger and click OK when ready.", L"Celerity", MB_OK);
 		} },
+	{ _T("launch"), [](const TCHAR *opts)
+		{
+			CString last_launched = theApp.m_Config->GetString(_T("LastLaunchedFile"), _T("..\\Samples\\c3demo.c3js"));
+
+			if (last_launched.IsEmpty() || !PathFileExists(last_launched))
+			{
+				TCHAR exePath[MAX_PATH * 2]{};
+				GetModuleFileName(nullptr, exePath, MAX_PATH * 2);
+				PathRemoveFileSpec(exePath);
+
+				last_launched.Format(_T("%s\\Samples\\c3demo.c3js"), exePath);
+			}
+
+			CFileDialog fd(
+				TRUE,                 // open dialog
+				_T("c3js"),           // default extension
+				last_launched,        // default file name (relative to CWD)
+				OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_ENABLESIZING,
+				_T("Celerity Content (*.c3js;*.c3o)|*.c3js;*.c3o|")
+				_T("Celerity Scripts (*.c3js)|*.c3js|")
+				_T("Celerity Objects (*.c3o)|*.c3o|")
+				_T("All Files (*.*)|*.*||"));
+
+			INT_PTR ret = fd.DoModal();
+			if (ret == IDOK)
+			{
+				theApp.m_StartScript = (LPCTSTR)(fd.GetPathName());
+				theApp.m_Launched = true;
+
+				theApp.m_Config->SetString(_T("LastLaunchedFile"), fd.GetPathName());
+			}
+			else if (ret == IDCANCEL)
+			{
+				// if you cancel out of the launch dialog, then the app will exit
+				exit(0);
+			}
+		} },
 };
 
 BOOL C3App::InitInstance()
@@ -286,7 +324,7 @@ BOOL C3App::InitInstance()
 					m_C3->GetLog()->Print(_T("Unrecognized command-line option: \"%hs\"\n"), cmd);
 				}
 			}
-			else
+			else if (!m_Launched)
 				m_StartScript = argv[a];
 		}
 
@@ -357,7 +395,7 @@ BOOL C3App::InitInstance()
 
 	respaths = m_Config->GetString(_T("resources.sound.paths"), _T("./;./assets;./assets/sound"));
 	respaths += path_extra;
-	resexts = m_Config->GetString(_T("resources.sound.extensions"), _T("wav;mp3;flac"));
+	resexts = m_Config->GetString(_T("resources.sound.extensions"), _T("wav;mp3;flac;ogg"));
 	pfm->SetMappingsFromDelimitedStrings(resexts.c_str(), respaths.c_str(), _T(';'));
 
 	respaths = m_Config->GetString(_T("resources.packfiles.paths"), _T("./;./assets;./assets/models;./assets/textures;./assets/shaders;./assets/scripts;./assets/animations;./assets/sounds;./assets/levels"));

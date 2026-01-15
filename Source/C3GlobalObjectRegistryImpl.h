@@ -19,9 +19,11 @@ namespace c3
 	protected:
 		Object *m_RegisteredObjects[GlobalObjectRegistry::ObjectDesignation::OD_NUMDESIGNATIONS];
 
+		System *m_pSys;
+
 	public:
 
-		GlobalObjectRegistryImpl();
+		GlobalObjectRegistryImpl(System *psys);
 
 		virtual ~GlobalObjectRegistryImpl();
 

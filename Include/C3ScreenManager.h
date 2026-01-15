@@ -20,35 +20,33 @@ namespace c3
 
 	public:
 
-#define SCRFLAG_UPDATEOVER		0x00000001
-#define SCRFLAG_DRAWOVER		0x00000002
-
 		using TScreenFlags = props::TFlags32;
 
-		/// Adds your screen to the ScreenManager's registry
-		virtual bool RegisterScreen(const Screen *pscreen) = NULL;
+		// Set this flag to allow screens not at the top of the stack to be updated
+		// Note: not setting this flag at some level of the stack will stop any lower updates
+		static constexpr uint32_t SCRFLAG_UPDATEOVER	= 0x00000001;
 
-		/// Removes your Screen from the ScreenManager's registry
-		virtual bool UnregisterScreen(const Screen *pscreen) = NULL;
+		// Set this flag to allow screens not at the top of the stack to be drawn
+		// Note: not setting this flag at some level of the stack will stop any lower screen from drawing
+		static constexpr uint32_t SCRFLAG_DRAWOVER		= 0x00000002;
 
-		/// Returns the number of registered Screens
-		virtual size_t RegisteredScreenCount() = NULL;
-
-		/// Gets the Screen at the given index
-		virtual Screen *GetRegisteredScreen(size_t idx) = NULL;
 
 		/// Updates the screens by the given amount of elapsed time (in seconds)
 		virtual void Update(float elapsed_time = 0.0f) = NULL;
 
+		using ScreenFunc = std::function<void(GlobalObjectRegistry *)>;
+
 		/// Called to render the screen stack; returns true if Postrender should be called, false if not
-		virtual void Render() = NULL;
+		virtual void Render(ScreenFunc render_func) = NULL;
 
 		/// Pushes a screen type that was registered
-		virtual bool PushScreen(const TCHAR *screen_name, TScreenFlags flags = 0) = NULL;
+		virtual bool PushScreen(const TCHAR *screen_name, const TCHAR *script_filename = nullptr, TScreenFlags flags = 0) = NULL;
 
 		///  Pops the top-level screen, returns false if no screen is left on the stack (and you should probably terminate)
 		virtual bool PopScreen() = NULL;
 
+		// Gets the Screen at the top of the stack - provide an offset to get Screens further down
+		virtual Object *GetActiveScreen(size_t offset = 0) const = NULL;
 	};
 
 };

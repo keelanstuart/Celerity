@@ -1,4 +1,8 @@
-// TODO: add copyright
+// **************************************************************
+// Celerity v3 Game / Visualization Engine Source File
+//
+// Copyright © 2001-2025, Keelan Stuart
+
 
 #include "pch.h"
 
@@ -26,9 +30,9 @@ void InteractableImpl::Release()
 }
 
 
-props::TFlags64 InteractableImpl::Flags() const
+props::TFlags64 &InteractableImpl::Flags()
 {
-	return 0;
+	return m_Flags;
 }
 
 
@@ -86,6 +90,16 @@ void ExecuteDeepest(Object *pobj, const TCHAR *funcname, const TCHAR *args, ...)
 
 void InteractableImpl::Update(float elapsed_time)
 {
+	// Don't allow any input actions if one of our parents doesn't accept input or isn't being drawn
+	Object *pobj = m_pOwner;
+	while (pobj)
+	{
+		if (!pobj->Flags().IsSet(OF_ACCEPTINPUT | OF_DRAW))
+			return;
+
+		pobj = pobj->GetParent();
+	}
+
 	System *psys = m_pOwner->GetSystem();
 	InputManager *pim = psys->GetInputManager();
 
@@ -156,7 +170,7 @@ void InteractableImpl::Update(float elapsed_time)
 }
 
 
-bool InteractableImpl::Prerender(Object::RenderFlags flags, int draworder)
+bool InteractableImpl::Prerender(RenderFlags flags, int draworder)
 {
 	if (flags.IsSet(RF_FORCE))
 		return true;
@@ -174,7 +188,7 @@ bool InteractableImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void InteractableImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
+void InteractableImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 	if (flags.IsSet(RF_SHADOW))
 		return; // TODO; just suggestions

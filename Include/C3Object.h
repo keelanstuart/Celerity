@@ -30,8 +30,6 @@ namespace c3
 
 	public:
 
-		typedef props::TFlags64		ObjectFlags;
-
 		// ObjectFlags
 		#define OF_UPDATE			0x00000001					// Clearing this ensures the object won't update
 		#define OF_DRAW				0x00000002					// Clearing this ensures the object won't draw
@@ -51,13 +49,11 @@ namespace c3
 		#define OF_PARENTDIRTY		0x00008000					// Indicates that the parent has changed since the last update
 		#define OF_LIGHT			0x00010000					// Indicates that the object emits light
 		#define OF_CASTSHADOW		0x00020000					// Indicates that the object casts a shadow
-		#define OF_NOMODELSCALE		0x00040000					// DEPRECATED; Affects only ModelRenderer; does not scale the model
+		#define OF_ACCEPTINPUT		0x00040000					// Indicates that the object will take input
 		#define OF_LOCKED			0x00080000					// Don't allow changes in the editor
 
 		#define OF_EXPANDED			0x10000000					// A flag for tools, indicates that the child objects should be displayed
 
-
-		typedef props::TFlags64		RenderFlags;
 
 		// RenderFlags
 		#define RF_EDITORDRAW		0x00000001					// Indicates this should be drawn as it would be in an editor
@@ -72,8 +68,6 @@ namespace c3
 		#define RF_SELECTED			0x00000200					// Drawing as a selection
 		#define RF_EFFECT			0x00000400					// A special effect (drawn after everything else?!)
 
-
-		typedef props::TFlags64		SaveFlags;
 
 		// SaveFlags
 		#define SF_REFERENCEFILE	0x00000001					// Save as a reference file

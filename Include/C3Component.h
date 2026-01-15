@@ -7,10 +7,11 @@
 #pragma once
 
 #include <C3.h>
-#include <C3Object.h>
 
 namespace c3
 {
+	class ComponentType;
+	class Object;
 
 	/// A Component is a behavior controller that attaches to an Object and is, given it's flags,
 	/// Updated or Rendered, thus giving plain "vanilla" Objects more interesting characteristics.
@@ -36,7 +37,7 @@ namespace c3
 		virtual const ComponentType *GetType() const = NULL;
 
 		/// Returns the flags that reveal what this Component should be used for, such as rendering or character-like behavior
-		virtual props::TFlags64 Flags() const = NULL;
+		virtual props::TFlags64 &Flags() = NULL;
 
 		/// Called to initialize the Component on a given Object, allowing it to allocate any resources
 		virtual bool Initialize(Object *pobject) = NULL;
@@ -46,10 +47,10 @@ namespace c3
 
 		/// Called by the Object that owns the Component during it's own Prerender
 		/// If any Component Prerender succeeds, Object::Render is called
-		virtual bool Prerender(Object::RenderFlags flags, int draworder = 0) = NULL;
+		virtual bool Prerender(RenderFlags flags, int draworder = 0) = NULL;
 
 		/// Called by the Object that owns the Component during it's own Render
-		virtual void Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat = nullptr) = NULL;
+		virtual void Render(RenderFlags flags, const glm::fmat4x4 *pmat = nullptr) = NULL;
 
 		/// Called when a property on the owning Object has changed
 		virtual void PropertyChanged(const props::IProperty *pprop) = NULL;

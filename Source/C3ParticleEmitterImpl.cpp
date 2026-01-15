@@ -77,9 +77,9 @@ void ParticleEmitterImpl::Release()
 }
 
 
-props::TFlags64 ParticleEmitterImpl::Flags() const
+props::TFlags64 &ParticleEmitterImpl::Flags()
 {
-	return 0;
+	return m_Flags;
 }
 
 
@@ -375,7 +375,7 @@ void ParticleEmitterImpl::Update(float elapsed_time)
 }
 
 
-bool ParticleEmitterImpl::Prerender(Object::RenderFlags flags, int draworder)
+bool ParticleEmitterImpl::Prerender(RenderFlags flags, int draworder)
 {
 	if (!m_pMethod)
 	{
@@ -417,7 +417,7 @@ bool ParticleEmitterImpl::Prerender(Object::RenderFlags flags, int draworder)
 }
 
 
-void ParticleEmitterImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
+void ParticleEmitterImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 	static glm::fmat4x4 imat = glm::identity<glm::fmat4x4>();
 	if (!pmat)

@@ -174,9 +174,9 @@ void ScriptableImpl::Release()
 }
 
 
-props::TFlags64 ScriptableImpl::Flags() const
+props::TFlags64 &ScriptableImpl::Flags()
 {
-	return 0;
+	return m_Flags;
 }
 
 
@@ -193,6 +193,9 @@ void jcFindProperty(CScriptVar *c, void *userdata);
 void jcGetPropertyValue(CScriptVar *c, void *userdata);
 void jcSetPropertyValue(CScriptVar *c, void *userdata);
 void jcCreateObject(CScriptVar *c, void *userdata);
+void jcAddComponent(CScriptVar *c, void *userdata);
+void jcRemoveComponent(CScriptVar *c, void *userdata);
+void jcHasComponent(CScriptVar *c, void *userdata);
 void jcCloneObject(CScriptVar *c, void *userdata);
 void jcDeleteObject(CScriptVar *c, void *userdata);
 void jcGetParent(CScriptVar *c, void *userdata);
@@ -202,6 +205,9 @@ void jcSetObjectName(CScriptVar *c, void *userdata);
 void jcLoadPrototypes(CScriptVar *c, void *userdata);
 void jcLoadObject(CScriptVar *c, void *userdata);
 void jcSaveObject(CScriptVar *c, void *userdata);
+void jcPushScreen(CScriptVar *c, void *userdata);
+void jcPopScreen(CScriptVar *c, void *userdata);
+void jcGetScreenObject(CScriptVar *c, void *userdata);
 void jcGetRegisteredObject(CScriptVar *c, void *userdata);
 void jcRegisterObject(CScriptVar *c, void *userdata);
 void jcIsObjFlagSet(CScriptVar *c, void *userdata);
@@ -218,6 +224,8 @@ void jcResumeSound(CScriptVar *c, void *userdata);
 void jcSetSoundVolume(CScriptVar *c, void *userdata);
 void jcSetSoundPitchMod(CScriptVar *c, void *userdata);
 void jcSetSoundPosition(CScriptVar *c, void *userdata);
+void jcSetListenerPosition(CScriptVar *c, void *userdata);
+void jcGetListenerPosition(CScriptVar *c, void *userdata);
 void jcGetModelNodeIndex(CScriptVar *c, void *userdata);
 void jcGetModelNodeCount(CScriptVar *c, void *userdata);
 void jcGetModelInstNodePos(CScriptVar *c, void *userdata);
@@ -264,10 +272,13 @@ void jcGetCursorName(CScriptVar *c, void *userdata);
 void jcSetCursor(CScriptVar *c, void *userdata);
 void jcGetCursor(CScriptVar *c, void *userdata);
 void jcSetCursorTransform(CScriptVar *c, void *userdata);
+void jcUnproject(CScriptVar *c, void *userdata);
 
 void jcPauseGame(CScriptVar *c, void *userdata);
 void jcGamePaused(CScriptVar *c, void *userdata);
 void jcInEditor(CScriptVar *c, void *userdata);
+
+void jcBreak(CScriptVar *c, void *userdata);
 
 
 void ScriptableImpl::ResetJS()
@@ -290,6 +301,7 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function Log(text)"),											jcLog, psys);
 
+	m_JS->AddNative(_T("function Break(text)"),											jcBreak, psys);
 	m_JS->AddNative(_T("function Exit()"),												jcExit, psys);
 
 	m_JS->AddNative(_T("function Execute(hobj, cmd)"),									jcExecute, psys);
@@ -303,6 +315,9 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function CreateObject(protoname, hparentobj)"),					jcCreateObject, psys);
 	m_JS->AddNative(_T("function CloneObject(hobj, hparentobj)"),						jcCloneObject, psys);
 	m_JS->AddNative(_T("function DeleteObject(hobj)"),									jcDeleteObject, psys);
+	m_JS->AddNative(_T("function AddComponent(hobj, compname)"),						jcAddComponent, psys);
+	m_JS->AddNative(_T("function RemoveComponent(hobj, compname)"),						jcRemoveComponent, psys);
+	m_JS->AddNative(_T("function HasComponent(hobj, compnane)"),						jcHasComponent, psys);
 
 	m_JS->AddNative(_T("function GetParent(hobj)"),										jcGetParent, psys);
 	m_JS->AddNative(_T("function SetParent(hobj, hnewparentobj)"),						jcSetParent, psys);
@@ -314,6 +329,10 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function LoadObject(hobj, filename)"),							jcLoadObject, psys);
 	m_JS->AddNative(_T("function SaveObject(hobj, filename)"),							jcSaveObject, psys);
+
+	m_JS->AddNative(_T("function PushScreen(name, script_file, overupdate, overdraw)"),	jcPushScreen, psys);
+	m_JS->AddNative(_T("function PopScreen()"),											jcPopScreen, psys);
+	m_JS->AddNative(_T("function GetScreenObject(offset)"),								jcGetScreenObject, psys);
 
 	m_JS->AddNative(_T("function GetRegisteredObject(designation)"),					jcGetRegisteredObject, psys);
 	m_JS->AddNative(_T("function RegisterObject(designation, hobj)"),					jcRegisterObject, psys);
@@ -330,10 +349,13 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function PlaySound(filename, volmod, pitchmod, loop, pos)"),	jcPlaySound, psys);
 	m_JS->AddNative(_T("function StopSound(hsound)"),									jcStopSound, psys);
 	m_JS->AddNative(_T("function PauseSound(hsound)"),									jcPauseSound, psys);
-	m_JS->AddNative(_T("function PauseSound(hsound)"),									jcResumeSound, psys);
+	m_JS->AddNative(_T("function ResumeSound(hsound)"),									jcResumeSound, psys);
 	m_JS->AddNative(_T("function SetSoundVolume(hsound, vol)"),							jcSetSoundVolume, psys);
 	m_JS->AddNative(_T("function SetSoundPitchMod(hsound, pitchmod)"),					jcSetSoundPitchMod, psys);
 	m_JS->AddNative(_T("function SetSoundPosition(hsound, pos)"),						jcSetSoundPosition, psys);
+	m_JS->AddNative(_T("function GetListenerPosition()"),								jcGetListenerPosition, psys);
+	m_JS->AddNative(_T("function SetListenerPosition(pos)"),							jcSetListenerPosition, psys);
+
 
 	m_JS->AddNative(_T("function GetModelNodeIndex(hobj, nodename)"),					jcGetModelNodeIndex, psys);
 	m_JS->AddNative(_T("function GetModelNodeCount(hobj)"),								jcGetModelNodeCount, psys);
@@ -375,7 +397,7 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function SetMousePos(pos)"),									jcSetMousePos, psys);
 	m_JS->AddNative(_T("function GetMousePos()"),										jcGetMousePos, psys);
-	m_JS->AddNative(_T("function EnableMouse(enabled)"),									jcEnableMouse, psys);
+	m_JS->AddNative(_T("function EnableMouse(enabled)"),								jcEnableMouse, psys);
 	m_JS->AddNative(_T("function MouseEnabled()"),										jcMouseEnabled, psys);
 	m_JS->AddNative(_T("function EnableSystemMouse(enabled)"),							jcEnableSystemMouse, psys);
 	m_JS->AddNative(_T("function SystemMouseEnabled()"),								jcSystemMouseEnabled, psys);
@@ -388,6 +410,8 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function SetCursor(cursorid)"),									jcSetCursor, psys);
 	m_JS->AddNative(_T("function GetCursor()"),											jcGetCursor, psys);
 	m_JS->AddNative(_T("function SetCursorTransform(pos, rot, scl)"),					jcSetCursorTransform, psys);
+	
+	m_JS->AddNative(_T("function Unproject(pos)"),										jcUnproject, psys);
 
 	m_JS->AddNative(_T("function PauseGame(paused)"),									jcPauseGame, psys);
 	m_JS->AddNative(_T("function GamePaused()"),										jcGamePaused, psys);
@@ -453,19 +477,19 @@ void ScriptableImpl::Update(float elapsed_time)
 
 			// ALL the precision here... release mode might have very small frame times!
 			// The previous %0.3f value was giving dead updates sometimes.
-			Execute(_T("update(%0.8f);"), elapsed_time);
+			Execute(_T("update(%.9f);"), elapsed_time);
 		}
 	}
 }
 
 
-bool ScriptableImpl::Prerender(Object::RenderFlags flags, int draworder)
+bool ScriptableImpl::Prerender(RenderFlags flags, int draworder)
 {
 	return false;
 }
 
 
-void ScriptableImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
+void ScriptableImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 
 }
@@ -679,52 +703,64 @@ void jcFindObjByGUID(CScriptVar *c, void *userdata)
 
 	ret->SetInt(0);
 
-	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
-	tstring guids = c->GetParameter(_T("guid"))->GetString();
-	bool recurse = c->GetParameter(_T("recursive"))->GetBool();
+	CScriptVar *proot = c->GetParameter(_T("hrootobj"));
+	CScriptVar *pguid = c->GetParameter(_T("guid"));
+	CScriptVar *precursive = c->GetParameter(_T("recursive"));
 
-	std::function<Object *(Object *, GUID &, bool)> findObjByGuid = [&findObjByGuid] (Object *proot, GUID &sg, bool r) -> Object *
-	{
-		if (!proot)
-			return nullptr;
+	if (!proot || !pguid || !precursive)
+		return;
 
-		if (proot->GetGuid() == sg)
-			return proot;
+	int64_t hrootobj = proot->GetInt();
+	tstring guids = pguid->GetString();
+	bool recursive = precursive->GetBool();
 
-		Object *pc = nullptr;
-		for (size_t i = 0, maxi = proot->GetNumChildren(); i < maxi; i++)
-		{
-			pc = findObjByGuid(proot->GetChild(i), sg, r);
-			if (pc)
-				break;
-		}
+	int d[11];
+	_sntscanf_s(guids.c_str(), guids.length() * sizeof(TCHAR), _T("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}"),
+		&d[0], &d[1], &d[2], &d[3], &d[4], &d[5], &d[6], &d[7], &d[8], &d[9], &d[10]);
 
-		return pc;
-	};
+	GUID g;
+	g.Data1 = d[0];
+	g.Data2 = d[1];
+	g.Data3 = d[2];
+	g.Data4[0] = d[3];
+	g.Data4[1] = d[4];
+	g.Data4[2] = d[5];
+	g.Data4[3] = d[6];
+	g.Data4[4] = d[7];
+	g.Data4[5] = d[8];
+	g.Data4[6] = d[9];
+	g.Data4[7] = d[10];
 
 	Object *rootobj = dynamic_cast<Object *>((Object *)hrootobj);
-	if (rootobj)
+	if (!rootobj)
+		return;
+
+	// depthRemaining: 0 = only this node, 1 = children, 2 = grandchildren, ...
+	// Use a big number for "infinite" recursion.
+	int depthRemaining = recursive ? INT_MAX : 1;
+
+	std::function<Object *(Object *, GUID &, int)> findObjByGuid =
+		[findObjByGuid](Object *obj, GUID &g, int depth) -> Object *
 	{
-		int d[11];
-		_sntscanf_s(guids.c_str(), guids.length() * sizeof(TCHAR), _T("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}"),
-					&d[0], &d[1], &d[2], &d[3], &d[4], &d[5], &d[6], &d[7], &d[8], &d[9], &d[10]);
+		assert(obj);
 
-		GUID g;
-		g.Data1 = d[0];
-		g.Data2 = d[1];
-		g.Data3 = d[2];
-		g.Data4[0] = d[3];
-		g.Data4[1] = d[4];
-		g.Data4[2] = d[5];
-		g.Data4[3] = d[6];
-		g.Data4[4] = d[7];
-		g.Data4[5] = d[8];
-		g.Data4[6] = d[9];
-		g.Data4[7] = d[10];
+		if (obj->GetGuid() == g)
+			return obj;
 
-		Object *pretobj = findObjByGuid(rootobj, g, recurse);
-		ret->SetInt((int64_t)pretobj);
-	}
+		if (depth <= 0)
+			return nullptr;
+
+		for (size_t i = 0, maxi = obj->GetNumChildren(); i < maxi; ++i)
+		{
+			if (Object *hit = findObjByGuid(obj->GetChild(i), g, depth - 1))
+				return hit;
+		}
+
+		return nullptr;
+	};
+
+	Object *found = findObjByGuid(rootobj, g, depthRemaining);
+	ret->SetInt((int64_t)found);
 }
 
 
@@ -736,35 +772,47 @@ void jcFindFirstObjByName(CScriptVar *c, void *userdata)
 
 	ret->SetInt(0);
 
-	int64_t hrootobj = c->GetParameter(_T("hrootobj"))->GetInt();
-	tstring names = c->GetParameter(_T("name"))->GetString();
-	bool recurse = c->GetParameter(_T("recursive"))->GetBool();
+	CScriptVar *proot = c->GetParameter(_T("hrootobj"));
+	CScriptVar *pname = c->GetParameter(_T("name"));
+	CScriptVar *precursive = c->GetParameter(_T("recursive"));
 
-	std::function<Object *(Object *, const TCHAR *, bool)> findObjByName = [&findObjByName] (Object *proot, const TCHAR *n, bool r) -> Object *
-	{
-		if (!proot)
-			return nullptr;
+	if (!proot || !pname || !precursive)
+		return;
 
-		if (!_tcsicmp(proot->GetName(), n))
-			return proot;
-
-		Object *pc = nullptr;
-		for (size_t i = 0, maxi = proot->GetNumChildren(); i < maxi; i++)
-		{
-			pc = findObjByName(proot->GetChild(i), n, r);
-			if (pc)
-				break;
-		}
-
-		return pc;
-	};
+	int64_t hrootobj = proot->GetInt();
+	tstring name = pname->GetString();
+	bool recursive = precursive->GetBool();
 
 	Object *rootobj = dynamic_cast<Object *>((Object *)hrootobj);
-	if (rootobj)
+	if (!rootobj)
+		return;
+
+	// depthRemaining: 0 = only this node, 1 = children, 2 = grandchildren, ...
+	// Use a big number for "infinite" recursion.
+	int depthRemaining = recursive ? INT_MAX : 1;
+
+	std::function<Object *(Object *, const TCHAR *, int)> findObjByName =
+		[&](Object *obj, const TCHAR *n, int depth) -> Object *
 	{
-		Object *pretobj = findObjByName(rootobj, names.c_str(), recurse);
-		ret->SetInt((int64_t)pretobj);
-	}
+		assert(obj);
+
+		if (!_tcsicmp(obj->GetName(), n))
+			return obj;
+
+		if (depth <= 0)
+			return nullptr;
+
+		for (size_t i = 0, maxi = obj->GetNumChildren(); i < maxi; ++i)
+		{
+			if (Object *hit = findObjByName(obj->GetChild(i), n, depth - 1))
+				return hit;
+		}
+
+		return nullptr;
+	};
+
+	Object *found = findObjByName(rootobj, name.c_str(), depthRemaining);
+	ret->SetInt((int64_t)found);
 }
 
 
@@ -775,6 +823,20 @@ void jcLog(CScriptVar *c, void *userdata)
 	assert(psys);
 
 	psys->GetLog()->Print(text.c_str());
+}
+
+
+// m_JS->AddNative(_T("function Break(text)"), jcBreak, psys);
+void jcBreak(CScriptVar *c, void *userdata)
+{
+	tstring text = c->GetParameter(_T("text"))->GetString();
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	psys->GetLog()->Print(text.c_str());
+
+	if (IsDebuggerPresent())
+		DebugBreak();
 }
 
 
@@ -1196,6 +1258,82 @@ void jcDeleteObject(CScriptVar *c, void *userdata)
 }
 
 
+//m_JS->AddNative(_T("function AddComponent(hobj, compname)"), jcAddComponent, psys);
+void jcAddComponent(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	tstring compname = c->GetParameter(_T("compname"))->GetString();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+
+	if (pobj)
+	{
+		const ComponentType *pct = psys->GetFactory()->FindComponentType(compname.c_str(), false);
+		if (pct && !pobj->FindComponent(pct))
+			pobj->AddComponent(pct, true);
+	}
+}
+
+
+//m_JS->AddNative(_T("function RemoveComponent(hobj, compname)"), jcRemoveComponent, psys);
+void jcRemoveComponent(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	tstring compname = c->GetParameter(_T("compname"))->GetString();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+
+	if (pobj)
+	{
+		const ComponentType *pct = psys->GetFactory()->FindComponentType(compname.c_str(), false);
+		if (pct)
+		{
+			Component *pc = pobj->FindComponent(pct);
+			if (pc)
+				pobj->RemoveComponent(pc);
+		}
+	}
+}
+
+
+//m_JS->AddNative(_T("function HasComponent(hobj, compnane)"), jcHasComponent, psys);
+void jcHasComponent(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
+	tstring compname = c->GetParameter(_T("compname"))->GetString();
+
+	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+
+	if (pobj)
+	{
+		const ComponentType *pct = psys->GetFactory()->FindComponentType(compname.c_str(), false);
+		if (pct)
+		{
+			Component *pc = pobj->FindComponent(pct);
+			if (pc)
+				ret->SetInt(1);
+
+			return;
+		}
+	}
+
+	ret->SetInt(0);
+}
+
+
 //m_JS->AddNative(_T("function GetParent(hobj)"),									jcGetParent, psys);
 void jcGetParent(CScriptVar *c, void *userdata)
 {
@@ -1414,6 +1552,67 @@ void jcSaveObject(CScriptVar *c, void *userdata)
 }
 
 
+//m_JS->AddNative(_T("function PushScreen(name, script_file, overupdate, overdraw)"), jcPushScreen, psys);
+void jcPushScreen(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	if (ret)
+		ret->SetInt(0);
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	tstring name = c->GetParameter(_T("name"))->GetString();
+	tstring scriptfile = c->GetParameter(_T("script_file"))->GetString();
+	int64_t overupdate = c->GetParameter(_T("overupdate"))->GetInt();
+	int64_t overdraw = c->GetParameter(_T("overdraw"))->GetInt();
+
+	ScreenManager::TScreenFlags flags = 0;
+	flags |= overupdate ? ScreenManager::SCRFLAG_UPDATEOVER : 0;
+	flags |= overdraw ? ScreenManager::SCRFLAG_DRAWOVER : 0;
+	if (psys->GetScreenManager()->PushScreen(name.c_str(), scriptfile.c_str(), flags))
+	{
+		Object *pso = psys->GetScreenManager()->GetActiveScreen();
+		pso->Update();
+		if (ret)
+			ret->SetInt((int64_t)pso);
+	}
+}
+
+
+//m_JS->AddNative(_T("function PopScreen()"), jcPopScreen, psys);
+void jcPopScreen(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	if (ret)
+		ret->SetInt(0);
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	if (psys->GetScreenManager()->PopScreen() && ret)
+		ret->SetInt(1);
+}
+
+
+//m_JS->AddNative(_T("function GetScreenObject(offset)"), jcGetScreenObject, psys);
+void jcGetScreenObject(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	int64_t offset = c->GetParameter(_T("offset"))->GetInt();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	Object *pso = psys->GetScreenManager()->GetActiveScreen(offset);
+	if (ret)
+		ret->SetInt((int64_t)pso);
+}
+
+
 const TCHAR *gGlobalDesignations[GlobalObjectRegistry::OD_NUMDESIGNATIONS] =
 {
 	_T("worldroot"),
@@ -1494,7 +1693,7 @@ std::vector<const TCHAR *> gObjFlagName =
 	_T("PARENTDIRTY"),
 	_T("LIGHT"),
 	_T("CASTSHADOW"),
-	_T("NOMODELSCALE")
+	_T("ACCEPTINPUT")
 };
 
 
@@ -1986,6 +2185,38 @@ void jcSetSoundPosition(CScriptVar *c, void *userdata)
 	}
 
 	psys->GetSoundPlayer()->SetChannelPos(phsound->GetInt(), &pos);
+}
+
+
+//m_JS->AddNative(_T("function GetListenerPosition()"), jcGetListenerPosition, psys);
+void jcGetListenerPosition(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	glm::fvec3 pos;
+	psys->GetSoundPlayer()->GetListenerPos(&pos);
+
+	PlaceVec3InVar(ret, pos);
+}
+
+
+//m_JS->AddNative(_T("function SetListenerPosition(pos)"), jcSetListenerPosition, psys);
+void jcSetListenerPosition(CScriptVar *c, void *userdata)
+{
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	glm::fvec3 pos(0, 0, 0);
+	CScriptVar *ppos = c->GetParameter(_T("pos"));
+	if (ppos)
+		ExtractVec3FromVar(ppos, pos);
+
+	psys->GetSoundPlayer()->SetListenerPos(&pos);
 }
 
 
@@ -3016,25 +3247,42 @@ void jcRegisterInputAction(CScriptVar *c, void *userdata)
 
 	size_t ai = pam->RegisterAction(action_name.c_str(), tt, delay, [](const TCHAR *action_name, c3::InputDevice *from_device, size_t user, c3::InputDevice::VirtualButton button, float value, void *userdata)
 	{
+		bool ret = false;
+
 		System *psys = from_device->GetSystem();
 		assert(psys);
 
-		c3::Object *inputobj = psys->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_PLAYER);
-
-		if (!inputobj)
-			inputobj = psys->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT);
-
-		if (inputobj)
+		auto GetValidInputScriptable = [psys](GlobalObjectRegistry::ObjectDesignation od) -> Scriptable *
 		{
-			c3::Scriptable *pscr = dynamic_cast<c3::Scriptable *>(inputobj->FindComponent(c3::Scriptable::Type()));
+			c3::Object *obj = psys->GetGlobalObjectRegistry()->GetRegisteredObject(od);
+			if (!obj || !obj->Flags().IsSet(OF_ACCEPTINPUT))
+				return nullptr;
+
+			c3::Scriptable *pscr = dynamic_cast<c3::Scriptable *>(obj->FindComponent(c3::Scriptable::Type()));
+			if (!pscr || !pscr->FunctionExists(_T("handle_input")))
+				return nullptr;
+
+			return pscr;
+		};
+
+		static std::vector<GlobalObjectRegistry::EObjectDesignation> desigs =
+		{
+			GlobalObjectRegistry::OD_WORLDROOT,
+			GlobalObjectRegistry::OD_PLAYER,
+			GlobalObjectRegistry::OD_GUI_ROOT,
+		};
+
+		for (auto d : desigs)
+		{
+			Scriptable *pscr = GetValidInputScriptable(d);
 			if (pscr)
 			{
-				if (pscr->FunctionExists(_T("handle_input")))
-					pscr->Execute(_T("handle_input(\"%s\", %0.5f);"), action_name, value);
-				return true;
+				pscr->Execute(_T("handle_input(\"%s\", %0.5f);"), action_name, value);
+				ret = true;
 			}
 		}
-		return false;
+
+		return ret;
 	}, nullptr);
 
 	ret->SetInt(ai);
@@ -3143,8 +3391,8 @@ void jcGetMousePos(CScriptVar *c, void *userdata)
 
 	c3::InputManager *pim = psys->GetInputManager();
 
-	CScriptVarLink *pposx = ret->FindChild(_T("x"));
-	CScriptVarLink *pposy = ret->FindChild(_T("y"));
+	CScriptVarLink *pposx = ret->FindChildOrCreate(_T("x"));
+	CScriptVarLink *pposy = ret->FindChildOrCreate(_T("y"));
 	if (!(pposx && pposy))
 		return;
 
@@ -3396,6 +3644,57 @@ void jcSetCursorTransform(CScriptVar *c, void *userdata)
 	pim->SetCursorTransform(mat);
 }
 
+
+// m_JS->AddNative(_T("function Unproject(pos)"), jcUnproject, psys);
+void jcUnproject(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	Object *pobj_cam = psys->GetGlobalObjectRegistry()->GetRegisteredObject(GlobalObjectRegistry::OD_CAMERA);
+	if (!pobj_cam)
+		return;
+
+	Camera *pcam = dynamic_cast<Camera *>((Camera *)(pobj_cam->FindComponent(Camera::Type())));
+	if (!pcam)
+		return;
+
+	CScriptVar *ppos = c->GetParameter(_T("pos"));
+
+	glm::fvec3 pos;
+	CScriptVarLink *pposx = ppos->FindChild(_T("x"));
+	CScriptVarLink *pposy = ppos->FindChild(_T("y"));
+	if (!(pposx && pposy))
+		return;
+
+	pos.x = pposx->m_Var->GetFloat();
+	pos.y = pposy->m_Var->GetFloat();
+	pos.z = 1.0f;
+
+	RECT vp;
+	psys->GetRenderer()->GetViewport(&vp);
+	glm::fvec4 viewport(0, 0, abs(vp.left - vp.right), abs(vp.top - vp.bottom));
+
+	glm::fvec3 rv = glm::unProject(pos, *pcam->GetViewMatrix(), *pcam->GetProjectionMatrix(), viewport);
+
+	CScriptVarLink *psvl;
+
+	psvl = ret->FindChildOrCreate(_T("x"));
+	psvl->m_Owned = true;
+	psvl->m_Var->SetFloat(rv.x);
+
+	psvl = ret->FindChildOrCreate(_T("y"));
+	psvl->m_Owned = true;
+	psvl->m_Var->SetFloat(rv.y);
+
+	psvl = ret->FindChildOrCreate(_T("z"));
+	psvl->m_Owned = true;
+	psvl->m_Var->SetFloat(rv.z);
+}
 
 void jcPauseGame(CScriptVar *c, void *userdata)
 {

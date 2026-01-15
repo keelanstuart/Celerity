@@ -73,7 +73,7 @@ void PhysicalImpl::Release()
 }
 
 
-props::TFlags64 PhysicalImpl::Flags() const
+props::TFlags64 &PhysicalImpl::Flags()
 {
 	return m_Flags;
 }
@@ -294,13 +294,13 @@ void PhysicalImpl::Update(float elapsed_time)
 }
 
 
-bool PhysicalImpl::Prerender(Object::RenderFlags flags, int draworder)
+bool PhysicalImpl::Prerender(RenderFlags flags, int draworder)
 {
 	return false;
 }
 
 
-void PhysicalImpl::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)
+void PhysicalImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 {
 }
 

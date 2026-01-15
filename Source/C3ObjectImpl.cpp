@@ -21,7 +21,7 @@ ObjectImpl::ObjectImpl(SystemImpl *psys, GUID guid)
 	m_GUID = guid;
 	m_Props = props::IPropertySet::CreatePropertySet();
 	m_Props->SetChangeListener(this);
-	m_Flags.SetAll(OF_UPDATE | OF_DRAW);
+	m_Flags.SetAll(OF_UPDATE | OF_DRAW | OF_ACCEPTINPUT);
 	m_pParent = nullptr;
 }
 
@@ -266,7 +266,7 @@ void ObjectImpl::Update(float elapsed_time)
 }
 
 
-bool ObjectImpl::Render(Object::RenderFlags flags, int draworder, const glm::fmat4x4 *pmat)
+bool ObjectImpl::Render(RenderFlags flags, int draworder, const glm::fmat4x4 *pmat)
 {
 	// if no transform was provided, build it... this is important for things like selections in the editor
 	glm::fmat4x4 imat = {};
@@ -429,6 +429,7 @@ bool ObjectImpl::Load(genio::IInputStream *is, Object *parent, MetadataLoadFunc 
 					}
 
 					is->Read(&m_Flags, sizeof(props::TFlags64));
+					m_Flags.Set(OF_ACCEPTINPUT);
 
 					size_t ct;
 

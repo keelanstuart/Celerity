@@ -1,5 +1,7 @@
 var runtime;
 
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+
 function update(elapsed_seconds)
 {
 	if (elapsed_seconds == 0.0)
@@ -10,10 +12,7 @@ function init()
 {
 	runtime = 0.0;
 
-	//var gui_root = GetRegisteredObject("gui.root");
-	//var gui_load_result = LoadObject(gui_root, "Protectorate/Protectorate_MainMenu.c3o");
-
-	//var load_result = LoadObject(self, "Protectorate/Protectorate_MainMenuBG.c3o");
+	Log("Main Menu Initialized.\n");
 }
 
 function free()
@@ -22,9 +21,16 @@ function free()
 
 function mouse_click(control_name, button, mx, my)
 {
+	tmpv3 = GetListenerPosition();
+	PlaySound("Protectorate/confirmation.wav", 1.0, 1.0, 0, tmpv3);
+
 	if (control_name == "New Game")
 	{
-	
+		var hobj_screen = PushScreen("Game", "Protectorate/Protectorate_Game.c3js", 0, 0);
+
+		Execute(hobj_screen, "setup(\"Protectorate_AlphaSector\");");
+
+		CaptureMouse(1);
 	}
 	else if (control_name == "Continue")
 	{

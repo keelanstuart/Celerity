@@ -27,6 +27,7 @@ public:
 	tstring m_StartScript;
 	tstring m_AppName;
 	bool m_AlwaysPaint;
+	bool m_Launched;
 
 public:
 	C3App();

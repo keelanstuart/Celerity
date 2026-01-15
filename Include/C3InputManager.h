@@ -124,7 +124,6 @@ namespace c3
 		// Removes and re-enumerates all devices - this should be handled when a WM_DEVICECHANGE message has been received
 		// If you are directly getting devices, rather than using the input manager, you will need to re-get your devices after this
 		virtual void Reset() = NULL;
-
 	};
 
 };

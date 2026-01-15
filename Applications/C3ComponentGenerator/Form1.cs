@@ -92,11 +92,11 @@ namespace C3ComponentGenerator
                 "\t\tvirtual ~" + impl_name + "();\n\n" +
                 "\t\tvirtual void Release();\n\n" +
                 "\t\tvirtual const ComponentType *GetType() const;\n\n" +
-                "\t\tvirtual props::TFlags64 Flags() const;\n\n" +
+                "\t\tvirtual props::TFlags64 &Flags();\n\n" +
                 "\t\tvirtual bool Initialize(Object *pobject);\n\n" +
                 "\t\tvirtual void Update(float elapsed_time = 0.0f);\n\n" +
-				"\t\tvirtual bool Prerender(Object::RenderFlags flags, int draworder = 0);\n\n" +
-				"\t\tvirtual void Render(Object::RenderFlags rendflags, const glm::fmat4x4 *pmat);\n\n" +
+				"\t\tvirtual bool Prerender(RenderFlags flags, int draworder = 0);\n\n" +
+				"\t\tvirtual void Render(RenderFlags rendflags, const glm::fmat4x4 *pmat);\n\n" +
                 "\t\tvirtual void PropertyChanged(const props::IProperty *pprop);\n\n" +
 				"\t\tvirtual bool Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir, const glm::fmat4x4 *mats, float *pDistance, bool force) const;\n\n" +
                 "\t};\n\n" +
@@ -119,7 +119,7 @@ namespace C3ComponentGenerator
                 impl_name + "::" + impl_name + "()\n{\n}\n\n\n" +
                 impl_name + "::~" + impl_name + "()\n{\n}\n\n\n" +
                 "void " + impl_name + "::Release()\n{\n\tdelete this;\n}\n\n\n" +
-                "props::TFlags64 " + impl_name + "::Flags() const\n{\n\treturn 0;\n}\n\n\n" +
+                "props::TFlags64 &" + impl_name + "::Flags()\n{\n\treturn m_Flags;\n}\n\n\n" +
 
                 "bool " + impl_name + "::Initialize(Object *pobject)\n{\n" +
                 "\tif (nullptr == (m_pOwner = pobject))\n\t\treturn false;\n\n" +
@@ -129,11 +129,11 @@ namespace C3ComponentGenerator
 
                 "void " + impl_name + "::Update(float elapsed_time)\n{\n\tif (elapsed_time == 0)\n\t\treturn;\n}\n\n\n" +
 
-                "bool " + impl_name + "::Prerender(Object::RenderFlags flags, int draworder)\n{\n" +
+                "bool " + impl_name + "::Prerender(RenderFlags flags, int draworder)\n{\n" +
                 "\tif (flags.IsSet(RF_FORCE))\n\t\treturn true;\n\n" +
                 "\tif (!m_pOwner->Flags().IsSet(OF_DRAW))\n\t\treturn false;\n\n\treturn true;\n}\n\n\n" +
 
-                "void " + impl_name + "::Render(Object::RenderFlags flags, const glm::fmat4x4 *pmat)\n{\n" +
+                "void " + impl_name + "::Render(RenderFlags flags, const glm::fmat4x4 *pmat)\n{\n" +
                 "\tif (flags.IsSet(RF_SHADOW))\n\t\treturn; // TODO; just suggestions\n\n" +
                 "\tif (flags.IsSet(RF_LIGHT))\n\t\treturn; // TODO; just suggestions\n\n" +
                 "\tif (flags.IsSet(RF_AUXILIARY))\n\t\treturn; // TODO; just suggestions\n\n" +
