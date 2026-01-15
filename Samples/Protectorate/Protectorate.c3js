@@ -1,0 +1,187 @@
+// This is the start-up script for Protectorate.
+// It loads the main menu, pause menu, the HUD and has some utility functions to
+// active each of them and load a scenario.
+
+var runtime;
+
+var tmp;
+var tmpv3 = { x:0.0, y:0.0, z:0.0 };
+var tmpv4 = { x:0.0, y:0.0, z:0.0, w:1.0 };
+
+var hsound_music = -1;
+
+var hprop_scenario;
+var scenario;
+
+var hobj_menubg;
+var hobj_guiroot;
+var hobj_mainmenu;
+var hobj_mainmenubg;
+
+var i = 0;
+var cursor = [];
+
+function update(elapsed_seconds)
+{
+	if (elapsed_seconds == 0.0)
+		return;
+
+	runtime += elapsed_seconds;
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	EnableMouse(1);
+	EnableSystemMouse(0);
+	CaptureMouse(1);
+
+	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
+	hsound_music = PlaySound("Protectorate/LateralSpace.wav", 1.0, 1.0, -1, tmpv3);
+
+	var cx = 16;
+	var cy = -16;
+	cursor[0] = RegisterCursor("Protectorate/cursor_normal.tga", {x:cx, y:cy}, "Default");
+	cursor[1] = RegisterCursor("Protectorate/cursor_move1.tga",  {x:cx, y:cy}, "Speed1");
+	cursor[2] = RegisterCursor("Protectorate/cursor_move2.tga",  {x:cx, y:cy}, "Speed2");
+	cursor[3] = RegisterCursor("Protectorate/cursor_move3.tga",  {x:cx, y:cy}, "Speed3");
+	SetCursor(cursor[0]);
+
+	LoadPrototypes("Protectorate/Protectorate.c3protoa");
+
+	var load_result;
+
+	hobj_guiroot = GetRegisteredObject("gui.root");
+
+	// Load the main menu stuff
+	load_result = LoadObject(hobj_guiroot, "Protectorate/Protectorate_MainMenu.c3o");
+	if (load_result["success"] == 0)
+		Log("Main menu failed to load!\n");
+
+	hobj_mainmenubg = CreateObject("", self);
+	load_result = LoadObject(hobj_mainmenubg, "Protectorate/Protectorate_MainMenuBG.c3o");
+	if (load_result["success"] == 0)
+		Log("Main Menu Background failed to load!\n");
+
+	RegisterInputAction("Boost", "", 0.0);
+	RegisterInputAction("Fire 1", "", 0.0);
+	RegisterInputAction("Fire 2", "", 0.0);
+	RegisterInputAction("Strafe Left", "", 0.0);
+	RegisterInputAction("Strafe Right", "", 0.0);
+	RegisterInputAction("Roll Left", "", 0.0);
+	RegisterInputAction("Roll Right", "", 0.0);
+	RegisterInputAction("Look Up", "", 0.0);
+	RegisterInputAction("Look Down", "", 0.0);
+	RegisterInputAction("Look Left", "", 0.0);
+	RegisterInputAction("Look Right", "", 0.0);
+	RegisterInputAction("Ascend", "", 0.0);
+	RegisterInputAction("Descend", "", 0.0);
+	RegisterInputAction("Increase Velocity", "", 0.2);
+	RegisterInputAction("Decrease Velocity", "", 0.2);
+	RegisterInputAction("Cycle View Mode", "up", 0.0);
+	RegisterInputAction("Quit", "up", 0.0);
+}
+
+
+// ---------- Shutdown ----------
+function free()
+{
+	if (hsound_music >= 0)
+		StopSound(hsound_music);
+
+	CaptureMouse(0);
+	EnableSystemMouse(1);
+}
+
+
+function device_connected(device_type, device_name, naxes, nbuttons)
+{
+	Log("Registering " + device_name + " Controls... ");
+
+	if (device_type == "keyboard")
+	{
+		LinkInputToAction("Fire 1", device_name, "button 3");
+		LinkInputToAction("Fire 2", device_name, "l ctrl");
+		LinkInputToAction("Boost", device_name, "l shift");
+		LinkInputToAction("Look Up", device_name, "axis 1 +y");
+		LinkInputToAction("Look Down", device_name, "axis 1 -y");
+		LinkInputToAction("Look Left", device_name, "axis 1 -x");
+		LinkInputToAction("Look Right", device_name, "axis 1 +x");
+		LinkInputToAction("Roll Left", device_name, "q");
+		LinkInputToAction("Roll Right", device_name, "e");
+		LinkInputToAction("Strafe Left", device_name, "a");
+		LinkInputToAction("Strafe Right", device_name, "d");
+		LinkInputToAction("Ascend", device_name, "z");
+		LinkInputToAction("Descend", device_name, "c");
+		LinkInputToAction("Increase Velocity", device_name, "w");
+		LinkInputToAction("Decrease Velocity", device_name, "s");
+		LinkInputToAction("Cycle View Mode", device_name, "select");
+		LinkInputToAction("Quit", device_name, "quit");
+
+		Log("done.\n");
+	}
+	else if (device_type == "mouse")
+	{
+		LinkInputToAction("Fire 1", device_name, "button 1");
+		LinkInputToAction("Fire 2", device_name, "button 2");
+		LinkInputToAction("Increase Velocity", device_name, "axis 2 -z");
+		LinkInputToAction("Decrease Velocity", device_name, "axis 2 +z");
+
+		Log("done.\n");
+	}
+	else if (naxes > 1)
+	{
+		LinkInputToAction("Boost", device_name, "button 2");
+		LinkInputToAction("Increase Velocity", device_name, "axis 1 +y");
+		LinkInputToAction("Decrease Velocity", device_name, "axis 1 -y");
+		LinkInputToAction("Strafe Left", device_name, "axis 1 -x");
+		LinkInputToAction("Strafe Right", device_name, "axis 1 +x");
+		LinkInputToAction("Look Down", device_name, "axis 2 -y");
+		LinkInputToAction("Look Up", device_name, "axis 2 +y");
+		LinkInputToAction("Look Left", device_name, "axis 2 -x");
+		LinkInputToAction("Look Right", device_name, "axis 2 +x");
+		LinkInputToAction("Roll Left", device_name, "axis 1 +z");
+		LinkInputToAction("Roll Right", device_name, "axis 1 -z");
+		LinkInputToAction("Fire 1", device_name, "button 1");
+		LinkInputToAction("Fire 2", device_name, "button 3");
+		LinkInputToAction("Ascend", device_name, "button 6");
+		LinkInputToAction("Descend", device_name, "button 5");
+		LinkInputToAction("Cycle View Mode", device_name, "button 4");
+
+		Log("done.\n");
+	}
+	else
+	{
+		Log("device ignored.\n");
+	}
+}
+
+
+// ---------- Input ----------
+function handle_input(action, value)
+{
+	if (action == "Quit")
+	{
+		Exit();
+	}
+}
+
+
+// set the mouse cursor based on the screen position
+function update_cursor(mouse_fwd_dot)
+{
+	i = 0;
+
+	if (hobj_levelroot != 0)
+	{
+		if (mouse_fwd_dot > 0.7)
+			i = 3;
+		else if (mouse_fwd_dot > 0.4)
+			i = 2;
+		else if (mouse_fwd_dot > 0.1)
+			i = 1;
+	}
+
+	SetCursor(cursor[i]);
+}
