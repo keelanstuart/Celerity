@@ -8,7 +8,7 @@ Celerity is a flexible, modular engine built from the ground up in C++. Now in i
 Celerity is built as a truly generic engine. You can use as much or as little of the system as needed in your own applications via a clean, well-structured API.
 
 - Extensible via Plug-ins:
-Easily extend functionality by writing custom plug-ins—for example, to support proprietary file formats or add new runtime object behaviors.
+Easily extend functionality by writing custom plug-ins... for example, to support proprietary file formats or add new runtime object behaviors.
 
 - Embedded JavaScript:
 Access object properties, handle input, play sounds, respond to events... all using JavaScript.
