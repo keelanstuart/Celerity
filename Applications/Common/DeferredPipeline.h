@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2025, Keelan Stuart
+// Copyright © 2001-2026, Keelan Stuart
 
 
 #include <C3AppCommon.h>

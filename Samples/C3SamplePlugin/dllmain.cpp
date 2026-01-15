@@ -1,7 +1,7 @@
 // **************************************************************
 // Celerity v3 Game / Visualization Engine Source File
 //
-// Copyright © 2001-2025, Keelan Stuart
+// Copyright © 2001-2026, Keelan Stuart
 
 
 #include "pch.h"
@@ -14,7 +14,7 @@ CELERITYPLUGIN_SHORTNAME("CelerityExamplePlugin");
 CELERITYPLUGIN_AUTHOR("Keelan Stuart");
 CELERITYPLUGIN_WEBSITE("https://github.com/keelanstuart/Celerity");
 CELERITYPLUGIN_DESC("A simple plug-in for Celerity 3.x that demonstrates how to implement your own Component and Resource types");
-CELERITYPLUGIN_COPYRIGHT("Copyright © 2001-2025, Keelan Stuart");
+CELERITYPLUGIN_COPYRIGHT("Copyright © 2001-2026, Keelan Stuart");
 CELERITYPLUGIN_VERSION(1);
 CELERITYPLUGIN_CELERITYVERSION();
 

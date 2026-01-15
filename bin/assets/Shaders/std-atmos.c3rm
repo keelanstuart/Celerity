@@ -1,0 +1,27 @@
+<render_method name="standard">
+
+	<technique name="g">
+		<pass name="front">
+			<setting name="framebuffer"			value="Aux" />
+			<setting name="blendmode"			value="replace" />
+			<setting name="blendeq"				value="min" />
+			<setting name="cullmode"			value="back" />
+			<setting name="depthmode"			value="disabled" />
+			<setting name="channelmask"			value="GA" />
+			<setting name="shader.vertex"		value="def-obj.vsh" />
+			<setting name="shader.fragment"		value="def-obj-atmos.fsh" />
+		</pass>
+
+		<pass name="back">
+			<setting name="framebuffer"			value="Aux" />
+			<setting name="blendmode"			value="replace" />
+			<setting name="blendeq"				value="max" />
+			<setting name="cullmode"			value="front" />
+			<setting name="depthmode"			value="disabled" />
+			<setting name="channelmask"			value="B" />
+			<setting name="shader.vertex"		value="def-obj.vsh" />
+			<setting name="shader.fragment"		value="def-obj-atmos.fsh" />
+		</pass>
+	</technique>
+
+</render_method>
