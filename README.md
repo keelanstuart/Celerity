@@ -13,7 +13,7 @@ Easily extend functionality by writing custom plug-ins... for example, to suppor
 - Embedded JavaScript:
 Access object properties, handle input, play sounds, respond to events... all using JavaScript.
 
-- Dual Architecture for Development & Content Creation:
+- Dual Architecture for "Out of the Box" Development & Content Creation:
 The platform is split into two main parts:<br>
    - A generic host application, suitable for embedding or launching projects<br>
    - A fully-featured scene editor for creating and modifying game and simulation content
