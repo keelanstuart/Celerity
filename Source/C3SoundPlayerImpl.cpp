@@ -20,6 +20,13 @@
 
 using namespace c3;
 
+using SSoundResourceData = struct
+{
+	ma_sound sound;
+	const BYTE *encoded;
+	size_t encoded_len;
+	bool from_memory;
+};
 
 
 SoundPlayerImpl::SoundPlayerImpl(System *system)
@@ -48,7 +55,7 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 	m_ResManConfig = ma_resource_manager_config_init();
 
 	m_ResManConfig.decodedFormat = SOUND_FORMAT_DEFAULT;
-	m_ResManConfig.decodedChannels = SOUND_CHANNELS_DEFAULT;				
+	m_ResManConfig.decodedChannels = SOUND_CHANNELS_DEFAULT;
 	m_ResManConfig.decodedSampleRate = SOUND_RATE_DEFAULT;
 
 	// no threading - Celerity's own resource manager is already multi-threaded
@@ -82,6 +89,7 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 	{
 		m_Channels[i].state = ChannelState::inactive;
 		m_Channels[i].loop_count = 0;
+		m_Channels[i].has_decoder = false;
 	}
 }
 
@@ -274,9 +282,11 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 	if (!pres || (pres->GetType() != &SoundResourceType::self) || (pres->GetStatus() != Resource::RS_LOADED))
 		return INVALID_HSAMPLE;
 
-	const ma_sound *hs = (const ma_sound *)pres->GetData();
-	if (!hs)
+	SSoundResourceData *srd = (SSoundResourceData *)(pres->GetData());
+	if (!srd)
 		return INVALID_HSAMPLE;
+
+	const ma_sound *hs = (const ma_sound *)&(srd->sound);
 
 	// find an available channel for playback
 
@@ -288,6 +298,9 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 		if (pch->state == ChannelState::finished)
 		{
 			ma_sound_uninit(&(pch->sound));
+			if (pch->has_decoder)
+				ma_decoder_uninit(&(pch->decoder));
+			pch->has_decoder = false;
 
 			pch->state = ChannelState::inactive;
 		}
@@ -295,9 +308,40 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 		// any sound that is no loger queued for play can be replaced
 		if (pch->state == ChannelState::inactive)
 		{
-			ma_sound_init_copy(&m_Engine, hs, 0, &m_Group[sndtype], &pch->sound);
+			ma_result r = MA_ERROR;
 
-			pch->sound.ownsDataSource = false;	// this is key; we are playing a copy of a sound we loaded elsewhere
+			if (srd->from_memory)
+			{
+				r = ma_decoder_init_memory(srd->encoded, srd->encoded_len, nullptr, &pch->decoder);
+				if (r == MA_SUCCESS)
+				{
+					ma_uint32 flags = MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT;
+					r = ma_sound_init_from_data_source(&m_Engine, (ma_data_source *)&pch->decoder, flags, &m_Group[sndtype], &pch->sound);
+					pch->has_decoder = true;
+				}
+
+				if (r != MA_SUCCESS)
+				{
+					if (pch->has_decoder)
+						ma_decoder_uninit(&(pch->decoder));
+
+					chidx = MA_MAX_CHANNELS;
+					break;
+				}
+			}
+			else
+			{
+				// File-backed resource sound is copyable, so use copy path.
+				r = ma_sound_init_copy(&m_Engine, &srd->sound, 0, &m_Group[sndtype], &pch->sound);
+				if (r != MA_SUCCESS)
+				{
+					chidx = MA_MAX_CHANNELS;
+					break;
+				}
+
+				pch->sound.ownsDataSource = false;
+			}
+
 			pch->loop_count = loopcount;
 			pch->state = ChannelState::active;
 			break;
@@ -315,7 +359,22 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 
 	ma_sound_set_looping(ps, (loopcount == LOOP_INFINITE) ? 1 : 0);
 
-	ma_sound_set_position(ps, pos ? pos->x : 0, pos ? pos->y : 0, pos ? pos->z : 0);
+	// spatialized or no?
+	if (!pos)
+	{
+		// music / UI
+		ma_sound_set_attenuation_model(ps, ma_attenuation_model_none);
+		ma_sound_set_spatialization_enabled(ps, MA_FALSE);
+	}
+	else
+	{
+		// SFX
+		ma_sound_set_spatialization_enabled(ps, MA_TRUE);
+
+		ma_sound_set_min_distance(ps, 25.0f);
+		ma_sound_set_max_distance(ps, 8000.0f);
+		ma_sound_set_rolloff(ps, 1.0f);
+	}
 
 	ma_sound_set_pitch(ps, pitchmult);
 
@@ -335,11 +394,11 @@ SoundPlayer::HCHANNEL SoundPlayerImpl::Play(Resource *pres, SOUND_TYPE sndtype, 
 
 			if (pch->loop_count)
 			{
-				ma_sound_start(&(pch->sound));
-
 				ma_sound_seek_to_pcm_frame(&(pch->sound), 0);
 
 				ma_sound_set_at_end(&(pch->sound), false);
+
+				ma_sound_start(&(pch->sound));
 			}
 		}
 
@@ -820,19 +879,19 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromFile(c3::System *p
 	{
 		SoundPlayerImpl *sp = (SoundPlayerImpl *)psys->GetSoundPlayer();
 
-		ma_sound *psound = (ma_sound *)malloc(sizeof(ma_sound));
+		SSoundResourceData *psr = new SSoundResourceData{};
 
 #if UNICODE
-		if (ma_sound_init_from_file_w(&(sp->m_Engine), filename, MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT, nullptr, nullptr, psound) != MA_SUCCESS)
+		if (ma_sound_init_from_file_w(&(sp->m_Engine), filename, MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT, nullptr, nullptr, &(psr->sound)) != MA_SUCCESS)
 #else
-		if (ma_sound_init_from_file(&(sp->m_Engine), filename, MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT, nullptr, nullptr, psound) != MA_SUCCESS)
+		if (ma_sound_init_from_file(&(sp->m_Engine), filename, MA_SOUND_FLAG_DECODE | MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT, nullptr, nullptr, &(psr->sound)) != MA_SUCCESS)
 #endif
 		{
-			free(psound);
-			psound = nullptr;
+			delete psr;
+			psr = nullptr;
 		}
 
-		*returned_data = psound;
+		*returned_data = psr;
 		if (!*returned_data)
 			return ResourceType::LoadResult::LR_ERROR;
 	}
@@ -842,24 +901,23 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromFile(c3::System *p
 
 
 // this function is called back by the ResourceManager to load a sound resource from a location in memory
-c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer,
+	size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	SoundPlayerImpl *sp = (SoundPlayerImpl *)psys->GetSoundPlayer();
-
-	ma_sound *psound = (ma_sound *)malloc(sizeof(ma_sound));
-
-	uint32_t flags = MA_SOUND_FLAG_NO_DEFAULT_ATTACHMENT | MA_SOUND_FLAG_DECODE;
-	//if (ma_sound_init_ex(sp->GetSfxEngine(), ) != MS_SUCCESS)
-	if (ma_sound_init_from_data_source(&(sp->m_Engine), (ma_data_source *)buffer, flags, nullptr, psound) != MA_SUCCESS)
-	{
-		free(psound);
-		psound = nullptr;
-	}
-
-	*returned_data = psound;
-	if (!*returned_data)
+	if (!returned_data || !buffer || (buffer_length == 0))
 		return ResourceType::LoadResult::LR_ERROR;
 
+	SoundPlayerImpl *sp = (SoundPlayerImpl *)psys->GetSoundPlayer();
+	if (!sp)
+		return ResourceType::LoadResult::LR_ERROR;
+
+	SSoundResourceData *psr = new SSoundResourceData{};
+
+	psr->from_memory = true;
+	psr->encoded = buffer;
+	psr->encoded_len = buffer_length;
+
+	*returned_data = psr;
 	return ResourceType::LoadResult::LR_SUCCESS;
 }
 
@@ -872,8 +930,10 @@ bool RESOURCETYPENAME(Sound)::WriteToFile(c3::System *psys, const TCHAR *filenam
 
 void RESOURCETYPENAME(Sound)::Unload(void *data) const
 {
-	ma_sound_uninit((ma_sound *)data);
+	SSoundResourceData *psr = (SSoundResourceData *)data;
+	if (!psr->from_memory)
+		ma_sound_uninit(&psr->sound);
 
-	free(data);
+	delete psr;
 	data = nullptr;
 }

@@ -9,6 +9,7 @@
 #include <C3ScreenManagerImpl.h>
 #include <C3ScreenImpl.h>
 #include <C3Interactable.h>
+#include <C3BlobImpl.h>
 
 using namespace c3;
 
@@ -79,6 +80,7 @@ bool ScreenManagerImpl::PushScreen(const TCHAR *screen_name, const TCHAR *script
 	if (!po_world)
 		return false;
 
+	m_pSys->GetLog()->Print(_T("Pushing Screen: %s\n"), screen_name);
 	po_world->SetName(screen_name);
 
 	Screen *pc_scr = dynamic_cast<Screen *>(po_world->AddComponent(Screen::Type()));
@@ -170,11 +172,14 @@ bool ScreenManagerImpl::PushScreen(const TCHAR *screen_name, const TCHAR *script
 		}
 		else if (!_tcsicmp(ext, _T(".c3o")))
 		{
-			genio::IInputStream *is = genio::IInputStream::Create();
-			if (is)
+			Resource *hr = m_pSys->GetResourceManager()->GetResource(script_filename, RESF_DEMANDLOAD, RESOURCETYPE(Blob));
+
+			if (hr && (hr->GetStatus() == Resource::RS_LOADED))
 			{
-				is->Assign(script_filename);
-				if (is->Open())
+				c3::Blob *pblob = dynamic_cast<Blob *>((Blob *)hr->GetData());
+
+				genio::IInputStream *is = genio::IMemoryInputStream::Create(pblob->Data(), pblob->Size());
+				if (is)
 				{
 					// use the camera from the editor to start
 					c3::Object::CameraLoadFunc loadcam = [&](c3::Object *camera, float yaw, float pitch)
@@ -185,9 +190,10 @@ bool ScreenManagerImpl::PushScreen(const TCHAR *screen_name, const TCHAR *script
 
 					po_world->Load(is, po_world, nullptr, loadcam);
 					is->Close();
-				}
+					
 
-				is->Release();
+					is->Release();
+				}
 			}
 		}
 	}
@@ -205,6 +211,8 @@ bool ScreenManagerImpl::PopScreen()
 
 		if (ps)
 		{
+			m_pSys->GetLog()->Print(_T("Popping Screen: %s\n"), ps->GetName());
+
 			// can't delete things yet...
 			m_Cleanup.push_back(ps);
 		}

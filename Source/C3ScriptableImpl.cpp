@@ -13,6 +13,8 @@
 #include <C3GlobalObjectRegistry.h>
 #include <C3Math.h>
 #include <C3ColorDefs.h>
+#include <C3Utility.h>
+#include <C3BlobImpl.h>
 
 using namespace c3;
 
@@ -124,7 +126,31 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromMemory(c3::System
 	if (returned_data && buffer && buffer_length)
 	{
 		Script *ps = new Script;
-		ps->m_Code = (const TCHAR *)buffer;
+
+		size_t bom_size;
+		util::Encoding enc = util::DetectBOM((const uint8_t *)buffer, buffer_length, bom_size);
+		size_t adjlen = buffer_length - bom_size;
+		const uint8_t *b = (const uint8_t *)buffer + bom_size;
+
+		switch (enc)
+		{
+			case util::Encoding::Unknown:
+			{
+				ps->m_Code.reserve(buffer_length);
+				for (size_t i = 0; i < buffer_length; i++)
+					ps->m_Code.push_back(b[i]);
+				break;
+			}
+
+			case util::Encoding::UTF8:
+				util::UTF8_to_tstring(b, adjlen, ps->m_Code);
+				break;
+
+			default:
+				// if you ever have a UTF-16/32 script, deal with this then
+				break;
+		}
+
 		*returned_data = ps;
 	}
 
@@ -273,6 +299,7 @@ void jcSetCursor(CScriptVar *c, void *userdata);
 void jcGetCursor(CScriptVar *c, void *userdata);
 void jcSetCursorTransform(CScriptVar *c, void *userdata);
 void jcUnproject(CScriptVar *c, void *userdata);
+void jcGetWindowDimensions(CScriptVar *c, void *userdata);
 
 void jcPauseGame(CScriptVar *c, void *userdata);
 void jcGamePaused(CScriptVar *c, void *userdata);
@@ -412,6 +439,7 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function SetCursorTransform(pos, rot, scl)"),					jcSetCursorTransform, psys);
 	
 	m_JS->AddNative(_T("function Unproject(pos)"),										jcUnproject, psys);
+	m_JS->AddNative(_T("function GetWindowDimensions()"),								jcGetWindowDimensions, psys);
 
 	m_JS->AddNative(_T("function PauseGame(paused)"),									jcPauseGame, psys);
 	m_JS->AddNative(_T("function GamePaused()"),										jcGamePaused, psys);
@@ -1418,11 +1446,16 @@ void jcLoadPrototypes(CScriptVar *c, void *userdata)
 	assert(psys);
 
 	tstring filename = c->GetParameter(_T("filename"))->GetString();
-	TCHAR fullpath[MAX_PATH];
 
-	if (psys->GetFileMapper()->FindFile(filename.c_str(), fullpath, MAX_PATH))
+	Resource *hr = psys->GetResourceManager()->GetResource(filename.c_str(), RESF_DEMANDLOAD, RESOURCETYPE(Blob));
+
+	if (hr && (hr->GetStatus() == Resource::RS_LOADED))
 	{
-		if (psys->GetFactory()->LoadPrototypes((const tinyxml2::XMLNode *)nullptr, fullpath))
+		c3::Blob *pblob = dynamic_cast<Blob *>((Blob *)hr->GetData());
+		tinyxml2::XMLDocument doc;
+		doc.Parse((const char *)(pblob->Data()), pblob->Size());
+		
+		if (psys->GetFactory()->LoadPrototypes(doc.RootElement(), nullptr))
 			ret->SetInt(1);
 	}
 }
@@ -1433,85 +1466,89 @@ void jcLoadObject(CScriptVar *c, void *userdata)
 {
 	CScriptVar *ret = c->GetReturnVar();
 
-	if (ret)
-		ret->SetInt(0);
+	CScriptVarLink *psvl;
+	if (ret && (psvl = ret->FindChildOrCreate(_T("success"))))
+		psvl->m_Var->SetInt(0);
 
 	System *psys = (System *)userdata;
 	assert(psys);
 
+	ResourceManager *rm = psys->GetResourceManager();
+
 	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
 	tstring filename = c->GetParameter(_T("filename"))->GetString();
-	TCHAR fullpath[MAX_PATH];
 
 	Object *pobj = dynamic_cast<Object *>((Object *)hobj);
+	if (!pobj)
+		return;
 
-	if (pobj && psys->GetFileMapper()->FindFile(filename.c_str(), fullpath, MAX_PATH))
+	Resource *hr = rm->GetResource(filename.c_str(), RESF_DEMANDLOAD, RESOURCETYPE(Blob));
+
+	if (hr && (hr->GetStatus() == Resource::RS_LOADED))
 	{
-		genio::IInputStream *is = genio::IInputStream::Create();
+		c3::Blob *pblob = dynamic_cast<Blob *>((Blob *)hr->GetData());
+
+		genio::IInputStream *is = genio::IMemoryInputStream::Create(pblob->Data(), pblob->Size());
 		if (is)
 		{
-			if (is->Assign(fullpath) && is->Open())
+			c3::Object::MetadataLoadFunc loadmd = [&](const tstring &name, const tstring &description, const tstring &author, const tstring &website, const tstring &copyright)
 			{
-				CScriptVarLink *psvl;
-
-				c3::Object::MetadataLoadFunc loadmd = [&](const tstring &name, const tstring &description, const tstring &author, const tstring &website, const tstring &copyright)
+				if (ret)
 				{
-					if (ret)
-					{
-						if (psvl = ret->FindChildOrCreate(_T("name")))
-							psvl->m_Var->SetString(name.c_str());
+					if (psvl = ret->FindChildOrCreate(_T("name")))
+						psvl->m_Var->SetString(name.c_str());
 
-						if (psvl = ret->FindChildOrCreate(_T("description")))
-							psvl->m_Var->SetString(description.c_str());
+					if (psvl = ret->FindChildOrCreate(_T("description")))
+						psvl->m_Var->SetString(description.c_str());
 
-						if (psvl = ret->FindChildOrCreate(_T("author")))
-							psvl->m_Var->SetString(author.c_str());
+					if (psvl = ret->FindChildOrCreate(_T("author")))
+						psvl->m_Var->SetString(author.c_str());
 
-						if (psvl = ret->FindChildOrCreate(_T("website")))
-							psvl->m_Var->SetString(website.c_str());
+					if (psvl = ret->FindChildOrCreate(_T("website")))
+						psvl->m_Var->SetString(website.c_str());
 
-						if (psvl = ret->FindChildOrCreate(_T("copyright")))
-							psvl->m_Var->SetString(copyright.c_str());
-					}
-				};
+					if (psvl = ret->FindChildOrCreate(_T("copyright")))
+						psvl->m_Var->SetString(copyright.c_str());
+				}
+			};
 
-				c3::Object::CameraLoadFunc loadcam = [&](c3::Object *camera, float yaw, float pitch)
-				{
-					if (psvl = ret->FindChildOrCreate(_T("camera")))
-						psvl->m_Var->SetInt((int64_t)camera);
+			c3::Object::CameraLoadFunc loadcam = [&](c3::Object *camera, float yaw, float pitch)
+			{
+				if (psvl = ret->FindChildOrCreate(_T("camera")))
+					psvl->m_Var->SetInt((int64_t)camera);
 
-					if (psvl = ret->FindChildOrCreate(_T("yaw")))
-						psvl->m_Var->SetFloat(yaw);
+				if (psvl = ret->FindChildOrCreate(_T("yaw")))
+					psvl->m_Var->SetFloat(yaw);
 
-					if (psvl = ret->FindChildOrCreate(_T("pitch")))
-						psvl->m_Var->SetFloat(pitch);
-				};
+				if (psvl = ret->FindChildOrCreate(_T("pitch")))
+					psvl->m_Var->SetFloat(pitch);
+			};
 
-				c3::Object::EnvironmentLoadFunc loadenv = [&](const glm::fvec4 &clearcolor, const glm::fvec4 &shadowcolor, const glm::fvec4 &fogcolor, const float &fogdensity)
-				{
-					Color::SRGBAColor c;
+			c3::Object::EnvironmentLoadFunc loadenv = [&](const glm::fvec4 &clearcolor, const glm::fvec4 &shadowcolor, const glm::fvec4 &fogcolor, const float &fogdensity)
+			{
+				Color::SRGBAColor c;
 
-					c = Color::ConvertVecToInt((props::TVec4F &)clearcolor);
-					if (psvl = ret->FindChildOrCreate(_T("clearcolor")))
-						psvl->m_Var->SetInt((int64_t)c.i);
+				c = Color::ConvertVecToInt((props::TVec4F &)clearcolor);
+				if (psvl = ret->FindChildOrCreate(_T("clearcolor")))
+					psvl->m_Var->SetInt((int64_t)c.i);
 
-					c = Color::ConvertVecToInt((props::TVec4F &)shadowcolor);
-					if (psvl = ret->FindChildOrCreate(_T("shadowcolor")))
-						psvl->m_Var->SetInt((int64_t)c.i);
+				c = Color::ConvertVecToInt((props::TVec4F &)shadowcolor);
+				if (psvl = ret->FindChildOrCreate(_T("shadowcolor")))
+					psvl->m_Var->SetInt((int64_t)c.i);
 
-					c = Color::ConvertVecToInt((props::TVec4F &)fogcolor);
-					if (psvl = ret->FindChildOrCreate(_T("fogcolor")))
-						psvl->m_Var->SetInt((int64_t)c.i);
+				c = Color::ConvertVecToInt((props::TVec4F &)fogcolor);
+				if (psvl = ret->FindChildOrCreate(_T("fogcolor")))
+					psvl->m_Var->SetInt((int64_t)c.i);
 
-					if (psvl = ret->FindChildOrCreate(_T("fogdensity")))
-						psvl->m_Var->SetFloat(fogdensity);
-				};
+				if (psvl = ret->FindChildOrCreate(_T("fogdensity")))
+					psvl->m_Var->SetFloat(fogdensity);
+			};
 
-				bool r = pobj->Load(is, pobj->GetParent(), loadmd, loadcam, loadenv);
+			// put all the metadata into our return value's named elements
+			bool r = pobj->Load(is, pobj->GetParent(), loadmd, loadcam, loadenv);
 
-				if (ret && (psvl = ret->FindChildOrCreate(_T("success"))))
-					psvl->m_Var->SetInt(r ? 1 : 0);
-			}
+			if (ret && (psvl = ret->FindChildOrCreate(_T("success"))))
+				psvl->m_Var->SetInt(r ? 1 : 0);
 
 			is->Release();
 		}
@@ -2087,13 +2124,22 @@ void jcPlaySound(CScriptVar *c, void *userdata)
 	CScriptVar *ploop = c->GetParameter(_T("loop"));
 
 	glm::fvec3 pos(0, 0, 0);
+	bool play2d = false;
+
 	CScriptVar *ppos = c->GetParameter(_T("pos"));
 	if (ppos)
 		ExtractVec3FromVar(ppos, pos);
+	if (ppos->IsUndefined())
+		play2d = true;
 
 	Resource *pres = psys->GetResourceManager()->GetResource(pfilename->GetString(), RESF_DEMANDLOAD);
 
-	ret->SetInt((int64_t)(psys->GetSoundPlayer()->Play(pres, SoundPlayer::SOUND_TYPE::ST_SFX, pvolmod ? pvolmod->GetFloat() : 0, ppitchmod ? ppitchmod->GetFloat() : 0, ploop ? ploop->GetInt() : 1, &pos)));
+	ret->SetInt((int64_t)(psys->GetSoundPlayer()->Play(pres,
+		play2d ? SoundPlayer::SOUND_TYPE::ST_MUSIC : SoundPlayer::SOUND_TYPE::ST_SFX,
+		pvolmod ? pvolmod->GetFloat() : 0,
+		ppitchmod ? ppitchmod->GetFloat() : 0,
+		ploop ? ploop->GetInt() : 1,
+		play2d ? nullptr : &pos)));
 }
 
 
@@ -3695,6 +3741,37 @@ void jcUnproject(CScriptVar *c, void *userdata)
 	psvl->m_Owned = true;
 	psvl->m_Var->SetFloat(rv.z);
 }
+
+
+// m_JS->AddNative(_T("function GetWindowDimensions()"), jcGetWindowDimensions, psys);
+void jcGetWindowDimensions(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+
+	System *psys = (System *)userdata;
+	assert(psys);
+
+	c3::Renderer *pr = psys->GetRenderer();
+
+	CScriptVarLink *pposx = ret->FindChildOrCreate(_T("x"));
+	CScriptVarLink *pposy = ret->FindChildOrCreate(_T("y"));
+	if (!(pposx && pposy))
+		return;
+
+	RECT r;
+	pr->GetViewport(&r);
+
+	if (pposx->m_Var->IsInt())
+		pposx->m_Var->SetInt(r.right);
+	else
+		pposx->m_Var->SetFloat(float(r.right));
+
+	if (pposy->m_Var->IsInt())
+		pposy->m_Var->SetInt(r.bottom);
+	else
+		pposy->m_Var->SetFloat(float(r.bottom));
+}
+
 
 void jcPauseGame(CScriptVar *c, void *userdata)
 {

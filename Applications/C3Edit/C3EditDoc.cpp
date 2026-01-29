@@ -279,7 +279,7 @@ BOOL C3EditDoc::OnOpenDocument(LPCTSTR lpszPathName)
 	}
 	m_OperationalRootObj = m_RootObj;
 
-	genio::IInputStream *is = genio::IInputStream::Create();
+	genio::IInputStream *is = genio::IFileInputStream::Create();
 	if (!is || !is->Assign(lpszPathName) || !is->Open() || !is->CanAccess())
 		return FALSE;
 

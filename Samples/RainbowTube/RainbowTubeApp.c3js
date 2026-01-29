@@ -1,6 +1,6 @@
 var runtime;
 var hcam;
-var vec3 = { x:0.0, y:0.0, z:0.0 };
+var v3 = { x:0.0, y:0.0, z:0.0 };
 var vec4 = { x:0.0, y:0.0, z:0.0, w:1.0 };
 var hprop;
 var hobj;
@@ -10,11 +10,11 @@ function update(elapsed_seconds)
 {
 	runtime += elapsed_seconds;
 
-	vec3.x = 0.0;
-	vec3.y = 0.0;
-	vec3.z = Math.sin(runtime / 30.0) * 180.0;
+	v3.x = 0.0;
+	v3.y = 0.0;
+	v3.z = Math.sin(runtime / 30.0) * 180.0;
 
-	vec4 = EulerToQuat(vec3);
+	vec4 = EulerToQuat(v3);
 	SetPropertyValue(hcam_ori, vec4);
 }
 

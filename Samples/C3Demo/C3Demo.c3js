@@ -4,8 +4,8 @@ var hcam;
 var hcam_ori;
 var cam_ori = { x:0.0, y:0.0, z:0.0, w:0.0 };
 var cam_rot = { x:0.0, y:0.0, z:0.0 };
-var vec3 = { x:0.0, y:0.0, z:0.0 };
-var vec4 = { x:0.0, y:0.0, z:0.0, w:1.0 };
+var v3 = { x:0.0, y:0.0, z:0.0 };
+var v4 = { x:0.0, y:0.0, z:0.0, w:1.0 };
 var hobj;
 var hprop;
 var hgroup;
@@ -20,15 +20,15 @@ function init()
 
 	hobj = GetRegisteredObject("camera.root");
 	hprop = FindProperty(hobj, "Orientation");
-	SetPropertyValue(hprop, vec4);
+	SetPropertyValue(hprop, v4);
 	hprop = FindProperty(hobj, "Position");
-	SetPropertyValue(hprop, vec3);
+	SetPropertyValue(hprop, v3);
 
 	hobj = GetRegisteredObject("camera.arm");
 	hprop = FindProperty(hobj, "Orientation");
-	SetPropertyValue(hprop, vec4);
+	SetPropertyValue(hprop, v4);
 	hprop = FindProperty(hobj, "Position");
-	SetPropertyValue(hprop, vec3);
+	SetPropertyValue(hprop, v3);
 
 	hcam = GetRegisteredObject("camera");
 	hprop = FindProperty(hcam, "FOV(Perspective)");
@@ -48,24 +48,24 @@ function update(elapsed_seconds)
 
 function handle_input(action, value)
 {
-	vec3 = GetPropertyValue(hrvel);
+	v3 = GetPropertyValue(hrvel);
 
 	if (action == "Look Down")
 	{
-		vec3.x -= value;
+		v3.x -= value;
 	}
 	else if (action == "Look Up")
 	{
-		vec3.x += value;
+		v3.x += value;
 	}
 	else if (action == "Look Left")
 	{
-		vec3.z -= value;
+		v3.z -= value;
 	}
 	else if (action == "Look Right")
 	{
-		vec3.z += value;
+		v3.z += value;
 	}
 
-	SetPropertyValue(hrvel, vec3);
+	SetPropertyValue(hrvel, v3);
 }

@@ -30,7 +30,7 @@ BOOL FAR PASCAL EnumAxesCallback(const DIDEVICEOBJECTINSTANCE *pdidoi, void *con
 
 VirtualJoystickImpl::VirtualJoystickImpl(System *psys, LPDIRECTINPUTDEVICE8 pdid) : InputDeviceImpl(psys, pdid)
 {
-	m_MinProportion = 0.2f;
+	m_MinProportion = 0.04f;
 
 	// Set the data format to the default one for keyboards...
 	m_pDIDevice->SetDataFormat(&c_dfDIJoystick2);
@@ -66,12 +66,13 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 
 	DIJOYSTATE2 state;
 	memset(&state, 0, sizeof(DIJOYSTATE2));
-	if (m_bAttached)
-		hr = m_pDIDevice->GetDeviceState(sizeof(DIJOYSTATE2), &state);
-	else
-		ZeroMemory(m_ButtonState, sizeof(m_ButtonState));
+
+	hr = m_bAttached ? m_pDIDevice->GetDeviceState(sizeof(DIJOYSTATE2), &state) : DIERR_NOTACQUIRED;
 
 	ZeroMemory(m_ButtonDelta, sizeof(m_ButtonDelta));
+	ZeroMemory(m_ButtonState, sizeof(m_ButtonState));
+	if (FAILED(hr))
+		return false;
 
 	auto Dampen = [](int val) -> int
 	{
@@ -95,7 +96,7 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 		m_ButtonState[butidx] = val;
 	};
 
-	constexpr LONG deadzone = (InputDevice::BUTTONVAL_MAX / 16);
+	constexpr LONG deadzone = (InputDevice::BUTTONVAL_MAX / 22);
 
 	int32_t iminprop = (int32_t)(255.0f * m_MinProportion);
 	if (abs(state.lX) > deadzone)
@@ -179,23 +180,48 @@ bool VirtualJoystickImpl::Update(float elapsed_seconds)
 	SetButton(InputDevice::VirtualButton::THROTTLE1, state.rglSlider[0]);
 	SetButton(InputDevice::VirtualButton::THROTTLE2, state.rglSlider[1]);
 
-	switch (state.rgdwPOV[0])
+	// Differences in drivers, apparently?! Yuck.
+	if ((state.rgdwPOV[0] != 0xffff) && (state.rgdwPOV[0] != -1))
 	{
-		case 0:
-			SetButton(InputDevice::VirtualButton::POV_POSY, InputDevice::BUTTONVAL_MAX);
-			break;
-	
-		case 18000:
-			SetButton(InputDevice::VirtualButton::POV_NEGY, InputDevice::BUTTONVAL_MAX);
-			break;
-	
-		case 9000:
-			SetButton(InputDevice::VirtualButton::POV_POSX, InputDevice::BUTTONVAL_MAX);
-			break;
-	
-		case 27000:
-			SetButton(InputDevice::VirtualButton::POV_NEGX, InputDevice::BUTTONVAL_MAX);
-			break;
+		int sector = ((state.rgdwPOV[0] + 2250) / 4500) & 7; // 0..7
+
+		switch (sector)
+		{
+			case 0: // up
+				SetButton(InputDevice::VirtualButton::POV_POSY, InputDevice::BUTTONVAL_MAX);
+				break;
+
+			case 1: // up-right
+				SetButton(InputDevice::VirtualButton::POV_POSY, InputDevice::BUTTONVAL_MAX);
+				SetButton(InputDevice::VirtualButton::POV_POSX, InputDevice::BUTTONVAL_MAX);
+				break;
+
+			case 2: // right
+				SetButton(InputDevice::VirtualButton::POV_POSX, InputDevice::BUTTONVAL_MAX);
+				break;
+
+			case 3: // down-right
+				SetButton(InputDevice::VirtualButton::POV_NEGY, InputDevice::BUTTONVAL_MAX);
+				SetButton(InputDevice::VirtualButton::POV_POSX, InputDevice::BUTTONVAL_MAX);
+				break;
+
+			case 4: // down
+				SetButton(InputDevice::VirtualButton::POV_NEGY, InputDevice::BUTTONVAL_MAX);
+				break;
+
+			case 5: // down-left
+				SetButton(InputDevice::VirtualButton::POV_NEGY, InputDevice::BUTTONVAL_MAX);
+				SetButton(InputDevice::VirtualButton::POV_NEGX, InputDevice::BUTTONVAL_MAX);
+				break;
+			case 6: // left
+				SetButton(InputDevice::VirtualButton::POV_NEGX, InputDevice::BUTTONVAL_MAX);
+				break;
+
+			case 7: // up-left
+				SetButton(InputDevice::VirtualButton::POV_NEGX, InputDevice::BUTTONVAL_MAX);
+				SetButton(InputDevice::VirtualButton::POV_POSY, InputDevice::BUTTONVAL_MAX);
+				break;
+		}
 	}
 
 	constexpr size_t DI_BUTTON1 = 21;

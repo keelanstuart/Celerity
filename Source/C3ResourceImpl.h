@@ -14,6 +14,7 @@ namespace c3
 	class ResourceImpl : public Resource
 	{
 		friend class System;
+		friend class ResourceManagerImpl;
 
 	protected:
 

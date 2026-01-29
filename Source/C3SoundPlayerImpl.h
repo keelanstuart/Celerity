@@ -96,8 +96,22 @@ namespace c3
 		ma_engine m_Engine;
 		ma_sound_group m_Group[SOUND_TYPE::SOUND_TYPES];
 
-		using ChannelState = enum { inactive, active, finished };
-		using TChannel = struct { ChannelState state; size_t loop_count; ma_sound sound; };
+		using ChannelState = enum
+		{
+			inactive,
+			active,
+			finished
+		};
+
+		using TChannel = struct
+		{
+			ChannelState state;
+			size_t loop_count;
+			ma_sound sound;
+			ma_decoder decoder;
+			bool has_decoder;
+		};
+
 		using TChannelArray = std::array<TChannel, MA_MAX_CHANNELS>;
 		TChannelArray m_Channels;
 

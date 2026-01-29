@@ -57,7 +57,7 @@ function init()
 {
 	runtime = 0.0;
 
-	tmppos = Vec3.mul(tmppos, 0.0);
+	tmppos = Vec.mul(tmppos, 0.0);
 	PlaySound("Incursion/sovereign.mp3", 0.25, 1.0, -1, tmppos);
 
 	hobj_levelroot = CreateObject("", self);
@@ -197,23 +197,23 @@ function handle_input(action, value)
 {
 	if (action == "Move Forward")
 	{
-		tmppos = Vec3.mul(player_facing, value);
-		player_vel = Vec3.add(player_vel, tmppos);
+		tmppos = Vec.mul(player_facing, value);
+		player_vel = Vec.add(player_vel, tmppos);
 	}
 	else if (action == "Move Backward")
 	{
-		tmppos = Vec3.mul(player_facing, value);
-		player_vel = Vec3.sub(player_vel, tmppos);
+		tmppos = Vec.mul(player_facing, value);
+		player_vel = Vec.sub(player_vel, tmppos);
 	}
 	else if (action == "Strafe Left")
 	{
-		tmppos = Vec3.mul(player_right, value);
-		player_vel = Vec3.sub(player_vel, tmppos);
+		tmppos = Vec.mul(player_right, value);
+		player_vel = Vec.sub(player_vel, tmppos);
 	}
 	else if (action == "Strafe Right")
 	{
-		tmppos = Vec3.mul(player_right, value);
-		player_vel = Vec3.add(player_vel, tmppos);
+		tmppos = Vec.mul(player_right, value);
+		player_vel = Vec.add(player_vel, tmppos);
 	}
 	else if (action == "Turn Left")
 	{
@@ -300,7 +300,7 @@ function update(elapsed_seconds)
 	tmppos.x = speed * elapsed_seconds;
 	tmppos.y = tmppos.x;
 	tmppos.z = 0.0;
-	tmppos = Vec3.madd(player_vel, (speed * elapsed_seconds), player_pos);
+	tmppos = Vec.madd(player_vel, (speed * elapsed_seconds), player_pos);
 	SetPropertyValue(hprop_player_pos, tmppos);
 	player_vel.x = 0.0;
 	player_vel.y = 0.0;

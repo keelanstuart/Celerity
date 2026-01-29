@@ -404,3 +404,66 @@ bool util::SnapTo(Object *obj, util::SnapDirection sd)
 	obj->Flags() = oldflags;
 	return hit;
 }
+
+
+util::Encoding util::DetectBOM(const uint8_t *data, size_t size, size_t &bom_size)
+{
+	if (size >= 3 &&
+		data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)
+	{
+		bom_size = 3;
+		return util::Encoding::UTF8;
+	}
+
+	if (size >= 4 &&
+		data[0] == 0xFF && data[1] == 0xFE &&
+		data[2] == 0x00 && data[3] == 0x00)
+	{
+		bom_size = 4;
+		return Encoding::UTF32LE;
+	}
+
+	if (size >= 4 &&
+		data[0] == 0x00 && data[1] == 0x00 &&
+		data[2] == 0xFE && data[3] == 0xFF)
+	{
+		bom_size = 4;
+		return Encoding::UTF32BE;
+	}
+
+	if (size >= 2 && data[0] == 0xFF && data[1] == 0xFE)
+	{
+		bom_size = 2;
+		return Encoding::UTF16LE;
+	}
+
+	if (size >= 2 && data[0] == 0xFE && data[1] == 0xFF)
+	{
+		bom_size = 2;
+		return Encoding::UTF16BE;
+	}
+
+	bom_size = 0;
+	return Encoding::Unknown;
+}
+
+
+void util::UTF8_to_tstring(const uint8_t *data, size_t len, tstring &ret)
+{
+#ifdef UNICODE
+	// UTF-8 -> UTF-16 (Windows)
+	if (len == 0)
+		ret.clear();
+
+	int needed = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (const char *)data, int(len), nullptr, 0);
+	if (needed <= 0)
+		ret.clear(); // or throw/log
+
+	ret.resize(needed);
+	MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, (const char *)data, int(len), ret.data(), needed);
+#else
+	// Non-UNICODE: just treat as bytes
+	return tstring(reinterpret_cast<const char *>(data),
+		reinterpret_cast<const char *>(data) + len);
+#endif
+}

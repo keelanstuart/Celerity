@@ -20,11 +20,12 @@ namespace c3
 		typedef props::TFlags64		ResourceFlags;
 
 		// Flag values for use in GetResource
-		#define RESF_DEMANDLOAD			0x00000001			// Loads the Resource immediately in the current thread
-		#define RESF_CREATEENTRYONLY	0x00000002			// Creates an empty Resource in the table (or replaces the current resource with data)
-		#define RESF_ZIPRES				0x00000004			// Indicates that the resource comes from a zipfile (loads only from memory)
-		#define RESF_FINDENTRYONLY		0x00000008			// Only check to see if the resource exists - don't create an new entry or attempt to load anything!
-		#define RESF_CACHENATIVE		0x00000010			// For GPU resources, will keep a CPU-side cache
+		#define RESF_DEMANDLOAD			0x01			// Loads the Resource immediately in the current thread
+		#define RESF_CREATEENTRYONLY	0x02			// Creates an empty Resource in the table (or replaces the current resource with data)
+		#define RESF_ZIPRES				0x04			// Indicates that the resource comes from a zipfile (loads only from memory)
+		#define RESF_FINDENTRYONLY		0x08			// Only check to see if the resource exists - don't create an new entry or attempt to load anything!
+		#define RESF_CACHENATIVE		0x10			// For GPU resources, will keep a CPU-side cache
+		#define RESF_RESERVED			0x80			// RESERVED - DON'T ASK ME NO QUESTIONS
 
 
 		/// ResTypeFlagMode is used in ForAllResourceDo calls

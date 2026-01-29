@@ -51,7 +51,7 @@ function update(elapsed_seconds)
 	// turn a little less well
 
 	tmpv3 = GetPropertyValue(hlvel);
-	tmp = Vec3.length(tmpv3);
+	tmp = Vec.length(tmpv3);
 	tmp /= max_speed;			// a ratio of current speed / max speed
 	tmpv3.x = 0.0;
 	tmpv3.y = 0.0;

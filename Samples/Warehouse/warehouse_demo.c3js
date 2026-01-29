@@ -236,17 +236,17 @@ function update(elapsed_seconds)
 
 	// Gravity & camera bases
 	grav = GetGravity();
-	tmp = Vec3.length(grav);
+	tmp = Vec.length(grav);
 	if (tmp > 0.0)
-		grav_dir = Vec3.div(grav, tmp);
+		grav_dir = Vec.div(grav, tmp);
 	else
-		grav_dir = Vec3.mul(zaxis, -1.0);
+		grav_dir = Vec.mul(zaxis, -1.0);
 	
 	cam_facing = GetPropertyValue(hprop_camroot_facing);
 	cam_right  = GetPropertyValue(hprop_camroot_right);
 
-	cam_facing_flat = Vec3.normalize(Vec3.reject(cam_facing, grav_dir));
-	cam_right_flat  = Vec3.normalize(Vec3.reject(cam_right,  grav_dir));
+	cam_facing_flat = Vec.normalize(Vec.reject(cam_facing, grav_dir));
+	cam_right_flat  = Vec.normalize(Vec.reject(cam_right,  grav_dir));
 	
 	// Eyepoint + FOV smoothing
 	if (crouching == 0)
@@ -266,11 +266,11 @@ function update(elapsed_seconds)
 	strafe_mag = (strafe_right - strafe_left);
 
 	// Build lateral acceleration from input flags
-	horz_acc = Vec3.mul(cam_facing_flat, move_mag);
-	horz_acc = Vec3.madd(cam_right_flat, strafe_mag, horz_acc);
+	horz_acc = Vec.mul(cam_facing_flat, move_mag);
+	horz_acc = Vec.madd(cam_right_flat, strafe_mag, horz_acc);
 
 	// if we're moving, then normalize and re-mult by the move speed
-	horz_acc_len = Vec3.length(horz_acc);
+	horz_acc_len = Vec.length(horz_acc);
 	if (horz_acc_len > 0.0001)
 	{
 		// Apply run/crouch to lateral accel only; reduce in air
@@ -289,13 +289,13 @@ function update(elapsed_seconds)
 			move_mult *= air_control;
 		}
 
-		horz_acc = Vec3.mul(horz_acc, walk_speed * move_mult / horz_acc_len);
+		horz_acc = Vec.mul(horz_acc, walk_speed * move_mult / horz_acc_len);
 	}
 	
 	if (jumped == 1)
 	{
 		jumped = 0;
-		vert_vel = Vec3.madd(grav_dir, jump_power, vert_vel);
+		vert_vel = Vec.madd(grav_dir, jump_power, vert_vel);
 	}
 	else
 	{
@@ -317,7 +317,7 @@ function update(elapsed_seconds)
 		}
 		else
 		{
-			stepdist += (Vec3.length(horz_vel) * move_mult * elapsed_seconds);
+			stepdist += (Vec.length(horz_vel) * move_mult * elapsed_seconds);
 		}
 
 		grounded = 1;
@@ -342,7 +342,7 @@ function update(elapsed_seconds)
 	}
 
 	// Ground/air post-processing on velocity (with friction)
-	horz_vel = Vec3.madd(horz_vel, friction * elapsed_seconds, horz_vel);
+	horz_vel = Vec.madd(horz_vel, friction * elapsed_seconds, horz_vel);
 
 	// Write back updated position
 	SetPropertyValue(hprop_camroot_pos, pos);

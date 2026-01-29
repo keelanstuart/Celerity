@@ -264,8 +264,14 @@ void ModelRendererImpl::PropertyChanged(const props::IProperty *pprop)
 			break;
 
 		case 'MODF':
+		{
+			for (TCHAR *c = (TCHAR *)(pprop->AsString()); *c != _T('\0'); c++)
+				if (*c == _T('\\'))
+					*c = _T('/');
+
 			m_Mod.second = prm->GetResource(pprop->AsString());
 			break;
+		}
 
 		case 'MPOS':
 		case 'MORI':

@@ -181,6 +181,7 @@ namespace c3
 		void *m_MappedAddr;
 		ZipEntryArray m_Files;				// Files in zip
 		ZIPINFO m_Header;					// Header of zip
+		tstring m_ShortName;
 
 	};
 

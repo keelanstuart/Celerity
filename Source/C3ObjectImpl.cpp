@@ -11,6 +11,7 @@
 #include <C3PrototypeImpl.h>
 #include <C3ObjectImpl.h>
 #include <C3Utility.h>
+#include <C3BlobImpl.h>
 
 using namespace c3;
 
@@ -338,39 +339,43 @@ bool ObjectImpl::Load(genio::IInputStream *is, Object *parent, MetadataLoadFunc 
 
 		switch (b)
 		{
+			// we must accommodate the editor's metadata...
+			// so begin the block but don't end it - do that at the end
 			case 'CEL0':
 				if (is->BeginBlock(b))
 				{
-					uint16_t len;
-
-					tstring name, description, author, website, copyright;
-					is->ReadUINT16(len);
-					name.resize(len);
-					if (len)
-						is->ReadString(name.data());
-
-					is->ReadUINT16(len);
-					description.resize(len);
-					if (len)
-						is->ReadString(description.data());
-
-					is->ReadUINT16(len);
-					author.resize(len);
-					if (len)
-						is->ReadString(author.data());
-
-					is->ReadUINT16(len);
-					website.resize(len);
-					if (len)
-						is->ReadString(website.data());
-
-					is->ReadUINT16(len);
-					copyright.resize(len);
-					if (len)
-						is->ReadString(copyright.data());
-
 					if (loadmd)
+					{
+						uint16_t len;
+
+						tstring name, description, author, website, copyright;
+						is->ReadUINT16(len);
+						name.resize(len);
+						if (len)
+							is->ReadString(name.data());
+
+						is->ReadUINT16(len);
+						description.resize(len);
+						if (len)
+							is->ReadString(description.data());
+
+						is->ReadUINT16(len);
+						author.resize(len);
+						if (len)
+							is->ReadString(author.data());
+
+						is->ReadUINT16(len);
+						website.resize(len);
+						if (len)
+							is->ReadString(website.data());
+
+						is->ReadUINT16(len);
+						copyright.resize(len);
+						if (len)
+							is->ReadString(copyright.data());
+
 						loadmd(name, description, author, website, copyright);
+					}
 
 					celdepth++;
 				}
@@ -713,18 +718,24 @@ void ObjectImpl::PropertyChanged(const props::IProperty *pprop)
 				pobj->Release();
 		});
 
-		genio::IInputStream *is = genio::IInputStream::Create();
-		is->Assign(pprop->AsString());
-		if (is->Open())
-		{
-			Object *pco = m_pSys->GetFactory()->Build();
-			pco->Load(is, m_pParent);
+		Resource *hr = m_pSys->GetResourceManager()->GetResource(pprop->AsString(), RESF_DEMANDLOAD, RESOURCETYPE(Blob));
 
-			// mark all the objects we loaded as temporary... they're created on the fly
-			util::RecursiveObjectAction(pco, [&](Object *pobj)
+		if (hr && (hr->GetStatus() == Resource::RS_LOADED))
+		{
+			c3::Blob *pblob = dynamic_cast<Blob *>((Blob *)hr->GetData());
+
+			genio::IInputStream *is = genio::IMemoryInputStream::Create(pblob->Data(), pblob->Size());
+			if (is)
 			{
-				pobj->Flags().Set(OF_TEMPORARY);
-			});
+				Object *pco = m_pSys->GetFactory()->Build();
+				pco->Load(is, m_pParent);
+
+				// mark all the objects we loaded as temporary... they're created on the fly
+				util::RecursiveObjectAction(pco, [&](Object *pobj)
+				{
+					pobj->Flags().Set(OF_TEMPORARY);
+				});
+			}
 		}
 	}
 }

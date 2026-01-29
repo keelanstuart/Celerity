@@ -104,30 +104,29 @@ void ResourceImpl::AddRef()
 
 			m_Status = Resource::Status::RS_LOADING;
 			ResourceType::LoadResult r;
-			if (!m_AuxFlags)
-				r = m_pResType->ReadFromFile(s_pSys, m_Filename.c_str(), m_Options.c_str(), &m_Data);
-			else
+			if (m_AuxFlags.IsSet(RESF_ZIPRES))
 			{
-				if (m_AuxFlags.IsSet(RESF_ZIPRES))
+				ResourceManagerImpl *prmi = (ResourceManagerImpl *)s_pSys->GetResourceManager();
+				const ZipFile *pzf = prmi->GetZipFile(m_Aux);
+				if (pzf)
 				{
-					ResourceManagerImpl *prmi = (ResourceManagerImpl *)s_pSys->GetResourceManager();
-					const ZipFile *pzf = prmi->GetZipFile(m_Aux);
-					if (pzf)
-					{
-						size_t zfi = pzf->FindFileIndex(m_Filename.c_str());
+					size_t zfi = pzf->FindFileIndex(m_Filename.c_str());
 
-						void *addr = nullptr;
-						size_t len = 0;
-						if (pzf->GetContent(zfi, &addr, &len))
-						{
-							r = m_pResType->ReadFromMemory(s_pSys, m_Filename.c_str(), (const BYTE *)addr, len, m_Options.c_str(), &m_Data);
-						}
-						else
-						{
-							r = ResourceType::LoadResult::LR_ERROR;
-						}
+					void *addr = nullptr;
+					size_t len = 0;
+					if (pzf->GetContent(zfi, &addr, &len))
+					{
+						r = m_pResType->ReadFromMemory(s_pSys, m_Filename.c_str(), (const BYTE *)addr, len, m_Options.c_str(), &m_Data);
+					}
+					else
+					{
+						r = ResourceType::LoadResult::LR_ERROR;
 					}
 				}
+			}
+			else
+			{
+				r = m_pResType->ReadFromFile(s_pSys, m_Filename.c_str(), m_Options.c_str(), &m_Data);
 			}
 
 			switch (r)

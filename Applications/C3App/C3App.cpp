@@ -203,9 +203,10 @@ SettingsTable gSettings =
 				_T("c3js"),           // default extension
 				last_launched,        // default file name (relative to CWD)
 				OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST | OFN_ENABLESIZING,
-				_T("Celerity Content (*.c3js;*.c3o)|*.c3js;*.c3o|")
+				_T("Celerity Content (*.c3js;*.c3o;*.c3z)|*.c3js;*.c3o;*.c3z|")
 				_T("Celerity Scripts (*.c3js)|*.c3js|")
 				_T("Celerity Objects (*.c3o)|*.c3o|")
+				_T("Celerity Packfiles (*.c3z)|*.c3z|")
 				_T("All Files (*.*)|*.*||"));
 
 			INT_PTR ret = fd.DoModal();
@@ -292,9 +293,13 @@ BOOL C3App::InitInstance()
 	logpath += _T(".log");
 	m_C3->GetLog()->SetLogFile(logpath.c_str());
 
-	const TCHAR *fn = PathFindFileName(theApp.m_AppName.c_str());
+	TCHAR exePath[MAX_PATH * 2]{};
+	::GetModuleFileName(nullptr, exePath, MAX_PATH * 2);
+	const TCHAR *fn = PathFindFileName(exePath);
 
 	m_StartScript = ReplaceFileExtension(fn, _T(".c3js"));
+	if (!PathFileExists(m_StartScript.c_str()))
+		m_StartScript = ReplaceFileExtension(fn, _T(".c3z"));
 
 	// Parse the command line into arguments
 	int argc = 0;
@@ -328,17 +333,22 @@ BOOL C3App::InitInstance()
 				m_StartScript = argv[a];
 		}
 
-		tstring modpack = ReplaceFileExtension(fn, _T(".c3z"));
-		if (theApp.m_C3->GetResourceManager()->RegisterZipArchive(modpack.c_str()))
-		{
-			if (!PathFileExists(m_StartScript.c_str()))
-			{
-				m_StartScript.insert(m_StartScript.rfind(_T('.'), 0), _T("/main"));
-			}
-		}
-
 		// Free memory allocated by CommandLineToArgvW
 		LocalFree(argv);
+	}
+
+	// if the user gave us a packfile as the content to open, then register it and
+	// change the start script to be the duplicated name of the packfile -- inside
+	// the packfile, with a c3js extension
+	TCHAR *ssext = PathFindExtension(m_StartScript.c_str());
+	if (ssext && !_tcsicmp(ssext, _T(".c3z")))
+	{
+		if (theApp.m_C3->GetResourceManager()->RegisterZipArchive(m_StartScript.c_str()))
+		{
+			PathRemoveExtension(m_StartScript.data());
+			m_StartScript = PathFindFileName(m_StartScript.c_str());
+			m_StartScript += _T("/") + m_StartScript + _T(".c3js");
+		}
 	}
 
 	theApp.m_C3->GetLog()->Print(_T("Celerity3 system created\nC3App starting up...\n"));

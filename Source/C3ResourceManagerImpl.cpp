@@ -10,6 +10,7 @@
 #include <C3ResourceImpl.h>
 #include <Shlwapi.h>
 #include <C3RendererImpl.h>
+#include <C3BlobImpl.h>
 
 
 using namespace c3;
@@ -48,7 +49,13 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 	// don't transform the options so that they are lower case -- preserve them... important for shader compiler preprocessor directives, amongst others
 	tstring key = filename;
 	size_t opts_ofs = key.find(_T('|'));
-	std::transform(key.begin(), (opts_ofs == tstring::npos) ? key.end() : key.begin() + opts_ofs, key.begin(), tolower);
+	std::transform(key.begin(), (opts_ofs == tstring::npos) ? key.end() : key.begin() + opts_ofs, key.begin(),
+		[](TCHAR c) -> TCHAR
+		{
+			if (c == _T('\\'))
+				return _T('/');
+			return tolower(c);
+		});
 
 	tstring filename_only = key;
 	tstring opts;
@@ -58,45 +65,24 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 		filename_only.erase(opts_ofs, opts.length() + 1);
 	}
 
-#if 0
-	// the upper bound will be resmap.end() if either there are no matching entries or
-	// if the entry is the last in the map.
-	TResourceMap::const_iterator e = m_ResMap.upper_bound(key);
-	for (TResourceMap::const_iterator i = m_ResMap.lower_bound(key); i != e; i++)
-	{
-		pres = i->second;
-		if (flags.IsSet(RESF_FINDENTRYONLY) || ((pres->GetStatus() == Resource::RS_LOADED) && (!pres->GetType() || (pres->GetType() == restype))))
-			return pres;
-	}
-#else
 	TResourceMap::const_iterator e = m_ResMap.find(key);
 	if (e != m_ResMap.end())
-	{
 		pres = e->second;
-		if (flags.IsSet(RESF_FINDENTRYONLY) || ((pres->GetStatus() == Resource::RS_LOADED) && (!pres->GetType() || (pres->GetType() == restype))))
-			return pres;
-	}
-#endif
 
 	if (flags.IsSet(RESF_FINDENTRYONLY))
 		return pres;
 
 	bool only_create_entry = flags.IsSet(RESF_CREATEENTRYONLY);
 
+	// there's no entry for the resource? ok... make one!
 	if (!pres)
 	{
 		const TCHAR *ext = NULL;
 
-		//if (!only_create_entry)
-		{
-			// find the file extension and advance past the '.' if possible
-			ext = PathFindExtension(filename_only.c_str());
-		}
-
+		// find the file extension and advance past the '.' if possible
+		ext = PathFindExtension(filename_only.c_str());
 		if (ext)
-		{
 			ext++;
-		}
 
 		// if a specific resource type wasn't given and we're not just creating an entry in the table,
 		/// then find the resource type based on the file extension
@@ -104,14 +90,14 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 		{
 			if (ext)
 			{
-				TExtToResourceTypeMap::const_iterator it = m_ExtResTypeMap.lower_bound(ext);
+				TExtToResourceTypeMap::const_iterator it = m_ExtResTypeMap.find(ext);
 				if (it != m_ExtResTypeMap.cend())
 					restype = it->second;
 			}
-		}
 
-		if (!restype)
-			return nullptr;
+			if (!restype)
+				restype = RESOURCETYPE(Blob);
+		}
 
 		TCHAR fullpath[MAX_PATH];
 
@@ -124,6 +110,15 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 		pres = new ResourceImpl(only_create_entry ? filename_only.c_str() : fullpath, opts.c_str(), restype, only_create_entry ? data : nullptr);
 		if (pres)
 		{
+			// if the resource already exists under the filename_only key,
+			// then we may need to copy the aux data for zipfile support
+			TResourceMap::const_iterator ex = m_ResMap.find(filename_only);
+			if (ex != m_ResMap.end())
+			{
+				((ResourceImpl *)pres)->m_Aux = ((ResourceImpl *)(ex->second))->m_Aux;
+				((ResourceImpl *)pres)->m_AuxFlags = ((ResourceImpl *)(ex->second))->m_AuxFlags;
+			}
+
 			m_ResMap.insert(TResourceMap::value_type(key, pres));
 			m_ResByTypeMap.insert(TResourceByTypeMap::value_type(restype, pres));
 
@@ -356,6 +351,15 @@ bool ResourceManagerImpl::IsZipArchiveRegistered(const TCHAR *filename) const
 {
 	for (auto zit = m_ZipFileRegistry.cbegin(); zit != m_ZipFileRegistry.cend(); zit++)
 	{
+		// absolute paths should be checked 
+		if (!PathIsRelative(filename))
+		{
+			TCHAR fullpath[MAX_PATH * 2];
+
+			if (m_pSys->GetFileMapper()->FindFile(filename, fullpath, MAX_PATH * 2) && !_tcsicmp(filename, zit->second.first.c_str()))
+				return true;
+		}
+
 		if (!_tcsicmp(filename, zit->second.first.c_str()))
 			return true;
 	}
@@ -368,14 +372,14 @@ bool ResourceManagerImpl::RegisterZipArchive(const TCHAR *filename)
 	if (!filename)
 		return false;
 
-	if (IsZipArchiveRegistered(filename))
-		return true;
-
 	bool ret = false;
 
 	TCHAR full_filename[MAX_PATH * 2];
 	if (m_pSys->GetFileMapper()->FindFile(filename, full_filename, MAX_PATH * 2))
 	{
+		if (IsZipArchiveRegistered(full_filename))
+			return true;
+
 		ZipFile *pzf = new ZipFile();
 		if (pzf)
 		{
@@ -401,7 +405,7 @@ bool ResourceManagerImpl::RegisterZipArchive(const TCHAR *filename)
 					rfn += _T('/');
 					rfn += pzf->GetContentInfo(i)->fname;
 
-					ResourceImpl *pr = (ResourceImpl *)GetResource(rfn.c_str(), RESF_CREATEENTRYONLY | RESF_ZIPRES);
+					ResourceImpl *pr = (ResourceImpl *)GetResource(rfn.c_str(), RESF_CREATEENTRYONLY);
 					if (pr)
 						pr->SetAux(sZipId, RESF_ZIPRES);
 				}
@@ -478,12 +482,26 @@ bool ResourceManagerImpl::FindZippedFile(const TCHAR *filename, TCHAR *fullpath,
 
 		_tcscpy_s(tmp, PathFindFileName(it->second.first.c_str()));
 		PathRemoveExtension(tmp);
-		_tcscat_s(tmp, _T("/"));
-		_tcscat_s(tmp, filename);
-		if (GetResource(tmp, RESF_FINDENTRYONLY) != nullptr)
+		for (TCHAR *c = tmp; *c != 0; c++)
+			*c = std::tolower(*c);
+
+		const TCHAR *lpath = filename;
+
+		// if the root of the filename is the name of this packfile, then
+		// assume this is it and skip ahead of that name
+		const TCHAR *s = _tcsstr(filename, tmp);
+		if (s != filename)
+		{
+			_tcscat_s(tmp, _T("/"));
+			_tcscat_s(tmp, filename);
+			lpath = tmp;
+		}
+
+		if (GetResource(lpath, RESF_FINDENTRYONLY) != nullptr)
 		{
 			if (fullpath)
-				_tcscpy_s(fullpath, fullpathlen, tmp);
+				_tcscpy_s(fullpath, fullpathlen, lpath);
+
 			return true;
 		}
 

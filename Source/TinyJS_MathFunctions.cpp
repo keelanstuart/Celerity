@@ -448,6 +448,323 @@ void scQuatMul(CScriptVar *c, void *userdata)
 	}
 }
 
+
+void scVecDot(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct < 2) || (elct > 4))
+		return;
+
+	glm::fvec4 va(0, 0, 0, 0), vb(0, 0, 0, 0);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec4::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec4::length_type)i] = pbcomp->m_Var->GetFloat();
+	}
+
+	float r = glm::dot(va, vb);
+
+	pr->SetFloat(r);
+}
+
+
+void scVecCross(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct < 2) || (elct > 3))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec3 va(0, 0, 0), vb(0, 0, 0), vr(0, 0, 0);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec3::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec3::length_type)i] = pbcomp->m_Var->GetFloat();
+
+		prcomp[(glm::fvec3::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = glm::cross(va, vb);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec3::length_type)i]);
+	}
+}
+
+
+void scVecLength(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct < 2) || (elct > 4))
+		return;
+
+	glm::fvec4 va(0, 0, 0, 0);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec4::length_type)i] = pacomp->m_Var->GetFloat();
+	}
+
+	float r = glm::length(va);
+
+	pr->SetFloat(r);
+}
+
+
+void scVecDistance(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct < 2) || (elct > 4))
+		return;
+
+	glm::fvec4 va(0, 0, 0, 0), vb(0, 0, 0, 0);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec4::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pa->GetChild(i);
+		vb[(glm::fvec4::length_type)i] = pbcomp->m_Var->GetFloat();
+	}
+
+	float r = glm::distance(va, vb);
+
+	pr->SetFloat(r);
+}
+
+
+void scVecNormalize(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct < 2) || (elct > 4))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec4 va(0, 0, 0, 0), vr(0, 0, 0, 0);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec4::length_type)i] = pacomp->m_Var->GetFloat();
+
+		prcomp[(glm::fvec4::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = glm::normalize(va);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec4::length_type)i]);
+	}
+}
+
+
+void scVecAdd(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct < 2) || (elct > 4))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec4 va(0, 0, 0, 0), vb(0, 0, 0, 0), vr(0, 0, 0, 0);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec4::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec4::length_type)i] = pbcomp ? pbcomp->m_Var->GetFloat() : pb->GetFloat();
+
+		prcomp[(glm::fvec4::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = va + vb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec4::length_type)i]);
+	}
+}
+
+
+void scVecSub(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct < 2) || (elct > 4))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec4 va(0, 0, 0, 0), vb(0, 0, 0, 0), vr(0, 0, 0, 0);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec4::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec4::length_type)i] = pbcomp ? pbcomp->m_Var->GetFloat() : pb->GetFloat();
+
+		prcomp[(glm::fvec4::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = va - vb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec4::length_type)i]);
+	}
+}
+
+
+void scVecMul(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct < 2) || (elct > 4))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec4 va(0, 0, 0, 0), vb(0, 0, 0, 0), vr(0, 0, 0, 0);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec4::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec4::length_type)i] = pbcomp ? pbcomp->m_Var->GetFloat() : pb->GetFloat();
+
+		prcomp[(glm::fvec4::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = va * vb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec4::length_type)i]);
+	}
+}
+
+
+void scVecDiv(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct < 2) || (elct > 4))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec4 va(0, 0, 0, 0), vb(0, 0, 0, 0), vr(0, 0, 0, 0);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec4::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec4::length_type)i] = pbcomp ? pbcomp->m_Var->GetFloat() : pb->GetFloat();
+
+		prcomp[(glm::fvec4::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = va / vb;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec4::length_type)i]);
+	}
+}
+
+
+// multiply-add
+void scVecMadd(CScriptVar *c, void *userdata)
+{
+	CScriptVar *pa = c->GetParameter(_T("a"));
+	CScriptVar *pb = c->GetParameter(_T("b"));
+	CScriptVar *pc = c->GetParameter(_T("c"));
+	CScriptVar *pr = c->GetReturnVar();
+	int64_t elct = pa->GetNumChildren();
+
+	if (!pr || (elct < 2))
+		return;
+
+	CScriptVarLink *prcomp[4];
+
+	glm::fvec4 va(0, 0, 0, 0), vb(0, 0, 0, 0), vc(0, 0, 0, 0), vr(0, 0, 0, 0);
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		CScriptVarLink *pacomp = pa->GetChild(i);
+		va[(glm::fvec4::length_type)i] = pacomp->m_Var->GetFloat();
+
+		CScriptVarLink *pbcomp = pb->GetChild(i);
+		vb[(glm::fvec4::length_type)i] = pbcomp ? pbcomp->m_Var->GetFloat() : pb->GetFloat();
+
+		CScriptVarLink *pccomp = pc->GetChild(i);
+		vc[(glm::fvec4::length_type)i] = pccomp ? pccomp->m_Var->GetFloat() : pc->GetFloat();
+
+		prcomp[(glm::fvec4::length_type)i] = pr->FindChildOrCreate(pacomp->m_Name.c_str());
+	}
+
+	vr = (va * vb) + vc;
+
+	for (int64_t i = 0; i < elct; i++)
+	{
+		prcomp[i]->m_Var->SetFloat(vr[(glm::fvec4::length_type)i]);
+	}
+}
+
+
 void scVec3Dot(CScriptVar *c, void *userdata)
 {
 	CScriptVar *pa = c->GetParameter(_T("a"));
@@ -955,16 +1272,17 @@ void registerMathFunctions(CTinyJS *tinyJS)
 	tinyJS->AddNative(_T("function Math.slerp(a, b, t)"), scMathSlerp, 0);
 	tinyJS->AddNative(_T("function Quat.mul(a, b)"), scQuatMul, 0);
 
-	tinyJS->AddNative(_T("function Vec3.dot(a, b)"), scVec3Dot, 0);
-	tinyJS->AddNative(_T("function Vec3.cross(a, b)"), scVec3Cross, 0);
-	tinyJS->AddNative(_T("function Vec3.length(a)"), scVec3Length, 0);
-	tinyJS->AddNative(_T("function Vec3.distance(a, b)"), scVec3Distance, 0);
-	tinyJS->AddNative(_T("function Vec3.normalize(a)"), scVec3Normalize, 0);
-	tinyJS->AddNative(_T("function Vec3.add(a, b)"), scVec3Add, 0);
-	tinyJS->AddNative(_T("function Vec3.sub(a, b)"), scVec3Sub, 0);
-	tinyJS->AddNative(_T("function Vec3.mul(a, b)"), scVec3Mul, 0);
-	tinyJS->AddNative(_T("function Vec3.div(a, b)"), scVec3Div, 0);
-	tinyJS->AddNative(_T("function Vec3.madd(a, b, c)"), scVec3Madd, 0);
+	tinyJS->AddNative(_T("function Vec.dot(a, b)"), scVecDot, 0);
+	tinyJS->AddNative(_T("function Vec.cross(a, b)"), scVecCross, 0);
+	tinyJS->AddNative(_T("function Vec.length(a)"), scVecLength, 0);
+	tinyJS->AddNative(_T("function Vec.distance(a, b)"), scVecDistance, 0);
+	tinyJS->AddNative(_T("function Vec.normalize(a)"), scVecNormalize, 0);
+	tinyJS->AddNative(_T("function Vec.add(a, b)"), scVecAdd, 0);
+	tinyJS->AddNative(_T("function Vec.sub(a, b)"), scVecSub, 0);
+	tinyJS->AddNative(_T("function Vec.mul(a, b)"), scVecMul, 0);
+	tinyJS->AddNative(_T("function Vec.div(a, b)"), scVecDiv, 0);
+	tinyJS->AddNative(_T("function Vec.madd(a, b, c)"), scVecMadd, 0);
+
 	tinyJS->AddNative(_T("function Vec3.project(v, n)"), scVec3Project, 0);
 	tinyJS->AddNative(_T("function Vec3.reject(v, n)"), scVec3Reject, 0);
 	tinyJS->AddNative(_T("function Vec3.projlen(v, n)"), scVec3ProjLen, 0);

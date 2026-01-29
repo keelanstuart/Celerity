@@ -28,6 +28,7 @@
 #include <C3AnimatorImpl.h>
 #include <C3TextRendererImpl.h>
 #include <C3InteractableImpl.h>
+#include <C3BlobImpl.h>
 
 #include <C3ResourceImpl.h>
 
@@ -123,6 +124,7 @@ void SystemImpl::Release()
 		// *************************************************
 		UNREGISTER_RESOURCETYPE(Animation, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(AnimStatesDesc, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(Blob, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(DefaultTexture2D, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(DefaultTextureCube, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(DefaultTexture3D, m_ResourceManager);
@@ -233,6 +235,7 @@ ResourceManager *SystemImpl::GetResourceManager()
 		// *************************************************
 		REGISTER_RESOURCETYPE(Animation, m_ResourceManager);
 		REGISTER_RESOURCETYPE(AnimStatesDesc, m_ResourceManager);
+		REGISTER_RESOURCETYPE(Blob, m_ResourceManager);
 		REGISTER_RESOURCETYPE(DefaultTexture2D, m_ResourceManager);
 		REGISTER_RESOURCETYPE(DefaultTextureCube, m_ResourceManager);
 		REGISTER_RESOURCETYPE(DefaultTexture3D, m_ResourceManager);

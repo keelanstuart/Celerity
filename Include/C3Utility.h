@@ -58,6 +58,15 @@ namespace c3
 		// Moves the given Object to a position that is on the surface of the near collidable Object in the given direction
 		bool C3_API SnapTo(Object *obj, SnapDirection sd);
 
+		using Encoding = enum
+		{
+			UTF8, UTF16LE, UTF16BE, UTF32LE, UTF32BE, Unknown
+		};
+
+		Encoding DetectBOM(const uint8_t *data, size_t size, size_t &bom_size);
+
+		void UTF8_to_tstring(const uint8_t *data, size_t len, tstring &ret);
+
 	};
 
 };
