@@ -1,0 +1,67 @@
+var runtime;
+var lifetime = 1.0;
+var active = 0;
+
+var tmp = 0.0;
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+
+var hprop_pos;
+var pos = { x: 0.0, y: 0.0, z: 0.0 };
+
+var hprop_emitrate;
+var emitrate_default = { x: 0.0, y: 0.0 };
+var emitrate_null = { x: 0.0, y: 0.0 };
+
+function update(elapsed_seconds)
+{
+	runtime += elapsed_seconds;
+
+	if ((active == 1) && (runtime >= lifetime))
+	{
+		SetPropertyValue(hprop_emitrate, emitrate_null);
+		SetObjFlag(self, "LIGHT", 0);
+		active = 0;
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	// cache property handles now so value access is cheaper later
+
+	hprop_pos = FindProperty(self, "Position");
+
+	hprop_emitrate = FindProperty(self, "EmitRate");
+	emitrate_default = GetPropertyValue(hprop_emitrate);
+
+	SetObjFlag(self, "TEMPORARY", 1);
+	SetObjFlag(self, "UPDATE", 1);
+	SetObjFlag(self, "DRAW", 0);
+	SetObjFlag(self, "LIGHT", 0);
+}
+
+function free()
+{
+	FreeCollisionResults(collision_info);
+}
+
+function spawn(posx, posy, posz, duration)
+{
+	pos.x = posx;
+	pos.y = posy;
+	pos.z = posz;
+	
+	SetPropertyValue(hprop_pos, pos);
+
+	SetObjFlag(self, "UPDATE", 1);
+	SetObjFlag(self, "DRAW", 1);
+	SetObjFlag(self, "LIGHT", 1);
+	SetObjFlag(self, "RESET", 1);
+	
+	runtime = 0.0;
+	active = 1;
+	lifetime = duration;
+
+	SetPropertyValue(hprop_emitrate, emitrate_default);
+}

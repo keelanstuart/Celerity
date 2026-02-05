@@ -229,6 +229,13 @@ bool ParticleEmitterImpl::Initialize(Object *pobject)
 
 void ParticleEmitterImpl::Update(float elapsed_time)
 {
+	bool reset = m_pOwner->Flags().IsSet(OF_RESET);
+	if (reset)
+	{
+		m_Inactive.insert(m_Inactive.end(), m_Active.begin(), m_Active.end());
+		m_Active.clear();
+	}
+
 	if (elapsed_time == 0)
 		return;
 

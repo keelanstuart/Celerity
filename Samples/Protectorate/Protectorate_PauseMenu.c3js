@@ -1,0 +1,88 @@
+var runtime;
+
+var hobj_root = 0;
+
+function update(elapsed_seconds)
+{
+	if (elapsed_seconds == 0.0)
+		return;
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	Log("Pause Menu Initialized.\n");
+}
+
+function free()
+{
+}
+
+function handle_input(action, value)
+{
+	if (action == "Look Up")
+	{
+		tmpv2 = GetWindowDimensions();
+		tmpv2 = Vec2.div(tmpv2, 20.0);
+		mousepos = GetMousePos();
+		mousepos.y -= tmpv2.y * value;
+		SetMousePos(mousepos);
+	}
+	else if (action == "Look Down")
+	{
+		tmpv2 = GetWindowDimensions();
+		tmpv2 = Vec2.div(tmpv2, 20.0);
+		mousepos = GetMousePos();
+		mousepos.y += tmpv2.y * value;
+		SetMousePos(mousepos);
+	}
+	else if (action == "Look Left")
+	{
+		tmpv2 = GetWindowDimensions();
+		tmpv2 = Vec2.div(tmpv2, 20.0);
+		mousepos = GetMousePos();
+		mousepos.x -= tmpv2.x * value;
+		SetMousePos(mousepos);
+	}
+	else if (action == "Look Right")
+	{
+		tmpv2 = GetWindowDimensions();
+		tmpv2 = Vec2.div(tmpv2, 20.0);
+		mousepos = GetMousePos();
+		mousepos.x += tmpv2.x * value;
+		SetMousePos(mousepos);
+	}
+	else if (action == "Quit")
+	{
+		// pop out of the pause menu
+		PopScreen();
+	}
+}
+
+function mouse_click(control_name, button, mx, my)
+{
+	PlaySound("Protectorate/confirmation.wav", 0.5, 1.0, 0, undefined);
+
+	if (control_name == "Continue")
+	{
+		// pop out of the pause menu
+		PopScreen();
+	}
+	else if (control_name == "Settings")
+	{
+	
+	}
+	else if (control_name == "Quit To Main Menu")
+	{
+		// pop out of the pause menu
+		PopScreen();
+
+		// pop out of the game
+		PopScreen();
+	}
+	else if (control_name == "Quit To Desktop")
+	{
+		Exit();
+	}
+}

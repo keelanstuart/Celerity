@@ -264,6 +264,8 @@ void ObjectImpl::Update(float elapsed_time)
 	{
 		it->Update(elapsed_time);
 	}
+
+	m_Flags.Clear(OF_RESET);
 }
 
 

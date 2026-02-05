@@ -1,0 +1,60 @@
+var runtime;
+
+var hiclr;
+
+var iclr = { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
+var iclrp = 0;
+var oiclrp = 0;
+
+var active = 0;
+var s = 0.0;
+
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+
+function update(elapsed_seconds)
+{
+	if (elapsed_seconds == 0.0)
+		return;
+
+	runtime += elapsed_seconds;
+
+	if (active == 1)
+	{
+		iclr = UnpackColorToFloatVec(iclrp);
+		iclr.r = (Math.cos(runtime * 3.0) * 0.05) + 0.1;
+		iclr.g = (Math.sin(runtime * 3.0) * 0.05) + 0.1;
+		iclr.b = (Math.cos(runtime * 3.0) * 0.1) + 0.3;
+		iclrp = PackColorFromFloatVec(iclr);
+		SetPropertyValue(hiclr, iclrp);
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	hiclr = FindProperty(self, "Image.Color.Normal");
+	oiclrp = GetPropertyValue(hiclr);
+	iclrp = oiclrp;
+}
+
+function free()
+{
+}
+
+function mouse_enter()
+{
+	active = 1;
+	PlaySound("Protectorate/select.wav", 0.5, 1.0, 0, undefined);
+
+	//Log("Mouse Entered: " + GetObjectName(self) + "\n");
+}
+
+function mouse_exit()
+{
+	active = 0;
+	//Log("Mouse Exited: " + GetObjectName(self) + "\n");
+
+	iclrp = oiclrp;
+	SetPropertyValue(hiclr, iclrp);
+}

@@ -1,0 +1,151 @@
+var runtime;
+var lifetime = 2.0;
+var active = 0;
+
+var tmp = 0.0;
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+var dist;
+var hprop_pos;
+var hprop_lvel;
+var pos = { x: 0.0, y: 0.0, z: 0.0 };
+var lvel = { x: 0.0, y: 0.0, z: 0.0 };
+var hsound;
+
+var hobj_parent;
+var hobj_cam;
+var hprop_campos;
+var collision_info;
+var coll_init = 0;
+var hobj_from;
+
+var hprop_emitrate;
+var emitrate_default = { x: 0.0, y: 0.0 };
+var emitrate_null = { x: 0.0, y: 0.0 };
+
+var hobj_sparks;
+var hobj_smoke;
+
+var damage_amount = 10;
+var damage_type = 0;
+var damage_dir = { x: 0.0, y: 0.0, z: 0.0 };
+
+function update(elapsed_seconds)
+{
+	//if (elapsed_seconds > 0.0)
+	//	return;
+
+	//if (active == 1)
+	{
+		runtime += elapsed_seconds;
+
+		pos = GetPropertyValue(hprop_pos);
+		lvel = GetPropertyValue(hprop_lvel);
+		lvel = Vec.mul(lvel, elapsed_seconds);
+		tmp = Vec.length(lvel);
+
+		CheckCollisions(hobj_parent, pos, lvel, collision_info);
+		if ((collision_info["found"] == 1) && (collision_info["hobj"] != hobj_from))
+		{
+			dist = collision_info["distance"];
+			if  (dist <= tmp)
+			{
+				lvel = Vec.normalize(lvel);
+				lvel = Vec.mul(lvel, dist);
+				pos = Vec.add(pos, lvel);
+				lvel = Vec.mul(lvel, 0.0);
+
+				if (FunctionExists(hobj_sparks, "spawn") == 1)
+					Execute(hobj_sparks, "spawn(" + pos.x + ", " + pos.y + ", " + pos.z + ", 0.8);");
+
+				if (FunctionExists(hobj_smoke, "spawn") == 1)
+					Execute(hobj_smoke, "spawn(" + pos.x + ", " + pos.y + ", " + pos.z + ", 2.0);");
+
+				SetPropertyValue(hprop_lvel, lvel);
+				SetPropertyValue(hprop_pos, pos);
+
+				active = 0;
+				if (FunctionExists(collision_info["hobj"], "do_damage") == 1)
+				{
+					damage_dir = Vec.mul(collision_info["normal"], -1.0);
+					Execute(collision_info["hobj"], "do_damage(" + self +
+						", {x:" + damage_dir.x + ", y:" + damage_dir.y + ", z:" + damage_dir.z + "}, " + 
+						damage_amount + ", " + damage_type + ");");
+				}
+			}
+		}
+
+		if ((runtime >= lifetime) || (active == 0))
+		{
+			SetPropertyValue(hprop_emitrate, emitrate_null);
+			//SetObjFlag(self, "DRAW", 0);
+			SetObjFlag(self, "LIGHT", 0);
+		}
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	// cache property handles now so value access is cheaper later
+
+	hprop_pos = FindProperty(self, "Position");
+	hprop_lvel = FindProperty(self, "LinearVelocity");
+
+	collision_info = CreateCollisionResults();
+	hobj_parent = GetParent(self);
+	hobj_cam = GetRegisteredObject("camera.root");
+	hprop_campos = FindProperty(hobj_cam, "Position");
+
+	hprop_emitrate = FindProperty(self, "EmitRate");
+	emitrate_default = GetPropertyValue(hprop_emitrate);
+
+	hobj_sparks = CreateObject("Impact_Red_Spark", GetParent(self));
+	hobj_smoke = CreateObject("Impact_Smoke", GetParent(self));
+
+	SetObjFlag(self, "TEMPORARY", 1);
+	SetObjFlag(self, "UPDATE", 1);
+	SetObjFlag(self, "DRAW", 0);
+	SetObjFlag(self, "LIGHT", 0);
+}
+
+function free()
+{
+	FreeCollisionResults(collision_info);
+	DeleteObject(hobj_sparks);
+	DeleteObject(hobj_smoke);
+}
+
+function fire(posx, posy, posz, velx, vely, velz, fromobj)
+{
+	// ignore hits from this object
+	hobj_from = fromobj;
+
+	pos.x = posx;
+	pos.y = posy;
+	pos.z = posz;
+	lvel.x = velx;
+	lvel.y = vely;
+	lvel.z = velz;
+	
+	SetPropertyValue(hprop_pos, pos);
+	SetPropertyValue(hprop_lvel, lvel);
+
+	SetObjFlag(self, "UPDATE", 1);
+	SetObjFlag(self, "DRAW", 1);
+	SetObjFlag(self, "LIGHT", 1);
+	SetObjFlag(self, "RESET", 1);
+	
+	runtime = 0.0;
+	active = 1;
+
+	SetPropertyValue(hprop_emitrate, emitrate_default);
+
+	tmpv3 = GetListenerPosition();
+	hsound = PlaySound("Protectorate/laser.wav", 1.0, 1.0, 1, tmpv3);
+	SetSoundPosition(hsound, tmpv3);
+
+	//Log("\nprojectile::fire\n");
+	//Log(" - pos: {" + pos.x + ", " + pos.y + ", " + pos.z + "}\n");
+	//Log(" - lvel: {" + lvel.x + ", " + lvel.y + ", " + lvel.z + "}\n");
+}

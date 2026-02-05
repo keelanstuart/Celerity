@@ -51,6 +51,7 @@ namespace c3
 		#define OF_CASTSHADOW		0x00020000					// Indicates that the object casts a shadow
 		#define OF_ACCEPTINPUT		0x00040000					// Indicates that the object will take input
 		#define OF_LOCKED			0x00080000					// Don't allow changes in the editor
+		#define OF_RESET			0x00100000					// Triggers a reset, results depend on Object composition
 
 		#define OF_EXPANDED			0x10000000					// A flag for tools, indicates that the child objects should be displayed
 

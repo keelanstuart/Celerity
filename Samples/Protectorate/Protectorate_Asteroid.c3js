@@ -1,0 +1,101 @@
+var runtime;
+var lifetime = 2.0;
+
+var tmp = 0.0;
+var i, itmp = 0;
+var hobj = 0;
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+var scl_tmp = { x: 0.0, y: 0.0, z: 0.0 };
+var dist;
+var hprop_pos;
+var hprop_scl;
+var hprop_rvel;
+var hprop_tmp = 0;
+var pos = { x: 0.0, y: 0.0, z: 0.0 };
+var scl = { x: 0.0, y: 0.0, z: 0.0 };
+var rvel = { x: 0.0, y: 0.0, z: 0.0 };
+
+var hobj_parent;
+var collision_info;
+var coll_init = 0;
+var hobj_from;
+
+var hobj_sparks;
+var hitpoints = 10;
+
+function update(elapsed_seconds)
+{
+	if (elapsed_seconds == 0.0)
+		return;
+
+	runtime += elapsed_seconds;
+
+	if (hitpoints <= 0)
+	{
+		scl = Vec.mul(scl, 0.7);
+		SetPropertyValue(hprop_scl, scl);
+
+		if (Vec.length(scl) < 0.1)
+			SetObjFlag(self, "KILL", 1);
+	}
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	// cache property handles now so value access is cheaper later
+
+	hprop_pos = FindProperty(self, "Position");
+
+	hprop_scl = FindProperty(self, "Scale");
+	tmp = Math.random(20.0, 30.0);
+	scl.x = Math.random(-10.0, 15.0) + tmp;
+	scl.y = Math.random(-10.0, 15.0) + tmp;
+	scl.z = Math.random(-10.0, 15.0) + tmp;
+	SetPropertyValue(hprop_scl, scl);
+
+	hprop_rvel = FindProperty(self, "RotationalVelocity");
+	rvel.x = Math.toRadians(Math.random(-3.0, 3.0));
+	rvel.y = Math.toRadians(Math.random(-3.0, 3.0));
+	rvel.z = Math.toRadians(Math.random(-3.0, 3.0));
+	SetPropertyValue(hprop_rvel, rvel);
+
+	collision_info = CreateCollisionResults();
+	hobj_parent = GetParent(self);
+}
+
+function free()
+{
+	FreeCollisionResults(collision_info);
+}
+
+function do_damage(hobj, dmg_dir, dmg_amt, dmg_type)
+{
+	rvel.x = Math.toRadians(Math.random(-4.0, 4.0));
+	rvel.y = Math.toRadians(Math.random(-4.0, 4.0));
+	rvel.z = Math.toRadians(Math.random(-4.0, 4.0));
+	SetPropertyValue(hprop_rvel, rvel);
+
+	//hitpoints -= dmg_amt;
+	if (hitpoints <= 0)
+	{
+		itmp = Math.random(2, 5);
+		scl_tmp = Vec.div(scl, itmp);
+
+		for (i = 0; i < itmp; i++)
+		{
+			hobj = CloneObject(self, GetParent(self));
+
+			hprop_tmp = FindProperty(hobj, "Scale");
+			SetPropertyValue(hprop_tmp, scl_tmp);
+
+			hprop_tmp = FindProperty(hobj, "LinearVelocity");
+			tmpv3 = Vec.mul(tmpv3, 40.0);
+			rvel.x += Math.random(0.0, 10.0);
+			rvel.y += Math.random(0.0, 10.0);
+			rvel.z += Math.random(0.0, 10.0);
+			SetPropertyValue(hprop_tmp, tmpv3);
+		}
+	}
+}

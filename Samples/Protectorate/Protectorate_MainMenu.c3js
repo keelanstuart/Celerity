@@ -1,0 +1,86 @@
+var runtime;
+
+var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
+
+function update(elapsed_seconds)
+{
+	if (elapsed_seconds == 0.0)
+		return;
+}
+
+function init()
+{
+	runtime = 0.0;
+
+	Log("Main Menu Initialized.\n");
+}
+
+function free()
+{
+}
+
+function handle_input(action, value)
+{
+	if (action == "Look Up")
+	{
+		tmpv2 = GetWindowDimensions();
+		tmpv2 = Vec2.div(tmpv2, 20.0);
+		mousepos = GetMousePos();
+		mousepos.y -= tmpv2.y * value;
+		SetMousePos(mousepos);
+	}
+	else if (action == "Look Down")
+	{
+		tmpv2 = GetWindowDimensions();
+		tmpv2 = Vec2.div(tmpv2, 20.0);
+		mousepos = GetMousePos();
+		mousepos.y += tmpv2.y * value;
+		SetMousePos(mousepos);
+	}
+	else if (action == "Look Left")
+	{
+		tmpv2 = GetWindowDimensions();
+		tmpv2 = Vec2.div(tmpv2, 20.0);
+		mousepos = GetMousePos();
+		mousepos.x -= tmpv2.x * value;
+		SetMousePos(mousepos);
+	}
+	else if (action == "Look Right")
+	{
+		tmpv2 = GetWindowDimensions();
+		tmpv2 = Vec2.div(tmpv2, 20.0);
+		mousepos = GetMousePos();
+		mousepos.x += tmpv2.x * value;
+		SetMousePos(mousepos);
+	}
+}
+
+function mouse_click(control_name, button, mx, my)
+{
+	PlaySound("Protectorate/confirmation.wav", 0.5, 1.0, 0, undefined);
+
+	if (control_name == "New Game")
+	{
+		var hobj_screen = PushScreen("Game", "Protectorate/Protectorate_Game.c3js", 0, 0);
+
+		Execute(hobj_screen, "setup(\"Protectorate_AlphaSector\");");
+
+		CaptureMouse(1);
+	}
+	else if (control_name == "Continue")
+	{
+	
+	}
+	else if (control_name == "Load Game")
+	{
+	
+	}
+	else if (control_name == "Settings")
+	{
+	
+	}
+	else if (control_name == "Quit")
+	{
+		Exit();
+	}
+}

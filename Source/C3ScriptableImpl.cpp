@@ -212,6 +212,7 @@ void jcFindObjByGUID(CScriptVar *c, void *userdata);
 void jcFindFirstObjByName(CScriptVar *c, void *userdata);
 void jcLog(CScriptVar *c, void *userdata);
 void jcExit(CScriptVar *c, void *userdata);
+void jcFunctionExists(CScriptVar *c, void *userdata);
 void jcExecute(CScriptVar *c, void *userdata);
 void jcCreateProperty(CScriptVar* c, void* userdata);
 void jcDeleteProperty(CScriptVar* c, void* userdata);
@@ -331,6 +332,7 @@ void ScriptableImpl::ResetJS()
 	m_JS->AddNative(_T("function Break(text)"),											jcBreak, psys);
 	m_JS->AddNative(_T("function Exit()"),												jcExit, psys);
 
+	m_JS->AddNative(_T("function FunctionExists(hobj, funcname)"),						jcFunctionExists, psys);
 	m_JS->AddNative(_T("function Execute(hobj, cmd)"),									jcExecute, psys);
 
 	m_JS->AddNative(_T("function CreateProperty(hobj, name, fcc)"),						jcCreateProperty, psys);
@@ -871,6 +873,24 @@ void jcBreak(CScriptVar *c, void *userdata)
 void jcExit(CScriptVar *c, void *userdata)
 {
 	exit(0);
+}
+
+
+void jcFunctionExists(CScriptVar *c, void *userdata)
+{
+	CScriptVar *ret = c->GetReturnVar();
+	if (!ret)
+		return;
+
+	ret->SetInt(0);
+
+	Object *pobj = (Object *)(c->GetParameter(_T("hobj"))->GetInt());
+	if (!pobj)
+		return;
+
+	Scriptable *pscr = dynamic_cast<Scriptable * >(pobj->FindComponent(Scriptable::Type()));
+	if (pscr && pscr->FunctionExists(c->GetParameter(_T("funcname"))->GetString()))
+		ret->SetInt(1);
 }
 
 
@@ -1731,6 +1751,8 @@ std::vector<const TCHAR *> gObjFlagName =
 	_T("LIGHT"),
 	_T("CASTSHADOW"),
 	_T("ACCEPTINPUT")
+	_T("LOCKED")
+	_T("RESET")
 };
 
 

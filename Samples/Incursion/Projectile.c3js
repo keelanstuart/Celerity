@@ -42,8 +42,8 @@ function update(elapsed_seconds)
 	facing = GetPropertyValue(hprop_facing);
 	oldpos = GetPropertyValue(hprop_pos);
 	tmp = maxspeed * elapsed_seconds;
-	curpos = Vec3.madd(facing, tmp, oldpos);
-	diffpos = Vec3.sub(curpos, oldpos);
+	curpos = Vec.madd(facing, tmp, oldpos);
+	diffpos = Vec.sub(curpos, oldpos);
 	SetPropertyValue(hprop_pos, curpos);
 	//Log("\nupdate: " + maxspeed + " * " + elapsed_seconds + " = " + tmp + " ; (" + curpos.x + ", " + curpos.y + ")");
 
@@ -54,10 +54,10 @@ function update(elapsed_seconds)
 		dist = collision_info["distance"];
 		if  (dist <= tmp)
 		{
-			lvel = Vec3.normalize(lvel);
-			lvel = Vec3.mul(lvel, dist);
-			pos = Vec3.add(pos, lvel);
-			lvel = Vec3.mul(lvel, 0.0);
+			lvel = Vec.normalize(lvel);
+			lvel = Vec.mul(lvel, dist);
+			pos = Vec.add(pos, lvel);
+			lvel = Vec.mul(lvel, 0.0);
 
 			Log("Hit " + GetObjectName(collision_info["hobj"]) + ", distance away: " + dist + "\n");
 
@@ -106,6 +106,7 @@ function fire(hprop_fromori, hprop_frompos, ofsx, ofsy, ofsz)
 	SetObjFlag(self, "UPDATE", 1);
 	SetObjFlag(self, "DRAW", 1);
 	SetObjFlag(self, "LIGHT", 1);
+	SetObjFlag(self, "RESET", 1);
 
 	hprop_ori = FindProperty(self, "Orientation");
 	hprop_pos = FindProperty(self, "Position");
