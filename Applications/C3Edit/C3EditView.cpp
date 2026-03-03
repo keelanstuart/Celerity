@@ -505,6 +505,11 @@ void C3EditView::OnDraw(CDC *pDC)
 		prend->SetClearDepth(1.0f);
 
 		pDoc->m_RootObj->Update(paused ? 0 : dt);
+		c3::util::ObjectArrayAction(pDoc->m_Selected, [pDoc](c3::Object *pobj)
+		{
+			if (pobj && pobj->Flags().IsSet(OF_KILL))
+				pDoc->RemoveFromSelection(pobj);
+		});
 
 		if ((active_tool == C3EditApp::ToolType::TT_WAND) && pDoc->m_Brush)
 			pDoc->m_Brush->Update(dt);
@@ -2398,6 +2403,8 @@ void C3EditView::OnEditExport()
 			{
 				pobj->Save(os, SF_REFERENCEFILE);
 			});
+
+			os->Close();
 		}
 	}
 }

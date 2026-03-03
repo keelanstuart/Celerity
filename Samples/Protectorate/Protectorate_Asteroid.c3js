@@ -18,7 +18,7 @@ var rvel = { x: 0.0, y: 0.0, z: 0.0 };
 var hobj_parent;
 var collision_info;
 var coll_init = 0;
-var hobj_from;
+var hobj_tmp;
 
 var hobj_sparks;
 var hitpoints = 10;
@@ -32,7 +32,7 @@ function update(elapsed_seconds)
 
 	if (hitpoints <= 0)
 	{
-		scl = Vec.mul(scl, 0.7);
+		scl = Vec.mul(scl, 0.95);
 		SetPropertyValue(hprop_scl, scl);
 
 		if (Vec.length(scl) < 0.1)
@@ -49,16 +49,13 @@ function init()
 	hprop_pos = FindProperty(self, "Position");
 
 	hprop_scl = FindProperty(self, "Scale");
-	tmp = Math.random(20.0, 30.0);
-	scl.x = Math.random(-10.0, 15.0) + tmp;
-	scl.y = Math.random(-10.0, 15.0) + tmp;
-	scl.z = Math.random(-10.0, 15.0) + tmp;
-	SetPropertyValue(hprop_scl, scl);
+	scl = GetPropertyValue(hprop_scl);
+	hitpoints = Vec.length(scl);
 
 	hprop_rvel = FindProperty(self, "RotationalVelocity");
-	rvel.x = Math.toRadians(Math.random(-3.0, 3.0));
-	rvel.y = Math.toRadians(Math.random(-3.0, 3.0));
-	rvel.z = Math.toRadians(Math.random(-3.0, 3.0));
+	rvel.x = Math.toRadians(Math.random(-6.0, 6.0));
+	rvel.y = Math.toRadians(Math.random(-6.0, 6.0));
+	rvel.z = Math.toRadians(Math.random(-6.0, 6.0));
 	SetPropertyValue(hprop_rvel, rvel);
 
 	collision_info = CreateCollisionResults();
@@ -72,30 +69,61 @@ function free()
 
 function do_damage(hobj, dmg_dir, dmg_amt, dmg_type)
 {
-	rvel.x = Math.toRadians(Math.random(-4.0, 4.0));
-	rvel.y = Math.toRadians(Math.random(-4.0, 4.0));
-	rvel.z = Math.toRadians(Math.random(-4.0, 4.0));
+	rvel.x = Math.toRadians(Math.random(-6.0, 6.0));
+	rvel.y = Math.toRadians(Math.random(-6.0, 6.0));
+	rvel.z = Math.toRadians(Math.random(-6.0, 6.0));
 	SetPropertyValue(hprop_rvel, rvel);
 
-	//hitpoints -= dmg_amt;
+	hitpoints -= dmg_amt;
 	if (hitpoints <= 0)
 	{
-		itmp = Math.random(2, 5);
-		scl_tmp = Vec.div(scl, itmp);
+		itmp = Math.random(3, 5);
+		tmp = 1.1 / itmp;
+		scl_tmp = Vec.mul(scl, tmp);
 
-		for (i = 0; i < itmp; i++)
+		if (Vec.length(scl_tmp) > 1.0)
 		{
-			hobj = CloneObject(self, GetParent(self));
+			for (i = 0; i < itmp; i++)
+			{
+				hobj_tmp = CloneObject(self, GetParent(self));
 
-			hprop_tmp = FindProperty(hobj, "Scale");
-			SetPropertyValue(hprop_tmp, scl_tmp);
+				hprop_tmp = FindProperty(hobj_tmp, "Scale");
+				SetPropertyValue(hprop_tmp, scl_tmp);
+				
+				hprop_tmp = FindProperty(hobj_tmp, "Position");
+				tmpv3 = GetPropertyValue(hprop_tmp);
+				if (Math.even(i) != 0)
+				{
+					tmpv3.x += scl_tmp.x / 2.0;
+					tmpv3.y -= scl_tmp.y / 2.0;
+				}
+				else
+				{
+					tmpv3.x -= scl_tmp.x / 2.0;
+					tmpv3.y += scl_tmp.y / 2.0;
+				}
+				tmpv3.z += scl_tmp.z * Math.random(-1.0, 1.0);
+				SetPropertyValue(hprop_tmp, tmpv3);
 
-			hprop_tmp = FindProperty(hobj, "LinearVelocity");
-			tmpv3 = Vec.mul(tmpv3, 40.0);
-			rvel.x += Math.random(0.0, 10.0);
-			rvel.y += Math.random(0.0, 10.0);
-			rvel.z += Math.random(0.0, 10.0);
-			SetPropertyValue(hprop_tmp, tmpv3);
+				hprop_tmp = FindProperty(hobj_tmp, "LinearVelocity");
+				tmpv3 = Vec.mul(dmg_dir, 32.0);
+				//tmpv3.x += Math.random(-2.0, 2.0);
+				//tmpv3.y += Math.random(-2.0, 2.0);
+				//tmpv3.z += Math.random(-2.0, 2.0);
+				SetPropertyValue(hprop_tmp, tmpv3);
+
+				hprop_tmp = FindProperty(hobj_tmp, "RotationalVelocity");
+				tmpv3.x = Math.toRadians(Math.random(-6.0, 6.0));
+				tmpv3.y = Math.toRadians(Math.random(-6.0, 6.0));
+				tmpv3.z = Math.toRadians(Math.random(-6.0, 6.0));
+				SetPropertyValue(hprop_tmp, tmpv3);
+				
+				hprop_tmp = FindProperty(hobj_tmp, "LinearSpeedFalloffFactor");
+				SetPropertyValue(hprop_tmp, 1.0);
+			}
 		}
+		
+		hprop_tmp = FindProperty(self, "ScriptUpdateRate");
+		SetPropertyValue(hprop_tmp, 0.0);
 	}
 }

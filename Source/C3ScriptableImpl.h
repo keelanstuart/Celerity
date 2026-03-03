@@ -8,7 +8,7 @@
 
 #include <C3.h>
 #include <C3Scriptable.h>
-#include <TinyJS.h>
+#include <TinyJS_pooled.h>
 
 namespace c3
 {

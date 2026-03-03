@@ -52,7 +52,6 @@ function update(elapsed_seconds)
 				lvel = Vec.normalize(lvel);
 				lvel = Vec.mul(lvel, dist);
 				pos = Vec.add(pos, lvel);
-				lvel = Vec.mul(lvel, 0.0);
 
 				if (FunctionExists(hobj_sparks, "spawn") == 1)
 					Execute(hobj_sparks, "spawn(" + pos.x + ", " + pos.y + ", " + pos.z + ", 0.8);");
@@ -66,11 +65,13 @@ function update(elapsed_seconds)
 				active = 0;
 				if (FunctionExists(collision_info["hobj"], "do_damage") == 1)
 				{
-					damage_dir = Vec.mul(collision_info["normal"], -1.0);
+					damage_dir = Vec.normalize(lvel); //Vec.mul(collision_info["normal"], -1.0);
 					Execute(collision_info["hobj"], "do_damage(" + self +
 						", {x:" + damage_dir.x + ", y:" + damage_dir.y + ", z:" + damage_dir.z + "}, " + 
 						damage_amount + ", " + damage_type + ");");
 				}
+
+				lvel = Vec.mul(lvel, 0.0);
 			}
 		}
 

@@ -54,6 +54,7 @@ namespace c3
 		#define OF_RESET			0x00100000					// Triggers a reset, results depend on Object composition
 
 		#define OF_EXPANDED			0x10000000					// A flag for tools, indicates that the child objects should be displayed
+		#define OF_DELETENOW		0x20000000					// NOT FOR YOU. Indicates that object will be deleted - set after OF_KILL
 
 
 		// RenderFlags

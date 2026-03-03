@@ -209,6 +209,10 @@ void SystemImpl::Release()
 		m_PhysicsManager = nullptr;
 	}
 
+	// Optional: release pooled objects back to the CRT heap for leak-checkers
+	CScriptVarLink::PurgePool();
+	CScriptVar::PurgePool();
+
 	delete this;
 }
 

@@ -20,6 +20,64 @@ DECLARE_COMPONENTTYPE(Animator, AnimatorImpl);
 #define DEFAULT_ANIMSTATE	_T("Default")
 
 
+/*
+
+Since people are starting to look at this file,
+I thought I would explain how the animation system works in detail.
+
+First, an Animator is a Component that loads c3states files which are xml content, resembling this:
+
+<states startstate="idle">
+
+	<state name="idle" goto="idle">
+		<animation filename="idle.anim" weight="50" />
+		<animation filename="shift_weight.anim" weight="10" />
+		<animation filename="scratch_butt.anim" weight="2" />
+		<animation filename="pick_nose.anim" weight="1" />
+	</state>
+
+	<state name="walk" goto="idle">
+		<animation filename="walk.anim" weight="1" />
+	</state>
+
+	<state name="dying" goto="dead">
+		<animation filename="death1.anim" weight="1" />
+		<animation filename="death2.anim" weight="1" />
+	</state>
+
+	<state name="dead" goto="dead">
+		<animation filename="dead.anim" weight="1" />
+	</state>
+
+</states>
+
+The idea is that states, when their animation is finished playing, transition to another state.
+When that happens, an animation for the new state is chosen... and this is done randomly, given
+weights for each actual animation. In the example above, the "idle" state has 4 possible animations
+it could play, with a total, combined weight of 63 (50 + 10 + 2 + 1).
+
+So, a random number is generated between 0-62 and if it is less than 50, the first animation
+(idle.anim) is chosen. If it is 50-59, "shift_weight.anim" is chosen. In the unlikely event
+that the number is above that, the character will scratch their butt or pick their nose. The key
+is that the weights are relative... thus, if you wanted to decrease the likelihood of a nose pick,
+you would increase the weights on other animations, not necessarily decrease the weight of
+"pick_nose.anim" (impossible here, since it is already only 1).
+
+The other important things to note here:
+
+- Animation channels are independent; you can have different numbers of keys for translation,
+  rotation, and scale (or not at all for any of those)\
+- There is the concept of a "note" track; notes are script code embedded in the animation...
+  you might use them to place footfall sounds at the exact moment of ground impact or
+  spawn an effect / missile during a spell. Let your imagination go wild.
+  The bad news about notes: currently there is no format that supports them, even though you can
+  create them in 3DStudio Max. I may write a note-tracker application for Celerity 3.0 (one existed for 1.0).
+
+Individual animations are collections of tracks, containing key frames... see C3Animation*.* and
+C3AnimTrack*.* for more information.
+
+*/
+
 AnimatorImpl::AnimatorImpl()
 {
 	m_pOwner = nullptr;
@@ -59,6 +117,8 @@ props::TFlags64 &AnimatorImpl::Flags()
 }
 
 
+// This is required by props::IProperty::IEnumProvider... it's not related to "animation" --
+// it returns the animation states current availble in a way that makes them discoverable [in the editor]
 size_t AnimatorImpl::GetNumValues(const props::IProperty *pprop) const
 {
 	assert(pprop);
@@ -80,6 +140,8 @@ size_t AnimatorImpl::GetNumValues(const props::IProperty *pprop) const
 }
 
 
+// This is required by props::IProperty::IEnumProvider... it's not related to "animation" --
+// it returns the animation states current availble in a way that makes them discoverable [in the editor]
 const TCHAR *AnimatorImpl::GetValue(const props::IProperty *pprop, size_t ordinal, TCHAR *buf, size_t bufsize) const
 {
 	assert(pprop);
@@ -146,6 +208,7 @@ bool AnimatorImpl::Initialize(Object *pobject)
 }
 
 
+// maps nodes to tracks based on their names
 void AnimatorImpl::GenerateNodeToTrackMapping()
 {
 	if (!m_CurAnim)
@@ -158,8 +221,6 @@ void AnimatorImpl::GenerateNodeToTrackMapping()
 	const Model *pm = pmr->GetModel();
 	if (!pm)
 		return;
-
-	Model::InstanceData *pmid = pmr->GetModelInstanceData();
 
 	size_t nc = pm->GetNodeCount();
 	if (m_NodeToTrack.size() < nc)
@@ -174,8 +235,10 @@ void AnimatorImpl::GenerateNodeToTrackMapping()
 
 		Animation::TrackIndex ti = m_CurAnim->FindTrackByName(name);
 
+		// store the track index in the map
 		m_NodeToTrack[n] = ti;
 
+		// reset our key cache
 		m_KeyIndices[n].m_Pos = AnimTrack::KEYINDEX_INVALID;
 		m_KeyIndices[n].m_Ori = AnimTrack::KEYINDEX_INVALID;
 		m_KeyIndices[n].m_Scl = AnimTrack::KEYINDEX_INVALID;
@@ -197,7 +260,8 @@ void AnimatorImpl::SelectAnimation()
 		size_t w = m_CurState->second->m_TotalWeight;
 		if (w)
 		{
-			// get the total weight of all animations in the state, then iteratively decerement that by the weights of individual animations until it's less than one of them
+			// get the total weight of all animations in the state, then iteratively decerement that by
+			// the weights of individual animations until it's less than one of them
 			size_t animchoice = rand() % w;
 
 			for (size_t i = 0, maxi = m_CurState->second->m_WeightedAnims.size(); i < maxi; i++)
@@ -213,7 +277,7 @@ void AnimatorImpl::SelectAnimation()
 			}
 		}
 		else
-			m_CurAnim = nullptr;
+			m_CurAnim = nullptr; // no animations in this state?
 	}
 
 	if (!m_CurAnim)
@@ -227,6 +291,7 @@ void AnimatorImpl::SelectAnimation()
 		}
 	}
 
+	// if a new animation was chosen, then re-map the tracks to nodes (they could be different)
 	if (m_CurAnim != oldanim)
 		GenerateNodeToTrackMapping();
 }
@@ -243,6 +308,7 @@ void AnimatorImpl::AdvanceState()
 	if (m_CurState == m_StateMap.end())
 		m_CurState = m_StateMap.find(m_StartState.empty() ? DEFAULT_ANIMSTATE : m_StartState);
 
+	// now we can choose a new animation
 	SelectAnimation();
 
 	m_CurAnimTime = 0;
@@ -267,26 +333,33 @@ void AnimatorImpl::Update(float elapsed_time)
 			return;
 	}
 
+	// if we have an animation, and either time changed or the animation changed, we need to do something...
 	if (m_CurAnim && ((m_CurAnimTime != m_LastAnimTime) || (m_CurAnim != oldanim)))
 	{
+		// Maybe the model changed!
 		ModelRenderer *pmr = dynamic_cast<ModelRenderer *>(m_pOwner->FindComponent(ModelRenderer::Type()));
 		const Model *pm = pmr->GetModel();
 		if (pm != m_pLastModel)
 		{
+			// synthesize a state file property change to force the re-mapping of our
+			// nodes to tracks (since the nodes are likely different)
 			const props::IProperty *psf = m_pOwner->GetProperties()->GetPropertyById('ST8F');
 			if (psf)
 				PropertyChanged(psf);
 		}
+
+		// the ModelInstanceData is what stores the individual node transforms
+		// (including bones for weighted / skin setups)
 		Model::InstanceData *pmid = pmr->GetModelInstanceData();
 
 		if (pm && pmid)
 		{
+			// first time through? initalize the mapping
 			if (m_NodeToTrack.size() != pm->GetNodeCount())
 				GenerateNodeToTrackMapping();
 
 			glm::fmat4x4 m, om, ident = glm::identity<glm::fmat4x4>();
 
-#if 1
 			std::function<void(size_t)> ComputeTransforms = [&](size_t child_of)
 			{
 				for (size_t n = 0, maxn = pm->GetNodeCount(); n < maxn; n++)
@@ -304,65 +377,48 @@ void AnimatorImpl::Update(float elapsed_time)
 							if (const TCHAR *pnote = pat->GetNote(m_LastAnimTime, m_CurAnimTime))
 								ProcessNote(pnote);
 
+							// get the transform and key index from the animation track for this node
+							// based on the current time
 							AnimTrack::KeyIndex kip = AnimTrack::KEYINDEX_INVALID, kio = kip, kis = kio;
-							glm::fvec3 apos = pat->GetPos(m_CurAnimTime, kip);//m_KeyIndices[ti].m_Pos);
-							glm::fquat aori = pat->GetOri(m_CurAnimTime, kio);//m_KeyIndices[ti].m_Ori);
-							glm::fvec3 ascl = pat->GetScl(m_CurAnimTime, kis);//m_KeyIndices[ti].m_Scl);
+							glm::fvec3 apos = pat->GetPos(m_CurAnimTime, kip);
+							glm::fquat aori = pat->GetOri(m_CurAnimTime, kio);
+							glm::fvec3 ascl = pat->GetScl(m_CurAnimTime, kis);
 
+							// build the affine transform... start with scale, then rotation...
 							m = glm::scale(glm::identity<glm::fmat4x4>(), ascl) * (glm::fmat4x4)(aori);
 
-							// Then translate last... 
+							// translate last... 
 							m = glm::translate(glm::identity<glm::fmat4x4>(), apos) * m;
 
+							// push the matrix
 							m_MatStack->Push(&m);
 						}
 						else
+						{
+							// in case there was no mapping track for the node,
+							// we want to make sure that we're applying identity to the node...
+							// this way we can have incomplete animations that still "work" for
+							// models (that is, a more detailed model can have an animation
+							// applied to it that is less detailed)
 							m_MatStack->Push(&ident);
+						}
 
+						// get the concatenated transform from the stack
 						m_MatStack->Top(&m);
 
+						// apply it to the model instance data
 						pmid->SetTransform(n, m);
 
+						// recurse into the node hierarchy
 						ComputeTransforms(n);
 
+						// pop the stack
 						m_MatStack->Pop();
 					}
 				}
 			};
 
 			ComputeTransforms(Model::NO_PARENT);
-#else
-			for (size_t n = 0, maxn = pm->GetNodeCount(); n < maxn; n++)
-			{
-				Animation::TrackIndex ti = m_NodeToTrack[n];
-
-				if (ti != Animation::TRACKINDEX_INVALID)
-				{
-					AnimTrack *pat = m_CurAnim->GetTrack(ti);
-
-					// if there's a note on the current key and we just now reached it (last time was before this key) then process it
-					// TODO: evaluate for correctness - this might be better in Update than Prerender. <shrug>
-					if (const TCHAR *pnote = pat->GetNote(m_LastAnimTime, m_CurAnimTime))
-						ProcessNote(pnote);
-
-					AnimTrack::KeyIndex kip = AnimTrack::KEYINDEX_INVALID, kio = kip, kis = kio;
-					glm::fvec3 apos = pat->GetPos(m_CurAnimTime, kip);//m_KeyIndices[ti].m_Pos);
-					glm::fquat aori = pat->GetOri(m_CurAnimTime, kio);//m_KeyIndices[ti].m_Ori);
-					glm::fvec3 ascl = pat->GetScl(m_CurAnimTime, kis);//m_KeyIndices[ti].m_Scl);
-
-					m = glm::scale(glm::identity<glm::fmat4x4>(), ascl) * (glm::fmat4x4)(aori);
-
-					// Then translate last... 
-					m = glm::translate(glm::identity<glm::fmat4x4>(), apos) * m;
-
-					pmid->SetTransform(n, m);
-				}
-				else
-				{
-					pmid->SetTransform(n, ident);
-				}
-			}
-#endif
 		}
 	}
 }

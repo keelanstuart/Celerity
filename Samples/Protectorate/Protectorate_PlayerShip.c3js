@@ -121,7 +121,8 @@ function update(elapsed_seconds)
 	// ...ignore turn_speed here, since we've already take it into account
 	ori = Math.slerp(ori, target_ori, Math.min(elapsed_seconds, 1.0));
 
-	SetPropertyValue(hprop_ori, ori);
+	if (InEditor() == 0)
+		SetPropertyValue(hprop_ori, ori);
 
 	if (hsound_engine >= 0)
 	{

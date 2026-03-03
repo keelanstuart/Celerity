@@ -256,8 +256,10 @@ void ObjectImpl::Update(float elapsed_time)
 		Object *pc = m_Children[--i];
 		pc->Update(elapsed_time);
 
-		if (pc->Flags().IsSet(OF_KILL))
+		if (pc->Flags().IsSet(OF_DELETENOW))
 			RemoveChild(pc, true);
+		else if (pc->Flags().IsSet(OF_KILL))
+			pc->Flags().Set(OF_DELETENOW);
 	}
 
 	for (const auto &it : m_Components)
@@ -271,6 +273,9 @@ void ObjectImpl::Update(float elapsed_time)
 
 bool ObjectImpl::Render(RenderFlags flags, int draworder, const glm::fmat4x4 *pmat)
 {
+	if (m_Flags.IsSet(OF_KILL))
+		return false;
+
 	// if no transform was provided, build it... this is important for things like selections in the editor
 	glm::fmat4x4 imat = {};
 	if (!pmat)

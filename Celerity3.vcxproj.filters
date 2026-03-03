@@ -168,9 +168,6 @@
     <ClCompile Include="Source\C3VirtualMouseImpl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source\TinyJS.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Source\TinyJS_Functions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -256,6 +253,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Source\C3ScreenImpl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\TinyJS_pooled.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -536,9 +536,6 @@
     <ClInclude Include="Include\C3InputManager.h">
       <Filter>Header Files\Public</Filter>
     </ClInclude>
-    <ClInclude Include="Source\TinyJS.h">
-      <Filter>Header Files\Private</Filter>
-    </ClInclude>
     <ClInclude Include="Source\TinyJS_Functions.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
@@ -681,6 +678,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Source\C3ScreenImpl.h">
+      <Filter>Header Files\Private</Filter>
+    </ClInclude>
+    <ClInclude Include="Source\TinyJS_pooled.h">
       <Filter>Header Files\Private</Filter>
     </ClInclude>
   </ItemGroup>
