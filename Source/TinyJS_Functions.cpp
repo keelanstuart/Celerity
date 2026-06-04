@@ -90,6 +90,47 @@ void scStringIndexOf(CScriptVar *c, void *)
 	c->GetReturnVar()->SetInt(val);
 }
 
+void scStringLastIndexOf(CScriptVar *c, void *)
+{
+	tstring str = c->GetParameter(_T("this"))->GetString();
+	tstring search = c->GetParameter(_T("search"))->GetString();
+
+	int64_t startIndex = -1;
+	int64_t result = -1;
+
+	if (!search.empty() && !str.empty())
+	{
+		int64_t strLen = (int64_t)str.length();
+		int64_t searchLen = (int64_t)search.length();
+
+		// Default start = end of string
+		if (startIndex < 0 || startIndex > strLen - searchLen)
+			startIndex = strLen - searchLen;
+
+		for (int64_t i = startIndex; i >= 0; --i)
+		{
+			bool match = true;
+
+			for (int64_t j = 0; j < searchLen; ++j)
+			{
+				if (str[i + j] != search[j])
+				{
+					match = false;
+					break;
+				}
+			}
+
+			if (match)
+			{
+				result = i;
+				break;
+			}
+		}
+	}
+
+	c->GetReturnVar()->SetInt(result);
+}
+
 void scStringSubstring(CScriptVar *c, void *)
 {
 	tstring str = c->GetParameter(_T("this"))->GetString();
@@ -312,6 +353,7 @@ void registerFunctions(CTinyJS *tinyJS)
 	tinyJS->AddNative(_T("function String.indexOf(search)"), scStringIndexOf, 0); // find the position of a string in a string, -1 if not
 	tinyJS->AddNative(_T("function String.split(separator)"), scStringSplit, 0);
 	tinyJS->AddNative(_T("function String.substring(lo,hi)"), scStringSubstring, 0);
+	tinyJS->AddNative(_T("function String.lastIndexOf(search)"), scStringLastIndexOf, 0);
 	tinyJS->AddNative(_T("function trace()"), scTrace, tinyJS);
 }
 

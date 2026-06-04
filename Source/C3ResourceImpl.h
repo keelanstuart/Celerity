@@ -19,6 +19,7 @@ namespace c3
 	protected:
 
 		const ResourceType *m_pResType;
+		const ResourceCodec *m_pCodec;
 		size_t m_RefCt;
 		tstring m_Filename;
 		tstring m_Options;
@@ -31,13 +32,19 @@ namespace c3
 
 		static System *s_pSys;
 
-		ResourceImpl(const TCHAR *filename, const TCHAR *options, const ResourceType *prestype, const void *data = nullptr);
+		ResourceImpl(const TCHAR *filename,	const TCHAR *options,
+			const ResourceType *prestype, const ResourceCodec *pcodec = nullptr,
+			const void *data = nullptr);
 
 		virtual ~ResourceImpl();
 
 		virtual Resource::Status GetStatus() const;
 
 		virtual const ResourceType *GetType() const;
+
+		virtual const ResourceCodec *GetCodec() const;
+
+		virtual void SetCodec(const ResourceCodec *pcodec);
 
 		virtual const TCHAR *GetFilename() const;
 
@@ -47,6 +54,11 @@ namespace c3
 
 		// RISKY, BUT SOMETIMES NECESSARY INTERNALLY
 		void OverrideData(void *newdata);
+
+		// optional convenience
+		void SetStatus(Status st) { m_Status = st; }
+
+		void SetType(const ResourceType *prestype) { m_pResType = prestype; }
 
 		virtual void AddRef();
 

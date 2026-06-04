@@ -13,6 +13,7 @@
 #include <C3ResourceManager.h>
 #include <C3FileMapper.h>
 #include <C3System.h>
+#include <format>
 
 #include <dbt.h>
 

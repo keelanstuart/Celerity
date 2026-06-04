@@ -8,11 +8,14 @@
 
 #include <C3.h>
 #include <deque>
+#include <set>
 
 
 namespace c3
 {
-	typedef std::deque<Object *> TObjectArray;
+	using TObjectArray = std::deque<Object *>;
+
+	using TStringSet = std::set<tstring>;
 
 	namespace util
 	{
@@ -63,10 +66,25 @@ namespace c3
 			UTF8, UTF16LE, UTF16BE, UTF32LE, UTF32BE, Unknown
 		};
 
-		Encoding DetectBOM(const uint8_t *data, size_t size, size_t &bom_size);
+		Encoding C3_API DetectBOM(const uint8_t *data, size_t size, size_t &bom_size);
 
-		void UTF8_to_tstring(const uint8_t *data, size_t len, tstring &ret);
+		void C3_API UTF8_to_tstring(const uint8_t *data, size_t len, tstring &ret);
 
+		void C3_API TrimL(tstring &s);
+
+		void C3_API TrimR(tstring &s);
+
+		void C3_API Trim(tstring &s);
+
+		void C3_API CombineStringSets(const TStringSet &ssa, const TStringSet &ssb, TStringSet &sso);
+
+		void C3_API MakeSetFromDelimitedList(const TCHAR *items, TCHAR delim, TStringSet &ss);
+
+		void C3_API MakeDelimitedListFromSet(const TStringSet &ss, TCHAR delim, tstring &sout);
+
+		void C3_API CombineDelimitedLists(const TCHAR *origitems, const TCHAR *newitems, TCHAR delim, tstring &combined);
+
+		bool C3_API DelimitedListContains(const TCHAR *items, TCHAR delim, const TCHAR *searchitem);
 	};
 
 };

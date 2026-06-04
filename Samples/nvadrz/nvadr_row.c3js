@@ -27,9 +27,9 @@ function update(elapsed_seconds)
 			SetObjFlag(hexplosion, "KILL", 1);
 		}
 		
-		vec3.x = time_left;
-		vec3.y = time_left;
-		vec3.z = time_left;
+		v3.x = time_left;
+		v3.y = time_left;
+		v3.z = time_left;
 		SetPropertyValue(hscl, vec3);
 	}
 }
@@ -41,4 +41,8 @@ function hit()
 	vec3 = GetPropertyValue(hpos);
 	tmp = FindProperty(hexplosion, "Position");
 	SetPropertyValue(tmp, vec3);
+}
+
+function cycle_model()
+{
 }

@@ -9,8 +9,14 @@
 #include <C3RenderMethodImpl.h>
 #include <C3Resource.h>
 #include <C3FrameBufferImpl.h>
+#include <C3ShaderComponentImpl.h>
 
 using namespace c3;
+
+
+DECLARE_RESOURCETYPE(RenderMethod);
+
+DECLARE_RESOURCECODEC(RenderMethodASCII);
 
 
 RenderMethodImpl::DrawOrderCountMap RenderMethodImpl::s_DrawOrders;
@@ -202,7 +208,7 @@ Renderer::RenderStateOverrideFlags RenderMethodImpl::PassImpl::Apply(Renderer *p
 			Resource *scres[Renderer::ShaderComponentType::ST_NUMTYPES] = {0};
 			for (size_t i = 0; i < Renderer::ShaderComponentType::ST_NUMTYPES; i++)
 				if (m_ShaderCompFilename[i].has_value())
-					scres[i] = prend->GetSystem()->GetResourceManager()->GetResource(m_ShaderCompFilename[i]->c_str(), RESF_DEMANDLOAD);
+					scres[i] = prend->GetSystem()->GetResourceManager()->GetResource(m_ShaderCompFilename[i]->c_str(), RESF_DEMANDLOAD, RESOURCETYPE(ShaderComponent));
 
 			bool has_all_comps = true;
 			for (size_t i = 0; i < Renderer::ShaderComponentType::ST_NUMTYPES; i++)
@@ -1156,9 +1162,15 @@ void RenderMethodImpl::LoadPass(TechniqueImpl *ptech, const tinyxml2::XMLElement
 	}
 }
 
-DECLARE_RESOURCETYPE(RenderMethod);
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+
+void RESOURCETYPENAME(RenderMethod)::DestroyData(void *data) const
+{
+	((RenderMethod *)data)->Release();
+}
+
+
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(RenderMethodASCII)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
@@ -1169,7 +1181,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromFile(c3::Sy
 
 		tinyxml2::XMLDocument doc;
 		if (doc.LoadFile(s) != tinyxml2::XMLError::XML_SUCCESS)
-			return ResourceType::LoadResult::LR_ERROR;
+			return ResourceCodec::LoadResult::LR_ERROR;
 
 		RenderMethod *prm = psys->GetRenderer()->CreateRenderMethod();
 
@@ -1177,22 +1189,19 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromFile(c3::Sy
 
 		((RenderMethodImpl *)prm)->Load(doc.FirstChildElement(), options);
 
-		*returned_data = (void *)prm;
+		*returned_data = prm;
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
-
-c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(RenderMethodASCII)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
-		*returned_data = nullptr;
-
 		tinyxml2::XMLDocument doc;
 		if (doc.Parse((const char *)buffer, buffer_length) != tinyxml2::XMLError::XML_SUCCESS)
-			return ResourceType::LoadResult::LR_ERROR;
+			return ResourceCodec::LoadResult::LR_ERROR;
 
 		RenderMethod *prm = psys->GetRenderer()->CreateRenderMethod();
 
@@ -1200,20 +1209,13 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(RenderMethod)::ReadFromMemory(c3::
 
 		((RenderMethodImpl *)prm)->Load(doc.FirstChildElement(), options);
 
-		*returned_data = (void *)prm;
+		*returned_data = prm;
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
-
-bool RESOURCETYPENAME(RenderMethod)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(RenderMethodASCII)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	return false;
-}
-
-
-void RESOURCETYPENAME(RenderMethod)::Unload(void *data) const
-{
-	((RenderMethod *)data)->Release();
 }

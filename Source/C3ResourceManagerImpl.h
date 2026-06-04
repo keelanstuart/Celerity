@@ -8,6 +8,7 @@
 
 #include <C3ResourceManager.h>
 #include "C3ZipImpl.h"
+#include <C3Utility.h>
 #include <atomic>
 
 namespace c3
@@ -20,25 +21,38 @@ namespace c3
 		System *m_pSys;
 		std::atomic<uint64_t> m_LastFrameChanged;
 
-		typedef std::map<tstring, Resource *, std::less<tstring>> TResourceMap;
+		using TResourceMap = std::map<tstring, Resource *, std::less<tstring>>;
 		TResourceMap m_ResMap;
 
-		typedef std::multimap<const ResourceType *, Resource *> TResourceByTypeMap;
+		using TResourceByTypeMap = std::multimap<const ResourceType *, Resource *>;
 		TResourceByTypeMap m_ResByTypeMap;
 
-		typedef std::deque<const ResourceType *> TResourceTypeArray;
+		using TResourceTypeArray = std::deque<const ResourceType *>;
 		TResourceTypeArray m_ResTypes;
 
-		typedef std::multimap<tstring, const ResourceType *> TExtToResourceTypeMap;
-		TExtToResourceTypeMap m_ExtResTypeMap;
+		using TResourceTypeToExtSetMap = std::map<const ResourceType *, TStringSet>;
+		TResourceTypeToExtSetMap m_ResTypeExtSetMap;
+
+		using TResourceTypeToExtsMap = std::map<const ResourceType *, tstring>;
+		TResourceTypeToExtsMap m_ResTypeExtsMap;
+
+		using TResourceTypeToCodecMap = std::multimap<const ResourceType *, const ResourceCodec *>;
+		TResourceTypeToCodecMap m_ResTypeToCodec;
+
+		using TResourceTypeToExtListMap = std::map<const ResourceType *, tstring>;
+
+		// Readable extension lists per registered ResourceType, based on registered ResourceCodecs
+		TResourceTypeToExtListMap m_ResTypeToExtsRead;
+
+		// Saveable extension lists per registered ResourceType, based on registered ResourceCodecs
+		TResourceTypeToExtListMap m_ResTypeToExtsSave;
 
 		using ArchiveID = uint16_t;
 
-		typedef std::map<ArchiveID, std::pair<tstring, ZipFile *>> TZipFileRegistry;
+		using TZipFileRegistry = std::map<ArchiveID, std::pair<tstring, ZipFile *>>;
 		TZipFileRegistry m_ZipFileRegistry;
 
 		friend class ResourceImpl;
-
 
 	public:
 
@@ -48,7 +62,9 @@ namespace c3
 
 		static pool::IThreadPool::TASK_RETURN __cdecl LoadingThreadProc(void *presmanimpl, void *pres, size_t task_number);
 
-		virtual Resource *GetResource(const TCHAR *filename, props::TFlags64 flags, const ResourceType *restype = nullptr, const void *data = nullptr);
+		virtual Resource *GetResource(const TCHAR *filename, ResourceFlags flags = 0,
+			const ResourceType *restype = nullptr, const ResourceCodec *pcodec = nullptr,
+			const void *data = nullptr);
 
 		virtual void ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype = nullptr, props::TFlags64 restypeflags = 0, ResTypeFlagMode flagmode = RTFM_IGNORE);
 
@@ -60,11 +76,17 @@ namespace c3
 
 		virtual const ResourceType *GetResourceType(size_t index) const;
 
-		virtual const ResourceType *FindResourceTypeByExt(const TCHAR *ext) const;
-
 		virtual const ResourceType *FindResourceTypeByName(const TCHAR *name) const;
 
 		virtual const ResourceType *FindResourceType(GUID guid) const;
+
+		virtual void RegisterResourceCodec(const ResourceCodec *pcodec);
+
+		virtual void UnregisterResourceCodec(const ResourceCodec *pcodec);
+
+		virtual const ResourceCodec *FindBestCodecByExt(const TCHAR *ext, const ResourceType *restype = nullptr, bool for_write = false) const;
+
+		virtual void BuildExtensionListForType(const ResourceType *restype, tstring &extlist);
 
 		virtual void Reset();
 

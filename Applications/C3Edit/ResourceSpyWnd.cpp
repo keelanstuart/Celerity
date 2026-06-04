@@ -148,24 +148,27 @@ void CResourceSpyWnd::OnNotifyListData(NMHDR *phdr, LRESULT *pres)
 			return;
 		}
 
+		const TCHAR *src = nullptr;
 		switch (pItem->iSubItem)
 		{
 			case 0: //fill in main text with filename
-				_tcscpy_s(pItem->pszText, pItem->cchTextMax, pr->GetFilename());
+				src = pr->GetFilename();
 				break;
 
 			case 1: //fill in sub item 1 text with type
-				_tcscpy_s(pItem->pszText, pItem->cchTextMax, pr->GetType()->GetName());
+				src = pr->GetType()->GetName();
 				break;
 
 			case 2: //fill in sub item 2 text with status
-				_tcscpy_s(pItem->pszText, pItem->cchTextMax, status_text[pr->GetStatus()]);
+				src = status_text[pr->GetStatus()];
 				break;
 
 			case 3: //fill in sub item 2 text with optiosn
-				_tcscpy_s(pItem->pszText, pItem->cchTextMax, pr->GetOptions());
+				src = pr->GetOptions();
 				break;
 		}
+
+		_tcsncpy_s(pItem->pszText, pItem->cchTextMax, src ? src : _T(""), std::min(pItem->cchTextMax - 1, pItem->cchTextMax));
 	}
 }
 

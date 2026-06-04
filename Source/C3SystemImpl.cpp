@@ -13,6 +13,7 @@
 #include <C3ModelImpl.h>
 #include <C3ShaderComponentImpl.h>
 #include <C3RenderMethodImpl.h>
+#include <C3ShaderProgramImpl.h>
 
 #include <C3PositionableImpl.h>
 #include <C3CameraImpl.h>
@@ -120,14 +121,26 @@ void SystemImpl::Release()
 
 	if (m_ResourceManager)
 	{
+		/// UNREGISTER NATIVE RESOURCE CODECS BETWEEN THESE LINES
+		// *************************************************
+		UNREGISTER_RESOURCECODEC(AnimationXAF, m_ResourceManager);
+		UNREGISTER_RESOURCECODEC(AnimStatesDescC3, m_ResourceManager);
+		UNREGISTER_RESOURCECODEC(Blobs, m_ResourceManager);
+		UNREGISTER_RESOURCECODEC(Texture2D, m_ResourceManager);
+		UNREGISTER_RESOURCECODEC(TextureCube, m_ResourceManager);
+		UNREGISTER_RESOURCECODEC(Texture3D, m_ResourceManager);
+		UNREGISTER_RESOURCECODEC(ShaderComponentASCII, m_ResourceManager);
+		UNREGISTER_RESOURCECODEC(RenderMethodASCII, m_ResourceManager);
+		UNREGISTER_RESOURCECODEC(ScriptJS, m_ResourceManager);
+		UNREGISTER_RESOURCECODEC(SoundMA, m_ResourceManager);
+		// *************************************************
+
 		/// UNREGISTER NATIVE RESOURCE TYPES BETWEEN THESE LINES
 		// *************************************************
 		UNREGISTER_RESOURCETYPE(Animation, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(AnimStatesDesc, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(Blob, m_ResourceManager);
-		UNREGISTER_RESOURCETYPE(DefaultTexture2D, m_ResourceManager);
-		UNREGISTER_RESOURCETYPE(DefaultTextureCube, m_ResourceManager);
-		UNREGISTER_RESOURCETYPE(DefaultTexture3D, m_ResourceManager);
+		UNREGISTER_RESOURCETYPE(Texture, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(Model, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
 		UNREGISTER_RESOURCETYPE(RenderMethod, m_ResourceManager);
@@ -240,14 +253,30 @@ ResourceManager *SystemImpl::GetResourceManager()
 		REGISTER_RESOURCETYPE(Animation, m_ResourceManager);
 		REGISTER_RESOURCETYPE(AnimStatesDesc, m_ResourceManager);
 		REGISTER_RESOURCETYPE(Blob, m_ResourceManager);
-		REGISTER_RESOURCETYPE(DefaultTexture2D, m_ResourceManager);
-		REGISTER_RESOURCETYPE(DefaultTextureCube, m_ResourceManager);
-		REGISTER_RESOURCETYPE(DefaultTexture3D, m_ResourceManager);
+		REGISTER_RESOURCETYPE(Texture, m_ResourceManager);
 		REGISTER_RESOURCETYPE(Model, m_ResourceManager);
+		REGISTER_RESOURCETYPE(ShaderProgram, m_ResourceManager);
 		REGISTER_RESOURCETYPE(ShaderComponent, m_ResourceManager);
 		REGISTER_RESOURCETYPE(RenderMethod, m_ResourceManager);
 		REGISTER_RESOURCETYPE(Script, m_ResourceManager);
 		REGISTER_RESOURCETYPE(Sound, m_ResourceManager);
+		// *************************************************
+
+		/// REGISTER NATIVE RESOURCE CODECS BETWEEN THESE LINES
+		// *************************************************
+		REGISTER_RESOURCECODEC(AnimationXAF, m_ResourceManager);
+		REGISTER_RESOURCECODEC(AnimStatesDescC3, m_ResourceManager);
+		REGISTER_RESOURCECODEC(Blobs, m_ResourceManager);
+		REGISTER_RESOURCECODEC(Texture2D, m_ResourceManager);
+		REGISTER_RESOURCECODEC(TextureCube, m_ResourceManager);
+		REGISTER_RESOURCECODEC(Texture3D, m_ResourceManager);
+		REGISTER_RESOURCECODEC(ShaderProgramASCII, m_ResourceManager);
+		REGISTER_RESOURCECODEC(ShaderComponentASCII, m_ResourceManager);
+		REGISTER_RESOURCECODEC(RenderMethodASCII, m_ResourceManager);
+		REGISTER_RESOURCECODEC(ScriptJS, m_ResourceManager);
+		REGISTER_RESOURCECODEC(SoundMA, m_ResourceManager);
+		REGISTER_RESOURCECODEC(ModelAssImp, m_ResourceManager);
+		REGISTER_RESOURCECODEC(ModelProc, m_ResourceManager);
 		// *************************************************
 	}
 

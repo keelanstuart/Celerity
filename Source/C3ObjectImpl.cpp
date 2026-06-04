@@ -458,7 +458,7 @@ bool ObjectImpl::Load(genio::IInputStream *is, Object *parent, MetadataLoadFunc 
 					is->ReadUINT64(propssz);
 					if (propssz)
 					{
-						BYTE *propsbuf = (BYTE *)_alloca(propssz);
+						BYTE *propsbuf = (BYTE *)_malloca(propssz);
 						is->Read(propsbuf, propssz);
 						m_Props->Deserialize(propsbuf, propssz, &propsbr);
 					}
@@ -596,7 +596,7 @@ bool ObjectImpl::Save(genio::IOutputStream *os, props::TFlags64 saveflags, Metad
 		os->WriteUINT64(propssz);
 		if (propssz)
 		{
-			BYTE *propsbuf = (BYTE *)_alloca(propssz);
+			BYTE *propsbuf = (BYTE *)_malloca(propssz);
 			m_Props->Serialize(props::IProperty::SERIALIZE_MODE::SM_BIN_VERBOSE, propsbuf, propssz);
 			os->Write(propsbuf, propssz);
 		}

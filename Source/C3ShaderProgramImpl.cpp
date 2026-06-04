@@ -17,6 +17,11 @@
 using namespace c3;
 
 
+DECLARE_RESOURCETYPE(ShaderProgram);
+
+DECLARE_RESOURCECODEC(ShaderProgramASCII);
+
+
 #define PROPASPECT_MODELINSTDATA		((props::IProperty::PROPERTY_ASPECT)(props::IProperty::PROPERTY_ASPECT::PA_FIRSTUSERASPECT + 1))
 
 
@@ -104,7 +109,7 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::Link()
 		if (maxlen)
 		{
 			// The maxLength includes the NULL character
-			char *pserr = (char *)_alloca(maxlen);
+			char *pserr = (char *)_malloca(maxlen);
 			m_Rend->gl.GetProgramInfoLog(m_glID, maxlen, &maxlen, pserr);
 			TCHAR *tpserr;
 			CONVERT_MBCS2TCS(pserr, tpserr);
@@ -404,7 +409,7 @@ void ShaderProgramImpl::CaptureUniforms()
 			case GL_SAMPLER_2D:
 			{
 				ResourceManager *presman = m_Rend->GetSystem()->GetResourceManager();
-				ResourceImpl *pres = (ResourceImpl *)presman->GetResource(n, RESF_CREATEENTRYONLY, DefaultTexture2DResourceType::Type(), nullptr);
+				ResourceImpl *pres = (ResourceImpl *)presman->GetResource(n, RESF_CREATEENTRYONLY, RESOURCETYPE(Texture), nullptr);
 
 				p->SetVec4I(props::TVec4I(location, sampleridx++, (int64_t)pres, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR | TEXFLAG_RESOURCE));
 				p->SetAspect(props::IProperty::PROPERTY_ASPECT::PA_SAMPLER2D);
@@ -724,21 +729,19 @@ void ShaderProgramImpl::CaptureExpectedInputs()
 }
 
 
-DECLARE_RESOURCETYPE(ShaderProgram);
-
-c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(ShaderProgramASCII)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
 		*returned_data = psys->GetRenderer()->CreateShaderProgram();
 		if (!*returned_data)
-			return ResourceType::LoadResult::LR_ERROR;
+			return ResourceCodec::LoadResult::LR_ERROR;
 
 		char *fn;
 		CONVERT_TCS2MBCS(filename, fn);
 		tinyxml2::XMLDocument doc;
 		if (!doc.LoadFile(fn) != tinyxml2::XMLError::XML_SUCCESS)
-			return ResourceType::LoadResult::LR_ERROR;
+			return ResourceCodec::LoadResult::LR_ERROR;
 
 		static const char *shader_tagname[Renderer::ShaderComponentType::ST_NUMTYPES] =
 		{
@@ -822,23 +825,23 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromFile(c3::S
 		((ShaderProgram *)*returned_data)->Link();
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderProgram)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(ShaderProgramASCII)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	return ResourceType::LoadResult::LR_ERROR;
+	return ResourceCodec::LoadResult::LR_ERROR;
 }
 
 
-bool RESOURCETYPENAME(ShaderProgram)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(ShaderProgramASCII)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	return false;
 }
 
 
-void RESOURCETYPENAME(ShaderProgram)::Unload(void *data) const
+void RESOURCETYPENAME(ShaderProgram)::DestroyData(void *data) const
 {
 	((ShaderProgram *)data)->Release();
 }

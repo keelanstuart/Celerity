@@ -18,7 +18,12 @@
 
 using namespace c3;
 
+
 DECLARE_RESOURCETYPE(Script);
+
+DECLARE_RESOURCECODEC(ScriptJS);
+
+
 
 inline bool ExtractVec3FromVar(CScriptVar *pvl, glm::fvec3 &v)
 {
@@ -92,13 +97,13 @@ inline bool PlaceVec4InVar(CScriptVar *pvl, glm::fvec4 &v)
 	return true;
 }
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(ScriptJS)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
 		FILE *f = nullptr;
 		if ((_tfopen_s(&f, filename, _T("rt, ccs=UTF-8")) == EINVAL) || !f)
-			return ResourceType::LoadResult::LR_NOTFOUND;
+			return ResourceCodec::LoadResult::LR_NOTFOUND;
 
 		fseek(f, 0, SEEK_END);
 		size_t sz = ftell(f);
@@ -117,11 +122,11 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromFile(c3::System *
 		free(code);
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(ScriptJS)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data && buffer && buffer_length)
 	{
@@ -154,17 +159,17 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Script)::ReadFromMemory(c3::System
 		*returned_data = ps;
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
 
-bool RESOURCETYPENAME(Script)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(ScriptJS)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	return false;
 }
 
 
-void RESOURCETYPENAME(Script)::Unload(void *data) const
+void RESOURCETYPENAME(Script)::DestroyData(void *data) const
 {
 	delete (Script *)data;
 }
@@ -214,6 +219,7 @@ void jcLog(CScriptVar *c, void *userdata);
 void jcExit(CScriptVar *c, void *userdata);
 void jcFunctionExists(CScriptVar *c, void *userdata);
 void jcExecute(CScriptVar *c, void *userdata);
+void jcExecuteRecursive(CScriptVar *c, void *userdata);
 void jcCreateProperty(CScriptVar* c, void* userdata);
 void jcDeleteProperty(CScriptVar* c, void* userdata);
 void jcFindProperty(CScriptVar *c, void *userdata);
@@ -334,6 +340,7 @@ void ScriptableImpl::ResetJS()
 
 	m_JS->AddNative(_T("function FunctionExists(hobj, funcname)"),						jcFunctionExists, psys);
 	m_JS->AddNative(_T("function Execute(hobj, cmd)"),									jcExecute, psys);
+	m_JS->AddNative(_T("function ExecuteRecursive(hobj, cmd)"),							jcExecuteRecursive, psys);
 
 	m_JS->AddNative(_T("function CreateProperty(hobj, name, fcc)"),						jcCreateProperty, psys);
 	m_JS->AddNative(_T("function DeleteProperty(hprop)"),								jcDeleteProperty, psys);
@@ -528,6 +535,7 @@ void ScriptableImpl::Render(RenderFlags flags, const glm::fmat4x4 *pmat)
 void ScriptableImpl::Preprocess(const TCHAR *options)
 {
 #define KILL_LINE	-1
+
 	std::function<void(size_t, size_t)> KillCodeBlock = [&](size_t sc, size_t ec)
 	{
 		if (ec == KILL_LINE)
@@ -566,7 +574,7 @@ void ScriptableImpl::Preprocess(const TCHAR *options)
 			}
 
 			tstring filename = m_Code.substr(qpos, _qpos - qpos - 1);
-			Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(filename.c_str(), RESF_DEMANDLOAD);
+			Resource *pres = m_pOwner->GetSystem()->GetResourceManager()->GetResource(filename.c_str(), RESF_DEMANDLOAD, RESOURCETYPE(Script));
 			if (pres && (pres->GetStatus() == Resource::RS_LOADED))
 			{
 				// no recursive inclusions
@@ -906,6 +914,26 @@ void jcExecute(CScriptVar *c, void *userdata)
 
 	pscr->Execute(c->GetParameter(_T("cmd"))->GetString());
 }
+
+
+void jcExecuteRecursive(CScriptVar *c, void *userdata)
+{
+	Object *pobj = (Object *)(c->GetParameter(_T("hobj"))->GetInt());
+	if (!pobj)
+		return;
+
+	const TCHAR *cmd = c->GetParameter(_T("cmd"))->GetString();
+
+	c3::util::RecursiveObjectAction(pobj, [cmd](c3::Object *pobj)
+	{
+		Scriptable *pscr = (Scriptable *)pobj->FindComponent(Scriptable::Type());
+		if (!pscr)
+			return;
+
+		pscr->Execute(cmd);
+	});
+}
+
 
 void jcCreateProperty(CScriptVar* c, void* userdata)
 {

@@ -20,6 +20,11 @@
 
 using namespace c3;
 
+DECLARE_RESOURCETYPE(Sound);
+
+DECLARE_RESOURCECODEC(SoundMA);
+
+
 using SSoundResourceData = struct
 {
 	ma_sound sound;
@@ -870,10 +875,9 @@ void SoundPlayerImpl::DisableCDAudio()
 #endif
 
 
-DECLARE_RESOURCETYPE(Sound);
 
 // this function is called back by the ResourceManager to load a sound resource from a file
-c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(SoundMA)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
@@ -893,23 +897,23 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromFile(c3::System *p
 
 		*returned_data = psr;
 		if (!*returned_data)
-			return ResourceType::LoadResult::LR_ERROR;
+			return ResourceCodec::LoadResult::LR_ERROR;
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
 
 // this function is called back by the ResourceManager to load a sound resource from a location in memory
-c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer,
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(SoundMA)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer,
 	size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	if (!returned_data || !buffer || (buffer_length == 0))
-		return ResourceType::LoadResult::LR_ERROR;
+		return ResourceCodec::LoadResult::LR_ERROR;
 
 	SoundPlayerImpl *sp = (SoundPlayerImpl *)psys->GetSoundPlayer();
 	if (!sp)
-		return ResourceType::LoadResult::LR_ERROR;
+		return ResourceCodec::LoadResult::LR_ERROR;
 
 	SSoundResourceData *psr = new SSoundResourceData{};
 
@@ -918,17 +922,17 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Sound)::ReadFromMemory(c3::System 
 	psr->encoded_len = buffer_length;
 
 	*returned_data = psr;
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
 
-bool RESOURCETYPENAME(Sound)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(SoundMA)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	return false;
 }
 
 
-void RESOURCETYPENAME(Sound)::Unload(void *data) const
+void RESOURCETYPENAME(Sound)::DestroyData(void *data) const
 {
 	SSoundResourceData *psr = (SSoundResourceData *)data;
 	if (!psr->from_memory)

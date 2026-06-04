@@ -19,10 +19,12 @@
 
 namespace c3
 {
+
 	class SoundPlayerImpl : public SoundPlayer
 	{
 
 		friend class RESOURCETYPENAME(Sound);
+		friend class RESOURCECODECNAME(SoundMA);
 
 	public:
 		SoundPlayerImpl(System *system);
@@ -131,6 +133,12 @@ namespace c3
 	};
 
 	// The data type stored by this resource is an HSOUND
-	DEFINE_RESOURCETYPE(Sound, 0, GUID({0x9178daa1, 0xd5f5, 0x40ef, { 0xa0, 0x5d, 0x3a, 0xa, 0x98, 0xec, 0xf4, 0x81 }}), "Sounds", "Sound Files", "wav;mp3;flac", "wav");
+	DEFINE_RESOURCETYPE(Sound, 0, GUID({ 0x9178daa1, 0xd5f5, 0x40ef, { 0xa0, 0x5d, 0x3a, 0xa, 0x98, 0xec, 0xf4, 0x81 } }),
+		"Sounds", "Sound Files");
+		
+	DEFINE_RESOURCECODEC(SoundMA, Sound, 0,
+		GUID({ 0xc2ac7f3f, 0xc9f8, 0x4937, { 0x9b, 0x8e, 0xb3, 0xc6, 0x3c, 0xda, 0x69, 0xb } }),
+		"Sounds", "Sound Files",
+		"wav;mp3;flac;ogg", "wav", 0);
 
 };

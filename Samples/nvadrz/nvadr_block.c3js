@@ -4,10 +4,13 @@ var move_speed = 4.0;
 var drop_speed = 0.5;
 
 var tmp = 0.0;
-var vec3 = { x:0.0, y:0.0, z:0.0 };
+var v3 = { x:0.0, y:0.0, z:0.0 };
+var oldx = 0.0;
 
 var left_edge = -5.0;
 var right_edge = 5.0;
+var womp_freq = 0.8;
+var womp_time = 0.0;
 
 function init()
 {
@@ -17,32 +20,50 @@ function init()
 function update(elapsed_seconds)
 {
 	// get the position
-	vec3 = GetPropertyValue(hpos);
+	v3 = GetPropertyValue(hpos);
+	oldx = v3.x;
 
 	// move the block of nvadrz some
 	tmp = move_speed * elapsed_seconds;
-	vec3.x += tmp;
+	v3.x += tmp;
+
+	womp_time -= elapsed_seconds;
+	if (womp_time < 0.0)
+	{
+		womp_time = 0.1;
+
+		ExecuteRecursive(self, "cycle_model();");
+		PlaySound("nvadrz/womp.wav", 0.25, womp_freq, 1, undefined);
+		if (womp_freq < 1.0)
+			womp_freq += 0.3;
+		else
+			womp_freq -= 0.3;
+	}
 
 	// if they're out of bounds:
 	//  - set their position TO the bounds
 	//  - reverse direction
 	//  - move down
 
-	if ((move_speed > 0.0) && (vec3.x > right_edge))
+	if ((move_speed > 0.0) && (v3.x > right_edge))
 	{
-		vec3.x = right_edge;
+		v3.x = right_edge;
 		move_speed += 0.5;
 		move_speed *= -1.0;
-		vec3.z -= drop_speed;
+		v3.z -= drop_speed;
 	}
-	else if ((move_speed < 0.0) && (vec3.x < left_edge))
+	else if ((move_speed < 0.0) && (v3.x < left_edge))
 	{
-		vec3.x = left_edge;
+		v3.x = left_edge;
 		move_speed *= -1.0;
 		move_speed += 0.5;
-		vec3.z -= drop_speed;
+		v3.z -= drop_speed;
 	}
 
 	// update the position
-	SetPropertyValue(hpos, vec3);
+	SetPropertyValue(hpos, v3);
+}
+
+function cycle_model()
+{
 }

@@ -16,6 +16,10 @@ using namespace c3;
 
 DECLARE_COMPONENTTYPE(Animator, AnimatorImpl);
 
+DECLARE_RESOURCETYPE(AnimStatesDesc);
+
+DECLARE_RESOURCECODEC(AnimStatesDescC3);
+
 
 #define DEFAULT_ANIMSTATE	_T("Default")
 
@@ -479,7 +483,7 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 			TCHAR filename[1024];
 			pprop->AsString(filename, 1023);
 
-			Resource *pr = prm->GetResource(filename, RESF_DEMANDLOAD);
+			Resource *pr = prm->GetResource(filename, RESF_DEMANDLOAD, RESOURCETYPE(AnimStatesDesc));
 			if (pr && (pr->GetStatus() == Resource::Status::RS_LOADED))
 			{
 				tinyxml2::XMLDocument *pd = (tinyxml2::XMLDocument *)pr->GetData();
@@ -535,7 +539,7 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 										TCHAR *_filename;
 										CONVERT_MBCS2TCS(pfilename->Value(), _filename);
 
-										Resource *animres = prm->GetResource(_filename, RESF_DEMANDLOAD);
+										Resource *animres = prm->GetResource(_filename, RESF_DEMANDLOAD, RESOURCETYPE(Animation));
 										const Animation *pa = (const Animation *)(animres ? animres->GetData() : nullptr);
 
 										emres.first->second->m_WeightedAnims.emplace_back();
@@ -596,7 +600,7 @@ bool AnimatorImpl::HasState(const TCHAR *name) const
 		return false;
 
 	size_t namelen = _tcslen(name) + 1;
-	TCHAR *_name = (TCHAR *)_alloca(sizeof(TCHAR) * namelen);
+	TCHAR *_name = (TCHAR *)_malloca(sizeof(TCHAR) * namelen);
 
 	for (size_t i = 0; i < namelen; i++)
 		_name[i] = std::tolower(name[i], std::locale());
@@ -620,7 +624,7 @@ void AnimatorImpl::SetCurrentState(const TCHAR *name)
 		return;
 
 	size_t namelen = _tcslen(name) + 1;
-	TCHAR *_name = (TCHAR *)_alloca(sizeof(TCHAR) * namelen);
+	TCHAR *_name = (TCHAR *)_malloca(sizeof(TCHAR) * namelen);
 
 	for (size_t i = 0; i < namelen; i++)
 		_name[i] = std::tolower(name[i], std::locale());
@@ -655,12 +659,9 @@ bool AnimatorImpl::Intersect(const glm::vec3 *pRayPos, const glm::vec3 *pRayDir,
 }
 
 
-DECLARE_RESOURCETYPE(AnimStatesDesc);
-
-
-c3::ResourceType::LoadResult RESOURCETYPENAME(AnimStatesDesc)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(AnimStatesDescC3)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
-	c3::ResourceType::LoadResult ret = c3::ResourceType::LR_ERROR;
+	c3::ResourceCodec::LoadResult ret = c3::ResourceCodec::LR_ERROR;
 
 	if (returned_data)
 	{
@@ -670,7 +671,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(AnimStatesDesc)::ReadFromFile(c3::
 		if (!_tfopen_s(&f, filename, _T("rb, ccs=UTF-8")))
 		{
 			if (!((tinyxml2::XMLDocument *)*returned_data)->LoadFile(f))
-				ret = c3::ResourceType::LR_SUCCESS;
+				ret = c3::ResourceCodec::LR_SUCCESS;
 
 			fclose(f);
 		}
@@ -680,29 +681,29 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(AnimStatesDesc)::ReadFromFile(c3::
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(AnimStatesDesc)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(AnimStatesDescC3)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	c3::ResourceType::LoadResult ret = c3::ResourceType::LR_ERROR;
+	c3::ResourceCodec::LoadResult ret = c3::ResourceCodec::LR_ERROR;
 
 	if (returned_data)
 	{
 		*returned_data = new tinyxml2::XMLDocument();
 
 		if (!((tinyxml2::XMLDocument *)*returned_data)->Parse((const char *)buffer, buffer_length))
-			ret = c3::ResourceType::LR_SUCCESS;
+			ret = c3::ResourceCodec::LR_SUCCESS;
 	}
 
 	return ret;
 }
 
 
-bool RESOURCETYPENAME(AnimStatesDesc)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(AnimStatesDescC3)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	return false;
 }
 
 
-void RESOURCETYPENAME(AnimStatesDesc)::Unload(void *data) const
+void RESOURCETYPENAME(AnimStatesDesc)::DestroyData(void *data) const
 {
 	if (data)
 	{

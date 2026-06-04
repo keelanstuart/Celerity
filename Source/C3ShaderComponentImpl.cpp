@@ -14,6 +14,12 @@
 
 using namespace c3;
 
+DECLARE_RESOURCETYPE(ShaderComponent);
+
+DECLARE_RESOURCECODEC(ShaderComponentASCII);
+
+
+
 
 ShaderComponentImpl::ShaderComponentImpl(RendererImpl *prend, Renderer::ShaderComponentType type)
 {
@@ -112,7 +118,7 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 		if (maxlen)
 		{
 			// The maxLength includes the NULL character
-			char *pserr = (char *)_alloca(maxlen);
+			char *pserr = (char *)_malloca(maxlen);
 			m_Rend->gl.GetShaderInfoLog(m_glID, maxlen, &maxlen, pserr);
 			TCHAR *tpserr;
 			CONVERT_MBCS2TCS(pserr, tpserr);
@@ -152,12 +158,10 @@ bool ShaderComponentImpl::IsCompiled() const
 }
 
 
-DECLARE_RESOURCETYPE(ShaderComponent);
-
-c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(ShaderComponentASCII)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (!filename || !*filename)
-		return ResourceType::LoadResult::LR_ERROR;
+		return ResourceCodec::LoadResult::LR_ERROR;
 
 	if (returned_data)
 	{
@@ -194,7 +198,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromFile(c3:
 					break;
 
 				default:
-					return ResourceType::LoadResult::LR_ERROR;
+					return ResourceCodec::LoadResult::LR_ERROR;
 			}
 		}
 
@@ -259,26 +263,26 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromFile(c3:
 
 		*returned_data = psh;
 		if (!*returned_data)
-			return ResourceType::LoadResult::LR_ERROR;
+			return ResourceCodec::LoadResult::LR_ERROR;
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(ShaderComponent)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(ShaderComponentASCII)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	return ResourceType::LoadResult::LR_ERROR;
+	return ResourceCodec::LoadResult::LR_ERROR;
 }
 
 
-bool RESOURCETYPENAME(ShaderComponent)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(ShaderComponentASCII)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	return false;
 }
 
 
-void RESOURCETYPENAME(ShaderComponent)::Unload(void *data) const
+void RESOURCETYPENAME(ShaderComponent)::DestroyData(void *data) const
 {
 	((ShaderComponent *)data)->Release();
 }

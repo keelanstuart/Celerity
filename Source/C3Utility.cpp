@@ -231,7 +231,7 @@ bool util::FindShortestRelativePath(const std::vector<tstring> &relative_paths,
 
 void util::LoadU8Image(ResourceManager *rm, const TCHAR *filename, U8Raster &img)
 {
-	Resource *hr = rm->GetResource(filename, RESF_DEMANDLOAD, RESOURCETYPE(Blob));
+	Resource *hr = rm->GetResource(filename, RESF_DEMANDLOAD, RESOURCETYPE(Blob), RESOURCECODEC(Blobs));
 
 	if (hr && (hr->GetStatus() == Resource::RS_LOADED))
 	{
@@ -466,4 +466,126 @@ void util::UTF8_to_tstring(const uint8_t *data, size_t len, tstring &ret)
 	return tstring(reinterpret_cast<const char *>(data),
 		reinterpret_cast<const char *>(data) + len);
 #endif
+}
+
+
+void util::TrimL(tstring &s)
+{
+	s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+		[](TCHAR ch) { return !std::isspace(ch); }));
+}
+
+
+void util::TrimR(tstring &s)
+{
+	s.erase(std::find_if(s.rbegin(), s.rend(),
+		[](TCHAR ch) { return !std::isspace(ch); }).base(), s.end());
+}
+
+
+void util::Trim(tstring &s)
+{
+	TrimL(s);
+	TrimR(s);
+}
+
+
+void util::CombineStringSets(const TStringSet &ssa, const TStringSet &ssb, TStringSet &sso)
+{
+	sso.insert(ssa.cbegin(), ssa.cend());
+	sso.insert(ssb.cbegin(), ssb.cend());
+}
+
+
+void util::MakeSetFromDelimitedList(const TCHAR *items, TCHAR delim, TStringSet &ss)
+{
+	assert(items);
+
+	const TCHAR *c = items;
+	tstring tmp_item;
+
+	while (*c)
+	{
+		tmp_item.clear();
+		while (*c && (*c != delim))
+		{
+			tmp_item += *c;
+			c++;
+		}
+
+		if (*c == delim)
+			c++;
+
+		Trim(tmp_item);
+		if (!tmp_item.empty())
+			ss.insert(tmp_item);
+	}
+};
+
+
+void util::MakeDelimitedListFromSet(const TStringSet &ss, TCHAR delim, tstring &sout)
+{
+	for (TStringSet::const_iterator s = ss.cbegin(); s != ss.cend(); s++)
+	{
+		if (s != ss.cbegin())
+			sout += delim;
+
+		sout += *s;
+	}
+};
+
+
+void util::CombineDelimitedLists(const TCHAR *origitems, const TCHAR *newitems, TCHAR delim, tstring &combined)
+{
+	const TCHAR *_origitems = origitems ? origitems : _T("");
+	const TCHAR *_newitems = newitems ? newitems : _T("");
+
+	TStringSet ss;
+
+	MakeSetFromDelimitedList(_origitems, delim, ss);
+	MakeSetFromDelimitedList(_newitems, delim, ss);
+
+	combined.clear();
+	for (TStringSet::const_iterator it = ss.cbegin(); it != ss.cend(); it++)
+	{
+		if (it != ss.cbegin())
+			combined += delim;
+
+		combined += *it;
+	}
+}
+
+
+bool util::DelimitedListContains(const TCHAR *items, TCHAR delim, const TCHAR *searchitem)
+{
+	if (!items || !*items || !searchitem || !*searchitem)
+		return false;
+
+	size_t sz = (_tcslen(searchitem) + 1) * sizeof(TCHAR);
+	TCHAR *_searchitem = (TCHAR *)_malloca(sz);
+	memcpy(_searchitem, searchitem, sz);
+
+	for (TCHAR *d = _searchitem; *d != _T('\0'); d++)
+		*d = _totlower(*d);
+
+	const TCHAR *c = items;
+
+	while (*c)
+	{
+		tstring item;
+
+		while (*c && (*c != delim))
+		{
+			item += (TCHAR)_totlower(*c);
+			++c;
+		}
+
+		if (*c == delim)
+			++c;
+
+		if (item == _searchitem)
+			return true;
+	}
+
+	return false;
 }

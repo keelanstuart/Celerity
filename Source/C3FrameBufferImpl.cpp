@@ -120,7 +120,8 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Setup(size_t numtargs, const TargetDesc
 
 		// register the texture so it can be auto-bound in a shader
 		ResourceManager *presman = m_Rend->GetSystem()->GetResourceManager();
-		ResourceImpl *pres = (ResourceImpl *)presman->GetResource(ptargdescs[i].name, RESF_CREATEENTRYONLY, DefaultTexture2DResourceType::Type(), pt);
+		ResourceImpl *pres = (ResourceImpl *)presman->GetResource(ptargdescs[i].name, RESF_CREATEENTRYONLY,
+			RESOURCETYPE(Texture), RESOURCECODEC(Texture2D), pt);
 
 		ret = AttachColorTarget(pt, i);
 		if (ret != RETURNCODE::RET_OK)

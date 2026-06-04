@@ -183,6 +183,16 @@ namespace c3
 
 	};
 
-	DEFINE_RESOURCETYPE(Model, RTFLAG_RUNBYRENDERER, GUID({0x2ea22c05, 0xbf99, 0x493c, { 0xb7, 0xa, 0x26, 0x6f, 0x89, 0xaf, 0x30, 0x91 }}), "Model", "3D Models", "3ds;c3pg;dae;fbx;gltb;gltf;glb;obj;x", "fbx");
+	DEFINE_RESOURCETYPE(Model, RTFLAG_RUNBYRENDERER,
+		GUID({0x2ea22c05, 0xbf99, 0x493c, { 0xb7, 0xa, 0x26, 0x6f, 0x89, 0xaf, 0x30, 0x91 }}),
+		"Model", "3D Models");
+
+	DEFINE_RESOURCECODEC(ModelAssImp, Model, RTFLAG_RUNBYRENDERER,
+		GUID({ 0x517ecc, 0x2f2e, 0x4483, { 0xa4, 0xb0, 0x8a, 0x7b, 0x16, 0x46, 0xbd, 0x5d } }),
+		"3D Model", "3D Models through AssImp", "3ds;dae;fbx;gltb;gltf;glb;obj;x", "fbx", 0);
+
+	DEFINE_RESOURCECODEC(ModelProc, Model, RTFLAG_RUNBYRENDERER,
+		GUID({ 0x5d56c9fe, 0x7607, 0x48ae, { 0xba, 0x2e, 0xb7, 0x12, 0xbb, 0x52, 0x3f, 0xba } }),
+		"ProceduralModel", "Celerity Procedural 3D Models", "c3pg", "", 0);
 
 };

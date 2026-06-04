@@ -64,6 +64,13 @@ namespace c3
 	
 	};
 
-	DEFINE_RESOURCETYPE(ShaderProgram, RTFLAG_RUNBYRENDERER, GUID({0x9c62e3e0, 0x95d0, 0x4023, { 0xad, 0xb3, 0x6a, 0xb2, 0xd5, 0xcf, 0x4e, 0x9a }}), "ShaderProgram", "Shader Programs (GLSL)", "c3shader", "c3shader");
+	DEFINE_RESOURCETYPE(ShaderProgram, RTFLAG_RUNBYRENDERER,
+		GUID({0x9c62e3e0, 0x95d0, 0x4023, { 0xad, 0xb3, 0x6a, 0xb2, 0xd5, 0xcf, 0x4e, 0x9a }}),
+		"ShaderProgram", "Shader Programs (GLSL)");
+
+	DEFINE_RESOURCECODEC(ShaderProgramASCII, ShaderProgram, RTFLAG_RUNBYRENDERER,
+		GUID({ 0xb0d33f6b, 0x7e1d, 0x4912, { 0x85, 0xdf, 0x23, 0xb5, 0x9d, 0xe, 0xb7, 0x7 } }),
+		"ShaderProgramASII", "Shader Programs in ASCII",
+		"c3shader", "c3shader", 0);
 
 };

@@ -13,8 +13,29 @@
 namespace c3
 {
 
+	DEFINE_RESOURCETYPE(Texture, RTFLAG_RUNBYRENDERER,
+		GUID({ 0xd9afb0b6, 0x8eea, 0x4bdc, { 0x97, 0x68, 0x4f, 0x3d, 0x55, 0x69, 0x35, 0x4c } }),
+		"Texture", "Textures");
+	
+	DEFINE_RESOURCECODEC(Texture2D, Texture, RTFLAG_RUNBYRENDERER,
+		GUID({ 0xd1d7344f, 0x2857, 0x441d, { 0xbd, 0x77, 0x7d, 0x94, 0x71, 0x7c, 0xc0, 0x8e } }),
+		"Texture2D", "2D Textures",
+		"png;jpg;tga;bmp;gif;psd;hdr;pic;pnm;dds;tif;tiff", "tga", 0);
+
+	DEFINE_RESOURCECODEC(TextureCube, Texture, RTFLAG_RUNBYRENDERER,
+		GUID({ 0x5644209e, 0x72da, 0x46b4, { 0x93, 0xad, 0x60, 0xa0, 0xbc, 0x60, 0x25, 0x7b } }),
+		"TextureCube", "Cube Textures",
+		"dds", "dds", 1);
+
+	DEFINE_RESOURCECODEC(Texture3D, Texture, RTFLAG_RUNBYRENDERER,
+		GUID({ 0x5f040bd, 0x361c, 0x47ee, { 0x96, 0xc8, 0x44, 0xa6, 0xcf, 0x41, 0xdb, 0xf } }),
+		"Texture3D", "3D Textures",
+		"dds", "dds", 2);
+
+
 	// PRIVATE don't use in UseTexture's texflags
 	#define TEXFLAG_GENMIPS			0x80000000
+
 
 	class Texture2DImpl : public Texture2D
 	{
@@ -62,7 +83,6 @@ namespace c3
 
 	};
 
-	DEFINE_RESOURCETYPE(DefaultTexture2D, RTFLAG_RUNBYRENDERER, GUID({0xd9afb0b6, 0x8eea, 0x4bdc, { 0x97, 0x68, 0x4f, 0x3d, 0x55, 0x69, 0x35, 0x4c }}), "Texture2D", "Two-Dimensional Textures", "png;jpg;tga;bmp;gif;psd;hdr;pic;pnm;dds;tif;tiff", "tga");
 
 	class TextureCubeImpl : public TextureCube
 	{
@@ -114,7 +134,6 @@ namespace c3
 
 	};
 
-	DEFINE_RESOURCETYPE(DefaultTextureCube, RTFLAG_RUNBYRENDERER, GUID({0xf46f85a2, 0x45da, 0x4fc1, {0x81, 0x4a, 0xee, 0x9a, 0x67, 0xc4, 0x3e, 0x9f}}), "TextureCube", "Cube Textures", "dds", "dds");
 
 	class Texture3DImpl : public Texture3D
 	{
@@ -162,7 +181,5 @@ namespace c3
 		operator GLuint() const { return m_glID; }
 
 	};
-
-	DEFINE_RESOURCETYPE(DefaultTexture3D, RTFLAG_RUNBYRENDERER, GUID({0x93927dc6, 0xe335, 0x4728, {0x87, 0x55, 0x36, 0x7c, 0xc9, 0xc, 0x34, 0x3d}}), "Texture3D", "Volumetric Textures", "dds", "dds");
 
 };

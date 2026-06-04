@@ -129,8 +129,16 @@ namespace c3
 
 	};
 
-	DEFINE_COMPONENTTYPE(Animator, AnimatorImpl, GUID({ 0x37c5c9f5, 0xd98b, 0x4d3c, { 0xac, 0xe0, 0x54, 0xc3, 0xf6, 0xf1, 0x1e, 0xb9 }}), "Animator", "Animator maintains and applies animation states to Models", 0);
+	DEFINE_COMPONENTTYPE(Animator, AnimatorImpl,
+		GUID({ 0x37c5c9f5, 0xd98b, 0x4d3c, { 0xac, 0xe0, 0x54, 0xc3, 0xf6, 0xf1, 0x1e, 0xb9 }}),
+		"Animator", "Animator maintains and applies animation states to Models", 0);
 
-	DEFINE_RESOURCETYPE(AnimStatesDesc, 0, GUID({0x26193eee, 0x518e, 0x4ecd, { 0xb1, 0xcd, 0x80, 0x74, 0xd6, 0xa0, 0x3d, 0x33 }}), "AnimStateDefs", "Animation State Definitions", "c3states", "c3states");
+	DEFINE_RESOURCETYPE(AnimStatesDesc, 0,
+		GUID({0x26193eee, 0x518e, 0x4ecd, { 0xb1, 0xcd, 0x80, 0x74, 0xd6, 0xa0, 0x3d, 0x33 }}),
+		"AnimStateDefs", "Animation State Definitions");
+
+	DEFINE_RESOURCECODEC(AnimStatesDescC3, AnimStatesDesc, 0,
+		GUID({ 0xf989df6b, 0xf8a5, 0x4dee, { 0x91, 0x92, 0x4b, 0x16, 0x59, 0xdf, 0x61, 0xf2 } }),
+		"AnimStateDefsC3", "Animation State Definitions", "c3states", "c3states", 0);
 
 };

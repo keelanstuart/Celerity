@@ -30,6 +30,14 @@
 using namespace c3;
 
 
+DECLARE_RESOURCETYPE(Model);
+
+DECLARE_RESOURCECODEC(ModelAssImp);
+
+DECLARE_RESOURCECODEC(ModelProc);
+
+
+
 Model *Model::Create(Renderer *prend)
 {
 	return new ModelImpl((RendererImpl *)prend);
@@ -616,8 +624,6 @@ void ModelImpl::GetBoundingSphere(glm::fvec3 *centroid, float *radius) const
 }
 
 
-DECLARE_RESOURCETYPE(Model);
-
 typedef std::map<const aiNode *, Model::NodeIndex> TNodeIndexMap;
 typedef std::map<size_t, Model::MeshIndex> TMeshIndexMap;
 
@@ -803,10 +809,13 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			c3::Texture2D *pt = nullptr;
 
 			pr->GetSystem()->GetLog()->Print(_T("\n\t- TEXTURE \"%s\""), texname.c_str());
-			DefaultTexture2DResourceType::Type()->ReadFromMemory(psys, texname.c_str(), (const BYTE *)scene->mTextures[texidx]->pcData, scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
+			RESOURCECODEC(Texture2D)->ReadFromMemory(psys, texname.c_str(),
+				(const BYTE *)scene->mTextures[texidx]->pcData,
+				scene->mTextures[texidx]->mWidth, nullptr, (void **)&pt);
 			if (pt)
 			{
-				psys->GetResourceManager()->GetResource(texname.c_str(), RESF_CREATEENTRYONLY, DefaultTexture2DResourceType::Type(), pt);
+				psys->GetResourceManager()->GetResource(texname.c_str(), RESF_CREATEENTRYONLY,
+					RESOURCETYPE(Texture), RESOURCECODEC(Texture2D), pt);
 			}
 		}
 	}
@@ -905,7 +914,9 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 						MakeAnimFilename(animfilename, idxtmp);
 					}
 
-					psys->GetResourceManager()->GetResource(animfilename.c_str(), RESF_CREATEENTRYONLY, RESOURCETYPE(Animation), panim);
+					psys->GetResourceManager()->GetResource(animfilename.c_str(), RESF_CREATEENTRYONLY,
+						RESOURCETYPE(Animation), nullptr, panim);
+
 					pr->GetSystem()->GetLog()->Print(_T("\n\t- ANIM \"%s\""), animfilename.c_str());
 				}
 
@@ -1004,7 +1015,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 				_itot_s(texidx, idxstr, 10);
 
 				tstring texname = sourcename;
-				Resource *ptres = psys->GetResourceManager()->GetResource(MakeTexFilename(texname, idxstr));
+				Resource *ptres = psys->GetResourceManager()->GetResource(MakeTexFilename(texname, idxstr), RESF_DEMANDLOAD, RESOURCETYPE(Texture), RESOURCECODEC(Texture2D));
 				c3::Texture2D *pt = ptres ? dynamic_cast<Texture2D *>((Texture2D *)ptres->GetData()) : nullptr;
 
 				pmtl->SetTexture(t, pt);
@@ -1422,7 +1433,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 	return pmi;
 }
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(ModelAssImp)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
@@ -1432,84 +1443,43 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromFile(c3::System *p
 		CONVERT_TCS2MBCS(filename, s);
 		std::string fn = s;
 
-		const TCHAR *ext = PathFindExtension(filename);
-
-		// "c3pg" C3 Procedural Geometry - various procedural model descriptions
-		// in similar XML containers
-		if (ext && !_tcsicmp(ext, _T(".c3pg")))
+		Assimp::Importer import;
+		bool animation_only = false;
+		bool keep_rootxform = false;
+		const aiScene * scene = import.ReadFile(fn, MakeImportFlags(options, animation_only, keep_rootxform));
+		if (!scene)
 		{
-			tinyxml2::XMLDocument xdoc;
-			xdoc.LoadFile(fn.c_str());
-
-			tinyxml2::XMLElement *xr = xdoc.RootElement();
-			if (xr)
-			{
-				if (!_stricmp(xr->Name(), "c3pg:maze"))
-				{
-					MazeDescription md;
-
-					bool b = md.Load(&xdoc);
-					if (b)
-						*returned_data = (ModelImpl *)(md.GenerateMaze(psys));
-				}
-				if (!_stricmp(xr->Name(), "c3pg:extrusion"))
-				{
-					ExtrusionDescription ed;
-
-					bool b = ed.Load(&xdoc);
-					if (b)
-						*returned_data = (ModelImpl *)(ed.GenerateExtrusion(psys));
-				}
-				else if (!_stricmp(xr->Name(), "c3pg:terrain"))
-				{
-					TerrainDescription td;
-
-					if (td.Load(&xdoc))
-						*returned_data = (ModelImpl *)(td.GenerateTerrain(psys));
-				}
-			}
+			TCHAR *err;
+			CONVERT_MBCS2TCS(import.GetErrorString(), err);
+			psys->GetLog()->Print(_T(" ("));
+			psys->GetLog()->Print(err);
+			psys->GetLog()->Print(_T(") - "));
 		}
 		else
 		{
-
-			Assimp::Importer import;
-			bool animation_only = false;
-			bool keep_rootxform = false;
-			const aiScene * scene = import.ReadFile(fn, MakeImportFlags(options, animation_only, keep_rootxform));
-			if (!scene)
+			TCHAR modbasepath[MAX_PATH];
+			_tcscpy_s(modbasepath, filename);
+			TCHAR *c = modbasepath;
+			while (*c) { if (*c == _T('/')) { *c = _T('\\'); } c++; }
+			c = _tcsrchr(modbasepath, _T('\\'));
+			if (c)
 			{
-				TCHAR *err;
-				CONVERT_MBCS2TCS(import.GetErrorString(), err);
-				psys->GetLog()->Print(_T(" ("));
-				psys->GetLog()->Print(err);
-				psys->GetLog()->Print(_T(") - "));
+				*c = _T('\0');
+				c++;
 			}
-			else
-			{
-				TCHAR modbasepath[MAX_PATH];
-				_tcscpy_s(modbasepath, filename);
-				TCHAR *c = modbasepath;
-				while (*c) { if (*c == _T('/')) { *c = _T('\\'); } c++; }
-				c = _tcsrchr(modbasepath, _T('\\'));
-				if (c)
-				{
-					*c = _T('\0');
-					c++;
-				}
 
-				*returned_data = ImportModel(psys, scene, modbasepath, c, animation_only, keep_rootxform);
-			}
+			*returned_data = ImportModel(psys, scene, modbasepath, c, animation_only, keep_rootxform);
 		}
 
 		if (!*returned_data)
-			return ResourceType::LoadResult::LR_ERROR;
+			return ResourceCodec::LoadResult::LR_ERROR;
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(ModelAssImp)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
@@ -1538,10 +1508,10 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Model)::ReadFromMemory(c3::System 
 
 		*returned_data = ImportModel(psys, scene, nullptr, contextname, animation_only, keep_rootxform);
 		if (!*returned_data)
-			return ResourceType::LoadResult::LR_ERROR;
+			return ResourceCodec::LoadResult::LR_ERROR;
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
 
@@ -1557,7 +1527,7 @@ size_t ParentlessNodeCount(ModelImpl *pm)
 
 
 // TODO: finish the write function - it's non-trivial because of the assimp data fill-out procedure
-bool RESOURCETYPENAME(Model)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(ModelAssImp)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	ModelImpl *pmod = dynamic_cast<ModelImpl *>((ModelImpl *)data);
 	if (pmod)
@@ -1611,7 +1581,99 @@ bool RESOURCETYPENAME(Model)::WriteToFile(c3::System *psys, const TCHAR *filenam
 }
 
 
-void RESOURCETYPENAME(Model)::Unload(void *data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(ModelProc)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+{
+	if (returned_data)
+	{
+		*returned_data = nullptr;
+
+		char *s;
+		CONVERT_TCS2MBCS(filename, s);
+		std::string fn = s;
+
+		tinyxml2::XMLDocument xdoc;
+		xdoc.LoadFile(fn.c_str());
+
+		tinyxml2::XMLElement *xr = xdoc.RootElement();
+		if (xr)
+		{
+			if (!_stricmp(xr->Name(), "c3pg:maze"))
+			{
+				MazeDescription md;
+
+				bool b = md.Load(&xdoc);
+				if (b)
+					*returned_data = (ModelImpl *)(md.GenerateMaze(psys));
+			}
+			if (!_stricmp(xr->Name(), "c3pg:extrusion"))
+			{
+				ExtrusionDescription ed;
+
+				bool b = ed.Load(&xdoc);
+				if (b)
+					*returned_data = (ModelImpl *)(ed.GenerateExtrusion(psys));
+			}
+			else if (!_stricmp(xr->Name(), "c3pg:terrain"))
+			{
+				TerrainDescription td;
+
+				if (td.Load(&xdoc))
+					*returned_data = (ModelImpl *)(td.GenerateTerrain(psys));
+			}
+		}
+
+		if (!*returned_data)
+			return ResourceCodec::LoadResult::LR_ERROR;
+	}
+
+	return ResourceCodec::LoadResult::LR_SUCCESS;
+}
+
+
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(ModelProc)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+{
+	if (returned_data)
+	{
+		*returned_data = nullptr;
+
+		char *ctx;
+		CONVERT_TCS2MBCS(contextname, ctx);
+
+		Assimp::Importer import;
+		bool animation_only = false;
+		bool keep_rootxform = false;
+		const aiScene * scene = import.ReadFileFromMemory(buffer, buffer_length, MakeImportFlags(options, animation_only, keep_rootxform), ctx);
+		if (!scene)
+			psys->GetLog()->Print(_T("ModelResourceType::ReadFromMemory Error importing: %s\n"), import.GetErrorString());
+
+		tstring sourcename;
+		if (!contextname || !*contextname)
+		{
+			sourcename.resize(64, _T('#'));
+			GUID g;
+			CoCreateGuid(&g);
+			_stprintf_s(sourcename.data(), sourcename.size(), _T("{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}"), g.Data1, g.Data2, g.Data3,
+				g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
+			contextname = sourcename.c_str();
+		}
+
+		*returned_data = ImportModel(psys, scene, nullptr, contextname, animation_only, keep_rootxform);
+		if (!*returned_data)
+			return ResourceCodec::LoadResult::LR_ERROR;
+	}
+
+	return ResourceCodec::LoadResult::LR_SUCCESS;
+}
+
+
+bool RESOURCECODECNAME(ModelProc)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+{
+	return false;
+}
+
+
+
+void RESOURCETYPENAME(Model)::DestroyData(void *data) const
 {
 	((Mesh *)data)->Release();
 }

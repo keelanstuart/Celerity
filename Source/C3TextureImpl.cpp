@@ -17,6 +17,13 @@
 
 using namespace c3;
 
+DECLARE_RESOURCETYPE(Texture);
+
+void RESOURCETYPENAME(Texture)::DestroyData(void *data) const
+{
+	((Texture *)data)->Release();
+}
+
 
 Texture2DImpl::Texture2DImpl(RendererImpl *prend, size_t width, size_t height, Renderer::ETextureType type, size_t mipcount, props::TFlags64 flags)
 {
@@ -287,12 +294,12 @@ Texture::RETURNCODE Texture2DImpl::Unlock()
 }
 
 
-DECLARE_RESOURCETYPE(DefaultTexture2D);
+DECLARE_RESOURCECODEC(Texture2D);
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTexture2D)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(Texture2D)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
-	c3::ResourceType::LoadResult ret = c3::ResourceType::LR_ERROR;
+	c3::ResourceCodec::LoadResult ret = c3::ResourceCodec::LR_ERROR;
 
 	if (returned_data)
 	{
@@ -360,7 +367,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTexture2D)::ReadFromFile(c3
 
 						ptex->SetName(filename);
 
-						ret = ResourceType::LoadResult::LR_SUCCESS;
+						ret = ResourceCodec::LoadResult::LR_SUCCESS;
 					}
 				}
 
@@ -415,7 +422,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTexture2D)::ReadFromFile(c3
 
 						ptex->SetName(filename);
 
-						ret = ResourceType::LoadResult::LR_SUCCESS;
+						ret = ResourceCodec::LoadResult::LR_SUCCESS;
 					}
 				}
 
@@ -428,9 +435,9 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTexture2D)::ReadFromFile(c3
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTexture2D)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(Texture2D)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	c3::ResourceType::LoadResult ret = c3::ResourceType::LR_ERROR;
+	c3::ResourceCodec::LoadResult ret = c3::ResourceCodec::LR_ERROR;
 
 	if (returned_data)
 	{
@@ -482,7 +489,7 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTexture2D)::ReadFromMemory(
 							free(src);
 						}
 
-						ret = ResourceType::LoadResult::LR_SUCCESS;
+						ret = ResourceCodec::LoadResult::LR_SUCCESS;
 					}
 				}
 
@@ -502,16 +509,11 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTexture2D)::ReadFromMemory(
 }
 
 
-bool RESOURCETYPENAME(DefaultTexture2D)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(Texture2D)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	return false;
 }
 
-
-void RESOURCETYPENAME(DefaultTexture2D)::Unload(void *data) const
-{
-	((Texture2D *)data)->Release();
-}
 
 
 // *******************************************************************************
@@ -747,36 +749,30 @@ Texture::RETURNCODE TextureCubeImpl::Unlock()
 }
 
 
-DECLARE_RESOURCETYPE(DefaultTextureCube);
+DECLARE_RESOURCECODEC(TextureCube);
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTextureCube)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(TextureCube)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
 		*returned_data = nullptr; //psys->GetRenderer()->CreateTextureCubeFromFile(filename, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
 		if (!*returned_data)
-			return ResourceType::LoadResult::LR_ERROR;
+			return ResourceCodec::LoadResult::LR_ERROR;
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTextureCube)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(TextureCube)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	return ResourceType::LoadResult::LR_ERROR;
+	return ResourceCodec::LoadResult::LR_ERROR;
 }
 
 
-bool RESOURCETYPENAME(DefaultTextureCube)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(TextureCube)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	return false;
-}
-
-
-void RESOURCETYPENAME(DefaultTextureCube)::Unload(void *data) const
-{
-	((TextureCube *)data)->Release();
 }
 
 
@@ -1014,34 +1010,28 @@ Texture::RETURNCODE Texture3DImpl::Unlock()
 }
 
 
-DECLARE_RESOURCETYPE(DefaultTexture3D);
+DECLARE_RESOURCECODEC(Texture3D);
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTexture3D)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(Texture3D)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
 	if (returned_data)
 	{
 		*returned_data = nullptr; //psys->GetRenderer()->CreateTexture2DFromFile(filename, TEXFLAG_WRAP_U | TEXFLAG_WRAP_V | TEXFLAG_MAGFILTER_LINEAR | TEXFLAG_MINFILTER_LINEAR | TEXFLAG_MINFILTER_MIPLINEAR);
 		if (!*returned_data)
-			return ResourceType::LoadResult::LR_ERROR;
+			return ResourceCodec::LoadResult::LR_ERROR;
 	}
 
-	return ResourceType::LoadResult::LR_SUCCESS;
+	return ResourceCodec::LoadResult::LR_SUCCESS;
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(DefaultTexture3D)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(Texture3D)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	return ResourceType::LoadResult::LR_ERROR;
+	return ResourceCodec::LoadResult::LR_ERROR;
 }
 
 
-bool RESOURCETYPENAME(DefaultTexture3D)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(Texture3D)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	return false;
-}
-
-
-void RESOURCETYPENAME(DefaultTexture3D)::Unload(void *data) const
-{
-	((Texture3D *)data)->Release();
 }

@@ -25,6 +25,7 @@ namespace c3
 		#define RESF_ZIPRES				0x04			// Indicates that the resource comes from a zipfile (loads only from memory)
 		#define RESF_FINDENTRYONLY		0x08			// Only check to see if the resource exists - don't create an new entry or attempt to load anything!
 		#define RESF_CACHENATIVE		0x10			// For GPU resources, will keep a CPU-side cache
+		#define RESF_ACQUIRECODEC		0x20			// Find the codec
 		#define RESF_RESERVED			0x80			// RESERVED - DON'T ASK ME NO QUESTIONS
 
 
@@ -35,7 +36,6 @@ namespace c3
 			RTFM_ANY,				/// Passes if ANY ResType flags (set in your DEFINE_RESOURCETYPE code) match the flags given here
 			RTFM_ALL,				/// Passes only if ALL ResType flags (set in your DEFINE_RESOURCETYPE code) match the flags given here
 			RTFM_NONE				/// Passes if NONE OF the ResType flags (set in your DEFINE_RESOURCETYPE code) match the flags given here
-
 		};
 
 		// resource handling functions
@@ -46,7 +46,9 @@ namespace c3
 		// queue (non-blocking; returns "instantly") and brought in by a worker thread.
 		// In either case, the resource status should be checked prior to accessing it's
 		// data.
-		virtual Resource *GetResource(const TCHAR *filename, ResourceFlags flags = 0, const ResourceType *restype = nullptr, const void *data = nullptr) = NULL;
+		virtual Resource *GetResource(const TCHAR *filename, ResourceFlags flags = 0,
+			const ResourceType *restype = nullptr, const ResourceCodec *pcodec = nullptr,
+			const void *data = nullptr) = NULL;
 
 		// For all the resources currently managed by the system, call back into this function. Optionally filter by ResourceType.
 		virtual void ForAllResourcesDo(RESOURCE_CALLBACK_FUNC func, const ResourceType *restype = nullptr, props::TFlags64 restypeflags = 0, ResTypeFlagMode flagmode = RTFM_IGNORE) = NULL;
@@ -59,13 +61,17 @@ namespace c3
 
 		virtual const ResourceType *GetResourceType(size_t index) const = NULL;
 
-		// Finds a resource type that has been previously registered, based on file extension
-		// if the same file extension could be used for multiple data types, then 
-		virtual const ResourceType *FindResourceTypeByExt(const TCHAR *ext) const = NULL;
-
 		virtual const ResourceType *FindResourceTypeByName(const TCHAR *name) const = NULL;
 
 		virtual const ResourceType *FindResourceType(GUID guid) const = NULL;
+
+		virtual void RegisterResourceCodec(const ResourceCodec *pcodec) = NULL;
+
+		virtual void UnregisterResourceCodec(const ResourceCodec *pcodec) = NULL;
+
+		virtual const ResourceCodec *FindBestCodecByExt(const TCHAR *ext, const ResourceType *restype = nullptr, bool for_write = false) const = NULL;
+
+		virtual void BuildExtensionListForType(const ResourceType *restype, tstring &extlist) = NULL;
 
 		// Deletes all references on all resources, effectively unloading everything
 		virtual void Reset() = NULL;

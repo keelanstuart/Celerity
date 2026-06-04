@@ -19,6 +19,7 @@
 #include <C3CommonVertexDefs.h>
 #include <C3RenderMethodImpl.h>
 #include <C3FontImpl.h>
+#include <C3ModelImpl.h>
 
 #include "resource.h"
 
@@ -436,22 +437,18 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 
 
 	c3::ResourceManager *rm = m_pSys->GetResourceManager();
-	const c3::ResourceType *rt;
 
 	// Initizlie utility textures and register them with the resource manager
-	rt = rm->FindResourceTypeByName(_T("Texture2D"));
-	rm->GetResource(_T("[black.tex]"), RESF_CREATEENTRYONLY, rt, GetBlackTexture());
-	rm->GetResource(_T("[grey.tex]"), RESF_CREATEENTRYONLY, rt, GetGreyTexture());
-	rm->GetResource(_T("[white.tex]"), RESF_CREATEENTRYONLY, rt, GetWhiteTexture());
-	rm->GetResource(_T("[blue.tex]"), RESF_CREATEENTRYONLY, rt, GetBlueTexture());
-	rm->GetResource(_T("[grid.tex]"), RESF_CREATEENTRYONLY, rt, GetGridTexture());
-	rm->GetResource(_T("[lineargradient.tex]"), RESF_CREATEENTRYONLY, rt, GetLinearGradientTexture());
-	rm->GetResource(_T("[utilitycolor.tex]"), RESF_CREATEENTRYONLY, rt, GetUtilityColorTexture());
-	rm->GetResource(_T("[orthoref.tex]"), RESF_CREATEENTRYONLY, rt, GetOrthoRefTexture());
+	rm->GetResource(_T("[black.tex]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Texture), nullptr, GetBlackTexture());
+	rm->GetResource(_T("[grey.tex]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Texture), nullptr, GetGreyTexture());
+	rm->GetResource(_T("[white.tex]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Texture), nullptr, GetWhiteTexture());
+	rm->GetResource(_T("[blue.tex]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Texture), nullptr, GetBlueTexture());
+	rm->GetResource(_T("[grid.tex]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Texture), nullptr, GetGridTexture());
+	rm->GetResource(_T("[lineargradient.tex]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Texture), nullptr, GetLinearGradientTexture());
+	rm->GetResource(_T("[utilitycolor.tex]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Texture), nullptr, GetUtilityColorTexture());
+	rm->GetResource(_T("[orthoref.tex]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Texture), nullptr, GetOrthoRefTexture());
 
 	// Initialize the reference cube model and register it with the resource manager
-	rt = rm->FindResourceTypeByName(_T("Model"));
-
 	{
 		c3::Material *refmtl = GetMaterialManager()->CreateMaterial();
 		refmtl->SetTexture(c3::Material::ETextureComponentType::TCT_DIFFUSE, GetOrthoRefTexture());
@@ -461,7 +458,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		c3::Model::NodeIndex ni = refcube->AddNode();
 		refcube->AssignMeshToNode(ni, mi);
 		refcube->SetMaterial(mi, refmtl);
-		rm->GetResource(_T("[refcube.model]"), RESF_CREATEENTRYONLY, rt, refcube);
+		rm->GetResource(_T("[refcube.model]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Model), nullptr, refcube);
 	}
 
 	{
@@ -478,7 +475,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 			c3::Model::NodeIndex ni = hemisphere->AddNode();
 			hemisphere->AssignMeshToNode(ni, mi);
 			hemisphere->SetMaterial(mi, refmtl);
-			rm->GetResource(hemispherename[i], RESF_CREATEENTRYONLY, rt, hemisphere);
+			rm->GetResource(hemispherename[i], RESF_CREATEENTRYONLY, RESOURCETYPE(Model), nullptr, hemisphere);
 		}
 	}
 
@@ -497,7 +494,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 			c3::Model::NodeIndex ni = sphere->AddNode();
 			sphere->AssignMeshToNode(ni, mi);
 			sphere->SetMaterial(mi, refmtl);
-			rm->GetResource(spherename[i], RESF_CREATEENTRYONLY, rt, sphere);
+			rm->GetResource(spherename[i], RESF_CREATEENTRYONLY, RESOURCETYPE(Model), nullptr, sphere);
 		}
 	}
 
@@ -506,7 +503,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		c3::Model::MeshIndex mi = boundscube->AddMesh(GetBoundsMesh());
 		c3::Model::NodeIndex ni = boundscube->AddNode();
 		boundscube->AssignMeshToNode(ni, mi);
-		rm->GetResource(_T("[bounds.model]"), RESF_CREATEENTRYONLY, rt, boundscube);
+		rm->GetResource(_T("[bounds.model]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Model), nullptr, boundscube);
 	}
 
 	{
@@ -515,7 +512,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		c3::Model::NodeIndex ni = plane_model->AddNode();
 		plane_model->AssignMeshToNode(ni, mi);
 		plane_model->SetMaterial(mi, GetWhiteMaterial());
-		rm->GetResource(_T("[xyplane.model]"), RESF_CREATEENTRYONLY, rt, plane_model);
+		rm->GetResource(_T("[xyplane.model]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Model), nullptr, plane_model);
 	}
 
 	{
@@ -524,7 +521,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		c3::Model::NodeIndex ni = plane_model->AddNode();
 		plane_model->AssignMeshToNode(ni, mi);
 		plane_model->SetMaterial(mi, GetWhiteMaterial());
-		rm->GetResource(_T("[yzplane.model]"), RESF_CREATEENTRYONLY, rt, plane_model);
+		rm->GetResource(_T("[yzplane.model]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Model), nullptr, plane_model);
 	}
 
 	{
@@ -533,7 +530,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		c3::Model::NodeIndex ni = plane_model->AddNode();
 		plane_model->AssignMeshToNode(ni, mi);
 		plane_model->SetMaterial(mi, GetWhiteMaterial());
-		rm->GetResource(_T("[xzplane.model]"), RESF_CREATEENTRYONLY, rt, plane_model);
+		rm->GetResource(_T("[xzplane.model]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Model), nullptr, plane_model);
 	}
 
 	{
@@ -542,7 +539,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 		c3::Model::NodeIndex ni = plane_model->AddNode();
 		plane_model->AssignMeshToNode(ni, mi);
 		plane_model->SetMaterial(mi, GetWhiteMaterial());
-		rm->GetResource(_T("[guirect.model]"), RESF_CREATEENTRYONLY, rt, plane_model);
+		rm->GetResource(_T("[guirect.model]"), RESF_CREATEENTRYONLY, RESOURCETYPE(Model), nullptr, plane_model);
 	}
 
 	m_Gui = new GuiImpl(this);
@@ -3146,11 +3143,11 @@ VertexBuffer *RendererImpl::GetHemisphereVB(EResLevel lvl)
 
 		verts.push_back(v);
 
-		glm::fmat4x4 mz = (glm::fmat4x4)glm::angleAxis(C3_PI * 2.0f / (float)hemisphereSectorCount[lvl], glm::fvec3(0.0f, 0.0f, 1.0f));
+		glm::fmat4x4 mz = (glm::fmat4x4)glm::angleAxis(glm::pi<float>() * 2.0f / (float)hemisphereSectorCount[lvl], glm::fvec3(0.0f, 0.0f, 1.0f));
 
 		for (size_t i = 1, maxi = hemisphereStackCount[lvl] + 1; i < maxi; i++)
 		{
-			glm::fmat4x4 mx = (glm::fmat4x4)glm::angleAxis(C3_PI / 2.0f / (float)(hemisphereStackCount[lvl] + 1) * i, glm::fvec3(0.0f, 1.0f, 0.0f));
+			glm::fmat4x4 mx = (glm::fmat4x4)glm::angleAxis(glm::pi<float>() / 2.0f / (float)(hemisphereStackCount[lvl] + 1) * i, glm::fvec3(0.0f, 1.0f, 0.0f));
 			n = glm::normalize(glm::fvec4(0, 0, 1, 0) * mx);
 
 			for (size_t j = 0, maxj = hemisphereSectorCount[lvl] + 1; j < maxj; j++)

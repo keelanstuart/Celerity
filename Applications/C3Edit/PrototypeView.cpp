@@ -547,7 +547,9 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 				const c3::ResourceType *pModResType = theApp.m_C3->GetResourceManager()->FindResourceTypeByName(_T("Model"));
 				assert(pModResType);
 
-				tstring exts = pModResType->GetReadableExtensions();
+				tstring exts;
+				theApp.m_C3->GetResourceManager()->BuildExtensionListForType(pModResType, exts);
+
 				tstring::iterator extsit = exts.begin();
 				while (extsit != exts.end())
 				{

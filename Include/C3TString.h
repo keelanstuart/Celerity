@@ -30,7 +30,7 @@ typedef std::basic_fstream<TCHAR, std::char_traits<TCHAR>> tfstream;
 #define CONVERT_WCS2MBCS(wcs, mbcs) if (wcs) {			\
   size_t origsize = _tcslen(wcs) + 1;					\
   size_t newsize = (origsize * 2) * sizeof(char);		\
-  mbcs = (char *)_alloca(newsize);						\
+  mbcs = (char *)_malloca(newsize);						\
   size_t retval = 0;									\
   wcstombs_s(&retval, mbcs, newsize, wcs, newsize); }	\
   else mbcs = nullptr;
@@ -38,7 +38,7 @@ typedef std::basic_fstream<TCHAR, std::char_traits<TCHAR>> tfstream;
 #define CONVERT_MBCS2WCS(mbcs, wcs) if (mbcs) {			\
   size_t origsize = strlen(mbcs) + 1;					\
   size_t newsize = origsize * sizeof(wchar_t);			\
-  wcs = (wchar_t *)_alloca(newsize);					\
+  wcs = (wchar_t *)_malloca(newsize);					\
   size_t retval = 0;									\
   mbstowcs_s(&retval, wcs, origsize, mbcs, newsize); }	\
   else wcs = nullptr;

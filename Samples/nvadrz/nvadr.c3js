@@ -4,15 +4,27 @@ var hparent;
 var hexplosion;
 var tmp;
 
+var model_file = {};
+var model_idx = 0;
+
 var dying = 0;
 var time_left = 1.0;
 var v3 = { x:0.0, y:0.0, z:0.0 };
+var i = 0;
 
 function init()
 {
 	hmod = FindProperty(self, "ModelFile");
 	hscl = FindProperty(self, "Scale");
 	hparent = GetParent(self);
+	
+	model_file[0] = GetPropertyValue(hmod);
+	i = model_file[0].lastIndexOf("a.");
+	if (i > 0)
+		model_file[1] =
+			model_file[0].substring(0, i) +
+			"b" +
+			model_file[0].substring(i + 1, model_file[0].length);
 }
 
 function update(elapsed_seconds)
@@ -41,4 +53,12 @@ function hit()
 	v3 = GetPropertyValue(hpos);
 	tmp = FindProperty(hexplosion, "Position");
 	SetPropertyValue(tmp, v3);
+}
+
+function cycle_model()
+{
+	model_idx++;
+	if (model_idx >= 2)
+		model_idx = 0;
+	SetPropertyValue(hmod, model_file[model_idx]);
 }

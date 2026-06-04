@@ -44,6 +44,12 @@ namespace c3
 
 	};
 
-	DEFINE_RESOURCETYPE(ShaderComponent, RTFLAG_RUNBYRENDERER, GUID({0x8c91d2f4, 0xb414, 0x47ef, {0x88, 0x23, 0xf9, 0x5e, 0xb6, 0xab, 0x22, 0x72}}), "ShaderComponent", "Shader Components", "esh;fsh;gsh;tsh;vsh", "glsl");
+	DEFINE_RESOURCETYPE(ShaderComponent, RTFLAG_RUNBYRENDERER,
+		GUID({0x8c91d2f4, 0xb414, 0x47ef, {0x88, 0x23, 0xf9, 0x5e, 0xb6, 0xab, 0x22, 0x72}}),
+		"ShaderComponent", "Shader Components");
+
+	DEFINE_RESOURCECODEC(ShaderComponentASCII, ShaderComponent, RTFLAG_RUNBYRENDERER,
+		GUID({ 0x1bf3ed1c, 0x5b2e, 0x46e3, { 0xa9, 0xf1, 0xa, 0xeb, 0x4f, 0xde, 0x76, 0x9d } }),
+		"ShaderComponentASCII", "Shader Components (ASCII)", "esh;fsh;gsh;tsh;vsh", "glsl", 0);
 
 };

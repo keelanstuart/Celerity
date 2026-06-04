@@ -17,12 +17,18 @@ using namespace c3;
 // this should be set when the ResourceManager is created
 System *ResourceImpl::s_pSys = nullptr;
 
-
-ResourceImpl::ResourceImpl(const TCHAR *filename, const TCHAR *options, const ResourceType *prestype, const void *data)
+ResourceImpl::ResourceImpl(const TCHAR *filename, const TCHAR *options,
+	const ResourceType *prestype, const ResourceCodec *pcodec,
+	const void *data)
 {
-	m_Filename = filename;
-	m_Options = options;
+	if (filename)
+		m_Filename = filename;
+	if (options)
+		m_Options = options;
+
 	m_pResType = prestype;
+	m_pCodec = pcodec;
+
 	m_Data = (void *)data;
 	if (!m_Data)
 	{
@@ -34,35 +40,46 @@ ResourceImpl::ResourceImpl(const TCHAR *filename, const TCHAR *options, const Re
 		m_Status = Resource::Status::RS_LOADED;
 		m_RefCt = 1;
 	}
-}
 
+	m_AuxFlags = 0;
+	m_Aux = 0;
+}
 
 ResourceImpl::~ResourceImpl()
 {
 	// Deleting resources while still referencing them? Naughty you.
 	assert(m_RefCt == 0);
 
-	if (m_Data)
+	// unloading / destruction in type, distinct from codec
+	if (m_Data && m_pResType)
 	{
-		if (m_pResType)
-			m_pResType->Unload(this);
-
+		m_pResType->DestroyData(m_Data);
 		m_Data = nullptr;
 	}
-
-	m_Status = Resource::Status::RS_NONE;
 }
 
 
 Resource::Status ResourceImpl::GetStatus() const
 {
-	return (Resource::Status)m_Status;
+	return m_Status;
 }
 
 
 const ResourceType *ResourceImpl::GetType() const
 {
 	return m_pResType;
+}
+
+
+const ResourceCodec *ResourceImpl::GetCodec() const
+{
+	return m_pCodec;
+}
+
+
+void ResourceImpl::SetCodec(const ResourceCodec *pcodec)
+{
+	m_pCodec = pcodec;
 }
 
 
@@ -86,6 +103,12 @@ void *ResourceImpl::GetData() const
 
 void ResourceImpl::OverrideData(void *newdata)
 {
+	if (m_Data == newdata)
+		return;
+
+	if (m_Data && m_pResType)
+		m_pResType->DestroyData(m_Data);
+
 	m_Data = newdata;
 }
 
@@ -98,12 +121,12 @@ void ResourceImpl::AddRef()
 
 	if (!m_RefCt)
 	{
-		if (m_pResType)
+		if (m_pResType && m_pCodec)
 		{
 			s_pSys->GetLog()->Print(_T("Loading \"%s\"%s%s%s... "), m_Filename.c_str(), m_Options.empty() ? _T("") : _T(" ("), m_Options.c_str(), m_Options.empty() ? _T("") : _T(")"));
 
 			m_Status = Resource::Status::RS_LOADING;
-			ResourceType::LoadResult r;
+			ResourceCodec::LoadResult r = ResourceCodec::LoadResult::LR_ERROR;
 			if (m_AuxFlags.IsSet(RESF_ZIPRES))
 			{
 				ResourceManagerImpl *prmi = (ResourceManagerImpl *)s_pSys->GetResourceManager();
@@ -116,33 +139,40 @@ void ResourceImpl::AddRef()
 					size_t len = 0;
 					if (pzf->GetContent(zfi, &addr, &len))
 					{
-						r = m_pResType->ReadFromMemory(s_pSys, m_Filename.c_str(), (const BYTE *)addr, len, m_Options.c_str(), &m_Data);
+						r = m_pCodec->ReadFromMemory(s_pSys, m_Filename.c_str(), (const BYTE *)addr, len, m_Options.c_str(), &m_Data);
 					}
 					else
 					{
-						r = ResourceType::LoadResult::LR_ERROR;
+						r = ResourceCodec::LoadResult::LR_ERROR;
 					}
 				}
 			}
-			else
+			else if (m_pCodec)
 			{
-				r = m_pResType->ReadFromFile(s_pSys, m_Filename.c_str(), m_Options.c_str(), &m_Data);
+				r = m_pCodec->ReadFromFile(s_pSys, m_Filename.c_str(), m_Options.c_str(), &m_Data);
 			}
+			else
+				r = ResourceCodec::LR_NOCODEC;
 
 			switch (r)
 			{
-				case ResourceType::LoadResult::LR_NOTFOUND:
+				case ResourceCodec::LoadResult::LR_NOTFOUND:
 					m_Status = Resource::Status::RS_NOTFOUND;
 					s_pSys->GetLog()->Print(_T("not found\n"));
 					break;
 
 				default:
-				case ResourceType::LoadResult::LR_ERROR:
+				case ResourceCodec::LoadResult::LR_ERROR:
 					m_Status = Resource::Status::RS_LOADERROR;
 					s_pSys->GetLog()->Print(_T("load error\n"));
 					break;
 
-				case ResourceType::LoadResult::LR_SUCCESS:
+				case ResourceCodec::LoadResult::LR_NOCODEC:
+					m_Status = Resource::Status::RS_LOADERROR;
+					s_pSys->GetLog()->Print(_T("No codec available\n"));
+					break;
+
+				case ResourceCodec::LoadResult::LR_SUCCESS:
 					m_Status = Resource::Status::RS_LOADED;
 					s_pSys->GetLog()->Print(_T("ok\n"));
 					break;
@@ -166,7 +196,7 @@ void ResourceImpl::DelRef()
 		{
 			if (m_pResType && m_Data && (m_Status == Resource::Status::RS_LOADED))
 			{
-				m_pResType->Unload(m_Data);
+				m_pResType->DestroyData(m_Data);
 				m_Data = nullptr;
 				m_Status = Resource::Status::RS_NONE;
 

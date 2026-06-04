@@ -12,6 +12,11 @@
 using namespace c3;
 
 
+DECLARE_RESOURCETYPE(Animation);
+
+DECLARE_RESOURCECODEC(AnimationXAF);
+
+
 Animation *Animation::Create()
 {
 	return new AnimationImpl();
@@ -133,9 +138,6 @@ void AnimationImpl::BuildNodeHierarchy()
 		m_TrackParent.push_back(pidx);
 	}
 }
-
-
-DECLARE_RESOURCETYPE(Animation);
 
 
 
@@ -305,31 +307,27 @@ bool ReadAnimFromXAF(Animation *panim, tinyxml2::XMLElement *xafdom)
 	return false;
 }
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Animation)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(AnimationXAF)::ReadFromFile(c3::System *psys, const TCHAR *filename, const TCHAR *options, void **returned_data) const
 {
-	c3::ResourceType::LoadResult ret = c3::ResourceType::LR_ERROR;
+	c3::ResourceCodec::LoadResult ret = c3::ResourceCodec::LR_ERROR;
 
 	if (returned_data)
 	{
 		*returned_data = nullptr;
 
-		const TCHAR *ext = PathFindExtension(filename);
-		if (!_tcsicmp(ext, _T(".xaf")))
+		char *s;
+		CONVERT_TCS2MBCS(filename, s);
+
+		tinyxml2::XMLDocument xafdoc;
+		if (xafdoc.LoadFile(s) == tinyxml2::XMLError::XML_SUCCESS)
 		{
-			char *s;
-			CONVERT_TCS2MBCS(filename, s);
+			Animation *panim = Animation::Create();
+			*returned_data = (void *)panim;
 
-			tinyxml2::XMLDocument xafdoc;
-			if (xafdoc.LoadFile(s) == tinyxml2::XMLError::XML_SUCCESS)
+			if (ReadAnimFromXAF(panim, xafdoc.RootElement()))
 			{
-				Animation *panim = Animation::Create();
-				*returned_data = (void *)panim;
-
-				if (ReadAnimFromXAF(panim, xafdoc.RootElement()))
-				{
-					panim->SetName(filename);
-					ret = c3::ResourceType::LoadResult::LR_SUCCESS;
-				}
+				panim->SetName(filename);
+				ret = c3::ResourceCodec::LoadResult::LR_SUCCESS;
 			}
 		}
 	}
@@ -338,9 +336,9 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Animation)::ReadFromFile(c3::Syste
 }
 
 
-c3::ResourceType::LoadResult RESOURCETYPENAME(Animation)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
+c3::ResourceCodec::LoadResult RESOURCECODECNAME(AnimationXAF)::ReadFromMemory(c3::System *psys, const TCHAR *contextname, const BYTE *buffer, size_t buffer_length, const TCHAR *options, void **returned_data) const
 {
-	c3::ResourceType::LoadResult ret = c3::ResourceType::LR_ERROR;
+	c3::ResourceCodec::LoadResult ret = c3::ResourceCodec::LR_ERROR;
 
 	if (returned_data)
 	{
@@ -351,13 +349,13 @@ c3::ResourceType::LoadResult RESOURCETYPENAME(Animation)::ReadFromMemory(c3::Sys
 }
 
 
-bool RESOURCETYPENAME(Animation)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
+bool RESOURCECODECNAME(AnimationXAF)::WriteToFile(c3::System *psys, const TCHAR *filename, const void *data) const
 {
 	return false;
 }
 
 
-void RESOURCETYPENAME(Animation)::Unload(void *data) const
+void RESOURCETYPENAME(Animation)::DestroyData(void *data) const
 {
 	((Animation *)data)->Release();
 }
