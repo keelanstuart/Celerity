@@ -16,6 +16,7 @@
 #include <C3TerrainImpl.h>
 #include <C3MazeImpl.h>
 #include <C3ExtrusionImpl.h>
+#include <C3AnimatorImpl.h>
 
 #include <assimp/Importer.hpp>
 #include <assimp/Exporter.hpp>
@@ -830,24 +831,53 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 	if (scene->HasAnimations())
 	{
-		AnimationImpl *panim = (AnimationImpl *)Animation::Create();
-		if (panim)
+		tinyxml2::XMLDocument *defstates = new tinyxml2::XMLDocument(true);
+		tinyxml2::XMLElement *pasroot = defstates ? defstates->NewElement("states") : nullptr;
+		if (defstates && pasroot)
+			defstates->InsertFirstChild(pasroot);
+
+		tstring animstatesfilename = sourcename;
+		animstatesfilename += _T(":defstates");
+		psys->GetResourceManager()->GetResource(animstatesfilename.c_str(), RESF_CREATEENTRYONLY,
+												RESOURCETYPE(AnimStatesDesc), RESOURCECODEC(AnimStatesDescC3), defstates);
+
+		pr->GetSystem()->GetLog()->Print(_T("\n\t- DEFAULT ANIMSTATES \"%s\""), animstatesfilename.c_str());
+
+		for (size_t aidx = 0; aidx < scene->mNumAnimations; aidx++)
 		{
-			pmi->SetDefaultAnim(panim);
+			aiAnimation *pa = scene->mAnimations[aidx];
 
-			for (size_t aidx = 0; aidx < scene->mNumAnimations; aidx++)
+			float ticks = (float)pa->mTicksPerSecond;
+			if (pa->mTicksPerSecond == 0)
 			{
-				aiAnimation *pa = scene->mAnimations[aidx];
+				if (from_3dsmax)
+					ticks = 4800.0f;
+				else
+					ticks = 30.0f;
+			}
 
+			// if the animation is named, use the name... otherwise, use the index
+			tstring animname;
+			if (pa->mName.length)
+			{
+				TCHAR *nametmp;
+				CONVERT_MBCS2TCS(pa->mName.C_Str(), nametmp);
+				animname = nametmp;
+			}
+			else
+			{
+				TCHAR idxtmp[8];
+				_itot_s((int)aidx, idxtmp, 10);
+				animname = _T("anim");
+				animname += idxtmp;
+			}
 
-				float ticks = (float)pa->mTicksPerSecond;
-				if (pa->mTicksPerSecond == 0)
-				{
-					if (from_3dsmax)
-						ticks = 4800.0f;
-					else
-						ticks = 30.0f;
-				}
+			AnimationImpl *panim = (AnimationImpl *)Animation::Create();
+			if (panim)
+			{
+				panim->SetName(animname.c_str());
+
+				pmi->SetDefaultAnim(panim);
 
 				for (unsigned int aci = 0; aci < pa->mNumChannels; aci++)
 				{
@@ -899,25 +929,33 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 				tstring animfilename = sourcename;
 
 				{
-					// if the animation is named, use the name... otherwise, use the index
-
-					if (pa->mName.length)
-					{
-						TCHAR *nametmp;
-						CONVERT_MBCS2TCS(pa->mName.C_Str(), nametmp);
-						MakeAnimFilename(animfilename, nametmp);
-					}
-					else
-					{
-						TCHAR idxtmp[8];
-						_itot_s((int)aidx, idxtmp, 10);
-						MakeAnimFilename(animfilename, idxtmp);
-					}
+					MakeAnimFilename(animfilename, animname.c_str());
 
 					psys->GetResourceManager()->GetResource(animfilename.c_str(), RESF_CREATEENTRYONLY,
 						RESOURCETYPE(Animation), nullptr, panim);
 
 					pr->GetSystem()->GetLog()->Print(_T("\n\t- ANIM \"%s\""), animfilename.c_str());
+					if (pasroot)
+					{
+						tinyxml2::XMLElement *passtate = pasroot->InsertNewChildElement("state");
+						if (passtate)
+						{
+							passtate->SetAttribute("name", pa->mName.C_Str());
+							passtate->SetAttribute("goto", pa->mName.C_Str());
+
+							tinyxml2::XMLElement *pasanim = passtate->InsertNewChildElement("animation");
+							if (pasanim)
+							{
+								char *mbfilename;
+								CONVERT_TCS2MBCS(animfilename.c_str(), mbfilename);
+								pasanim->SetAttribute("filename", mbfilename);
+								pasanim->SetAttribute("weight", 1);
+							}
+
+							// last animation wins for the default start state
+							pasroot->SetAttribute("startstate", pa->mName.C_Str());
+						}
+					}
 				}
 
 			}

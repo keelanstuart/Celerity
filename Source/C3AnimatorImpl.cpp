@@ -159,8 +159,11 @@ const TCHAR *AnimatorImpl::GetValue(const props::IProperty *pprop, size_t ordina
 			if (!m_StateMap.empty())
 			{
 				auto s = m_StateMap.begin();
-				while (ordinal--)
-					s++;
+				if (ordinal < m_StateMap.size())
+				{
+					while (ordinal--)
+						s++;
+				}
 
 				ret = s->first.c_str();
 			}
@@ -315,6 +318,8 @@ void AnimatorImpl::AdvanceState()
 	// now we can choose a new animation
 	SelectAnimation();
 
+	m_Flags.Clear(AF_FORCENEXT);
+
 	m_CurAnimTime = 0;
 }
 
@@ -329,7 +334,7 @@ void AnimatorImpl::Update(float elapsed_time)
 	// advance the animation time by the time that's passed...
 	m_CurAnimTime += elapsed_time;
 
-	if (!m_CurAnim || (m_CurAnimTime > GetCurAnimLength()))
+	if (!m_CurAnim || (m_CurAnimTime > GetCurAnimLength()) || m_Flags.IsSet(AF_FORCENEXT))
 	{
 		AdvanceState();
 
@@ -469,6 +474,12 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 
 	switch (pprop->GetID())
 	{
+		case 'ST8':
+		{
+			SetCurrentState(pprop->AsString());
+			break;
+		}
+
 		case 'ST8F':
 		{
 			System *psys = m_pOwner->GetSystem();
@@ -560,7 +571,10 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 					}
 				}
 
-				SetCurrentState(m_StartState.c_str());
+				if (m_StateProp && m_StateProp->AsString())
+					SetCurrentState(m_StateProp->AsString());
+				else
+					SetCurrentState(m_StartState.c_str());
 			}
 			// load states
 			break;
