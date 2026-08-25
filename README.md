@@ -1,66 +1,82 @@
-# Celerity <i>- a modern C++ engine for visualization, simulation, and game development on Windows.</i>
+# Celerity
 
-Celerity is a flexible, modular engine built from the ground up in C++. Now in its third major iteration, it’s designed to serve as both a powerful development platform and a practical content creation environment. Whether you’re building a real-time visualization, a full game, or a simulation, Celerity offers the tools and extensibility to get you there.
+**A native C++ game, graphics, and simulation engine for Windows.**
 
+Celerity is a complete development environment for building games, real-time visualizations, simulations, and other interactive applications.
 
-### Key Features
-- Modular & Generic Design:
-Celerity is built as a truly generic engine. You can use as much or as little of the system as needed in your own applications via a clean, well-structured API.
+Long-running and large in scope, Celerity encompasses everything from rendering, physics, audio, scripting, terrain, input, animation, resources, and application infrastructure to the tools used to put it all together. The engine has evolved through three major generations over more than two decades of development.
 
-- Extensible via Plug-ins:
-Easily extend functionality by writing custom plug-ins... for example, to support proprietary file formats or add new runtime object behaviors.
+<table>
+  <tr>
+    <td width="50%" align="center" valign="top">
+      <a href="https://www.youtube.com/playlist?list=PLaed72lE3UjhVFmb2GQAxGLLvyB35kld-&feature=player_embedded">
+        <img src="https://img.youtube.com/vi/K8VkbBgpvhg/0.jpg" alt="2026 Demos" width="100%" />
+      </a>
+      <br>
+      <em>2026 Celerity Demo Reel</em>
+    </td>
+    <td width="50%" align="center" valign="top">
+      <a href="https://www.youtube.com/watch?v=mlXiiIEqRsw&feature=player_embedded">
+        <img src="https://img.youtube.com/vi/mlXiiIEqRsw/0.jpg" alt="Inventoractive (my old company) Promotional Video" width="100%" />
+      </a>
+      <br>
+      <em>Inventoractive's Promotional Video (my old company)</em>
+    </td>
+  </tr>
+</table>
 
-- Embedded JavaScript:
-Access object properties, handle input, play sounds, respond to events... all using JavaScript.
+**The goal is always the same: make difficult things easier.**
 
-- Dual Architecture for "Out of the Box" Development & Content Creation:
-The platform is split into two main parts:<br>
-   - A generic host application, suitable for embedding or launching projects<br>
-   - A fully-featured scene editor for creating and modifying game and simulation content
+Celerity gives you several levels at which to work. Build scenes and content visually in the editor... add behavior using embedded JavaScript... extend the engine with native plug-ins... or, use Celerity's individual systems directly from C++ when you need complete control.
 
-- Robust Rendering & Simulation Framework:
-Built on OpenGL with a custom wrapper layer, Celerity includes tooling that generates rich, versioned wrapper code (with inline documentation) to simplify development and maximize compatibility.
+Use as much or as little of it as you need.
 
+## More Than a Rendering Engine
 
-### Getting Started
-To start developing, download the latest SDK release and install it wherever you prefer. The environment variable CELERITY_SDK will be created or updated to reflect the root install path automatically.
+Celerity is designed as an integrated development platform rather than a collection of unrelated graphics libraries.
 
-All the sub-systems of Celerity are made available through the c3::System interface. Create one like this:
+Its systems share a common object and property model, allowing the editor, scripting environment, serialization, plug-ins, and runtime code to operate on the same application data. Content created in the editor is the same content consumed by the runtime.
 
-```C++
-#include <C3.h>
+At the center is a component-based object model: objects acquire capabilities such as rendering, physics, scripting, audio, animation, or application-specific behavior through the components attached to them.
 
-void your_code()
-{
-  c3::System *psys = c3::System::Create();
+The result is an engine that can provide a productive out-of-the-box environment without putting a wall between you and the underlying systems.
 
-  // access all Celerity systems through psys
+## What Celerity Includes
 
-  psys->Release();
-}
-```
+* **Modern real-time rendering**: OpenGL-based rendering with programmable materials, deferred lighting, physically based shading, terrain, model rendering, and the infrastructure needed to build complete 3D scenes.
 
+* **Physics and simulation**: Integrated rigid-body physics and collision support designed to work naturally with Celerity's scene objects and component system.
 
-### Building the Engine
-To build Celerity from source:
-- Open the Celerity.sln solution file in Visual Studio.
+* **Embedded scripting**: JavaScript-like scripting for object behavior, input handling, events, audio, properties, and gameplay or simulation logic without requiring a native rebuild.
 
-- Build the Bootstrap (Debug) target.
+* **Visual scene editing**: Create, inspect, configure, and assemble application content using Celerity's editor rather than constructing everything programmatically.
 
-- The initial build generates the OpenGL wrapper code, which will automatically download OpenGL headers, parse them, and adds comments for all functions. A CRC is calculated from the headers and configuration options, preventing unnecessary regeneration on subsequent builds. Note: the initial bootstrap process can be slow due to downloads, so switching to Debug or Release afterward is recommended.
+* **Component-based objects**: Add capabilities to objects through reusable components for rendering, physics, scripting, and other behaviors.
 
+* **Properties everywhere**: A common property system allows data to be exposed consistently to native code, scripts, editors, serialization, and application-specific tooling.
 
-### Contributions
-Pull requests are welcome! Contributions that improve flexibility, compatibility, performance, or ease of use are encouraged.
+* **Terrain / Procedural Geometry**: Integrated terrain rendering and interaction suitable for large visualization, simulation, and game environments.
 
-<br>
-Video Links:
-<br>
-<a href="https://www.youtube.com/playlist?list=PLaed72lE3UjhVFmb2GQAxGLLvyB35kld-&feature=player_embedded" target="_blank">
-<img src="http://img.youtube.com/vi/K8VkbBgpvhg/0.jpg" alt="2026 Demos" width="600" height="450" border="50" />
-</a>
-<br>
-______________________________________________
-<br>
+* **Audio**: Runtime sound and audio support available from both native code and scripts.
 
-To see some of the things Celerity has been used to create, check out this promotional video from my old company, Inventoractive: https://www.youtube.com/watch?v=mlXiiIEqRsw
+* **Input and actions**: Abstract application input into named actions rather than coupling behavior directly to individual keys or devices.
+
+* **Extensible plug-in architecture**: Add proprietary formats, specialized object behaviors, application-specific systems, or entirely new capabilities without modifying the core engine.
+
+* **Resource and content management**: Common infrastructure for loading, locating, managing, and consuming application assets.
+
+* **Native C++ API**: The same underlying systems remain directly available when higher-level tools and scripting aren't enough.
+
+## Work at the Level You Need
+
+One of Celerity's central design goals is to avoid forcing every problem through the same abstraction.
+
+For content creation, use the editor.
+
+For behavior and rapid iteration, use scripting.
+
+For reusable or performance-sensitive functionality, write a native component or plug-in.
+
+For specialized applications, use Celerity as an engine underneath your own application and access its subsystems directly.
+
+The higher-level tools are there to remove work, not remove control.
