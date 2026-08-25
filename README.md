@@ -65,7 +65,7 @@ The result is an engine that can provide a productive out-of-the-box environment
 
 * **Resource and content management**: Common infrastructure for loading, locating, managing, and consuming application assets.
 
-* **Native C++ API**: The same underlying systems remain directly available when higher-level tools and scripting aren't enough.
+* **Clean, Native C++ API**: The same underlying systems remain directly available when higher-level tools and scripting aren't enough.
 
 ## Work at the Level You Need
 
