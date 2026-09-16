@@ -890,10 +890,10 @@ bool RendererImpl::BeginScene(props::TFlags64 flags)
 		m_Gui->BeginFrame();
 	}
 
-	if (flags.AnySet(UFBFLAG_CLEARCOLOR | UFBFLAG_CLEARDEPTH | UFBFLAG_CLEARSTENCIL))
-		gl.Clear((flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) |
-			(flags.IsSet(UFBFLAG_CLEARCOLOR) ? GL_DEPTH_BUFFER_BIT : 0) |
-			(flags.IsSet(UFBFLAG_CLEARSTENCIL) ? GL_STENCIL_BUFFER_BIT : 0));
+	if (flags.AnySet(BSFLAG_CLEARCOLOR | BSFLAG_CLEARDEPTH | BSFLAG_CLEARSTENCIL))
+		gl.Clear((flags.IsSet(BSFLAG_CLEARCOLOR) ? GL_COLOR_BUFFER_BIT : 0) |
+			(flags.IsSet(BSFLAG_CLEARCOLOR) ? GL_DEPTH_BUFFER_BIT : 0) |
+			(flags.IsSet(BSFLAG_CLEARSTENCIL) ? GL_STENCIL_BUFFER_BIT : 0));
 
 	return true;
 }

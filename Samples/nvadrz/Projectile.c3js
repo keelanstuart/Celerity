@@ -1,38 +1,42 @@
-var runtime;
-var lifetime = 2.0;
+// Reusable swept projectile for Nvadrz.
+// team: 1 = player, 2 = invader.
 
-var tmp = 0.0;
-var tmpv3 = { x: 0.0, y: 0.0, z: 0.0 };
-var dist;
+var active = 0;
+var team = 0;
+var age = 0.0;
+var lifetime = 3.0;
+
+var hroot;
 var hprop_pos;
 var hprop_lvel;
-var pos = { x: 0.0, y: 0.0, z: 0.0 };
-var lvel = { x: 0.0, y: 0.0, z: 0.0 };
-
-var hobj_parent;
-var hobj_cam;
-var hprop_campos;
 var collision_info;
-var hobj_from;
+var hobj_from = -1;
+
+var pos = { x:0.0, y:0.0, z:0.0 };
+var vel = { x:0.0, y:0.0, z:0.0 };
+var step = { x:0.0, y:0.0, z:0.0 };
+var zero = { x:0.0, y:0.0, z:0.0 };
+var hitpos = { x:0.0, y:0.0, z:0.0 };
+var step_len = 0.0;
+var hit_dist = 0.0;
+var hhit = -1;
+var htarget = -1;
+var parent_steps = 0;
+var target_is_player = 0;
+var target_is_invader = 0;
 
 function init()
 {
-	runtime = 0.0;
-
-	// cache property handles now so value access is cheaper later
-
 	hprop_pos = FindProperty(self, "Position");
 	hprop_lvel = FindProperty(self, "LinearVelocity");
 
+	// The projectile's parent should be the gameplay/scene root so the ray
+	// sees players, invaders, shields, and scenery below it.
+	hroot = GetParent(self);
 	collision_info = CreateCollisionResults();
-	hobj_parent = GetParent(self);
-	hobj_cam = GetRegisteredObject("camera.root");
-	hprop_campos = FindProperty(hobj_cam, "Position");
 
-	SetObjFlag(self, "TEMPORARY", 1);
-	SetObjFlag(self, "UPDATE", 0);
-	SetObjFlag(self, "DRAW", 0);
-	SetObjFlag(self, "LIGHT", 0);
+	SetObjFlag(self, "TEMPORARY", 0);
+	retire();
 }
 
 function free()
@@ -40,70 +44,125 @@ function free()
 	FreeCollisionResults(collision_info);
 }
 
-function update(elapsed_seconds)
+function retire()
 {
-	if (elapsed_seconds == 0.0)
-		return;
+	active = 0;
+	team = 0;
+	hobj_from = -1;
+	age = 0.0;
 
-	runtime += elapsed_seconds;
-
-	pos = GetPropertyValue(hprop_pos);
-	lvel = GetPropertyValue(hprop_lvel);
-	lvel = Vec.mul(lvel, elapsed_seconds);
-	tmp = Vec.length(lvel);
-
-	CheckCollisions(hobj_parent, pos, lvel, collision_info);
-	if ((collision_info["found"] == 1) && (collision_info["hobj"] != hobj_from))
-	{
-		dist = collision_info["distance"];
-		if  (dist <= tmp)
-		{
-			lvel = Vec.normalize(lvel);
-			lvel = Vec.mul(lvel, dist);
-			pos = Vec.add(pos, lvel);
-			lvel = Vec.mul(lvel, 0.0);
-
-			//Log("Hit " + GetObjectName(collision_info["hobj"]) + ", distance away: " + dist + "\n");
-
-			SetPropertyValue(hprop_lvel, lvel);
-			SetPropertyValue(hprop_pos, pos);
-
-			// TODO: spawn sparks maybe? we hit something!
-		}
-	}
-
-	if (runtime >= lifetime)
-	{
-		SetObjFlag(self, "DRAW", 0);
-		SetObjFlag(self, "UPDATE", 0);
-		SetObjFlag(self, "LIGHT", 0);
-	}
+	SetPropertyValue(hprop_lvel, zero);
+	SetObjFlag(self, "UPDATE", 0);
+	SetObjFlag(self, "DRAW", 0);
+	SetObjFlag(self, "LIGHT", 0);
 }
 
-
-
-function fire(posx, posy, posz, velx, vely, velz, fromobj)
+function fire(posx, posy, posz, velx, vely, velz, fromobj, newteam)
 {
-	// ignore hits from this object
-	hobj_from = fromobj;
-
 	pos.x = posx;
 	pos.y = posy;
 	pos.z = posz;
-	lvel.x = velx;
-	lvel.y = vely;
-	lvel.z = velz;
-	
-	SetPropertyValue(hprop_pos, pos);
-	SetPropertyValue(hprop_lvel, lvel);
+	vel.x = velx;
+	vel.y = vely;
+	vel.z = velz;
 
-	SetObjFlag(self, "UPDATE", 1);
+	hobj_from = fromobj;
+	team = newteam;
+	age = 0.0;
+	active = 1;
+
+	SetPropertyValue(hprop_pos, pos);
+	SetPropertyValue(hprop_lvel, vel);
 	SetObjFlag(self, "DRAW", 1);
 	SetObjFlag(self, "LIGHT", 1);
-	
-	runtime = 0.0;
-//	tmpv3 = GetPropertyValue(hprop_campos);
-//	tmpv3 = Vec.sub(tmpv3, pos);
-	tmpv3.x = 0.0; tmpv3.y = 0.0; tmpv3.z = 0.0;
-	PlaySound("Protectorate/laser.wav", 255.0, Math.random(0.90, 1.1), 0, tmpv3);
+	SetObjFlag(self, "UPDATE", 1);
+}
+
+function update(elapsed_seconds)
+{
+	if ((active == 0) || (elapsed_seconds <= 0.0))
+		return;
+
+	age += elapsed_seconds;
+	if (age >= lifetime)
+	{
+		retire();
+		return;
+	}
+
+	pos = GetPropertyValue(hprop_pos);
+	vel = GetPropertyValue(hprop_lvel);
+
+	step.x = vel.x * elapsed_seconds;
+	step.y = vel.y * elapsed_seconds;
+	step.z = vel.z * elapsed_seconds;
+	step_len = Vec.length(step);
+
+	if (step_len <= 0.0)
+	{
+		retire();
+		return;
+	}
+
+	CheckCollisions(hroot, pos, step, collision_info);
+	if (collision_info["found"] == 1)
+	{
+		hhit = collision_info["hobj"];
+		hit_dist = collision_info["distance"];
+
+		if ((hhit != self) && (hhit != hobj_from) && (hit_dist <= step_len))
+		{
+			// Collision geometry may belong to a child below the scripted object.
+			// Walk a small, fixed number of parents without allocating a collection.
+			htarget = hhit;
+			parent_steps = 0;
+			target_is_player = 0;
+			target_is_invader = 0;
+			while ((parent_steps < 6) && (htarget != -1))
+			{
+				if (FunctionExists(htarget, "hit_by_player"))
+				{
+					target_is_invader = 1;
+					parent_steps = 6;
+				}
+				else if (FunctionExists(htarget, "hit_by_enemy"))
+				{
+					target_is_player = 1;
+					parent_steps = 6;
+				}
+				else
+				{
+					htarget = GetParent(htarget);
+					parent_steps++;
+				}
+			}
+
+			// Friendly objects are transparent to the projectile. The native
+			// Positionable continues moving it, so it will leave that geometry.
+			if (((team == 1) && (target_is_player == 1)) ||
+				((team == 2) && (target_is_invader == 1)))
+				return;
+
+			step.x /= step_len;
+			step.y /= step_len;
+			step.z /= step_len;
+
+			hitpos.x = pos.x + step.x * hit_dist;
+			hitpos.y = pos.y + step.y * hit_dist;
+			hitpos.z = pos.z + step.z * hit_dist;
+			SetPropertyValue(hprop_pos, hitpos);
+
+			if ((team == 1) && (target_is_invader == 1))
+				Execute(htarget, "hit_by_player();");
+			else if ((team == 2) && (target_is_player == 1))
+				Execute(htarget, "hit_by_enemy();");
+
+			// Unknown collision objects are scenery/shields and consume the shot.
+			retire();
+			return;
+		}
+	}
+
+	// Positionable/Physical may integrate LinearVelocity itself. The old
+	// projectile script relied on that behavior, so no duplicate movement here.
 }

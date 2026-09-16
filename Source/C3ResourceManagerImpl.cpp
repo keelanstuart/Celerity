@@ -148,15 +148,15 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 		{
 			if (pres->GetStatus() == Resource::Status::RS_NONE)
 			{
-				std::function<pool::IThreadPool::TASK_RETURN(size_t task_number)> LoadingThreadProc =
-					[res = pres](size_t task_number) -> pool::IThreadPool::TASK_RETURN
+				std::function<pool::IThreadPool::TaskReturn(size_t task_number)> LoadingThreadProc =
+					[res = pres](size_t task_number) -> pool::IThreadPool::TaskReturn
 				{
 					if (!res)
-						return pool::IThreadPool::TR_OK;
+						return pool::IThreadPool::TaskReturn::OK;
 
 					((Resource *)res)->AddRef();
 
-					return pool::IThreadPool::TR_OK;
+					return pool::IThreadPool::TaskReturn::OK;
 				};
 
 				if (flags.IsSet(RESF_DEMANDLOAD) || !pres->GetType()->Flags().IsSet(RTFLAG_RUNBYRENDERER))
@@ -359,14 +359,14 @@ Resource *ResourceManagerImpl::GetResource(const TCHAR *filename, props::TFlags6
 
 	if (pres->GetStatus() == Resource::Status::RS_NONE)
 	{
-		std::function<pool::IThreadPool::TASK_RETURN(size_t task_number)> LoadingThreadProc =
-			[res = pres](size_t task_number) -> pool::IThreadPool::TASK_RETURN
+		std::function<pool::IThreadPool::TaskReturn(size_t task_number)> LoadingThreadProc =
+			[res = pres](size_t task_number) -> pool::IThreadPool::TaskReturn
 		{
 			if (!res)
-				return pool::IThreadPool::TR_OK;
+				return pool::IThreadPool::TaskReturn::OK;
 
 			((Resource *)res)->AddRef();
-			return pool::IThreadPool::TR_OK;
+			return pool::IThreadPool::TaskReturn::OK;
 		};
 
 		if (flags.IsSet(RESF_DEMANDLOAD) || !pres->GetType()->Flags().IsSet(RTFLAG_RUNBYRENDERER))

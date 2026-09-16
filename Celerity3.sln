@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.8.34408.163
+# Visual Studio Version 18
+VisualStudioVersion = 18.10.12120.281
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Celerity", "Celerity3.vcxproj", "{6D28A84B-C7D5-402B-BE1D-79C7E9036748}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -82,6 +82,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GenIO", "third-party\GenIO\GenIO.vcxproj", "{3E55E33C-4834-4D0A-A998-1A33A6B91B74}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tiff", "third-party\libtiff\build\libtiff\tiff.vcxproj", "{9995927B-2AD8-315B-9242-D4485C94F040}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "C3NoteTracker", "Applications\C3NoteTracker\NoteTracker.vcxproj", "{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -626,6 +628,39 @@ Global
 		{9995927B-2AD8-315B-9242-D4485C94F040}.Release|x64.Build.0 = Release|x64
 		{9995927B-2AD8-315B-9242-D4485C94F040}.Release|x86.ActiveCfg = Release|x64
 		{9995927B-2AD8-315B-9242-D4485C94F040}.Release|x86.Build.0 = Release|x64
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Bootstrap|Any CPU.ActiveCfg = Template|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Bootstrap|x64.ActiveCfg = Template|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Bootstrap|x86.ActiveCfg = Template|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug Static|Any CPU.ActiveCfg = Debug|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug Static|Any CPU.Build.0 = Debug|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug Static|x64.ActiveCfg = Debug|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug Static|x64.Build.0 = Debug|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug Static|x86.ActiveCfg = Debug|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug Static|x86.Build.0 = Debug|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug|Any CPU.Build.0 = Debug|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug|x64.ActiveCfg = Debug|x64
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug|x64.Build.0 = Debug|x64
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug|x86.ActiveCfg = Debug|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Debug|x86.Build.0 = Debug|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Profile|Any CPU.ActiveCfg = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Profile|Any CPU.Build.0 = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Profile|x64.ActiveCfg = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Profile|x64.Build.0 = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Profile|x86.ActiveCfg = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Profile|x86.Build.0 = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Static|Any CPU.ActiveCfg = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Static|Any CPU.Build.0 = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Static|x64.ActiveCfg = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Static|x64.Build.0 = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Static|x86.ActiveCfg = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release Static|x86.Build.0 = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release|Any CPU.ActiveCfg = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release|Any CPU.Build.0 = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release|x64.ActiveCfg = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release|x64.Build.0 = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release|x86.ActiveCfg = Release|Win32
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -644,6 +679,7 @@ Global
 		{CF62610A-3667-40BD-8E11-30103DAA6EC0} = {EF4A097B-75FB-421C-B66E-E411BE29A4CA}
 		{3E55E33C-4834-4D0A-A998-1A33A6B91B74} = {EF4A097B-75FB-421C-B66E-E411BE29A4CA}
 		{9995927B-2AD8-315B-9242-D4485C94F040} = {EF4A097B-75FB-421C-B66E-E411BE29A4CA}
+		{64D4AD90-C052-4B06-89D5-BC63FCFDC1A5} = {4E2B1180-74AF-4192-94FE-766EB5179074}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2F101180-AF31-41BB-92BB-C1A3AB6DAB41}

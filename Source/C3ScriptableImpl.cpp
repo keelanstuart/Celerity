@@ -1698,16 +1698,22 @@ void jcGetScreenObject(CScriptVar *c, void *userdata)
 }
 
 
-const TCHAR *gGlobalDesignations[GlobalObjectRegistry::OD_NUMDESIGNATIONS] =
+using TObjDesigMap = std::map<tstring, GlobalObjectRegistry::EObjectDesignation>;
+TObjDesigMap gGlobalDesignations =
 {
-	_T("worldroot"),
-	_T("skyboxroot"),
-	_T("camera.root"),
-	_T("camera.arm"),
-	_T("camera"),
-	_T("gui.root"),
-	_T("gui.camera"),
-	_T("player"),
+	{	_T("worldroot"),	GlobalObjectRegistry::OD_WORLDROOT		},
+	{	_T("skyboxroot"),	GlobalObjectRegistry::OD_SKYBOXROOT		},
+	{	_T("camera.root"),	GlobalObjectRegistry::OD_CAMERA_ROOT	},
+	{	_T("camera.arm"),	GlobalObjectRegistry::OD_CAMERA_ARM		},
+	{	_T("camera"),		GlobalObjectRegistry::OD_CAMERA			},
+	{	_T("gui.root"),		GlobalObjectRegistry::OD_GUI_ROOT		},
+	{	_T("gui.camera"),	GlobalObjectRegistry::OD_GUI_CAMERA		},
+	{	_T("player"),		GlobalObjectRegistry::OD_PLAYER			},
+	{	_T("player1"),		GlobalObjectRegistry::OD_PLAYER1		},
+	{	_T("player2"),		GlobalObjectRegistry::OD_PLAYER2		},
+	{	_T("player3"),		GlobalObjectRegistry::OD_PLAYER3		},
+	{	_T("player4"),		GlobalObjectRegistry::OD_PLAYER4		},
+	{	_T("input_target"),	GlobalObjectRegistry::OD_INPUT_TARGET	},
 };
 
 //m_JS->AddNative(_T("function jcGetRegisteredObject(designation)"),					jcGetRegisteredObject, psys);
@@ -1721,17 +1727,13 @@ void jcGetRegisteredObject(CScriptVar *c, void *userdata)
 	assert(psys);
 
 	tstring designation = c->GetParameter(_T("designation"))->GetString();
+	std::transform(designation.cbegin(), designation.cend(), designation.begin(), tolower);
 
 	Object *pretobj = nullptr;
 
-	for (size_t i = 0; i < GlobalObjectRegistry::OD_NUMDESIGNATIONS; i++)
-	{
-		if (!_tcsicmp(designation.c_str(), gGlobalDesignations[i]))
-		{
-			pretobj = psys->GetGlobalObjectRegistry()->GetRegisteredObject((GlobalObjectRegistry::ObjectDesignation)i);
-			break;
-		}
-	}
+	TObjDesigMap::const_iterator it = gGlobalDesignations.find(designation);
+	if (it != gGlobalDesignations.cend())
+		pretobj = psys->GetGlobalObjectRegistry()->GetRegisteredObject(it->second);
 
 	ret->SetInt((int64_t)pretobj);
 }
@@ -1744,43 +1746,41 @@ void jcRegisterObject(CScriptVar *c, void *userdata)
 	assert(psys);
 
 	tstring designation = c->GetParameter(_T("designation"))->GetString();
+	std::transform(designation.cbegin(), designation.cend(), designation.begin(), tolower);
+
 	int64_t hobj = c->GetParameter(_T("hobj"))->GetInt();
 
-	for (size_t i = 0; i < GlobalObjectRegistry::OD_NUMDESIGNATIONS; i++)
-	{
-		if (!_tcsicmp(designation.c_str(), gGlobalDesignations[i]))
-		{
-			psys->GetGlobalObjectRegistry()->RegisterObject((GlobalObjectRegistry::ObjectDesignation)i, (Object *)hobj);
-			return;
-		}
-	}
+	TObjDesigMap::const_iterator it = gGlobalDesignations.find(designation);
+	if (it != gGlobalDesignations.cend())
+		psys->GetGlobalObjectRegistry()->RegisterObject(it->second, (Object *)hobj);
 }
 
 
 // corresponds to the flags defined in Object
-std::vector<const TCHAR *> gObjFlagName =
+using TObjFlagMap = std::map<tstring, props::TFlags32>;
+TObjFlagMap gObjFlagName =
 {
-	_T("UPDATE"),
-	_T("DRAW"),		
-	_T("DRAWINEDITOR"),
-	_T("POSCHANGED"),
-	_T("ORICHANGED"),		
-	_T("SCLCHANGED"),
-	_T("KILL"),	
-	_T("TEMPORARY"),
-	_T("CHECKCOLLISIONS"),
-	_T("TRACKCAMX"),
-	_T("TRACKCAMY"),
-	_T("TRACKCAMZ"),
-	_T("TRACKCAMLITERAL"),
-	_T("BILLBOARD"),
-	_T("CHILDRENDIRTY"),
-	_T("PARENTDIRTY"),
-	_T("LIGHT"),
-	_T("CASTSHADOW"),
-	_T("ACCEPTINPUT")
-	_T("LOCKED")
-	_T("RESET")
+	{	_T("UPDATE"),			OF_UPDATE			},
+	{	_T("DRAW"),				OF_DRAW				},
+	{	_T("DRAWINEDITOR"),		OF_DRAWINEDITOR		},
+	{	_T("POSCHANGED"),		OF_POSCHANGED		},
+	{	_T("ORICHANGED"),		OF_ORICHANGED		},
+	{	_T("SCLCHANGED"),		OF_SCLCHANGED		},
+	{	_T("KILL"),				OF_KILL				},
+	{	_T("TEMPORARY"),		OF_TEMPORARY		},
+	{	_T("CHECKCOLLISIONS"),	OF_CHECKCOLLISIONS	},
+	{	_T("TRACKCAMX"),		OF_TRACKCAMX		},
+	{	_T("TRACKCAMY"),		OF_TRACKCAMY		},
+	{	_T("TRACKCAMZ"),		OF_TRACKCAMZ		},
+	{	_T("TRACKCAMLITERAL"),	OF_TRACKCAMLITERAL	},
+	{	_T("BILLBOARD"),		OF_BILLBOARD		},
+	{	_T("CHILDRENDIRTY"),	OF_CHILDRENDIRTY	},
+	{	_T("PARENTDIRTY"),		OF_PARENTDIRTY		},
+	{	_T("LIGHT"),			OF_LIGHT			},
+	{	_T("CASTSHADOW"),		OF_CASTSHADOW		},
+	{	_T("ACCEPTINPUT"),		OF_ACCEPTINPUT		},
+	{	_T("LOCKED"),			OF_LOCKED			},
+	{	_T("RESET"),			OF_RESET			},
 };
 
 
@@ -1792,24 +1792,20 @@ void jcIsObjFlagSet(CScriptVar *c, void *userdata)
 		return;
 
 	CScriptVar *phobj = c->GetParameter(_T("hobj"));
-	CScriptVar *pflagname = c->GetParameter(_T("flagname"));
-	if (!phobj || !pflagname)
-		return;
 
 	Object *pobj = dynamic_cast<Object *>((Object *)phobj->GetInt());
 	if (pobj)
 	{
-		uint64_t flag = 1;
-		for (auto s : gObjFlagName)
+		tstring flagname = c->GetParameter(_T("flagname"))->GetString();
+		std::transform(flagname.cbegin(), flagname.cend(), flagname.begin(), toupper);
+
+		TObjFlagMap::const_iterator it = gObjFlagName.find(flagname);
+
+		if (it != gObjFlagName.cend())
 		{
-			if (!_tcsicmp(pflagname->GetString(), s))
-				break;
-
-			flag <<= 1;
+			ret->SetInt(pobj->Flags().IsSet(it->second) ? 1 : 0);
+			return;
 		}
-
-		ret->SetInt(pobj->Flags().IsSet(flag) ? 1 : 0);
-		return;
 	}
 
 	ret->SetInt(0);
@@ -1820,28 +1816,22 @@ void jcIsObjFlagSet(CScriptVar *c, void *userdata)
 void jcSetObjFlag(CScriptVar *c, void *userdata)
 {
 	CScriptVar *phobj = c->GetParameter(_T("hobj"));
-	CScriptVar *pflagname = c->GetParameter(_T("flagname"));
 	CScriptVar *pval = c->GetParameter(_T("val"));
-	if (!phobj || !pflagname || !pval)
-		return;
 
 	Object *pobj = dynamic_cast<Object *>((Object *)phobj->GetInt());
 	if (pobj)
 	{
-		uint64_t flag = 1;
-		for (auto s : gObjFlagName)
+		tstring flagname = c->GetParameter(_T("flagname"))->GetString();
+		std::transform(flagname.cbegin(), flagname.cend(), flagname.begin(), toupper);
+
+		TObjFlagMap::const_iterator it = gObjFlagName.find(flagname);
+
+		if (it != gObjFlagName.cend())
 		{
-			if (!_tcsicmp(pflagname->GetString(), s))
-			{
-				if (!(pval->GetInt()))
-					pobj->Flags().Clear(flag);
-				else
-					pobj->Flags().Set(flag);
-
-				break;
-			}
-
-			flag <<= 1;
+			if (pval->GetBool())
+				pobj->Flags().Set(it->second);
+			else
+				pobj->Flags().Clear(it->second);
 		}
 	}
 }
@@ -3364,7 +3354,11 @@ void jcRegisterInputAction(CScriptVar *c, void *userdata)
 		static std::vector<GlobalObjectRegistry::EObjectDesignation> desigs =
 		{
 			GlobalObjectRegistry::OD_WORLDROOT,
-			GlobalObjectRegistry::OD_PLAYER,
+			GlobalObjectRegistry::OD_PLAYER1,
+			GlobalObjectRegistry::OD_PLAYER2,
+			GlobalObjectRegistry::OD_PLAYER3,
+			GlobalObjectRegistry::OD_PLAYER4,
+			GlobalObjectRegistry::OD_INPUT_TARGET,
 			GlobalObjectRegistry::OD_GUI_ROOT,
 		};
 

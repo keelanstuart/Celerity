@@ -1,28 +1,63 @@
-var hemitrate;
+// Reusable particle explosion. Created once, then restarted with explode().
 
-var emit_time = 1.0;
-var life_time = 3.0;
+var active = 0;
+var emit_time = 0.0;
+var life_time = 0.0;
+var emit_duration = 0.18;
+var life_duration = 0.70;
 
-var vec2 = { x:0.0, y:0.0 };
-var vec3 = { x:0.0, y:0.0, z:0.0 };
+var hprop_pos;
+var hprop_emitrate;
+var emit_on = { x:45.0, y:45.0 };
+var emit_off = { x:0.0, y:0.0 };
+var pos = { x:0.0, y:0.0, z:0.0 };
 
 function init()
 {
-	hemitrate = FindProperty(self, "EmitRate");
+	hprop_pos = FindProperty(self, "Position");
+	hprop_emitrate = FindProperty(self, "EmitRate");
+	retire();
+}
+
+function retire()
+{
+	active = 0;
+	emit_time = 0.0;
+	life_time = 0.0;
+	SetPropertyValue(hprop_emitrate, emit_off);
+	SetObjFlag(self, "UPDATE", 0);
+	SetObjFlag(self, "DRAW", 0);
+}
+
+function explode(x, y, z)
+{
+	pos.x = x;
+	pos.y = y;
+	pos.z = z;
+	SetPropertyValue(hprop_pos, pos);
+	SetPropertyValue(hprop_emitrate, emit_on);
+
+	emit_time = emit_duration;
+	life_time = life_duration;
+	active = 1;
+	SetObjFlag(self, "DRAW", 1);
+	SetObjFlag(self, "UPDATE", 1);
 }
 
 function update(elapsed_seconds)
 {
+	if (active == 0)
+		return;
+
 	emit_time -= elapsed_seconds;
 	life_time -= elapsed_seconds;
 
-	if (emit_time < 0.0)
+	if (emit_time <= 0.0)
 	{
-		SetPropertyValue(hemitrate, vec2);
+		emit_time = 0.0;
+		SetPropertyValue(hprop_emitrate, emit_off);
 	}
 
-	if (life_time < 0.0)
-	{
-		SetObjFlag(hexplosion, "KILL", 1);
-	}
+	if (life_time <= 0.0)
+		retire();
 }

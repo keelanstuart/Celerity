@@ -579,7 +579,7 @@ bool TerrainDescription::CompositeTextures(System *psys, Material *pmtl)
 	
 					thcount.fetch_sub(1, std::memory_order_acq_rel);
 	
-					return pool::IThreadPool::TR_OK;
+					return pool::IThreadPool::TaskReturn::OK;
 				});
 		}
 
@@ -622,7 +622,7 @@ bool TerrainDescription::CompositeTextures(System *psys, Material *pmtl)
 	
 					thcount.fetch_sub(1, std::memory_order_acq_rel);
 	
-					return pool::IThreadPool::TR_OK;
+					return pool::IThreadPool::TaskReturn::OK;
 				});
 		}
 
@@ -662,7 +662,7 @@ bool TerrainDescription::CompositeTextures(System *psys, Material *pmtl)
 	
 					thcount.fetch_sub(1, std::memory_order_acq_rel);
 	
-					return pool::IThreadPool::TR_OK;
+					return pool::IThreadPool::TaskReturn::OK;
 				});
 		}
 

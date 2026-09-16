@@ -1,69 +1,111 @@
-var hpos;
+// Invader formation movement and fixed enemy-projectile pool.
+
+var hprop_pos;
+var hgame;
 
 var move_speed = 4.0;
 var drop_speed = 0.5;
-
-var tmp = 0.0;
-var v3 = { x:0.0, y:0.0, z:0.0 };
-var oldx = 0.0;
-
+var speed_gain = 0.5;
 var left_edge = -5.0;
 var right_edge = 5.0;
+
 var womp_freq = 0.8;
 var womp_time = 0.0;
+var womp_interval = 0.10;
+
+var enemy_fire_time = 0.75;
+var enemy_fire_min = 0.45;
+var enemy_fire_max = 1.25;
+var enemy_projectile_count = 8;
+var enemy_projectile_idx = 0;
+var henemy_projectile = [];
+
+var col_count = 0;
+var col_idx = 0;
+var hcol = -1;
+var tmp = 0.0;
+var pos = { x:0.0, y:0.0, z:0.0 };
+var sound_pos = { x:0.0, y:0.0, z:0.0 };
+var i = 0;
 
 function init()
 {
-	hpos = FindProperty(self, "Position");
+	hprop_pos = FindProperty(self, "Position");
+	hgame = GetParent(GetParent(self));
+	col_count = GetNumChildren(self);
+
+	if (InEditor() == 0)
+	{
+		// Projectiles live under the gameplay root so their collision query can use
+		// that root without intersecting only the invader block.
+		for (i = 0; i < enemy_projectile_count; i++)
+		{
+			henemy_projectile[i] = CreateObject("Projectile", hgame);
+			SetObjFlag(enemy_projectile[i], "DRAW", 0);
+			SetObjFlag(enemy_projectile[i], "UPDATE", 0);
+		}
+	}
 }
 
 function update(elapsed_seconds)
 {
-	// get the position
-	v3 = GetPropertyValue(hpos);
-	oldx = v3.x;
-
-	// move the block of nvadrz some
-	tmp = move_speed * elapsed_seconds;
-	v3.x += tmp;
+	pos = GetPropertyValue(hprop_pos);
+	pos.x += move_speed * elapsed_seconds;
 
 	womp_time -= elapsed_seconds;
-	if (womp_time < 0.0)
+	if (womp_time <= 0.0)
 	{
-		womp_time = 0.1;
-
+		womp_time = womp_interval;
 		ExecuteRecursive(self, "cycle_model();");
-		PlaySound("nvadrz/womp.wav", 0.25, womp_freq, 1, undefined);
+		PlaySound("nvadrz/womp.wav", 0.25, womp_freq, 1, sound_pos);
 		if (womp_freq < 1.0)
 			womp_freq += 0.3;
 		else
 			womp_freq -= 0.3;
 	}
 
-	// if they're out of bounds:
-	//  - set their position TO the bounds
-	//  - reverse direction
-	//  - move down
-
-	if ((move_speed > 0.0) && (v3.x > right_edge))
+	if ((move_speed > 0.0) && (pos.x > right_edge))
 	{
-		v3.x = right_edge;
-		move_speed += 0.5;
-		move_speed *= -1.0;
-		v3.z -= drop_speed;
+		pos.x = right_edge;
+		move_speed = -(move_speed + speed_gain);
+		pos.z -= drop_speed;
 	}
-	else if ((move_speed < 0.0) && (v3.x < left_edge))
+	else if ((move_speed < 0.0) && (pos.x < left_edge))
 	{
-		v3.x = left_edge;
-		move_speed *= -1.0;
-		move_speed += 0.5;
-		v3.z -= drop_speed;
+		pos.x = left_edge;
+		move_speed = -move_speed + speed_gain;
+		pos.z -= drop_speed;
 	}
 
-	// update the position
-	SetPropertyValue(hpos, v3);
+	SetPropertyValue(hprop_pos, pos);
+
+	enemy_fire_time -= elapsed_seconds;
+	if ((enemy_fire_time <= 0.0) && (col_count > 0))
+	{
+		enemy_fire_time = Math.random(enemy_fire_min, enemy_fire_max);
+
+		col_idx = Math.random(0, col_count);
+		if (col_idx >= col_count)
+			col_idx = col_count - 1;
+		hcol = GetChild(self, col_idx);
+
+		if (FunctionExists(hcol, "fire_random"))
+			Execute(hcol, "fire_random(" + henemy_projectile[enemy_projectile_idx] + ");");
+
+		enemy_projectile_idx++;
+		if (enemy_projectile_idx >= enemy_projectile_count)
+			enemy_projectile_idx = 0;
+	}
 }
 
 function cycle_model()
 {
+}
+
+function reset_block()
+{
+	move_speed = 4.0;
+	womp_time = 0.0;
+	enemy_fire_time = 0.75;
+	ExecuteRecursive(self, "reset_invader();");
 }

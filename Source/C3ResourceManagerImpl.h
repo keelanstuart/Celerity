@@ -60,7 +60,7 @@ namespace c3
 
 		virtual ~ResourceManagerImpl();
 
-		static pool::IThreadPool::TASK_RETURN __cdecl LoadingThreadProc(void *presmanimpl, void *pres, size_t task_number);
+		//static pool::IThreadPool::TaskReturn __cdecl LoadingThreadProc(void *presmanimpl, void *pres, size_t task_number);
 
 		virtual Resource *GetResource(const TCHAR *filename, ResourceFlags flags = 0,
 			const ResourceType *restype = nullptr, const ResourceCodec *pcodec = nullptr,

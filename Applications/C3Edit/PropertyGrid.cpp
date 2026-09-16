@@ -973,7 +973,11 @@ void CPropertyGrid::OnPropertyChanged(CWTFPropertyGridProperty* pProp)
 					}
 
 					default:
-						p->SetInt(var.llVal);
+						assert((var.vt == VT_I4) || (var.vt == VT_I8));
+						if (var.vt == VT_I4)
+							p->SetInt((int64_t)(var.lVal));
+						else if (var.vt == VT_I8)
+							p->SetInt(var.llVal);
 						break;
 				}
 				break;

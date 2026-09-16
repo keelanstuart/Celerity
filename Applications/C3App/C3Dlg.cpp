@@ -1030,7 +1030,7 @@ bool __cdecl C3Dlg::DeviceConnected(c3::InputDevice *device, bool conn, void *us
 		return nullptr;
 	};
 
-	inputobj = ConfirmInputObject(theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_PLAYER));
+	inputobj = ConfirmInputObject(theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_PLAYER1));
 	if (!inputobj)
 		inputobj = ConfirmInputObject(theApp.m_C3->GetGlobalObjectRegistry()->GetRegisteredObject(c3::GlobalObjectRegistry::OD_WORLDROOT));
 

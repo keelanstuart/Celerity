@@ -254,7 +254,13 @@ namespace c3
 		#define UFBFLAG_UPDATEVIEWPORT		0x0010
 		#define UFBFLAG_STRICTCOMPLIANCE	0x0020		// on nv systems, does not call glClearBuffer for attachment 0, only glClear
 
-		#define BSFLAG_SHOWGUI				0x0001		// BeginScene flag; Indicates that the GUI should be rendered
+		#define BSFLAG_CLEARCOLOR			0x0001
+		#define BSFLAG_CLEARDEPTH			0x0002
+		#define BSFLAG_CLEARSTENCIL			0x0004
+		#define BSFLAG_FINISHLAST			0x0008
+		#define BSFLAG_UPDATEVIEWPORT		0x0010
+		#define BSFLAG_STRICTCOMPLIANCE		0x0020		// on nv systems, does not call glClearBuffer for attachment 0, only glClear
+		#define BSFLAG_SHOWGUI				0x0040		// BeginScene flag; Indicates that the GUI should be rendered
 
 		/// Returns the System that created this Renderer
 		virtual System *GetSystem() = NULL;
