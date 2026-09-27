@@ -351,15 +351,15 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 				if (strstr(message, "Buffer detailed info") != message)
 					errct--;
 
-				TCHAR *tmp;
+				CONVERT_STRING<TCHAR> tmp;
 				CONVERT_MBCS2TCS(message, tmp);
 
 				// until making the logging system thread-safe (including the editor's output window), don't log.
 				// nvidia's messages come from a thread that's not the main one grrrr
-				psys->GetLog()->Print(_T("[GL] DEBUG: %s\n"), tmp);
+				psys->GetLog()->Print(_T("[GL] DEBUG: %s\n"), (const TCHAR *)tmp);
 
 				if (!errct)
-					psys->GetLog()->Print(_T("\n[GL] Too many errors; error logging disabled.\n"), tmp);
+					psys->GetLog()->Print(_T("\n[GL] Too many errors; error logging disabled.\n"), (const TCHAR *)tmp);
 			}
 		}
 	}, m_pSys);
@@ -382,7 +382,7 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	{
 		char *c = devname;
 		while (*c) { *c = tolower(*c); c++; }
-		TCHAR *tmp;
+		CONVERT_STRING<TCHAR> tmp;
 		CONVERT_MBCS2TCS(devname, tmp);
 		m_DeviceName = tmp;
 		free(devname);
@@ -393,9 +393,9 @@ bool RendererImpl::Initialize(HWND hwnd, props::TFlags64 flags)
 	{
 		char *c = vendorname;
 		while (*c) { *c = tolower(*c); c++; }
-		TCHAR *tmp;
+		CONVERT_STRING<TCHAR> tmp;
 		CONVERT_MBCS2TCS(vendorname, tmp);
-		m_VendorName = tmp;
+		m_VendorName = (const TCHAR *)tmp;
 		free(vendorname);
 	}
 

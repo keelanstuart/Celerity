@@ -40,18 +40,26 @@ int CResourceSpyWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	CRect r;
 	r.SetRectEmpty();
 
-	DWORD cs = WS_CHILD | WS_VISIBLE | LVS_REPORT | LVS_OWNERDATA | LVS_OWNERDRAWFIXED;
-	DWORD csex = LVS_EX_AUTOSIZECOLUMNS | LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT;
-	m_ResList.CreateEx(csex, cs, r, this, CTLID_RESSPY_LIST);
+	DWORD cs = WS_CHILD | WS_VISIBLE | WS_TABSTOP | LVS_REPORT | LVS_OWNERDATA;
+
+	if (!m_ResList.CreateEx(0, cs, r, this, CTLID_RESSPY_LIST))
+		return -1;
+
+	m_ResList.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
 	m_ResList.InsertColumn(0, _T("Filename"), LVCFMT_LEFT, 200, 0);
 	m_ResList.InsertColumn(1, _T("Type"), LVCFMT_LEFT, 100, 1);
 	m_ResList.InsertColumn(2, _T("Status"), LVCFMT_LEFT, 80, 2);
 	m_ResList.InsertColumn(3, _T("Options"), LVCFMT_LEFT, 100, 3);
 
-	m_ResList.SetBkColor(RGB(64, 64, 64));
+	COLORREF background = RGB(64, 64, 64);
+	m_ResList.SetBkColor(background);
+	m_ResList.SetTextBkColor(background);
 	m_ResList.SetTextColor(RGB(255, 255, 255));
 
+	ModifyStyle(0, WS_CLIPCHILDREN);
+
+	AdjustLayout();
 	SetTimer('RSPY', 500, nullptr);
 
 	return 0;
@@ -188,25 +196,20 @@ void CResourceSpyWnd::OnPaint()
 
 void CResourceSpyWnd::OnTimer(UINT_PTR nIDEvent)
 {
-	c3::ResourceManager *prm = theApp.m_C3->GetResourceManager();
-	uint64_t f = prm->GetLastFrameChanged();
-
-	switch (nIDEvent)
+	if ((nIDEvent == 'RSPY') && (m_ResList.GetSafeHwnd() != nullptr) &&	(theApp.m_C3 != nullptr))
 	{
-		case 'RSPY':
-			if (f > m_Frame)
-			{
-				m_Frame = f;
-				int sh = m_ResList.GetScrollPos(SB_HORZ);
-				int sv = m_ResList.GetScrollPos(SB_VERT);
-				m_ResList.SetItemCount((int)prm->GetNumResources());
-				m_ResList.SetScrollPos(SB_HORZ, sh, 0);
-				m_ResList.SetScrollPos(SB_VERT, sv, 0);
-				RedrawWindow(nullptr, nullptr, RDW_INVALIDATE | RDW_UPDATENOW | RDW_NOERASE);
+		c3::ResourceManager *prm = theApp.m_C3->GetResourceManager();
 
-			}
-			break;
+		if (prm)
+		{
+			int count = (int)prm->GetNumResources();
+
+			if (count != m_ResList.GetItemCount())
+				m_ResList.SetItemCountEx(count, LVSICF_NOSCROLL | LVSICF_NOINVALIDATEALL);
+
+			m_ResList.Invalidate(FALSE);
+		}
 	}
 
-	__super::OnTimer(nIDEvent);
+	CDockablePane::OnTimer(nIDEvent);
 }

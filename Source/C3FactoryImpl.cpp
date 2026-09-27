@@ -333,7 +333,7 @@ bool FactoryImpl::LoadPrototypes(const tinyxml2::XMLNode *proot, const TCHAR *so
 	if (!proot && source)
 	{
 		pdoc = new tinyxml2::XMLDocument;
-		char *p;
+		CONVERT_STRING<char> p;
 		CONVERT_TCS2MBCS(source, p);
 		pdoc->LoadFile(p);
 		proot = pdoc->RootElement();
@@ -362,7 +362,7 @@ bool FactoryImpl::LoadPrototypes(const tinyxml2::XMLNode *proot, const TCHAR *so
 			const tinyxml2::XMLAttribute *paname = pel->FindAttribute("name");
 			if (paname)
 			{
-				TCHAR *n;
+				CONVERT_STRING<TCHAR> n;
 				CONVERT_MBCS2TCS(paname->Value(), n);
 				pproto->SetName(n);
 			}
@@ -370,7 +370,7 @@ bool FactoryImpl::LoadPrototypes(const tinyxml2::XMLNode *proot, const TCHAR *so
 			const tinyxml2::XMLAttribute *pagroup = pel->FindAttribute("group");
 			if (pagroup)
 			{
-				TCHAR *g;
+				CONVERT_STRING<TCHAR> g;
 				CONVERT_MBCS2TCS(pagroup->Value(), g);
 				pproto->SetGroup(g);
 			}
@@ -400,7 +400,7 @@ bool FactoryImpl::LoadPrototypes(const tinyxml2::XMLNode *proot, const TCHAR *so
 					}
 					else if (pacompname)
 					{
-						TCHAR *compname;
+						CONVERT_STRING<TCHAR> compname;
 						CONVERT_MBCS2TCS(pacompname->Value(), compname);
 
 						pct = FindComponentType(compname, false);
@@ -522,13 +522,13 @@ bool FactoryImpl::SavePrototypes(tinyxml2::XMLNode *proot, PROTO_SAVE_HUERISTIC_
 			}
 
 			{
-				char *n;
+				CONVERT_STRING<char> n;
 				CONVERT_TCS2MBCS(it->GetName(), n);
 				pprotonode->SetAttribute("name", n);
 			}
 
 			{
-				char *g;
+				CONVERT_STRING<char> g;
 				CONVERT_TCS2MBCS(it->GetGroup(), g);
 				pprotonode->SetAttribute("group", g);
 			}
@@ -550,7 +550,7 @@ bool FactoryImpl::SavePrototypes(tinyxml2::XMLNode *proot, PROTO_SAVE_HUERISTIC_
 							 g.Data4[0], g.Data4[1], g.Data4[2], g.Data4[3], g.Data4[4], g.Data4[5], g.Data4[6], g.Data4[7]);
 				pcomp->SetAttribute("guid", gs);
 
-				char *ns;
+				CONVERT_STRING<char> ns;
 				CONVERT_TCS2MBCS(pc->GetName(), ns);
 				pcomp->SetAttribute("name", ns);
 			}

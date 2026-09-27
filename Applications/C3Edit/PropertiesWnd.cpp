@@ -35,12 +35,17 @@ CPropertiesWnd::CPropertiesWnd() noexcept
 	m_pProps = nullptr;
 	m_bExpanded = false;
 
+	COLORREF bkColor = RGB(64, 64, 64);
+	m_BGBrush.CreateSolidBrush(bkColor);
+
 	InitializeCriticalSection(&m_PropLock);
 }
 
 CPropertiesWnd::~CPropertiesWnd()
 {
 	DeleteCriticalSection(&m_PropLock);
+
+	m_BGBrush.DeleteObject();
 }
 
 #define PWID_EDITNAME		1
@@ -480,7 +485,7 @@ afx_msg LRESULT CPropertiesWnd::OnCtlcolorlistbox(WPARAM wParam, LPARAM lParam)
 	dc.Attach(hdc);
 	COLORREF bkColor = RGB(64, 64, 64);
 	dc.SetBkColor(bkColor);
-	return (LRESULT)CreateSolidBrush(bkColor);
+	return (LRESULT)m_BGBrush.GetSafeHandle();
 }
 
 

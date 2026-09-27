@@ -177,6 +177,8 @@ BOOL C3EditApp::InitInstance()
 {
 	CoInitialize(NULL);
 
+	m_ProcDiag.Initialize();
+
 	// InitCommonControlsEx() is required on Windows XP if an application
 	// manifest specifies use of ComCtl32.dll version 6 or later to enable
 	// visual styles.  Otherwise, any window creation will fail.
@@ -200,7 +202,7 @@ BOOL C3EditApp::InitInstance()
 	PWSTR appdata = nullptr;
 	if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appdata) == S_OK)
 	{
-		TCHAR *appdatat;
+		CONVERT_STRING<TCHAR> appdatat;
 		CONVERT_WCS2TCS(appdata, appdatat);
 		CoTaskMemFree(appdata);
 
@@ -555,6 +557,8 @@ int C3EditApp::ExitInstance()
 
 	m_C3->Release();
 
+	m_ProcDiag.Shutdown();
+
 	return CWinAppEx::ExitInstance();
 }
 
@@ -600,11 +604,14 @@ void C3EditApp::UpdateObjectList()
 }
 
 
-void C3EditApp::UpdateStatusMessage(const TCHAR *msg)
+void C3EditApp::UpdateStatusMessage(const TCHAR *msg, int pane)
 {
 	C3EditFrame *pef = (C3EditFrame *)m_pMainWnd;
 	if (pef->GetSafeHwnd() && pef->m_wndStatusBar.GetSafeHwnd())
-		pef->m_wndStatusBar.SetPaneText(0, msg);
+	{
+		int pane_idx = pef->m_wndStatusBar.CommandToIndex(pane);
+		pef->m_wndStatusBar.SetPaneText(pane_idx, msg);
+	}
 }
 
 

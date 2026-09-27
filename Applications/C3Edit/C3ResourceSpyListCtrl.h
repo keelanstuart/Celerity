@@ -20,6 +20,8 @@ public:
 	afx_msg void OnUpdateResourceReload(CCmdUI *pCmdUI);
 	afx_msg void OnResourceReload();
 
+    afx_msg void OnResourceUnload();
+    afx_msg void OnUpdateResourceUnload(CCmdUI *pCmdUI);
 };
 
 

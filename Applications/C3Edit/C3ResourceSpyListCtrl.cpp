@@ -27,6 +27,8 @@ BEGIN_MESSAGE_MAP(C3ResourceSpyListCtrl, CListCtrl)
 	ON_WM_CONTEXTMENU()
 	ON_UPDATE_COMMAND_UI(ID_RESOURCE_RELOAD, &C3ResourceSpyListCtrl::OnUpdateResourceReload)
 	ON_COMMAND(ID_RESOURCE_RELOAD, &C3ResourceSpyListCtrl::OnResourceReload)
+	ON_COMMAND(ID_RESOURCE_UNLOAD, &C3ResourceSpyListCtrl::OnResourceUnload)
+	ON_UPDATE_COMMAND_UI(ID_RESOURCE_UNLOAD, &C3ResourceSpyListCtrl::OnUpdateResourceUnload)
 END_MESSAGE_MAP()
 
 
@@ -142,4 +144,32 @@ void C3ResourceSpyListCtrl::OnResourceReload()
 			pr->AddRef();
 		}
 	}
+}
+
+void C3ResourceSpyListCtrl::OnResourceUnload()
+{
+	c3::ResourceManager *prm = theApp.m_C3->GetResourceManager();
+
+	POSITION sp = GetFirstSelectedItemPosition();
+	for (int i = 0, maxi = GetSelectedCount(); i < maxi; i++)
+	{
+		c3::Resource *pr = prm->GetResourceByIndex(GetNextSelectedItem(sp));
+
+		if (pr)
+		{
+			pr->DelRef();
+			pr->DelRef();
+			pr->DelRef();
+		}
+	}
+}
+
+void C3ResourceSpyListCtrl::OnUpdateResourceUnload(CCmdUI *pCmdUI)
+{
+	c3::ResourceManager *prm = theApp.m_C3->GetResourceManager();
+
+	POSITION sp = GetFirstSelectedItemPosition();
+	c3::Resource *pr = prm->GetResourceByIndex(GetNextSelectedItem(sp));
+
+	pCmdUI->Enable(pr != nullptr);
 }

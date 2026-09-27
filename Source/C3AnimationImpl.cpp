@@ -263,11 +263,12 @@ bool ReadAnimFromXAF(Animation *panim, tinyxml2::XMLElement *xafdom)
 			const tinyxml2::XMLAttribute *atpar = elnode->FindAttribute("parentNode");
 			if (atname && atpar)
 			{
-				TCHAR *nodename, *parentname;
+				CONVERT_STRING<TCHAR> nodename, parentname;
 				CONVERT_MBCS2TCS(atname->Value(), nodename);
 				CONVERT_MBCS2TCS(atpar->Value(), parentname);
 
 				Animation::TrackIndex ti = panim->AddNewTrack(nodename, panim->FindTrackByName(parentname));
+
 				AnimTrack *pt = panim->GetTrack(ti);
 				if (pt)
 				{
@@ -315,7 +316,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(AnimationXAF)::ReadFromFile(c3::
 	{
 		*returned_data = nullptr;
 
-		char *s;
+		CONVERT_STRING<char> s;
 		CONVERT_TCS2MBCS(filename, s);
 
 		tinyxml2::XMLDocument xafdoc;

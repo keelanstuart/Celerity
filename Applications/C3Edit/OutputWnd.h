@@ -8,7 +8,12 @@
 
 class CDebugOutputEdit : public CEdit
 {
+public:
+	CDebugOutputEdit();
+	virtual ~CDebugOutputEdit();
 protected:
+	CBrush m_BGBrush;
+
 	HBRUSH CtlColor(CDC *pDC, UINT);
 	DECLARE_MESSAGE_MAP()
 };

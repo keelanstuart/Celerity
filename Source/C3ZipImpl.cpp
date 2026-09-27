@@ -252,7 +252,7 @@ bool ZipFile::ReadZipEntry()
 	TRYREADBUF(rpath, cds.fnlen);
 	rpath[cds.fnlen] = '\0';
 
-	TCHAR *tpath;
+	CONVERT_STRING<TCHAR> tpath;
 	CONVERT_MBCS2TCS(rpath, tpath);
 
 	// Skip file extra data..

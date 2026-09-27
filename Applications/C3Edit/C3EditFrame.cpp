@@ -105,9 +105,12 @@ BEGIN_MESSAGE_MAP(C3EditFrame, CFrameWndEx)
 	ON_UPDATE_COMMAND_UI(ID_RUN, &C3EditFrame::OnUpdateRun)
 END_MESSAGE_MAP()
 
+
 static UINT indicators[] =
 {
-	ID_SEPARATOR,           // status line indicator
+	ID_SEPARATOR,
+	//ID_SELECTION,
+	ID_DIAGNOSTICS,
 	ID_INDICATOR_CAPS,
 	ID_INDICATOR_NUM,
 	ID_INDICATOR_SCRL,
@@ -209,7 +212,14 @@ int C3EditFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		TRACE0("Failed to create status bar\n");
 		return -1;      // fail to create
 	}
+	// TODO: add pane here for process diagnostics... use m_wndStatusBar.AddPane()?
 	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT));
+	m_wndStatusBar.SetPaneWidth(m_wndStatusBar.CommandToIndex(ID_SEPARATOR), 200); // Help
+	//m_wndStatusBar.SetPaneWidth(m_wndStatusBar.CommandToIndex(ID_SELECTION), 200); // Selection
+	m_wndStatusBar.SetPaneWidth(m_wndStatusBar.CommandToIndex(ID_DIAGNOSTICS), 400); // Diagnostics
+	m_wndStatusBar.SetPaneWidth(m_wndStatusBar.CommandToIndex(ID_INDICATOR_CAPS), 40);  // CAPS
+	m_wndStatusBar.SetPaneWidth(m_wndStatusBar.CommandToIndex(ID_INDICATOR_NUM), 40);  // NUM
+	m_wndStatusBar.SetPaneWidth(m_wndStatusBar.CommandToIndex(ID_INDICATOR_SCRL), 40);  // SCRL
 
 	// TODO: Delete these five lines if you don't want the toolbar and menubar to be dockable
 	m_wndMenuBar.EnableDocking(CBRS_ALIGN_ANY);

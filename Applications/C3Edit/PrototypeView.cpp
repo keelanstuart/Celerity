@@ -479,7 +479,7 @@ void CPrototypeView::OnContextMenu(CWnd* pWnd, CPoint point)
 								protodoc.InsertEndChild(protoroot);
 								theApp.m_C3->GetFactory()->SavePrototypes(protoroot, ProtoSaveFilter);
 
-								char *fn;
+								CONVERT_STRING<char> fn;
 								CONVERT_TCS2MBCS(fd.GetPathName(), fn);
 								protodoc.SaveFile(fn);
 

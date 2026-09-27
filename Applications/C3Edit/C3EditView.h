@@ -98,6 +98,7 @@ protected:
 
 	bool m_bCenter;
 
+
 // Generated message map functions
 protected:
 

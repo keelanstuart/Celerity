@@ -22,7 +22,9 @@
 #define IDS_TOOLBAR_RESOURCESPY         131
 #define IDS_RESOURCESPY_WND             132
 #define ID_VIEW_FILEVIEW                133
+#define ID_SELECTION                    133
 #define ID_VIEW_PROTOVIEW               134
+#define ID_DIAGNOSTICS                  134
 #define ID_PROPERTIES                   135
 #define ID_OPEN                         136
 #define ID_OPEN_WITH                    137
@@ -282,13 +284,14 @@
 #define ID_GUITOGGLE                    32856
 #define ID_Menu32858                    32858
 #define ID_EDIT_SNAPGROUND              32859
+#define ID_RESOURCE_UNLOAD              32860
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        358
-#define _APS_NEXT_COMMAND_VALUE         32860
+#define _APS_NEXT_COMMAND_VALUE         32861
 #define _APS_NEXT_CONTROL_VALUE         1046
 #define _APS_NEXT_SYMED_VALUE           368
 #endif

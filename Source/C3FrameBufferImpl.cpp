@@ -36,6 +36,7 @@ FrameBufferImpl::FrameBufferImpl(RendererImpl* prend, const TCHAR *name)
 	m_Name = name;
 	m_glID = NULL;
 	m_DepthTarget = nullptr;
+	m_OwnsDepth = false;
 
 	for (size_t i = 0; i < MAX_COLORTARGETS; i++)
 	{
@@ -145,7 +146,7 @@ FrameBuffer::RETURNCODE FrameBufferImpl::Teardown()
 	{
 		if (m_ColorTarget[i].owns)
 		{
-			//C3_SAFERELEASE(m_ColorTarget[i].tex);
+			C3_SAFERELEASE(m_ColorTarget[i].tex);
 		}
 	}
 

@@ -317,7 +317,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(Texture2D)::ReadFromFile(c3::Sys
 #ifdef UNICODE
 			TIFF* tif = TIFFOpenW(filename, "r");
 #else
-			char* _filename;
+			CONVERT_STRING<char> _filename;
 			CONVERT_TCS2MBCS(filename, _filename);
 
 			TIFF* tif = TIFFOpen(_filename, "r");
@@ -382,7 +382,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(Texture2D)::ReadFromFile(c3::Sys
 		}
 		else // all other formats are read by STB
 		{
-			char *_filename;
+			CONVERT_STRING<char> _filename;
 			CONVERT_TCS2MBCS(filename, _filename);
 
 			if (stbi_info(_filename, &width, &height, &numchannels))

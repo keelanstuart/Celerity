@@ -86,7 +86,7 @@ bool TerrainDescription::Load(tinyxml2::XMLDocument *pdoc)
 		if (!pel)
 			return false;
 
-		TCHAR *tmp;
+		CONVERT_STRING<TCHAR> tmp;
 		CONVERT_MBCS2TCS(pel->GetText(), tmp);
 		*texfn = tmp;
 
@@ -107,7 +107,7 @@ bool TerrainDescription::Load(tinyxml2::XMLDocument *pdoc)
 		pa = pel->FindAttribute("tex.opacity");
 		if (pa)
 		{
-			TCHAR *tmp;
+			CONVERT_STRING<TCHAR> tmp;
 			CONVERT_MBCS2TCS(pa->Value(), tmp);
 			desc.m_LayerOpacityFile = tmp;
 		}
@@ -148,13 +148,15 @@ bool TerrainDescription::Load(tinyxml2::XMLDocument *pdoc)
 
 	tinyxml2::XMLElement *pel = pdoc->FirstChildElement("c3pg:terrain");
 	bool ret = pel != nullptr;
+	if (!ret)
+		return false;
 
-	TCHAR *tmp;
 	const tinyxml2::XMLAttribute *pa;
 
 	pa = pel->FindAttribute("name");
 	if (pa)
 	{
+		CONVERT_STRING<TCHAR> tmp;
 		CONVERT_MBCS2TCS(pa->Value(), tmp);
 		m_Name = tmp;
 	}
@@ -162,6 +164,7 @@ bool TerrainDescription::Load(tinyxml2::XMLDocument *pdoc)
 	pa = pel->FindAttribute("heightmap");
 	if (pa)
 	{
+		CONVERT_STRING<TCHAR> tmp;
 		CONVERT_MBCS2TCS(pa->Value(), tmp);
 		m_HeightmapFile = tmp;
 	}

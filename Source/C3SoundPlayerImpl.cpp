@@ -81,7 +81,7 @@ SoundPlayerImpl::SoundPlayerImpl(System *system)
 	m_DefaultDevice = 0;
 	for (size_t i = 0; i < m_DeviceCount; i++)
 	{
-		TCHAR *name;
+		CONVERT_STRING<TCHAR> name;
 		CONVERT_MBCS2TCS(m_pDeviceInfo[i].name, name);
 		m_DeviceName[i] = name;
 

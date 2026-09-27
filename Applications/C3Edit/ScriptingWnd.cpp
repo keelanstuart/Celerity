@@ -171,9 +171,9 @@ void CScriptingWnd::UpdateResourceScript()
 	FILE *f;
 	if (_tfopen_s(&f, m_pRes->GetFilename(), _T("wt")) != EINVAL)
 	{
-		char *ss;
+		CONVERT_STRING<char> ss;
 		CONVERT_TCS2MBCS((LPCTSTR)s, ss);
-		fprintf(f, ss);
+		fprintf(f, (LPCSTR)ss);
 
 		fclose(f);
 	}

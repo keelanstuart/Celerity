@@ -111,10 +111,10 @@ ShaderProgram::RETURNCODE ShaderProgramImpl::Link()
 			// The maxLength includes the NULL character
 			char *pserr = (char *)_malloca(maxlen);
 			m_Rend->gl.GetProgramInfoLog(m_glID, maxlen, &maxlen, pserr);
-			TCHAR *tpserr;
+			CONVERT_STRING<TCHAR> tpserr;
 			CONVERT_MBCS2TCS(pserr, tpserr);
 
-			m_Rend->GetSystem()->GetLog()->Print(_T("\n\t%s\n\n"), tpserr);
+			m_Rend->GetSystem()->GetLog()->Print(_T("\n\t%s\n\n"), (const TCHAR *)tpserr);
 		}
 		else
 		{
@@ -288,7 +288,7 @@ void ShaderProgramImpl::CaptureUniforms()
 
 		std::function<props::IProperty *(const char *mbcs, GLuint)> create_mbcs_property = [&](const char *mbcs, GLuint i)
 		{
-			TCHAR *t;
+			CONVERT_STRING<TCHAR> t;
 			CONVERT_MBCS2TCS(mbcs, t);
 			return m_Uniforms->CreateProperty(t, i);
 		};
@@ -737,7 +737,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(ShaderProgramASCII)::ReadFromFil
 		if (!*returned_data)
 			return ResourceCodec::LoadResult::LR_ERROR;
 
-		char *fn;
+		CONVERT_STRING<char> fn;
 		CONVERT_TCS2MBCS(filename, fn);
 		tinyxml2::XMLDocument doc;
 		if (!doc.LoadFile(fn) != tinyxml2::XMLError::XML_SUCCESS)
@@ -760,7 +760,8 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(ShaderProgramASCII)::ReadFromFil
 				const tinyxml2::XMLAttribute *pa = pel->FindAttribute("filename");
 				if (pa)
 				{
-					TCHAR *sfn, ffn[MAX_PATH];
+					CONVERT_STRING<TCHAR> sfn;
+					TCHAR ffn[MAX_PATH];
 					CONVERT_MBCS2TCS(pa->Value(), sfn);
 					if (!psys->GetFileMapper()->FindFile(sfn, ffn, MAX_PATH))
 					{
@@ -809,7 +810,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(ShaderProgramASCII)::ReadFromFil
 								}
 							}
 
-							TCHAR *_sh;
+							CONVERT_STRING<TCHAR> _sh;
 							CONVERT_MBCS2TCS(sh, _sh);
 							psc->CompileProgram(_sh, defines.empty() ? nullptr : defines.c_str());
 						}

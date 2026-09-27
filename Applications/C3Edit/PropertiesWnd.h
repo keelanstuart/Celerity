@@ -62,6 +62,7 @@ protected:
 	CWtfCheckListBox m_wndCompList;
 	CWtfCheckListBox m_wndFlagList;
 	CPropertyGrid m_wndPropList;
+	CBrush m_BGBrush;
 
 	c3::Prototype *m_pProto;
 	c3::Object *m_pObj;

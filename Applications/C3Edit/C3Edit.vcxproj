@@ -225,6 +225,7 @@
   <ItemGroup>
     <ClInclude Include="..\Common\C3AppCommon.h" />
     <ClInclude Include="..\Common\DeferredPipeline.h" />
+    <ClInclude Include="..\Common\ProcessDiagnostics.h" />
     <ClInclude Include="..\Common\renderdoc_app.h" />
     <ClInclude Include="BrushSettingsDlg.h" />
     <ClInclude Include="C3Edit.h" />

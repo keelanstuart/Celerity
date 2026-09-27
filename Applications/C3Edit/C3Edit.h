@@ -11,6 +11,7 @@
 #endif
 
 #include "resource.h"       // main symbols
+#include "ProcessDiagnostics.h"
 
 
 // C3EditApp:
@@ -101,12 +102,14 @@ public:
 
 	c3::Configuration *m_Config;
 
+	ProcessDiagnostics m_ProcDiag;
+
 	void SetActiveProperties(props::IPropertySet *props, bool readonly = false, const TCHAR *title = nullptr);
 	void SetActivePrototype(c3::Prototype *pproto, bool readonly = false, const TCHAR *title = nullptr);
 	void SetActiveObject(c3::Object *pobj, bool readonly = false, const TCHAR *title = nullptr);
 	c3::Object *GetActiveObject() const;
 	void UpdateObjectList();
-	void UpdateStatusMessage(const TCHAR *msg = nullptr);
+	void UpdateStatusMessage(const TCHAR *msg = nullptr, int pane = 0);
 
 	void ExtractPaths(const TCHAR *allpaths, std::vector<tstring> &paths);
 

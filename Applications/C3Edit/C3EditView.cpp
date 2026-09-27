@@ -423,8 +423,9 @@ void C3EditView::OnInitialUpdate()
 	GetClientRect(r);
 
 	SetTimer('DRAW', 17, nullptr);
-	SetTimer('PICK', 33, nullptr);
+	SetTimer('PICK', 100, nullptr);
 	SetTimer('PROP', 1000, nullptr);
+	SetTimer('DIAG', 1000, nullptr);
 }
 
 
@@ -987,10 +988,12 @@ C3EditDoc* C3EditView::GetDocument() const // non-debug version is inline
 
 void C3EditView::OnDestroy()
 {
-	KillTimer('DRAW');
 	KillTimer('SIZE');
+
+	KillTimer('DRAW');
 	KillTimer('PICK');
 	KillTimer('PROP');
+	KillTimer('DIAG');
 
 	CView::OnDestroy();
 }
@@ -1450,6 +1453,11 @@ void C3EditView::OnTimer(UINT_PTR nIDEvent)
 			SetTimer('DRAW', 17, nullptr);
 			break;
 		}
+
+		case 'DIAG':
+			theApp.m_ProcDiag.Sample();
+			theApp.UpdateStatusMessage(theApp.m_ProcDiag.FormatStatus(), ID_DIAGNOSTICS);
+			break;
 
 		default:
 			break;

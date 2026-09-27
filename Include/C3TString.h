@@ -28,7 +28,7 @@ typedef std::basic_fstream<TCHAR, std::char_traits<TCHAR>> tfstream;
 
 
 #define CONVERT_WCS2MBCS(wcs, mbcs) if (wcs) {			\
-  size_t origsize = _tcslen(wcs) + 1;					\
+  size_t origsize = wcslen(wcs) + 1;					\
   size_t newsize = (origsize * 2) * sizeof(char);		\
   mbcs = (char *)_malloca(newsize);						\
   size_t retval = 0;									\
@@ -43,23 +43,54 @@ typedef std::basic_fstream<TCHAR, std::char_traits<TCHAR>> tfstream;
   mbstowcs_s(&retval, wcs, origsize, mbcs, newsize); }	\
   else wcs = nullptr;
 
+template <typename T> class CONVERT_STRING
+{
+public:
+	T *pbuf;
+	bool owned;
+
+	CONVERT_STRING() : pbuf(nullptr), owned(false) { }
+	CONVERT_STRING(const CONVERT_STRING &) = delete;
+	CONVERT_STRING &operator=(const CONVERT_STRING &) = delete;
+
+	~CONVERT_STRING() { Release(); }
+
+	inline void Release()
+	{
+		if (pbuf && owned)
+			_freea(pbuf);
+
+		pbuf = nullptr;
+	}
+
+	void Borrow(T *p)
+	{
+		Release();
+		pbuf = p;
+	}
+
+	inline operator T *() { return pbuf; }
+	inline operator const T *() { return pbuf; }
+	inline CONVERT_STRING &operator =(T *f) { Release(); pbuf = f; owned = true;  return *this; }
+};
+
 #if defined(_UNICODE) || defined(UNICODE)
 
 #define CONVERT_TCS2MBCS(tcs, mbcs) CONVERT_WCS2MBCS(tcs, mbcs)
 
-#define CONVERT_TCS2WCS(tcs, wcs) wcs = (wchar_t *)tcs;
+#define CONVERT_TCS2WCS(tcs, wcs) wcs.Borrow((wchar_t *)tcs);
 
 #define CONVERT_MBCS2TCS(mbcs, tcs) CONVERT_MBCS2WCS(mbcs, tcs)
 
-#define CONVERT_WCS2TCS(wcs, tcs) tcs = (TCHAR *)wcs;
+#define CONVERT_WCS2TCS(wcs, tcs) tcs.Borrow((TCHAR *)wcs);
 
 #else
 
-#define CONVERT_TCS2MBCS(tcs, mbcs) mbcs = (char *)tcs;
+#define CONVERT_TCS2MBCS(tcs, mbcs) mbcs.Borrow((char *)tcs);
 
 #define CONVERT_TCS2WCS(tcs, wcs) CONVERT_MBCS2WCS(tcs, wcs)
 
-#define CONVERT_MBCS2TCS(mbcs, tcs) tcs = (TCHAR *)mbcs;
+#define CONVERT_MBCS2TCS(mbcs, tcs) tcs.Borrow((TCHAR *)mbcs);
 
 #define CONVERT_WCS2TCS(tcs, wcs) CONVERT_WCS2MBCS(wcs, tcs)
 

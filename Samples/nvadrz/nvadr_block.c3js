@@ -3,15 +3,13 @@
 var hprop_pos;
 var hgame;
 
-var move_speed = 4.0;
+var move_speed = 0.25;
 var drop_speed = 0.5;
-var speed_gain = 0.5;
-var left_edge = -5.0;
-var right_edge = 5.0;
+var speed_gain = 0.0;
+var left_edge = -4.0;
+var right_edge = 3.0;
 
 var womp_freq = 0.8;
-var womp_time = 0.0;
-var womp_interval = 0.10;
 
 var enemy_fire_time = 0.75;
 var enemy_fire_min = 0.45;
@@ -47,22 +45,19 @@ function init()
 	}
 }
 
+function womp()
+{
+	ExecuteRecursive(self, "cycle_model();");
+	PlaySound("nvadrz/womp.wav", 1.0, womp_freq, 1, sound_pos);
+	if (womp_freq < 1.0)
+		womp_freq += 0.3;
+	else
+		womp_freq -= 0.3;
+}
+
 function update(elapsed_seconds)
 {
 	pos = GetPropertyValue(hprop_pos);
-	pos.x += move_speed * elapsed_seconds;
-
-	womp_time -= elapsed_seconds;
-	if (womp_time <= 0.0)
-	{
-		womp_time = womp_interval;
-		ExecuteRecursive(self, "cycle_model();");
-		PlaySound("nvadrz/womp.wav", 0.25, womp_freq, 1, sound_pos);
-		if (womp_freq < 1.0)
-			womp_freq += 0.3;
-		else
-			womp_freq -= 0.3;
-	}
 
 	if ((move_speed > 0.0) && (pos.x > right_edge))
 	{
@@ -76,6 +71,12 @@ function update(elapsed_seconds)
 		move_speed = -move_speed + speed_gain;
 		pos.z -= drop_speed;
 	}
+	else
+	{
+		pos.x += move_speed;
+	}
+
+	womp();
 
 	SetPropertyValue(hprop_pos, pos);
 

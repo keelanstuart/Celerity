@@ -466,9 +466,10 @@ const TCHAR *ConfigurationImpl::GetString(const TCHAR *path, const TCHAR *def)
 			tinyxml2::XMLText *pt = (tinyxml2::XMLText *)pel->FirstChild();
 			if (!pt)
 			{
-				char *tmpdef;
+				CONVERT_STRING<char> tmpdef;
 				CONVERT_TCS2MBCS(def, tmpdef);
 				tinyxml2::XMLText *tmp = m_ConfigDoc.NewText(tmpdef);
+
 				pt = (tinyxml2::XMLText *)pel->InsertEndChild(tmp);
 			}
 		}
@@ -487,10 +488,10 @@ const TCHAR *ConfigurationImpl::GetString(const TCHAR *path, const TCHAR *def)
 
 			if (tmpret)
 			{
-				TCHAR *ret;
+				CONVERT_STRING<TCHAR> ret;
 				CONVERT_MBCS2TCS(tmpret, ret);
 				assert(it != m_StringMap.end());
-				it->second = ret;
+				it->second = (TCHAR *)ret;
 
 				return it->second.c_str();
 			}
@@ -524,7 +525,7 @@ void ConfigurationImpl::SetString(const TCHAR *path, const TCHAR *val)
 
 			if (pt)
 			{
-				char *tmpval;
+				CONVERT_STRING<char> tmpval;
 				CONVERT_TCS2MBCS(val, tmpval);
 				pt->SetValue(tmpval);
 
@@ -590,7 +591,7 @@ tinyxml2::XMLElement *ConfigurationImpl::EvaluatePath(const TCHAR *path, bool cr
 
 		if ((!*path || !(isalnum(*path) || _tcschr(allowed_chars, *path))) && !pathcomp.empty())
 		{
-			char *elstr;
+			CONVERT_STRING<char> elstr;
 			CONVERT_TCS2MBCS(pathcomp.c_str(), elstr);
 
 			tinyxml2::XMLElement *tmpret = ret->FirstChildElement(elstr);
@@ -632,13 +633,13 @@ tinyxml2::XMLElement *ConfigurationImpl::EvaluatePath(const TCHAR *path, bool cr
 
 tinyxml2::XMLAttribute *ConfigurationImpl::GetAttribute(const tinyxml2::XMLElement *pel, const TCHAR *name)
 {
-	char *_name;
+	CONVERT_STRING<char> _name;
 	CONVERT_TCS2MBCS(name, _name);
 
 	tinyxml2::XMLAttribute *pa = (tinyxml2::XMLAttribute *)pel->FirstAttribute();
 	while (pa)
 	{
-		if (!_stricmp(pa->Name(), _name))
+		if (!_stricmp(pa->Name(), (const char *)_name))
 		{
 			return pa;
 		}
@@ -651,13 +652,13 @@ tinyxml2::XMLAttribute *ConfigurationImpl::GetAttribute(const tinyxml2::XMLEleme
 
 bool ConfigurationImpl::IsType(const tinyxml2::XMLElement *pel, const TCHAR *type)
 {
-	char *_type;
+	CONVERT_STRING<char> _type;
 	CONVERT_TCS2MBCS(type, _type);
 
 	tinyxml2::XMLAttribute *pa = GetAttribute(pel, _T("type"));
 	if (pa)
 	{
-		if (!_stricmp(pa->Value(), _type))
+		if (!_stricmp(pa->Value(), (const char *)_type))
 			return true;
 	}
 
@@ -706,10 +707,10 @@ bool ConfigurationImpl::GetSubKeyName(const TCHAR *path, size_t subkeyindex, TCH
 
 		if (pchild)
 		{
-			TCHAR *val;
+			CONVERT_STRING<TCHAR> val;
 			CONVERT_MBCS2TCS(pchild->Value(), val);
 
-			_tcsncpy_s(retbuf, retbuflen, val, retbuflen);
+			_tcsncpy_s(retbuf, retbuflen, (const TCHAR *)val, retbuflen);
 			ret = true;
 		}
 	}

@@ -708,7 +708,7 @@ bool RenderMethodImpl::Load(const tinyxml2::XMLElement *proot, const TCHAR *opti
 	const tinyxml2::XMLAttribute *paname = proot->FindAttribute("name");
 	if (paname)
 	{
-		TCHAR *n;
+		CONVERT_STRING<TCHAR> n;
 		CONVERT_MBCS2TCS(paname->Value(), n);
 		m_Name = n;
 	}
@@ -732,7 +732,7 @@ void RenderMethodImpl::LoadTechnique(const tinyxml2::XMLElement *proot, const TC
 	const tinyxml2::XMLAttribute *paname = proot->FindAttribute("name");
 	if (paname)
 	{
-		TCHAR *n;
+		CONVERT_STRING<TCHAR> n;
 		CONVERT_MBCS2TCS(paname->Value(), n);
 
 		tstring name;
@@ -751,10 +751,10 @@ void RenderMethodImpl::LoadTechnique(const tinyxml2::XMLElement *proot, const TC
 	const tinyxml2::XMLAttribute *poptions = proot->FindAttribute("options");
 	if (poptions)
 	{
-		TCHAR *n;
+		CONVERT_STRING<TCHAR> n;
 		CONVERT_MBCS2TCS(poptions->Value(), n);
 
-		techopts = n;
+		techopts = (const TCHAR *)n;
 	}
 
 	const tinyxml2::XMLElement *ppel = proot->FirstChildElement("pass");
@@ -787,9 +787,9 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	if (!paname)
 		return false;
 
-	TCHAR *n;
+	CONVERT_STRING<TCHAR> n;
 	CONVERT_MBCS2TCS(paname->Value(), n);
-	tstring name = n;
+	tstring name = (const TCHAR *)n;
 
 	const tinyxml2::XMLAttribute *pavalue = proot->FindAttribute("value");
 	if (!pavalue)
@@ -799,7 +799,7 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	bool persist = false;
 	if (papersist)
 	{
-		TCHAR *pp;
+		CONVERT_STRING<TCHAR> pp;
 		CONVERT_MBCS2TCS(papersist->Value(), pp);
 		if (!_tcsicmp(_T("yes"), pp) || !_tcsicmp(_T("1"), pp) || !_tcsicmp(_T("true"), pp))
 			persist = true;
@@ -816,9 +816,9 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 		}
 	}
 
-	TCHAR *v;
-	CONVERT_MBCS2TCS(pavalue->Value(), v);
-	tstring value = v;
+	CONVERT_STRING<TCHAR> tmp;
+	CONVERT_MBCS2TCS(pavalue->Value(), tmp);
+	tstring value = (const TCHAR *)tmp;
 
 	auto SetShaderToLoad = [&](Renderer::ShaderComponentType shtype, const TCHAR *filename)
 	{
@@ -842,6 +842,7 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 	{
 		props::TFlags64 flags = 0;
 		m_FrameBufferFlags = flags;
+		const TCHAR *v = value.c_str();
 		if (v)
 		{
 			while (*v)
@@ -849,7 +850,7 @@ bool RenderMethodImpl::PassImpl::LoadSetting(const tinyxml2::XMLElement *proot)
 				while (*v && !__iswcsym(*v))
 					v++;
 
-				TCHAR *vp = v + 1;
+				const TCHAR *vp = v + 1;
 				while (*vp && __iswcsym(*vp))
 					vp++;
 
@@ -1176,7 +1177,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(RenderMethodASCII)::ReadFromFile
 	{
 		*returned_data = nullptr;
 
-		char *s;
+		CONVERT_STRING<char> s;
 		CONVERT_TCS2MBCS(filename, s);
 
 		tinyxml2::XMLDocument doc;

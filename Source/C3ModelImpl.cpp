@@ -61,6 +61,23 @@ ModelImpl::~ModelImpl()
 
 void ModelImpl::Release()
 {
+	for (auto pmi : m_Meshes)
+	{
+		if (!pmi)
+			continue;
+
+		Mesh *pm = (Mesh *)pmi->pmesh;
+		C3_SAFERELEASE(pm);
+	}
+
+	for (auto pn : m_Nodes)
+	{
+		if (!pn)
+			continue;
+
+		delete pn;
+	}
+
 	C3_SAFERELEASE(m_Bounds);
 	C3_SAFERELEASE(m_ScratchBounds);
 
@@ -635,7 +652,7 @@ void AddModelNode(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn, aiMat
 
 	Model::NodeIndex nidx;
 
-	TCHAR *name;
+	CONVERT_STRING<TCHAR> name;
 	CONVERT_MBCS2TCS(pn->mName.C_Str(), name);
 
 	nidx = pm->AddNode(name);
@@ -668,7 +685,7 @@ void AssignMeshesToNodes(ModelImpl *pm, Model::NodeIndex parent_nidx, aiNode *pn
 
 	Model::NodeIndex nidx;
 
-	TCHAR *name;
+	CONVERT_STRING<TCHAR> name;
 	CONVERT_MBCS2TCS(pn->mName.C_Str(), name);
 
 	if (!pm->FindNode(name, &nidx, true))
@@ -860,7 +877,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			tstring animname;
 			if (pa->mName.length)
 			{
-				TCHAR *nametmp;
+				CONVERT_STRING<TCHAR> nametmp;
 				CONVERT_MBCS2TCS(pa->mName.C_Str(), nametmp);
 				animname = nametmp;
 			}
@@ -883,7 +900,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 				{
 					aiNodeAnim* pna = pa->mChannels[aci];
 
-					TCHAR *trackname;
+					CONVERT_STRING<TCHAR> trackname;
 					CONVERT_MBCS2TCS(pna->mNodeName.C_Str(), trackname);
 					Animation::TrackIndex trackidx = panim->AddNewTrack(trackname);
 					if (trackidx < 0)
@@ -946,7 +963,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 							tinyxml2::XMLElement *pasanim = passtate->InsertNewChildElement("animation");
 							if (pasanim)
 							{
-								char *mbfilename;
+								CONVERT_STRING<char> mbfilename;
 								CONVERT_TCS2MBCS(animfilename.c_str(), mbfilename);
 								pasanim->SetAttribute("filename", mbfilename);
 								pasanim->SetAttribute("weight", 1);
@@ -973,7 +990,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 	MaterialManager *pmm = pr->GetMaterialManager();
 
 	aiString aipath;
-	TCHAR *textmp, *texfilename;
+	TCHAR *texfilename;
 	TCHAR texpath[MAX_PATH];
 	bool has_difftex = false;
 
@@ -1030,16 +1047,18 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 		// locally-defined function to set texture filenames for specific types of textures
 		auto SetTextureFileName = [&](Material::TextureComponentType t, const char *s)
 		{
+			CONVERT_STRING<TCHAR> textmp;
 			CONVERT_MBCS2TCS(s, textmp);
 			TCHAR idxstr[16];
+			TCHAR *_textmp = (TCHAR *)textmp;
 
 			if (scene->HasTextures())
 			{
 				unsigned int texidx = 0;
-				if (*textmp == '*')
+				if (*_textmp == _T('*'))
 				{
-					textmp++;
-					texidx = _ttoi(textmp);
+					_textmp++;
+					texidx = _ttoi(_textmp);
 				}
 				else
 				{
@@ -1090,7 +1109,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			paim->GetTexture(aiTextureType_NORMAL_CAMERA, 0, &aipath);
 		else if (has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_normtex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_NORMAL, texpathtemp, MAX_PATH - 1)) == true))
 		{
-			char *c;
+			CONVERT_STRING<char> c;
 			CONVERT_TCS2MBCS(texpathtemp, c);
 			aipath = c;
 		}
@@ -1107,7 +1126,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 			paim->GetTexture(aiTextureType_EMISSION_COLOR, 0, &aipath);
 		else if (has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_emistex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_EMISSIVE, texpathtemp, MAX_PATH - 1)) == true))
 		{
-			char *c;
+			CONVERT_STRING<char> c;
 			CONVERT_TCS2MBCS(texpathtemp, c);
 			aipath = c;
 		}
@@ -1139,7 +1158,7 @@ ModelImpl *ImportModel(c3::System *psys, const aiScene *scene, const TCHAR *root
 
 		if (!has_surftex && has_difftex && MaterialImpl::s_pfAltTexFilenameFunc && ((has_surftex = MaterialImpl::s_pfAltTexFilenameFunc(difftexpath, Material::TextureComponentType::TCT_SURFACEDESC, texpathtemp, MAX_PATH - 1)) == true))
 		{
-			char *c;
+			CONVERT_STRING<char> c;
 			CONVERT_TCS2MBCS(texpathtemp, c);
 			aipath = c;
 		}
@@ -1477,7 +1496,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(ModelAssImp)::ReadFromFile(c3::S
 	{
 		*returned_data = nullptr;
 
-		char *s;
+		CONVERT_STRING<char> s;
 		CONVERT_TCS2MBCS(filename, s);
 		std::string fn = s;
 
@@ -1487,7 +1506,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(ModelAssImp)::ReadFromFile(c3::S
 		const aiScene * scene = import.ReadFile(fn, MakeImportFlags(options, animation_only, keep_rootxform));
 		if (!scene)
 		{
-			TCHAR *err;
+			CONVERT_STRING<TCHAR> err;
 			CONVERT_MBCS2TCS(import.GetErrorString(), err);
 			psys->GetLog()->Print(_T(" ("));
 			psys->GetLog()->Print(err);
@@ -1523,7 +1542,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(ModelAssImp)::ReadFromMemory(c3:
 	{
 		*returned_data = nullptr;
 
-		char *ctx;
+		CONVERT_STRING<char> ctx;
 		CONVERT_TCS2MBCS(contextname, ctx);
 
 		Assimp::Importer import;
@@ -1599,9 +1618,9 @@ bool RESOURCECODECNAME(ModelAssImp)::WriteToFile(c3::System *psys, const TCHAR *
 		{
 			size_t ni = nc - 1;
 
-			char *nn;
+			CONVERT_STRING<char> nn;
 			CONVERT_TCS2MBCS(pmod->GetNodeName(ni), nn);
-			pn = new aiNode(nn);
+			pn = new aiNode((const char *)nn);
 			nodes.push_back(pn);
 
 			unsigned int snc = (unsigned int)pmod->GetMeshCountOnNode(ni);
@@ -1625,9 +1644,9 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(ModelProc)::ReadFromFile(c3::Sys
 	{
 		*returned_data = nullptr;
 
-		char *s;
+		CONVERT_STRING<char> s;
 		CONVERT_TCS2MBCS(filename, s);
-		std::string fn = s;
+		std::string fn = (const char *)s;
 
 		tinyxml2::XMLDocument xdoc;
 		xdoc.LoadFile(fn.c_str());
@@ -1674,7 +1693,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(ModelProc)::ReadFromMemory(c3::S
 	{
 		*returned_data = nullptr;
 
-		char *ctx;
+		CONVERT_STRING<char> ctx;
 		CONVERT_TCS2MBCS(contextname, ctx);
 
 		Assimp::Importer import;
@@ -1713,7 +1732,7 @@ bool RESOURCECODECNAME(ModelProc)::WriteToFile(c3::System *psys, const TCHAR *fi
 
 void RESOURCETYPENAME(Model)::DestroyData(void *data) const
 {
-	((Mesh *)data)->Release();
+	((Model *)data)->Release();
 }
 
 

@@ -505,7 +505,7 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 					const tinyxml2::XMLAttribute *pstartstate = pstates->FindAttribute("startstate");
 					if (pstartstate)
 					{
-						TCHAR *_startstate;
+						CONVERT_STRING<TCHAR> _startstate;
 						CONVERT_MBCS2TCS(pstartstate->Value(), _startstate);
 						m_StartState = _startstate;
 					}
@@ -516,14 +516,14 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 						const tinyxml2::XMLAttribute *pname = pstate->FindAttribute("name");
 						if (pname)
 						{
-							TCHAR *_name;
+							CONVERT_STRING<TCHAR> _name;
 							CONVERT_MBCS2TCS(pname->Value(), _name);
 
 							std::pair<AnimStateMap::iterator, bool> emres = m_StateMap.insert(AnimStateMap::value_type(_name, new AnimStateInfo()));
 
 							if (!emres.second)
 							{
-								m_pOwner->GetSystem()->GetLog()->Print(_T("\"%s\" contains duplicate state: \"%s\"\n"), filename, _name);
+								m_pOwner->GetSystem()->GetLog()->Print(_T("\"%s\" contains duplicate state: \"%s\"\n"), filename, (TCHAR *)_name);
 							}
 							else
 							{
@@ -532,9 +532,9 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 								const tinyxml2::XMLAttribute *pgoto = pstate->FindAttribute("goto");
 								if (pgoto)
 								{
-									TCHAR *_goto;
+									CONVERT_STRING<TCHAR> _goto;
 									CONVERT_MBCS2TCS(pgoto->Value(), _goto);
-									emres.first->second->m_GotoName = _goto;
+									emres.first->second->m_GotoName = (TCHAR *)_goto;
 								}
 								else
 								{
@@ -547,10 +547,11 @@ void AnimatorImpl::PropertyChanged(const props::IProperty *pprop)
 									const tinyxml2::XMLAttribute *pfilename = panim->FindAttribute("filename");
 									if (pfilename)
 									{
-										TCHAR *_filename;
+										CONVERT_STRING<TCHAR> _filename;
 										CONVERT_MBCS2TCS(pfilename->Value(), _filename);
 
 										Resource *animres = prm->GetResource(_filename, RESF_DEMANDLOAD, RESOURCETYPE(Animation));
+
 										const Animation *pa = (const Animation *)(animres ? animres->GetData() : nullptr);
 
 										emres.first->second->m_WeightedAnims.emplace_back();

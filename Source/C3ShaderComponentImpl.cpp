@@ -94,11 +94,15 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 		m_CRC = Crc32::CalculateString(preamble, m_CRC);
 
 	size_t progidx = preamble ? 2 : 1;
+	CONVERT_STRING<char> _ps1, _ps2;
 	char *ps[3] = {(char *)"#version 410\n", nullptr, nullptr};
-	CONVERT_TCS2MBCS(program, ps[progidx]);
+
+	CONVERT_TCS2MBCS(program, _ps2);
+	ps[progidx] = _ps2;
 	if (preamble)
 	{
-		CONVERT_TCS2MBCS(preamble, ps[1]);
+		CONVERT_TCS2MBCS(preamble, _ps1);
+		ps[1] = _ps1;
 	}
 	m_Rend->gl.ShaderSource(m_glID, preamble ? 3 : 2, ps, NULL);
 
@@ -120,10 +124,11 @@ ShaderComponent::RETURNCODE ShaderComponentImpl::CompileProgram(const TCHAR *pro
 			// The maxLength includes the NULL character
 			char *pserr = (char *)_malloca(maxlen);
 			m_Rend->gl.GetShaderInfoLog(m_glID, maxlen, &maxlen, pserr);
-			TCHAR *tpserr;
+			CONVERT_STRING<TCHAR> tpserr;
 			CONVERT_MBCS2TCS(pserr, tpserr);
+			_freea(pserr);
 
-			m_Rend->GetSystem()->GetLog()->Print(_T("\n\t%s\n\n"), tpserr);
+			m_Rend->GetSystem()->GetLog()->Print(_T("\n\t%s\n\n"), (const TCHAR *)tpserr);
 		}
 		else
 		{
@@ -224,7 +229,7 @@ c3::ResourceCodec::LoadResult RESOURCECODECNAME(ShaderComponentASCII)::ReadFromF
 						if (sc[i] == '\r')
 							sc[i] = '\n';
 
-					TCHAR *tsc;
+					CONVERT_STRING<TCHAR> tsc;
 					CONVERT_MBCS2TCS(sc, tsc);
 					free(sc);
 

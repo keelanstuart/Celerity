@@ -243,7 +243,7 @@ BOOL C3App::InitInstance()
 	PWSTR appdata = nullptr;
 	if (SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_CREATE, NULL, &appdata) == S_OK)
 	{
-		TCHAR *appdatat;
+		CONVERT_STRING<TCHAR> appdatat;
 		CONVERT_WCS2TCS(appdata, appdatat);
 		CoTaskMemFree(appdata);
 
@@ -429,7 +429,7 @@ BOOL C3App::InitInstance()
 			do
 			{
 				tstring fpath = ppath + fd.cFileName;
-				char *fp;
+				CONVERT_STRING<char> fp;
 				CONVERT_TCS2MBCS(fpath.c_str(), fp);
 
 				tinyxml2::XMLDocument protodoc;

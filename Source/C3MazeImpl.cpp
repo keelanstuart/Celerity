@@ -26,9 +26,9 @@ bool MazeDescription::Load(tinyxml2::XMLDocument *pdoc)
 		if (!pel)
 			return false;
 
-		TCHAR *tmp;
+		CONVERT_STRING<TCHAR> tmp;
 		CONVERT_MBCS2TCS(pel->GetText(), tmp);
-		*texfn = tmp;
+		*texfn = (const TCHAR *)tmp;
 
 		return true;
 	};
@@ -110,21 +110,22 @@ bool MazeDescription::Load(tinyxml2::XMLDocument *pdoc)
 	tinyxml2::XMLElement *pel = pdoc->FirstChildElement("c3pg:maze");
 	bool ret = pel != nullptr;
 
-	TCHAR *tmp;
 	const tinyxml2::XMLAttribute *pa;
 
 	pa = pel->FindAttribute("name");
 	if (pa)
 	{
+		CONVERT_STRING<TCHAR> tmp;
 		CONVERT_MBCS2TCS(pa->Value(), tmp);
-		m_Name = tmp;
+		m_Name = (const TCHAR *)tmp;
 	}
 
 	pa = pel->FindAttribute("map");
 	if (pa)
 	{
+		CONVERT_STRING<TCHAR> tmp;
 		CONVERT_MBCS2TCS(pa->Value(), tmp);
-		m_MapFile = tmp;
+		m_MapFile = (const TCHAR *)tmp;
 	}
 
 	if ((pa = pel->FindAttribute("minwallz")) != nullptr)

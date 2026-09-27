@@ -530,5 +530,5 @@ void C3EditDoc::UpdateStatusMessage(const c3::Object *pobj)
 			break;
 	}
 
-	theApp.UpdateStatusMessage(msgbuf);
+	theApp.UpdateStatusMessage(msgbuf, 0);
 }

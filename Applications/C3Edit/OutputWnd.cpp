@@ -22,12 +22,23 @@ BEGIN_MESSAGE_MAP(CDebugOutputEdit, CEdit)
 	ON_WM_CTLCOLOR_REFLECT()
 END_MESSAGE_MAP()
 
+CDebugOutputEdit::CDebugOutputEdit()
+{
+	COLORREF bkColor = RGB(64, 64, 64);
+	m_BGBrush.CreateSolidBrush(bkColor);
+}
+
+CDebugOutputEdit::~CDebugOutputEdit()
+{
+	m_BGBrush.DeleteObject();
+}
+
 HBRUSH CDebugOutputEdit::CtlColor(CDC *pDC, UINT)
 {
 	COLORREF bkColor = RGB(64, 64, 64);
 	pDC->SetBkColor(bkColor);
 	pDC->SetTextColor(RGB(255, 255, 255));
-	return CreateSolidBrush(bkColor);
+	return m_BGBrush;
 }
 
 /////////////////////////////////////////////////////////////////////////////

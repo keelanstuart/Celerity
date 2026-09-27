@@ -239,7 +239,7 @@ void GuiImpl::AddMouseWheelEvent(float wheelx, float wheely)
 
 bool GuiImpl::Begin(const TCHAR *name, bool *p_openptr, props::TFlags64 flags)
 {
-	char *_name;
+	CONVERT_STRING<char> _name;
 	CONVERT_TCS2MBCS(name, _name);
 	return ImGui::Begin(_name, p_openptr, (ImGuiWindowFlags)(uint64_t)flags);
 }
@@ -253,7 +253,7 @@ void GuiImpl::End()
 
 bool GuiImpl::BeginChild(const TCHAR *str_id, const glm::fvec2 &size, bool border, props::TFlags64 window_flags)
 {
-	char *_str_id;
+	CONVERT_STRING<char> _str_id;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	return ImGui::BeginChild(_str_id, size, border, (ImGuiWindowFlags)(uint64_t)window_flags);
 }
@@ -393,7 +393,7 @@ void GuiImpl::SetWindowFontScale(float scale)
 
 void GuiImpl::SetWindowPos(const TCHAR *name, const glm::fvec2 &pos, int64_t cond)
 {
-	char *_name;
+	CONVERT_STRING<char> _name;
 	CONVERT_TCS2MBCS(name, _name);
 	ImGui::SetWindowPos(_name, pos, (ImGuiCond)cond);
 }
@@ -401,7 +401,7 @@ void GuiImpl::SetWindowPos(const TCHAR *name, const glm::fvec2 &pos, int64_t con
 
 void GuiImpl::SetWindowSize(const TCHAR *name, const glm::fvec2 &size, int64_t cond)
 {
-	char *_name;
+	CONVERT_STRING<char> _name;
 	CONVERT_TCS2MBCS(name, _name);
 	ImGui::SetWindowSize(_name, size, (ImGuiCond)cond);
 }
@@ -409,7 +409,7 @@ void GuiImpl::SetWindowSize(const TCHAR *name, const glm::fvec2 &size, int64_t c
 
 void GuiImpl::SetWindowCollapsed(const TCHAR *name, bool collapsed, int64_t cond)
 {
-	char *_name;
+	CONVERT_STRING<char> _name;
 	CONVERT_TCS2MBCS(name, _name);
 	ImGui::SetWindowCollapsed(_name, collapsed, (ImGuiCond)cond);
 }
@@ -417,7 +417,7 @@ void GuiImpl::SetWindowCollapsed(const TCHAR *name, bool collapsed, int64_t cond
 
 void GuiImpl::SetWindowFocus(const TCHAR *name)
 {
-	char *_name;
+	CONVERT_STRING<char> _name;
 	CONVERT_TCS2MBCS(name, _name);
 	ImGui::SetWindowFocus(_name);
 }
@@ -815,7 +815,7 @@ float GuiImpl::GetFrameHeightWithSpacing()
 
 void GuiImpl::PushID(const TCHAR *str_id)
 {
-	char *_str_id;
+	CONVERT_STRING<char> _str_id;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	ImGui::PushID(_str_id);
 }
@@ -823,7 +823,7 @@ void GuiImpl::PushID(const TCHAR *str_id)
 
 void GuiImpl::PushID(const TCHAR *str_id_begin, const TCHAR *str_id_end)
 {
-	char *_str_id_begin, *_str_id_end;
+	CONVERT_STRING<char> _str_id_begin, _str_id_end;
 	CONVERT_TCS2MBCS(str_id_begin, _str_id_begin);
 	CONVERT_TCS2MBCS(str_id_end, _str_id_end);
 	ImGui::PushID(_str_id_begin, _str_id_end);
@@ -850,7 +850,7 @@ void GuiImpl::PopID()
 
 uint64_t GuiImpl::GetID(const TCHAR *str_id)
 {
-	char *_str_id;
+	CONVERT_STRING<char> _str_id;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	return ImGui::GetID(_str_id);
 }
@@ -858,7 +858,7 @@ uint64_t GuiImpl::GetID(const TCHAR *str_id)
 
 uint64_t GuiImpl::GetID(const TCHAR *str_id_begin, const TCHAR *str_id_end)
 {
-	char *_str_id_begin, *_str_id_end;
+	CONVERT_STRING<char> _str_id_begin, _str_id_end;
 	CONVERT_TCS2MBCS(str_id_begin, _str_id_begin);
 	CONVERT_TCS2MBCS(str_id_end, _str_id_end);
 	return ImGui::GetID(_str_id_begin, _str_id_end);
@@ -873,9 +873,9 @@ uint64_t GuiImpl::GetID(const void *ptr_id)
 
 void GuiImpl::TextUnformatted(const TCHAR *text, const TCHAR *text_endptr)
 {
-	char *_text, *_text_endptr;
+	CONVERT_STRING<char> _text;
 	CONVERT_TCS2MBCS(text, _text);
-	_text_endptr = _text + (text_endptr - text);
+	const char *_text_endptr = (const char *)_text + (text_endptr - text);
 	ImGui::TextUnformatted(_text, _text_endptr);
 }
 
@@ -893,7 +893,7 @@ void GuiImpl::Text(const TCHAR *fmt, ...)
 
 void GuiImpl::TextV(const TCHAR *fmt, va_list args)
 {
-	char *_fmt;
+	CONVERT_STRING<char> _fmt;
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	ImGui::TextV(_fmt, args);
 }
@@ -912,7 +912,7 @@ void GuiImpl::TextColored(const glm::fvec4 &col, const TCHAR *fmt, ...)
 
 void GuiImpl::TextColoredV(const glm::fvec4 &col, const TCHAR *fmt, va_list args)
 {
-	char *_fmt;
+	CONVERT_STRING<char> _fmt;
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	ImGui::TextColoredV(col, _fmt, args);
 }
@@ -931,7 +931,7 @@ void GuiImpl::TextDisabled(const TCHAR *fmt, ...)
 
 void GuiImpl::TextDisabledV(const TCHAR *fmt, va_list args)
 {
-	char *_fmt;
+	CONVERT_STRING<char> _fmt;
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	ImGui::TextDisabledV(_fmt, args);
 }
@@ -950,7 +950,7 @@ void GuiImpl::TextWrapped(const TCHAR *fmt, ...)
 
 void GuiImpl::TextWrappedV(const TCHAR *fmt, va_list args)
 {
-	char *_fmt;
+	CONVERT_STRING<char> _fmt;
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	ImGui::TextWrappedV(_fmt, args);
 }
@@ -969,7 +969,7 @@ void GuiImpl::LabelText(const TCHAR *label, const TCHAR *fmt, ...)
 
 void GuiImpl::LabelTextV(const TCHAR *label, const TCHAR *fmt, va_list args)
 {
-	char *_label, *_fmt;
+	CONVERT_STRING<char> _label, _fmt;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	ImGui::LabelTextV(_label, _fmt, args);
@@ -989,7 +989,7 @@ void GuiImpl::BulletText(const TCHAR *fmt, ...)
 
 void GuiImpl::BulletTextV(const TCHAR *fmt, va_list args)
 {
-	char *_fmt;
+	CONVERT_STRING<char> _fmt;
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	ImGui::BulletTextV(_fmt, args);
 }
@@ -997,7 +997,7 @@ void GuiImpl::BulletTextV(const TCHAR *fmt, va_list args)
 
 bool GuiImpl::Button(const TCHAR *label, const glm::fvec2 &size)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::Button(_label, size);
 }
@@ -1005,7 +1005,7 @@ bool GuiImpl::Button(const TCHAR *label, const glm::fvec2 &size)
 
 bool GuiImpl::SmallButton(const TCHAR *label)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::SmallButton(_label);
 }
@@ -1013,7 +1013,7 @@ bool GuiImpl::SmallButton(const TCHAR *label)
 
 bool GuiImpl::InvisibleButton(const TCHAR *str_id, const glm::fvec2 &size)
 {
-	char *_str_id;
+	CONVERT_STRING<char> _str_id;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	return ImGui::InvisibleButton(_str_id, size);
 }
@@ -1021,7 +1021,7 @@ bool GuiImpl::InvisibleButton(const TCHAR *str_id, const glm::fvec2 &size)
 
 bool GuiImpl::ArrowButton(const TCHAR *str_id, Direction dir)
 {
-	char *_str_id;
+	CONVERT_STRING<char> _str_id;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	return ImGui::ArrowButton(_str_id, dir);
 
@@ -1042,7 +1042,7 @@ bool GuiImpl::ImageButton(Texture2D *user_texture, const glm::fvec2 &size, const
 
 bool GuiImpl::Checkbox(const TCHAR *label, bool *v)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::Checkbox(_label, v);
 }
@@ -1050,7 +1050,7 @@ bool GuiImpl::Checkbox(const TCHAR *label, bool *v)
 
 bool GuiImpl::CheckboxFlags(const TCHAR *label, unsigned int *flags, unsigned int flags_value)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::CheckboxFlags(_label, flags, flags_value);
 }
@@ -1058,7 +1058,7 @@ bool GuiImpl::CheckboxFlags(const TCHAR *label, unsigned int *flags, unsigned in
 
 bool GuiImpl::RadioButton(const TCHAR *label, bool active)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::RadioButton(_label, active);
 }
@@ -1066,7 +1066,7 @@ bool GuiImpl::RadioButton(const TCHAR *label, bool active)
 
 bool GuiImpl::RadioButton(const TCHAR *label, int *v, int v_button)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::RadioButton(_label, v, v_button);
 }
@@ -1074,7 +1074,7 @@ bool GuiImpl::RadioButton(const TCHAR *label, int *v, int v_button)
 
 void GuiImpl::ProgressBar(float fraction, const glm::fvec2 &size_arg, const TCHAR *overlayptr)
 {
-	char *_overlayptr;
+	CONVERT_STRING<char> _overlayptr;
 	CONVERT_TCS2MBCS(overlayptr, _overlayptr);
 	ImGui::ProgressBar(fraction, size_arg, _overlayptr);
 }
@@ -1088,7 +1088,7 @@ void GuiImpl::Bullet()
 
 bool GuiImpl::BeginCombo(const TCHAR *label, const TCHAR *preview_value, props::TFlags64 combo_flags)
 {
-	char *_label, *_preview_value;
+	CONVERT_STRING<char> _label, _preview_value;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(preview_value, _preview_value);
 	return ImGui::BeginCombo(_label, _preview_value, (ImGuiComboFlags)(uint64_t)combo_flags);
@@ -1105,7 +1105,7 @@ bool GuiImpl::Combo(const TCHAR *label, int *current_item, const TCHAR *const it
 {
 	// TODO
 #if 0
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::Combo(_label, current_item, items, items_count, popup_max_height_in_items);
 #else
@@ -1116,7 +1116,7 @@ bool GuiImpl::Combo(const TCHAR *label, int *current_item, const TCHAR *const it
 
 bool GuiImpl::Combo(const TCHAR *label, int *current_item, const TCHAR *items_separated_by_zeros, int popup_max_height_in_items)
 {
-	char *_label, *_items;
+	CONVERT_STRING<char> _label, _items;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(items_separated_by_zeros, _items);
 	return ImGui::Combo(_label, current_item, _items, popup_max_height_in_items);
@@ -1125,7 +1125,7 @@ bool GuiImpl::Combo(const TCHAR *label, int *current_item, const TCHAR *items_se
 
 bool GuiImpl::Combo(const TCHAR *label, int *current_item, bool(*items_getter)(void *data, int idx, const char **out_text), void *data, int items_count, int popup_max_height_in_items)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::Combo(_label, current_item, items_getter, data, items_count, popup_max_height_in_items);
 }
@@ -1207,7 +1207,7 @@ bool GuiImpl::DragScalarN(const TCHAR *label, DataType data_type, void *p_data, 
 
 bool GuiImpl::SliderFloat(const TCHAR *label, float *v, float v_min, float v_max, const TCHAR *format, float power)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	//return ImGui::SliderFloat(_label, v, v_min, v_max, _format, power);
@@ -1217,7 +1217,7 @@ bool GuiImpl::SliderFloat(const TCHAR *label, float *v, float v_min, float v_max
 
 bool GuiImpl::SliderFloat2(const TCHAR *label, float v[2], float v_min, float v_max, const TCHAR *format, float power)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	//return ImGui::SliderFloat2(_label, v, v_min, v_max, _format, power);
@@ -1227,7 +1227,7 @@ bool GuiImpl::SliderFloat2(const TCHAR *label, float v[2], float v_min, float v_
 
 bool GuiImpl::SliderFloat3(const TCHAR *label, float v[3], float v_min, float v_max, const TCHAR *format, float power)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	//return ImGui::SliderFloat(_label, v, v_min, v_max, _format, power);
@@ -1237,7 +1237,7 @@ bool GuiImpl::SliderFloat3(const TCHAR *label, float v[3], float v_min, float v_
 
 bool GuiImpl::SliderFloat4(const TCHAR *label, float v[4], float v_min, float v_max, const TCHAR *format, float power)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	//return ImGui::SliderFloat(_label, v, v_min, v_max, _format, power);
@@ -1247,7 +1247,7 @@ bool GuiImpl::SliderFloat4(const TCHAR *label, float v[4], float v_min, float v_
 
 bool GuiImpl::SliderAngle(const TCHAR *label, float *v_rad, float v_degrees_min, float v_degrees_max, const TCHAR *format)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	return ImGui::SliderAngle(_label, v_rad, v_degrees_min, v_degrees_max, _format);
@@ -1256,7 +1256,7 @@ bool GuiImpl::SliderAngle(const TCHAR *label, float *v_rad, float v_degrees_min,
 
 bool GuiImpl::SliderInt(const TCHAR *label, int *v, int v_min, int v_max, const TCHAR *format)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	return ImGui::SliderInt(_label, v, v_min, v_max, _format);
@@ -1265,7 +1265,7 @@ bool GuiImpl::SliderInt(const TCHAR *label, int *v, int v_min, int v_max, const 
 
 bool GuiImpl::SliderInt2(const TCHAR *label, int v[2], int v_min, int v_max, const TCHAR *format)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	return ImGui::SliderInt(_label, v, v_min, v_max, _format);
@@ -1274,7 +1274,7 @@ bool GuiImpl::SliderInt2(const TCHAR *label, int v[2], int v_min, int v_max, con
 
 bool GuiImpl::SliderInt3(const TCHAR *label, int v[3], int v_min, int v_max, const TCHAR *format)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	return ImGui::SliderInt(_label, v, v_min, v_max, _format);
@@ -1283,7 +1283,7 @@ bool GuiImpl::SliderInt3(const TCHAR *label, int v[3], int v_min, int v_max, con
 
 bool GuiImpl::SliderInt4(const TCHAR *label, int v[4], int v_min, int v_max, const TCHAR *format)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	return ImGui::SliderInt(_label, v, v_min, v_max, _format);
@@ -1292,7 +1292,7 @@ bool GuiImpl::SliderInt4(const TCHAR *label, int v[4], int v_min, int v_max, con
 
 bool GuiImpl::SliderScalar(const TCHAR *label, DataType data_type, void *p_data, const void *p_min, const void *p_max, const TCHAR *formatptr, float power)
 {
-	char *_label, *_formatptr;
+	CONVERT_STRING<char> _label, _formatptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(formatptr, _formatptr);
 	//return ImGui::SliderScalar(_label, data_type, p_data, p_min, p_max, _formatptr, power);
@@ -1302,7 +1302,7 @@ bool GuiImpl::SliderScalar(const TCHAR *label, DataType data_type, void *p_data,
 
 bool GuiImpl::SliderScalarN(const TCHAR *label, DataType data_type, void *p_data, int components, const void *p_min, const void *p_max, const TCHAR *formatptr, float power)
 {
-	char *_label, *_formatptr;
+	CONVERT_STRING<char> _label, _formatptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(formatptr, _formatptr);
 	//return ImGui::SliderScalar(_label, data_type, p_data, p_min, p_max, _formatptr, power);
@@ -1312,7 +1312,7 @@ bool GuiImpl::SliderScalarN(const TCHAR *label, DataType data_type, void *p_data
 
 bool GuiImpl::VSliderFloat(const TCHAR *label, const glm::fvec2 &size, float *v, float v_min, float v_max, const TCHAR *format, props::TFlags64 flags)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	//return ImGui::VSliderFloat(_label, size, v, v_min, v_max, _format, power);
@@ -1322,7 +1322,7 @@ bool GuiImpl::VSliderFloat(const TCHAR *label, const glm::fvec2 &size, float *v,
 
 bool GuiImpl::VSliderInt(const TCHAR *label, const glm::fvec2 &size, int *v, int v_min, int v_max, const TCHAR *format)
 {
-	char *_label, *_format;
+	CONVERT_STRING<char> _label, _format;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(format, _format);
 	return ImGui::VSliderInt(_label, size, v, v_min, v_max, _format);
@@ -1331,7 +1331,7 @@ bool GuiImpl::VSliderInt(const TCHAR *label, const glm::fvec2 &size, int *v, int
 
 bool GuiImpl::VSliderScalar(const TCHAR *label, const glm::fvec2 &size, DataType data_type, void *p_data, const void *p_min, const void *p_max, const TCHAR *formatptr, props::TFlags64 flags)
 {
-	char *_label, *_formatptr;
+	CONVERT_STRING<char> _label, _formatptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(formatptr, _formatptr);
 	//return ImGui::VSliderScalar(_label, size, data_type, p_data, p_min, p_max, _formatptr, power);
@@ -1426,7 +1426,7 @@ bool GuiImpl::InputScalarN(const TCHAR *label, DataType data_type, void *p_data,
 
 bool GuiImpl::ColorEdit3(const TCHAR *label, float col[3], props::TFlags64 coloredit_flags)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::ColorEdit3(_label, col, (ImGuiColorEditFlags)(uint64_t)coloredit_flags);
 }
@@ -1434,7 +1434,7 @@ bool GuiImpl::ColorEdit3(const TCHAR *label, float col[3], props::TFlags64 color
 
 bool GuiImpl::ColorEdit4(const TCHAR *label, float col[4], props::TFlags64 coloredit_flags)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::ColorEdit4(_label, col, (ImGuiColorEditFlags)(uint64_t)coloredit_flags);
 }
@@ -1442,7 +1442,7 @@ bool GuiImpl::ColorEdit4(const TCHAR *label, float col[4], props::TFlags64 color
 
 bool GuiImpl::ColorPicker3(const TCHAR *label, float col[3], props::TFlags64 coloredit_flags)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::ColorPicker3(_label, col, (ImGuiColorEditFlags)(uint64_t)coloredit_flags);
 }
@@ -1450,7 +1450,7 @@ bool GuiImpl::ColorPicker3(const TCHAR *label, float col[3], props::TFlags64 col
 
 bool GuiImpl::ColorPicker4(const TCHAR *label, float col[4], props::TFlags64 coloredit_flags, const float *ref_colptr)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::ColorPicker4(_label, col, (ImGuiColorEditFlags)(uint64_t)coloredit_flags);
 }
@@ -1458,7 +1458,7 @@ bool GuiImpl::ColorPicker4(const TCHAR *label, float col[4], props::TFlags64 col
 
 bool GuiImpl::ColorButton(const TCHAR *desc_id, const glm::fvec4 &col, props::TFlags64 coloredit_flags, glm::fvec2 size)
 {
-	char *_desc_id;
+	CONVERT_STRING<char> _desc_id;
 	CONVERT_TCS2MBCS(desc_id, _desc_id);
 	return ImGui::ColorButton(_desc_id, col, (ImGuiColorEditFlags)(uint64_t)coloredit_flags, size);
 }
@@ -1472,7 +1472,7 @@ void GuiImpl::SetColorEditOptions(props::TFlags64 coloredit_flags)
 
 bool GuiImpl::TreeNode(const TCHAR *label)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::TreeNode(_label);
 }
@@ -1506,7 +1506,7 @@ bool GuiImpl::TreeNode(const void *ptr_id, const TCHAR *fmt, ...)
 
 bool GuiImpl::TreeNodeV(const TCHAR *str_id, const TCHAR *fmt, va_list args)
 {
-	char *_str_id, *_fmt;
+	CONVERT_STRING<char> _str_id, _fmt;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	return ImGui::TreeNodeV(_str_id, _fmt, args);
@@ -1515,7 +1515,7 @@ bool GuiImpl::TreeNodeV(const TCHAR *str_id, const TCHAR *fmt, va_list args)
 
 bool GuiImpl::TreeNodeV(const void *ptr_id, const TCHAR *fmt, va_list args)
 {
-	char *_fmt;
+	CONVERT_STRING<char> _fmt;
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	return ImGui::TreeNodeV(ptr_id, _fmt, args);
 }
@@ -1523,7 +1523,7 @@ bool GuiImpl::TreeNodeV(const void *ptr_id, const TCHAR *fmt, va_list args)
 
 bool GuiImpl::TreeNodeEx(const TCHAR *label, props::TFlags64 treenode_flags)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::TreeNodeEx(_label, (ImGuiTreeNodeFlags)(uint64_t)treenode_flags);
 }
@@ -1557,7 +1557,7 @@ bool GuiImpl::TreeNodeEx(const void *ptr_id, props::TFlags64 treenode_flags, con
 
 bool GuiImpl::TreeNodeExV(const TCHAR *str_id, props::TFlags64 treenode_flags, const TCHAR *fmt, va_list args)
 {
-	char *_str_id, *_fmt;
+	CONVERT_STRING<char> _str_id, _fmt;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	return ImGui::TreeNodeExV(_str_id, (ImGuiTreeNodeFlags)(uint64_t)treenode_flags, _fmt, args);
@@ -1566,7 +1566,7 @@ bool GuiImpl::TreeNodeExV(const TCHAR *str_id, props::TFlags64 treenode_flags, c
 
 bool GuiImpl::TreeNodeExV(const void *ptr_id, props::TFlags64 treenode_flags, const TCHAR *fmt, va_list args)
 {
-	char *_fmt;
+	CONVERT_STRING<char> _fmt;
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	return ImGui::TreeNodeExV(ptr_id, (ImGuiTreeNodeFlags)(uint64_t)treenode_flags, _fmt, args);
 }
@@ -1574,7 +1574,7 @@ bool GuiImpl::TreeNodeExV(const void *ptr_id, props::TFlags64 treenode_flags, co
 
 void GuiImpl::TreePush(const TCHAR *str_id)
 {
-	char *_str_id;
+	CONVERT_STRING<char> _str_id;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	ImGui::TreePush(_str_id);
 }
@@ -1600,7 +1600,7 @@ float GuiImpl::GetTreeNodeToLabelSpacing()
 
 bool GuiImpl::CollapsingHeader(const TCHAR *label, props::TFlags64 treenode_flags)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::CollapsingHeader(_label, (ImGuiTreeNodeFlags)(uint64_t)treenode_flags);
 }
@@ -1608,7 +1608,7 @@ bool GuiImpl::CollapsingHeader(const TCHAR *label, props::TFlags64 treenode_flag
 
 bool GuiImpl::CollapsingHeader(const TCHAR *label, bool *p_open, props::TFlags64 treenode_flags)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::CollapsingHeader(_label, p_open, (ImGuiTreeNodeFlags)(uint64_t)treenode_flags);
 }
@@ -1622,7 +1622,7 @@ void GuiImpl::SetNextItemOpen(bool is_open, int64_t cond)
 
 bool GuiImpl::Selectable(const TCHAR *label, bool selected, props::TFlags64 selectable_flags, const glm::fvec2 &size)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::Selectable(_label, selected, (ImGuiSelectableFlags)(uint64_t)selectable_flags, size);
 }
@@ -1630,7 +1630,7 @@ bool GuiImpl::Selectable(const TCHAR *label, bool selected, props::TFlags64 sele
 
 bool GuiImpl::Selectable(const TCHAR *label, bool *p_selected, props::TFlags64 selectable_flags, const glm::fvec2 &size)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::Selectable(_label, p_selected, (ImGuiSelectableFlags)(uint64_t)selectable_flags, size);
 }
@@ -1638,7 +1638,7 @@ bool GuiImpl::Selectable(const TCHAR *label, bool *p_selected, props::TFlags64 s
 
 bool GuiImpl::ListBox(const TCHAR *label, int *current_item, const TCHAR *const items[], int items_count, int height_in_items)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 
 	//return ImGui::ListBox(_label, current_item, );
@@ -1648,7 +1648,7 @@ bool GuiImpl::ListBox(const TCHAR *label, int *current_item, const TCHAR *const 
 
 bool GuiImpl::ListBox(const TCHAR *label, int *current_item, bool (*items_getter)(void *data, int idx, const char **out_text), void *data, int items_count, int height_in_items)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::ListBox(_label, current_item, items_getter, data, items_count, height_in_items);
 }
@@ -1656,7 +1656,7 @@ bool GuiImpl::ListBox(const TCHAR *label, int *current_item, bool (*items_getter
 
 bool GuiImpl::ListBoxHeader(const TCHAR *label, const glm::fvec2 &size)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	//return ImGui::ListBoxHeader(_label, size);
 	return false;
@@ -1665,7 +1665,7 @@ bool GuiImpl::ListBoxHeader(const TCHAR *label, const glm::fvec2 &size)
 
 bool GuiImpl::ListBoxHeader(const TCHAR *label, int items_count, int height_in_items)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	//return ImGui::ListBoxHeader(_label, items_count, height_in_items);
 	return false;
@@ -1681,7 +1681,7 @@ void GuiImpl::ListBoxFooter()
 
 void GuiImpl::PlotLines(const TCHAR *label, const float *values, int values_count, int values_offset, const TCHAR *overlay_textptr, float scale_min, float scale_max, glm::fvec2 graph_size, int stride)
 {
-	char *_label, *_overlay_textptr;
+	CONVERT_STRING<char> _label, _overlay_textptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(overlay_textptr, _overlay_textptr);
 	return ImGui::PlotLines(_label, values, values_count, values_offset, _overlay_textptr, scale_min, scale_max, graph_size, stride);
@@ -1690,7 +1690,7 @@ void GuiImpl::PlotLines(const TCHAR *label, const float *values, int values_coun
 
 void GuiImpl::PlotLines(const TCHAR *label, float(*values_getter)(void *data, int idx), void *data, int values_count, int values_offset, const TCHAR *overlay_textptr, float scale_min, float scale_max, glm::fvec2 graph_size)
 {
-	char *_label, *_overlay_textptr;
+	CONVERT_STRING<char> _label, _overlay_textptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(overlay_textptr, _overlay_textptr);
 	return ImGui::PlotLines(_label, values_getter, data, values_count, values_offset, _overlay_textptr, scale_min, scale_max, graph_size);
@@ -1699,7 +1699,7 @@ void GuiImpl::PlotLines(const TCHAR *label, float(*values_getter)(void *data, in
 
 void GuiImpl::PlotHistogram(const TCHAR *label, const float *values, int values_count, int values_offset, const TCHAR *overlay_textptr, float scale_min, float scale_max, glm::fvec2 graph_size, int stride)
 {
-	char *_label, *_overlay_textptr;
+	CONVERT_STRING<char> _label, _overlay_textptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(overlay_textptr, _overlay_textptr);
 	ImGui::PlotHistogram(_label, values, values_count, values_offset, _overlay_textptr, scale_min, scale_max, graph_size, stride);
@@ -1708,7 +1708,7 @@ void GuiImpl::PlotHistogram(const TCHAR *label, const float *values, int values_
 
 void GuiImpl::PlotHistogram(const TCHAR *label, float(*values_getter)(void *data, int idx), void *data, int values_count, int values_offset, const TCHAR *overlay_textptr, float scale_min, float scale_max, glm::fvec2 graph_size)
 {
-	char *_label, *_overlay_textptr;
+	CONVERT_STRING<char> _label, _overlay_textptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(overlay_textptr, _overlay_textptr);
 	ImGui::PlotHistogram(_label, values_getter, data, values_count, values_offset, _overlay_textptr, scale_min, scale_max, graph_size);
@@ -1717,7 +1717,7 @@ void GuiImpl::PlotHistogram(const TCHAR *label, float(*values_getter)(void *data
 
 void GuiImpl::Value(const TCHAR *prefix, bool b)
 {
-	char *_prefix;
+	CONVERT_STRING<char> _prefix;
 	CONVERT_TCS2MBCS(prefix, _prefix);
 	ImGui::Value(_prefix, b);
 }
@@ -1725,7 +1725,7 @@ void GuiImpl::Value(const TCHAR *prefix, bool b)
 
 void GuiImpl::Value(const TCHAR *prefix, int v)
 {
-	char *_prefix;
+	CONVERT_STRING<char> _prefix;
 	CONVERT_TCS2MBCS(prefix, _prefix);
 	ImGui::Value(_prefix, v);
 }
@@ -1733,7 +1733,7 @@ void GuiImpl::Value(const TCHAR *prefix, int v)
 
 void GuiImpl::Value(const TCHAR *prefix, unsigned int v)
 {
-	char *_prefix;
+	CONVERT_STRING<char> _prefix;
 	CONVERT_TCS2MBCS(prefix, _prefix);
 	ImGui::Value(_prefix, v);
 }
@@ -1741,7 +1741,7 @@ void GuiImpl::Value(const TCHAR *prefix, unsigned int v)
 
 void GuiImpl::Value(const TCHAR *prefix, float v, const TCHAR *float_formatptr)
 {
-	char *_prefix, *_float_formatptr;
+	CONVERT_STRING<char> _prefix, _float_formatptr;
 	CONVERT_TCS2MBCS(prefix, _prefix);
 	CONVERT_TCS2MBCS(float_formatptr, _float_formatptr);
 	ImGui::Value(_prefix, v, _float_formatptr);
@@ -1774,7 +1774,7 @@ void GuiImpl::EndMainMenuBar()
 
 bool GuiImpl::BeginMenu(const TCHAR *label, bool enabled)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::BeginMenu(_label, enabled);
 }
@@ -1788,7 +1788,7 @@ void GuiImpl::EndMenu()
 
 bool GuiImpl::MenuItem(const TCHAR *label, const TCHAR *shortcutptr, bool selected, bool enabled)
 {
-	char *_label, *_shortcutptr;
+	CONVERT_STRING<char> _label, _shortcutptr;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(shortcutptr, _shortcutptr);
 	return ImGui::MenuItem(_label, _shortcutptr, selected, enabled);
@@ -1797,7 +1797,7 @@ bool GuiImpl::MenuItem(const TCHAR *label, const TCHAR *shortcutptr, bool select
 
 bool GuiImpl::MenuItem(const TCHAR *label, const TCHAR *shortcut, bool *p_selected, bool enabled)
 {
-	char *_label, *_shortcut;
+	CONVERT_STRING<char> _label, _shortcut;
 	CONVERT_TCS2MBCS(label, _label);
 	CONVERT_TCS2MBCS(shortcut, _shortcut);
 	return ImGui::MenuItem(_label, _shortcut, p_selected, enabled);
@@ -1829,7 +1829,7 @@ void GuiImpl::SetTooltip(const TCHAR *fmt, ...)
 
 void GuiImpl::SetTooltipV(const TCHAR *fmt, va_list args)
 {
-	char *_fmt;
+	CONVERT_STRING<char> _fmt;
 	CONVERT_TCS2MBCS(fmt, _fmt);
 	ImGui::SetTooltipV(_fmt, args);
 }
@@ -1837,7 +1837,7 @@ void GuiImpl::SetTooltipV(const TCHAR *fmt, va_list args)
 
 void GuiImpl::OpenPopup(const TCHAR *str_id)
 {
-	char *_str_id;
+	CONVERT_STRING<char> _str_id;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	ImGui::OpenPopup(_str_id);
 }
@@ -1845,7 +1845,7 @@ void GuiImpl::OpenPopup(const TCHAR *str_id)
 
 bool GuiImpl::BeginPopup(const TCHAR *str_id, props::TFlags64 window_flags)
 {
-	char *_str_id;
+	CONVERT_STRING<char> _str_id;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	return ImGui::BeginPopup(_str_id, (ImGuiWindowFlags)(uint64_t)window_flags);
 }
@@ -1853,7 +1853,7 @@ bool GuiImpl::BeginPopup(const TCHAR *str_id, props::TFlags64 window_flags)
 
 bool GuiImpl::BeginPopupContextItem(const TCHAR *str_idptr, MouseButton mouse_button)
 {
-	char *_str_idptr;
+	CONVERT_STRING<char> _str_idptr;
 	CONVERT_TCS2MBCS(str_idptr, _str_idptr);
 	return ImGui::BeginPopupContextItem(_str_idptr, mouse_button);
 }
@@ -1861,7 +1861,7 @@ bool GuiImpl::BeginPopupContextItem(const TCHAR *str_idptr, MouseButton mouse_bu
 
 bool GuiImpl::BeginPopupContextWindow(const TCHAR *str_idptr, MouseButton mouse_button, bool also_over_items)
 {
-	char *_str_idptr;
+	CONVERT_STRING<char> _str_idptr;
 	CONVERT_TCS2MBCS(str_idptr, _str_idptr);
 	//return ImGui::BeginPopupContextWindow(_str_idptr, mouse_button, also_over_items);
 	return false;
@@ -1870,7 +1870,7 @@ bool GuiImpl::BeginPopupContextWindow(const TCHAR *str_idptr, MouseButton mouse_
 
 bool GuiImpl::BeginPopupContextVoid(const TCHAR *str_idptr, MouseButton mouse_button)
 {
-	char *_str_idptr;
+	CONVERT_STRING<char> _str_idptr;
 	CONVERT_TCS2MBCS(str_idptr, _str_idptr);
 	return ImGui::BeginPopupContextVoid(_str_idptr, mouse_button);
 }
@@ -1878,7 +1878,7 @@ bool GuiImpl::BeginPopupContextVoid(const TCHAR *str_idptr, MouseButton mouse_bu
 
 bool GuiImpl::BeginPopupModal(const TCHAR *name, bool *p_openptr, props::TFlags64 window_flags)
 {
-	char *_name;
+	CONVERT_STRING<char> _name;
 	CONVERT_TCS2MBCS(name, _name);
 	return ImGui::BeginPopupModal(_name, p_openptr, (ImGuiWindowFlags)(uint64_t)window_flags);
 }
@@ -1892,7 +1892,7 @@ void GuiImpl::EndPopup()
 
 void GuiImpl::OpenPopupOnItemClick(const TCHAR *str_idptr, MouseButton mouse_button)
 {
-	char *_str_idptr;
+	CONVERT_STRING<char> _str_idptr;
 	CONVERT_TCS2MBCS(str_idptr, _str_idptr);
 	//return ImGui::OpenPopupOnItemClick(_str_idptr, mouse_button);
 }
@@ -1900,7 +1900,7 @@ void GuiImpl::OpenPopupOnItemClick(const TCHAR *str_idptr, MouseButton mouse_but
 
 bool GuiImpl::IsPopupOpen(const TCHAR *str_id)
 {
-	char *_str_id;
+	CONVERT_STRING<char> _str_id;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	return ImGui::IsPopupOpen(_str_id);
 }
@@ -1914,7 +1914,7 @@ void GuiImpl::CloseCurrentPopup()
 
 void GuiImpl::Columns(int count, const TCHAR *idptr, bool border)
 {
-	char *_idptr;
+	CONVERT_STRING<char> _idptr;
 	CONVERT_TCS2MBCS(idptr, _idptr);
 	//return ImGui::Columns(count, _idptr, border);
 }
@@ -1964,7 +1964,7 @@ int GuiImpl::GetColumnsCount()
 
 bool GuiImpl::BeginTabBar(const TCHAR *str_id, props::TFlags64 tabbar_flags)
 {
-	char *_str_id;
+	CONVERT_STRING<char> _str_id;
 	CONVERT_TCS2MBCS(str_id, _str_id);
 	return ImGui::BeginTabBar(_str_id, (ImGuiTabBarFlags)(uint64_t)tabbar_flags);
 }
@@ -1978,7 +1978,7 @@ void GuiImpl::EndTabBar()
 
 bool GuiImpl::BeginTabItem(const TCHAR *label, bool *p_openptr, props::TFlags64 tabitem_flags)
 {
-	char *_label;
+	CONVERT_STRING<char> _label;
 	CONVERT_TCS2MBCS(label, _label);
 	return ImGui::BeginTabItem(_label, p_openptr, (ImGuiTabItemFlags)(uint64_t)tabitem_flags);
 }
@@ -1992,7 +1992,7 @@ void GuiImpl::EndTabItem()
 
 void GuiImpl::SetTabItemClosed(const TCHAR *tab_or_docked_window_label)
 {
-	char *_tab_or_docked_window_label;
+	CONVERT_STRING<char> _tab_or_docked_window_label;
 	CONVERT_TCS2MBCS(tab_or_docked_window_label, _tab_or_docked_window_label);
 	ImGui::SetTabItemClosed(_tab_or_docked_window_label);
 }
@@ -2006,7 +2006,7 @@ void GuiImpl::LogToTTY(int auto_open_depth)
 
 void GuiImpl::LogToFile(int auto_open_depth, const TCHAR *filenameptr)
 {
-	char *_filenameptr;
+	CONVERT_STRING<char> _filenameptr;
 	CONVERT_TCS2MBCS(filenameptr, _filenameptr);
 	return ImGui::LogToFile(auto_open_depth, _filenameptr);
 }
@@ -2050,7 +2050,7 @@ bool GuiImpl::BeginDragDropSource(props::TFlags64 dragdrop_flags)
 
 bool GuiImpl::SetDragDropPayload(const TCHAR *type, const void *data, size_t sz, int64_t cond)
 {
-	char *_type;
+	CONVERT_STRING<char> _type;
 	CONVERT_TCS2MBCS(type, _type);
 	return ImGui::SetDragDropPayload(_type, data, sz, cond);
 }
@@ -2070,7 +2070,7 @@ bool GuiImpl::BeginDragDropTarget()
 
 const ImGuiPayload *GuiImpl::AcceptDragDropPayload(const TCHAR *type, props::TFlags64 dragdrop_flags)
 {
-	char *_type;
+	CONVERT_STRING<char> _type;
 	CONVERT_TCS2MBCS(type, _type);
 	return ImGui::AcceptDragDropPayload(_type, dragdrop_flags);
 }
@@ -2242,7 +2242,7 @@ int GuiImpl::GetFrameCount()
 const TCHAR *GuiImpl::GetStyleColorName(ColorType idx)
 {
 	const char *ret = ImGui::GetStyleColorName(idx);
-	TCHAR *_ret;
+	CONVERT_STRING<TCHAR> _ret;
 	CONVERT_MBCS2TCS(ret, _ret);
 
 	return nullptr;
@@ -2265,9 +2265,9 @@ ImGuiStorage *GuiImpl::GetStateStorage()
 
 glm::fvec2 GuiImpl::CalcTextSize(const TCHAR *text, const TCHAR *text_endptr, bool hide_text_after_double_hash, float wrap_width)
 {
-	char *_text;
+	CONVERT_STRING<char> _text;
 	CONVERT_TCS2MBCS(text, _text);
-	const char *_text_endptr = _text + (text_endptr - text);
+	const char *_text_endptr = (const char *)_text + (text_endptr - text);
 	return ImGui::CalcTextSize(_text, _text_endptr, hide_text_after_double_hash, wrap_width);
 }
 
@@ -2444,9 +2444,9 @@ void GuiImpl::CaptureMouseFromApp(bool want_capture_mouse_value)
 const TCHAR *GuiImpl::GetClipboardText()
 {
 	const char *text = ImGui::GetClipboardText();
-	TCHAR *_text;
+	CONVERT_STRING<TCHAR> _text;
 	CONVERT_MBCS2TCS(text, _text);
-	m_ClipboardText = _text;
+	m_ClipboardText = (const TCHAR *)_text;
 	return m_ClipboardText.c_str();
 }
 
@@ -2454,7 +2454,7 @@ const TCHAR *GuiImpl::GetClipboardText()
 void GuiImpl::SetClipboardText(const TCHAR *text)
 {
 	m_ClipboardText = text;
-	char *_text;
+	CONVERT_STRING<char> _text;
 	CONVERT_TCS2MBCS(text, _text);
 	ImGui::SetClipboardText(_text);
 }
